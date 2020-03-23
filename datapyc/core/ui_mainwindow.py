@@ -10,13 +10,15 @@
 ############################################################################
 
 
+import os
+
 from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2.QtQuickWidgets import QQuickWidget
 
 from datapyc.core.calibrationview import CalibrationLineEdit
 from datapyc.core.canvasview import FigureCanvas
 from datapyc.core.dataview import TableView, ListView
-
+import datapyc.core.resources_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -146,7 +148,8 @@ class Ui_MainWindow(object):
         self.quickWidget.setMaximumSize(QtCore.QSize(16777215, 35))
         self.quickWidget.setAutoFillBackground(True)
         self.quickWidget.setResizeMode(QQuickWidget.SizeRootObjectToView)
-        self.quickWidget.setSource(QtCore.QUrl("qrc:/rangeslider.qml"))
+        qml_file = os.path.join(os.path.dirname(__file__), "rangeslider.qml")
+        self.quickWidget.setSource(QtCore.QUrl.fromLocalFile(os.path.abspath(qml_file)))
         self.quickWidget.setObjectName("quickWidget")
         self.gridLayout_4.addWidget(self.quickWidget, 1, 0, 1, 2)
         self.verticalLayout_4.addWidget(self.gridGroupBox)
