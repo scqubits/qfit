@@ -282,5 +282,3 @@ class ListModel(QAbstractListModel, serializers.Serializable, metaclass=ListMode
         iodata = serializers.dict_serialize(initdata)
         iodata.typename = 'StoredFitData'
         return iodata
-
-

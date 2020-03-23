@@ -41,8 +41,8 @@ class MainWindow(QMainWindow):
         self.calibrationButtons = None
         self.calibrationStates = None
         self.calibrationView = None
-        self.leftValProperty = None
-        self.rightValProperty = None
+        self.minRangeSliderProperty = None
+        self.maxRangeSliderProperty = None
         self.axes = None
         self.cidCanvas = None
         self.doXYSwap = False
@@ -78,28 +78,33 @@ class MainWindow(QMainWindow):
         """For the interface that enables calibration of data with respect to x and y axis, group QLineEdit elements
         and the corresponding buttons in dicts. Set up a dictionary mapping calibration labels to the corresponding
         State choices. Finally, set up an instance of CalibrationModel and CalibrationView"""
-        self.rawLineEdits = {'X1': self.ui.rawX1LineEdit,
-                            'X2': self.ui.rawX2LineEdit,
-                            'Y1': self.ui.rawY1LineEdit,
-                            'Y2': self.ui.rawY2LineEdit}
-
-        self.mapLineEdits = {'X1': self.ui.mapX1LineEdit,
-                            'X2': self.ui.mapX2LineEdit,
-                            'Y1': self.ui.mapY1LineEdit,
-                            'Y2': self.ui.mapY2LineEdit}
-
-        self.calibrationButtons = {'X1': self.ui.calibrateX1Button,
-                                   'X2': self.ui.calibrateX2Button,
-                                   'Y1': self.ui.calibrateY1Button,
-                                   'Y2': self.ui.calibrateY2Button}
-
-        self.calibrationStates = {'X1': State.CALIBRATE_X1,
-                                  'X2': State.CALIBRATE_X2,
-                                  'Y1': State.CALIBRATE_Y1,
-                                  'Y2': State.CALIBRATE_Y2}
+        self.rawLineEdits = {
+            'X1': self.ui.rawX1LineEdit,
+            'X2': self.ui.rawX2LineEdit,
+            'Y1': self.ui.rawY1LineEdit,
+            'Y2': self.ui.rawY2LineEdit
+        }
+        self.mapLineEdits = {
+            'X1': self.ui.mapX1LineEdit,
+            'X2': self.ui.mapX2LineEdit,
+            'Y1': self.ui.mapY1LineEdit,
+            'Y2': self.ui.mapY2LineEdit
+        }
+        self.calibrationButtons = {
+            'X1': self.ui.calibrateX1Button,
+            'X2': self.ui.calibrateX2Button,
+            'Y1': self.ui.calibrateY1Button,
+            'Y2': self.ui.calibrateY2Button
+        }
+        self.calibrationStates = {
+            'X1': State.CALIBRATE_X1,
+            'X2': State.CALIBRATE_X2,
+            'Y1': State.CALIBRATE_Y1,
+            'Y2': State.CALIBRATE_Y2
+        }
 
         self.calibrationModel = CalibrationModel()
-        self.calibrationView = CalibrationView(self.rawLineEdits, self.mapLineEdits, self.calibrationModel)
+        self.calibrationView = CalibrationView(self.rawLineEdits, self.mapLineEdits)
         self.calibrationModel.setCalibration(*self.calibrationView.calibrationPoints())
 
     def setupUiOptions(self):
@@ -112,10 +117,10 @@ class MainWindow(QMainWindow):
                                  'logColoring': self.ui.logScaleCheckBox.isChecked}
 
         # The following are the left and right values of the sliders used in manipulating the plot range.
-        self.leftValProperty = QQmlProperty(self.ui.quickWidget.rootObject(), "first.value")
-        self.rightValProperty = QQmlProperty(self.ui.quickWidget.rootObject(), "second.value")
+        self.minRangeSliderProperty = QQmlProperty(self.ui.quickWidget.rootObject(), "first.value")
+        self.maxRangeSliderProperty = QQmlProperty(self.ui.quickWidget.rootObject(), "second.value")
 
-        plotRangeCallbacks = {'left': self.leftValProperty.read, 'right': self.rightValProperty.read}
+        plotRangeCallbacks = {'left': self.minRangeSliderProperty.read, 'right': self.maxRangeSliderProperty.read}
 
         self.measurementData.setupUiCallbacks(dataCheckBoxCallbacks, plotRangeCallbacks)
 
@@ -186,8 +191,8 @@ class MainWindow(QMainWindow):
         self.ui.colorComboBox.activated.connect(self.updatePlot)
 
         # Ensure that a change in the range slider positions cause an update of the plot.
-        self.leftValProperty.connectNotifySignal(self, SLOT("updatePlot()"))
-        self.rightValProperty.connectNotifySignal(self, SLOT("updatePlot()"))
+        self.minRangeSliderProperty.connectNotifySignal(self, SLOT("updatePlot()"))
+        self.maxRangeSliderProperty.connectNotifySignal(self, SLOT("updatePlot()"))
 
     def uiCalibrationConnects(self):
         """Connect UI elements for data calibration."""
@@ -222,27 +227,16 @@ class MainWindow(QMainWindow):
         self.updatePlot(initialize=True)
         self.cidCanvas = self.axes.figure.canvas.mpl_connect('button_press_event', self.mplOnClick)
 
-    @Slot()
-    def calibrate(self, calibrationLabel):
-        """Mouse click on one of the calibration buttons prompts switching to calibration mode. Mouse cursor crosshair
-        is adjusted and canvas waits for click setting calibration point x or y component."""
-        appstate.state = self.calibrationStates[calibrationLabel]
-        self.ui.mplFigureCanvas.calibrateOn(calibrationLabel[0])
+    def setupXYDataBoxes(self):
+        self.ui.xComboBox.clear()
+        xDataNames = [dataName for dataName in self.measurementData.currentXCompatibles.keys()]
+        self.ui.xComboBox.addItems(xDataNames)
+        self.ui.xComboBox.setCurrentText(self.measurementData.currentX.name)
 
-    @Slot()
-    def updateCalibration(self):
-        """Transfer new calibration data from CalibrationView over to CalibrationModel instance. If the model is
-        currently applying the calibration, then emit signal to rewrite the table."""
-        self.calibrationModel.setCalibration(*self.calibrationView.calibrationPoints())
-        if self.calibrationModel.applyCalibration:
-            self.currentPointsTable.layoutChanged.emit()
-
-    @Slot()
-    def toggleCalibration(self):
-        """If calibration tick mark is changed, toggle the calibration status of the CalibrationModel. Also induce
-        change at the level of the displayed data of selected points."""
-        self.calibrationModel.toggleCalibration()
-        self.currentPointsTable.toggleCalibratedView()
+        self.ui.yComboBox.clear()
+        yDataNames = [dataName for dataName in self.measurementData.currentYCompatibles.keys()]
+        self.ui.yComboBox.addItems(yDataNames)
+        self.ui.yComboBox.setCurrentText(self.measurementData.currentY.name)
 
     @Slot()
     def updatePlot(self, slotdummy=None, initialize=False, toggleXY=False, **kwargs):
@@ -274,6 +268,28 @@ class MainWindow(QMainWindow):
 
         self.axes.figure.canvas.draw()
 
+    @Slot()
+    def calibrate(self, calibrationLabel):
+        """Mouse click on one of the calibration buttons prompts switching to calibration mode. Mouse cursor crosshair
+        is adjusted and canvas waits for click setting calibration point x or y component."""
+        appstate.state = self.calibrationStates[calibrationLabel]
+        self.ui.mplFigureCanvas.calibrateOn(calibrationLabel[0])
+
+    @Slot()
+    def updateCalibration(self):
+        """Transfer new calibration data from CalibrationView over to CalibrationModel instance. If the model is
+        currently applying the calibration, then emit signal to rewrite the table."""
+        self.calibrationModel.setCalibration(*self.calibrationView.calibrationPoints())
+        if self.calibrationModel.applyCalibration:
+            self.currentPointsTable.layoutChanged.emit()
+
+    @Slot()
+    def toggleCalibration(self):
+        """If calibration check box is changed, toggle the calibration status of the CalibrationModel. Also induce
+        change at the level of the displayed data of selected points."""
+        self.calibrationModel.toggleCalibration()
+        self.currentPointsTable.toggleCalibratedView()
+
     @Slot(int)
     def zDataUpdate(self, itemIndex):
         self.measurementData.setCurrentZ(itemIndex)
@@ -290,17 +306,6 @@ class MainWindow(QMainWindow):
         self.measurementData.setCurrentY(itemIndex)
         self.updatePlot(initialize=True)
 
-    def setupXYDataBoxes(self):
-        self.ui.xComboBox.clear()
-        xDataNames = [dataName for dataName in self.measurementData.currentXCompatibles.keys()]
-        self.ui.xComboBox.addItems(xDataNames)
-        self.ui.xComboBox.setCurrentText(self.measurementData.currentX.name)
-
-        self.ui.yComboBox.clear()
-        yDataNames = [dataName for dataName in self.measurementData.currentYCompatibles.keys()]
-        self.ui.yComboBox.addItems(yDataNames)
-        self.ui.yComboBox.setCurrentText(self.measurementData.currentY.name)
-
     @Slot()
     def toggleSwapXY(self):
         self.doXYSwap = not self.doXYSwap
@@ -311,10 +316,6 @@ class MainWindow(QMainWindow):
             return lambda array: np.flip(array, axis=0)
         else:
             return lambda array: array
-
-    @Slot()
-    def toggleBackgroundSubtraction(self):
-        self.updatePlot()
 
     @Slot()
     def mplOnClick(self, event):
@@ -330,7 +331,7 @@ class MainWindow(QMainWindow):
                 self.rawLineEdits[calibLabel].home(False)
                 self.mapLineEdits[calibLabel].selectAll()
                 self.ui.mplFigureCanvas.selectOn()
-                self.ui.rawLineEdit[calibLabel].editingFinished.emit()
+                self.rawLineEdit[calibLabel].editingFinished.emit()
                 return None
 
         if appstate.state == State.SELECT:

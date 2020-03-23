@@ -112,7 +112,6 @@ class FigureCanvas(QFrame):
 
         self._crosshair = None
 
-
     def axes(self):
         return self.canvas.figure.axes[0]
 

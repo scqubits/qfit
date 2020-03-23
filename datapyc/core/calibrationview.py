@@ -16,12 +16,11 @@ from datapyc.core.misc import DoubleValidator
 
 
 class CalibrationView:
-    def __init__(self, rawLineEdits, mapLineEdits, model):
+    def __init__(self, rawLineEdits, mapLineEdits):
         self.rawLineEdits = rawLineEdits
         self.mapLineEdits = mapLineEdits
         self.rawLineEdits['X1'].setSibling(self.rawLineEdits['X2'])
         self.rawLineEdits['Y1'].setSibling(self.rawLineEdits['Y2'])
-        self.model = model
         self.msg = None
 
     def calibrationErrorMsg(self):
@@ -67,7 +66,7 @@ class CalibrationLineEdit(QLineEdit):
         if self.previousStr is None:
             self.previousStr = arg
         try:
-            floatResult = float(arg)
+            _ = float(arg)
         except ValueError:
             arg = self.previousStr
         else:

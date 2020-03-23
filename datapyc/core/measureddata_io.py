@@ -28,8 +28,6 @@ def readMeasurementData(fileName):
     ----------
     fileName: str
         Name of file to be read.
-    fileHandle: h5py.Group, optional
-        Specify Group inside h5 file if only this subgroup should be read.
 
     Returns
     -------

@@ -9,15 +9,15 @@
 #    LICENSE file in the root directory of this source tree.
 ############################################################################
 
-import sys
 import os
+import sys
 
-from PySide2.QtGui import QFont
 from PySide2.QtCore import QSize
+from PySide2.QtGui import QFont
 from PySide2.QtWidgets import QApplication, QFileDialog
 
-from datapyc.datapyc_engine import MainWindow
 from datapyc.core.measureddata_io import readMeasurementData
+from datapyc.datapyc_engine import MainWindow
 
 
 def maxWindowSize(app):

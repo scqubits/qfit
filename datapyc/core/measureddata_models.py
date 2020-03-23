@@ -177,9 +177,9 @@ class NumericalMeasurementData(MeasurementData):
             norm = None
 
         if (self.currentX.data is None) or (self.currentY.data is None):
-            im = axes.pcolormesh(zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs)
+            _ = axes.pcolormesh(zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs)
         else:
-            im = axes.pcolormesh(self.currentX.data, self.currentY.data, zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs)
+            _ = axes.pcolormesh(self.currentX.data, self.currentY.data, zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs)
 
 
 class ImageMeasurementData(MeasurementData):
@@ -205,4 +205,4 @@ class ImageMeasurementData(MeasurementData):
         else:
             norm = None
 
-        im = axes.imshow(zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs)
+        _ = axes.imshow(zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs)
