@@ -10,7 +10,7 @@
 ############################################################################
 
 import numpy as np
-from scqubits.utils.file_io_serializers import Serializable
+from datapyc.io.file_io_serializers import Serializable
 
 
 class CalibrationModel(Serializable):

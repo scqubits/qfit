@@ -1,6 +1,6 @@
 numpy>=1.14.2
 scipy>=1.1.0
 matplotlib>=3.1.2
-scqubits>=1.2
 pyside2>=5.14
 pyqt>=5.12
+h5py>=2.7.1

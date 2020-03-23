@@ -11,7 +11,7 @@
 
 
 import numpy as np
-import scqubits.utils.file_io_serializers as serializers
+import datapyc.io.file_io_serializers as serializers
 from PySide2.QtCore import Slot, QAbstractTableModel, QAbstractListModel, QModelIndex, Qt
 
 
@@ -280,5 +280,5 @@ class ListModel(QAbstractListModel, serializers.Serializable, metaclass=ListMode
                     'datalist': self.assocDataList,
                     'calibration_data': self.calibrationModel}
         iodata = serializers.dict_serialize(initdata)
-        iodata.typename = 'StoredFitData'
+        iodata.typename = 'DatapycStore'
         return iodata

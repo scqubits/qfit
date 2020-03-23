@@ -50,19 +50,22 @@ ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 REQUIRES = ['numpy>=1.14.2',
             'scipy>=1.1.0',
-            'matplotlib>=3.0.0',
-            'scqubits>=1.2',
-            'pyside2>=5.14'
+            'matplotlib>=3.1.2',
+            'pyside2>=5.14',
+            'pyqt>=5.12',
+            'h5py>=2.7'
             ]
 
 INSTALL_REQUIRES = ['numpy>=1.14.2',
                     'scipy>=1.1.0',
-                    'matplotlib>=3.0.0',
-                    'scqubits>=1.2',
-                    'pyside2>=5.14'
+                    'matplotlib>=3.1.2',
+                    'pyside2>=5.14',
+                    'pyqt>=5.12',
+                    'h5py>=2.7'
                     ]
+
 PACKAGES = ['datapyc']
-PYTHON_VERSION = '>=3.5'
+PYTHON_VERSION = '>=3.6'
 
 
 NAME = "datapyc"
