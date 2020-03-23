@@ -137,7 +137,7 @@ class TableModel(QAbstractTableModel):
         self.layoutChanged.emit()
 
     def flags(self, index):
-        flags = super(self.__class__,self).flags(index)
+        flags = super(self.__class__, self).flags(index)
         flags |= Qt.ItemIsEditable
         flags |= Qt.ItemIsSelectable
         flags |= Qt.ItemIsEnabled
@@ -199,7 +199,7 @@ class ListModel(QAbstractListModel, serializers.Serializable, metaclass=ListMode
         return True
 
     def flags(self, index):
-        flags = super(self.__class__,self).flags(index)
+        flags = super(self.__class__, self).flags(index)
         flags |= Qt.ItemIsEditable
         flags |= Qt.ItemIsSelectable
         flags |= Qt.ItemIsEnabled
@@ -278,7 +278,7 @@ class ListModel(QAbstractListModel, serializers.Serializable, metaclass=ListMode
         """
         initdata = {'datanames': self.dataList,
                     'datalist': self.assocDataList,
-                    'calibration_data':self.calibrationModel}
+                    'calibration_data': self.calibrationModel}
         iodata = serializers.dict_serialize(initdata)
         iodata.typename = 'StoredFitData'
         return iodata

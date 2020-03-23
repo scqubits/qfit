@@ -357,9 +357,21 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.addWidget(self.gridGroupBox3)
         spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_4.addItem(spacerItem1)
-        self.calibratedCheckBox = QtWidgets.QCheckBox(self.layoutWidget)
+        self.groupBox = QtWidgets.QGroupBox(self.layoutWidget)
+        self.groupBox.setObjectName("groupBox")
+        self.gridLayout_7 = QtWidgets.QGridLayout(self.groupBox)
+        self.gridLayout_7.setObjectName("gridLayout_7")
+        self.calibratedCheckBox = QtWidgets.QCheckBox(self.groupBox)
         self.calibratedCheckBox.setObjectName("calibratedCheckBox")
-        self.verticalLayout_4.addWidget(self.calibratedCheckBox)
+        self.gridLayout_7.addWidget(self.calibratedCheckBox, 0, 1, 1, 1)
+        self.label_12 = QtWidgets.QLabel(self.groupBox)
+        self.label_12.setText("")
+        self.label_12.setObjectName("label_12")
+        self.gridLayout_7.addWidget(self.label_12, 0, 0, 1, 1)
+        self.verticalLayout_4.addWidget(self.groupBox)
+        self.gridLayout_5 = QtWidgets.QGridLayout()
+        self.gridLayout_5.setObjectName("gridLayout_5")
+        self.verticalLayout_4.addLayout(self.gridLayout_5)
         self.horizontalLayout_4.addLayout(self.verticalLayout_4)
         self.mplFigureCanvas = FigureCanvas(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Ignored)
@@ -416,7 +428,8 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.datasetListView.sizePolicy().hasHeightForWidth())
         self.datasetListView.setSizePolicy(sizePolicy)
-        self.datasetListView.setMaximumSize(QtCore.QSize(150, 130))
+        self.datasetListView.setMinimumSize(QtCore.QSize(0, 140))
+        self.datasetListView.setMaximumSize(QtCore.QSize(150, 150))
         self.datasetListView.setObjectName("datasetListView")
         self.horizontalLayout_5.addWidget(self.datasetListView)
         self.dataTableView = TableView(self.horizontalGroupBox1)
@@ -425,15 +438,15 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.dataTableView.sizePolicy().hasHeightForWidth())
         self.dataTableView.setSizePolicy(sizePolicy)
-        self.dataTableView.setMinimumSize(QtCore.QSize(0, 100))
-        self.dataTableView.setMaximumSize(QtCore.QSize(16777215, 130))
+        self.dataTableView.setMinimumSize(QtCore.QSize(0, 140))
+        self.dataTableView.setMaximumSize(QtCore.QSize(16777215, 140))
         self.dataTableView.setStyleSheet("")
         self.dataTableView.setObjectName("dataTableView")
         self.horizontalLayout_5.addWidget(self.dataTableView)
         self.horizontalLayout_3.addWidget(self.horizontalGroupBox1)
         self.verticalLayout.addWidget(self.splitter)
         self.buttonBox = QtWidgets.QDialogButtonBox(self.centralWidget)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Close|QtWidgets.QDialogButtonBox.Save)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Close | QtWidgets.QDialogButtonBox.Save)
         self.buttonBox.setObjectName("buttonBox")
         self.verticalLayout.addWidget(self.buttonBox)
         MainWindow.setCentralWidget(self.centralWidget)
@@ -444,20 +457,27 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "DataSelector", None, -1))
         self.resetViewButton.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Reset plot area", None, -1))
-        self.panViewButton.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Pan mode: move plot region by dragging", None, -1))
-        self.zoomViewButton.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Zoom mode: select a plot region to enlarge", None, -1))
+        self.panViewButton.setToolTip(
+            QtWidgets.QApplication.translate("MainWindow", "Pan mode: move plot region by dragging", None, -1))
+        self.zoomViewButton.setToolTip(
+            QtWidgets.QApplication.translate("MainWindow", "Zoom mode: select a plot region to enlarge", None, -1))
         self.verticalGroupBox_3.setTitle(QtWidgets.QApplication.translate("MainWindow", "Image Options", None, -1))
-        self.bgndSubtractXCheckBox.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Background subtraction along X", None, -1))
+        self.bgndSubtractXCheckBox.setToolTip(
+            QtWidgets.QApplication.translate("MainWindow", "Background subtraction along X", None, -1))
         self.bgndSubtractXCheckBox.setText(QtWidgets.QApplication.translate("MainWindow", "Subtract Bgnd X", None, -1))
-        self.bgndSubtractYCheckBox.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Background subtraction along Y", None, -1))
+        self.bgndSubtractYCheckBox.setToolTip(
+            QtWidgets.QApplication.translate("MainWindow", "Background subtraction along Y", None, -1))
         self.bgndSubtractYCheckBox.setText(QtWidgets.QApplication.translate("MainWindow", "Subtract Bgnd Y", None, -1))
         self.swapXYCheckBox.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Swap X and Y axes", None, -1))
         self.swapXYCheckBox.setText(QtWidgets.QApplication.translate("MainWindow", "Swap X↔Y", None, -1))
-        self.savgolFilterXCheckBox.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Savitzky-Golay filter (X cuts)", None, -1))
+        self.savgolFilterXCheckBox.setToolTip(
+            QtWidgets.QApplication.translate("MainWindow", "Savitzky-Golay filter (X cuts)", None, -1))
         self.savgolFilterXCheckBox.setText(QtWidgets.QApplication.translate("MainWindow", "Sav-Gol Filter X", None, -1))
-        self.savgolFilterYCheckBox.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Savitzky-Golay filter (Y cuts)", None, -1))
+        self.savgolFilterYCheckBox.setToolTip(
+            QtWidgets.QApplication.translate("MainWindow", "Savitzky-Golay filter (Y cuts)", None, -1))
         self.savgolFilterYCheckBox.setText(QtWidgets.QApplication.translate("MainWindow", "Sav-Gol Filter Y", None, -1))
-        self.gaussLaplaceCheckBox.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Apply Gauss-Laplace filter", None, -1))
+        self.gaussLaplaceCheckBox.setToolTip(
+            QtWidgets.QApplication.translate("MainWindow", "Apply Gauss-Laplace filter", None, -1))
         self.gaussLaplaceCheckBox.setText(QtWidgets.QApplication.translate("MainWindow", "Gauss-Laplace", None, -1))
         self.gridGroupBox.setTitle(QtWidgets.QApplication.translate("MainWindow", "Color Options", None, -1))
         self.colorComboBox.setItemText(0, QtWidgets.QApplication.translate("MainWindow", "PuOr", None, -1))
@@ -474,28 +494,53 @@ class Ui_MainWindow(object):
         self.label_2.setText(QtWidgets.QApplication.translate("MainWindow", "Axis-2 Values", None, -1))
         self.gridGroupBox2.setTitle(QtWidgets.QApplication.translate("MainWindow", "Calibrate X Axis", None, -1))
         self.rawX1LineEdit.setText(QtWidgets.QApplication.translate("MainWindow", "0.0", None, -1))
-        self.calibrateX2Button.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Calibrate x2, allows selection of coordinate inside plot", None, -1))
+        self.calibrateX2Button.setToolTip(
+            QtWidgets.QApplication.translate("MainWindow", "Calibrate x2, allows selection of coordinate inside plot",
+                                             None, -1))
         self.mapX2LineEdit.setText(QtWidgets.QApplication.translate("MainWindow", "1.0", None, -1))
         self.rawX2LineEdit.setText(QtWidgets.QApplication.translate("MainWindow", "1.0", None, -1))
         self.mapX1LineEdit.setText(QtWidgets.QApplication.translate("MainWindow", "0.0", None, -1))
-        self.calibrateX1Button.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Calibrate x1, allows selection of coordinate inside plot", None, -1))
-        self.label_4.setText(QtWidgets.QApplication.translate("MainWindow", "<html><head/><body><p align=\"right\">X<span style=\" vertical-align:sub;\">1</span></p></body></html>", None, -1))
-        self.label_5.setText(QtWidgets.QApplication.translate("MainWindow", "<html><head/><body><p align=\"right\">X<span style=\" vertical-align:sub;\">2</span></p></body></html>", None, -1))
-        self.label_6.setText(QtWidgets.QApplication.translate("MainWindow", "<html><head/><body><p align=\"right\">→ X<span style=\" vertical-align:sub;\">1</span>\'</p></body></html>", None, -1))
-        self.label_7.setText(QtWidgets.QApplication.translate("MainWindow", "<html><head/><body><p align=\"right\">→ X<span style=\" vertical-align:sub;\">2</span>\'</p></body></html>", None, -1))
+        self.calibrateX1Button.setToolTip(
+            QtWidgets.QApplication.translate("MainWindow", "Calibrate x1, allows selection of coordinate inside plot",
+                                             None, -1))
+        self.label_4.setText(QtWidgets.QApplication.translate("MainWindow",
+                                                              "<html><head/><body><p align=\"right\">X<span style=\" vertical-align:sub;\">1</span></p></body></html>",
+                                                              None, -1))
+        self.label_5.setText(QtWidgets.QApplication.translate("MainWindow",
+                                                              "<html><head/><body><p align=\"right\">X<span style=\" vertical-align:sub;\">2</span></p></body></html>",
+                                                              None, -1))
+        self.label_6.setText(QtWidgets.QApplication.translate("MainWindow",
+                                                              "<html><head/><body><p align=\"right\">→ X<span style=\" vertical-align:sub;\">1</span>\'</p></body></html>",
+                                                              None, -1))
+        self.label_7.setText(QtWidgets.QApplication.translate("MainWindow",
+                                                              "<html><head/><body><p align=\"right\">→ X<span style=\" vertical-align:sub;\">2</span>\'</p></body></html>",
+                                                              None, -1))
         self.gridGroupBox3.setTitle(QtWidgets.QApplication.translate("MainWindow", "Calibrate Y Axis", None, -1))
         self.rawY2LineEdit.setText(QtWidgets.QApplication.translate("MainWindow", "1.0", None, -1))
-        self.label_8.setText(QtWidgets.QApplication.translate("MainWindow", "<html><head/><body><p align=\"right\">Y<span style=\" vertical-align:sub;\">1</span></p></body></html>", None, -1))
-        self.calibrateY2Button.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Calibrate y2, allows selection of coordinate inside plot", None, -1))
-        self.calibrateY1Button.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Calibrate y1, allows selection of coordinate inside plot", None, -1))
-        self.label_9.setText(QtWidgets.QApplication.translate("MainWindow", "<html><head/><body><p align=\"right\">Y<span style=\" vertical-align:sub;\">2</span></p></body></html>", None, -1))
+        self.label_8.setText(QtWidgets.QApplication.translate("MainWindow",
+                                                              "<html><head/><body><p align=\"right\">Y<span style=\" vertical-align:sub;\">1</span></p></body></html>",
+                                                              None, -1))
+        self.calibrateY2Button.setToolTip(
+            QtWidgets.QApplication.translate("MainWindow", "Calibrate y2, allows selection of coordinate inside plot",
+                                             None, -1))
+        self.calibrateY1Button.setToolTip(
+            QtWidgets.QApplication.translate("MainWindow", "Calibrate y1, allows selection of coordinate inside plot",
+                                             None, -1))
+        self.label_9.setText(QtWidgets.QApplication.translate("MainWindow",
+                                                              "<html><head/><body><p align=\"right\">Y<span style=\" vertical-align:sub;\">2</span></p></body></html>",
+                                                              None, -1))
         self.mapY1LineEdit.setText(QtWidgets.QApplication.translate("MainWindow", "0.0", None, -1))
         self.mapY2LineEdit.setText(QtWidgets.QApplication.translate("MainWindow", "1.0", None, -1))
         self.rawY1LineEdit.setText(QtWidgets.QApplication.translate("MainWindow", "0.0", None, -1))
-        self.label_10.setText(QtWidgets.QApplication.translate("MainWindow", "<html><head/><body><p align=\"right\">→ Y<span style=\" vertical-align:sub;\">1</span>\'</p></body></html>", None, -1))
-        self.label_11.setText(QtWidgets.QApplication.translate("MainWindow", "<html><head/><body><p align=\"right\">→ Y<span style=\" vertical-align:sub;\">2</span>\'</p></body></html>", None, -1))
+        self.label_10.setText(QtWidgets.QApplication.translate("MainWindow",
+                                                               "<html><head/><body><p align=\"right\">→ Y<span style=\" vertical-align:sub;\">1</span>\'</p></body></html>",
+                                                               None, -1))
+        self.label_11.setText(QtWidgets.QApplication.translate("MainWindow",
+                                                               "<html><head/><body><p align=\"right\">→ Y<span style=\" vertical-align:sub;\">2</span>\'</p></body></html>",
+                                                               None, -1))
+        self.groupBox.setTitle(
+            QtWidgets.QApplication.translate("MainWindow", "Apply calibration to data table below", None, -1))
         self.calibratedCheckBox.setText(QtWidgets.QApplication.translate("MainWindow", " Show Calibrated", None, -1))
         self.newRowButton.setText(QtWidgets.QApplication.translate("MainWindow", "New dataset", None, -1))
         self.deleteRowButton.setText(QtWidgets.QApplication.translate("MainWindow", "Delete dataset", None, -1))
         self.clearAllButton.setText(QtWidgets.QApplication.translate("MainWindow", "Clear all", None, -1))
-

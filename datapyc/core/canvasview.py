@@ -100,7 +100,7 @@ class NavigationHidden(NavigationToolbar2QT):
 
 
 class FigureCanvas(QFrame):
-    def __init__(self, parent=None, resetViewButton=None, panViewButton=None, zoomViewButton=None):
+    def __init__(self, parent=None):
         QFrame.__init__(self, parent)
 
         self.canvas = FigureCanvasQTAgg(Figure())
@@ -112,6 +112,7 @@ class FigureCanvas(QFrame):
 
         self._crosshair = None
 
+
     def axes(self):
         return self.canvas.figure.axes[0]
 
@@ -120,12 +121,14 @@ class FigureCanvas(QFrame):
         self.canvas.draw()
 
     def zoomOn(self):
-        self.toolbar.setZoomMode(on=True)  # toggle zoom at the level of the NavigationToolbar2QT, enabling actual zoom functionality
+        self.toolbar.setZoomMode(on=True)  # toggle zoom at the level of the NavigationToolbar2QT, enabling actual
+                                          # zoom functionality
         appstate.state = State.ZOOM
         self.select_crosshair()
 
     def panOn(self):
-        self.toolbar.setPanMode(on=True)  # toggle pan at the level of the NavigationToolbar2QT, enabling actual pan functionality
+        self.toolbar.setPanMode(on=True)  # toggle pan at the level of the NavigationToolbar2QT, enabling actual
+                                         # pan functionality
         appstate.state = State.PAN
         # self.zoomViewButton.setChecked(False)
         # self.panViewButton.setChecked(True)

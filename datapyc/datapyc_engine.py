@@ -38,6 +38,8 @@ class MainWindow(QMainWindow):
         self.calibrationModel = None
         self.rawLineEdits = None
         self.mapLineEdits = None
+        self.calibrationButtons = None
+        self.calibrationStates = None
         self.calibrationView = None
         self.leftValProperty = None
         self.rightValProperty = None
@@ -47,7 +49,6 @@ class MainWindow(QMainWindow):
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.ui.splitter.setSizes([12000, 250])
 
         self.setupUiCalibration()
         self.setupUiOptions()
@@ -66,9 +67,11 @@ class MainWindow(QMainWindow):
         self.ui.buttonBox.accepted.connect(self.saveAndClose)
         self.ui.buttonBox.rejected.connect(self.close)
 
+        self.ui.mplFigureCanvas.selectOn()
+
     def resizeAndCenter(self, maxSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)
-        maxRect = QRect(QPoint(0,0), maxSize)
+        maxRect = QRect(QPoint(0, 0), maxSize)
         self.setGeometry(QStyle.alignedRect(Qt.LeftToRight, Qt.AlignCenter, newSize, maxRect))
 
     def setupUiCalibration(self):
@@ -99,7 +102,6 @@ class MainWindow(QMainWindow):
         self.calibrationView = CalibrationView(self.rawLineEdits, self.mapLineEdits, self.calibrationModel)
         self.calibrationModel.setCalibration(*self.calibrationView.calibrationPoints())
 
-
     def setupUiOptions(self):
         dataCheckBoxCallbacks = {'savgolFilterX': self.ui.savgolFilterXCheckBox.isChecked,
                                  'savgolFilterY': self.ui.savgolFilterYCheckBox.isChecked,
@@ -116,7 +118,6 @@ class MainWindow(QMainWindow):
         plotRangeCallbacks = {'left': self.leftValProperty.read, 'right': self.rightValProperty.read}
 
         self.measurementData.setupUiCallbacks(dataCheckBoxCallbacks, plotRangeCallbacks)
-
 
     def setupUiDataModel(self):
         """Set up the main class instances holding the data extracted from placing markers on the canvas. The ListModel
@@ -145,7 +146,10 @@ class MainWindow(QMainWindow):
         # If data in the TableView is changed manually through editing, the 'dataChanged' signal will be emitted. The
         # following connects the signal to an update in th data stored in the ListModel
         self.currentPointsTable.dataChanged.connect(
-            lambda topLeft, bottomRight: self.ui.datasetListView.model().updateAssocData(newData=self.currentPointsTable.all()))
+            lambda topLeft, bottomRight: self.ui.datasetListView.model().updateAssocData(
+                newData=self.currentPointsTable.all()
+            )
+        )
 
         # Whenever the ListModel changes layout - for example, due to switching from one existing data set to another
         # one, this connection will ensure that the TableView will be updated with the correct data
@@ -276,12 +280,12 @@ class MainWindow(QMainWindow):
         self.setupXYDataBoxes()
         self.updatePlot()
 
-    #Slot(int)
+    @Slot(int)
     def xAxisUpdate(self, itemIndex):
         self.measurementData.setCurrentX(itemIndex)
         self.updatePlot(initialize=True)
 
-    #Slot(int)
+    @Slot(int)
     def yAxisUpdate(self, itemIndex):
         self.measurementData.setCurrentY(itemIndex)
         self.updatePlot(initialize=True)
@@ -317,40 +321,24 @@ class MainWindow(QMainWindow):
         """Main loop for acting on mouse events occurring in the canvas area."""
         if event.xdata is None or event.ydata is None:
             return None
-        if appstate.state == State.CALIBRATE_X1:
-            self.ui.rawX1LineEdit.setText(str(event.xdata))
-            self.ui.rawX1LineEdit.home(False)
-            self.ui.mapX1LineEdit.selectAll()
-            self.ui.mplFigureCanvas.selectOn()
-            self.ui.rawX1LineEdit.editingFinished.emit()
-            return None
-        if appstate.state == State.CALIBRATE_X2:
-            self.ui.rawX2LineEdit.setText(str(event.xdata))
-            self.ui.rawX2LineEdit.home(False)
-            self.ui.mapX2LineEdit.selectAll()
-            self.ui.mplFigureCanvas.selectOn()
-            self.ui.rawX2LineEdit.editingFinished.emit()
-            return None
-        if appstate.state == State.CALIBRATE_Y1:
-            self.ui.rawY1LineEdit.setText(str(event.ydata))
-            self.ui.rawY1LineEdit.home(False)
-            self.ui.mapY1LineEdit.selectAll()
-            self.ui.mplFigureCanvas.selectOn()
-            self.ui.rawY1LineEdit.editingFinished.emit()
-            return None
-        if appstate.state == State.CALIBRATE_Y2:
-            self.ui.rawY2LineEdit.setText(str(event.ydata))
-            self.ui.rawY2LineEdit.home(False)
-            self.ui.mapY2LineEdit.selectAll()
-            self.ui.mplFigureCanvas.selectOn()
-            self.ui.rawY2LineEdit.editingFinished.emit()
-            return None
+
+        for calibLabel in ['X1', 'X2', 'Y1', 'Y2']:
+            data = event.xdata if (calibLabel[0] == 'X') else event.ydata
+
+            if appstate.state == self.calibrationStates[calibLabel]:
+                self.rawLineEdits[calibLabel].setText(str(data))
+                self.rawLineEdits[calibLabel].home(False)
+                self.mapLineEdits[calibLabel].selectAll()
+                self.ui.mplFigureCanvas.selectOn()
+                self.ui.rawLineEdit[calibLabel].editingFinished.emit()
+                return None
+
         if appstate.state == State.SELECT:
             current_data = self.currentPointsTable.all()
             x1y1 = np.asarray([event.xdata, event.ydata])
             if self.doXYSwap:
                 x1y1 = np.flip(x1y1)
-            for index, x2y2 in enumerate(current_data.transpose()):  # self.ui.tableWidget.selected_data[self.ui.tableWidget.current_dataset]):
+            for index, x2y2 in enumerate(current_data.transpose()):
                 if self.isRelativelyClose(x1y1, x2y2):
                     self.currentPointsTable.removeColumn(index)
                     self.updatePlot()
@@ -382,5 +370,5 @@ class MainWindow(QMainWindow):
     def saveAndClose(self):
         """Save the extracted data and calibration information to file, then exit the application."""
         home = os.path.expanduser("~")
-        fileName, filter = QFileDialog.getSaveFileName(self, "Save Extracted Data", home, "Data Files (*.h5)")
+        fileName, _ = QFileDialog.getSaveFileName(self, "Save Extracted Data", home, "Data Files (*.h5)")
         self.allDatasetsList.filewrite(fileName)

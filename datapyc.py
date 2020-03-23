@@ -35,7 +35,7 @@ if __name__ == "__main__":
     home = os.path.expanduser("~")
     while not success:
         fileName, filter = QFileDialog.getOpenFileName(None, "Open", home,
-                                                       "Data files (*.h5 *.mat *.csv *.jpg *.png *.hdf5)")
+                                                       "Data files (*.h5 *.mat *.csv *.jpg *.jpeg *.png *.hdf5)")
         if fileName:
             measurementData = readMeasurementData(fileName)
             success = measurementData.success

@@ -134,22 +134,22 @@ class NumericalMeasurementData(MeasurementData):
 
     def findZData(self):
         zCandidates = OrderedDictMod()
-        for name, object in self.rawData.items():
-            if isinstance(object, np.ndarray) and isValid2dArray(object):
-                if not (hasIdenticalCols(object) or hasIdenticalRows(object)):
-                    zCandidates[name] = object
+        for name, theObject in self.rawData.items():
+            if isinstance(theObject, np.ndarray) and isValid2dArray(theObject):
+                if not (hasIdenticalCols(theObject) or hasIdenticalRows(theObject)):
+                    zCandidates[name] = theObject
         return zCandidates
 
     def findXYData(self):
         xyCandidates = OrderedDictMod()
-        for name, object in self.rawData.items():
-            if isinstance(object, np.ndarray):
-                if isValid1dArray(object):
-                    xyCandidates[name] = object.flatten()
-                if isValid2dArray(object) and hasIdenticalRows(object):
-                    xyCandidates[name] = object[0]
-                if isValid2dArray(object) and hasIdenticalCols(object):
-                    xyCandidates[name] = object[:, 0]
+        for name, theObject in self.rawData.items():
+            if isinstance(theObject, np.ndarray):
+                if isValid1dArray(theObject):
+                    xyCandidates[name] = theObject.flatten()
+                if isValid2dArray(theObject) and hasIdenticalRows(theObject):
+                    xyCandidates[name] = theObject[0]
+                if isValid2dArray(theObject) and hasIdenticalCols(theObject):
+                    xyCandidates[name] = theObject[:, 0]
         return xyCandidates
 
     def doBgndSubtraction(self, array, axis=0):
@@ -174,7 +174,7 @@ class NumericalMeasurementData(MeasurementData):
         if self.checkBoxCallbacks['logColoring']():
             norm = colors.SymLogNorm(linthresh=0.2, vmin=self.currentZ.data.min(), vmax=self.currentZ.data.max())
         else:
-             norm = None
+            norm = None
 
         if (self.currentX.data is None) or (self.currentY.data is None):
             im = axes.pcolormesh(zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs)
@@ -190,7 +190,7 @@ class ImageMeasurementData(MeasurementData):
         self.success = (image is not None)
 
     def canvasPlot(self, axes, **kwargs):
-        zData = self.currentZ.data[:, :, 0]
+        zData = np.sum(self.currentZ.data, axis=2) if (self.currentZ.data.ndim == 3) else self.currentZ.data
         rawZMin = zData.min()
         rawZMax = zData.max()
 
