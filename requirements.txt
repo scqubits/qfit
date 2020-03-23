@@ -1,0 +1,5 @@
+numpy>=1.14.2
+scipy>=1.1.0
+matplotlib>=3.0.0
+scqubits>=1.2
+pyside2>=5.14
