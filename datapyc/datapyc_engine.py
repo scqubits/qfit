@@ -128,11 +128,11 @@ class MainWindow(QMainWindow):
         """Set up the main class instances holding the data extracted from placing markers on the canvas. The ListModel
          instance holds all data, whereas the TableModel instance holds data of the currently selected data set."""
         self.currentPointsTable = TableModel()
-        self.currentPointsTable.setCalibrationModel(self.calibrationModel)
+        self.currentPointsTable.setAdaptiveCalibrationFunc(self.calibrationModel.adaptiveConversionFunc)
         self.ui.dataTableView.setModel(self.currentPointsTable)
 
         self.allDatasetsList = ListModel()
-        self.allDatasetsList.calibrationData = self.calibrationModel
+        self.allDatasetsList.setCalibrationFunc(self.calibrationModel.calibrateDataset)
         self.ui.datasetListView.setModel(self.allDatasetsList)
 
     def setupUiXYZComboBoxes(self):
@@ -241,7 +241,6 @@ class MainWindow(QMainWindow):
     @Slot()
     def updatePlot(self, slotdummy=None, initialize=False, toggleXY=False, **kwargs):
         """Update the current plot of measurement data and markers of selected data points."""
-
         # If this is not the first time of plotting, store the current axes limits and clear the graph.
         if (not initialize) and (not toggleXY):
             xlim = self.axes.get_xlim()
@@ -294,7 +293,7 @@ class MainWindow(QMainWindow):
     def zDataUpdate(self, itemIndex):
         self.measurementData.setCurrentZ(itemIndex)
         self.setupXYDataBoxes()
-        self.updatePlot()
+        self.updatePlot(initialize=True)
 
     @Slot(int)
     def xAxisUpdate(self, itemIndex):
@@ -331,7 +330,7 @@ class MainWindow(QMainWindow):
                 self.rawLineEdits[calibLabel].home(False)
                 self.mapLineEdits[calibLabel].selectAll()
                 self.ui.mplFigureCanvas.selectOn()
-                self.rawLineEdit[calibLabel].editingFinished.emit()
+                self.rawLineEdits[calibLabel].editingFinished.emit()
                 return None
 
         if appstate.state == State.SELECT:
@@ -371,5 +370,5 @@ class MainWindow(QMainWindow):
     def saveAndClose(self):
         """Save the extracted data and calibration information to file, then exit the application."""
         home = os.path.expanduser("~")
-        fileName, _ = QFileDialog.getSaveFileName(self, "Save Extracted Data", home, "Data Files (*.h5)")
+        fileName, _ = QFileDialog.getSaveFileName(self, "Save Extracted Data", home, "scQubits file (*.h5);;Data file (*.csv)")
         self.allDatasetsList.filewrite(fileName)

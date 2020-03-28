@@ -144,8 +144,8 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.quickWidget.sizePolicy().hasHeightForWidth())
         self.quickWidget.setSizePolicy(sizePolicy)
-        self.quickWidget.setMinimumSize(QtCore.QSize(0, 35))
-        self.quickWidget.setMaximumSize(QtCore.QSize(16777215, 35))
+        self.quickWidget.setMinimumSize(QtCore.QSize(0, 30))
+        self.quickWidget.setMaximumSize(QtCore.QSize(16777215, 30))
         self.quickWidget.setAutoFillBackground(True)
         self.quickWidget.setResizeMode(QQuickWidget.SizeRootObjectToView)
         qml_file = os.path.join(os.path.dirname(__file__), "rangeslider.qml")
@@ -455,7 +455,7 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "DataSelector", None, -1))
+        MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "datapyc", None, -1))
         self.resetViewButton.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Reset plot area", None, -1))
         self.panViewButton.setToolTip(
             QtWidgets.QApplication.translate("MainWindow", "Pan mode: move plot region by dragging", None, -1))

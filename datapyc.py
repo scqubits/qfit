@@ -31,20 +31,21 @@ if __name__ == "__main__":
     font.setPointSize(9)
     app.setFont(font)
 
-    success = False
-    home = os.path.expanduser("~")
-    while not success:
-        fileName, filter = QFileDialog.getOpenFileName(None, "Open", home,
-                                                       "Data files (*.h5 *.mat *.csv *.jpg *.jpeg *.png *.hdf5)")
-        if fileName:
-            measurementData = readMeasurementData(fileName)
-            success = measurementData.success
-        else:
-            exit()
+    # success = False
+    # home = os.path.expanduser("~")
+    # while not success:
+    #     fileName, filter = QFileDialog.getOpenFileName(None, "Open", home,
+    #                                                    "Data files (*.h5 *.mat *.csv *.jpg *.jpeg *.png *.hdf5)")
+    #     if fileName:
+    #         measurementData = readMeasurementData(fileName)
+    #         success = measurementData.success
+    #     else:
+    #         exit()
 
     # measurementData = readMeasurementData('C:/Users/drjen/PycharmProjects/DataSelector/scratch/00000_twotoneVsPowerTransmission.h5')
     # measurementData = readMeasurementData('C:/Users/drjen/PycharmProjects/DataSelector/scratch/spec_scan_flux_gate_20190629_v05.mat')
     # measurementData = readMeasurementData('C:/Users/drjen/Desktop/Spectroscopy.JPG')
+    measurementData = readMeasurementData(r"C:\Users\drjen\PycharmProjects\datapyc\datapyc\scratch\aug_summary_4_1_copy.hdf5")
 
     window = MainWindow(measurementData)
     maxSize = maxWindowSize(app)

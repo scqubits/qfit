@@ -118,13 +118,14 @@ class NumericalMeasurementData(MeasurementData):
     def inferXYData(self):
         self.xyCandidates = self.findXYData()
         self.setXYCompatibles()
-
         if self.currentXCompatibles:
             self._currentX = self.currentXCompatibles.itemByIndex(0)
         if self.currentYCompatibles:
             self._currentY = self.currentYCompatibles.itemByIndex(0)
 
     def setXYCompatibles(self):
+        self.currentXCompatibles = OrderedDictMod()
+        self.currentYCompatibles = OrderedDictMod()
         ydim, xdim = self._currentZ.data.shape
         for name, data in self.xyCandidates.items():
             if len(data) == xdim:

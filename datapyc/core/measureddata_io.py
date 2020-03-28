@@ -45,12 +45,12 @@ def readMeasurementData(fileName):
         reader = MatlabReader()
     elif suffix.lower() == '.csv':
         reader = CSVReader()
-    measurementData = reader.from_file(fileName)
+    measurementData = reader.fromFile(fileName)
     return measurementData
 
 
 class ImageFileReader:
-    def from_file(self, fileName):
+    def fromFile(self, fileName):
         _, fileStr = os.path.split(fileName)
         try:
             imageData = imread(fileName)
@@ -60,15 +60,57 @@ class ImageFileReader:
 
 
 class GenericH5Reader:
-    def from_file(self, fileName):
+    def fromFile(self, fileName):
         dataCollection = {}
 
         def visitor_func(name, data):
-            if isinstance(data, h5py.Dataset):
+            if isinstance(data, h5py.Dataset) and data[:].dtype in [np.float32, np.float64]:
                 dataCollection[name] = data[:]
 
         with h5py.File(fileName, 'r') as h5File:
+            if isLikelyLabberFile(h5File):
+                labberReader = LabberH5Reader()
+                return labberReader.fromFile(fileName)
             h5File.visititems(visitor_func)
+        return NumericalMeasurementData(dataCollection)
+
+
+class LabberH5Reader:
+    def fromFile(self, fileName):
+
+        with h5py.File(fileName, 'r') as h5File:
+            dataEntries = ['Data']
+            dataEntries += [name + '/Data' for name in h5File if name[0:4] == 'Log_']
+
+            dataNames = []
+            dataArrays = []
+
+            dataCollection = {}
+
+            for entry in dataEntries:
+                array = h5File[entry + '/Data'][:]
+                if array.ndim != 3:
+                    raise Exception('Error reading data file. File appears to be a Labber file, but its structure does not'
+                                    'match employed heuristics.')
+                dataArrays.append(array)
+
+                names = h5File[entry + '/Channel names'][:]
+
+                if isinstance(names[0], str):
+                    dataNames.append(names)
+                else:
+                    newNames = []
+                    for infoTuple in names:
+                        newNames.append(infoTuple[0] + infoTuple[1])
+                        names = newNames
+                        dataNames.append(newNames)
+
+                dataCollection[names[0] + ' ' + entry] = array[:, 0, 0]
+                dataCollection[names[1] + ' ' + entry] = array[0, 1, :]
+                dataCollection[names[2] + ' ' + entry] = array[:, 2, :]
+                if len(names) == 4:
+                    dataCollection[names[3] + ' ' + entry] = array[:, 3, :]
+
         return NumericalMeasurementData(dataCollection)
 
 
@@ -80,3 +122,10 @@ class MatlabReader:
 class CSVReader:
     def from_file(self, fileName):
         return NumericalMeasurementData({fileName: np.loadtxt(fileName)})
+
+
+def isLikelyLabberFile(h5File):
+    # Heuristic inspection to determine whether the h5 file might be from Labber
+    if {"Data", "Instrument config", "Settings", "Step config"}.issubset(set(h5File)):
+        return True
+    return False

@@ -14,9 +14,6 @@ import os
 import datapyc.io.file_io_serializers as io_serializers
 
 
-# supported file types
-FILE_TYPES = ['.h5 | .hdf5', '.csv']
-
 
 def serialize(the_object):
     """
@@ -37,7 +34,6 @@ def serialize(the_object):
     if hasattr(io_serializers, typename + '_serialize'):
         serializer_method = getattr(io_serializers, typename + '_serialize')
         return serializer_method(the_object)
-
     raise NotImplementedError("No implementation for writing {} to file".format(typename))
 
 
@@ -81,8 +77,6 @@ class FileIOFactory:
             return io_backends.CSVWriter(file_name)
         if suffix in ('.h5', '.hdf5'):
             return io_backends.H5Writer(file_name, file_handle=file_handle)
-        raise Exception("Extension '{}' of given file name '{}' does not match any supported "
-                        "file type: {}".format(suffix, file_name, FILE_TYPES))
 
 
 IO = FileIOFactory()

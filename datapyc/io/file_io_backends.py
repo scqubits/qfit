@@ -11,6 +11,9 @@
 
 
 from abc import ABC, abstractmethod
+import os
+import numpy as np
+import csv
 
 
 try:
@@ -106,3 +109,53 @@ class H5Writer(IOWriter):
         self.write_attributes(h5file_group)
         self.write_ndarrays(h5file_group)
         self.write_objects(h5file_group)
+
+
+class CSVWriter(IOWriter):
+    """
+    Given filename='somename.csv', write initdata into somename.csv
+    Then, additional csv files are written for each dataset, with filenames: 'somename_' + dataname0 + '.csv' etc.
+    """
+    def append_ndarray_info(self, attributes):
+        """Add data set information to attributes, so that dataset names and dimensions are available
+        in attributes CSV file."""
+        for index, dataname in enumerate(self.io_data.ndarrays.keys()):
+            data = self.io_data.ndarrays[dataname]
+            attributes['dataset' + str(index)] = dataname
+
+            if data.ndim == 3:
+                slice_count = len(data)
+            else:
+                slice_count = 1
+            attributes['dataset' + str(index) + '.slices'] = slice_count
+        return attributes
+
+    def write_attributes(self, filename):
+        attributes = self.io_data.attributes
+        attributes["__type"] = self.io_data.typename
+        attributes = self.append_ndarray_info(attributes)
+        with open(filename, mode='w', newline='') as meta_file:
+            file_writer = csv.writer(meta_file, delimiter=',')
+            file_writer.writerow(attributes.keys())
+            file_writer.writerow(attributes.values())
+
+    def write_ndarrays(self, filename):
+        filename_stub, _ = os.path.splitext(filename)
+        for dataname, dataset in self.io_data.ndarrays.items():
+            filename = filename_stub + '_' + dataname + '.csv'
+            self.write_data(filename, dataset)
+
+    def write_data(self, filename, dataset):
+        if dataset.ndim <= 2:
+            np.savetxt(filename, dataset)
+        else:
+            raise Exception("Error: Unexpected array dimensions > 2.")
+
+    def write_objects(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def to_file(self, io_data, **kwargs):
+        # with open(self.filename, 'ab') as outfile:
+        # self.io_data = io_data
+        self.write_attributes(self.filename)
+        self.write_ndarrays(self.filename)

@@ -19,9 +19,15 @@ class TableModel(QAbstractTableModel):
     """This class holds one data set, as extracted by markers on the canvas. In addition, it references calibration
     data to expose either the raw selected data, or their calibrated counterparts."""
     def __init__(self, data=None):
+        """
+        Parameters
+        ----------
+        data: np.ndarray
+            numpy array of floats, shape=(2, N)
+        """
         super().__init__()
         self._data = data or np.empty(shape=(2, 0), dtype=np.float_)
-        self.calibrationModel = None
+        self._adaptiveCalibrationFunc = None
 
     @Slot()
     def all(self):
@@ -53,7 +59,7 @@ class TableModel(QAbstractTableModel):
         str
         """
         if role == Qt.DisplayRole:
-            conversionFunc = self.calibrationModel.conversionFunc()
+            conversionFunc = self._adaptiveCalibrationFunc()
             value = conversionFunc([self._data[0, index.column()], self._data[1, index.column()]])
             return "{:#.6g}".format(value[index.row()])
 
@@ -164,8 +170,15 @@ class TableModel(QAbstractTableModel):
         self.setData(self.index(1, max_col), yval, role=Qt.EditRole)
         self.layoutChanged.emit()
 
-    def setCalibrationModel(self, calibrationModel):
-        self.calibrationModel = calibrationModel
+    def setAdaptiveCalibrationFunc(self, adaptiveCalibrationCallback):
+        """
+        Record the CalibrationModel instance associated with the data.
+
+        Parameters
+        ----------
+        adaptiveCalibrationCallback: function
+        """
+        self._adaptiveCalibrationFunc = adaptiveCalibrationCallback
 
 
 class ListModelMeta(type(QAbstractListModel), type(serializers.Serializable)):
@@ -175,24 +188,24 @@ class ListModelMeta(type(QAbstractListModel), type(serializers.Serializable)):
 class ListModel(QAbstractListModel, serializers.Serializable, metaclass=ListModelMeta):
     def __init__(self):
         super().__init__()
-        self.dataList = ['dataset1']
+        self.dataNames = ['dataset1']
         self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
-        self.calibrationModel = None
+        self._calibrationFunc = None
         self._currentRow = 0
 
     def rowCount(self, *args):
-        return len(self.dataList)
+        return len(self.dataNames)
 
     def data(self, index, role):
         if role == Qt.DisplayRole:
-            str_value = self.dataList[index.row()]
+            str_value = self.dataNames[index.row()]
             return str_value
 
     def setData(self, index, value, role=None):
         if not (index.isValid() and role == Qt.EditRole):
             return False
         try:
-            self.dataList[index.row()] = value
+            self.dataNames[index.row()] = value
         except (ValueError, IndexError):
             return False
         self.dataChanged.emit(index, index)
@@ -207,7 +220,7 @@ class ListModel(QAbstractListModel, serializers.Serializable, metaclass=ListMode
 
     def insertRow(self, row, parent=QModelIndex(), *args, **kwargs):
         self.beginInsertRows(parent, row, row)
-        self.dataList.insert(row, '')
+        self.dataNames.insert(row, '')
         self.assocDataList.insert(row, np.empty(shape=(2, 0), dtype=np.float_))
         self.endInsertRows()
         self.layoutChanged.emit()
@@ -220,7 +233,7 @@ class ListModel(QAbstractListModel, serializers.Serializable, metaclass=ListMode
             return True
 
         self.beginRemoveRows(parent, row, row)
-        self.dataList.pop(row)
+        self.dataNames.pop(row)
         self.assocDataList.pop(row)
         self.endRemoveRows()
         self.layoutChanged.emit()
@@ -241,7 +254,7 @@ class ListModel(QAbstractListModel, serializers.Serializable, metaclass=ListMode
     @Slot()
     def removeAll(self):
         self.beginRemoveRows(QModelIndex(), 0, self.rowCount() - 1)
-        self.dataList = ['dataset1']
+        self.dataNames = ['dataset1']
         self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
         self.endRemoveRows()
         self.layoutChanged.emit()
@@ -265,8 +278,8 @@ class ListModel(QAbstractListModel, serializers.Serializable, metaclass=ListMode
     def updateAssocData(self, newData):
         self.assocDataList[self.currentRow] = newData
 
-    def setCalibrationModel(self, calibrationModel):
-        self.calibrationModel = calibrationModel
+    def setCalibrationFunc(self, calibrationModelCallback):
+        self._calibrationFunc = calibrationModelCallback
 
     def serialize(self):
         """
@@ -276,9 +289,11 @@ class ListModel(QAbstractListModel, serializers.Serializable, metaclass=ListMode
         -------
         IOData
         """
-        initdata = {'datanames': self.dataList,
-                    'datalist': self.assocDataList,
-                    'calibration_data': self.calibrationModel}
+        calibratedData = [self._calibrationFunc(dataSet) for dataSet in self.assocDataList]
+        initdata = {
+            'datanames': self.dataNames,
+            'datalist': calibratedData
+        }
         iodata = serializers.dict_serialize(initdata)
-        iodata.typename = 'DatapycStore'
+        iodata.typename = 'FitData'
         return iodata

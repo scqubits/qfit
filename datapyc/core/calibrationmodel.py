@@ -10,50 +10,45 @@
 ############################################################################
 
 import numpy as np
-from datapyc.io.file_io_serializers import Serializable
 
 
-class CalibrationModel(Serializable):
-    def __init__(self, rawVec1=None, rawVec2=None, mapVec1=None, mapVec2=None):
-        self.rawVec1 = rawVec1
-        self.rawVec2 = rawVec2
-        self.mapVec1 = mapVec1
-        self.mapVec2 = mapVec2
+class CalibrationModel:
+    def __init__(self):
+        self.rawVec1 = None
+        self.rawVec2 = None
+        self.mapVec1 = None
+        self.mapVec2 = None
         self.bVec = None
         self.alphaMat = None
         self.setCalibration((1., 0.), (0., 1.), (1., 0.), (0., 1.))
         self.applyCalibration = False
-        self.msg = None
 
     def toggleCalibration(self):
         self.applyCalibration = not self.applyCalibration
 
-    def setCalibration(self, rawVec1, rawVec2, mapVec1, mapVec2):
-        x1, y1 = rawVec1
-        x2, y2 = rawVec2
-        x1p, y1p = mapVec1
-        x2p, y2p = mapVec2
-
-        # if (x1 == x2) or (y1 == y2):
-        #     self.view.calibrationErrorMsg()
-        #     return
+    def setCalibration(self, rVec1, rVec2, mVec1, mVec2):
+        x1, y1 = rVec1
+        x2, y2 = rVec2
+        x1p, y1p = mVec1
+        x2p, y2p = mVec2
 
         alphaX = (x1p - x2p) / (x1 - x2)
         alphaY = (y1p - y2p) / (y1 - y2)
 
         self.bVec = np.asarray([x1p - alphaX * x1, y1p - alphaY * y1])
         self.alphaMat = np.asarray([[alphaX, 0.], [0., alphaY]])
-        self.rawVec1, self.rawVec2, self.mapVec1, self.mapVec2 = rawVec1, rawVec2, mapVec1, mapVec2
+        self.rawVec1, self.rawVec2, self.mapVec1, self.mapVec2 = rVec1, rVec2, mVec1, mVec2
 
-    def conversionFunc(self):
-        def identityFunc(rowVec):
-            return rowVec
+    def calibrateDataset(self, array):
+        return np.apply_along_axis(self.calibrateDataPoint, axis=0, arr=array)
 
-        def convFunc(rawVec):
-            rVec = np.asarray(rawVec)
-            mVec = np.matmul(self.alphaMat, rVec) + self.bVec
-            return mVec.tolist()
+    def calibrateDataPoint(self, rawVec):
+        if isinstance(rawVec, list):
+            rawVec = np.asarray(rawVec)
+        mVec = np.matmul(self.alphaMat, rawVec) + self.bVec
+        return mVec
 
+    def adaptiveConversionFunc(self):
         if not self.applyCalibration:
-            return identityFunc
-        return convFunc
+            return lambda vec: vec
+        return self.calibrateDataPoint

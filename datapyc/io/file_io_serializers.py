@@ -172,7 +172,7 @@ def list_serialize(list_instance):
     -------
     IOData
     """
-    import scqubits.utils.file_io as io
+    import datapyc.io.file_io as io
     attributes = {}
     ndarrays = {}
     objects = {}
