@@ -24,7 +24,7 @@ from datapyc.core.appstate import State
 from datapyc.core.calibrationmodel import CalibrationModel
 from datapyc.core.calibrationview import CalibrationView
 from datapyc.core.datamodel import TableModel, ListModel
-from datapyc.core.ui_mainwindow import Ui_MainWindow
+from datapyc.core.ui_window import Ui_MainWindow
 
 
 class MainWindow(QMainWindow):
@@ -63,16 +63,9 @@ class MainWindow(QMainWindow):
         self.uiDataControlConnects()
         self.uiXYZComboBoxesConnects()
         self.uiMplCanvasConnects()
-
-        self.ui.buttonBox.accepted.connect(self.saveAndClose)
-        self.ui.buttonBox.rejected.connect(self.close)
+        self.saveAndCloseConnects()
 
         self.ui.mplFigureCanvas.selectOn()
-
-    def resizeAndCenter(self, maxSize):
-        newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)
-        maxRect = QRect(QPoint(0, 0), maxSize)
-        self.setGeometry(QStyle.alignedRect(Qt.LeftToRight, Qt.AlignCenter, newSize, maxRect))
 
     def setupUiCalibration(self):
         """For the interface that enables calibration of data with respect to x and y axis, group QLineEdit elements
@@ -116,7 +109,7 @@ class MainWindow(QMainWindow):
                                  'swapXY': self.ui.swapXYCheckBox.isChecked,
                                  'logColoring': self.ui.logScaleCheckBox.isChecked}
 
-        # The following are the left and right values of the sliders used in manipulating the plot range.
+        # Left and right values of the double slider manipulating the z plot range
         self.minRangeSliderProperty = QQmlProperty(self.ui.quickWidget.rootObject(), "first.value")
         self.maxRangeSliderProperty = QQmlProperty(self.ui.quickWidget.rootObject(), "second.value")
 
@@ -204,11 +197,6 @@ class MainWindow(QMainWindow):
         for lineEdit in (list(self.rawLineEdits.values()) + list(self.mapLineEdits.values())):
             lineEdit.editingFinished.connect(self.updateCalibration)
 
-    def uiXYZComboBoxesConnects(self):
-        self.ui.zComboBox.activated.connect(self.zDataUpdate)
-        self.ui.xComboBox.activated.connect(self.xAxisUpdate)
-        self.ui.yComboBox.activated.connect(self.yAxisUpdate)
-
     def uiCanvasControlConnects(self):
         """Connect the UI buttons for reset, zoom, and pan functions of the matplotlib canvas."""
         self.ui.resetViewButton.clicked.connect(self.ui.mplFigureCanvas.resetView)
@@ -221,11 +209,20 @@ class MainWindow(QMainWindow):
         self.ui.deleteRowButton.clicked.connect(self.allDatasetsList.removeCurrentRow)
         self.ui.clearAllButton.clicked.connect(self.allDatasetsList.removeAll)
 
+    def uiXYZComboBoxesConnects(self):
+        self.ui.zComboBox.activated.connect(self.zDataUpdate)
+        self.ui.xComboBox.activated.connect(self.xAxisUpdate)
+        self.ui.yComboBox.activated.connect(self.yAxisUpdate)
+
     def uiMplCanvasConnects(self):
         """Set up the matplotlib canvas and start monitoring for mouse click events in the canvas area."""
         self.axes = self.ui.mplFigureCanvas.canvas.figure.subplots()
         self.updatePlot(initialize=True)
-        self.cidCanvas = self.axes.figure.canvas.mpl_connect('button_press_event', self.mplOnClick)
+        self.cidCanvas = self.axes.figure.canvas.mpl_connect('button_press_event', self.canvasClickMonitoring)
+
+    def saveAndCloseConnects(self):
+        self.ui.buttonBox.accepted.connect(self.saveAndClose)
+        self.ui.buttonBox.rejected.connect(self.close)
 
     def setupXYDataBoxes(self):
         self.ui.xComboBox.clear()
@@ -237,6 +234,36 @@ class MainWindow(QMainWindow):
         yDataNames = [dataName for dataName in self.measurementData.currentYCompatibles.keys()]
         self.ui.yComboBox.addItems(yDataNames)
         self.ui.yComboBox.setCurrentText(self.measurementData.currentY.name)
+
+    @Slot()
+    def canvasClickMonitoring(self, event):
+        """Main loop for acting on mouse events occurring in the canvas area."""
+        if event.xdata is None or event.ydata is None:
+            return None
+
+        for calibrationLabel in ['X1', 'X2', 'Y1', 'Y2']:
+            data = event.xdata if (calibrationLabel[0] == 'X') else event.ydata
+
+            if appstate.state == self.calibrationStates[calibrationLabel]:
+                self.rawLineEdits[calibrationLabel].setText(str(data))
+                self.rawLineEdits[calibrationLabel].home(False)
+                self.mapLineEdits[calibrationLabel].selectAll()
+                self.ui.mplFigureCanvas.selectOn()
+                self.rawLineEdits[calibrationLabel].editingFinished.emit()
+                return None
+
+        if appstate.state == State.SELECT:
+            current_data = self.currentPointsTable.all()
+            x1y1 = np.asarray([event.xdata, event.ydata])
+            if self.doXYSwap:
+                x1y1 = np.flip(x1y1)
+            for index, x2y2 in enumerate(current_data.transpose()):
+                if self.isRelativelyClose(x1y1, x2y2):
+                    self.currentPointsTable.removeColumn(index)
+                    self.updatePlot()
+                    return None
+            self.currentPointsTable.append(*x1y1)
+            self.updatePlot()
 
     @Slot()
     def updatePlot(self, slotdummy=None, initialize=False, toggleXY=False, **kwargs):
@@ -316,36 +343,6 @@ class MainWindow(QMainWindow):
         else:
             return lambda array: array
 
-    @Slot()
-    def mplOnClick(self, event):
-        """Main loop for acting on mouse events occurring in the canvas area."""
-        if event.xdata is None or event.ydata is None:
-            return None
-
-        for calibLabel in ['X1', 'X2', 'Y1', 'Y2']:
-            data = event.xdata if (calibLabel[0] == 'X') else event.ydata
-
-            if appstate.state == self.calibrationStates[calibLabel]:
-                self.rawLineEdits[calibLabel].setText(str(data))
-                self.rawLineEdits[calibLabel].home(False)
-                self.mapLineEdits[calibLabel].selectAll()
-                self.ui.mplFigureCanvas.selectOn()
-                self.rawLineEdits[calibLabel].editingFinished.emit()
-                return None
-
-        if appstate.state == State.SELECT:
-            current_data = self.currentPointsTable.all()
-            x1y1 = np.asarray([event.xdata, event.ydata])
-            if self.doXYSwap:
-                x1y1 = np.flip(x1y1)
-            for index, x2y2 in enumerate(current_data.transpose()):
-                if self.isRelativelyClose(x1y1, x2y2):
-                    self.currentPointsTable.removeColumn(index)
-                    self.updatePlot()
-                    return None
-            self.currentPointsTable.append(*x1y1)
-            self.updatePlot()
-
     def isRelativelyClose(self, x1y1, x2y2):
         """Check whether the point x1y1 is relatively close to x2y2, given the current field of view on the canvas."""
         xlim = self.axes.get_xlim() if not self.doXYSwap else self.axes.get_ylim()
@@ -372,3 +369,8 @@ class MainWindow(QMainWindow):
         home = os.path.expanduser("~")
         fileName, _ = QFileDialog.getSaveFileName(self, "Save Extracted Data", home, "scQubits file (*.h5);;Data file (*.csv)")
         self.allDatasetsList.filewrite(fileName)
+
+    def resizeAndCenter(self, maxSize):
+        newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)
+        maxRect = QRect(QPoint(0, 0), maxSize)
+        self.setGeometry(QStyle.alignedRect(Qt.LeftToRight, Qt.AlignCenter, newSize, maxRect))

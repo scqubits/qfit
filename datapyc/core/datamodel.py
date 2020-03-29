@@ -281,6 +281,19 @@ class ListModel(QAbstractListModel, serializers.Serializable, metaclass=ListMode
     def setCalibrationFunc(self, calibrationModelCallback):
         self._calibrationFunc = calibrationModelCallback
 
+    def allDataSorted(self, applyCalibration=True):
+        if applyCalibration:
+            data = [self._calibrationFunc(dataSet) for dataSet in self.assocDataList]
+        else:
+            data = self.assocDataList
+        sortIndices = [np.argsort(xValues) for xValues, _ in data]
+        xData = [dataSet[0] for dataSet in data]
+        yData = [dataSet[1] for dataSet in data]
+        sortedXData = [np.take(xValues, indices) for xValues, indices in zip(xData, sortIndices)]
+        sortedYData = [np.take(yValues, indices) for yValues, indices in zip(yData, sortIndices)]
+        allData = [np.asarray([xSet, ySet]).transpose() for xSet, ySet in zip(sortedXData, sortedYData)]
+        return allData
+
     def serialize(self):
         """
         Convert the content of the current class instance into IOData format.
@@ -289,10 +302,11 @@ class ListModel(QAbstractListModel, serializers.Serializable, metaclass=ListMode
         -------
         IOData
         """
-        calibratedData = [self._calibrationFunc(dataSet) for dataSet in self.assocDataList]
+        # calibratedData = [self._calibrationFunc(dataSet) for dataSet in self.assocDataList]
+        processedData = self.allDataSorted()
         initdata = {
             'datanames': self.dataNames,
-            'datalist': calibratedData
+            'datalist': processedData
         }
         iodata = serializers.dict_serialize(initdata)
         iodata.typename = 'FitData'

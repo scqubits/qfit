@@ -1,4 +1,4 @@
-# datapyc.py
+# main.py
 #
 # This file is part of datapyc.
 #
@@ -9,19 +9,15 @@
 #    LICENSE file in the root directory of this source tree.
 ############################################################################
 
-import os
 import sys
 
 from PySide2.QtCore import QSize
 from PySide2.QtGui import QFont
-from PySide2.QtWidgets import QApplication, QFileDialog
+from PySide2.QtWidgets import QApplication, QStyleFactory
 
 from datapyc.core.measureddata_io import readMeasurementData
 from datapyc.datapyc_engine import MainWindow
 
-
-def maxWindowSize(app):
-    return QSize(app.desktop().availableGeometry().size())
 
 
 if __name__ == "__main__":
@@ -44,11 +40,11 @@ if __name__ == "__main__":
 
     # measurementData = readMeasurementData('C:/Users/drjen/PycharmProjects/DataSelector/scratch/00000_twotoneVsPowerTransmission.h5')
     # measurementData = readMeasurementData('C:/Users/drjen/PycharmProjects/DataSelector/scratch/spec_scan_flux_gate_20190629_v05.mat')
-    # measurementData = readMeasurementData('C:/Users/drjen/Desktop/Spectroscopy.JPG')
-    measurementData = readMeasurementData(r"C:\Users\drjen\PycharmProjects\datapyc\datapyc\scratch\aug_summary_4_1_copy.hdf5")
+    measurementData = readMeasurementData('C:/Users/drjen/Desktop/Spectroscopy.JPEG')
+    # measurementData = readMeasurementData(r"C:\Users\drjen\PycharmProjects\datapyc\datapyc\scratch\aug_summary_4_1.hdf5")
 
     window = MainWindow(measurementData)
-    maxSize = maxWindowSize(app)
+    maxSize = QSize(app.desktop().availableGeometry().size())
     window.resizeAndCenter(maxSize)
     window.show()
     sys.exit(app.exec_())

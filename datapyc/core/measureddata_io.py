@@ -39,12 +39,14 @@ def readMeasurementData(fileName):
 
     if suffix.lower() in ('.h5', '.hdf5'):
         reader = GenericH5Reader()
-    elif suffix.lower() in ('.jpg', '.png'):
+    elif suffix.lower() in ('.jpg', '.jpeg', '.png'):
         reader = ImageFileReader()
     elif suffix.lower() == '.mat':
         reader = MatlabReader()
     elif suffix.lower() == '.csv':
         reader = CSVReader()
+    else:
+        raise Exception('IOError: The requested file type is not supported.')
     measurementData = reader.fromFile(fileName)
     return measurementData
 
@@ -84,13 +86,12 @@ class LabberH5Reader:
 
             dataNames = []
             dataArrays = []
-
             dataCollection = {}
 
             for entry in dataEntries:
                 array = h5File[entry + '/Data'][:]
                 if array.ndim != 3:
-                    raise Exception('Error reading data file. File appears to be a Labber file, but its structure does not'
+                    raise Exception('Error reading data file. Appears to be a Labber file, but its structure does not'
                                     'match employed heuristics.')
                 dataArrays.append(array)
 
@@ -101,7 +102,7 @@ class LabberH5Reader:
                 else:
                     newNames = []
                     for infoTuple in names:
-                        newNames.append(infoTuple[0] + infoTuple[1])
+                        newNames.append(infoTuple[0] + ' ' + infoTuple[1])
                         names = newNames
                         dataNames.append(newNames)
 
