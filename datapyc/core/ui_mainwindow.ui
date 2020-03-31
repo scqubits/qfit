@@ -48,9 +48,9 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>10</y>
-         <width>41</width>
-         <height>31</height>
+         <y>20</y>
+         <width>40</width>
+         <height>40</height>
         </rect>
        </property>
        <property name="toolTip">
@@ -68,9 +68,9 @@
        <property name="geometry">
         <rect>
          <x>60</x>
-         <y>10</y>
-         <width>41</width>
-         <height>31</height>
+         <y>20</y>
+         <width>40</width>
+         <height>40</height>
         </rect>
        </property>
        <property name="toolTip">
@@ -91,9 +91,9 @@
        <property name="geometry">
         <rect>
          <x>110</x>
-         <y>10</y>
-         <width>41</width>
-         <height>31</height>
+         <y>20</y>
+         <width>40</width>
+         <height>40</height>
         </rect>
        </property>
        <property name="toolTip">
@@ -115,9 +115,21 @@
         <rect>
          <x>170</x>
          <y>20</y>
-         <width>98</width>
-         <height>17</height>
+         <width>200</width>
+         <height>40</height>
         </rect>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>100</width>
+         <height>0</height>
+        </size>
        </property>
        <property name="font">
         <font>
@@ -132,6 +144,10 @@
         <string>Swap X↔Y</string>
        </property>
       </widget>
+      <zorder>swapXYCheckBox</zorder>
+      <zorder>zoomViewButton</zorder>
+      <zorder>panViewButton</zorder>
+      <zorder>resetViewButton</zorder>
      </widget>
     </item>
     <item row="9" column="4">
@@ -145,13 +161,13 @@
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>100</height>
+        <height>150</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
         <width>16777215</width>
-        <height>100</height>
+        <height>150</height>
        </size>
       </property>
       <property name="styleSheet">
@@ -652,10 +668,16 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>150</height>
+       </size>
+      </property>
       <property name="maximumSize">
        <size>
         <width>230</width>
-        <height>100</height>
+        <height>150</height>
        </size>
       </property>
      </widget>
