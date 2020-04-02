@@ -20,7 +20,6 @@ from datapyc.core.measureddata_io import readMeasurementData
 from datapyc.datapyc_engine import MainWindow
 
 
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     font = QFont()

@@ -98,7 +98,7 @@ if not ISRELEASED:
     FULLVERSION += '.dev'+str(MICRO)+git_short_hash()
 
 
-def write_version_py(filename='datapy/version.py'):
+def write_version_py(filename='datapyc/version.py'):
     cnt = """\
 # THIS FILE IS GENERATED FROM datapyc SETUP.PY
 short_version = '%(version)s'
