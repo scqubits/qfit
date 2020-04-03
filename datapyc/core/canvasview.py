@@ -87,14 +87,6 @@ class NavigationHidden(NavigationToolbar2QT):
             a.set_navigate_mode(self._active)
         self.set_message(self.mode)
 
-    def release_pan(self, event):
-        super().release_pan(event)
-        self.parent.selectOn()
-
-    def release_zoom(self, event):
-        super().release_zoom(event)
-        self.parent.selectOn()
-
     def set_cursor(self, cursor):
         self.canvas.setCursor(QtCore.Qt.CrossCursor)
 
@@ -129,8 +121,6 @@ class FigureCanvas(QFrame):
         self.toolbar.setPanMode(on=True)  # toggle pan at the level of the NavigationToolbar2QT, enabling actual
                                          # pan functionality
         appstate.state = State.PAN
-        # self.zoomViewButton.setChecked(False)
-        # self.panViewButton.setChecked(True)
         self.select_crosshair()
 
     def selectOn(self):
@@ -153,7 +143,6 @@ class FigureCanvas(QFrame):
     @Slot()
     def resetView(self):
         self.toolbar.home()
-        self.selectOn()
 
     @Slot()
     def zoomView(self):

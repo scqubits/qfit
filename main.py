@@ -14,7 +14,7 @@ import os
 
 from PySide2.QtCore import QSize
 from PySide2.QtGui import QFont
-from PySide2.QtWidgets import QApplication, QFileDialog
+from PySide2.QtWidgets import QApplication, QFileDialog, QMessageBox
 
 from datapyc.core.measureddata_io import readMeasurementData
 from datapyc.datapyc_engine import MainWindow
@@ -35,6 +35,14 @@ if __name__ == "__main__":
         if fileName:
             measurementData = readMeasurementData(fileName)
             success = measurementData.success
+            if not success:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Warning)
+                msg.setText("An error occurred opening the selected file.")
+                msg.setInformativeText("While the selected file format is generally supported, heuristic inspection "
+                                       "failed to identify suitable data inside the file.")
+                msg.setWindowTitle("Error")
+                returnVal = msg.exec_()
         else:
             exit()
 

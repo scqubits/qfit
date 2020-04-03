@@ -116,12 +116,12 @@ class LabberH5Reader:
 
 
 class MatlabReader:
-    def from_file(self, fileName):
+    def fromFile(self, fileName):
         return NumericalMeasurementData(loadmat(fileName))
 
 
 class CSVReader:
-    def from_file(self, fileName):
+    def fromFile(self, fileName):
         return NumericalMeasurementData({fileName: np.loadtxt(fileName)})
 
 

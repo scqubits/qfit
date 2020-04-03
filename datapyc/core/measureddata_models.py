@@ -69,7 +69,9 @@ class NumericalMeasurementData(MeasurementData):
         if self.zCandidates:
             self._currentZ = self.zCandidates.itemByIndex(0)
             self.success = True
-        self.inferXYData()
+            self.inferXYData()
+        else:
+            self.success = False
 
     @property
     def currentZ(self):
@@ -173,14 +175,16 @@ class NumericalMeasurementData(MeasurementData):
         zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
 
         if self.checkBoxCallbacks['logColoring']():
-            norm = colors.SymLogNorm(linthresh=0.2, vmin=self.currentZ.data.min(), vmax=self.currentZ.data.max())
+            linthresh = max(abs(zMin), abs(zMax)) / 20.0
+            norm = colors.SymLogNorm(linthresh=linthresh, vmin=zMin, vmax=zMax, base=10)
         else:
             norm = None
 
         if (self.currentX.data is None) or (self.currentY.data is None):
             _ = axes.pcolormesh(zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs)
         else:
-            _ = axes.pcolormesh(self.currentX.data, self.currentY.data, zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs)
+            _ = axes.pcolormesh(self.currentX.data, self.currentY.data, zData, vmin=zMin, vmax=zMax,
+                                norm=norm, **kwargs)
 
 
 class ImageMeasurementData(MeasurementData):
@@ -202,7 +206,8 @@ class ImageMeasurementData(MeasurementData):
         zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
 
         if self.checkBoxCallbacks['logColoring']():
-            norm = colors.SymLogNorm(linthresh=0.2, vmin=self.currentZ.data.min(), vmax=self.currentZ.data.max())
+            norm = colors.SymLogNorm(linthresh=0.2, vmin=self.currentZ.data.min(), vmax=self.currentZ.data.max(),
+                                     base=10)
         else:
             norm = None
 

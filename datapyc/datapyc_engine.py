@@ -200,8 +200,9 @@ class MainWindow(QMainWindow):
     def uiCanvasControlConnects(self):
         """Connect the UI buttons for reset, zoom, and pan functions of the matplotlib canvas."""
         self.ui.resetViewButton.clicked.connect(self.ui.mplFigureCanvas.resetView)
-        self.ui.zoomViewButton.clicked.connect(self.ui.mplFigureCanvas.zoomView)
-        self.ui.panViewButton.clicked.connect(self.ui.mplFigureCanvas.panView)
+        self.ui.zoomViewButton.clicked.connect(self.toggleZoom)
+        self.ui.panViewButton.clicked.connect(self.togglePan)
+        self.ui.selectViewButton.clicked.connect(self.toggleSelect)
 
     def uiDataControlConnects(self):
         """Connect buttons for inserting and deleting a data set, or clearing all data sets"""
@@ -234,6 +235,24 @@ class MainWindow(QMainWindow):
         yDataNames = [dataName for dataName in self.measurementData.currentYCompatibles.keys()]
         self.ui.yComboBox.addItems(yDataNames)
         self.ui.yComboBox.setCurrentText(self.measurementData.currentY.name)
+
+    @Slot()
+    def toggleSelect(self):
+        if appstate.state != State.SELECT:
+            appstate.state = State.SELECT
+            self.ui.mplFigureCanvas.selectOn()
+
+    @Slot()
+    def toggleZoom(self):
+        if appstate.state != 'ZOOM':
+            appstate.state = State.ZOOM
+            self.ui.mplFigureCanvas.zoomView()
+
+    @Slot()
+    def togglePan(self):
+        if appstate.state != 'PAN':
+            appstate.state = State.PAN
+            self.ui.mplFigureCanvas.panView()
 
     @Slot()
     def canvasClickMonitoring(self, event):
