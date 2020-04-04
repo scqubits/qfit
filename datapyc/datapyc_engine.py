@@ -19,20 +19,29 @@ from PySide2.QtGui import Qt
 from PySide2.QtQml import QQmlProperty
 from PySide2.QtWidgets import QMainWindow, QFileDialog, QStyle
 
+import scqubits.utils.fitting as fit
+
 import datapyc.core.appstate as appstate
 from datapyc.core.appstate import State
 from datapyc.core.calibrationmodel import CalibrationModel
 from datapyc.core.calibrationview import CalibrationView
 from datapyc.core.datamodel import TableModel, ListModel
+from datapyc.core.measureddata_models import MeasurementData, NumericalMeasurementData
 from datapyc.core.ui_window import Ui_MainWindow
 
 
 class MainWindow(QMainWindow):
     """Class for the main window of the app."""
-    def __init__(self, measurementData):
+    def __init__(self, fileData):
         super().__init__()
 
-        self.measurementData = measurementData
+        if isinstance(fileData, MeasurementData):
+            self.measurementData = fileData
+            self.datapycData = None
+        else:
+            self.measurementData = NumericalMeasurementData({'xData': fileData.x_data,
+                                                             'yData': fileData.y_data,
+                                                             'zData': fileData.z_data})
         self.currentPointsTable = None
         self.allDatasetsList = None
         self.calibrationModel = None
@@ -386,8 +395,15 @@ class MainWindow(QMainWindow):
     def saveAndClose(self):
         """Save the extracted data and calibration information to file, then exit the application."""
         home = os.path.expanduser("~")
-        fileName, _ = QFileDialog.getSaveFileName(self, "Save Extracted Data", home, "scQubits file (*.h5);;Data file (*.csv)")
-        self.allDatasetsList.filewrite(fileName)
+        fileName, _ = QFileDialog.getSaveFileName(self, "Save Extracted Data", home,
+                                                  "scQubits file (*.h5);;Data file (*.csv)")
+        dataNames = self.allDatasetsList.dataNames
+        dataList = self.allDatasetsList.allDataSorted(applyCalibration=True)
+        zData = self.measurementData.currentZ.data
+        xData = self.measurementData.currentX.data
+        yData = self.measurementData.currentY.data
+        fitData = fit.FitData(dataNames, dataList, x_data=xData, y_data=yData, z_data=zData)
+        fitData.filewrite(fileName)
 
     def resizeAndCenter(self, maxSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)

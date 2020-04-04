@@ -53,7 +53,8 @@ REQUIRES = ['numpy>=1.14.2',
             'matplotlib>=3.1.2',
             'pyside2>=5.14',
             'pyqt>=5.12',
-            'h5py>=2.7'
+            'h5py>=2.7',
+            'scqubits'
             ]
 
 INSTALL_REQUIRES = ['numpy>=1.14.2',
@@ -61,7 +62,8 @@ INSTALL_REQUIRES = ['numpy>=1.14.2',
                     'matplotlib>=3.1.2',
                     'pyside2>=5.14',
                     'pyqt>=5.12',
-                    'h5py>=2.7'
+                    'h5py>=2.7',
+                    'scqubits'
                     ]
 
 PACKAGES = ['datapyc']

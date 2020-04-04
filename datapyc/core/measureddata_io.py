@@ -17,10 +17,13 @@ import numpy as np
 from matplotlib.image import imread
 from scipy.io import loadmat
 
+import scqubits.utils.file_io_backends as io_backends
+import scqubits.utils.file_io as io
+
 from datapyc.core.measureddata_models import NumericalMeasurementData, ImageMeasurementData
 
 
-def readMeasurementData(fileName):
+def readFileData(fileName):
     """
     Read experimental data from file.
 
@@ -73,6 +76,10 @@ class GenericH5Reader:
             if isLikelyLabberFile(h5File):
                 labberReader = LabberH5Reader()
                 return labberReader.fromFile(fileName)
+            if isLikelyDatapycFile(h5File):
+                datapycReader = io_backends.H5Reader(fileName)
+                iodata = datapycReader.from_file(fileName)
+                return io.deserialize(iodata)
             h5File.visititems(visitor_func)
         return NumericalMeasurementData(dataCollection)
 
@@ -128,5 +135,12 @@ class CSVReader:
 def isLikelyLabberFile(h5File):
     # Heuristic inspection to determine whether the h5 file might be from Labber
     if {"Data", "Instrument config", "Settings", "Step config"}.issubset(set(h5File)):
+        return True
+    return False
+
+
+def isLikelyDatapycFile(h5File):
+    # Heuristic inspection to determine whether the h5 file might be from datapyc
+    if '__type' in h5File.attrs.keys() and h5File.attrs['__type'] == 'FitData':
         return True
     return False
