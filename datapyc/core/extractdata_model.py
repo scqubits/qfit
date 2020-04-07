@@ -104,7 +104,7 @@ class TableModel(QAbstractTableModel):
             if orientation == Qt.Vertical:
                 return str(['x', 'y'][section])
             elif orientation == Qt.Horizontal:
-                return str(range(100)[section])
+                return str(section)
 
     def setData(self, index, value, role=Qt.EditRole):
         """

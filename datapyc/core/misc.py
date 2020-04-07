@@ -96,3 +96,20 @@ def hasIdenticalRows(array):
 
 def hasIdenticalCols(array):
     return (array.transpose == array.transpose()[0]).all()
+
+def transposeEach(xyDataList):
+    """
+    Helper function that transposes each data set in the list. Used when importing FitData and converting back
+    to data format used in ListModel
+
+    Parameters
+    ----------
+    xyDataList: list of ndarray
+        Each ndarray is of the form array([[x1,y1], [x2,y2], ...]).
+
+    Returns
+    -------
+    list of ndarray
+        Each ndarray has the form array([[x1, x2, ...], [y1, y2, ...]])
+    """
+    return [array.transpose() for array in xyDataList]

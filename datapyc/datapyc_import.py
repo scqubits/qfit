@@ -16,9 +16,10 @@ from PySide2.QtWidgets import QFileDialog, QMessageBox
 import scqubits.utils.fitting as fit
 
 from datapyc.core.inputdata_io import readFileData, ImageMeasurementData, NumericalMeasurementData
+from datapyc.core.misc import OrderedDictMod
 
 
-def import_file():
+def importFile():
     home = os.path.expanduser("~")
 
     success = False
@@ -38,13 +39,21 @@ def import_file():
                                    "failed to identify suitable data inside the file.")
             msg.setWindowTitle("Error")
             returnVal = msg.exec_()
+        else:
+            success = True
 
-    # if isinstance(fileData, ImageMeasurementData):
-    #     result = fit.FitData(datanames=[], datalist=[], image_data=fileData.image)
-    # if isinstance(fileData, MeasurementData):
-    #     self.measurementData = fileData
-    #     self.datapycData = None
-    # elif isinstance(fileData, fit.FitData)
-    #     self.measurementData = NumericalMeasurementData({'xData': fileData.x_data,
-    #                                                      'yData': fileData.y_data,
-    #                                                      'zData': fileData.z_data})
+    if isinstance(fileData, fit.FitData):
+        extractedData = fileData
+        if fileData.image_data is not None:
+            measurementData = ImageMeasurementData('image_data', fileData.image_data)
+
+        else:
+            measurementData = NumericalMeasurementData({'xData': fileData.x_data,
+                                                        'yData': fileData.y_data,
+                                                        'zData': fileData.z_data},
+                                                       {'zData': fileData.z_data})
+    else:
+        measurementData = fileData
+        extractedData = None
+
+    return measurementData, extractedData

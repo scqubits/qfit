@@ -25,12 +25,10 @@ def saveFile(parent):
 
     if isinstance(parent.measurementData, ImageMeasurementData):
         imageData = parent.measurementData.currentZ.data
-        FitClass = fit.FitImageData
     else:
         imageData = None
-        FitClass = fit.FitData
 
-    fitData = FitClass(
+    fitData = fit.FitData(
         datanames=parent.allDatasetsList.dataNames,
         datalist=parent.allDatasetsList.allDataSorted(applyCalibration=True),
         x_data=parent.measurementData.currentX.data,

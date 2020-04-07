@@ -17,8 +17,9 @@ import numpy as np
 from matplotlib.image import imread
 from scipy.io import loadmat
 
-# import scqubits.utils.file_io_backends as io_backends
-# import scqubits.utils.file_io as io
+import scqubits.utils.file_io_backends as io_backends
+import scqubits.utils.file_io as io
+
 from datapyc.core.misc import (OrderedDictMod,
                                isValid2dArray,
                                hasIdenticalCols,
@@ -70,20 +71,22 @@ class ImageFileReader:
 
 class GenericH5Reader:
     def fromFile(self, fileName):
-        dataCollection = {}
-
-        def visitor_func(name, data):
-            if isinstance(data, h5py.Dataset) and data[:].dtype in [np.float32, np.float64]:
-                dataCollection[name] = data[:]
-
         with h5py.File(fileName, 'r') as h5File:
             if isLikelyLabberFile(h5File):
                 labberReader = LabberH5Reader()
                 return labberReader.fromFile(fileName)
-            # if isLikelyDatapycFile(h5File):
-            #     datapycReader = io_backends.H5Reader(fileName)
-            #     iodata = datapycReader.from_file(fileName)
-            #     return io.deserialize(iodata)
+
+            if isLikelyDatapycFile(h5File):
+                datapycReader = io_backends.H5Reader(fileName)
+                iodata = datapycReader.from_file(fileName)
+                return io.deserialize(iodata)
+
+            # generic h5 file, attempt to read
+            dataCollection = {}
+            def visitor_func(name, data):
+                if isinstance(data, h5py.Dataset) and data[:].dtype in [np.float32, np.float64]:
+                    dataCollection[name] = data[:]
+
             h5File.visititems(visitor_func)
 
         zCandidates = findZData(dataCollection)

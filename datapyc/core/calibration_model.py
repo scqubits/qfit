@@ -11,10 +11,10 @@
 
 import numpy as np
 
-import scqubits.utils.file_io_serializers as serializer
+import scqubits.utils.file_io_serializers as serializers
 
 
-class CalibrationModel(serializer.Serializable):
+class CalibrationModel(serializers.Serializable):
     def __init__(self, rawVec1=None, rawVec2=None, mapVec1=None, mapVec2=None):
         """
         Store calibration data for x and y axes, and provide methods to transform between uncalibrated and calibrated

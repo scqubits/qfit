@@ -24,23 +24,18 @@ from datapyc.core.app_state import State
 from datapyc.core.calibration_model import CalibrationModel
 from datapyc.core.calibration_view import CalibrationView
 from datapyc.core.extractdata_model import TableModel, ListModel
-from datapyc.core.inputdata_models import MeasurementData, NumericalMeasurementData
 from datapyc.core.ui_window import Ui_MainWindow
 from datapyc.datapyc_save import saveFile
+from datapyc.core.misc import transposeEach
 
 
 class MainWindow(QMainWindow):
     """Class for the main window of the app."""
-    def __init__(self, fileData):
+    def __init__(self, measurementData, extractedData=None):
         super().__init__()
+        self.measurementData = measurementData
+        self.extractedData = extractedData
 
-        if isinstance(fileData, MeasurementData):
-            self.measurementData = fileData
-            self.datapycData = None
-        else:
-            self.measurementData = NumericalMeasurementData({'xData': fileData.x_data,
-                                                             'yData': fileData.y_data,
-                                                             'zData': fileData.z_data})
         self.currentPointsTable = None
         self.allDatasetsList = None
         self.calibrationModel = None
@@ -74,6 +69,17 @@ class MainWindow(QMainWindow):
         self.saveAndCloseConnects()
 
         self.ui.mplFigureCanvas.selectOn()
+
+        if self.extractedData is not None:
+            self.allDatasetsList.dataNames = self.extractedData.datanames
+            self.allDatasetsList.assocDataList = transposeEach(self.extractedData.datalist)
+            self.calibrationModel = self.extractedData.calibration_data
+            self.currentPointsTable._data = self.allDatasetsList.currentAssocItem()
+            # self.currentPointsTable.setAllData(newData=self.allDatasetsList.currentAssocItem())
+            self.allDatasetsList.layoutChanged.emit()
+            self.currentPointsTable.layoutChanged.emit()
+
+
 
     def setupUiCalibration(self):
         """For the interface that enables calibration of data with respect to x and y axis, group QLineEdit elements
@@ -312,7 +318,7 @@ class MainWindow(QMainWindow):
         if self.currentPointsTable.columnCount() > 0:
             transform = self.transformXY()
             dataXY = transform(self.currentPointsTable.all())
-            self.axes.scatter(dataXY[0], dataXY[1], c='k', marker='x')
+            self.axes.scatter(dataXY[0], dataXY[1], c='orange', marker='x')
 
         # Make sure that new axes limits match the old ones.
         if not initialize and not toggleXY:

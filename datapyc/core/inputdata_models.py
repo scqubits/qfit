@@ -63,9 +63,16 @@ class MeasurementData(abc.ABC):
 
 
 class NumericalMeasurementData(MeasurementData, serializers.Serializable):
-    def __init__(self, rawData, zCandidates=None):
+    def __init__(self, rawData, zCandidates):
+        """
+
+        Parameters
+        ----------
+        rawData
+        zCandidates: dict or OrderedDictMod
+        """
         super().__init__(rawData)
-        self.zCandidates = zCandidates
+        self.zCandidates = OrderedDictMod(zCandidates)
         self._currentZ = self.zCandidates.itemByIndex(0)
         self.inferXYData()
 

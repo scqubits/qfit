@@ -51,7 +51,7 @@ VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 REQUIRES = ['numpy>=1.14.2',
             'scipy>=1.1.0',
             'matplotlib>=3.1.2',
-            'pyside2>=5.14',
+            'pyside2>=5.13',
             'pyqt>=5.12',
             'h5py>=2.7',
             'scqubits'
@@ -60,7 +60,7 @@ REQUIRES = ['numpy>=1.14.2',
 INSTALL_REQUIRES = ['numpy>=1.14.2',
                     'scipy>=1.1.0',
                     'matplotlib>=3.1.2',
-                    'pyside2>=5.14',
+                    'pyside2>=5.13',
                     'pyqt>=5.12',
                     'h5py>=2.7',
                     'scqubits'
