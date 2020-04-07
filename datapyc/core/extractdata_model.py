@@ -1,4 +1,4 @@
-# datamodel.py
+# extractdata_model.py
 #
 # This file is part of datapyc.
 #

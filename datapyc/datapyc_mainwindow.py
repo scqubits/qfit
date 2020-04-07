@@ -1,4 +1,4 @@
-# datapyc_engine.py
+# datapyc_mainwindow.py
 #
 # This file is part of datapyc.
 #
@@ -9,7 +9,7 @@
 #    LICENSE file in the root directory of this source tree.
 ############################################################################
 
-import os
+
 from functools import partial
 
 import matplotlib.cm as cm
@@ -17,17 +17,16 @@ import numpy as np
 from PySide2.QtCore import Slot, SLOT, QSize, QPoint, QRect
 from PySide2.QtGui import Qt
 from PySide2.QtQml import QQmlProperty
-from PySide2.QtWidgets import QMainWindow, QFileDialog, QStyle
+from PySide2.QtWidgets import QMainWindow, QStyle
 
-import scqubits.utils.fitting as fit
-
-import datapyc.core.appstate as appstate
-from datapyc.core.appstate import State
-from datapyc.core.calibrationmodel import CalibrationModel
-from datapyc.core.calibrationview import CalibrationView
-from datapyc.core.datamodel import TableModel, ListModel
-from datapyc.core.measureddata_models import MeasurementData, NumericalMeasurementData
+import datapyc.core.app_state as appstate
+from datapyc.core.app_state import State
+from datapyc.core.calibration_model import CalibrationModel
+from datapyc.core.calibration_view import CalibrationView
+from datapyc.core.extractdata_model import TableModel, ListModel
+from datapyc.core.inputdata_models import MeasurementData, NumericalMeasurementData
 from datapyc.core.ui_window import Ui_MainWindow
+from datapyc.datapyc_save import saveFile
 
 
 class MainWindow(QMainWindow):
@@ -394,16 +393,25 @@ class MainWindow(QMainWindow):
     @Slot()
     def saveAndClose(self):
         """Save the extracted data and calibration information to file, then exit the application."""
-        home = os.path.expanduser("~")
-        fileName, _ = QFileDialog.getSaveFileName(self, "Save Extracted Data", home,
-                                                  "scQubits file (*.h5);;Data file (*.csv)")
-        dataNames = self.allDatasetsList.dataNames
-        dataList = self.allDatasetsList.allDataSorted(applyCalibration=True)
-        zData = self.measurementData.currentZ.data
-        xData = self.measurementData.currentX.data
-        yData = self.measurementData.currentY.data
-        fitData = fit.FitData(dataNames, dataList, x_data=xData, y_data=yData, z_data=zData)
-        fitData.filewrite(fileName)
+        # home = os.path.expanduser("~")
+        # fileCategories = "scQubits file (*.h5);;Data file (*.csv)"
+        # fileName, _ = QFileDialog.getSaveFileName(self, "Save Extracted Data", home, fileCategories)
+        #
+        # dataNames = self.allDatasetsList.dataNames
+        # dataList = self.allDatasetsList.allDataSorted(applyCalibration=True)
+        # zData = self.measurementData.currentZ.data
+        # xData = self.measurementData.currentX.data
+        # yData = self.measurementData.currentY.data
+        # fitData = fit.FitData(
+        #     datanames=dataNames,
+        #     datalist=dataList,
+        #     x_data=xData,
+        #     y_data=yData,
+        #     z_data=zData
+        # )
+        # fitData.filewrite(fileName)
+        saveFile(self)
+        exit()
 
     def resizeAndCenter(self, maxSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)

@@ -558,9 +558,9 @@ class Ui_MainWindow(object):
         self.quickWidget.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Adjust plot range (Z)", None, -1))
         self.quickWidget.setWhatsThis(QtWidgets.QApplication.translate("MainWindow", "Color Range", None, -1))
 
-from datapyc.core.calibrationview import CalibrationLineEdit
-from datapyc.core.canvasview import FigureCanvas
-from datapyc.core.dataview import TableView, ListView
+from datapyc.core.calibration_view import CalibrationLineEdit
+from datapyc.core.canvas_view import FigureCanvas
+from datapyc.core.extractdata_view import TableView, ListView
 from PySide2.QtQuickWidgets import QQuickWidget
 import datapyc.core.resources_rc
 

@@ -1,4 +1,4 @@
-# measureddata_models.py
+# inputdata_models.py
 #
 # This file is part of datapyc.
 #
@@ -17,6 +17,8 @@ import numpy as np
 from matplotlib import colors as colors
 from scipy.ndimage import gaussian_laplace
 from scipy.signal import savgol_filter
+
+import scqubits.utils.file_io_serializers as serializers
 
 from datapyc.core.misc import (DataItem,
                                OrderedDictMod,
@@ -39,8 +41,6 @@ class MeasurementData(abc.ABC):
         self.zCandidates = OrderedDictMod()
         self.currentXCompatibles = OrderedDictMod()
         self.currentYCompatibles = OrderedDictMod()
-        self.applyInterpolation = False
-        self.success = False
 
     def setupUiCallbacks(self, checkBoxCallbacks, plotRangeCallbacks):
         self.checkBoxCallbacks = checkBoxCallbacks
@@ -62,16 +62,12 @@ class MeasurementData(abc.ABC):
         pass
 
 
-class NumericalMeasurementData(MeasurementData):
-    def __init__(self, rawData):
+class NumericalMeasurementData(MeasurementData, serializers.Serializable):
+    def __init__(self, rawData, zCandidates=None):
         super().__init__(rawData)
-        self.zCandidates = self.findZData()
-        if self.zCandidates:
-            self._currentZ = self.zCandidates.itemByIndex(0)
-            self.success = True
-            self.inferXYData()
-        else:
-            self.success = False
+        self.zCandidates = zCandidates
+        self._currentZ = self.zCandidates.itemByIndex(0)
+        self.inferXYData()
 
     @property
     def currentZ(self):
@@ -135,14 +131,6 @@ class NumericalMeasurementData(MeasurementData):
             if len(data) == ydim:
                 self.currentYCompatibles[name] = data
 
-    def findZData(self):
-        zCandidates = OrderedDictMod()
-        for name, theObject in self.rawData.items():
-            if isinstance(theObject, np.ndarray) and isValid2dArray(theObject):
-                if not (hasIdenticalCols(theObject) or hasIdenticalRows(theObject)):
-                    zCandidates[name] = theObject
-        return zCandidates
-
     def findXYData(self):
         xyCandidates = OrderedDictMod()
         for name, theObject in self.rawData.items():
@@ -187,12 +175,11 @@ class NumericalMeasurementData(MeasurementData):
                                 norm=norm, **kwargs)
 
 
-class ImageMeasurementData(MeasurementData):
+class ImageMeasurementData(MeasurementData, serializers.Serializable):
     def __init__(self, fileName, image):
         super().__init__(None)
         self._currentZ = DataItem(fileName, image)
         self.zCandidates = {fileName: image}
-        self.success = (image is not None)
 
     def canvasPlot(self, axes, **kwargs):
         zData = np.sum(self.currentZ.data, axis=2) if (self.currentZ.data.ndim == 3) else self.currentZ.data
@@ -206,8 +193,7 @@ class ImageMeasurementData(MeasurementData):
         zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
 
         if self.checkBoxCallbacks['logColoring']():
-            norm = colors.SymLogNorm(linthresh=0.2, vmin=self.currentZ.data.min(), vmax=self.currentZ.data.max(),
-                                     base=10)
+            norm = colors.SymLogNorm(linthresh=0.2, vmin=self.currentZ.data.min(), vmax=self.currentZ.data.max(), base=10)
         else:
             norm = None
 

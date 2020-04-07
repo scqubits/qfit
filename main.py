@@ -16,8 +16,8 @@ from PySide2.QtCore import QSize
 from PySide2.QtGui import QFont
 from PySide2.QtWidgets import QApplication, QFileDialog, QMessageBox
 
-from datapyc.core.measureddata_io import readFileData
-from datapyc.datapyc_engine import MainWindow
+from datapyc.core.inputdata_io import readFileData
+from datapyc.datapyc_mainwindow import MainWindow
 
 
 if __name__ == "__main__":
@@ -34,7 +34,7 @@ if __name__ == "__main__":
                                                        "Data files (*.h5 *.mat *.csv *.jpg *.jpeg *.png *.hdf5)")
         if fileName:
             fileData = readFileData(fileName)
-            success = fileData.success
+            success = fileData is not None
             if not success:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Warning)

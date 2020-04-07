@@ -1,0 +1,42 @@
+# datapyc_save.py
+#
+# This file is part of datapyc.
+#
+#    Copyright (c) 2020, Jens Koch
+#    All rights reserved.
+#
+#    This source code is licensed under the BSD-style license found in the
+#    LICENSE file in the root directory of this source tree.
+############################################################################
+
+import os
+
+from PySide2.QtWidgets import QFileDialog, QMessageBox
+
+import scqubits.utils.fitting as fit
+
+from datapyc.core.inputdata_io import readFileData, ImageMeasurementData, NumericalMeasurementData
+
+
+def saveFile(parent):
+    home = os.path.expanduser("~")
+    fileCategories = "scQubits file (*.h5);;Data file (*.csv)"
+    fileName, _ = QFileDialog.getSaveFileName(parent, "Save Extracted Data", home, fileCategories)
+
+    if isinstance(parent.measurementData, ImageMeasurementData):
+        imageData = parent.measurementData.currentZ.data
+        FitClass = fit.FitImageData
+    else:
+        imageData = None
+        FitClass = fit.FitData
+
+    fitData = FitClass(
+        datanames=parent.allDatasetsList.dataNames,
+        datalist=parent.allDatasetsList.allDataSorted(applyCalibration=True),
+        x_data=parent.measurementData.currentX.data,
+        y_data=parent.measurementData.currentY.data,
+        z_data=parent.measurementData.currentZ.data,
+        image_data=imageData,
+        calibration_data=parent.calibrationModel
+    )
+    fitData.filewrite(fileName)

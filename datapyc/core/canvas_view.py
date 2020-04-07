@@ -1,4 +1,4 @@
-# canvasview.py
+# canvas_view.py
 #
 # This file is part of datapyc.
 #
@@ -18,8 +18,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationTool
 from matplotlib.figure import Figure
 from matplotlib.widgets import Cursor
 
-import datapyc.core.appstate as appstate
-from datapyc.core.appstate import State
+import datapyc.core.app_state as appstate
+from datapyc.core.app_state import State
 
 
 class NavigationHidden(NavigationToolbar2QT):

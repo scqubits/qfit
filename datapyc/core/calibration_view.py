@@ -1,4 +1,4 @@
-# calibrationview.py
+# calibration_view.py
 #
 # This file is part of datapyc.
 #

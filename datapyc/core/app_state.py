@@ -1,4 +1,4 @@
-# appstate.py
+# app_state.py
 #
 # This file is part of datapyc.
 #

@@ -1,4 +1,4 @@
-# calibrationmodel.py
+# calibration_model.py
 #
 # This file is part of datapyc.
 #
@@ -11,16 +11,33 @@
 
 import numpy as np
 
+import scqubits.utils.file_io_serializers as serializer
 
-class CalibrationModel:
-    def __init__(self):
-        self.rawVec1 = None
-        self.rawVec2 = None
-        self.mapVec1 = None
-        self.mapVec2 = None
+
+class CalibrationModel(serializer.Serializable):
+    def __init__(self, rawVec1=None, rawVec2=None, mapVec1=None, mapVec2=None):
+        """
+        Store calibration data for x and y axes, and provide methods to transform between uncalibrated and calibrated
+        data.
+
+        Parameters
+        ----------
+        rawVec1, rawVec2, mapVec1, mapVec2: ndarray
+            Each of these is a two component vector (x,y) marking a point. The calibration maps rawVec1 -> mapVec1,
+            rawVec2 -> mapVec2 with an affine-linear transformation:   mapVecN = alphaMat . rawVecN + bVec.
+        """
+        self.rawVec1 = rawVec1
+        self.rawVec2 = rawVec2
+        self.mapVec1 = mapVec1
+        self.mapVec2 = mapVec2
         self.bVec = None
         self.alphaMat = None
-        self.setCalibration((1., 0.), (0., 1.), (1., 0.), (0., 1.))
+
+        if rawVec1 and rawVec2 and mapVec1 and mapVec2:
+            self.setCalibration(rawVec1, rawVec2, mapVec1, mapVec2)
+        else:
+            self.setCalibration((1., 0.), (0., 1.), (1., 0.), (0., 1.))
+
         self.applyCalibration = False
 
     def toggleCalibration(self):

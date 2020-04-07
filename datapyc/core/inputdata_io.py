@@ -1,4 +1,4 @@
-# measureddata_io.py
+# inputdata_io.py
 #
 # This file is part of datapyc.
 #
@@ -17,10 +17,14 @@ import numpy as np
 from matplotlib.image import imread
 from scipy.io import loadmat
 
-import scqubits.utils.file_io_backends as io_backends
-import scqubits.utils.file_io as io
+# import scqubits.utils.file_io_backends as io_backends
+# import scqubits.utils.file_io as io
+from datapyc.core.misc import (OrderedDictMod,
+                               isValid2dArray,
+                               hasIdenticalCols,
+                               hasIdenticalRows)
 
-from datapyc.core.measureddata_models import NumericalMeasurementData, ImageMeasurementData
+from datapyc.core.inputdata_models import NumericalMeasurementData, ImageMeasurementData
 
 
 def readFileData(fileName):
@@ -60,7 +64,7 @@ class ImageFileReader:
         try:
             imageData = imread(fileName)
         except OSError:
-            return ImageMeasurementData('', None)
+            return None
         return ImageMeasurementData(fileStr, imageData)
 
 
@@ -76,12 +80,16 @@ class GenericH5Reader:
             if isLikelyLabberFile(h5File):
                 labberReader = LabberH5Reader()
                 return labberReader.fromFile(fileName)
-            if isLikelyDatapycFile(h5File):
-                datapycReader = io_backends.H5Reader(fileName)
-                iodata = datapycReader.from_file(fileName)
-                return io.deserialize(iodata)
+            # if isLikelyDatapycFile(h5File):
+            #     datapycReader = io_backends.H5Reader(fileName)
+            #     iodata = datapycReader.from_file(fileName)
+            #     return io.deserialize(iodata)
             h5File.visititems(visitor_func)
-        return NumericalMeasurementData(dataCollection)
+
+        zCandidates = findZData(dataCollection)
+        if not zCandidates:
+            return None
+        return NumericalMeasurementData(dataCollection, zCandidates)
 
 
 class LabberH5Reader:
@@ -119,12 +127,19 @@ class LabberH5Reader:
                 if len(names) == 4:
                     dataCollection[names[3] + ' ' + entry] = array[:, 3, :]
 
-        return NumericalMeasurementData(dataCollection)
+        zCandidates = findZData(dataCollection)
+        if not zCandidates:
+            return None
+        return NumericalMeasurementData(dataCollection, zCandidates)
 
 
 class MatlabReader:
     def fromFile(self, fileName):
-        return NumericalMeasurementData(loadmat(fileName))
+        dataCollection = loadmat(fileName)
+        zCandidates = findZData(dataCollection)
+        if not zCandidates:
+            return None
+        return NumericalMeasurementData(dataCollection, zCandidates)
 
 
 class CSVReader:
@@ -144,3 +159,12 @@ def isLikelyDatapycFile(h5File):
     if '__type' in h5File.attrs.keys() and h5File.attrs['__type'] == 'FitData':
         return True
     return False
+
+
+def findZData(rawData):
+    zCandidates = OrderedDictMod()
+    for name, theObject in rawData.items():
+        if isinstance(theObject, np.ndarray) and isValid2dArray(theObject):
+            if not (hasIdenticalCols(theObject) or hasIdenticalRows(theObject)):
+                zCandidates[name] = theObject
+    return zCandidates
