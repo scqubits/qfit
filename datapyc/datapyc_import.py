@@ -16,16 +16,30 @@ from PySide2.QtWidgets import QFileDialog, QMessageBox
 import scqubits.utils.fitting as fit
 
 from datapyc.core.inputdata_io import readFileData, ImageMeasurementData, NumericalMeasurementData
-from datapyc.core.misc import OrderedDictMod
 
 
 def importFile():
+    """
+    Opens a standard file dialog box for the user to select a file to be opened. Supported files types are
+    - .h5 / .hdf5  (generic h5, Labber, datapyc)
+    - .mat (Matlab file)
+    - .csv
+    - .jpg, .png
+
+    Data is inspected and categorized as data specifying the two axes (xData, yData) and spectroscopy measurement data
+    (zData). In the case of a datapyc .h5 file, additional data containing the extracted fit data points as well as
+    calibration data is obtained and returned alongside.
+
+    Returns
+    -------
+    MeasurementData, FitData
+    """
     home = os.path.expanduser("~")
 
     success = False
     while not success:
         fileCategories = "Data files (*.h5 *.mat *.csv *.jpg *.jpeg *.png *.hdf5)"
-        fileName, filter = QFileDialog.getOpenFileName(None, "Open", home, fileCategories)
+        fileName, fileFilter = QFileDialog.getOpenFileName(None, "Open", home, fileCategories)
         if not fileName:
             exit()
 

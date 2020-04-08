@@ -9,7 +9,14 @@
 # WARNING! All changes made in this file will be lost!
 
 import os
+
 from PySide2 import QtCore, QtGui, QtWidgets
+from PySide2.QtQuickWidgets import QQuickWidget
+
+from datapyc.core.calibration_view import CalibrationLineEdit
+from datapyc.core.canvas_view import FigureCanvas
+from datapyc.core.extractdata_view import TableView, ListView
+import datapyc.core.resources_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -23,7 +30,6 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout.setObjectName("gridLayout")
-
 
         self.dataTableView = TableView(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
@@ -315,7 +321,7 @@ class Ui_MainWindow(object):
         self.zComboBox.setObjectName("zComboBox")
         self.gridLayout_3.addWidget(self.zComboBox, 1, 1, 1, 1)
         self.label = QtWidgets.QLabel(self.gridGroupBox_2)
-        self.label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.label.setObjectName("label")
         self.gridLayout_3.addWidget(self.label, 3, 0, 1, 1)
         self.xComboBox = QtWidgets.QComboBox(self.gridGroupBox_2)
@@ -323,11 +329,11 @@ class Ui_MainWindow(object):
         self.xComboBox.setObjectName("xComboBox")
         self.gridLayout_3.addWidget(self.xComboBox, 3, 1, 1, 1)
         self.label_3 = QtWidgets.QLabel(self.gridGroupBox_2)
-        self.label_3.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_3.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.label_3.setObjectName("label_3")
         self.gridLayout_3.addWidget(self.label_3, 1, 0, 1, 1)
         self.label_2 = QtWidgets.QLabel(self.gridGroupBox_2)
-        self.label_2.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.label_2.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.label_2.setObjectName("label_2")
         self.gridLayout_3.addWidget(self.label_2, 4, 0, 1, 1)
         self.gridLayout.addWidget(self.gridGroupBox_2, 3, 1, 1, 2)
@@ -491,7 +497,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addItem(spacerItem2, 2, 1, 1, 2)
 
         self.buttonBox = QtWidgets.QDialogButtonBox(self.centralwidget)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Close|QtWidgets.QDialogButtonBox.Save)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Close | QtWidgets.QDialogButtonBox.Save)
         self.buttonBox.setObjectName("buttonBox")
         self.gridLayout.addWidget(self.buttonBox, 10, 4, 1, 1)
 
@@ -558,11 +564,7 @@ class Ui_MainWindow(object):
         self.quickWidget.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Adjust plot range (Z)", None, -1))
         self.quickWidget.setWhatsThis(QtWidgets.QApplication.translate("MainWindow", "Color Range", None, -1))
 
-from datapyc.core.calibration_view import CalibrationLineEdit
-from datapyc.core.canvas_view import FigureCanvas
-from datapyc.core.extractdata_view import TableView, ListView
-from PySide2.QtQuickWidgets import QQuickWidget
-import datapyc.core.resources_rc
+
 
 if __name__ == "__main__":
     import sys

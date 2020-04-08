@@ -80,7 +80,6 @@ class MainWindow(QMainWindow):
             self.currentPointsTable.layoutChanged.emit()
 
 
-
     def setupUiCalibration(self):
         """For the interface that enables calibration of data with respect to x and y axis, group QLineEdit elements
         and the corresponding buttons in dicts. Set up a dictionary mapping calibration labels to the corresponding

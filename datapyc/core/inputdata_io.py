@@ -42,7 +42,6 @@ def readFileData(fileName):
     Serializable
         class instance initialized with the data from the file
     """
-    reader = None
     _, suffix = os.path.splitext(fileName)
 
     if suffix.lower() in ('.h5', '.hdf5'):
@@ -83,6 +82,7 @@ class GenericH5Reader:
 
             # generic h5 file, attempt to read
             dataCollection = {}
+
             def visitor_func(name, data):
                 if isinstance(data, h5py.Dataset) and data[:].dtype in [np.float32, np.float64]:
                     dataCollection[name] = data[:]

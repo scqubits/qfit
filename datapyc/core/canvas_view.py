@@ -119,7 +119,7 @@ class FigureCanvas(QFrame):
 
     def panOn(self):
         self.toolbar.setPanMode(on=True)  # toggle pan at the level of the NavigationToolbar2QT, enabling actual
-                                         # pan functionality
+                                          # pan functionality
         appstate.state = State.PAN
         self.select_crosshair()
 

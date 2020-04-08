@@ -200,7 +200,8 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
         zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
 
         if self.checkBoxCallbacks['logColoring']():
-            norm = colors.SymLogNorm(linthresh=0.2, vmin=self.currentZ.data.min(), vmax=self.currentZ.data.max(), base=10)
+            norm = colors.SymLogNorm(linthresh=0.2, vmin=self.currentZ.data.min(), vmax=self.currentZ.data.max(),
+                                     base=10)
         else:
             norm = None
 

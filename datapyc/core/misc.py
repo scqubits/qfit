@@ -97,6 +97,7 @@ def hasIdenticalRows(array):
 def hasIdenticalCols(array):
     return (array.transpose == array.transpose()[0]).all()
 
+
 def transposeEach(xyDataList):
     """
     Helper function that transposes each data set in the list. Used when importing FitData and converting back
