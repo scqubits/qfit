@@ -1,0 +1,20 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>icons/app_icon.png</file>
+    <file>icons/move.png</file>
+    <file>icons/reset.png</file>
+    <file>icons/select.png</file>
+    <file>icons/zoom.png</file>
+    <file>icons/bwr.png</file>
+    <file>icons/cividis.png</file>
+    <file>icons/delete.png</file>
+    <file>icons/gray.png</file>
+    <file>icons/logo.png</file>
+    <file>icons/magma.png</file>
+    <file>icons/PuOr.png</file>
+    <file>icons/RdYlBu.png</file>
+    <file>icons/viridis.png</file>
+    <file>icons/selectmode.png</file>
+    <file>rangeslider.qml</file>
+</qresource>
+</RCC>
