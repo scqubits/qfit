@@ -13,10 +13,12 @@ import os
 from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2.QtQuickWidgets import QQuickWidget
 
-from datapyc.core.calibration_view import CalibrationLineEdit
-from datapyc.core.canvas_view import FigureCanvas
-from datapyc.core.extractdata_view import TableView, ListView
-import datapyc.core.resources_rc
+from datapyc.views.calibration_view import CalibrationLineEdit
+from datapyc.views.canvas_view import FigureCanvas
+from datapyc.views.extractdata_view import TableView, ListView
+
+import datapyc.ui.resources_rc
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -563,15 +565,3 @@ class Ui_MainWindow(object):
         self.logScaleCheckBox.setText(QtWidgets.QApplication.translate("MainWindow", "Log Colorscale", None, -1))
         self.quickWidget.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Adjust plot range (Z)", None, -1))
         self.quickWidget.setWhatsThis(QtWidgets.QApplication.translate("MainWindow", "Color Range", None, -1))
-
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
-

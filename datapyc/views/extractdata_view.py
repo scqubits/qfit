@@ -14,7 +14,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtGui import QFont
 from PySide2.QtWidgets import QTableView, QListView
 
-from datapyc.core.misc import EditDelegate
+from datapyc.core.helpers import EditDelegate
 
 
 class TableView(QTableView):

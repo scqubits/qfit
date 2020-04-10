@@ -12,7 +12,7 @@
 
 from PySide2.QtWidgets import QMessageBox, QLineEdit
 
-from datapyc.core.misc import DoubleValidator
+from datapyc.core.helpers import DoubleValidator
 
 
 class CalibrationView:

@@ -48,23 +48,10 @@ ISRELEASED = True
 
 
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
-REQUIRES = ['numpy>=1.14.2',
-            'scipy>=1.1.0',
-            'matplotlib>=3.1.2',
-            'pyside2>=5.13',
-            'pyqt>=5.12',
-            'h5py>=2.7',
-            'scqubits'
-            ]
 
-INSTALL_REQUIRES = ['numpy>=1.14.2',
-                    'scipy>=1.1.0',
-                    'matplotlib>=3.1.2',
-                    'pyside2>=5.13',
-                    'pyqt>=5.12',
-                    'h5py>=2.7',
-                    'scqubits'
-                    ]
+CURDIR = os.path.dirname(os.path.abspath(__file__))
+with open(os.path.join(CURDIR, "requirements.txt")) as requirements:
+    INSTALL_REQUIRES = requirements.read().splitlines()
 
 PACKAGES = ['datapyc']
 PYTHON_VERSION = '>=3.6'
@@ -138,9 +125,6 @@ setuptools.setup(name=NAME,
                  # url=URL,
                  classifiers=CLASSIFIERS,
                  platforms=PLATFORMS,
-                 # requires=REQUIRES,
-                 # extras_require=EXTRAS_REQUIRE,
-                 #3 tests_require=TESTS_REQUIRE,
                  zip_safe=False,
                  include_package_data=True,
                  install_requires=INSTALL_REQUIRES,

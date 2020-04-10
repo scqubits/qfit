@@ -1,4 +1,4 @@
-# datapyc_mainwindow.py
+# mainwindow.py
 #
 # This file is part of datapyc.
 #
@@ -21,12 +21,12 @@ from PySide2.QtWidgets import QMainWindow, QStyle
 
 import datapyc.core.app_state as appstate
 from datapyc.core.app_state import State
-from datapyc.core.calibration_model import CalibrationModel
-from datapyc.core.calibration_view import CalibrationView
-from datapyc.core.extractdata_model import TableModel, ListModel
-from datapyc.core.ui_window import Ui_MainWindow
-from datapyc.datapyc_save import saveFile
-from datapyc.core.misc import transposeEach
+from datapyc.models.calibration_model import CalibrationModel
+from datapyc.views.calibration_view import CalibrationView
+from datapyc.models.extractdata_model import TableModel, ListModel
+from datapyc.ui.ui_window import Ui_MainWindow
+from datapyc.io.save_data import saveFile
+from datapyc.core.helpers import transposeEach
 
 
 class MainWindow(QMainWindow):
@@ -398,23 +398,6 @@ class MainWindow(QMainWindow):
     @Slot()
     def saveAndClose(self):
         """Save the extracted data and calibration information to file, then exit the application."""
-        # home = os.path.expanduser("~")
-        # fileCategories = "scQubits file (*.h5);;Data file (*.csv)"
-        # fileName, _ = QFileDialog.getSaveFileName(self, "Save Extracted Data", home, fileCategories)
-        #
-        # dataNames = self.allDatasetsList.dataNames
-        # dataList = self.allDatasetsList.allDataSorted(applyCalibration=True)
-        # zData = self.measurementData.currentZ.data
-        # xData = self.measurementData.currentX.data
-        # yData = self.measurementData.currentY.data
-        # fitData = fit.FitData(
-        #     datanames=dataNames,
-        #     datalist=dataList,
-        #     x_data=xData,
-        #     y_data=yData,
-        #     z_data=zData
-        # )
-        # fitData.filewrite(fileName)
         saveFile(self)
         exit()
 

@@ -1,4 +1,4 @@
-# datapyc_save.py
+# save_data.py
 #
 # This file is part of datapyc.
 #
@@ -14,7 +14,7 @@ import os
 from PySide2.QtWidgets import QFileDialog
 
 import scqubits.utils.fitting as fit
-from datapyc.core.inputdata_io import ImageMeasurementData
+from datapyc.io.io_readers import ImageMeasurementData
 
 
 def saveFile(parent):

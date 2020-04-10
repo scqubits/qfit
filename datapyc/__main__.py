@@ -1,4 +1,4 @@
-# main.py
+# __main__.py
 #
 # This file is part of datapyc.
 #
@@ -15,8 +15,8 @@ from PySide2.QtCore import QSize
 from PySide2.QtGui import QFont
 from PySide2.QtWidgets import QApplication
 
-from datapyc.datapyc_import import importFile
-from datapyc.datapyc_mainwindow import MainWindow
+from datapyc.io.import_data import importFile
+from datapyc.views.mainwindow import MainWindow
 
 
 if __name__ == "__main__":

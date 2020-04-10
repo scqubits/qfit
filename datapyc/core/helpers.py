@@ -1,4 +1,4 @@
-# misc.py
+# helpers.py
 #
 # This file is part of datapyc.
 #
@@ -13,6 +13,7 @@
 from collections import OrderedDict
 
 import numpy as np
+
 from PySide2 import QtCore as QtCore
 from PySide2.QtCore import QLocale
 from PySide2.QtGui import QDoubleValidator
@@ -29,7 +30,6 @@ class EditDelegate(QStyledItemDelegate):
 
     def setEditorData(self, editor, index):
         editor.setText(index.model().data(index, role=QtCore.Qt.DisplayRole))
-
 
 class DoubleLineEdit(QLineEdit):
     def __init__(self, *args, **kwargs):
@@ -71,6 +71,21 @@ class DataItem:
 
 
 def isValid2dArray(array):
+    """
+    Checks whether the given array has the following properties:
+    * Array entries must be real-valued
+    * The array is strictly two-dimensional, i.e., number of rows>1 and number of cols>1
+    * The array does not merely repeat a single row or a single column n times
+
+    Parameters
+    ----------
+    array: ndarray
+
+    Returns
+    -------
+    bool:
+        True if all conditions above are satisfied.
+    """
     if array.dtype not in [float, np.float_, np.float64, np.float32]:
         return False
     if array.ndim == 2:

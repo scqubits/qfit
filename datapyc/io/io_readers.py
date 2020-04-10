@@ -1,4 +1,4 @@
-# inputdata_io.py
+# io_readers.py
 #
 # This file is part of datapyc.
 #
@@ -20,12 +20,12 @@ from scipy.io import loadmat
 import scqubits.utils.file_io_backends as io_backends
 import scqubits.utils.file_io as io
 
-from datapyc.core.misc import (OrderedDictMod,
-                               isValid2dArray,
-                               hasIdenticalCols,
-                               hasIdenticalRows)
+from datapyc.core.helpers import (OrderedDictMod,
+                                  isValid2dArray,
+                                  hasIdenticalCols,
+                                  hasIdenticalRows)
 
-from datapyc.core.inputdata_models import NumericalMeasurementData, ImageMeasurementData
+from datapyc.models.inputdata_models import NumericalMeasurementData, ImageMeasurementData
 
 
 def readFileData(fileName):

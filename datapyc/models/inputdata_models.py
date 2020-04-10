@@ -12,20 +12,22 @@
 
 import abc
 import copy
+import distutils.version as version
 
 import numpy as np
+import matplotlib
 from matplotlib import colors as colors
 from scipy.ndimage import gaussian_laplace
 from scipy.signal import savgol_filter
 
 import scqubits.utils.file_io_serializers as serializers
 
-from datapyc.core.misc import (DataItem,
-                               OrderedDictMod,
-                               isValid2dArray,
-                               hasIdenticalCols,
-                               hasIdenticalRows,
-                               isValid1dArray)
+from datapyc.core.helpers import (DataItem,
+                                  OrderedDictMod,
+                                  isValid2dArray,
+                                  hasIdenticalCols,
+                                  hasIdenticalRows,
+                                  isValid1dArray)
 
 
 class MeasurementData(abc.ABC):
@@ -48,14 +50,37 @@ class MeasurementData(abc.ABC):
 
     @property
     def currentX(self):
+        """
+        Return current dataset describing the x-axis values
+
+        Returns
+        -------
+        DataItem
+            where `<DataItem>.data` is a 1d ndarray of float
+        """
         return self._currentX
 
     @property
     def currentY(self):
+        """
+        Return current dataset describing the y-axis values
+
+        Returns
+        -------
+        DataItem
+            where `<DataItem>.data` is a 1d ndarray of float
+        """
         return self._currentY
 
     @property
     def currentZ(self):
+        """
+        Return current dataset describing the z values (measurement data)
+
+        Returns
+        -------
+        DataItem
+        """
         return self._currentZ
 
     def canvasPlot(self, axes, **kwargs):
@@ -63,6 +88,19 @@ class MeasurementData(abc.ABC):
 
 
 class NumericalMeasurementData(MeasurementData, serializers.Serializable):
+    """
+    Class for storing and manipulating measurement data. The primary measurement data (zData) is expected to be a
+    2d float ndarray representing, for example, a two-tone spectroscopy amplitude as a function of probe frequency
+    and an external field such as flux.
+
+    Parameters
+    ---------
+    rawData: list of ndarray
+        list containing all 1d and 2d arrays (floats) extracted from a data file
+    zCandidates: OrderedDictMod [str, ndarray]
+        each dict entry records the name associated with the dataset, and the dataset element, which  is a 2d ndarray
+        of floats representing a possible set of measurement data (zData)
+    """
     def __init__(self, rawData, zCandidates):
         """
 
@@ -78,6 +116,13 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
 
     @property
     def currentZ(self):
+        """
+        Return current dataset describing the z values (measurement data) with all filters etc. applied.
+
+        Returns
+        -------
+        DataItem
+        """
         zData = copy.copy(self._currentZ)
         if self.checkBoxCallbacks['swapXY']():
             zData.data = np.transpose(zData.data)
@@ -100,12 +145,26 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
 
     @property
     def currentX(self):
+        """
+        Return current dataset describing the x-axis values, taking into account the possibility of an x-y swap.
+
+        Returns
+        -------
+        ndarray, ndim=1
+        """
         if self.checkBoxCallbacks['swapXY']():
             return self._currentY
         return self._currentX
 
     @property
     def currentY(self):
+        """
+        Return current dataset describing the y-axis values, taking into account the possibility of an x-y swap.
+
+        Returns
+        -------
+        ndarray, ndim=1
+        """
         if self.checkBoxCallbacks['swapXY']():
             return self._currentX
         return self._currentY
@@ -171,7 +230,11 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
 
         if self.checkBoxCallbacks['logColoring']():
             linthresh = max(abs(zMin), abs(zMax)) / 20.0
-            norm = colors.SymLogNorm(linthresh=linthresh, vmin=zMin, vmax=zMax, base=10)
+            if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion("3.2.0"):
+                add_on_mpl_3_2_0 = {'base': 10}
+            else:
+                add_on_mpl_3_2_0 = {}
+            norm = colors.SymLogNorm(linthresh=linthresh, vmin=zMin, vmax=zMax, **add_on_mpl_3_2_0)
         else:
             norm = None
 
@@ -200,8 +263,12 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
         zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
 
         if self.checkBoxCallbacks['logColoring']():
+            if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion("3.2.0"):
+                add_on_mpl_3_2_0 = {'base': 10}
+            else:
+                add_on_mpl_3_2_0 = {}
             norm = colors.SymLogNorm(linthresh=0.2, vmin=self.currentZ.data.min(), vmax=self.currentZ.data.max(),
-                                     base=10)
+                                     **add_on_mpl_3_2_0)
         else:
             norm = None
 

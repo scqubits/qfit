@@ -1,4 +1,4 @@
-# datapyc_import.py
+# import_data.py
 #
 # This file is part of datapyc.
 #
@@ -15,7 +15,7 @@ from PySide2.QtWidgets import QFileDialog, QMessageBox
 
 import scqubits.utils.fitting as fit
 
-from datapyc.core.inputdata_io import readFileData, ImageMeasurementData, NumericalMeasurementData
+from datapyc.io.io_readers import readFileData, ImageMeasurementData, NumericalMeasurementData
 
 
 def importFile():
