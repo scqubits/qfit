@@ -11,11 +11,10 @@
 
 import os
 
-from PySide2.QtWidgets import QFileDialog, QMessageBox
+from PySide2.QtWidgets import QFileDialog
 
 import scqubits.utils.fitting as fit
-
-from datapyc.core.inputdata_io import readFileData, ImageMeasurementData, NumericalMeasurementData
+from datapyc.core.inputdata_io import ImageMeasurementData
 
 
 def saveFile(parent):

@@ -52,7 +52,7 @@ def importFile():
             msg.setInformativeText("The selected file format is supported, but heuristic inspection "
                                    "failed to identify suitable data inside the file.")
             msg.setWindowTitle("Error")
-            returnVal = msg.exec_()
+            _ = msg.exec_()
         else:
             success = True
 
