@@ -84,7 +84,6 @@ class MainWindow(QMainWindow):
             self.allDatasetsModel.layoutChanged.emit()
             self.activeDatasetModel.layoutChanged.emit()
 
-
     def setupUiCalibration(self):
         """For the interface that enables calibration of data with respect to x and y axis, group QLineEdit elements
         and the corresponding buttons in dicts. Set up a dictionary mapping calibration labels to the corresponding
@@ -136,8 +135,9 @@ class MainWindow(QMainWindow):
         self.measurementData.setupUiCallbacks(dataCheckBoxCallbacks, plotRangeCallbacks)
 
     def setupUiDataModel(self):
-        """Set up the main class instances holding the data extracted from placing markers on the canvas. The AllExtractedDataModel
-         instance holds all data, whereas the ActiveExtractedDataModel instance holds data of the currently selected data set."""
+        """Set up the main class instances holding the data extracted from placing markers on the canvas. The
+        AllExtractedDataModel instance holds all data, whereas the ActiveExtractedDataModel instance holds data
+        of the currently selected data set."""
         self.activeDatasetModel = ActiveExtractedDataModel()
         self.activeDatasetModel.setAdaptiveCalibrationFunc(self.calibrationModel.adaptiveConversionFunc)
         self.ui.dataTableView.setModel(self.activeDatasetModel)
@@ -154,8 +154,9 @@ class MainWindow(QMainWindow):
 
     def uiDataConnects(self):
         """Make connections for changes in data."""
-        # Whenever the data layout in the ActiveExtractedDataModel changes, update the corresponding AllExtractedDataModel data; this includes the
-        # important event of adding extraction points to the ActiveExtractedDataModel
+        # Whenever the data layout in the ActiveExtractedDataModel changes, update the corresponding
+        # AllExtractedDataModel data; this includes the important event of adding extraction points to the
+        # ActiveExtractedDataModel
         self.activeDatasetModel.layoutChanged.connect(
             lambda: self.ui.datasetListView.model().updateAssocData(newData=self.activeDatasetModel.all()))
 
@@ -167,16 +168,16 @@ class MainWindow(QMainWindow):
             )
         )
 
-        # Whenever the AllExtractedDataModel changes layout - for example, due to switching from one existing data set to another
-        # one, this connection will ensure that the TableView will be updated with the correct data
+        # Whenever the AllExtractedDataModel changes layout - for example, due to switching from one existing data set
+        # to another one, this connection will ensure that the TableView will be updated with the correct data
         self.allDatasetsModel.layoutChanged.connect(
             lambda: self.activeDatasetModel.setAllData(newData=self.allDatasetsModel.currentAssocItem()))
 
         # Whenever data sets are added or removed from the ListView, this ensures that the canvas display is updated.
         self.allDatasetsModel.layoutChanged.connect(self.updatePlot)
 
-        # Each time the data set is changed on ListView/Model by clicking a data set, the data in ActiveExtractedDataModel is updated
-        # to reflect the new selection.
+        # Each time the data set is changed on ListView/Model by clicking a data set, the data in
+        # ActiveExtractedDataModel is updated to reflect the new selection.
         self.ui.datasetListView.clicked.connect(
             lambda: self.activeDatasetModel.setAllData(newData=self.allDatasetsModel.currentAssocItem()))
 
@@ -209,7 +210,7 @@ class MainWindow(QMainWindow):
         """Connect UI elements for data calibration."""
         self.ui.calibratedCheckBox.toggled.connect(self.toggleCalibration)
 
-        for label in self.calibrationButtons.keys():
+        for label in self.calibrationButtons:
             self.calibrationButtons[label].clicked.connect(partial(self.calibrate, label))
 
         for lineEdit in (list(self.rawLineEdits.values()) + list(self.mapLineEdits.values())):
@@ -276,7 +277,7 @@ class MainWindow(QMainWindow):
     def canvasClickMonitoring(self, event):
         """Main loop for acting on mouse events occurring in the canvas area."""
         if event.xdata is None or event.ydata is None:
-            return None
+            return
 
         for calibrationLabel in ['X1', 'X2', 'Y1', 'Y2']:
             data = event.xdata if (calibrationLabel[0] == 'X') else event.ydata
@@ -287,7 +288,7 @@ class MainWindow(QMainWindow):
                 self.mapLineEdits[calibrationLabel].selectAll()
                 self.ui.mplFigureCanvas.selectOn()
                 self.rawLineEdits[calibrationLabel].editingFinished.emit()
-                return None
+                return
 
         if appstate.state == State.SELECT:
             current_data = self.activeDatasetModel.all()
@@ -298,7 +299,7 @@ class MainWindow(QMainWindow):
                 if self.isRelativelyClose(x1y1, x2y2):
                     self.activeDatasetModel.removeColumn(index)
                     self.updatePlot()
-                    return None
+                    return
             self.activeDatasetModel.append(*x1y1)
             self.updatePlot()
 
@@ -377,8 +378,7 @@ class MainWindow(QMainWindow):
     def transformXY(self):
         if self.doXYSwap:
             return lambda array: np.flip(array, axis=0)
-        else:
-            return lambda array: array
+        return lambda array: array
 
     def isRelativelyClose(self, x1y1, x2y2):
         """Check whether the point x1y1 is relatively close to x2y2, given the current field of view on the canvas."""

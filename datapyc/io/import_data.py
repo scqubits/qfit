@@ -13,7 +13,7 @@ import os
 
 from PySide2.QtWidgets import QFileDialog, QMessageBox
 
-import scqubits.utils.fitting as fit
+import datapyc.core.fitdata as fit
 
 from datapyc.io.io_readers import readFileData, ImageMeasurementData, NumericalMeasurementData
 

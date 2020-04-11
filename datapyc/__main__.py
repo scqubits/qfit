@@ -29,7 +29,6 @@ if __name__ == "__main__":
     measurementData, extractedData = importFile()
 
     # fileData = readFileData('C:/Users/drjen/PycharmProjects/DataSelector/scratch/00000_twotoneVsPowerTransmission.h5')
-    # fileData = readFileData('C:/Users/drjen/PycharmProjects/DataSelector/scratch/spec_scan_flux_gate_20190629_v05.mat')
     # fileData = readFileData('C:/Users/drjen/Desktop/Spectroscopy.JPEG')
     # fileData = readFileData(r"C:\Users\drjen\PycharmProjects\datapyc\datapyc\scratch\aug_summary_4_1.hdf5")
 

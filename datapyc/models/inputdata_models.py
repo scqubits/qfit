@@ -20,7 +20,7 @@ from matplotlib import colors as colors
 from scipy.ndimage import gaussian_laplace
 from scipy.signal import savgol_filter
 
-import scqubits.utils.file_io_serializers as serializers
+import datapyc.io.file_io_serializers as serializers
 
 from datapyc.core.helpers import (DataItem,
                                   OrderedDictMod,

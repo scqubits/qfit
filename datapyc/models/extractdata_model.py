@@ -11,8 +11,7 @@
 
 
 import numpy as np
-# import datapyc.io.file_io_serializers as serializers
-import scqubits.utils.file_io_serializers as serializers
+import datapyc.io.file_io_serializers as serializers
 from PySide2.QtCore import Slot, QAbstractTableModel, QAbstractListModel, QModelIndex, Qt
 
 

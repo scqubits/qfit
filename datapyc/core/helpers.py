@@ -31,6 +31,7 @@ class EditDelegate(QStyledItemDelegate):
     def setEditorData(self, editor, index):
         editor.setText(index.model().data(index, role=QtCore.Qt.DisplayRole))
 
+
 class DoubleLineEdit(QLineEdit):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -129,3 +130,7 @@ def transposeEach(xyDataList):
         Each ndarray has the form array([[x1, x2, ...], [y1, y2, ...]])
     """
     return [array.transpose() for array in xyDataList]
+
+
+def remove_nones(dict_data):
+    return {key: value for key, value in dict_data.items() if value is not None}

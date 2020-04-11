@@ -11,7 +11,7 @@
 
 import numpy as np
 
-import scqubits.utils.file_io_serializers as serializers
+import datapyc.io.file_io_serializers as serializers
 
 
 class CalibrationModel(serializers.Serializable):
