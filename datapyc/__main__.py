@@ -16,7 +16,7 @@ from PySide2.QtGui import QFont
 from PySide2.QtWidgets import QApplication
 
 from datapyc.io.import_data import importFile
-from datapyc.views.mainwindow import MainWindow
+from datapyc.core.mainwindow import MainWindow
 
 
 if __name__ == "__main__":

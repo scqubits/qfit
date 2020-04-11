@@ -16,7 +16,7 @@ import scqubits.utils.file_io_serializers as serializers
 from PySide2.QtCore import Slot, QAbstractTableModel, QAbstractListModel, QModelIndex, Qt
 
 
-class TableModel(QAbstractTableModel):
+class ActiveExtractedDataModel(QAbstractTableModel):
     """This class holds one data set, as extracted by markers on the canvas. In addition, it references calibration
     data to expose either the raw selected data, or their calibrated counterparts."""
     def __init__(self, data=None):
@@ -186,7 +186,7 @@ class ListModelMeta(type(QAbstractListModel), type(serializers.Serializable)):
     pass
 
 
-class ListModel(QAbstractListModel, serializers.Serializable, metaclass=ListModelMeta):
+class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metaclass=ListModelMeta):
     def __init__(self):
         super().__init__()
         self.dataNames = ['dataset1']

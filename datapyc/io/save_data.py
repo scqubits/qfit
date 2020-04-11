@@ -28,8 +28,8 @@ def saveFile(parent):
         imageData = None
 
     fitData = fit.FitData(
-        datanames=parent.allDatasetsList.dataNames,
-        datalist=parent.allDatasetsList.allDataSorted(applyCalibration=True),
+        datanames=parent.allDatasetsModel.dataNames,
+        datalist=parent.allDatasetsModel.allDataSorted(applyCalibration=True),
         x_data=parent.measurementData.currentX.data,
         y_data=parent.measurementData.currentY.data,
         z_data=parent.measurementData.currentZ.data,

@@ -7,6 +7,13 @@ scQubits is an open-source Python library for simulating superconducting qubits.
 for loading and displaying experimental data, such as two-tone spectroscopy data. The GUI simplifies the extraction of 
 data points from measurement results, as required for fitting experimental data to theoretical qubit models.
 
+Install datapyc via
+
+    pip install datapyc
+
+Once done, you the application can be launched this way::
+
+    python -m datapyc
 
 
 License
