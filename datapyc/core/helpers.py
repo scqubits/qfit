@@ -21,9 +21,6 @@ from PySide2.QtWidgets import QStyledItemDelegate, QLineEdit
 
 
 class EditDelegate(QStyledItemDelegate):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
     def createEditor(self, parent, option, index):
         editor = DoubleLineEdit(parent)
         return editor

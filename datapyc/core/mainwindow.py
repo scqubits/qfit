@@ -10,13 +10,8 @@
 ############################################################################
 
 
+import sys
 from functools import partial
-
-# from unittest.mock import MagicMock
-# import sys
-#
-# sys.modules['IPython'] = MagicMock()
-# sys.modules['ipywidgets'] = MagicMock()
 
 import matplotlib.cm as cm
 import numpy as np
@@ -34,11 +29,11 @@ from datapyc.ui.ui_window import Ui_MainWindow
 from datapyc.io.save_data import saveFile
 from datapyc.core.helpers import transposeEach
 
-
 class MainWindow(QMainWindow):
     """Class for the main window of the app."""
     def __init__(self, measurementData, extractedData=None):
         super().__init__()
+        self.disconnectCanvas = False
         self.measurementData = measurementData
         self.extractedData = extractedData
 
@@ -54,7 +49,6 @@ class MainWindow(QMainWindow):
         self.maxRangeSliderProperty = None
         self.axes = None
         self.cidCanvas = None
-        self.doXYSwap = False
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -123,7 +117,6 @@ class MainWindow(QMainWindow):
                                  'gaussLaplaceFilter': self.ui.gaussLaplaceCheckBox.isChecked,
                                  'bgndSubtractX': self.ui.bgndSubtractXCheckBox.isChecked,
                                  'bgndSubtractY': self.ui.bgndSubtractYCheckBox.isChecked,
-                                 'swapXY': self.ui.swapXYCheckBox.isChecked,
                                  'logColoring': self.ui.logScaleCheckBox.isChecked}
 
         # Left and right values of the double slider manipulating the z plot range
@@ -147,7 +140,7 @@ class MainWindow(QMainWindow):
         self.ui.datasetListView.setModel(self.allDatasetsModel)
 
     def setupUiXYZComboBoxes(self):
-        zDataNames = [dataName for dataName in self.measurementData.zCandidates.keys()]
+        zDataNames = list(self.measurementData.zCandidates.keys())
         self.ui.zComboBox.addItems(zDataNames)
         self.ui.zComboBox.setCurrentText(self.measurementData.currentZ.name)
         self.setupXYDataBoxes()
@@ -190,7 +183,6 @@ class MainWindow(QMainWindow):
         self.ui.savgolFilterXCheckBox.toggled.connect(self.updatePlot)
         self.ui.savgolFilterYCheckBox.toggled.connect(self.updatePlot)
         self.ui.gaussLaplaceCheckBox.toggled.connect(self.updatePlot)
-        self.ui.swapXYCheckBox.toggled.connect(self.toggleSwapXY)
         self.ui.bgndSubtractXCheckBox.toggled.connect(self.updatePlot)
         self.ui.bgndSubtractYCheckBox.toggled.connect(self.updatePlot)
 
@@ -222,6 +214,7 @@ class MainWindow(QMainWindow):
         self.ui.zoomViewButton.clicked.connect(self.toggleZoom)
         self.ui.panViewButton.clicked.connect(self.togglePan)
         self.ui.selectViewButton.clicked.connect(self.toggleSelect)
+        self.ui.swapXYButton.clicked.connect(self.swapXY)
 
     def uiDataControlConnects(self):
         """Connect buttons for inserting and deleting a data set, or clearing all data sets"""
@@ -246,12 +239,12 @@ class MainWindow(QMainWindow):
 
     def setupXYDataBoxes(self):
         self.ui.xComboBox.clear()
-        xDataNames = [dataName for dataName in self.measurementData.currentXCompatibles.keys()]
+        xDataNames = list(self.measurementData.currentXCompatibles.keys())
         self.ui.xComboBox.addItems(xDataNames)
         self.ui.xComboBox.setCurrentText(self.measurementData.currentX.name)
 
         self.ui.yComboBox.clear()
-        yDataNames = [dataName for dataName in self.measurementData.currentYCompatibles.keys()]
+        yDataNames = list(self.measurementData.currentYCompatibles.keys())
         self.ui.yComboBox.addItems(yDataNames)
         self.ui.yComboBox.setCurrentText(self.measurementData.currentY.name)
 
@@ -293,8 +286,6 @@ class MainWindow(QMainWindow):
         if appstate.state == State.SELECT:
             current_data = self.activeDatasetModel.all()
             x1y1 = np.asarray([event.xdata, event.ydata])
-            if self.doXYSwap:
-                x1y1 = np.flip(x1y1)
             for index, x2y2 in enumerate(current_data.transpose()):
                 if self.isRelativelyClose(x1y1, x2y2):
                     self.activeDatasetModel.removeColumn(index)
@@ -304,10 +295,13 @@ class MainWindow(QMainWindow):
             self.updatePlot()
 
     @Slot()
-    def updatePlot(self, slotdummy=None, initialize=False, toggleXY=False, **kwargs):
+    def updatePlot(self, slotdummy=None, initialize=False, **kwargs):
         """Update the current plot of measurement data and markers of selected data points."""
+        if self.disconnectCanvas:
+            return
+
         # If this is not the first time of plotting, store the current axes limits and clear the graph.
-        if (not initialize) and (not toggleXY):
+        if not initialize:
             xlim = self.axes.get_xlim()
             ylim = self.axes.get_ylim()
         self.axes.clear()
@@ -321,12 +315,11 @@ class MainWindow(QMainWindow):
 
         # If there are any extracted data points in the currently active data set, show those via a scatter plot.
         if self.activeDatasetModel.columnCount() > 0:
-            transform = self.transformXY()
-            dataXY = transform(self.activeDatasetModel.all())
+            dataXY = self.activeDatasetModel.all()
             self.axes.scatter(dataXY[0], dataXY[1], c='orange', marker='x')
 
         # Make sure that new axes limits match the old ones.
-        if not initialize and not toggleXY:
+        if not initialize:
             self.axes.set_xlim(xlim)
             self.axes.set_ylim(ylim)
 
@@ -371,19 +364,49 @@ class MainWindow(QMainWindow):
         self.updatePlot(initialize=True)
 
     @Slot()
-    def toggleSwapXY(self):
-        self.doXYSwap = not self.doXYSwap
-        self.updatePlot(toggleXY=True)
+    def swapXY(self):
+        self.disconnectCanvas = True
+        self.measurementData.swapXY()
+        self.setupXYDataBoxes()
 
-    def transformXY(self):
-        if self.doXYSwap:
-            return lambda array: np.flip(array, axis=0)
-        return lambda array: array
+        self.allDatasetsModel.swapXY()
+        self.allDatasetsModel.layoutChanged.emit()
+
+        xBgndSub = self.ui.bgndSubtractXCheckBox.checkState()
+        yBgndSub = self.ui.bgndSubtractYCheckBox.checkState()
+        xSavGol = self.ui.savgolFilterXCheckBox.checkState()
+        ySavGol = self.ui.savgolFilterYCheckBox.checkState()
+
+        self.ui.bgndSubtractXCheckBox.setCheckState(yBgndSub)
+        self.ui.bgndSubtractYCheckBox.setCheckState(xBgndSub)
+        self.ui.savgolFilterXCheckBox.setCheckState(ySavGol)
+        self.ui.savgolFilterYCheckBox.setCheckState(xSavGol)
+
+        rawx1 = self.rawLineEdits['X1'].value()
+        rawx2 = self.rawLineEdits['X2'].value()
+        rawy1 = self.rawLineEdits['Y1'].value()
+        rawy2 = self.rawLineEdits['Y2'].value()
+        mapx1 = self.mapLineEdits['X1'].value()
+        mapx2 = self.mapLineEdits['X2'].value()
+        mapy1 = self.mapLineEdits['Y1'].value()
+        mapy2 = self.mapLineEdits['Y2'].value()
+        self.rawLineEdits['X1'].setText(str(rawy1))
+        self.rawLineEdits['Y1'].setText(str(rawx1))
+        self.rawLineEdits['X2'].setText(str(rawy2))
+        self.rawLineEdits['Y2'].setText(str(rawx2))
+        self.mapLineEdits['X1'].setText(str(mapy1))
+        self.mapLineEdits['Y1'].setText(str(mapx1))
+        self.mapLineEdits['X2'].setText(str(mapy2))
+        self.mapLineEdits['Y2'].setText(str(mapx2))
+        self.updateCalibration()
+
+        self.disconnectCanvas = False
+        self.updatePlot(initialize=True)
 
     def isRelativelyClose(self, x1y1, x2y2):
         """Check whether the point x1y1 is relatively close to x2y2, given the current field of view on the canvas."""
-        xlim = self.axes.get_xlim() if not self.doXYSwap else self.axes.get_ylim()
-        ylim = self.axes.get_ylim() if not self.doXYSwap else self.axes.get_xlim()
+        xlim = self.axes.get_xlim()
+        ylim = self.axes.get_ylim()
         xmin, xmax = xlim
         ymin, ymax = ylim
         xrange = xmax - xmin
@@ -404,7 +427,7 @@ class MainWindow(QMainWindow):
     def saveAndCloseApp(self):
         """Save the extracted data and calibration information to file, then exit the application."""
         saveFile(self)
-        exit()
+        sys.exit()
 
     def resizeAndCenter(self, maxSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)

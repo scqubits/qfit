@@ -124,8 +124,6 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         DataItem
         """
         zData = copy.copy(self._currentZ)
-        if self.checkBoxCallbacks['swapXY']():
-            zData.data = np.transpose(zData.data)
 
         if self.checkBoxCallbacks['savgolFilterX']():
             zData.data = self.applySavitzkyGolayFilter(zData.data, axis=1)
@@ -152,8 +150,6 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         -------
         ndarray, ndim=1
         """
-        if self.checkBoxCallbacks['swapXY']():
-            return self._currentY
         return self._currentX
 
     @property
@@ -165,8 +161,6 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         -------
         ndarray, ndim=1
         """
-        if self.checkBoxCallbacks['swapXY']():
-            return self._currentX
         return self._currentY
 
     def setCurrentZ(self, itemIndex):
@@ -208,6 +202,14 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
                 if isValid2dArray(theObject) and hasIdenticalCols(theObject):
                     xyCandidates[name] = theObject[:, 0]
         return xyCandidates
+
+    def swapXY(self):
+        swappedZCandidates = {key: array.transpose() for key, array in self.zCandidates.items()}
+        self.zCandidates = OrderedDictMod(swappedZCandidates)
+        self._currentZ.data = self._currentZ.data.transpose()
+
+        self.currentXCompatibles, self.currentYCompatibles = self.currentYCompatibles, self.currentXCompatibles
+        self._currentX, self._currentY = self._currentY, self._currentX
 
     def doBgndSubtraction(self, array, axis=0):
         avgArray = array - np.nanmean(array, axis=axis, keepdims=True)
@@ -273,3 +275,6 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
             norm = None
 
         _ = axes.imshow(zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs)
+
+    def swapXY(self):
+        pass

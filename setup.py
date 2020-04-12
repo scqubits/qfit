@@ -3,8 +3,8 @@
 
 datapyc is part of scQubits, an an open-source Python package for simulating superconducting qubits. The datapyc package
 provides a GUI tool for loading and displaying data, for example from spectroscopy experiments. The GUI simplifies the
-extraction of data points from measurement results, as required for fitting experimental data to theoretical qubit models.
-
+extraction of data points from measurement results, as required for fitting experimental data to theoretical qubit
+models.
 """
 #
 # This file is part of datapyc.

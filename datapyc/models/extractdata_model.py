@@ -239,6 +239,10 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
         self.layoutChanged.emit()
         return True
 
+    def swapXY(self):
+        swappedAssocDataList = [array[[1, 0]] for array in self.assocDataList]
+        self.assocDataList = swappedAssocDataList
+
     @Slot()
     def newRow(self, str_value=None):
         rowCount = self.rowCount()
@@ -302,7 +306,6 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
         -------
         IOData
         """
-        # calibratedData = [self._calibrationFunc(dataSet) for dataSet in self.assocDataList]
         processedData = self.allDataSorted()
         initdata = {
             'datanames': self.dataNames,

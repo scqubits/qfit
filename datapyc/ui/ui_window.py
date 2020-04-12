@@ -20,7 +20,7 @@ from datapyc.views.extractdata_view import TableView, ListView
 import datapyc.ui.resources_rc
 
 
-class Ui_MainWindow(object):
+class Ui_MainWindow:
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1280, 1024)
@@ -278,22 +278,8 @@ class Ui_MainWindow(object):
         self.zoomViewButton.setCheckable(True)
         self.zoomViewButton.setAutoExclusive(True)
         self.zoomViewButton.setObjectName("zoomViewButton")
-        self.swapXYCheckBox = QtWidgets.QCheckBox(self.mplFigureCanvas)
-        self.swapXYCheckBox.setGeometry(QtCore.QRect(220, 20, 200, 40))
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.swapXYCheckBox.sizePolicy().hasHeightForWidth())
-        self.swapXYCheckBox.setSizePolicy(sizePolicy)
-        self.swapXYCheckBox.setMinimumSize(QtCore.QSize(100, 0))
-        font = QtGui.QFont()
-        font.setWeight(75)
-        font.setBold(True)
-        self.swapXYCheckBox.setFont(font)
-        self.swapXYCheckBox.setObjectName("swapXYCheckBox")
         self.selectViewButton = QtWidgets.QPushButton(self.mplFigureCanvas)
         self.selectViewButton.setGeometry(QtCore.QRect(160, 20, 41, 41))
-        self.selectViewButton.setCursor(QtCore.Qt.CrossCursor)
         self.selectViewButton.setText("")
         icon11 = QtGui.QIcon()
         icon11.addPixmap(QtGui.QPixmap(":/icons/selectmode.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
@@ -302,6 +288,9 @@ class Ui_MainWindow(object):
         self.selectViewButton.setChecked(True)
         self.selectViewButton.setAutoExclusive(True)
         self.selectViewButton.setObjectName("selectViewButton")
+        self.swapXYButton = QtWidgets.QPushButton(self.mplFigureCanvas)
+        self.swapXYButton.setGeometry(QtCore.QRect(210, 20, 71, 41))
+        self.swapXYButton.setObjectName("swapXYButton")
         self.gridLayout.addWidget(self.mplFigureCanvas, 0, 4, 9, 1)
 
         self.gridGroupBox_2 = QtWidgets.QGroupBox(self.centralwidget)
@@ -535,8 +524,7 @@ class Ui_MainWindow(object):
         self.resetViewButton.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Reset plot area", None, -1))
         self.panViewButton.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Pan mode: move plot region by dragging", None, -1))
         self.zoomViewButton.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Zoom mode: select a plot region to enlarge", None, -1))
-        self.swapXYCheckBox.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Swap X and Y axes", None, -1))
-        self.swapXYCheckBox.setText(QtWidgets.QApplication.translate("MainWindow", "Swap X↔Y", None, -1))
+        self.swapXYButton.setText(QtWidgets.QApplication.translate("MainWindow", "X↔Y", None, -1))
         self.label_3.setText(QtWidgets.QApplication.translate("MainWindow", "Z Values", None, -1))
         self.label_2.setText(QtWidgets.QApplication.translate("MainWindow", "Axis-2 Values", None, -1))
         self.label.setText(QtWidgets.QApplication.translate("MainWindow", "Axis-1 Values", None, -1))

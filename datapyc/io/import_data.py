@@ -39,7 +39,7 @@ def importFile():
     success = False
     while not success:
         fileCategories = "Data files (*.h5 *.mat *.csv *.jpg *.jpeg *.png *.hdf5)"
-        fileName, fileFilter = QFileDialog.getOpenFileName(None, "Open", home, fileCategories)
+        fileName, _ = QFileDialog.getOpenFileName(None, "Open", home, fileCategories)
         if not fileName:
             exit()
 

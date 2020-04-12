@@ -32,7 +32,7 @@ def saveFile(parent):
         datalist=parent.allDatasetsModel.allDataSorted(applyCalibration=True),
         x_data=parent.measurementData.currentX.data,
         y_data=parent.measurementData.currentY.data,
-        z_data=parent.measurementData.currentZ.data,
+        z_data=parent.measurementData.currentZ.data if imageData is None else None,
         image_data=imageData,
         calibration_data=parent.calibrationModel
     )

@@ -41,7 +41,7 @@ def readFileData(fileName):
     -------
     Serializable
         class instance initialized with the data from the file
-    """  
+    """
     _, suffix = os.path.splitext(fileName)
 
     if suffix.lower() in ('.h5', '.hdf5'):
