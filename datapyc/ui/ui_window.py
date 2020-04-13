@@ -1,12 +1,13 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'ui_mainwindow0.ui',
-# licensing of 'ui_mainwindow0.ui' applies.
+# ui_window.py
 #
-# Created: Sun Mar 29 08:38:31 2020
-#      by: pyside2-uic  running on PySide2 5.13.2
+# This file is part of datapyc.
 #
-# WARNING! All changes made in this file will be lost!
+#    Copyright (c) 2020, Jens Koch
+#    All rights reserved.
+#
+#    This source code is licensed under the BSD-style license found in the
+#    LICENSE file in the root directory of this source tree.
+############################################################################
 
 import os
 
