@@ -12,11 +12,11 @@
 import os
 
 from PySide2 import QtCore, QtGui, QtWidgets
-from PySide2.QtQuickWidgets import QQuickWidget
 
 from datapyc.views.calibration_view import CalibrationLineEdit
 from datapyc.views.canvas_view import FigureCanvas
 from datapyc.views.extractdata_view import TableView, ListView
+from datapyc.ui.rangeslider import RangeSlider
 
 import datapyc.ui.resources_rc
 
@@ -464,21 +464,17 @@ class Ui_MainWindow:
         self.logScaleCheckBox.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.logScaleCheckBox.setObjectName("logScaleCheckBox")
         self.gridLayout_5.addWidget(self.logScaleCheckBox, 0, 1, 1, 1)
-        self.quickWidget = QQuickWidget(self.gridGroupBox)
+
+        self.rangeSliderWidget = RangeSlider(self.gridGroupBox)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.quickWidget.sizePolicy().hasHeightForWidth())
-
-        self.quickWidget.setSizePolicy(sizePolicy)
-        self.quickWidget.setMinimumSize(QtCore.QSize(0, 30))
-        self.quickWidget.setMaximumSize(QtCore.QSize(16777215, 30))
-        self.quickWidget.setAutoFillBackground(True)
-        self.quickWidget.setResizeMode(QQuickWidget.SizeRootObjectToView)
-        qml_file = os.path.join(os.path.dirname(__file__), "rangeslider.qml")
-        self.quickWidget.setSource(QtCore.QUrl.fromLocalFile(os.path.abspath(qml_file)))
-        self.quickWidget.setObjectName("quickWidget")
-        self.gridLayout_5.addWidget(self.quickWidget, 1, 0, 1, 2)
+        sizePolicy.setHeightForWidth(self.rangeSliderWidget.sizePolicy().hasHeightForWidth())
+        self.rangeSliderWidget.setSizePolicy(sizePolicy)
+        self.rangeSliderWidget.setMinimumSize(QtCore.QSize(0, 30))
+        self.rangeSliderWidget.setMaximumSize(QtCore.QSize(16777215, 30))
+        self.rangeSliderWidget.setObjectName("rangeSliderWidget")
+        self.gridLayout_5.addWidget(self.rangeSliderWidget, 1, 0, 1, 2)
 
         self.gridLayout.addWidget(self.gridGroupBox, 1, 1, 1, 2)
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
@@ -552,5 +548,5 @@ class Ui_MainWindow:
         self.colorComboBox.setItemText(4, QtWidgets.QApplication.translate("MainWindow", "cividis", None, -1))
         self.colorComboBox.setItemText(5, QtWidgets.QApplication.translate("MainWindow", "gray", None, -1))
         self.logScaleCheckBox.setText(QtWidgets.QApplication.translate("MainWindow", "Log Colorscale", None, -1))
-        self.quickWidget.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Adjust plot range (Z)", None, -1))
-        self.quickWidget.setWhatsThis(QtWidgets.QApplication.translate("MainWindow", "Color Range", None, -1))
+        self.rangeSliderWidget.setToolTip(QtWidgets.QApplication.translate("MainWindow", "Adjust plot range (Z)", None, -1))
+        self.rangeSliderWidget.setWhatsThis(QtWidgets.QApplication.translate("MainWindow", "Color Range", None, -1))

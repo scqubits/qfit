@@ -15,7 +15,7 @@ from PySide2.QtCore import QSize
 from PySide2.QtGui import QFont
 from PySide2.QtWidgets import QApplication
 
-from datapyc.io.import_data import importFile
+from datapyc.io_utils.import_data import importFile
 from datapyc.core.mainwindow import MainWindow
 
 

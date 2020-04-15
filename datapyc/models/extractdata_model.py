@@ -11,7 +11,7 @@
 
 
 import numpy as np
-import datapyc.io.file_io_serializers as serializers
+import datapyc.io_utils.file_io_serializers as serializers
 from PySide2.QtCore import Slot, QAbstractTableModel, QAbstractListModel, QModelIndex, Qt
 
 
@@ -285,7 +285,7 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
     def setCalibrationFunc(self, calibrationModelCallback):
         self._calibrationFunc = calibrationModelCallback
 
-    def allDataSorted(self, applyCalibration=True):
+    def allDataSorted(self, applyCalibration):
         if applyCalibration:
             data = [self._calibrationFunc(dataSet) for dataSet in self.assocDataList]
         else:
@@ -306,7 +306,7 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
         -------
         IOData
         """
-        processedData = self.allDataSorted()
+        processedData = self.allDataSorted(applyCalibration=False)
         initdata = {
             'datanames': self.dataNames,
             'datalist': processedData

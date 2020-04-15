@@ -14,7 +14,7 @@ Helper routines for writing data to files.
 
 import os
 
-import datapyc.io.file_io_serializers as io_serializers
+import datapyc.io_utils.file_io_serializers as io_serializers
 
 
 FILE_TYPES = ['.h5 | .hdf5', '.csv']
@@ -125,7 +125,7 @@ class FileIOFactory:
         -------
         IOWriter
         """
-        import datapyc.io.file_io_backends as io_backends
+        import datapyc.io_utils.file_io_backends as io_backends
         _, suffix = os.path.splitext(file_name)
         if suffix == '.csv':
             return io_backends.CSVWriter(file_name)
@@ -151,7 +151,7 @@ class FileIOFactory:
         if get_external_reader:
             return get_external_reader(file_name, file_handle=file_handle)
 
-        import datapyc.io.file_io_backends as io_backends
+        import datapyc.io_utils.file_io_backends as io_backends
         _, suffix = os.path.splitext(file_name)
         if suffix in ('.h5', '.hdf5'):
             return io_backends.H5Reader(file_name, file_handle=file_handle)

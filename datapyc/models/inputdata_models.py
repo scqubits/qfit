@@ -20,7 +20,7 @@ from matplotlib import colors as colors
 from scipy.ndimage import gaussian_laplace
 from scipy.signal import savgol_filter
 
-import datapyc.io.file_io_serializers as serializers
+import datapyc.io_utils.file_io_serializers as serializers
 
 from datapyc.core.helpers import (DataItem,
                                   OrderedDictMod,
@@ -35,7 +35,7 @@ class MeasurementData(abc.ABC):
     def __init__(self, rawData):
         self.rawData = rawData
         self.checkBoxCallbacks = None
-        self.plotRangeCallbacks = None
+        self.plotRangeCallback = None
         self._currentX = DataItem('', None)
         self._currentY = DataItem('', None)
         self._currentZ = DataItem('', None)
@@ -44,9 +44,9 @@ class MeasurementData(abc.ABC):
         self.currentXCompatibles = OrderedDictMod()
         self.currentYCompatibles = OrderedDictMod()
 
-    def setupUiCallbacks(self, checkBoxCallbacks, plotRangeCallbacks):
+    def setupUiCallbacks(self, checkBoxCallbacks, plotRangeCallback):
         self.checkBoxCallbacks = checkBoxCallbacks
-        self.plotRangeCallbacks = plotRangeCallbacks
+        self.plotRangeCallback = plotRangeCallback
 
     @property
     def currentX(self):
@@ -225,7 +225,7 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         rawZMax = zData.max()
 
         # Extract zRange from range slider values
-        zRange = (self.plotRangeCallbacks['left'](), self.plotRangeCallbacks['right']())
+        zRange = self.plotRangeCallback()
         # Choose Z value range according to the range slider values.
         zMin = rawZMin + zRange[0] * (rawZMax - rawZMin)
         zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
@@ -259,7 +259,7 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
         rawZMax = zData.max()
 
         # Extract zRange from range slider values
-        zRange = (self.plotRangeCallbacks['left'](), self.plotRangeCallbacks['right']())
+        zRange = self.plotRangeCallback()
         # Choose Z value range according to the range slider values.
         zMin = rawZMin + zRange[0] * (rawZMax - rawZMin)
         zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)

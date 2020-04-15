@@ -10,7 +10,7 @@
 ############################################################################
 
 
-import datapyc.io.file_io_serializers as serializers
+import datapyc.io_utils.file_io_serializers as serializers
 from datapyc.models.calibration_model import CalibrationModel
 
 serializers.SERIALIZABLE_REGISTRY['CalibrationModel'] = CalibrationModel
@@ -36,6 +36,7 @@ class FitData(serializers.Serializable):
             as obtained with matplotlib.image.imread
         calibration_data: datapyc.CalibrationModel
         """
+        super().__init__()
         self.datanames = datanames
         self.datalist = datalist
         self.x_data = x_data

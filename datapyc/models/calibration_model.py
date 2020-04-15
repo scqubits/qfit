@@ -11,7 +11,7 @@
 
 import numpy as np
 
-import datapyc.io.file_io_serializers as serializers
+import datapyc.io_utils.file_io_serializers as serializers
 
 
 class CalibrationModel(serializers.Serializable):
@@ -26,6 +26,7 @@ class CalibrationModel(serializers.Serializable):
             Each of these is a two component vector (x,y) marking a point. The calibration maps rawVec1 -> mapVec1,
             rawVec2 -> mapVec2 with an affine-linear transformation:   mapVecN = alphaMat . rawVecN + bVec.
         """
+        super().__init__()
         self.rawVec1 = rawVec1
         self.rawVec2 = rawVec2
         self.mapVec1 = mapVec1

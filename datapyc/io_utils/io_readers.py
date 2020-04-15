@@ -17,8 +17,8 @@ import numpy as np
 from matplotlib.image import imread
 from scipy.io import loadmat
 
-import datapyc.io.file_io_backends as io_backends
-import datapyc.io.file_io as io
+import datapyc.io_utils.file_io_backends as io_backends
+import datapyc.io_utils.file_io as io
 
 from datapyc.core.helpers import (OrderedDictMod,
                                   isValid2dArray,

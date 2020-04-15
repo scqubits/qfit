@@ -53,7 +53,13 @@ CURDIR = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(CURDIR, "requirements.txt")) as requirements:
     INSTALL_REQUIRES = requirements.read().splitlines()
 
-PACKAGES = ['datapyc']
+PACKAGES = ['datapyc',
+            'datapyc/core',
+            'datapyc/io_utils',
+            'datapyc/models',
+            'datapyc/ui',
+            'datapyc/views']
+
 PYTHON_VERSION = '>=3.6'
 
 

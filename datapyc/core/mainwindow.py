@@ -15,9 +15,8 @@ from functools import partial
 
 import matplotlib.cm as cm
 import numpy as np
-from PySide2.QtCore import Slot, SLOT, QSize, QPoint, QRect
+from PySide2.QtCore import Slot, QSize, QPoint, QRect
 from PySide2.QtGui import Qt
-from PySide2.QtQml import QQmlProperty
 from PySide2.QtWidgets import QMainWindow, QStyle
 
 import datapyc.core.app_state as appstate
@@ -26,8 +25,9 @@ from datapyc.models.calibration_model import CalibrationModel
 from datapyc.views.calibration_view import CalibrationView
 from datapyc.models.extractdata_model import ActiveExtractedDataModel, AllExtractedDataModel
 from datapyc.ui.ui_window import Ui_MainWindow
-from datapyc.io.save_data import saveFile
+from datapyc.io_utils.save_data import saveFile
 from datapyc.core.helpers import transposeEach
+
 
 class MainWindow(QMainWindow):
     """Class for the main window of the app."""
@@ -119,13 +119,12 @@ class MainWindow(QMainWindow):
                                  'bgndSubtractY': self.ui.bgndSubtractYCheckBox.isChecked,
                                  'logColoring': self.ui.logScaleCheckBox.isChecked}
 
-        # Left and right values of the double slider manipulating the z plot range
-        self.minRangeSliderProperty = QQmlProperty(self.ui.quickWidget.rootObject(), "first.value")
-        self.maxRangeSliderProperty = QQmlProperty(self.ui.quickWidget.rootObject(), "second.value")
+        self.ui.rangeSliderWidget.setRange(0, 1)
+        self.ui.rangeSliderWidget.setValues(0, 1)
+        plotRangeCallback = self.ui.rangeSliderWidget.getValues
 
-        plotRangeCallbacks = {'left': self.minRangeSliderProperty.read, 'right': self.maxRangeSliderProperty.read}
+        self.measurementData.setupUiCallbacks(dataCheckBoxCallbacks, plotRangeCallback)
 
-        self.measurementData.setupUiCallbacks(dataCheckBoxCallbacks, plotRangeCallbacks)
 
     def setupUiDataModel(self):
         """Set up the main class instances holding the data extracted from placing markers on the canvas. The
@@ -195,8 +194,7 @@ class MainWindow(QMainWindow):
         self.ui.colorComboBox.activated.connect(self.updatePlot)
 
         # Ensure that a change in the range slider positions cause an update of the plot.
-        self.minRangeSliderProperty.connectNotifySignal(self, SLOT("updatePlot()"))
-        self.maxRangeSliderProperty.connectNotifySignal(self, SLOT("updatePlot()"))
+        self.ui.rangeSliderWidget.sigValueChanged.connect(self.updatePlot)
 
     def uiCalibrationConnects(self):
         """Connect UI elements for data calibration."""

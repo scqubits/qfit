@@ -31,8 +31,9 @@ class Serializable(ABC):
     def __new__(cls, *args, **kwargs):
         """Used to set up class attributes that record which __init__ parameters will be stored as attributes, ndarrays,
         and objects."""
-        cls._init_params = get_init_params(cls)
-        return super().__new__(cls, *args, **kwargs)
+        new_instance = super().__new__(cls)
+        new_instance._init_params = get_init_params(cls)
+        return new_instance
 
     def __init_subclass__(cls, **kwargs):
         """Used to register all non-abstract subclasses as a list in `QuantumSystem.subclasses`."""
@@ -86,7 +87,7 @@ class Serializable(ABC):
         ----------
         filename: str
         """
-        import datapyc.io.file_io as io
+        import datapyc.io_utils.file_io as io
         io.write(self, filename)
 
     @classmethod
@@ -102,7 +103,7 @@ class Serializable(ABC):
         SpectrumData
             new SpectrumData object, initialized with data read from file
         """
-        import datapyc.io.file_io as io
+        import datapyc.io_utils.file_io as io
         return io.read(filename)
 
 
@@ -161,7 +162,7 @@ def dict_serialize(dict_instance):
     -------
     IOData
     """
-    import datapyc.io.file_io as io
+    import datapyc.io_utils.file_io as io
     dict_instance = helpers.remove_nones(dict_instance)
     attributes = {}
     ndarrays = {}
@@ -186,7 +187,7 @@ def list_serialize(list_instance):
     -------
     IOData
     """
-    import datapyc.io.file_io as io
+    import datapyc.io_utils.file_io as io
     attributes = {}
     ndarrays = {}
     objects = {}

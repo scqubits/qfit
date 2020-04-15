@@ -25,7 +25,7 @@ except ImportError:
 else:
     _HAS_H5PY = True
 
-import datapyc.io.file_io as io
+import datapyc.io_utils.file_io as io
 
 
 class IOWriter(ABC):
