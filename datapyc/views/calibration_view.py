@@ -40,6 +40,16 @@ class CalibrationView:
         mVec2 = self.mapLineEdits['X2'].value(), self.mapLineEdits['Y2'].value()
         return rVec1, rVec2, mVec1, mVec2
 
+    def setView(self, rawVec1, rawVec2, mapVec1, mapVec2):
+        self.rawLineEdits['X1'].setText(str(rawVec1[0]))
+        self.rawLineEdits['X2'].setText(str(rawVec2[0]))
+        self.rawLineEdits['Y1'].setText(str(rawVec1[1]))
+        self.rawLineEdits['Y2'].setText(str(rawVec2[1]))
+        self.mapLineEdits['X1'].setText(str(mapVec1[0]))
+        self.mapLineEdits['X2'].setText(str(mapVec2[0]))
+        self.mapLineEdits['Y1'].setText(str(mapVec1[1]))
+        self.mapLineEdits['Y2'].setText(str(mapVec2[1]))
+
 
 class CalibrationLineEdit(QLineEdit):
     def __init__(self, *args, **kwargs):

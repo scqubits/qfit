@@ -57,6 +57,9 @@ class CalibrationModel(serializers.Serializable):
         self.alphaMat = np.asarray([[alphaX, 0.], [0., alphaY]])
         self.rawVec1, self.rawVec2, self.mapVec1, self.mapVec2 = rVec1, rVec2, mVec1, mVec2
 
+    def allCalibrationVecs(self):
+        return self.rawVec1, self.rawVec2, self.mapVec1, self.mapVec2
+
     def calibrateDataset(self, array):
         return np.apply_along_axis(self.calibrateDataPoint, axis=0, arr=array)
 

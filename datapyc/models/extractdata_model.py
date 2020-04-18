@@ -239,6 +239,11 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
         self.layoutChanged.emit()
         return True
 
+    def isEmpty(self):
+        if len(self.assocDataList) == 1 and self.assocDataList[0].size == 0:
+            return True
+        return False
+
     def swapXY(self):
         swappedAssocDataList = [array[[1, 0]] for array in self.assocDataList]
         self.assocDataList = swappedAssocDataList
