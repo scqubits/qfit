@@ -22,6 +22,9 @@ def saveFile(parent):
     fileCategories = "scQubits file (*.h5);;Data file (*.csv)"
     fileName, _ = QFileDialog.getSaveFileName(parent, "Save Extracted Data", home, fileCategories)
 
+    if not fileName:
+        return False
+
     if isinstance(parent.measurementData, ImageMeasurementData):
         imageData = parent.measurementData.currentZ.data
     else:
@@ -37,3 +40,4 @@ def saveFile(parent):
         calibration_data=parent.calibrationModel
     )
     fitData.filewrite(fileName)
+    return True

@@ -17,7 +17,7 @@ import matplotlib.cm as cm
 import numpy as np
 from PySide2.QtCore import Slot, QSize, QPoint, QRect
 from PySide2.QtGui import Qt
-from PySide2.QtWidgets import QMainWindow, QStyle
+from PySide2.QtWidgets import QMainWindow, QStyle, QMessageBox
 
 import datapyc.core.app_state as appstate
 from datapyc.core.app_state import State
@@ -73,7 +73,9 @@ class MainWindow(QMainWindow):
         if self.extractedData is not None:
             self.allDatasetsModel.dataNames = self.extractedData.datanames
             self.allDatasetsModel.assocDataList = transposeEach(self.extractedData.datalist)
-            self.calibrationModel = self.extractedData.calibration_data
+            self.calibrationModel.setCalibration(*self.extractedData.calibration_data.allCalibrationVecs())
+
+            self.calibrationView.setView(*self.calibrationModel.allCalibrationVecs())
             self.activeDatasetModel._data = self.allDatasetsModel.currentAssocItem()
             self.allDatasetsModel.layoutChanged.emit()
             self.activeDatasetModel.layoutChanged.emit()
@@ -314,7 +316,7 @@ class MainWindow(QMainWindow):
         # If there are any extracted data points in the currently active data set, show those via a scatter plot.
         if self.activeDatasetModel.columnCount() > 0:
             dataXY = self.activeDatasetModel.all()
-            self.axes.scatter(dataXY[0], dataXY[1], c='orange', marker='x')
+            self.axes.scatter(dataXY[0], dataXY[1], c='orange', marker='x', s=150)
 
         # Make sure that new axes limits match the old ones.
         if not initialize:
@@ -419,12 +421,31 @@ class MainWindow(QMainWindow):
     @Slot()
     def closeApp(self):
         """End the application"""
-        exit()
+        if self.allDatasetsModel.isEmpty():
+            sys.exit()
+        else:
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle("datapyc")
+            msgBox.setIcon(QMessageBox.Question)
+            msgBox.setInformativeText("Do you want to save changes?")
+            msgBox.setText("This document has been modified.")
+            msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+            msgBox.setDefaultButton(QMessageBox.Save)
+
+            reply = msgBox.exec_()
+
+            if reply == QMessageBox.Save:
+                self.saveAndCloseApp()
+            elif reply == QMessageBox.Discard:
+                sys.exit()
+            return
 
     @Slot()
     def saveAndCloseApp(self):
         """Save the extracted data and calibration information to file, then exit the application."""
-        saveFile(self)
+        success = saveFile(self)
+        if not success:
+            return
         sys.exit()
 
     def resizeAndCenter(self, maxSize):
