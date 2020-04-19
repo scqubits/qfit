@@ -7,8 +7,6 @@
 License
 *******************
 
-.. image:: https://img.shields.io/badge/license-New%20BSD-blue.svg
-
 BSD 3-Clause License
 
 Copyright (c) 2020, Jens Koch.
@@ -54,8 +52,9 @@ Licenses of included open-source code and icons
 
 `silx toolkit`:
    Copyright (c) European Synchrotron Radiation Facility (ESRF).
+
    The datapyc GUI incorporates a range slider widget from the `silx toolkit` library,
-   The `silx toolkit` follows the permissive MIT license, requiring inclusion of the subsequent
+   `silx toolkit` follows the permissive MIT license, requiring inclusion of the subsequent
    permissive notice:
 
    Permission is hereby granted, free of charge, to any person obtaining a copy of

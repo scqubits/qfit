@@ -5,7 +5,7 @@
 
 .. note::
 
-   Anyone is welcome to contribute to datapyc.  If you are interested in helping, please let us know!
+   Anyone is welcome to contribute to datapyc.
 
 
 ===========
@@ -26,8 +26,8 @@ Contributors
 
 | **Peter Groszkowski** (University of Chicago) - Code consultant
 | **Daniel Weiss** (Northwestern University) - Early testing and bug hunting
-| **Andras Gyenis** (Princeton University) - Provide sample experimental data
-| **Srivatsan Chakram** (University of Chicago) - Provide sample experimental data
-| **Chen Wang** (University of Massachussetts at Amherst) - Provide sample experimental data
+| **Andras Gyenis** (Princeton University) - Contributed sample experimental data
+| **Srivatsan Chakram** (University of Chicago) - Contributed sample experimental data
+| **Chen Wang** (University of Massachussetts at Amherst) - Contributed sample experimental data
 | **Ebru Dogan** (University of Massachussetts at Amherst) - Experimental data consultant
 

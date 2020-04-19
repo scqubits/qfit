@@ -17,3 +17,9 @@ datapyc aims to support file formats commonly used in experimental labs. The cur
    ".h5, .hdf5", "Labber", "Based on the hierarchical file structure used by Labber 1.7, datapyc attempts to extract relevant measurement data"
    ".mat", "Matlab", "MAT file format used by Matlab for array storage. datapyc relies on ``scipy.io.loadmat`` for reading .mat files."
    ".csv", "generic CSV data", "Comma Separated Value data is read using ``numpy.loadtxt``."
+
+At base level, the kind of data of interest for datapyc are 2d arrays of floats:
+
+.. figure:: ../graphics/data.jpg
+   :align: center
+   :width: 4.5in
