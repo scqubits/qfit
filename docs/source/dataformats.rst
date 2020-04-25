@@ -20,6 +20,6 @@ datapyc aims to support file formats commonly used in experimental labs. The cur
 
 At base level, the kind of data of interest for datapyc are 2d arrays of floats:
 
-.. figure:: ../graphics/data.jpg
+.. figure:: ./graphics/data.jpg
    :align: center
-   :width: 4.5in
+   :width: 5.5in

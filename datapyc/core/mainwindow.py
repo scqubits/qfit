@@ -279,6 +279,7 @@ class MainWindow(QMainWindow):
                 self.rawLineEdits[calibrationLabel].setText(str(data))
                 self.rawLineEdits[calibrationLabel].home(False)
                 self.mapLineEdits[calibrationLabel].selectAll()
+                self.ui.selectViewButton.setChecked(True)
                 self.ui.mplFigureCanvas.selectOn()
                 self.rawLineEdits[calibrationLabel].editingFinished.emit()
                 return

@@ -24,8 +24,8 @@ datapyc
    :maxdepth: 2
 
    installation.rst
-   dataformats.rst
    guide/guide.rst
+   dataformats.rst
    changelog.rst
    contributors.rst
    acknowledgments.rst
