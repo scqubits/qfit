@@ -11,10 +11,10 @@
 
 
 import numpy as np
-from PySide2.QtCore import Slot, QAbstractTableModel, QAbstractListModel, QModelIndex, Qt
+from PySide2.QtCore import QAbstractListModel, QAbstractTableModel, QModelIndex, Qt, Slot
 
 import datapyc.io_utils.file_io_serializers as serializers
-from datapyc.models.tagdata_model import Tag
+from datapyc.views.tagdata_view import Tag
 
 
 class ActiveExtractedDataModel(QAbstractTableModel):
@@ -298,7 +298,7 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
         self.assocDataList[self.currentRow] = newData
 
     @Slot()
-    def updateTagData(self, newTag):
+    def updateCurrentTag(self, newTag):
         self.assocTagList[self.currentRow] = newTag
 
     def setCalibrationFunc(self, calibrationModelCallback):

@@ -15,9 +15,9 @@ from functools import partial
 
 import matplotlib.cm as cm
 import numpy as np
-from PySide2.QtCore import Slot, QSize, QPoint, QRect
+from PySide2.QtCore import QPoint, QRect, QSize, Slot
 from PySide2.QtGui import Qt
-from PySide2.QtWidgets import QMainWindow, QStyle, QMessageBox
+from PySide2.QtWidgets import QMainWindow, QMessageBox, QStyle
 
 import datapyc.core.app_state as appstate
 from datapyc.core.app_state import State
@@ -183,6 +183,14 @@ class MainWindow(QMainWindow):
         # appropriate plot of selected points
         self.ui.datasetListView.clicked.connect(lambda: self.updatePlot(init=False))
 
+        # Whenever tag type or tag data is changed, update the AllExtractedDataModel data
+        self.tagDataView.changedTagType.connect(lambda: self.allDatasetsModel.updateCurrentTag(self.tagDataView.getTag()))
+        self.tagDataView.changedTagData.connect(lambda: self.allDatasetsModel.updateCurrentTag(self.tagDataView.getTag()))
+
+        # Whenever a new dataset is activated in the AllExtractedDataModel, update the TagDataView
+        self.ui.datasetListView.clicked.connect(lambda: self.tagDataView.setTag(
+            self.allDatasetsModel.currentTagItem()))
+
     def uiDataOptionsConnects(self):
         """Connect the UI elements related to display of data"""
         self.ui.savgolFilterXCheckBox.toggled.connect(lambda x: self.updatePlot())
@@ -225,6 +233,10 @@ class MainWindow(QMainWindow):
         self.ui.newRowButton.clicked.connect(self.allDatasetsModel.newRow)
         self.ui.deleteRowButton.clicked.connect(self.allDatasetsModel.removeCurrentRow)
         self.ui.clearAllButton.clicked.connect(self.allDatasetsModel.removeAll)
+
+        self.ui.newRowButton.clicked.connect(lambda: self.tagDataView.setTag(self.allDatasetsModel.currentTagItem()))
+        self.ui.deleteRowButton.clicked.connect(lambda: self.tagDataView.setTag(self.allDatasetsModel.currentTagItem()))
+        self.ui.clearAllButton.clicked.connect(lambda: self.tagDataView.setTag(self.allDatasetsModel.currentTagItem()))
 
     def uiXYZComboBoxesConnects(self):
         self.ui.zComboBox.activated.connect(self.zDataUpdate)

@@ -14,7 +14,7 @@ import os
 from PySide2.QtWidgets import QFileDialog, QMessageBox
 
 import datapyc.core.fitdata as fit
-from datapyc.io_utils.io_readers import readFileData, ImageMeasurementData, NumericalMeasurementData
+from datapyc.io_utils.io_readers import ImageMeasurementData, NumericalMeasurementData, readFileData
 
 
 def importFile():

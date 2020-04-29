@@ -18,7 +18,8 @@ serializers.SERIALIZABLE_REGISTRY['CalibrationModel'] = CalibrationModel
 
 class FitData(serializers.Serializable):
     def __init__(self, datanames, datalist,
-                 z_data=None, x_data=None, y_data=None, image_data=None, calibration_data=None, fit_results=None):
+                 z_data=None, x_data=None, y_data=None, image_data=None,
+                 calibration_data=None, tag_data=None, fit_results=None):
         """
         Class for fitting experimental spectroscopy data to the Hamiltonian model of the qubit / coupled quantum system.
 
@@ -44,6 +45,7 @@ class FitData(serializers.Serializable):
         self.z_data = z_data
         self.image_data = image_data
         self.calibration_data = calibration_data
+        self.tag_data = tag_data
         self.fit_results = fit_results
 
         self.system = None

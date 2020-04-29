@@ -10,7 +10,7 @@
 ############################################################################
 
 
-from PySide2.QtWidgets import QMessageBox, QLineEdit
+from PySide2.QtWidgets import QLineEdit, QMessageBox
 
 from datapyc.core.helpers import DoubleValidator
 

@@ -12,7 +12,7 @@
 
 from PySide2.QtCore import Slot
 from PySide2.QtGui import QFont
-from PySide2.QtWidgets import QTableView, QListView
+from PySide2.QtWidgets import QListView, QTableView
 
 from datapyc.core.helpers import EditDelegate
 

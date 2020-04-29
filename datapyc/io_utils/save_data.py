@@ -37,7 +37,8 @@ def saveFile(parent):
         y_data=parent.measurementData.currentY.data,
         z_data=parent.measurementData.currentZ.data if imageData is None else None,
         image_data=imageData,
-        calibration_data=parent.calibrationModel
+        calibration_data=parent.calibrationModel,
+        tag_data=parent.allDatasetsModel.assocTagList
     )
     fitData.filewrite(fileName)
     return True

@@ -19,11 +19,8 @@ from scipy.io import loadmat
 
 import datapyc.io_utils.file_io as io
 import datapyc.io_utils.file_io_backends as io_backends
-from datapyc.core.helpers import (OrderedDictMod,
-                                  isValid2dArray,
-                                  hasIdenticalCols,
-                                  hasIdenticalRows)
-from datapyc.models.inputdata_models import NumericalMeasurementData, ImageMeasurementData
+from datapyc.core.helpers import (OrderedDictMod, hasIdenticalCols, hasIdenticalRows, isValid2dArray)
+from datapyc.models.inputdata_models import ImageMeasurementData, NumericalMeasurementData
 
 
 def readFileData(fileName):

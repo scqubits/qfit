@@ -21,12 +21,8 @@ from scipy.ndimage import gaussian_laplace
 from scipy.signal import savgol_filter
 
 import datapyc.io_utils.file_io_serializers as serializers
-from datapyc.core.helpers import (DataItem,
-                                  OrderedDictMod,
-                                  isValid2dArray,
-                                  hasIdenticalCols,
-                                  hasIdenticalRows,
-                                  isValid1dArray)
+from datapyc.core.helpers import (DataItem, OrderedDictMod, hasIdenticalCols, hasIdenticalRows, isValid1dArray,
+                                  isValid2dArray)
 
 
 class MeasurementData(abc.ABC):
