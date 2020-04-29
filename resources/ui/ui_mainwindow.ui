@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1280</width>
-    <height>1024</height>
+    <width>835</width>
+    <height>717</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>datapyc</string>
+   <string notr="true">datapyc</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -101,8 +101,11 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="toolTip">
+          <string notr="true"/>
+         </property>
          <property name="text">
-          <string>New dataset</string>
+          <string notr="true">New dataset</string>
          </property>
         </widget>
        </item>
@@ -114,8 +117,11 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="toolTip">
+          <string notr="true"/>
+         </property>
          <property name="text">
-          <string>Delete dataset</string>
+          <string notr="true">Delete dataset</string>
          </property>
         </widget>
        </item>
@@ -127,8 +133,11 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="toolTip">
+          <string notr="true"/>
+         </property>
          <property name="text">
-          <string>Clear all</string>
+          <string notr="true">Clear all</string>
          </property>
          <property name="icon">
           <iconset resource="../resources.qrc">
@@ -142,11 +151,11 @@
     <item row="1" column="1" colspan="2">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="selectTab">
        <attribute name="title">
-        <string>Select data points</string>
+        <string notr="true">Select data points</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
@@ -164,16 +173,16 @@
            </size>
           </property>
           <property name="title">
-           <string>Image Options</string>
+           <string notr="true">Image Options</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_8">
            <item row="2" column="0">
             <widget class="QCheckBox" name="bgndSubtractXCheckBox">
              <property name="toolTip">
-              <string>Background subtraction along X</string>
+              <string notr="true">Background subtraction along X</string>
              </property>
              <property name="text">
-              <string>Subtract Bgnd X</string>
+              <string notr="true">Subtract Bgnd X</string>
              </property>
              <property name="checked">
               <bool>false</bool>
@@ -186,40 +195,40 @@
            <item row="2" column="1">
             <widget class="QCheckBox" name="bgndSubtractYCheckBox">
              <property name="toolTip">
-              <string>Background subtraction along Y</string>
+              <string notr="true">Background subtraction along Y</string>
              </property>
              <property name="text">
-              <string>Subtract Bgnd Y</string>
+              <string notr="true">Subtract Bgnd Y</string>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
             <widget class="QCheckBox" name="savgolFilterYCheckBox">
              <property name="toolTip">
-              <string>Savitzky-Golay filter (Y cuts)</string>
+              <string notr="true">Savitzky-Golay filter (Y cuts)</string>
              </property>
              <property name="text">
-              <string>Savitzky-Golay Filter Y</string>
+              <string notr="true">Savitzky-Golay Filter Y</string>
              </property>
             </widget>
            </item>
            <item row="0" column="0">
             <widget class="QCheckBox" name="savgolFilterXCheckBox">
              <property name="toolTip">
-              <string>Savitzky-Golay filter (X cuts)</string>
+              <string notr="true">Savitzky-Golay filter (X cuts)</string>
              </property>
              <property name="text">
-              <string>Savitzky-Golay Filter X</string>
+              <string notr="true">Savitzky-Golay Filter X</string>
              </property>
             </widget>
            </item>
            <item row="1" column="0">
             <widget class="QCheckBox" name="gaussLaplaceCheckBox">
              <property name="toolTip">
-              <string>Apply Gauss-Laplace filter</string>
+              <string notr="true">Apply Gauss-Laplace filter</string>
              </property>
              <property name="text">
-              <string>Gauss-Laplace Filter</string>
+              <string notr="true">Gauss-Laplace Filter</string>
              </property>
             </widget>
            </item>
@@ -241,7 +250,7 @@
            </size>
           </property>
           <property name="title">
-           <string>Color Options</string>
+           <string notr="true">Color Options</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_9">
            <item row="0" column="0">
@@ -252,6 +261,9 @@
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="iconSize">
               <size>
                <width>100</width>
@@ -260,7 +272,7 @@
              </property>
              <item>
               <property name="text">
-               <string>PuOr</string>
+               <string notr="true">PuOr</string>
               </property>
               <property name="icon">
                <iconset resource="../resources.qrc">
@@ -269,7 +281,7 @@
              </item>
              <item>
               <property name="text">
-               <string>RdYlBu</string>
+               <string notr="true">RdYlBu</string>
               </property>
               <property name="icon">
                <iconset resource="../resources.qrc">
@@ -278,7 +290,7 @@
              </item>
              <item>
               <property name="text">
-               <string>bwr</string>
+               <string notr="true">bwr</string>
               </property>
               <property name="icon">
                <iconset resource="../resources.qrc">
@@ -287,7 +299,7 @@
              </item>
              <item>
               <property name="text">
-               <string>viridis</string>
+               <string notr="true">viridis</string>
               </property>
               <property name="icon">
                <iconset resource="../resources.qrc">
@@ -296,7 +308,7 @@
              </item>
              <item>
               <property name="text">
-               <string>cividis</string>
+               <string notr="true">cividis</string>
               </property>
               <property name="icon">
                <iconset resource="../resources.qrc">
@@ -305,7 +317,7 @@
              </item>
              <item>
               <property name="text">
-               <string>gray</string>
+               <string notr="true">gray</string>
               </property>
               <property name="icon">
                <iconset resource="../resources.qrc">
@@ -320,7 +332,7 @@
               <enum>Qt::LeftToRight</enum>
              </property>
              <property name="text">
-              <string>Log Colorscale</string>
+              <string notr="true">Log Colorscale</string>
              </property>
             </widget>
            </item>
@@ -345,10 +357,10 @@
               </size>
              </property>
              <property name="toolTip">
-              <string>Adjust plot range (Z)</string>
+              <string notr="true">Adjust plot range (Z)</string>
              </property>
              <property name="whatsThis">
-              <string>Color Range</string>
+              <string notr="true">Color Range</string>
              </property>
              <property name="autoFillBackground">
               <bool>true</bool>
@@ -414,7 +426,7 @@
            <item row="3" column="0">
             <widget class="QLabel" name="label_12">
              <property name="text">
-              <string>Axis-1 Values</string>
+              <string notr="true">Axis-1 Values</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -434,7 +446,7 @@
            <item row="1" column="0">
             <widget class="QLabel" name="label_13">
              <property name="text">
-              <string>Z Values</string>
+              <string notr="true">Z Values</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -444,7 +456,7 @@
            <item row="4" column="0">
             <widget class="QLabel" name="label_14">
              <property name="text">
-              <string>Axis-2 Values</string>
+              <string notr="true">Axis-2 Values</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -488,7 +500,7 @@
            </size>
           </property>
           <property name="title">
-           <string>Calibrate X Axis</string>
+           <string notr="true">Calibrate X Axis</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_10">
            <item row="0" column="2">
@@ -511,15 +523,18 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="text">
-              <string>0.0</string>
+              <string notr="true">0.0</string>
              </property>
             </widget>
            </item>
            <item row="1" column="0">
             <widget class="QToolButton" name="calibrateX2Button">
              <property name="toolTip">
-              <string>Calibrate x2, allows selection of coordinate inside plot</string>
+              <string notr="true">Calibrate x2, allows selection of coordinate inside plot</string>
              </property>
              <property name="text">
               <string/>
@@ -550,8 +565,11 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="text">
-              <string>1.0</string>
+              <string notr="true">1.0</string>
              </property>
             </widget>
            </item>
@@ -575,8 +593,11 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="text">
-              <string>1.0</string>
+              <string notr="true">1.0</string>
              </property>
             </widget>
            </item>
@@ -600,18 +621,21 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="inputMask">
               <string/>
              </property>
              <property name="text">
-              <string>0.0</string>
+              <string notr="true">0.0</string>
              </property>
             </widget>
            </item>
            <item row="0" column="0">
             <widget class="QToolButton" name="calibrateX1Button">
              <property name="toolTip">
-              <string>Calibrate x1, allows selection of coordinate inside plot</string>
+              <string notr="true">Calibrate x1, allows selection of coordinate inside plot</string>
              </property>
              <property name="text">
               <string/>
@@ -631,7 +655,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;X&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;X&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
@@ -644,7 +668,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;X&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;X&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
@@ -657,7 +681,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ X&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ X&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
@@ -670,7 +694,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ X&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ X&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
@@ -697,8 +721,11 @@
             <height>16777215</height>
            </size>
           </property>
+          <property name="toolTip">
+           <string notr="true"/>
+          </property>
           <property name="title">
-           <string>Calibrate Y Axis</string>
+           <string notr="true">Calibrate Y Axis</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_11">
            <item row="1" column="2">
@@ -721,8 +748,11 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="text">
-              <string>1.0</string>
+              <string notr="true">1.0</string>
              </property>
             </widget>
            </item>
@@ -735,14 +765,14 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
            <item row="1" column="0">
             <widget class="QToolButton" name="calibrateY2Button">
              <property name="toolTip">
-              <string>Calibrate y2, allows selection of coordinate inside plot</string>
+              <string notr="true">Calibrate y2, allows selection of coordinate inside plot</string>
              </property>
              <property name="text">
               <string/>
@@ -773,15 +803,18 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="text">
-              <string>0.0</string>
+              <string notr="true">0.0</string>
              </property>
             </widget>
            </item>
            <item row="0" column="0">
             <widget class="QToolButton" name="calibrateY1Button">
              <property name="toolTip">
-              <string>Calibrate y1, allows selection of coordinate inside plot</string>
+              <string notr="true">Calibrate y1, allows selection of coordinate inside plot</string>
              </property>
              <property name="text">
               <string/>
@@ -801,7 +834,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
@@ -825,8 +858,11 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="text">
-              <string>1.0</string>
+              <string notr="true">1.0</string>
              </property>
             </widget>
            </item>
@@ -850,8 +886,11 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="text">
-              <string>0.0</string>
+              <string notr="true">0.0</string>
              </property>
             </widget>
            </item>
@@ -864,7 +903,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
@@ -877,7 +916,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
@@ -909,7 +948,7 @@
            <enum>Qt::RightToLeft</enum>
           </property>
           <property name="text">
-           <string>Apply calibration</string>
+           <string notr="true">Apply calibration</string>
           </property>
          </widget>
         </item>
@@ -917,22 +956,25 @@
       </widget>
       <widget class="QWidget" name="tagTab">
        <attribute name="title">
-        <string>Tag datasets</string>
+        <string notr="true">Tag datasets</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
          <widget class="QFrame" name="tagChoicesFrame">
           <property name="frameShape">
-           <enum>QFrame::StyledPanel</enum>
+           <enum>QFrame::Panel</enum>
           </property>
           <property name="frameShadow">
-           <enum>QFrame::Raised</enum>
+           <enum>QFrame::Plain</enum>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
             <widget class="QRadioButton" name="noTagRadioButton">
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="text">
-              <string>No tag</string>
+              <string notr="true">No tag</string>
              </property>
              <property name="iconSize">
               <size>
@@ -956,7 +998,7 @@
              <property name="sizeHint" stdset="0">
               <size>
                <width>20</width>
-               <height>20</height>
+               <height>10</height>
               </size>
              </property>
             </spacer>
@@ -969,15 +1011,21 @@
                <bold>true</bold>
               </font>
              </property>
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="text">
-              <string>Transition between dispersive states</string>
+              <string notr="true">Transition between dispersive states</string>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QRadioButton" name="tagDispersiveBareRadioButton">
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="text">
-              <string>Tag by bare-states indices</string>
+              <string notr="true">Tag by bare-states indices</string>
              </property>
              <property name="iconSize">
               <size>
@@ -989,8 +1037,11 @@
            </item>
            <item>
             <widget class="QRadioButton" name="tagDispersiveDressedRadioButton">
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="text">
-              <string>Tag by dressed-states indices</string>
+              <string notr="true">Tag by dressed-states indices</string>
              </property>
              <property name="iconSize">
               <size>
@@ -1011,7 +1062,7 @@
              <property name="sizeHint" stdset="0">
               <size>
                <width>20</width>
-               <height>20</height>
+               <height>10</height>
               </size>
              </property>
             </spacer>
@@ -1024,15 +1075,21 @@
                <bold>true</bold>
               </font>
              </property>
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="text">
-              <string>Avoided crossing</string>
+              <string notr="true">Avoided crossing</string>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QRadioButton" name="tagCrossingRadioButton">
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="text">
-              <string>Tag as avoided crossing (infer state indices when fitting)</string>
+              <string notr="true">Tag as avoided crossing (infer state indices when fitting)</string>
              </property>
              <property name="iconSize">
               <size>
@@ -1044,8 +1101,11 @@
            </item>
            <item>
             <widget class="QRadioButton" name="tagCrossingDressedRadioButton">
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
              <property name="text">
-              <string>Tag as avoided crossing by dressed-states indices</string>
+              <string notr="true">Tag as avoided crossing by dressed-states indices</string>
              </property>
              <property name="iconSize">
               <size>
@@ -1069,94 +1129,25 @@
           <property name="sizeHint" stdset="0">
            <size>
             <width>20</width>
-            <height>60</height>
+            <height>40</height>
            </size>
           </property>
          </spacer>
         </item>
         <item>
-         <widget class="QGroupBox" name="tagBareGroupBox">
+         <widget class="QGroupBox" name="tagDressedGroupBox">
           <property name="enabled">
            <bool>false</bool>
           </property>
-          <property name="autoFillBackground">
-           <bool>false</bool>
+          <property name="toolTip">
+           <string notr="true"/>
           </property>
           <property name="title">
-           <string>Tag by bare-states indices</string>
+           <string notr="true">Tag by dressed-states indices</string>
           </property>
-          <property name="flat">
-           <bool>false</bool>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_12">
-           <item row="1" column="1">
-            <widget class="QLabel" name="label_25">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Number of photons</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="4">
-            <widget class="QLabel" name="label_26">
-             <property name="text">
-              <string>Final state</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="5">
-            <widget class="QLineEdit" name="initialStateLineEdit"/>
-           </item>
-           <item row="0" column="0" colspan="2">
-            <widget class="QLabel" name="label_27">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Subsystem count</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QSpinBox" name="phNumberBareSpinBox">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="4">
-            <widget class="QLabel" name="label_28">
-             <property name="text">
-              <string>Initial state</string>
-             </property>
-            </widget>
-           </item>
+          <layout class="QGridLayout" name="gridLayout_13">
            <item row="0" column="2">
-            <widget class="QSpinBox" name="subsysCountSpinBox">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="5">
-            <widget class="QLineEdit" name="finalStateLineEdit"/>
-           </item>
-           <item row="1" column="3">
-            <spacer name="horizontalSpacer_2">
+            <spacer name="horizontalSpacer">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
@@ -1165,7 +1156,104 @@
              </property>
              <property name="sizeHint" stdset="0">
               <size>
-               <width>30</width>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="0" column="4">
+            <widget class="QSpinBox" name="inititalStateSpinBox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="4">
+            <widget class="QSpinBox" name="finalStateSpinBox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="value">
+              <number>1</number>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_29">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
+             <property name="text">
+              <string notr="true">Photons</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QLabel" name="label_30">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
+             <property name="text">
+              <string notr="true">Initial state</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QSpinBox" name="phNumberDressedSpinBox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimum">
+              <number>1</number>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="3">
+            <widget class="QLabel" name="label_31">
+             <property name="toolTip">
+              <string notr="true"/>
+             </property>
+             <property name="text">
+              <string notr="true">Final state</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="5">
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
                <height>20</height>
               </size>
              </property>
@@ -1191,16 +1279,48 @@
          </spacer>
         </item>
         <item>
-         <widget class="QGroupBox" name="tagDressedGroupBox">
+         <widget class="QGroupBox" name="tagBareGroupBox">
           <property name="enabled">
            <bool>false</bool>
           </property>
-          <property name="title">
-           <string>Tag by dressed-states indices</string>
+          <property name="autoFillBackground">
+           <bool>false</bool>
           </property>
-          <layout class="QGridLayout" name="gridLayout_13">
-           <item row="0" column="2">
-            <spacer name="horizontalSpacer">
+          <property name="title">
+           <string notr="true">Tag by bare-states indices</string>
+          </property>
+          <property name="flat">
+           <bool>false</bool>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_12">
+           <item row="0" column="0" colspan="5">
+            <widget class="QLineEdit" name="subsysNamesLineEdit">
+             <property name="text">
+              <string notr="true"/>
+             </property>
+             <property name="placeholderText">
+              <string notr="true">Subsystem names:   &lt;name of subsys 1&gt;, &lt;name of subsys 2&gt;, ...</string>
+             </property>
+             <property name="clearButtonEnabled">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_25">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string notr="true">Photons</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <spacer name="horizontalSpacer_2">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
@@ -1209,93 +1329,52 @@
              </property>
              <property name="sizeHint" stdset="0">
               <size>
-               <width>30</width>
+               <width>20</width>
                <height>20</height>
               </size>
              </property>
             </spacer>
            </item>
-           <item row="0" column="4">
-            <widget class="QSpinBox" name="inititalStateSpinBox">
+           <item row="1" column="3">
+            <widget class="QLabel" name="label_28">
+             <property name="text">
+              <string notr="true">Initial state</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="3">
+            <widget class="QLabel" name="label_26">
+             <property name="text">
+              <string notr="true">Final state</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="4">
+            <widget class="QLineEdit" name="finalStateLineEdit">
+             <property name="placeholderText">
+              <string notr="true">e.g.:  0, 1, ...</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QSpinBox" name="phNumberBareSpinBox">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
+             </property>
+             <property name="minimum">
+              <number>1</number>
              </property>
             </widget>
            </item>
            <item row="1" column="4">
-            <widget class="QSpinBox" name="finalStateSpinBox">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
+            <widget class="QLineEdit" name="initialStateLineEdit">
+             <property name="placeholderText">
+              <string notr="true">&lt;level subsys 1&gt;, &lt;level subsys2&gt;, ...</string>
              </property>
             </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_29">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Number of photons</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
-            <widget class="QLabel" name="label_30">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Initial state</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QSpinBox" name="phNumberDressedSpinBox">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QLabel" name="label_31">
-             <property name="text">
-              <string>Final state</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="5">
-            <spacer name="horizontalSpacer_3">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
            </item>
           </layout>
          </widget>
@@ -1344,7 +1423,7 @@
        <enum>QFrame::Plain</enum>
       </property>
       <property name="lineWidth">
-       <number>2</number>
+       <number>1</number>
       </property>
       <widget class="QPushButton" name="resetViewButton">
        <property name="geometry">
@@ -1356,7 +1435,7 @@
         </rect>
        </property>
        <property name="toolTip">
-        <string>Reset plot area</string>
+        <string notr="true">Reset plot area</string>
        </property>
        <property name="text">
         <string/>
@@ -1379,7 +1458,7 @@
         <cursorShape>ArrowCursor</cursorShape>
        </property>
        <property name="toolTip">
-        <string>Pan mode: move plot region by dragging</string>
+        <string notr="true">Pan mode: move plot region by dragging</string>
        </property>
        <property name="text">
         <string/>
@@ -1408,7 +1487,7 @@
         <cursorShape>ArrowCursor</cursorShape>
        </property>
        <property name="toolTip">
-        <string>Zoom mode: select a plot region to enlarge</string>
+        <string notr="true">Zoom mode: select a plot region to enlarge</string>
        </property>
        <property name="text">
         <string/>
@@ -1435,6 +1514,9 @@
        </property>
        <property name="cursor">
         <cursorShape>CrossCursor</cursorShape>
+       </property>
+       <property name="toolTip">
+        <string notr="true"/>
        </property>
        <property name="text">
         <string/>
@@ -1466,8 +1548,11 @@
        <property name="cursor">
         <cursorShape>CrossCursor</cursorShape>
        </property>
+       <property name="toolTip">
+        <string notr="true"/>
+       </property>
        <property name="text">
-        <string>Swap X↔Y</string>
+        <string notr="true">X↔Y</string>
        </property>
        <property name="checkable">
         <bool>true</bool>
@@ -1517,6 +1602,54 @@
    <header>datawidgets</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>dataTableView</tabstop>
+  <tabstop>datasetListView</tabstop>
+  <tabstop>newRowButton</tabstop>
+  <tabstop>deleteRowButton</tabstop>
+  <tabstop>clearAllButton</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>bgndSubtractXCheckBox</tabstop>
+  <tabstop>bgndSubtractYCheckBox</tabstop>
+  <tabstop>savgolFilterYCheckBox</tabstop>
+  <tabstop>savgolFilterXCheckBox</tabstop>
+  <tabstop>gaussLaplaceCheckBox</tabstop>
+  <tabstop>colorComboBox</tabstop>
+  <tabstop>logScaleCheckBox</tabstop>
+  <tabstop>yComboBox</tabstop>
+  <tabstop>zComboBox</tabstop>
+  <tabstop>xComboBox</tabstop>
+  <tabstop>rawX1LineEdit</tabstop>
+  <tabstop>calibrateX2Button</tabstop>
+  <tabstop>mapX2LineEdit</tabstop>
+  <tabstop>rawX2LineEdit</tabstop>
+  <tabstop>mapX1LineEdit</tabstop>
+  <tabstop>calibrateX1Button</tabstop>
+  <tabstop>rawY2LineEdit</tabstop>
+  <tabstop>calibrateY2Button</tabstop>
+  <tabstop>mapY1LineEdit</tabstop>
+  <tabstop>calibrateY1Button</tabstop>
+  <tabstop>mapY2LineEdit</tabstop>
+  <tabstop>rawY1LineEdit</tabstop>
+  <tabstop>calibratedCheckBox</tabstop>
+  <tabstop>noTagRadioButton</tabstop>
+  <tabstop>tagDispersiveBareRadioButton</tabstop>
+  <tabstop>tagDispersiveDressedRadioButton</tabstop>
+  <tabstop>tagCrossingRadioButton</tabstop>
+  <tabstop>tagCrossingDressedRadioButton</tabstop>
+  <tabstop>inititalStateSpinBox</tabstop>
+  <tabstop>finalStateSpinBox</tabstop>
+  <tabstop>phNumberDressedSpinBox</tabstop>
+  <tabstop>subsysNamesLineEdit</tabstop>
+  <tabstop>phNumberBareSpinBox</tabstop>
+  <tabstop>initialStateLineEdit</tabstop>
+  <tabstop>finalStateLineEdit</tabstop>
+  <tabstop>resetViewButton</tabstop>
+  <tabstop>panViewButton</tabstop>
+  <tabstop>zoomViewButton</tabstop>
+  <tabstop>selectViewButton</tabstop>
+  <tabstop>swapXYButton</tabstop>
+ </tabstops>
  <resources>
   <include location="../resources.qrc"/>
  </resources>

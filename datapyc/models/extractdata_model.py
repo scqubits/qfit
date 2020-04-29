@@ -11,8 +11,10 @@
 
 
 import numpy as np
-import datapyc.io_utils.file_io_serializers as serializers
 from PySide2.QtCore import Slot, QAbstractTableModel, QAbstractListModel, QModelIndex, Qt
+
+import datapyc.io_utils.file_io_serializers as serializers
+from datapyc.models.tagdata_model import Tag
 
 
 class ActiveExtractedDataModel(QAbstractTableModel):
@@ -132,7 +134,7 @@ class ActiveExtractedDataModel(QAbstractTableModel):
     @Slot()
     def setAllData(self, newData):
         """
-        Replaces the current table of extracted data points with a new data set of points
+        Replaces the current table of extracted data points with a new dataset of points
 
         Parameters
         ----------
@@ -190,6 +192,7 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
         super().__init__()
         self.dataNames = ['dataset1']
         self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
+        self.assocTagList = [Tag()]
         self._calibrationFunc = None
         self._currentRow = 0
 
@@ -222,6 +225,7 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
         self.beginInsertRows(parent, row, row)
         self.dataNames.insert(row, '')
         self.assocDataList.insert(row, np.empty(shape=(2, 0), dtype=np.float_))
+        self.assocTagList.insert(row, Tag())
         self.endInsertRows()
         self.layoutChanged.emit()
         return True
@@ -229,12 +233,14 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
     def removeRow(self, row, parent=QModelIndex(), *args, **kwargs):
         if self.rowCount() == 1:
             self.assocDataList[0] = np.empty(shape=(2, 0), dtype=np.float_)
+            self.assocTagList[0] = Tag()
             self.layoutChanged.emit()
             return True
 
         self.beginRemoveRows(parent, row, row)
         self.dataNames.pop(row)
         self.assocDataList.pop(row)
+        self.assocTagList.pop(row)
         self.endRemoveRows()
         self.layoutChanged.emit()
         return True
@@ -265,6 +271,7 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
         self.beginRemoveRows(QModelIndex(), 0, self.rowCount() - 1)
         self.dataNames = ['dataset1']
         self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
+        self.assocTagList = [Tag()]
         self.endRemoveRows()
         self.layoutChanged.emit()
         return True
@@ -283,9 +290,16 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
     def currentAssocItem(self):
         return self.assocDataList[self.currentRow]
 
+    def currentTagItem(self):
+        return self.assocTagList[self.currentRow]
+
     @Slot()
     def updateAssocData(self, newData):
         self.assocDataList[self.currentRow] = newData
+
+    @Slot()
+    def updateTagData(self, newTag):
+        self.assocTagList[self.currentRow] = newTag
 
     def setCalibrationFunc(self, calibrationModelCallback):
         self._calibrationFunc = calibrationModelCallback
@@ -314,7 +328,8 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
         processedData = self.allDataSorted(applyCalibration=False)
         initdata = {
             'datanames': self.dataNames,
-            'datalist': processedData
+            'datalist': processedData,
+            'taglist': self.assocTagList
         }
         iodata = serializers.dict_serialize(initdata)
         iodata.typename = 'FitData'

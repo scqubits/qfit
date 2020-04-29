@@ -17,14 +17,12 @@ import numpy as np
 from matplotlib.image import imread
 from scipy.io import loadmat
 
-import datapyc.io_utils.file_io_backends as io_backends
 import datapyc.io_utils.file_io as io
-
+import datapyc.io_utils.file_io_backends as io_backends
 from datapyc.core.helpers import (OrderedDictMod,
                                   isValid2dArray,
                                   hasIdenticalCols,
                                   hasIdenticalRows)
-
 from datapyc.models.inputdata_models import NumericalMeasurementData, ImageMeasurementData
 
 

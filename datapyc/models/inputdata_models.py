@@ -14,14 +14,13 @@ import abc
 import copy
 import distutils.version as version
 
-import numpy as np
 import matplotlib
+import numpy as np
 from matplotlib import colors as colors
 from scipy.ndimage import gaussian_laplace
 from scipy.signal import savgol_filter
 
 import datapyc.io_utils.file_io_serializers as serializers
-
 from datapyc.core.helpers import (DataItem,
                                   OrderedDictMod,
                                   isValid2dArray,
@@ -44,7 +43,7 @@ class MeasurementData(abc.ABC):
         self.currentXCompatibles = OrderedDictMod()
         self.currentYCompatibles = OrderedDictMod()
 
-    def setupUiCallbacks(self, checkBoxCallbacks, plotRangeCallback):
+    def setupUICallbacks(self, checkBoxCallbacks, plotRangeCallback):
         self.checkBoxCallbacks = checkBoxCallbacks
         self.plotRangeCallback = plotRangeCallback
 

@@ -13,7 +13,6 @@
 from collections import OrderedDict
 
 import numpy as np
-
 from PySide2 import QtCore as QtCore
 from PySide2.QtCore import QLocale
 from PySide2.QtGui import QDoubleValidator

@@ -20,7 +20,6 @@ import numpy as np
 
 import datapyc.core.helpers as helpers
 
-
 SERIALIZABLE_REGISTRY = {}
 
 

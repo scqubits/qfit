@@ -21,12 +21,13 @@ from PySide2.QtWidgets import QMainWindow, QStyle, QMessageBox
 
 import datapyc.core.app_state as appstate
 from datapyc.core.app_state import State
-from datapyc.models.calibration_model import CalibrationModel
-from datapyc.views.calibration_view import CalibrationView
-from datapyc.models.extractdata_model import ActiveExtractedDataModel, AllExtractedDataModel
-from datapyc.ui.ui_window import Ui_MainWindow
-from datapyc.io_utils.save_data import saveFile
 from datapyc.core.helpers import transposeEach
+from datapyc.io_utils.save_data import saveFile
+from datapyc.models.calibration_model import CalibrationModel
+from datapyc.models.extractdata_model import ActiveExtractedDataModel, AllExtractedDataModel
+from datapyc.ui.ui_window import UI_MainWindow
+from datapyc.views.calibration_view import CalibrationView
+from datapyc.views.tagdata_view import TagDataView
 
 
 class MainWindow(QMainWindow):
@@ -45,18 +46,18 @@ class MainWindow(QMainWindow):
         self.calibrationButtons = None
         self.calibrationStates = None
         self.calibrationView = None
-        self.minRangeSliderProperty = None
-        self.maxRangeSliderProperty = None
         self.axes = None
         self.cidCanvas = None
 
-        self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
+        self.ui = UI_MainWindow()
+        self.ui.setupUI(self)
 
-        self.setupUiCalibration()
-        self.setupUiOptions()
-        self.setupUiDataModel()
-        self.setupUiXYZComboBoxes()
+        self.setupUICalibration()
+        self.setupUIOptions()
+        self.setupUIDataModel()
+        self.setupUIXYZComboBoxes()
+
+        self.tagDataView = TagDataView(self.ui.ui_tagData)
 
         self.uiDataConnects()
         self.uiDataOptionsConnects()
@@ -66,9 +67,12 @@ class MainWindow(QMainWindow):
         self.uiDataControlConnects()
         self.uiXYZComboBoxesConnects()
         self.uiMplCanvasConnects()
+        self.uiTagDataConnects()
         self.saveAndCloseConnects()
 
         self.ui.mplFigureCanvas.selectOn()
+
+        self.setFocusPolicy(Qt.StrongFocus)
 
         if self.extractedData is not None:
             self.allDatasetsModel.dataNames = self.extractedData.datanames
@@ -80,7 +84,7 @@ class MainWindow(QMainWindow):
             self.allDatasetsModel.layoutChanged.emit()
             self.activeDatasetModel.layoutChanged.emit()
 
-    def setupUiCalibration(self):
+    def setupUICalibration(self):
         """For the interface that enables calibration of data with respect to x and y axis, group QLineEdit elements
         and the corresponding buttons in dicts. Set up a dictionary mapping calibration labels to the corresponding
         State choices. Finally, set up an instance of CalibrationModel and CalibrationView"""
@@ -113,7 +117,7 @@ class MainWindow(QMainWindow):
         self.calibrationView = CalibrationView(self.rawLineEdits, self.mapLineEdits)
         self.calibrationModel.setCalibration(*self.calibrationView.calibrationPoints())
 
-    def setupUiOptions(self):
+    def setupUIOptions(self):
         dataCheckBoxCallbacks = {'savgolFilterX': self.ui.savgolFilterXCheckBox.isChecked,
                                  'savgolFilterY': self.ui.savgolFilterYCheckBox.isChecked,
                                  'gaussLaplaceFilter': self.ui.gaussLaplaceCheckBox.isChecked,
@@ -125,10 +129,10 @@ class MainWindow(QMainWindow):
         self.ui.rangeSliderWidget.setValues(0, 1)
         plotRangeCallback = self.ui.rangeSliderWidget.getValues
 
-        self.measurementData.setupUiCallbacks(dataCheckBoxCallbacks, plotRangeCallback)
+        self.measurementData.setupUICallbacks(dataCheckBoxCallbacks, plotRangeCallback)
 
 
-    def setupUiDataModel(self):
+    def setupUIDataModel(self):
         """Set up the main class instances holding the data extracted from placing markers on the canvas. The
         AllExtractedDataModel instance holds all data, whereas the ActiveExtractedDataModel instance holds data
         of the currently selected data set."""
@@ -140,7 +144,7 @@ class MainWindow(QMainWindow):
         self.allDatasetsModel.setCalibrationFunc(self.calibrationModel.calibrateDataset)
         self.ui.datasetListView.setModel(self.allDatasetsModel)
 
-    def setupUiXYZComboBoxes(self):
+    def setupUIXYZComboBoxes(self):
         zDataNames = list(self.measurementData.zCandidates.keys())
         self.ui.zComboBox.addItems(zDataNames)
         self.ui.zComboBox.setCurrentText(self.measurementData.currentZ.name)
@@ -181,22 +185,22 @@ class MainWindow(QMainWindow):
 
     def uiDataOptionsConnects(self):
         """Connect the UI elements related to display of data"""
-        self.ui.savgolFilterXCheckBox.toggled.connect(self.updatePlot)
-        self.ui.savgolFilterYCheckBox.toggled.connect(self.updatePlot)
-        self.ui.gaussLaplaceCheckBox.toggled.connect(self.updatePlot)
-        self.ui.bgndSubtractXCheckBox.toggled.connect(self.updatePlot)
-        self.ui.bgndSubtractYCheckBox.toggled.connect(self.updatePlot)
+        self.ui.savgolFilterXCheckBox.toggled.connect(lambda x: self.updatePlot())
+        self.ui.savgolFilterYCheckBox.toggled.connect(lambda x: self.updatePlot())
+        self.ui.gaussLaplaceCheckBox.toggled.connect(lambda x: self.updatePlot())
+        self.ui.bgndSubtractXCheckBox.toggled.connect(lambda x: self.updatePlot())
+        self.ui.bgndSubtractYCheckBox.toggled.connect(lambda x: self.updatePlot())
 
     def uiColorScaleConnects(self):
         """Connect the color scale related UI elements."""
         # Toggling the loc scale check box prompts replotting.
-        self.ui.logScaleCheckBox.toggled.connect(self.updatePlot)
+        self.ui.logScaleCheckBox.toggled.connect(lambda x: self.updatePlot())
 
         # Changes in the color map dropdown menu prompt replotting.
-        self.ui.colorComboBox.activated.connect(self.updatePlot)
+        self.ui.colorComboBox.activated.connect(lambda x: self.updatePlot())
 
         # Ensure that a change in the range slider positions cause an update of the plot.
-        self.ui.rangeSliderWidget.sigValueChanged.connect(self.updatePlot)
+        self.ui.rangeSliderWidget.sigValueChanged.connect(lambda x: self.updatePlot())
 
     def uiCalibrationConnects(self):
         """Connect UI elements for data calibration."""
@@ -232,6 +236,9 @@ class MainWindow(QMainWindow):
         self.axes = self.ui.mplFigureCanvas.canvas.figure.subplots()
         self.updatePlot(initialize=True)
         self.cidCanvas = self.axes.figure.canvas.mpl_connect('button_press_event', self.canvasClickMonitoring)
+
+    def uiTagDataConnects(self):
+        pass
 
     def saveAndCloseConnects(self):
         self.ui.buttonBox.accepted.connect(self.saveAndCloseApp)
@@ -296,11 +303,10 @@ class MainWindow(QMainWindow):
             self.updatePlot()
 
     @Slot()
-    def updatePlot(self, slotdummy=None, initialize=False, **kwargs):
+    def updatePlot(self, initialize=False, **kwargs):
         """Update the current plot of measurement data and markers of selected data points."""
         if self.disconnectCanvas:
             return
-
         # If this is not the first time of plotting, store the current axes limits and clear the graph.
         if not initialize:
             xlim = self.axes.get_xlim()

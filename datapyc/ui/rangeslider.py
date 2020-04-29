@@ -33,11 +33,9 @@ __license__ = "MIT"
 __date__ = "26/11/2018"
 
 
-from PySide2.QtGui import Qt, QIcon, QPainter, QPalette, QColor, QPen, QLinearGradient
-from PySide2.QtWidgets import QStyleOption, QWidget, QMainWindow, QVBoxLayout, QApplication, QStyle, QStyleOptionProgressBar, QStyleOptionButton
 from PySide2.QtCore import Signal, QRect, QSize, QEvent
-
-import functools
+from PySide2.QtGui import Qt, QIcon, QPainter, QPalette, QColor, QPen, QLinearGradient
+from PySide2.QtWidgets import QStyleOption, QWidget, QApplication, QStyle, QStyleOptionProgressBar, QStyleOptionButton
 
 
 class StyleOptionRangeSlider(QStyleOption):

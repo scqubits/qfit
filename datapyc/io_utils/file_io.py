@@ -16,7 +16,6 @@ import os
 
 import datapyc.io_utils.file_io_serializers as io_serializers
 
-
 FILE_TYPES = ['.h5 | .hdf5', '.csv']
 
 
