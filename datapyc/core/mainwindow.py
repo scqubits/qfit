@@ -67,7 +67,6 @@ class MainWindow(QMainWindow):
         self.uiDataControlConnects()
         self.uiXYZComboBoxesConnects()
         self.uiMplCanvasConnects()
-        self.uiTagDataConnects()
         self.saveAndCloseConnects()
 
         self.ui.mplFigureCanvas.selectOn()
@@ -77,10 +76,12 @@ class MainWindow(QMainWindow):
         if self.extractedData is not None:
             self.allDatasetsModel.dataNames = self.extractedData.datanames
             self.allDatasetsModel.assocDataList = transposeEach(self.extractedData.datalist)
+            self.allDatasetsModel.assocTagList = self.extractedData.tag_data
             self.calibrationModel.setCalibration(*self.extractedData.calibration_data.allCalibrationVecs())
 
             self.calibrationView.setView(*self.calibrationModel.allCalibrationVecs())
             self.activeDatasetModel._data = self.allDatasetsModel.currentAssocItem()
+            self.tagDataView.setTag(self.allDatasetsModel.currentTagItem())
             self.allDatasetsModel.layoutChanged.emit()
             self.activeDatasetModel.layoutChanged.emit()
 
@@ -248,9 +249,6 @@ class MainWindow(QMainWindow):
         self.axes = self.ui.mplFigureCanvas.canvas.figure.subplots()
         self.updatePlot(initialize=True)
         self.cidCanvas = self.axes.figure.canvas.mpl_connect('button_press_event', self.canvasClickMonitoring)
-
-    def uiTagDataConnects(self):
-        pass
 
     def saveAndCloseConnects(self):
         self.ui.buttonBox.accepted.connect(self.saveAndCloseApp)
