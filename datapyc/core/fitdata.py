@@ -13,13 +13,22 @@
 import datapyc.io_utils.file_io_serializers as serializers
 from datapyc.models.calibration_model import CalibrationModel
 
-serializers.SERIALIZABLE_REGISTRY['CalibrationModel'] = CalibrationModel
+serializers.SERIALIZABLE_REGISTRY["CalibrationModel"] = CalibrationModel
 
 
 class FitData(serializers.Serializable):
-    def __init__(self, datanames, datalist,
-                 z_data=None, x_data=None, y_data=None, image_data=None,
-                 calibration_data=None, tag_data=None, fit_results=None):
+    def __init__(
+        self,
+        datanames,
+        datalist,
+        z_data=None,
+        x_data=None,
+        y_data=None,
+        image_data=None,
+        calibration_data=None,
+        tag_data=None,
+        fit_results=None,
+    ):
         """
         Class for fitting experimental spectroscopy data to the Hamiltonian model of the qubit / coupled quantum system.
 

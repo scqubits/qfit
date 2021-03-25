@@ -9,18 +9,22 @@
 #    LICENSE file in the root directory of this source tree.
 ############################################################################
 
-from PySide2.QtCore import QObject, QRegExp, Signal
-from PySide2.QtGui import QRegExpValidator, QValidator
+
+from PySide2.QtCore import QObject, Signal
 from PySide2.QtWidgets import QLineEdit
+from PySide2.QtCore import QRegularExpression as QRegExp
+from PySide2.QtGui import QRegularExpressionValidator as QRegExpValidator
+from PySide2.QtGui import QValidator
+
 
 from datapyc.io_utils import file_io_serializers as serializers
 
 # tagging types (to facilitate file io: do not use Enum)
-NO_TAG = 'NO_TAG'
-DISPERSIVE_DRESSED = 'DISPERSIVE_DRESSED'
-DISPERSIVE_BARE = 'DISPERSIVE_BARE'
-CROSSING = 'CROSSING'
-CROSSING_DRESSED = 'CROSSING_DRESSED'
+NO_TAG = "NO_TAG"
+DISPERSIVE_DRESSED = "DISPERSIVE_DRESSED"
+DISPERSIVE_BARE = "DISPERSIVE_BARE"
+CROSSING = "CROSSING"
+CROSSING_DRESSED = "CROSSING_DRESSED"
 
 
 class Tag(serializers.Serializable):
@@ -45,7 +49,10 @@ class Tag(serializers.Serializable):
         - For all other tag types, this int specifies the photon number rank of the transition.
 
     """
-    def __init__(self, tagType=NO_TAG, initial=None, final=None, photons=None, subsysList=None):
+
+    def __init__(
+        self, tagType=NO_TAG, initial=None, final=None, photons=None, subsysList=None
+    ):
         self.tagType = tagType
         self.initial = initial
         self.final = final
@@ -61,14 +68,21 @@ class TagDataView(QObject):
         super().__init__(*args, **kwargs)
 
         self.ui = ui_TagData
+
+        self.ui.tagDressedGroupBox.setVisible(False)
+        self.ui.tagBareGroupBox.setVisible(False)
         self.defaultStyleLineEdit = self.ui.subsysNamesLineEdit.styleSheet()
 
         # establish connects
         self.ui.tagDispersiveBareRadioButton.toggled.connect(self.setDispersiveBareMode)
-        self.ui.tagDispersiveDressedRadioButton.toggled.connect(self.setDispersiveDressedMode)
+        self.ui.tagDispersiveDressedRadioButton.toggled.connect(
+            self.setDispersiveDressedMode
+        )
         self.ui.noTagRadioButton.toggled.connect(self.setNoTagMode)
         self.ui.tagCrossingRadioButton.toggled.connect(self.setCrossingMode)
-        self.ui.tagCrossingDressedRadioButton.toggled.connect(self.setCrossingDressedMode)
+        self.ui.tagCrossingDressedRadioButton.toggled.connect(
+            self.setCrossingDressedMode
+        )
 
         self.ui.tagDispersiveBareRadioButton.toggled.connect(self.setLineEditColor)
         self.ui.tagDispersiveDressedRadioButton.toggled.connect(self.setLineEditColor)
@@ -76,49 +90,63 @@ class TagDataView(QObject):
         self.ui.tagCrossingRadioButton.toggled.connect(self.setLineEditColor)
         self.ui.tagCrossingDressedRadioButton.toggled.connect(self.setLineEditColor)
 
-        self.ui.subsysNamesLineEdit.textChanged.connect(lambda x: self.setLineEditColor())
-        self.ui.initialStateLineEdit.textChanged.connect(lambda x: self.setLineEditColor())
-        self.ui.finalStateLineEdit.textChanged.connect(lambda x: self.setLineEditColor())
+        self.ui.subsysNamesLineEdit.textChanged.connect(
+            lambda x: self.setLineEditColor()
+        )
+        self.ui.initialStateLineEdit.textChanged.connect(
+            lambda x: self.setLineEditColor()
+        )
+        self.ui.finalStateLineEdit.textChanged.connect(
+            lambda x: self.setLineEditColor()
+        )
 
         self.ui.subsysNamesLineEdit.editingFinished.connect(self.changedTagData.emit)
         self.ui.initialStateLineEdit.editingFinished.connect(self.changedTagData.emit)
         self.ui.finalStateLineEdit.editingFinished.connect(self.changedTagData.emit)
-        self.ui.phNumberBareSpinBox.valueChanged.connect(lambda x: self.changedTagData.emit)
+        self.ui.phNumberBareSpinBox.valueChanged.connect(
+            lambda x: self.changedTagData.emit
+        )
 
-        self.ui.initialStateSpinBox.valueChanged.connect(lambda x: self.changedTagData.emit)
-        self.ui.finalStateSpinBox.valueChanged.connect(lambda x: self.changedTagData.emit)
-        self.ui.phNumberDressedSpinBox.valueChanged.connect(lambda x: self.changedTagData.emit)
+        self.ui.initialStateSpinBox.valueChanged.connect(
+            lambda x: self.changedTagData.emit
+        )
+        self.ui.finalStateSpinBox.valueChanged.connect(
+            lambda x: self.changedTagData.emit
+        )
+        self.ui.phNumberDressedSpinBox.valueChanged.connect(
+            lambda x: self.changedTagData.emit
+        )
 
     def setNoTagMode(self):
-        self.ui.tagBareGroupBox.setEnabled(False)
-        self.ui.tagDressedGroupBox.setEnabled(False)
+        self.ui.tagBareGroupBox.setVisible(False)
+        self.ui.tagDressedGroupBox.setVisible(False)
         self.changedTagType.emit()
 
     def setDispersiveBareMode(self):
-        self.ui.tagBareGroupBox.setEnabled(True)
-        self.ui.tagDressedGroupBox.setEnabled(False)
+        self.ui.tagBareGroupBox.setVisible(True)
+        self.ui.tagDressedGroupBox.setVisible(False)
         self.changedTagType.emit()
         # self.ui.subsysNamesLineEdit.editingFinished.emit()
         # self.ui.initialStateLineEdit.editingFinished.emit()
         # self.ui.finalStateLineEdit.editingFinished.emit()
 
     def setDispersiveDressedMode(self):
-        self.ui.tagDressedGroupBox.setEnabled(True)
-        self.ui.tagBareGroupBox.setEnabled(False)
+        self.ui.tagDressedGroupBox.setVisible(True)
+        self.ui.tagBareGroupBox.setVisible(False)
         self.changedTagType.emit()
 
     def setCrossingMode(self):
-        self.ui.tagBareGroupBox.setEnabled(False)
-        self.ui.tagDressedGroupBox.setEnabled(False)
+        self.ui.tagBareGroupBox.setVisible(False)
+        self.ui.tagDressedGroupBox.setVisible(False)
         self.changedTagType.emit()
 
     def setCrossingDressedMode(self):
-        self.ui.tagBareGroupBox.setEnabled(False)
-        self.ui.tagDressedGroupBox.setEnabled(True)
+        self.ui.tagBareGroupBox.setVisible(False)
+        self.ui.tagDressedGroupBox.setVisible(True)
         self.changedTagType.emit()
 
     def isValidInitialBare(self):
-        if not self.ui.tagBareGroupBox.isEnabled():
+        if not self.ui.tagBareGroupBox.isVisible():
             return True  # only bare-states tags require validation
         if not self.ui.subsysNamesLineEdit.isValid():
             return False
@@ -131,7 +159,7 @@ class TagDataView(QObject):
         return True
 
     def isValidFinalBare(self):
-        if not self.ui.tagBareGroupBox.isEnabled():
+        if not self.ui.tagBareGroupBox.isVisible():
             return True  # only bare-states tags require validation
         if not self.ui.subsysNamesLineEdit.isValid():
             return False
@@ -200,17 +228,20 @@ class TagDataView(QObject):
         self.blockSignals(False)
 
     def setLineEditColor(self, *args, **kwargs):
-        if not self.ui.tagBareGroupBox.isEnabled() or self.ui.subsysNamesLineEdit.isValid():
+        if (
+            not self.ui.tagBareGroupBox.isVisible()
+            or self.ui.subsysNamesLineEdit.isValid()
+        ):
             self.ui.subsysNamesLineEdit.setStyleSheet(self.defaultStyleLineEdit)
         else:
             self.ui.subsysNamesLineEdit.setStyleSheet("border: 3px solid red;")
 
-        if not self.ui.tagBareGroupBox.isEnabled() or self.isValidInitialBare():
+        if not self.ui.tagBareGroupBox.isVisible() or self.isValidInitialBare():
             self.ui.initialStateLineEdit.setStyleSheet(self.defaultStyleLineEdit)
         else:
             self.ui.initialStateLineEdit.setStyleSheet("border: 3px solid red;")
 
-        if not self.ui.tagBareGroupBox.isEnabled() or self.isValidFinalBare():
+        if not self.ui.tagBareGroupBox.isVisible() or self.isValidFinalBare():
             self.ui.finalStateLineEdit.setStyleSheet(self.defaultStyleLineEdit)
         else:
             self.ui.finalStateLineEdit.setStyleSheet("border: 3px solid red;")
@@ -237,7 +268,7 @@ class StrTupleLineEdit(QLineEdit):
 
     def getSubsysNameList(self):
         if self.isValid():
-            return [name.strip() for name in self.value().split(',')]
+            return [name.strip() for name in self.value().split(",")]
         return []
 
     def setFromSubsysNameList(self, subsysNameList):
@@ -276,7 +307,7 @@ class IntTupleLineEdit(QLineEdit):
 
     def getTuple(self):
         if self.isValid():
-            return eval(self.value() + ',')
+            return eval(self.value() + ",")
         return None
 
     def setFromTuple(self, newTuple):

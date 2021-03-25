@@ -14,7 +14,11 @@ import os
 from PySide2.QtWidgets import QFileDialog, QMessageBox
 
 import datapyc.core.fitdata as fit
-from datapyc.io_utils.io_readers import ImageMeasurementData, NumericalMeasurementData, readFileData
+from datapyc.io_utils.io_readers import (
+    ImageMeasurementData,
+    NumericalMeasurementData,
+    readFileData,
+)
 
 
 def importFile():
@@ -48,8 +52,10 @@ def importFile():
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Warning)
             msg.setText("Error opening file.")
-            msg.setInformativeText("The selected file format is supported, but heuristic inspection "
-                                   "failed to identify suitable data inside the file.")
+            msg.setInformativeText(
+                "The selected file format is supported, but heuristic inspection "
+                "failed to identify suitable data inside the file."
+            )
             msg.setWindowTitle("Error")
             _ = msg.exec_()
         else:
@@ -58,13 +64,17 @@ def importFile():
     if isinstance(fileData, fit.FitData):
         extractedData = fileData
         if fileData.image_data is not None:
-            measurementData = ImageMeasurementData('image_data', fileData.image_data)
+            measurementData = ImageMeasurementData("image_data", fileData.image_data)
 
         else:
-            measurementData = NumericalMeasurementData({'xData': fileData.x_data,
-                                                        'yData': fileData.y_data,
-                                                        'zData': fileData.z_data},
-                                                       {'zData': fileData.z_data})
+            measurementData = NumericalMeasurementData(
+                {
+                    "xData": fileData.x_data,
+                    "yData": fileData.y_data,
+                    "zData": fileData.z_data,
+                },
+                {"zData": fileData.z_data},
+            )
     else:
         measurementData = fileData
         extractedData = None

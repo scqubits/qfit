@@ -11,17 +11,31 @@
 
 import sys
 
-from PySide2.QtCore import QSize
+import PySide2.QtCore
+
+from PySide2.QtCore import QSize, Qt
 from PySide2.QtGui import QFont
 from PySide2.QtWidgets import QApplication
 
 from datapyc.core.mainwindow import MainWindow
 from datapyc.io_utils.import_data import importFile
 
+
+if hasattr(PySide2.QtCore.Qt, "AA_EnableHighDpiScaling"):
+    PySide2.QtWidgets.QApplication.setAttribute(
+        PySide2.QtCore.Qt.AA_EnableHighDpiScaling, True
+    )
+
+if hasattr(PySide2.QtCore.Qt, "AA_UseHighDpiPixmaps"):
+    PySide2.QtWidgets.QApplication.setAttribute(
+        PySide2.QtCore.Qt.AA_UseHighDpiPixmaps, True
+    )
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     font = QFont()
-    font.setFamily('Segoe UI')
+    font.setFamily("Roboto Medium")
     font.setPointSize(9)
     app.setFont(font)
 
@@ -32,7 +46,8 @@ if __name__ == "__main__":
     # fileData = readFileData(r"C:\Users\drjen\PycharmProjects\datapyc\datapyc\scratch\aug_summary_4_1.hdf5")
 
     window = MainWindow(measurementData=measurementData, extractedData=extractedData)
-    maxSize = QSize(app.desktop().availableGeometry().size())
+    window.setWindowFlag(Qt.FramelessWindowHint)
+    maxSize = QSize(app.primaryScreen().availableGeometry().size())
     window.resizeAndCenter(maxSize)
     window.show()
     sys.exit(app.exec_())

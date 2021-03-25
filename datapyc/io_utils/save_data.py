@@ -20,7 +20,9 @@ from datapyc.io_utils.io_readers import ImageMeasurementData
 def saveFile(parent):
     home = os.path.expanduser("~")
     fileCategories = "scQubits file (*.h5);;Data file (*.csv)"
-    fileName, _ = QFileDialog.getSaveFileName(parent, "Save Extracted Data", home, fileCategories)
+    fileName, _ = QFileDialog.getSaveFileName(
+        parent, "Save Extracted Data", home, fileCategories
+    )
 
     if not fileName:
         return False
@@ -38,7 +40,7 @@ def saveFile(parent):
         z_data=parent.measurementData.currentZ.data if imageData is None else None,
         image_data=imageData,
         calibration_data=parent.calibrationModel,
-        tag_data=parent.allDatasetsModel.assocTagList
+        tag_data=parent.allDatasetsModel.assocTagList,
     )
     fitData.filewrite(fileName)
     return True

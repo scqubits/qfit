@@ -11,7 +11,13 @@
 
 
 import numpy as np
-from PySide2.QtCore import QAbstractListModel, QAbstractTableModel, QModelIndex, Qt, Slot
+from PySide2.QtCore import (
+    QAbstractListModel,
+    QAbstractTableModel,
+    QModelIndex,
+    Qt,
+    Slot,
+)
 
 import datapyc.io_utils.file_io_serializers as serializers
 from datapyc.views.tagdata_view import Tag
@@ -20,6 +26,7 @@ from datapyc.views.tagdata_view import Tag
 class ActiveExtractedDataModel(QAbstractTableModel):
     """This class holds one data set, as extracted by markers on the canvas. In addition, it references calibration
     data to expose either the raw selected data, or their calibrated counterparts."""
+
     def __init__(self, data=None):
         """
         Parameters
@@ -62,7 +69,9 @@ class ActiveExtractedDataModel(QAbstractTableModel):
         """
         if role == Qt.DisplayRole:
             conversionFunc = self._adaptiveCalibrationFunc()
-            value = conversionFunc([self._data[0, index.column()], self._data[1, index.column()]])
+            value = conversionFunc(
+                [self._data[0, index.column()], self._data[1, index.column()]]
+            )
             return "{:#.6g}".format(value[index.row()])
 
     def rowCount(self, *args):
@@ -103,7 +112,7 @@ class ActiveExtractedDataModel(QAbstractTableModel):
         # section is the index of the column/row.
         if role == Qt.DisplayRole:
             if orientation == Qt.Vertical:
-                return str(['x', 'y'][section])
+                return str(["x", "y"][section])
             elif orientation == Qt.Horizontal:
                 return str(section)
 
@@ -153,7 +162,7 @@ class ActiveExtractedDataModel(QAbstractTableModel):
 
     def insertColumn(self, column, parent=QModelIndex(), *args, **kwargs):
         self.beginInsertColumns(parent, column, column)
-        self._data = np.insert(self._data, column, np.asarray([0., 0.]), axis=1)
+        self._data = np.insert(self._data, column, np.asarray([0.0, 0.0]), axis=1)
         self.endInsertColumns()
         self.layoutChanged.emit()
         return True
@@ -187,10 +196,12 @@ class ListModelMeta(type(QAbstractListModel), type(serializers.Serializable)):
     pass
 
 
-class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metaclass=ListModelMeta):
+class AllExtractedDataModel(
+    QAbstractListModel, serializers.Serializable, metaclass=ListModelMeta
+):
     def __init__(self):
         super().__init__()
-        self.dataNames = ['dataset1']
+        self.dataNames = ["dataset1"]
         self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
         self.assocTagList = [Tag()]
         self._calibrationFunc = None
@@ -223,7 +234,7 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
 
     def insertRow(self, row, parent=QModelIndex(), *args, **kwargs):
         self.beginInsertRows(parent, row, row)
-        self.dataNames.insert(row, '')
+        self.dataNames.insert(row, "")
         self.assocDataList.insert(row, np.empty(shape=(2, 0), dtype=np.float_))
         self.assocTagList.insert(row, Tag())
         self.endInsertRows()
@@ -242,6 +253,8 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
         self.assocDataList.pop(row)
         self.assocTagList.pop(row)
         self.endRemoveRows()
+        if self.currentRow == self.rowCount():
+            self._currentRow -= 1
         self.layoutChanged.emit()
         return True
 
@@ -257,7 +270,7 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
     @Slot()
     def newRow(self, str_value=None):
         rowCount = self.rowCount()
-        str_value = str_value or 'dataset' + str(rowCount + 1)
+        str_value = str_value or "dataset" + str(rowCount + 1)
         self.insertRow(rowCount)
         self.setData(self.index(rowCount, 0), str_value, role=Qt.EditRole)
         self.layoutChanged.emit()
@@ -269,7 +282,7 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
     @Slot()
     def removeAll(self):
         self.beginRemoveRows(QModelIndex(), 0, self.rowCount() - 1)
-        self.dataNames = ['dataset1']
+        self.dataNames = ["dataset1"]
         self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
         self.assocTagList = [Tag()]
         self.endRemoveRows()
@@ -312,9 +325,16 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
         sortIndices = [np.argsort(xValues) for xValues, _ in data]
         xData = [dataSet[0] for dataSet in data]
         yData = [dataSet[1] for dataSet in data]
-        sortedXData = [np.take(xValues, indices) for xValues, indices in zip(xData, sortIndices)]
-        sortedYData = [np.take(yValues, indices) for yValues, indices in zip(yData, sortIndices)]
-        allData = [np.asarray([xSet, ySet]).transpose() for xSet, ySet in zip(sortedXData, sortedYData)]
+        sortedXData = [
+            np.take(xValues, indices) for xValues, indices in zip(xData, sortIndices)
+        ]
+        sortedYData = [
+            np.take(yValues, indices) for yValues, indices in zip(yData, sortIndices)
+        ]
+        allData = [
+            np.asarray([xSet, ySet]).transpose()
+            for xSet, ySet in zip(sortedXData, sortedYData)
+        ]
         return allData
 
     def serialize(self):
@@ -327,10 +347,10 @@ class AllExtractedDataModel(QAbstractListModel, serializers.Serializable, metacl
         """
         processedData = self.allDataSorted(applyCalibration=False)
         initdata = {
-            'datanames': self.dataNames,
-            'datalist': processedData,
-            'taglist': self.assocTagList
+            "datanames": self.dataNames,
+            "datalist": processedData,
+            "taglist": self.assocTagList,
         }
         iodata = serializers.dict_serialize(initdata)
-        iodata.typename = 'FitData'
+        iodata.typename = "FitData"
         return iodata

@@ -19,29 +19,30 @@ from datapyc.core.helpers import EditDelegate
 
 class TableView(QTableView):
     """Interface for the display of the table of extracted data points."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        style = "::section {""background-color: lightgray; }"
-        font = QFont()
-        font.setPointSize(9)
-        self.setFont(font)
-        self.horizontalHeader().setStyleSheet(style)
-        self.verticalHeader().setStyleSheet(style)
+        # style = "::section {""background-color: lightgray; }"
+        # font = QFont()
+        # font.setPointSize(9)
+        # self.setFont(font)
+        # self.horizontalHeader().setStyleSheet(style)
+        # self.verticalHeader().setStyleSheet(style)
         self.setItemDelegate(EditDelegate())
 
 
 class ListView(QListView):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        font = QFont()
-        font.setPointSize(9)
-        self.setFont(font)
+        # font = QFont()
+        # font.setPointSize(9)
+        # self.setFont(font)
         self.setSelectionRectVisible(True)
 
     def setModel(self, model):
         result = super().setModel(model)
-        self.model().rowsRemoved.connect(self.setCurrentToLast)
-        self.model().rowsInserted.connect(self.setCurrentToLast)
+        # self.model().rowsRemoved.connect(self.setCurrentToLast)
+        # self.model().rowsInserted.connect(self.setCurrentToLast)
         self.setCurrentToLast()
         return result
 

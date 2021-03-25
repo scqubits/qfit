@@ -19,8 +19,16 @@ from scipy.io import loadmat
 
 import datapyc.io_utils.file_io as io
 import datapyc.io_utils.file_io_backends as io_backends
-from datapyc.core.helpers import (OrderedDictMod, hasIdenticalCols, hasIdenticalRows, isValid2dArray)
-from datapyc.models.inputdata_models import ImageMeasurementData, NumericalMeasurementData
+from datapyc.core.helpers import (
+    OrderedDictMod,
+    hasIdenticalCols,
+    hasIdenticalRows,
+    isValid2dArray,
+)
+from datapyc.models.inputdata_models import (
+    ImageMeasurementData,
+    NumericalMeasurementData,
+)
 
 
 def readFileData(fileName):
@@ -39,16 +47,16 @@ def readFileData(fileName):
     """
     _, suffix = os.path.splitext(fileName)
 
-    if suffix.lower() in ('.h5', '.hdf5'):
+    if suffix.lower() in (".h5", ".hdf5"):
         reader = GenericH5Reader()
-    elif suffix.lower() in ('.jpg', '.jpeg', '.png'):
+    elif suffix.lower() in (".jpg", ".jpeg", ".png"):
         reader = ImageFileReader()
-    elif suffix.lower() == '.mat':
+    elif suffix.lower() == ".mat":
         reader = MatlabReader()
-    elif suffix.lower() == '.csv':
+    elif suffix.lower() == ".csv":
         reader = CSVReader()
     else:
-        raise Exception('IOError: The requested file type is not supported.')
+        raise Exception("IOError: The requested file type is not supported.")
     measurementData = reader.fromFile(fileName)
     return measurementData
 
@@ -65,7 +73,7 @@ class ImageFileReader:
 
 class GenericH5Reader:
     def fromFile(self, fileName):
-        with h5py.File(fileName, 'r') as h5File:
+        with h5py.File(fileName, "r") as h5File:
             if isLikelyLabberFile(h5File):
                 labberReader = LabberH5Reader()
                 return labberReader.fromFile(fileName)
@@ -79,7 +87,10 @@ class GenericH5Reader:
             dataCollection = {}
 
             def visitor_func(name, data):
-                if isinstance(data, h5py.Dataset) and data[:].dtype in [np.float32, np.float64]:
+                if isinstance(data, h5py.Dataset) and data[:].dtype in [
+                    np.float32,
+                    np.float64,
+                ]:
                     dataCollection[name] = data[:]
 
             h5File.visititems(visitor_func)
@@ -93,37 +104,39 @@ class GenericH5Reader:
 class LabberH5Reader:
     def fromFile(self, fileName):
 
-        with h5py.File(fileName, 'r') as h5File:
-            dataEntries = ['Data']
-            dataEntries += [name + '/Data' for name in h5File if name[0:4] == 'Log_']
+        with h5py.File(fileName, "r") as h5File:
+            dataEntries = ["Data"]
+            dataEntries += [name + "/Data" for name in h5File if name[0:4] == "Log_"]
 
             dataNames = []
             dataArrays = []
             dataCollection = {}
 
             for entry in dataEntries:
-                array = h5File[entry + '/Data'][:]
+                array = h5File[entry + "/Data"][:]
                 if array.ndim != 3:
-                    raise Exception('Error reading data file. Appears to be a Labber file, but its structure does not'
-                                    'match employed heuristics.')
+                    raise Exception(
+                        "Error reading data file. Appears to be a Labber file, but its structure does not"
+                        "match employed heuristics."
+                    )
                 dataArrays.append(array)
 
-                names = h5File[entry + '/Channel names'][:]
+                names = h5File[entry + "/Channel names"][:]
 
                 if isinstance(names[0], str):
                     dataNames.append(names)
                 else:
                     newNames = []
                     for infoTuple in names:
-                        newNames.append(infoTuple[0] + ' ' + infoTuple[1])
+                        newNames.append(infoTuple[0] + " " + infoTuple[1])
                         names = newNames
                         dataNames.append(newNames)
 
-                dataCollection[names[0] + ' ' + entry] = array[:, 0, 0]
-                dataCollection[names[1] + ' ' + entry] = array[0, 1, :]
-                dataCollection[names[2] + ' ' + entry] = array[:, 2, :]
+                dataCollection[names[0] + " " + entry] = array[:, 0, 0]
+                dataCollection[names[1] + " " + entry] = array[0, 1, :]
+                dataCollection[names[2] + " " + entry] = array[:, 2, :]
                 if len(names) == 4:
-                    dataCollection[names[3] + ' ' + entry] = array[:, 3, :]
+                    dataCollection[names[3] + " " + entry] = array[:, 3, :]
 
         zCandidates = findZData(dataCollection)
         if not zCandidates:
@@ -154,7 +167,7 @@ def isLikelyLabberFile(h5File):
 
 def isLikelyDatapycFile(h5File):
     # Heuristic inspection to determine whether the h5 file might be from datapyc
-    if '__type' in h5File.attrs.keys() and h5File.attrs['__type'] == 'FitData':
+    if "__type" in h5File.attrs.keys() and h5File.attrs["__type"] == "FitData":
         return True
     return False
 

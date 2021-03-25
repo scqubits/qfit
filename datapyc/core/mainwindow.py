@@ -10,28 +10,38 @@
 ############################################################################
 
 
+import copy
 import sys
 from functools import partial
 
 import matplotlib.cm as cm
 import numpy as np
 from PySide2.QtCore import QPoint, QRect, QSize, Slot
-from PySide2.QtGui import Qt
-from PySide2.QtWidgets import QMainWindow, QMessageBox, QStyle
+from PySide2.QtGui import Qt, QColor
+from PySide2.QtWidgets import (
+    QMainWindow,
+    QMessageBox,
+    QStyle,
+    QGraphicsDropShadowEffect,
+)
 
 import datapyc.core.app_state as appstate
 from datapyc.core.app_state import State
 from datapyc.core.helpers import transposeEach
 from datapyc.io_utils.save_data import saveFile
 from datapyc.models.calibration_model import CalibrationModel
-from datapyc.models.extractdata_model import ActiveExtractedDataModel, AllExtractedDataModel
-from datapyc.ui.ui_window import UI_MainWindow
+from datapyc.models.extractdata_model import (
+    ActiveExtractedDataModel,
+    AllExtractedDataModel,
+)
+from datapyc.ui.ui_window import Ui_MainWindow
 from datapyc.views.calibration_view import CalibrationView
 from datapyc.views.tagdata_view import TagDataView
 
 
 class MainWindow(QMainWindow):
     """Class for the main window of the app."""
+
     def __init__(self, measurementData, extractedData=None):
         super().__init__()
         self.disconnectCanvas = False
@@ -49,15 +59,16 @@ class MainWindow(QMainWindow):
         self.axes = None
         self.cidCanvas = None
 
-        self.ui = UI_MainWindow()
-        self.ui.setupUI(self)
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+        self.setShadows()
 
         self.setupUICalibration()
         self.setupUIOptions()
         self.setupUIDataModel()
         self.setupUIXYZComboBoxes()
 
-        self.tagDataView = TagDataView(self.ui.ui_tagData)
+        self.tagDataView = TagDataView(self.ui)
 
         self.uiDataConnects()
         self.uiDataOptionsConnects()
@@ -67,7 +78,7 @@ class MainWindow(QMainWindow):
         self.uiDataControlConnects()
         self.uiXYZComboBoxesConnects()
         self.uiMplCanvasConnects()
-        self.saveAndCloseConnects()
+        # self.saveAndCloseConnects()
 
         self.ui.mplFigureCanvas.selectOn()
 
@@ -75,9 +86,13 @@ class MainWindow(QMainWindow):
 
         if self.extractedData is not None:
             self.allDatasetsModel.dataNames = self.extractedData.datanames
-            self.allDatasetsModel.assocDataList = transposeEach(self.extractedData.datalist)
+            self.allDatasetsModel.assocDataList = transposeEach(
+                self.extractedData.datalist
+            )
             self.allDatasetsModel.assocTagList = self.extractedData.tag_data
-            self.calibrationModel.setCalibration(*self.extractedData.calibration_data.allCalibrationVecs())
+            self.calibrationModel.setCalibration(
+                *self.extractedData.calibration_data.allCalibrationVecs()
+            )
 
             self.calibrationView.setView(*self.calibrationModel.allCalibrationVecs())
             self.activeDatasetModel._data = self.allDatasetsModel.currentAssocItem()
@@ -85,33 +100,88 @@ class MainWindow(QMainWindow):
             self.allDatasetsModel.layoutChanged.emit()
             self.activeDatasetModel.layoutChanged.emit()
 
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.offset = None
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.offset = event.pos()
+        else:
+            super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self.offset is not None and event.buttons() == Qt.LeftButton:
+            self.move(self.pos() + event.pos() - self.offset)
+        else:
+            super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        self.offset = None
+        super().mouseReleaseEvent(event)
+
+    def setShadows(self):
+        for button in [
+            self.ui.newRowButton,
+            self.ui.deleteRowButton,
+            self.ui.clearAllButton,
+            self.ui.calibrateX1Button,
+            self.ui.calibrateX2Button,
+            self.ui.calibrateY1Button,
+            self.ui.calibrateY2Button,
+        ]:
+            eff = QGraphicsDropShadowEffect(button)
+            eff.setOffset(-2)
+            eff.setBlurRadius(18.0)
+            eff.setColor(QColor(220, 220, 220, 50))
+            button.setGraphicsEffect(eff)
+
+        for button in [
+            self.ui.zoomViewButton,
+            self.ui.resetViewButton,
+            self.ui.panViewButton,
+            self.ui.selectViewButton,
+            self.ui.swapXYButton,
+        ]:
+            eff = QGraphicsDropShadowEffect(button)
+            eff.setOffset(2)
+            eff.setBlurRadius(18.0)
+            eff.setColor(QColor(0, 0, 0, 90))
+            button.setGraphicsEffect(eff)
+
+        for panel in [self.ui.frame_3, self.ui.frame_6, self.ui.tabWidget]:
+            eff = QGraphicsDropShadowEffect(panel)
+            eff.setOffset(1)
+            eff.setBlurRadius(25.0)
+            eff.setColor(QColor(0, 0, 0, 50))
+            panel.setGraphicsEffect(eff)
+
     def setupUICalibration(self):
         """For the interface that enables calibration of data with respect to x and y axis, group QLineEdit elements
         and the corresponding buttons in dicts. Set up a dictionary mapping calibration labels to the corresponding
         State choices. Finally, set up an instance of CalibrationModel and CalibrationView"""
         self.rawLineEdits = {
-            'X1': self.ui.rawX1LineEdit,
-            'X2': self.ui.rawX2LineEdit,
-            'Y1': self.ui.rawY1LineEdit,
-            'Y2': self.ui.rawY2LineEdit
+            "X1": self.ui.rawX1LineEdit,
+            "X2": self.ui.rawX2LineEdit,
+            "Y1": self.ui.rawY1LineEdit,
+            "Y2": self.ui.rawY2LineEdit,
         }
         self.mapLineEdits = {
-            'X1': self.ui.mapX1LineEdit,
-            'X2': self.ui.mapX2LineEdit,
-            'Y1': self.ui.mapY1LineEdit,
-            'Y2': self.ui.mapY2LineEdit
+            "X1": self.ui.mapX1LineEdit,
+            "X2": self.ui.mapX2LineEdit,
+            "Y1": self.ui.mapY1LineEdit,
+            "Y2": self.ui.mapY2LineEdit,
         }
         self.calibrationButtons = {
-            'X1': self.ui.calibrateX1Button,
-            'X2': self.ui.calibrateX2Button,
-            'Y1': self.ui.calibrateY1Button,
-            'Y2': self.ui.calibrateY2Button
+            "X1": self.ui.calibrateX1Button,
+            "X2": self.ui.calibrateX2Button,
+            "Y1": self.ui.calibrateY1Button,
+            "Y2": self.ui.calibrateY2Button,
         }
         self.calibrationStates = {
-            'X1': State.CALIBRATE_X1,
-            'X2': State.CALIBRATE_X2,
-            'Y1': State.CALIBRATE_Y1,
-            'Y2': State.CALIBRATE_Y2
+            "X1": State.CALIBRATE_X1,
+            "X2": State.CALIBRATE_X2,
+            "Y1": State.CALIBRATE_Y1,
+            "Y2": State.CALIBRATE_Y2,
         }
 
         self.calibrationModel = CalibrationModel()
@@ -119,26 +189,32 @@ class MainWindow(QMainWindow):
         self.calibrationModel.setCalibration(*self.calibrationView.calibrationPoints())
 
     def setupUIOptions(self):
-        dataCheckBoxCallbacks = {'savgolFilterX': self.ui.savgolFilterXCheckBox.isChecked,
-                                 'savgolFilterY': self.ui.savgolFilterYCheckBox.isChecked,
-                                 'gaussLaplaceFilter': self.ui.gaussLaplaceCheckBox.isChecked,
-                                 'bgndSubtractX': self.ui.bgndSubtractXCheckBox.isChecked,
-                                 'bgndSubtractY': self.ui.bgndSubtractYCheckBox.isChecked,
-                                 'logColoring': self.ui.logScaleCheckBox.isChecked}
+        dataCheckBoxCallbacks = {
+            "topHatFilter": self.ui.topHatCheckBox.isChecked,
+            "waveletFilter": self.ui.waveletCheckBox.isChecked,
+            "edgeFilter": self.ui.edgeFilterCheckBox.isChecked,
+            "bgndSubtractX": self.ui.bgndSubtractXCheckBox.isChecked,
+            "bgndSubtractY": self.ui.bgndSubtractYCheckBox.isChecked,
+            "logColoring": self.ui.logScaleCheckBox.isChecked,
+        }
 
-        self.ui.rangeSliderWidget.setRange(0, 1)
-        self.ui.rangeSliderWidget.setValues(0, 1)
-        plotRangeCallback = self.ui.rangeSliderWidget.getValues
+        def plotRangeCallback():
+            val1 = self.ui.rangeSliderMin.value() / 100.0
+            val2 = self.ui.rangeSliderMax.value() / 100.0
+            min_val = min(val1, val2)
+            max_val = max(val1, val2)
+            return [min_val, max_val]
 
         self.measurementData.setupUICallbacks(dataCheckBoxCallbacks, plotRangeCallback)
-
 
     def setupUIDataModel(self):
         """Set up the main class instances holding the data extracted from placing markers on the canvas. The
         AllExtractedDataModel instance holds all data, whereas the ActiveExtractedDataModel instance holds data
         of the currently selected data set."""
         self.activeDatasetModel = ActiveExtractedDataModel()
-        self.activeDatasetModel.setAdaptiveCalibrationFunc(self.calibrationModel.adaptiveConversionFunc)
+        self.activeDatasetModel.setAdaptiveCalibrationFunc(
+            self.calibrationModel.adaptiveConversionFunc
+        )
         self.ui.dataTableView.setModel(self.activeDatasetModel)
 
         self.allDatasetsModel = AllExtractedDataModel()
@@ -153,50 +229,67 @@ class MainWindow(QMainWindow):
 
     def uiDataConnects(self):
         """Make connections for changes in data."""
-        # Whenever the data layout in the ActiveExtractedDataModel changes, update the corresponding
-        # AllExtractedDataModel data; this includes the important event of adding extraction points to the
-        # ActiveExtractedDataModel
+        # Whenever the data layout in the ActiveExtractedDataModel changes, update
+        # the corresponding AllExtractedDataModel data; this includes the important
+        # event of adding extraction points to the ActiveExtractedDataModel
         self.activeDatasetModel.layoutChanged.connect(
-            lambda: self.ui.datasetListView.model().updateAssocData(newData=self.activeDatasetModel.all()))
+            lambda: self.ui.datasetListView.model().updateAssocData(
+                newData=self.activeDatasetModel.all()
+            )
+        )
 
-        # If data in the TableView is changed manually through editing, the 'dataChanged' signal will be emitted. The
-        # following connects the signal to an update in th data stored in the AllExtractedDataModel
+        # If data in the TableView is changed manually through editing,
+        # the 'dataChanged' signal will be emitted. The following connects the signal
+        # to an update in th data stored in the AllExtractedDataModel
         self.activeDatasetModel.dataChanged.connect(
             lambda topLeft, bottomRight: self.ui.datasetListView.model().updateAssocData(
                 newData=self.activeDatasetModel.all()
             )
         )
 
-        # Whenever the AllExtractedDataModel changes layout - for example, due to switching from one existing data set
-        # to another one, this connection will ensure that the TableView will be updated with the correct data
+        # Whenever the AllExtractedDataModel changes layout - for example, due to
+        # switching from one existing data set to another one, this connection will
+        # ensure that the TableView will be updated with the correct data
         self.allDatasetsModel.layoutChanged.connect(
-            lambda: self.activeDatasetModel.setAllData(newData=self.allDatasetsModel.currentAssocItem()))
+            lambda: self.activeDatasetModel.setAllData(
+                newData=self.allDatasetsModel.currentAssocItem()
+            )
+        )
 
-        # Whenever data sets are added or removed from the ListView, this ensures that the canvas display is updated.
+        # Whenever data sets are added or removed from the ListView, this ensures
+        # that the canvas display is updated.
         self.allDatasetsModel.layoutChanged.connect(self.updatePlot)
 
-        # Each time the data set is changed on ListView/Model by clicking a data set, the data in
-        # ActiveExtractedDataModel is updated to reflect the new selection.
+        # Each time the data set is changed on ListView/Model by clicking a data set,
+        # the data in ActiveExtractedDataModel is updated to reflect the new selection.
         self.ui.datasetListView.clicked.connect(
-            lambda: self.activeDatasetModel.setAllData(newData=self.allDatasetsModel.currentAssocItem()))
+            lambda: self.activeDatasetModel.setAllData(
+                newData=self.allDatasetsModel.currentAssocItem()
+            )
+        )
 
-        # A new selection of a data set item in ListView is accompanied by an update of the canvas to show the
-        # appropriate plot of selected points
+        # A new selection of a data set item in ListView is accompanied by an update
+        # of the canvas to show the appropriate plot of selected points
         self.ui.datasetListView.clicked.connect(lambda: self.updatePlot(init=False))
 
         # Whenever tag type or tag data is changed, update the AllExtractedDataModel data
-        self.tagDataView.changedTagType.connect(lambda: self.allDatasetsModel.updateCurrentTag(self.tagDataView.getTag()))
-        self.tagDataView.changedTagData.connect(lambda: self.allDatasetsModel.updateCurrentTag(self.tagDataView.getTag()))
-
-        # Whenever a new dataset is activated in the AllExtractedDataModel, update the TagDataView
-        self.ui.datasetListView.clicked.connect(lambda: self.tagDataView.setTag(
-            self.allDatasetsModel.currentTagItem()))
+        self.tagDataView.changedTagType.connect(
+            lambda: self.allDatasetsModel.updateCurrentTag(self.tagDataView.getTag())
+        )
+        self.tagDataView.changedTagData.connect(
+            lambda: self.allDatasetsModel.updateCurrentTag(self.tagDataView.getTag())
+        )
+        #
+        # # Whenever a new dataset is activated in the AllExtractedDataModel, update the TagDataView
+        self.ui.datasetListView.clicked.connect(
+            lambda: self.tagDataView.setTag(self.allDatasetsModel.currentTagItem())
+        )
 
     def uiDataOptionsConnects(self):
         """Connect the UI elements related to display of data"""
-        self.ui.savgolFilterXCheckBox.toggled.connect(lambda x: self.updatePlot())
-        self.ui.savgolFilterYCheckBox.toggled.connect(lambda x: self.updatePlot())
-        self.ui.gaussLaplaceCheckBox.toggled.connect(lambda x: self.updatePlot())
+        self.ui.topHatCheckBox.toggled.connect(lambda x: self.updatePlot())
+        self.ui.waveletCheckBox.toggled.connect(lambda x: self.updatePlot())
+        self.ui.edgeFilterCheckBox.toggled.connect(lambda x: self.updatePlot())
         self.ui.bgndSubtractXCheckBox.toggled.connect(lambda x: self.updatePlot())
         self.ui.bgndSubtractYCheckBox.toggled.connect(lambda x: self.updatePlot())
 
@@ -209,16 +302,21 @@ class MainWindow(QMainWindow):
         self.ui.colorComboBox.activated.connect(lambda x: self.updatePlot())
 
         # Ensure that a change in the range slider positions cause an update of the plot.
-        self.ui.rangeSliderWidget.sigValueChanged.connect(lambda x: self.updatePlot())
+        self.ui.rangeSliderMin.valueChanged.connect(lambda x: self.updatePlot())
+        self.ui.rangeSliderMax.valueChanged.connect(lambda x: self.updatePlot())
 
     def uiCalibrationConnects(self):
         """Connect UI elements for data calibration."""
         self.ui.calibratedCheckBox.toggled.connect(self.toggleCalibration)
 
         for label in self.calibrationButtons:
-            self.calibrationButtons[label].clicked.connect(partial(self.calibrate, label))
+            self.calibrationButtons[label].clicked.connect(
+                partial(self.calibrate, label)
+            )
 
-        for lineEdit in (list(self.rawLineEdits.values()) + list(self.mapLineEdits.values())):
+        for lineEdit in list(self.rawLineEdits.values()) + list(
+            self.mapLineEdits.values()
+        ):
             lineEdit.editingFinished.connect(self.updateCalibration)
 
     def uiCanvasControlConnects(self):
@@ -235,9 +333,15 @@ class MainWindow(QMainWindow):
         self.ui.deleteRowButton.clicked.connect(self.allDatasetsModel.removeCurrentRow)
         self.ui.clearAllButton.clicked.connect(self.allDatasetsModel.removeAll)
 
-        self.ui.newRowButton.clicked.connect(lambda: self.tagDataView.setTag(self.allDatasetsModel.currentTagItem()))
-        self.ui.deleteRowButton.clicked.connect(lambda: self.tagDataView.setTag(self.allDatasetsModel.currentTagItem()))
-        self.ui.clearAllButton.clicked.connect(lambda: self.tagDataView.setTag(self.allDatasetsModel.currentTagItem()))
+        self.ui.newRowButton.clicked.connect(
+            lambda: self.tagDataView.setTag(self.allDatasetsModel.currentTagItem())
+        )
+        self.ui.deleteRowButton.clicked.connect(
+            lambda: self.tagDataView.setTag(self.allDatasetsModel.currentTagItem())
+        )
+        self.ui.clearAllButton.clicked.connect(
+            lambda: self.tagDataView.setTag(self.allDatasetsModel.currentTagItem())
+        )
 
     def uiXYZComboBoxesConnects(self):
         self.ui.zComboBox.activated.connect(self.zDataUpdate)
@@ -248,11 +352,13 @@ class MainWindow(QMainWindow):
         """Set up the matplotlib canvas and start monitoring for mouse click events in the canvas area."""
         self.axes = self.ui.mplFigureCanvas.canvas.figure.subplots()
         self.updatePlot(initialize=True)
-        self.cidCanvas = self.axes.figure.canvas.mpl_connect('button_press_event', self.canvasClickMonitoring)
+        self.cidCanvas = self.axes.figure.canvas.mpl_connect(
+            "button_press_event", self.canvasClickMonitoring
+        )
 
-    def saveAndCloseConnects(self):
-        self.ui.buttonBox.accepted.connect(self.saveAndCloseApp)
-        self.ui.buttonBox.rejected.connect(self.closeApp)
+    # def saveAndCloseConnects(self):
+    #     self.ui.buttonBox.accepted.connect(self.saveAndCloseApp)
+    #     self.ui.buttonBox.rejected.connect(self.closeApp)
 
     def setupXYDataBoxes(self):
         self.ui.xComboBox.clear()
@@ -273,13 +379,13 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def toggleZoom(self):
-        if appstate.state != 'ZOOM':
+        if appstate.state != "ZOOM":
             appstate.state = State.ZOOM
             self.ui.mplFigureCanvas.zoomView()
 
     @Slot()
     def togglePan(self):
-        if appstate.state != 'PAN':
+        if appstate.state != "PAN":
             appstate.state = State.PAN
             self.ui.mplFigureCanvas.panView()
 
@@ -289,8 +395,8 @@ class MainWindow(QMainWindow):
         if event.xdata is None or event.ydata is None:
             return
 
-        for calibrationLabel in ['X1', 'X2', 'Y1', 'Y2']:
-            data = event.xdata if (calibrationLabel[0] == 'X') else event.ydata
+        for calibrationLabel in ["X1", "X2", "Y1", "Y2"]:
+            data = event.xdata if (calibrationLabel[0] == "X") else event.ydata
 
             if appstate.state == self.calibrationStates[calibrationLabel]:
                 self.rawLineEdits[calibrationLabel].setText(str(data))
@@ -325,15 +431,15 @@ class MainWindow(QMainWindow):
 
         # Set the matplotlib colormap according to the selection in the dropdown menu.
         colorStr = self.ui.colorComboBox.currentText()
-        cmap = getattr(cm, colorStr)
-        cmap.set_bad(color='black')
+        cmap = copy.copy(getattr(cm, colorStr))
+        cmap.set_bad(color="black")
 
         self.measurementData.canvasPlot(self.axes, cmap=cmap)
 
         # If there are any extracted data points in the currently active data set, show those via a scatter plot.
         if self.activeDatasetModel.columnCount() > 0:
             dataXY = self.activeDatasetModel.all()
-            self.axes.scatter(dataXY[0], dataXY[1], c='orange', marker='x', s=150)
+            self.axes.scatter(dataXY[0], dataXY[1], c="orange", marker="x", s=150)
 
         # Make sure that new axes limits match the old ones.
         if not initialize:
@@ -391,30 +497,26 @@ class MainWindow(QMainWindow):
 
         xBgndSub = self.ui.bgndSubtractXCheckBox.checkState()
         yBgndSub = self.ui.bgndSubtractYCheckBox.checkState()
-        xSavGol = self.ui.savgolFilterXCheckBox.checkState()
-        ySavGol = self.ui.savgolFilterYCheckBox.checkState()
 
         self.ui.bgndSubtractXCheckBox.setCheckState(yBgndSub)
         self.ui.bgndSubtractYCheckBox.setCheckState(xBgndSub)
-        self.ui.savgolFilterXCheckBox.setCheckState(ySavGol)
-        self.ui.savgolFilterYCheckBox.setCheckState(xSavGol)
 
-        rawx1 = self.rawLineEdits['X1'].value()
-        rawx2 = self.rawLineEdits['X2'].value()
-        rawy1 = self.rawLineEdits['Y1'].value()
-        rawy2 = self.rawLineEdits['Y2'].value()
-        mapx1 = self.mapLineEdits['X1'].value()
-        mapx2 = self.mapLineEdits['X2'].value()
-        mapy1 = self.mapLineEdits['Y1'].value()
-        mapy2 = self.mapLineEdits['Y2'].value()
-        self.rawLineEdits['X1'].setText(str(rawy1))
-        self.rawLineEdits['Y1'].setText(str(rawx1))
-        self.rawLineEdits['X2'].setText(str(rawy2))
-        self.rawLineEdits['Y2'].setText(str(rawx2))
-        self.mapLineEdits['X1'].setText(str(mapy1))
-        self.mapLineEdits['Y1'].setText(str(mapx1))
-        self.mapLineEdits['X2'].setText(str(mapy2))
-        self.mapLineEdits['Y2'].setText(str(mapx2))
+        rawx1 = self.rawLineEdits["X1"].value()
+        rawx2 = self.rawLineEdits["X2"].value()
+        rawy1 = self.rawLineEdits["Y1"].value()
+        rawy2 = self.rawLineEdits["Y2"].value()
+        mapx1 = self.mapLineEdits["X1"].value()
+        mapx2 = self.mapLineEdits["X2"].value()
+        mapy1 = self.mapLineEdits["Y1"].value()
+        mapy2 = self.mapLineEdits["Y2"].value()
+        self.rawLineEdits["X1"].setText(str(rawy1))
+        self.rawLineEdits["Y1"].setText(str(rawx1))
+        self.rawLineEdits["X2"].setText(str(rawy2))
+        self.rawLineEdits["Y2"].setText(str(rawx2))
+        self.mapLineEdits["X1"].setText(str(mapy1))
+        self.mapLineEdits["Y1"].setText(str(mapx1))
+        self.mapLineEdits["X2"].setText(str(mapy2))
+        self.mapLineEdits["Y2"].setText(str(mapx2))
         self.updateCalibration()
 
         self.disconnectCanvas = False
@@ -430,7 +532,7 @@ class MainWindow(QMainWindow):
         yrange = ymax - ymin
         x1y1 = x1y1 / [xrange, yrange]
         x2y2 = x2y2 / [xrange, yrange]
-        distance = np.linalg.norm(x1y1-x2y2)
+        distance = np.linalg.norm(x1y1 - x2y2)
         if distance < 0.025:
             return True
         return False
@@ -446,7 +548,9 @@ class MainWindow(QMainWindow):
             msgBox.setIcon(QMessageBox.Question)
             msgBox.setInformativeText("Do you want to save changes?")
             msgBox.setText("This document has been modified.")
-            msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+            msgBox.setStandardButtons(
+                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
+            )
             msgBox.setDefaultButton(QMessageBox.Save)
 
             reply = msgBox.exec_()
@@ -468,4 +572,6 @@ class MainWindow(QMainWindow):
     def resizeAndCenter(self, maxSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)
         maxRect = QRect(QPoint(0, 0), maxSize)
-        self.setGeometry(QStyle.alignedRect(Qt.LeftToRight, Qt.AlignCenter, newSize, maxRect))
+        self.setGeometry(
+            QStyle.alignedRect(Qt.LeftToRight, Qt.AlignCenter, newSize, maxRect)
+        )

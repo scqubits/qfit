@@ -25,6 +25,7 @@ SERIALIZABLE_REGISTRY = {}
 
 class Serializable(ABC):
     """Mix-in class that makes descendant classes serializable."""
+
     _subclasses = []
 
     def __new__(cls, *args, **kwargs):
@@ -87,6 +88,7 @@ class Serializable(ABC):
         filename: str
         """
         import datapyc.io_utils.file_io as io
+
         io.write(self, filename)
 
     @classmethod
@@ -103,6 +105,7 @@ class Serializable(ABC):
             new SpectrumData object, initialized with data read from file
         """
         import datapyc.io_utils.file_io as io
+
         return io.read(filename)
 
 
@@ -162,15 +165,18 @@ def dict_serialize(dict_instance):
     IOData
     """
     import datapyc.io_utils.file_io as io
+
     dict_instance = helpers.remove_nones(dict_instance)
     attributes = {}
     ndarrays = {}
     objects = {}
-    typename = 'dict'
+    typename = "dict"
 
     for name, content in dict_instance.items():
         update_func = type_dispatch(content)
-        attributes, ndarrays, objects = update_func(name, content, attributes, ndarrays, objects)
+        attributes, ndarrays, objects = update_func(
+            name, content, attributes, ndarrays, objects
+        )
     return io.IOData(typename, attributes, ndarrays, objects)
 
 
@@ -187,13 +193,16 @@ def listlike_serialize(listlike_instance):
     IOData
     """
     import scqubits.io_utils.fileio as io
+
     attributes = {}
     ndarrays = {}
     objects = {}
     typename = type(listlike_instance).__name__
     for index, item in enumerate(listlike_instance):
         update_func = type_dispatch(item)
-        attributes, ndarrays, objects = update_func(str(index), item, attributes, ndarrays, objects)
+        attributes, ndarrays, objects = update_func(
+            str(index), item, attributes, ndarrays, objects
+        )
     return io.IOData(typename, attributes, ndarrays, objects)
 
 
@@ -231,8 +240,8 @@ def get_init_params(obj):
     list of str
     """
     init_params = list(inspect.signature(obj.__init__).parameters.keys())
-    if 'self' in init_params:
-        init_params.remove('self')
-    if 'kwargs' in init_params:
-        init_params.remove('kwargs')
+    if "self" in init_params:
+        init_params.remove("self")
+    if "kwargs" in init_params:
+        init_params.remove("kwargs")
     return init_params

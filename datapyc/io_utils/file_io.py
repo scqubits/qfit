@@ -16,7 +16,7 @@ import os
 
 import datapyc.io_utils.file_io_serializers as io_serializers
 
-FILE_TYPES = ['.h5 | .hdf5', '.csv']
+FILE_TYPES = [".h5 | .hdf5", ".csv"]
 
 
 def serialize(the_object):
@@ -31,15 +31,17 @@ def serialize(the_object):
     -------
     IOData
     """
-    if hasattr(the_object, 'serialize'):
+    if hasattr(the_object, "serialize"):
         return the_object.serialize()
 
     typename = type(the_object).__name__
-    if hasattr(io_serializers, typename + '_serialize'):
-        serializer_method = getattr(io_serializers, typename + '_serialize')
+    if hasattr(io_serializers, typename + "_serialize"):
+        serializer_method = getattr(io_serializers, typename + "_serialize")
         return serializer_method(the_object)
 
-    raise NotImplementedError("No implementation for writing {} to file".format(typename))
+    raise NotImplementedError(
+        "No implementation for writing {} to file".format(typename)
+    )
 
 
 def deserialize(iodata):
@@ -62,11 +64,13 @@ def deserialize(iodata):
         cls = io_serializers.SERIALIZABLE_REGISTRY[typename]
         return cls.deserialize(iodata)
 
-    if hasattr(io_serializers, typename + '_deserialize'):
-        deserialize_method = getattr(io_serializers, typename + '_deserialize')
+    if hasattr(io_serializers, typename + "_deserialize"):
+        deserialize_method = getattr(io_serializers, typename + "_deserialize")
         return deserialize_method(iodata)
 
-    raise NotImplementedError("No implementation for converting {} data to Python object.".format(typename))
+    raise NotImplementedError(
+        "No implementation for converting {} data to Python object.".format(typename)
+    )
 
 
 def write(the_object, filename, file_handle=None):
@@ -111,6 +115,7 @@ def read(filename, file_handle=None):
 
 class FileIOFactory:
     """Factory method for choosing reader/writer according to given format"""
+
     def get_writer(self, file_name, file_handle=None):
         """
         Based on the extension of the provided file name, return the appropriate writer engine.
@@ -125,13 +130,16 @@ class FileIOFactory:
         IOWriter
         """
         import datapyc.io_utils.file_io_backends as io_backends
+
         _, suffix = os.path.splitext(file_name)
-        if suffix == '.csv':
+        if suffix == ".csv":
             return io_backends.CSVWriter(file_name)
-        if suffix in ('.h5', '.hdf5'):
+        if suffix in (".h5", ".hdf5"):
             return io_backends.H5Writer(file_name, file_handle=file_handle)
-        raise Exception("Extension '{}' of given file name '{}' does not match any supported "
-                        "file type: {}".format(suffix, file_name, FILE_TYPES))
+        raise Exception(
+            "Extension '{}' of given file name '{}' does not match any supported "
+            "file type: {}".format(suffix, file_name, FILE_TYPES)
+        )
 
     def get_reader(self, file_name, file_handle=None, get_external_reader=False):
         """
@@ -151,11 +159,14 @@ class FileIOFactory:
             return get_external_reader(file_name, file_handle=file_handle)
 
         import datapyc.io_utils.file_io_backends as io_backends
+
         _, suffix = os.path.splitext(file_name)
-        if suffix in ('.h5', '.hdf5'):
+        if suffix in (".h5", ".hdf5"):
             return io_backends.H5Reader(file_name, file_handle=file_handle)
-        raise Exception("Extension '{}' of given file name '{}' does not match any supported "
-                        "file type: {}".format(suffix, file_name, FILE_TYPES))
+        raise Exception(
+            "Extension '{}' of given file name '{}' does not match any supported "
+            "file type: {}".format(suffix, file_name, FILE_TYPES)
+        )
 
 
 IO = FileIOFactory()
@@ -168,6 +179,7 @@ class IOData:
     ndarrays: dict of {str: ndarray}
     objects: dict of {str: Serializable}, optional
     """
+
     def __init__(self, typename, attributes, ndarrays, objects=None):
         self.typename = typename
         self.attributes = attributes or {}

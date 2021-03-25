@@ -37,7 +37,7 @@ class CalibrationModel(serializers.Serializable):
         if rawVec1 and rawVec2 and mapVec1 and mapVec2:
             self.setCalibration(rawVec1, rawVec2, mapVec1, mapVec2)
         else:
-            self.setCalibration((1., 0.), (0., 1.), (1., 0.), (0., 1.))
+            self.setCalibration((1.0, 0.0), (0.0, 1.0), (1.0, 0.0), (0.0, 1.0))
 
         self.applyCalibration = False
 
@@ -54,8 +54,13 @@ class CalibrationModel(serializers.Serializable):
         alphaY = (y1p - y2p) / (y1 - y2)
 
         self.bVec = np.asarray([x1p - alphaX * x1, y1p - alphaY * y1])
-        self.alphaMat = np.asarray([[alphaX, 0.], [0., alphaY]])
-        self.rawVec1, self.rawVec2, self.mapVec1, self.mapVec2 = rVec1, rVec2, mVec1, mVec2
+        self.alphaMat = np.asarray([[alphaX, 0.0], [0.0, alphaY]])
+        self.rawVec1, self.rawVec2, self.mapVec1, self.mapVec2 = (
+            rVec1,
+            rVec2,
+            mVec1,
+            mVec2,
+        )
 
     def allCalibrationVecs(self):
         return self.rawVec1, self.rawVec2, self.mapVec1, self.mapVec2

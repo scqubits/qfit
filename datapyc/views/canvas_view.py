@@ -24,11 +24,15 @@ from datapyc.core.app_state import State
 
 class NavigationHidden(NavigationToolbar2QT):
     # only connect to external buttons
-    toolitems = [t for t in NavigationToolbar2QT.toolitems if t[0] in ('Home', 'Pan', 'Zoom')]
+    toolitems = [
+        t for t in NavigationToolbar2QT.toolitems if t[0] in ("Home", "Pan", "Zoom")
+    ]
 
     def __init__(self, canvas, parent, coordinates=True):
         super().__init__(canvas, parent, coordinates=False)
         self.set_cursor(cursors.SELECT_REGION)
+        self._idPress = None
+        self._idRelease = None
 
     def _init_toolbar(self):
         pass
@@ -38,21 +42,25 @@ class NavigationHidden(NavigationToolbar2QT):
 
     def setPanMode(self, on=True):
         if on:
-            self._active = 'PAN'
+            self._active = "PAN"
         else:
             self._active = None
 
         if self._idPress is not None:
             self._idPress = self.canvas.mpl_disconnect(self._idPress)
-            self.mode = ''
+            self.mode = ""
         if self._idRelease is not None:
             self._idRelease = self.canvas.mpl_disconnect(self._idRelease)
-            self.mode = ''
+            self.mode = ""
 
         if on:
-            self._idPress = self.canvas.mpl_connect('button_press_event', self.press_pan)
-            self._idRelease = self.canvas.mpl_connect('button_release_event', self.release_pan)
-            self.mode = 'pan/zoom'
+            self._idPress = self.canvas.mpl_connect(
+                "button_press_event", self.press_pan
+            )
+            self._idRelease = self.canvas.mpl_connect(
+                "button_release_event", self.release_pan
+            )
+            self.mode = "pan/zoom"
             self.canvas.widgetlock(self)
         else:
             self.canvas.widgetlock.release(self)
@@ -64,21 +72,25 @@ class NavigationHidden(NavigationToolbar2QT):
 
     def setZoomMode(self, on=True):
         if on:
-            self._active = 'ZOOM'
+            self._active = "ZOOM"
         else:
             self._active = None
 
         if self._idPress is not None:
             self._idPress = self.canvas.mpl_disconnect(self._idPress)
-            self.mode = ''
+            self.mode = ""
         if self._idRelease is not None:
             self._idRelease = self.canvas.mpl_disconnect(self._idRelease)
-            self.mode = ''
+            self.mode = ""
 
         if on:
-            self._idPress = self.canvas.mpl_connect('button_press_event', self.press_zoom)
-            self._idRelease = self.canvas.mpl_connect('button_release_event', self.release_zoom)
-            self.mode = 'zoom rect'
+            self._idPress = self.canvas.mpl_connect(
+                "button_press_event", self.press_zoom
+            )
+            self._idRelease = self.canvas.mpl_connect(
+                "button_release_event", self.release_zoom
+            )
+            self.mode = "zoom rect"
             self.canvas.widgetlock(self)
         else:
             self.canvas.widgetlock.release(self)
@@ -108,18 +120,29 @@ class FigureCanvas(QFrame):
         return self.canvas.figure.axes[0]
 
     def select_crosshair(self, horizOn=True, vertOn=True):
-        self._crosshair = Cursor(self.axes(), useblit=True, horizOn=horizOn, vertOn=vertOn, color='black', linewidth=1)
+        self._crosshair = Cursor(
+            self.axes(),
+            useblit=True,
+            horizOn=horizOn,
+            vertOn=vertOn,
+            color="black",
+            linewidth=1,
+        )
         self.canvas.draw()
 
     def zoomOn(self):
-        self.toolbar.setZoomMode(on=True)  # toggle zoom at the level of the NavigationToolbar2QT, enabling actual
-                                          # zoom functionality
+        self.toolbar.setZoomMode(
+            on=True
+        )  # toggle zoom at the level of the NavigationToolbar2QT, enabling actual
+        # zoom functionality
         appstate.state = State.ZOOM
         self.select_crosshair()
 
     def panOn(self):
-        self.toolbar.setPanMode(on=True)  # toggle pan at the level of the NavigationToolbar2QT, enabling actual
-                                          # pan functionality
+        self.toolbar.setPanMode(
+            on=True
+        )  # toggle pan at the level of the NavigationToolbar2QT, enabling actual
+        # pan functionality
         appstate.state = State.PAN
         self.select_crosshair()
 
@@ -132,7 +155,7 @@ class FigureCanvas(QFrame):
     def calibrateOn(self, strXY):
         self.toolbar.setZoomMode(on=False)
         self.toolbar.setPanMode(on=False)
-        if strXY == 'X':
+        if strXY == "X":
             horizOn = False
             vertOn = True
         else:

@@ -16,24 +16,33 @@ import distutils.version as version
 
 import matplotlib
 import numpy as np
+import skimage.morphology
+import skimage.restoration
+
 from matplotlib import colors as colors
 from scipy.ndimage import gaussian_laplace
-from scipy.signal import savgol_filter
 
 import datapyc.io_utils.file_io_serializers as serializers
-from datapyc.core.helpers import (DataItem, OrderedDictMod, hasIdenticalCols, hasIdenticalRows, isValid1dArray,
-                                  isValid2dArray)
+from datapyc.core.helpers import (
+    DataItem,
+    OrderedDictMod,
+    hasIdenticalCols,
+    hasIdenticalRows,
+    isValid1dArray,
+    isValid2dArray,
+)
 
 
 class MeasurementData(abc.ABC):
     """Abstract basis class to enforce implementation of a data type specific plot method"""
+
     def __init__(self, rawData):
         self.rawData = rawData
         self.checkBoxCallbacks = None
         self.plotRangeCallback = None
-        self._currentX = DataItem('', None)
-        self._currentY = DataItem('', None)
-        self._currentZ = DataItem('', None)
+        self._currentX = DataItem("", None)
+        self._currentY = DataItem("", None)
+        self._currentZ = DataItem("", None)
         self.xyCandidates = OrderedDictMod()
         self.zCandidates = OrderedDictMod()
         self.currentXCompatibles = OrderedDictMod()
@@ -96,6 +105,7 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         each dict entry records the name associated with the dataset, and the dataset element, which  is a 2d ndarray
         of floats representing a possible set of measurement data (zData)
     """
+
     def __init__(self, rawData, zCandidates):
         """
 
@@ -120,19 +130,19 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         """
         zData = copy.copy(self._currentZ)
 
-        if self.checkBoxCallbacks['savgolFilterX']():
-            zData.data = self.applySavitzkyGolayFilter(zData.data, axis=1)
+        if self.checkBoxCallbacks["topHatFilter"]():
+            zData.data = self.applyTopHatFilter(zData.data)
 
-        if self.checkBoxCallbacks['savgolFilterY']():
-            zData.data = self.applySavitzkyGolayFilter(zData.data, axis=0)
+        if self.checkBoxCallbacks["waveletFilter"]():
+            zData.data = self.applyWaveletFilter(zData.data)
 
-        if self.checkBoxCallbacks['bgndSubtractX']():
+        if self.checkBoxCallbacks["bgndSubtractX"]():
             zData.data = self.doBgndSubtraction(zData.data, axis=1)
 
-        if self.checkBoxCallbacks['bgndSubtractY']():
+        if self.checkBoxCallbacks["bgndSubtractY"]():
             zData.data = self.doBgndSubtraction(zData.data, axis=0)
 
-        if self.checkBoxCallbacks['gaussLaplaceFilter']():
+        if self.checkBoxCallbacks["edgeFilter"]():
             zData.data = gaussian_laplace(zData.data, 1.0)
         return zData
 
@@ -199,20 +209,32 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         return xyCandidates
 
     def swapXY(self):
-        swappedZCandidates = {key: array.transpose() for key, array in self.zCandidates.items()}
+        swappedZCandidates = {
+            key: array.transpose() for key, array in self.zCandidates.items()
+        }
         self.zCandidates = OrderedDictMod(swappedZCandidates)
         self._currentZ.data = self._currentZ.data.transpose()
 
-        self.currentXCompatibles, self.currentYCompatibles = self.currentYCompatibles, self.currentXCompatibles
+        self.currentXCompatibles, self.currentYCompatibles = (
+            self.currentYCompatibles,
+            self.currentXCompatibles,
+        )
         self._currentX, self._currentY = self._currentY, self._currentX
 
     def doBgndSubtraction(self, array, axis=0):
         avgArray = array - np.nanmean(array, axis=axis, keepdims=True)
         return avgArray
 
-    def applySavitzkyGolayFilter(self, array, axis=0):
-        newArray = savgol_filter(array, window_length=3, polyorder=1, axis=axis)
-        return newArray
+    def applyWaveletFilter(self, array):
+        return skimage.restoration.denoise_wavelet(
+            array, multichannel=True, rescale_sigma=True
+        )
+
+    def applyTopHatFilter(self, array):
+        closed = skimage.morphology.closing(
+            array, skimage.morphology.square(23)
+        )
+        return closed - array
 
     def canvasPlot(self, axes, **kwargs):
         zData = self.currentZ.data
@@ -225,21 +247,34 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         zMin = rawZMin + zRange[0] * (rawZMax - rawZMin)
         zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
 
-        if self.checkBoxCallbacks['logColoring']():
+        if self.checkBoxCallbacks["logColoring"]():
             linthresh = max(abs(zMin), abs(zMax)) / 20.0
-            if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion("3.2.0"):
-                add_on_mpl_3_2_0 = {'base': 10}
+            if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion(
+                "3.2.0"
+            ):
+                add_on_mpl_3_2_0 = {"base": 10}
             else:
                 add_on_mpl_3_2_0 = {}
-            norm = colors.SymLogNorm(linthresh=linthresh, vmin=zMin, vmax=zMax, **add_on_mpl_3_2_0)
+            norm = colors.SymLogNorm(
+                linthresh=linthresh, vmin=zMin, vmax=zMax, **add_on_mpl_3_2_0
+            )
         else:
             norm = None
 
         if (self.currentX.data is None) or (self.currentY.data is None):
-            _ = axes.pcolormesh(zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs)
+            _ = axes.pcolormesh(zData, vmin=zMin, vmax=zMax, norm=norm,
+                                shading="auto", **kwargs)
         else:
-            _ = axes.pcolormesh(self.currentX.data, self.currentY.data, zData, vmin=zMin, vmax=zMax,
-                                norm=norm, **kwargs)
+            _ = axes.pcolormesh(
+                self.currentX.data,
+                self.currentY.data,
+                zData,
+                vmin=zMin,
+                vmax=zMax,
+                norm=norm,
+                shading="auto",
+                **kwargs
+            )
 
 
 class ImageMeasurementData(MeasurementData, serializers.Serializable):
@@ -249,7 +284,11 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
         self.zCandidates = {fileName: image}
 
     def canvasPlot(self, axes, **kwargs):
-        zData = np.sum(self.currentZ.data, axis=2) if (self.currentZ.data.ndim == 3) else self.currentZ.data
+        zData = (
+            np.sum(self.currentZ.data, axis=2)
+            if (self.currentZ.data.ndim == 3)
+            else self.currentZ.data
+        )
         rawZMin = zData.min()
         rawZMax = zData.max()
 
@@ -259,13 +298,19 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
         zMin = rawZMin + zRange[0] * (rawZMax - rawZMin)
         zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
 
-        if self.checkBoxCallbacks['logColoring']():
-            if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion("3.2.0"):
-                add_on_mpl_3_2_0 = {'base': 10}
+        if self.checkBoxCallbacks["logColoring"]():
+            if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion(
+                "3.2.0"
+            ):
+                add_on_mpl_3_2_0 = {"base": 10}
             else:
                 add_on_mpl_3_2_0 = {}
-            norm = colors.SymLogNorm(linthresh=0.2, vmin=self.currentZ.data.min(), vmax=self.currentZ.data.max(),
-                                     **add_on_mpl_3_2_0)
+            norm = colors.SymLogNorm(
+                linthresh=0.2,
+                vmin=self.currentZ.data.min(),
+                vmax=self.currentZ.data.max(),
+                **add_on_mpl_3_2_0
+            )
         else:
             norm = None
 
