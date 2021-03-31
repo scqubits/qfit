@@ -18,6 +18,7 @@ import matplotlib
 import numpy as np
 import skimage.morphology
 import skimage.restoration
+import skimage.filters
 
 from matplotlib import colors as colors
 from scipy.ndimage import gaussian_laplace
@@ -130,17 +131,17 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         """
         zData = copy.copy(self._currentZ)
 
-        if self.checkBoxCallbacks["topHatFilter"]():
-            zData.data = self.applyTopHatFilter(zData.data)
-
-        if self.checkBoxCallbacks["waveletFilter"]():
-            zData.data = self.applyWaveletFilter(zData.data)
-
         if self.checkBoxCallbacks["bgndSubtractX"]():
             zData.data = self.doBgndSubtraction(zData.data, axis=1)
 
         if self.checkBoxCallbacks["bgndSubtractY"]():
             zData.data = self.doBgndSubtraction(zData.data, axis=0)
+
+        if self.checkBoxCallbacks["topHatFilter"]():
+            zData.data = self.applyTopHatFilter(zData.data)
+
+        if self.checkBoxCallbacks["waveletFilter"]():
+            zData.data = self.applyWaveletFilter(zData.data)
 
         if self.checkBoxCallbacks["edgeFilter"]():
             zData.data = gaussian_laplace(zData.data, 1.0)
@@ -222,6 +223,7 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         self._currentX, self._currentY = self._currentY, self._currentX
 
     def doBgndSubtraction(self, array, axis=0):
+        globalAverage = np.nanmean(array)
         avgArray = array - np.nanmean(array, axis=axis, keepdims=True)
         return avgArray
 
@@ -231,10 +233,25 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         )
 
     def applyTopHatFilter(self, array):
-        closed = skimage.morphology.closing(
-            array, skimage.morphology.square(23)
+        array = array - np.mean(array)
+        stdvar = np.std(array)
+
+        histogram, bin_edges = np.histogram(
+            array, bins=30, range=(-1.5 * stdvar, 1.5 * stdvar)
         )
-        return closed - array
+        max_index = np.argmax(histogram)
+        mid_value = (bin_edges[max_index + 1] + bin_edges[max_index]) / 2
+        array = array - mid_value
+        stdvar = np.std(array)
+        ones = np.ones_like(array)
+
+        return (
+            np.select(
+                [array > 1.5 * stdvar, array < -1.5 * stdvar, True],
+                [ones, ones, 0.0 * ones],
+            )
+            * array
+        )
 
     def canvasPlot(self, axes, **kwargs):
         zData = self.currentZ.data
@@ -262,8 +279,9 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
             norm = None
 
         if (self.currentX.data is None) or (self.currentY.data is None):
-            _ = axes.pcolormesh(zData, vmin=zMin, vmax=zMax, norm=norm,
-                                shading="auto", **kwargs)
+            _ = axes.pcolormesh(
+                zData, vmin=zMin, vmax=zMax, norm=norm, shading="auto", **kwargs
+            )
         else:
             _ = axes.pcolormesh(
                 self.currentX.data,

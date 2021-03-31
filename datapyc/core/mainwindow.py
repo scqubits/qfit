@@ -70,6 +70,7 @@ class MainWindow(QMainWindow):
 
         self.tagDataView = TagDataView(self.ui)
 
+        self.uiPagesConnects()
         self.uiDataConnects()
         self.uiDataOptionsConnects()
         self.uiColorScaleConnects()
@@ -129,10 +130,11 @@ class MainWindow(QMainWindow):
             self.ui.calibrateY1Button,
             self.ui.calibrateY2Button,
         ]:
+            from datapyc.ui.neumo import NeumorphismEffect
             eff = QGraphicsDropShadowEffect(button)
-            eff.setOffset(-2)
+            eff.setOffset(2)
             eff.setBlurRadius(18.0)
-            eff.setColor(QColor(220, 220, 220, 50))
+            eff.setColor(QColor(0, 0, 0, 90))
             button.setGraphicsEffect(eff)
 
         for button in [
@@ -148,7 +150,7 @@ class MainWindow(QMainWindow):
             eff.setColor(QColor(0, 0, 0, 90))
             button.setGraphicsEffect(eff)
 
-        for panel in [self.ui.frame_3, self.ui.frame_6, self.ui.tabWidget]:
+        for panel in [self.ui.frame_3, self.ui.frame_6, self.ui.pagesStackedWidget]:
             eff = QGraphicsDropShadowEffect(panel)
             eff.setOffset(1)
             eff.setBlurRadius(25.0)
@@ -226,6 +228,14 @@ class MainWindow(QMainWindow):
         self.ui.zComboBox.addItems(zDataNames)
         self.ui.zComboBox.setCurrentText(self.measurementData.currentZ.name)
         self.setupXYDataBoxes()
+
+    def uiPagesConnects(self):
+        self.ui.modeSelectButton.clicked.connect(
+            lambda: self.ui.pagesStackedWidget.setCurrentIndex(0)
+        )
+        self.ui.modeTagButton.clicked.connect(
+            lambda: self.ui.pagesStackedWidget.setCurrentIndex(1)
+        )
 
     def uiDataConnects(self):
         """Make connections for changes in data."""
