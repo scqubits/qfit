@@ -130,7 +130,6 @@ class MainWindow(QMainWindow):
             self.ui.calibrateY1Button,
             self.ui.calibrateY2Button,
         ]:
-            from datapyc.ui.neumo import NeumorphismEffect
             eff = QGraphicsDropShadowEffect(button)
             eff.setOffset(2)
             eff.setBlurRadius(18.0)
