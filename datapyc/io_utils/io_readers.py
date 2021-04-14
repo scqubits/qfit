@@ -14,21 +14,20 @@ import os
 
 import h5py
 import numpy as np
+
 from matplotlib.image import imread
 from scipy.io import loadmat
 
 import datapyc.io_utils.file_io as io
 import datapyc.io_utils.file_io_backends as io_backends
+
 from datapyc.core.helpers import (
     OrderedDictMod,
     hasIdenticalCols,
     hasIdenticalRows,
     isValid2dArray,
 )
-from datapyc.models.inputdata_models import (
-    ImageMeasurementData,
-    NumericalMeasurementData,
-)
+from datapyc.data.measurement_data import ImageMeasurementData, NumericalMeasurementData
 
 
 def readFileData(fileName):
@@ -167,7 +166,7 @@ def isLikelyLabberFile(h5File):
 
 def isLikelyDatapycFile(h5File):
     # Heuristic inspection to determine whether the h5 file might be from datapyc
-    if "__type" in h5File.attrs.keys() and h5File.attrs["__type"] == "FitData":
+    if "__type" in h5File.attrs.keys() and h5File.attrs["__type"] == "DatapycData":
         return True
     return False
 

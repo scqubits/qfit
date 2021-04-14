@@ -13,6 +13,7 @@ Helper classes for writing data to files.
 """
 
 import inspect
+
 from abc import ABC
 from numbers import Number
 

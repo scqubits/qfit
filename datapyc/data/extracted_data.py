@@ -1,4 +1,4 @@
-# extractdata_model.py
+# extracted_data.py
 #
 # This file is part of datapyc.
 #
@@ -11,6 +11,7 @@
 
 
 import numpy as np
+
 from PySide2.QtCore import (
     QAbstractListModel,
     QAbstractTableModel,
@@ -20,10 +21,11 @@ from PySide2.QtCore import (
 )
 
 import datapyc.io_utils.file_io_serializers as serializers
-from datapyc.views.tagdata_view import Tag
+
+from datapyc.data.tagdata_view import Tag
 
 
-class ActiveExtractedDataModel(QAbstractTableModel):
+class ActiveExtractedData(QAbstractTableModel):
     """This class holds one data set, as extracted by markers on the canvas. In addition, it references calibration
     data to expose either the raw selected data, or their calibrated counterparts."""
 
@@ -183,7 +185,7 @@ class ActiveExtractedDataModel(QAbstractTableModel):
 
     def setAdaptiveCalibrationFunc(self, adaptiveCalibrationCallback):
         """
-        Record the CalibrationModel instance associated with the data.
+        Record the CalibrationData instance associated with the data.
 
         Parameters
         ----------
@@ -196,7 +198,7 @@ class ListModelMeta(type(QAbstractListModel), type(serializers.Serializable)):
     pass
 
 
-class AllExtractedDataModel(
+class AllExtractedData(
     QAbstractListModel, serializers.Serializable, metaclass=ListModelMeta
 ):
     def __init__(self):
@@ -314,8 +316,8 @@ class AllExtractedDataModel(
     def updateCurrentTag(self, newTag):
         self.assocTagList[self.currentRow] = newTag
 
-    def setCalibrationFunc(self, calibrationModelCallback):
-        self._calibrationFunc = calibrationModelCallback
+    def setCalibrationFunc(self, calibrationDataCallback):
+        self._calibrationFunc = calibrationDataCallback
 
     def allDataSorted(self, applyCalibration):
         if applyCalibration:
@@ -352,5 +354,5 @@ class AllExtractedDataModel(
             "taglist": self.assocTagList,
         }
         iodata = serializers.dict_serialize(initdata)
-        iodata.typename = "FitData"
+        iodata.typename = "DatapycData"
         return iodata

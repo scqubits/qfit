@@ -13,7 +13,8 @@ import os
 
 from PySide2.QtWidgets import QFileDialog
 
-import datapyc.core.fitdata as fit
+import datapyc.core.datapyc_data as fit
+
 from datapyc.io_utils.io_readers import ImageMeasurementData
 
 
@@ -32,7 +33,7 @@ def saveFile(parent):
     else:
         imageData = None
 
-    fitData = fit.FitData(
+    fitData = fit.DatapycData(
         datanames=parent.allDatasetsModel.dataNames,
         datalist=parent.allDatasetsModel.allDataSorted(applyCalibration=False),
         x_data=parent.measurementData.currentX.data,
