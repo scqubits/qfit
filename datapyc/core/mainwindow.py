@@ -58,6 +58,9 @@ class MainWindow(QMainWindow):
         self.calibrationView = None
         self.axes = None
         self.cidCanvas = None
+        self.cidMove = None
+        self.matching_mode = False
+        self.mousedat = None
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -256,6 +259,7 @@ class MainWindow(QMainWindow):
             )
         )
 
+        # TODO: Look into this one for current data set
         # Whenever the AllExtractedDataModel changes layout - for example, due to
         # switching from one existing data set to another one, this connection will
         # ensure that the TableView will be updated with the correct data
@@ -268,6 +272,8 @@ class MainWindow(QMainWindow):
         # Whenever data sets are added or removed from the ListView, this ensures
         # that the canvas display is updated.
         self.allDatasetsModel.layoutChanged.connect(self.updatePlot)
+
+        # TODO: Hook into a method that changes
 
         # Each time the data set is changed on ListView/Model by clicking a data set,
         # the data in ActiveExtractedDataModel is updated to reflect the new selection.
@@ -364,6 +370,8 @@ class MainWindow(QMainWindow):
         self.cidCanvas = self.axes.figure.canvas.mpl_connect(
             "button_press_event", self.canvasClickMonitoring
         )
+        self.cidMove = self.axes.figure.canvas.mpl_connect("motion_notify_event",
+                                                           self.canvasMouseMonitoring)
 
     # def saveAndCloseConnects(self):
     #     self.ui.buttonBox.accepted.connect(self.saveAndCloseApp)
@@ -398,6 +406,7 @@ class MainWindow(QMainWindow):
             appstate.state = State.PAN
             self.ui.mplFigureCanvas.panView()
 
+# TODO: Main place where clicks make data
     @Slot()
     def canvasClickMonitoring(self, event):
         """Main loop for acting on mouse events occurring in the canvas area."""
@@ -418,7 +427,10 @@ class MainWindow(QMainWindow):
 
         if appstate.state == State.SELECT:
             current_data = self.activeDatasetModel.all()
-            x1y1 = np.asarray([event.xdata, event.ydata])
+            if self.matching_mode:
+                x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
+            else:
+                x1y1 = np.asarray([event.xdata, event.ydata])
             for index, x2y2 in enumerate(current_data.transpose()):
                 if self.isRelativelyClose(x1y1, x2y2):
                     self.activeDatasetModel.removeColumn(index)
@@ -427,11 +439,38 @@ class MainWindow(QMainWindow):
             self.activeDatasetModel.append(*x1y1)
             self.updatePlot()
 
+        # TODO: how to tell if you're in a different dataset
+        self.matching_mode = False
+        if self.activeDatasetModel.columnCount() >= 5:
+            self.matching_mode = True
+
+    @Slot()
+    def canvasMouseMonitoring(self, event):
+        if not self.matching_mode:
+            return
+
+        if event.xdata is None or event.ydata is None:
+            return
+
+        ypos = event.ydata
+        xpos = self.closest_line(event.xdata)
+        if self.mousedat:
+            self.mousedat.remove()
+            del self.mousedat
+
+        self.mousedat = self.axes.scatter(xpos, ypos, c="red",
+                              marker="x", s=150)
+        self.axes.figure.canvas.draw()
+        # self.updatePlot()
+
+
+
     @Slot()
     def updatePlot(self, initialize=False, **kwargs):
         """Update the current plot of measurement data and markers of selected data points."""
         if self.disconnectCanvas:
             return
+
         # If this is not the first time of plotting, store the current axes limits and clear the graph.
         if not initialize:
             xlim = self.axes.get_xlim()
@@ -449,6 +488,15 @@ class MainWindow(QMainWindow):
         if self.activeDatasetModel.columnCount() > 0:
             dataXY = self.activeDatasetModel.all()
             self.axes.scatter(dataXY[0], dataXY[1], c="orange", marker="x", s=150)
+            plotted_data = []
+            for count, i in enumerate(dataXY[0]):
+                if i not in plotted_data:
+                    self.axes.axline((i,dataXY[1][count]), (i, dataXY[1][count]-(dataXY[
+                        1][count])*0.1), c="Green")
+                plotted_data.append(i)
+        # if self.matching_mode:
+        #     self.axes.scatter(self.mousedat[0], self.mousedat[1], c="red",
+        #                       marker="x", s=150)
 
         # Make sure that new axes limits match the old ones.
         if not initialize:
@@ -584,3 +632,8 @@ class MainWindow(QMainWindow):
         self.setGeometry(
             QStyle.alignedRect(Qt.LeftToRight, Qt.AlignCenter, newSize, maxRect)
         )
+
+    def closest_line(self, xdat):
+        current_data = self.activeDatasetModel.all()
+        allxdiff = {np.abs(xdat - i):i for i in current_data[0]}
+        return allxdiff[min(allxdiff.keys())]
