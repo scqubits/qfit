@@ -1,4 +1,4 @@
-# inputdata_models.py
+# measurement_data.py
 #
 # This file is part of datapyc.
 #
@@ -6,7 +6,7 @@
 #    All rights reserved.
 #
 #    This source code is licensed under the BSD-style license found in the
-#    LICENSE file in the root directory of this source tree.
+#    LICENSE file in the root directory eof this source tree.
 ############################################################################
 
 
@@ -14,16 +14,19 @@ import abc
 import copy
 import distutils.version as version
 
+from typing import Dict, Tuple
+
 import matplotlib
 import numpy as np
+import skimage.filters
 import skimage.morphology
 import skimage.restoration
-import skimage.filters
 
 from matplotlib import colors as colors
 from scipy.ndimage import gaussian_laplace
 
 import datapyc.io_utils.file_io_serializers as serializers
+
 from datapyc.core.helpers import (
     DataItem,
     OrderedDictMod,
@@ -336,3 +339,12 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
 
     def swapXY(self):
         pass
+
+
+def dummy_measurement_data() -> NumericalMeasurementData:
+    xData = np.linspace(0.0, 1.0, 100)
+    yData = np.linspace(3.0, 9.0, 100)
+    zData = np.zeros((100, 100))
+    return NumericalMeasurementData(
+        {"param": xData, "frequency": yData, "S21": zData}, {"S21": zData}
+    )

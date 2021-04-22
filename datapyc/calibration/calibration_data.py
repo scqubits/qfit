@@ -1,4 +1,4 @@
-# calibration_model.py
+# calibration_data.py
 #
 # This file is part of datapyc.
 #
@@ -9,13 +9,23 @@
 #    LICENSE file in the root directory of this source tree.
 ############################################################################
 
+from typing import Optional
+
 import numpy as np
+
+from PySide2.QtCore import QObject
 
 import datapyc.io_utils.file_io_serializers as serializers
 
 
-class CalibrationModel(serializers.Serializable):
-    def __init__(self, rawVec1=None, rawVec2=None, mapVec1=None, mapVec2=None):
+class CalibrationData(serializers.Serializable):
+    def __init__(
+        self,
+        rawVec1: Optional[np.ndarray] = None,
+        rawVec2: Optional[np.ndarray] = None,
+        mapVec1: Optional[np.ndarray] = None,
+        mapVec2: Optional[np.ndarray] = None,
+    ):
         """
         Store calibration data for x and y axes, and provide methods to transform between uncalibrated and calibrated
         data.
@@ -26,7 +36,6 @@ class CalibrationModel(serializers.Serializable):
             Each of these is a two component vector (x,y) marking a point. The calibration maps rawVec1 -> mapVec1,
             rawVec2 -> mapVec2 with an affine-linear transformation:   mapVecN = alphaMat . rawVecN + bVec.
         """
-        super().__init__()
         self.rawVec1 = rawVec1
         self.rawVec2 = rawVec2
         self.mapVec1 = mapVec1
@@ -37,8 +46,11 @@ class CalibrationModel(serializers.Serializable):
         if rawVec1 and rawVec2 and mapVec1 and mapVec2:
             self.setCalibration(rawVec1, rawVec2, mapVec1, mapVec2)
         else:
-            self.setCalibration((1.0, 0.0), (0.0, 1.0), (1.0, 0.0), (0.0, 1.0))
+            self.resetCalibration()
+        self.applyCalibration = False
 
+    def resetCalibration(self):
+        self.setCalibration((1.0, 0.0), (0.0, 1.0), (1.0, 0.0), (0.0, 1.0))
         self.applyCalibration = False
 
     def toggleCalibration(self):

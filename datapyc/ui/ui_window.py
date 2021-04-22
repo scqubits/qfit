@@ -12,12 +12,12 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
-from datapyc.views.calibration_view import CalibrationLineEdit
-from datapyc.views.canvas_view import FigureCanvas
-from datapyc.views.extractdata_view import ListView, TableView
-from datapyc.views.tagdata_view import IntTupleLineEdit, StrTupleLineEdit
-
 import datapyc.ui.resources_rc
+
+from datapyc.calibration.calibration_view import CalibrationLineEdit
+from datapyc.canvas.canvas_view import FigureCanvas
+from datapyc.data.extracted_view import ListView, TableView
+from datapyc.data.tagdata_view import IntTupleLineEdit, StrTupleLineEdit
 
 
 class Ui_MainWindow(object):
@@ -33,7 +33,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
         MainWindow.setSizePolicy(sizePolicy)
         palette = QPalette()
-        brush = QBrush(QColor(0, 0, 0, 0))
+        brush = QBrush(QColor(12, 12, 12, 0))
         brush.setStyle(Qt.SolidPattern)
         palette.setBrush(QPalette.Active, QPalette.Button, brush)
         palette.setBrush(QPalette.Active, QPalette.Base, brush)
@@ -51,7 +51,7 @@ class Ui_MainWindow(object):
         MainWindow.setFont(font)
         MainWindow.setWindowTitle(u"datapyc")
         MainWindow.setStyleSheet(
-            u"QMainWindow {background: transparent; }\n"
+            u"QMainWindow {background-color: rgb(12, 12, 12); }\n"
             "QToolTip {\n"
             "	color: #ffffff;\n"
             "	background-color: rgba(27, 29, 35, 160);\n"
@@ -314,18 +314,18 @@ class Ui_MainWindow(object):
         self.verticalLayout_7.setSpacing(0)
         self.verticalLayout_7.setObjectName(u"verticalLayout_7")
         self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
-        self.pushButton_2 = QPushButton(self.frame_2)
-        self.pushButton_2.setObjectName(u"pushButton_2")
+        self.toggleMenuButton = QPushButton(self.frame_2)
+        self.toggleMenuButton.setObjectName(u"toggleMenuButton")
         sizePolicy2 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(
-            self.pushButton_2.sizePolicy().hasHeightForWidth()
+            self.toggleMenuButton.sizePolicy().hasHeightForWidth()
         )
-        self.pushButton_2.setSizePolicy(sizePolicy2)
-        self.pushButton_2.setMinimumSize(QSize(0, 0))
-        self.pushButton_2.setMaximumSize(QSize(16777215, 16777215))
-        self.pushButton_2.setStyleSheet(
+        self.toggleMenuButton.setSizePolicy(sizePolicy2)
+        self.toggleMenuButton.setMinimumSize(QSize(0, 0))
+        self.toggleMenuButton.setMaximumSize(QSize(16777215, 16777215))
+        self.toggleMenuButton.setStyleSheet(
             u"QPushButton {	\n"
             "	border: none;\n"
             "	background-color: transparent;\n"
@@ -339,9 +339,9 @@ class Ui_MainWindow(object):
         )
         icon = QIcon()
         icon.addFile(u":/icons/20x20/cil-menu.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.pushButton_2.setIcon(icon)
+        self.toggleMenuButton.setIcon(icon)
 
-        self.verticalLayout_7.addWidget(self.pushButton_2)
+        self.verticalLayout_7.addWidget(self.toggleMenuButton)
 
         self.horizontalLayout_3.addWidget(self.frame_2)
 
@@ -537,6 +537,10 @@ class Ui_MainWindow(object):
         self.horizontalLayout_14.setContentsMargins(0, 0, 0, 0)
 
         self.horizontalLayout_12.addWidget(self.frame_15)
+
+        self.frame_14.raise_()
+        self.frame_15.raise_()
+        self.frame_13.raise_()
 
         self.verticalLayout.addWidget(self.frameTop_2)
 
@@ -1703,12 +1707,6 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_12.addWidget(self.imageOptionsVerticalGroupBox)
 
-        self.verticalSpacer_2 = QSpacerItem(
-            20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding
-        )
-
-        self.verticalLayout_12.addItem(self.verticalSpacer_2)
-
         self.colorGridGroupBox = QGroupBox(self.frame_8)
         self.colorGridGroupBox.setObjectName(u"colorGridGroupBox")
         sizePolicy9 = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
@@ -1752,6 +1750,7 @@ class Ui_MainWindow(object):
             self.colorComboBox.sizePolicy().hasHeightForWidth()
         )
         self.colorComboBox.setSizePolicy(sizePolicy10)
+        self.colorComboBox.setMinimumSize(QSize(0, 30))
         palette16 = QPalette()
         palette16.setBrush(QPalette.Active, QPalette.WindowText, brush16)
         brush31 = QBrush(QColor(27, 29, 35, 255))
@@ -1876,6 +1875,12 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_12.addWidget(self.colorGridGroupBox)
 
+        self.verticalSpacer_2 = QSpacerItem(
+            20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding
+        )
+
+        self.verticalLayout_12.addItem(self.verticalSpacer_2)
+
         self.verticalSpacer_4 = QSpacerItem(
             20, 96, QSizePolicy.Minimum, QSizePolicy.Expanding
         )
@@ -1896,7 +1901,7 @@ class Ui_MainWindow(object):
         self.gridLayout_4.setContentsMargins(-1, 27, -1, -1)
         self.xComboBox = QComboBox(self.xyzDataGridGroupBox)
         self.xComboBox.setObjectName(u"xComboBox")
-        self.xComboBox.setMinimumSize(QSize(250, 0))
+        self.xComboBox.setMinimumSize(QSize(250, 30))
         self.xComboBox.setFont(font2)
         self.xComboBox.setStyleSheet(
             u"QComboBox{\n"
@@ -1921,7 +1926,7 @@ class Ui_MainWindow(object):
 
         self.zComboBox = QComboBox(self.xyzDataGridGroupBox)
         self.zComboBox.setObjectName(u"zComboBox")
-        self.zComboBox.setMinimumSize(QSize(250, 0))
+        self.zComboBox.setMinimumSize(QSize(250, 30))
         palette17 = QPalette()
         palette17.setBrush(QPalette.Active, QPalette.WindowText, brush16)
         palette17.setBrush(QPalette.Active, QPalette.Button, brush31)
@@ -2019,7 +2024,7 @@ class Ui_MainWindow(object):
 
         self.yComboBox = QComboBox(self.xyzDataGridGroupBox)
         self.yComboBox.setObjectName(u"yComboBox")
-        self.yComboBox.setMinimumSize(QSize(250, 0))
+        self.yComboBox.setMinimumSize(QSize(250, 30))
         self.yComboBox.setFont(font2)
         self.yComboBox.setStyleSheet(
             u"QComboBox{\n"
@@ -3262,7 +3267,7 @@ class Ui_MainWindow(object):
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        self.pushButton_2.setText("")
+        self.toggleMenuButton.setText("")
         self.label.setText(QCoreApplication.translate("MainWindow", u"datapyc", None))
         self.buttonMinimize.setText("")
         self.buttonMaximize.setText("")

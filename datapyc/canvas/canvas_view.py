@@ -10,15 +10,16 @@
 ############################################################################
 
 
-from PySide2 import QtCore
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QFrame, QVBoxLayout
 from matplotlib.backend_bases import cursors
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib.figure import Figure
 from matplotlib.widgets import Cursor
+from PySide2 import QtCore
+from PySide2.QtCore import Slot
+from PySide2.QtWidgets import QFrame, QVBoxLayout
 
 import datapyc.core.app_state as appstate
+
 from datapyc.core.app_state import State
 
 

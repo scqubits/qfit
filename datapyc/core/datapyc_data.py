@@ -1,4 +1,4 @@
-# fitting.py
+# datapyc_data.py
 #
 # This file is part of datapyc.
 #
@@ -11,12 +11,13 @@
 
 
 import datapyc.io_utils.file_io_serializers as serializers
-from datapyc.models.calibration_model import CalibrationModel
 
-serializers.SERIALIZABLE_REGISTRY["CalibrationModel"] = CalibrationModel
+from datapyc.calibration.calibration_data import CalibrationData
+
+serializers.SERIALIZABLE_REGISTRY["CalibrationData"] = CalibrationData
 
 
-class FitData(serializers.Serializable):
+class DatapycData(serializers.Serializable):
     def __init__(
         self,
         datanames,
@@ -44,7 +45,7 @@ class FitData(serializers.Serializable):
         y_data: ndarray
         image_data: ndarray
             as obtained with matplotlib.image.imread
-        calibration_data: datapyc.CalibrationModel
+        calibration_data: datapyc.CalibrationData
         """
         super().__init__()
         self.datanames = datanames

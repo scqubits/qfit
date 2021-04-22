@@ -13,7 +13,8 @@ import os
 
 from PySide2.QtWidgets import QFileDialog, QMessageBox
 
-import datapyc.core.fitdata as fit
+import datapyc.core.datapyc_data as fit
+
 from datapyc.io_utils.io_readers import (
     ImageMeasurementData,
     NumericalMeasurementData,
@@ -21,7 +22,7 @@ from datapyc.io_utils.io_readers import (
 )
 
 
-def importFile():
+def importFile(parent=None):
     """
     Opens a standard file dialog box for the user to select a file to be opened. Supported files types are
     - .h5 / .hdf5  (generic h5, Labber, datapyc)
@@ -35,14 +36,14 @@ def importFile():
 
     Returns
     -------
-    MeasurementData, FitData
+    MeasurementData, DatapycData
     """
     home = os.path.expanduser("~")
 
     success = False
     while not success:
         fileCategories = "Data files (*.h5 *.mat *.csv *.jpg *.jpeg *.png *.hdf5)"
-        fileName, _ = QFileDialog.getOpenFileName(None, "Open", home, fileCategories)
+        fileName, _ = QFileDialog.getOpenFileName(parent, "Open", home, fileCategories)
         if not fileName:
             exit()
 
@@ -61,7 +62,7 @@ def importFile():
         else:
             success = True
 
-    if isinstance(fileData, fit.FitData):
+    if isinstance(fileData, fit.DatapycData):
         extractedData = fileData
         if fileData.image_data is not None:
             measurementData = ImageMeasurementData("image_data", fileData.image_data)
