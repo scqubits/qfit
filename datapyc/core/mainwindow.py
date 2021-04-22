@@ -12,26 +12,22 @@
 
 import copy
 import sys
-
 from functools import partial
 from typing import TYPE_CHECKING, Dict, Tuple, Union
 
 import matplotlib as mpl
 import matplotlib.cm as cm
 import numpy as np
-
 from PySide2.QtCore import QPoint, QRect, QSize, Qt, Slot
 from PySide2.QtGui import QColor, Qt
 from PySide2.QtWidgets import (
     QGraphicsDropShadowEffect,
-    QMainWindow,
     QMessageBox,
     QPushButton,
     QStyle,
 )
 
 import datapyc.core.app_state as appstate
-
 from datapyc.calibration.calibration_data import CalibrationData
 from datapyc.calibration.calibration_view import CalibrationView
 from datapyc.core.app_state import State
@@ -94,6 +90,9 @@ class MainWindow(ResizableFramelessWindow):
         self.setupUICalibration()
         self.calibrationData = CalibrationData()
         self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
+
+        self.matching_mode = False
+        self.mousedat = None
 
         self.setupUIPlotOptions()
 
@@ -461,8 +460,6 @@ class MainWindow(ResizableFramelessWindow):
 
         if appstate.state == State.SELECT:
             current_data = self.activeDataset.all()
-            x1y1 = np.asarray([event.xdata, event.ydata])
-            current_data = self.activeDatasetModel.all()
             if self.matching_mode:
                 x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
             else:
@@ -477,7 +474,7 @@ class MainWindow(ResizableFramelessWindow):
 
         # TODO: how to tell if you're in a different dataset
         self.matching_mode = False
-        if self.activeDatasetModel.columnCount() >= 5:
+        if self.activeDataset.columnCount() >= 5:
             self.matching_mode = True
 
     @Slot()
@@ -689,6 +686,6 @@ class MainWindow(ResizableFramelessWindow):
         )
 
     def closest_line(self, xdat):
-        current_data = self.activeDatasetModel.all()
+        current_data = self.activeDataset.all()
         allxdiff = {np.abs(xdat - i):i for i in current_data[0]}
         return allxdiff[min(allxdiff.keys())]
