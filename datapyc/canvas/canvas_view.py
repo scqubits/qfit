@@ -103,6 +103,61 @@ class NavigationHidden(NavigationToolbar2QT):
     def set_cursor(self, cursor):
         self.canvas.setCursor(QtCore.Qt.CrossCursor)
 
+class SpecialCursor(Cursor):
+    def __init__(self, ax, callback, horizOn=True, vertOn=True, useblit=False,
+                 **lineprops):
+        super().__init__(ax, horizOn=horizOn, vertOn=vertOn, useblit=useblit,
+                 **lineprops)
+        self.callback = callback
+
+    def onmove(self, event):
+        """Internal event handler to draw the cursor when the mouse moves."""
+        if self.ignore(event):
+            return
+        if not self.canvas.widgetlock.available(self):
+            return
+        if event.inaxes != self.ax:
+            self.linev.set_visible(False)
+            self.lineh.set_visible(False)
+
+            if self.needclear:
+                self.canvas.draw()
+                self.needclear = False
+            return
+        self.needclear = True
+        if not self.visible:
+            return
+        self.linev.set_xdata((event.xdata, event.xdata))
+
+        self.lineh.set_ydata((event.ydata, event.ydata))
+        self.cross = self.ax.scatter(event.xdata, event.ydata, c="red",
+                              marker="x", s=150, animated=True)
+
+
+        self.cross.set_visible(self.visible)
+        self.linev.set_visible(self.visible and self.vertOn)
+        self.lineh.set_visible(self.visible and self.horizOn)
+
+        self._update()
+
+    def _update(self):
+        if self.useblit:
+            if self.background is not None:
+                self.canvas.restore_region(self.background)
+            self.ax.draw_artist(self.linev)
+            self.ax.draw_artist(self.lineh)
+            self.ax.draw_artist(self.cross)
+            self.canvas.blit(self.ax.bbox)
+        else:
+            self.canvas.draw_idle()
+        return False
+
+    def line_blit_on(self):
+        self.line_blit = True
+
+    def line_blit_off(self):
+        self.line_blit = False
+
 
 class FigureCanvas(QFrame):
     def __init__(self, parent=None):
@@ -121,8 +176,9 @@ class FigureCanvas(QFrame):
         return self.canvas.figure.axes[0]
 
     def select_crosshair(self, horizOn=True, vertOn=True):
-        self._crosshair = Cursor(
+        self._crosshair = SpecialCursor(
             self.axes(),
+            callback=True,
             useblit=True,
             horizOn=horizOn,
             vertOn=vertOn,
@@ -130,6 +186,7 @@ class FigureCanvas(QFrame):
             linewidth=1,
         )
         self.canvas.draw()
+        self._crosshair.line_blit_on()
 
     def zoomOn(self):
         self.toolbar.setZoomMode(

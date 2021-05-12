@@ -36,6 +36,7 @@ from datapyc.data.extracted_data import ActiveExtractedData, AllExtractedData
 from datapyc.data.tagdata_view import TagDataView
 from datapyc.io_utils.import_data import importFile
 from datapyc.io_utils.save_data import saveFile
+from datapyc.settings import color_dict
 from datapyc.ui.resizable_window import ResizableFramelessWindow
 from datapyc.ui.ui_menu import Ui_MenuWidget
 from datapyc.ui.ui_window import Ui_MainWindow
@@ -471,30 +472,32 @@ class MainWindow(ResizableFramelessWindow):
                     return
             self.activeDataset.append(*x1y1)
             self.updatePlot()
-
-        # TODO: how to tell if you're in a different dataset
-        self.matching_mode = False
-        if self.activeDataset.columnCount() >= 5:
-            self.matching_mode = True
-
+    #
     @Slot()
     def canvasMouseMonitoring(self, event):
-        if not self.matching_mode:
-            return
-
-        if event.xdata is None or event.ydata is None:
-            return
-
-        ypos = event.ydata
-        xpos = self.closest_line(event.xdata)
-        if self.mousedat:
-            self.mousedat.remove()
-            del self.mousedat
-
-        self.mousedat = self.axes.scatter(xpos, ypos, c="red",
-                              marker="x", s=150)
-        self.axes.figure.canvas.draw()
-        # self.updatePlot()
+        pass
+    #     self.axes.figure.canvas.flush_events()
+    #     self.matching_mode = False
+    #     if self.allDatasets.currentRow != 0:
+    #         self.matching_mode = True
+    #     if not self.matching_mode:
+    #         return
+    #
+    #     if event.xdata is None or event.ydata is None:
+    #         return
+    #
+    #     ypos = event.ydata
+    #     xpos = self.closest_line(event.xdata)
+    #     if self.mousedat:
+    #         self.mousedat.remove()
+    #         del self.mousedat
+    #     full_event = self.axes.scatter(xpos, ypos, c="red",
+    #                           marker="x", s=150, animated=True)
+    #     self.axes.figure.canvas.restore_region(self.background)
+    #     self.axes.draw_artist(full_event)
+    #     self.axes.figure.canvas.blit(self.axes.figure.bbox)
+    #     # self.axes.figure.canvas.draw()
+    #     # self.updatePlot()
 
 
 
@@ -512,6 +515,9 @@ class MainWindow(ResizableFramelessWindow):
 
         # Set the matplotlib colormap according to the selection in the dropdown menu.
         colorStr = self.ui.colorComboBox.currentText()
+        cross_color = color_dict[colorStr]["Cross"]
+        line_color = color_dict[colorStr]["line"]
+        scatter_color = color_dict[colorStr]["Scatter"]
         cmap = copy.copy(getattr(cm, colorStr))
         cmap.set_bad(color="black")
 
@@ -520,16 +526,16 @@ class MainWindow(ResizableFramelessWindow):
         # If there are any extracted data points in the currently active data set, show those via a scatter plot.
         if self.activeDataset.columnCount() > 0:
             dataXY = self.activeDataset.all()
-            self.axes.scatter(dataXY[0], dataXY[1], c="orange", marker="x", s=150)
-            plotted_data = []
-            for count, i in enumerate(dataXY[0]):
-                if i not in plotted_data:
-                    self.axes.axline((i,dataXY[1][count]), (i, dataXY[1][count]-(dataXY[
-                        1][count])*0.1), c="Green")
-                plotted_data.append(i)
-        # if self.matching_mode:
-        #     self.axes.scatter(self.mousedat[0], self.mousedat[1], c="red",
-        #                       marker="x", s=150)
+            self.axes.scatter(dataXY[0], dataXY[1], c=scatter_color, marker="x", s=150)
+
+        plotted_data = []
+        line_data = self.allDatasets.assocDataList[0]
+        for count, i in enumerate(line_data[0]):
+            if i not in plotted_data:
+                self.axes.axline((i, line_data[1][count]), (i, line_data[1][count] - (
+                    line_data[
+                    1][count]) * 0.1), c=line_color)
+            plotted_data.append(i)
 
         # Make sure that new axes limits match the old ones.
         if not initialize:
@@ -537,6 +543,7 @@ class MainWindow(ResizableFramelessWindow):
             self.axes.set_ylim(ylim)
 
         self.axes.figure.canvas.draw()
+        self.background = self.axes.figure.canvas.copy_from_bbox(self.axes.figure.bbox)
 
     def toggleMenu(self):
         if self.ui_menu.menuFrame.isHidden():
@@ -686,6 +693,6 @@ class MainWindow(ResizableFramelessWindow):
         )
 
     def closest_line(self, xdat):
-        current_data = self.activeDataset.all()
+        current_data = self.allDatasets.assocDataList[0]
         allxdiff = {np.abs(xdat - i):i for i in current_data[0]}
         return allxdiff[min(allxdiff.keys())]

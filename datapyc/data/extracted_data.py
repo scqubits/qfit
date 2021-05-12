@@ -292,7 +292,6 @@ class AllExtractedData(
         return True
 
     @property
-    # TODO: This is what returns the current data set
     def currentRow(self):
         return self._currentRow
 
