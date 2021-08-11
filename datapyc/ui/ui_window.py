@@ -12,7 +12,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
-import datapyc.ui.resources_rc
+# import datapyc.ui.resources_rc
 
 from datapyc.calibration.calibration_view import CalibrationLineEdit
 from datapyc.canvas.canvas_view import FigureCanvas

@@ -9,7 +9,7 @@
 #    LICENSE file in the root directory of this source tree.
 ############################################################################
 
-from typing import Optional
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -56,7 +56,13 @@ class CalibrationData(serializers.Serializable):
     def toggleCalibration(self):
         self.applyCalibration = not self.applyCalibration
 
-    def setCalibration(self, rVec1, rVec2, mVec1, mVec2):
+    def setCalibration(
+        self,
+        rVec1: Tuple[float, float],
+        rVec2: Tuple[float, float],
+        mVec1: Tuple[float, float],
+        mVec2: Tuple[float, float],
+    ):
         x1, y1 = rVec1
         x2, y2 = rVec2
         x1p, y1p = mVec1
@@ -74,19 +80,21 @@ class CalibrationData(serializers.Serializable):
             mVec2,
         )
 
-    def allCalibrationVecs(self):
+    def allCalibrationVecs(
+        self,
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         return self.rawVec1, self.rawVec2, self.mapVec1, self.mapVec2
 
-    def calibrateDataset(self, array):
+    def calibrateDataset(self, array: np.ndarray):
         return np.apply_along_axis(self.calibrateDataPoint, axis=0, arr=array)
 
-    def calibrateDataPoint(self, rawVec):
+    def calibrateDataPoint(self, rawVec: Union[List[float], np.ndarray]) -> np.ndarray:
         if isinstance(rawVec, list):
             rawVec = np.asarray(rawVec)
         mVec = np.matmul(self.alphaMat, rawVec) + self.bVec
         return mVec
 
-    def adaptiveConversionFunc(self):
+    def adaptiveConversionFunc(self) -> callable:
         if not self.applyCalibration:
             return lambda vec: vec
         return self.calibrateDataPoint

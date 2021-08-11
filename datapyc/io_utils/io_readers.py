@@ -127,7 +127,7 @@ class LabberH5Reader:
                 else:
                     newNames = []
                     for infoTuple in names:
-                        newNames.append(infoTuple[0] + " " + infoTuple[1])
+                        newNames.append(str(infoTuple[0]) + " " + str(infoTuple[1]))
                         names = newNames
                         dataNames.append(newNames)
 

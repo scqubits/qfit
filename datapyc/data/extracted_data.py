@@ -10,6 +10,8 @@
 ############################################################################
 
 
+from typing import Union
+
 import numpy as np
 
 from PySide2.QtCore import (
@@ -29,7 +31,7 @@ class ActiveExtractedData(QAbstractTableModel):
     """This class holds one data set, as extracted by markers on the canvas. In addition, it references calibration
     data to expose either the raw selected data, or their calibrated counterparts."""
 
-    def __init__(self, data=None):
+    def __init__(self, data : np.ndarray = None):
         """
         Parameters
         ----------
@@ -41,7 +43,7 @@ class ActiveExtractedData(QAbstractTableModel):
         self._adaptiveCalibrationFunc = None
 
     @Slot()
-    def all(self):
+    def all(self) -> np.ndarray:
         """
         Return the raw data as a numpy array.
 
@@ -96,7 +98,8 @@ class ActiveExtractedData(QAbstractTableModel):
         """
         return self._data.shape[1]
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
+    def headerData(self, section: int, orientation: Qt.Orientation,
+                   role=Qt.DisplayRole):
         """
         Obtain table header info in string format
 
@@ -118,7 +121,7 @@ class ActiveExtractedData(QAbstractTableModel):
             elif orientation == Qt.Horizontal:
                 return str(section)
 
-    def setData(self, index, value, role=Qt.EditRole):
+    def setData(self, index: QModelIndex, value: float, role=Qt.EditRole) -> bool:
         """
 
         Parameters
@@ -143,7 +146,7 @@ class ActiveExtractedData(QAbstractTableModel):
         return True
 
     @Slot()
-    def setAllData(self, newData):
+    def setAllData(self, newData: Union[float, np.ndarray]):
         """
         Replaces the current table of extracted data points with a new dataset of points
 
@@ -155,35 +158,35 @@ class ActiveExtractedData(QAbstractTableModel):
         self._data = newData
         self.layoutChanged.emit()
 
-    def flags(self, index):
+    def flags(self, index: QModelIndex):
         flags = super(self.__class__, self).flags(index)
         flags |= Qt.ItemIsEditable
         flags |= Qt.ItemIsSelectable
         flags |= Qt.ItemIsEnabled
         return flags
 
-    def insertColumn(self, column, parent=QModelIndex(), *args, **kwargs):
+    def insertColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
         self.beginInsertColumns(parent, column, column)
         self._data = np.insert(self._data, column, np.asarray([0.0, 0.0]), axis=1)
         self.endInsertColumns()
         self.layoutChanged.emit()
         return True
 
-    def removeColumn(self, column, parent=QModelIndex(), *args, **kwargs):
+    def removeColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
         self.beginRemoveColumns(parent, column, column)
         self._data = np.delete(self._data, column, axis=1)
         self.endRemoveColumns()
         self.layoutChanged.emit()
         return True
 
-    def append(self, xval, yval):
+    def append(self, xval: float, yval: float):
         max_col = self.columnCount()
         self.insertColumn(max_col)
         self.setData(self.index(0, max_col), xval, role=Qt.EditRole)
         self.setData(self.index(1, max_col), yval, role=Qt.EditRole)
         self.layoutChanged.emit()
 
-    def setAdaptiveCalibrationFunc(self, adaptiveCalibrationCallback):
+    def setAdaptiveCalibrationFunc(self, adaptiveCalibrationCallback: callable):
         """
         Record the CalibrationData instance associated with the data.
 
@@ -209,7 +212,7 @@ class AllExtractedData(
         self._calibrationFunc = None
         self._currentRow = 0
 
-    def rowCount(self, *args):
+    def rowCount(self, *args) -> int:
         return len(self.dataNames)
 
     def data(self, index, role):

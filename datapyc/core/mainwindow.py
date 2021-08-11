@@ -21,7 +21,7 @@ import matplotlib.cm as cm
 import numpy as np
 
 from PySide2.QtCore import QPoint, QRect, QSize, Qt, Slot
-from PySide2.QtGui import QColor, Qt
+from PySide2.QtGui import QColor, QMouseEvent, Qt
 from PySide2.QtWidgets import (
     QGraphicsDropShadowEffect,
     QMainWindow,
@@ -136,19 +136,19 @@ class MainWindow(ResizableFramelessWindow):
             self.allDatasets.layoutChanged.emit()
             self.activeDataset.layoutChanged.emit()
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.LeftButton:
             self.offset = event.pos()
         else:
             super().mousePressEvent(event)
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event: QMouseEvent):
         if self.offset is not None and event.buttons() == Qt.LeftButton:
             self.move(self.pos() + event.pos() - self.offset)
         else:
             super().mouseMoveEvent(event)
 
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event: QMouseEvent):
         self.offset = None
         super().mouseReleaseEvent(event)
 
@@ -437,7 +437,7 @@ class MainWindow(ResizableFramelessWindow):
             self.ui.mplFigureCanvas.panView()
 
     @Slot()
-    def canvasClickMonitoring(self, event):
+    def canvasClickMonitoring(self, event: mpl.backend_bases.MouseEvent):
         """Main loop for acting on mouse events occurring in the canvas area."""
         if event.xdata is None or event.ydata is None:
             return
@@ -466,7 +466,7 @@ class MainWindow(ResizableFramelessWindow):
             self.updatePlot()
 
     @Slot()
-    def updatePlot(self, initialize=False, **kwargs):
+    def updatePlot(self, initialize: bool = False, **kwargs):
         """Update the current plot of measurement data and markers of selected data points."""
         if self.disconnectCanvas:
             return
@@ -502,7 +502,7 @@ class MainWindow(ResizableFramelessWindow):
             self.ui_menu.menuFrame.hide()
 
     @Slot()
-    def calibrate(self, calibrationLabel):
+    def calibrate(self, calibrationLabel: str):
         """Mouse click on one of the calibration buttons prompts switching to calibration mode. Mouse cursor crosshair
         is adjusted and canvas waits for click setting calibration point x or y component."""
         appstate.state = self.calibrationStates[calibrationLabel]
@@ -524,18 +524,18 @@ class MainWindow(ResizableFramelessWindow):
         self.activeDataset.toggleCalibratedView()
 
     @Slot(int)
-    def zDataUpdate(self, itemIndex):
+    def zDataUpdate(self, itemIndex: int):
         self.measurementData.setCurrentZ(itemIndex)
         self.setupXYDataBoxes()
         self.updatePlot(initialize=True)
 
     @Slot(int)
-    def xAxisUpdate(self, itemIndex):
+    def xAxisUpdate(self, itemIndex: int):
         self.measurementData.setCurrentX(itemIndex)
         self.updatePlot(initialize=True)
 
     @Slot(int)
-    def yAxisUpdate(self, itemIndex):
+    def yAxisUpdate(self, itemIndex: int):
         self.measurementData.setCurrentY(itemIndex)
         self.updatePlot(initialize=True)
 
@@ -575,7 +575,7 @@ class MainWindow(ResizableFramelessWindow):
         self.disconnectCanvas = False
         self.updatePlot(initialize=True)
 
-    def isRelativelyClose(self, x1y1, x2y2):
+    def isRelativelyClose(self, x1y1: np.ndarray, x2y2: np.ndarray):
         """Check whether the point x1y1 is relatively close to x2y2, given the current field of view on the canvas."""
         xlim = self.axes.get_xlim()
         ylim = self.axes.get_ylim()
@@ -591,7 +591,7 @@ class MainWindow(ResizableFramelessWindow):
         return False
 
     @Slot()
-    def openFile(self, initialize=False):
+    def openFile(self, initialize: bool = False):
         if not initialize:
             self.toggleMenu()
         self.measurementData, self.extractedData = importFile(parent=self)
@@ -635,7 +635,7 @@ class MainWindow(ResizableFramelessWindow):
             return
         sys.exit()
 
-    def resizeAndCenter(self, maxSize):
+    def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)
         maxRect = QRect(QPoint(0, 0), maxSize)
         self.setGeometry(

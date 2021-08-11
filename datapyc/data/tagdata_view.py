@@ -11,11 +11,12 @@
 
 
 from PySide2.QtCore import QObject
-from PySide2.QtCore import QRegularExpression as QRegExp
+from PySide2.QtCore import QRegExp
 from PySide2.QtCore import Signal
-from PySide2.QtGui import QRegularExpressionValidator as QRegExpValidator
+from PySide2.QtGui import QRegExpValidator
 from PySide2.QtGui import QValidator
 from PySide2.QtWidgets import QLineEdit
+
 
 from datapyc.io_utils import file_io_serializers as serializers
 
