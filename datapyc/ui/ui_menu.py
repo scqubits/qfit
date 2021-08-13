@@ -1,219 +1,124 @@
 # -*- coding: utf-8 -*-
 
-################################################################################
-## Form generated from reading UI file 'menu.ui'
-##
-## Created by: Qt User Interface Compiler version 5.15.2
-##
-## WARNING! All changes made in this file will be lost when recompiling UI file!
-################################################################################
+# Form implementation generated from reading ui file '.\menu.ui',
+# licensing of '.\menu.ui' applies.
+#
+# Created: Wed Aug 11 13:37:59 2021
+#      by: pyside2-uic  running on PySide2 5.13.2
+#
+# WARNING! All changes made in this file will be lost!
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-
+from PySide2 import QtCore, QtGui, QtWidgets
 
 class Ui_MenuWidget(object):
     def setupUi(self, MenuWidget):
-        if not MenuWidget.objectName():
-            MenuWidget.setObjectName(u"MenuWidget")
+        MenuWidget.setObjectName("MenuWidget")
         MenuWidget.resize(225, 300)
-        self.menuFrame = QFrame(MenuWidget)
-        self.menuFrame.setObjectName(u"menuFrame")
+        self.menuFrame = QtWidgets.QFrame(MenuWidget)
         self.menuFrame.setEnabled(True)
-        self.menuFrame.setGeometry(QRect(0, 0, 225, 300))
-        self.menuFrame.setMinimumSize(QSize(225, 300))
-        self.menuFrame.setMaximumSize(QSize(225, 300))
-        self.menuFrame.setFocusPolicy(Qt.NoFocus)
+        self.menuFrame.setGeometry(QtCore.QRect(0, 0, 225, 300))
+        self.menuFrame.setMinimumSize(QtCore.QSize(225, 300))
+        self.menuFrame.setMaximumSize(QtCore.QSize(225, 300))
+        self.menuFrame.setFocusPolicy(QtCore.Qt.NoFocus)
         self.menuFrame.setAutoFillBackground(False)
-        self.menuFrame.setStyleSheet(u"background-color: rgb(18, 18, 18);")
-        self.verticalLayout_8 = QVBoxLayout(self.menuFrame)
-        self.verticalLayout_8.setObjectName(u"verticalLayout_8")
-        self.menuOpenButton = QPushButton(self.menuFrame)
-        self.menuOpenButton.setObjectName(u"menuOpenButton")
-        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.menuFrame.setStyleSheet("QFrame {\n"
+"    background-color: rgb(18, 18, 18);\n"
+"}\n"
+"\n"
+"QPushButton {    \n"
+"    color: rgb(249, 249, 249);\n"
+"    background-color: rgb(18, 18, 18);\n"
+"    border: none;\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    background-color: rgb(52, 59, 72);\n"
+"}\n"
+"QPushButton:pressed {    \n"
+"    background-color: rgb(85, 170, 255);\n"
+"}\n"
+"\n"
+"QPushButton:checked {\n"
+"    border: 5px;\n"
+"    border-color: rgb(6, 50, 250);\n"
+"    border-right-style: inset;\n"
+"}")
+        self.menuFrame.setObjectName("menuFrame")
+        self.verticalLayout_8 = QtWidgets.QVBoxLayout(self.menuFrame)
+        self.verticalLayout_8.setObjectName("verticalLayout_8")
+        self.menuOpenButton = QtWidgets.QPushButton(self.menuFrame)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(
-            self.menuOpenButton.sizePolicy().hasHeightForWidth()
-        )
+        sizePolicy.setHeightForWidth(self.menuOpenButton.sizePolicy().hasHeightForWidth())
         self.menuOpenButton.setSizePolicy(sizePolicy)
-        self.menuOpenButton.setMinimumSize(QSize(0, 40))
-        font = QFont()
-        font.setFamily(u"Roboto")
+        self.menuOpenButton.setMinimumSize(QtCore.QSize(0, 40))
+        font = QtGui.QFont()
+        font.setFamily("Roboto")
         font.setPointSize(10)
         self.menuOpenButton.setFont(font)
-        self.menuOpenButton.setStyleSheet(
-            u"QPushButton {	\n"
-            "	color: rgb(249, 249, 249);\n"
-            "	background-color: rgb(18, 18, 18);\n"
-            "	border: none;\n"
-            "}\n"
-            "\n"
-            "QPushButton:hover {\n"
-            "	background-color: rgb(52, 59, 72);\n"
-            "}\n"
-            "QPushButton:pressed {	\n"
-            "	background-color: rgb(85, 170, 255);\n"
-            "}\n"
-            "\n"
-            "QPushButton:checked {\n"
-            "	border: 5px;\n"
-            "	border-color: rgb(6, 50, 250);\n"
-            "	border-right-style: inset;\n"
-            "}"
-        )
-
+        self.menuOpenButton.setObjectName("menuOpenButton")
         self.verticalLayout_8.addWidget(self.menuOpenButton)
-
-        self.menuNewButton = QPushButton(self.menuFrame)
-        self.menuNewButton.setObjectName(u"menuNewButton")
-        sizePolicy.setHeightForWidth(
-            self.menuNewButton.sizePolicy().hasHeightForWidth()
-        )
+        self.menuNewButton = QtWidgets.QPushButton(self.menuFrame)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.menuNewButton.sizePolicy().hasHeightForWidth())
         self.menuNewButton.setSizePolicy(sizePolicy)
-        self.menuNewButton.setMinimumSize(QSize(0, 40))
+        self.menuNewButton.setMinimumSize(QtCore.QSize(0, 40))
+        font = QtGui.QFont()
+        font.setFamily("Roboto")
+        font.setPointSize(10)
         self.menuNewButton.setFont(font)
-        self.menuNewButton.setStyleSheet(
-            u"QPushButton {	\n"
-            "	color: rgb(249, 249, 249);\n"
-            "	background-color: rgb(18, 18, 18);\n"
-            "	border: none;\n"
-            "}\n"
-            "\n"
-            "QPushButton:hover {\n"
-            "	background-color: rgb(52, 59, 72);\n"
-            "}\n"
-            "QPushButton:pressed {	\n"
-            "	background-color: rgb(85, 170, 255);\n"
-            "}\n"
-            "\n"
-            "QPushButton:checked {\n"
-            "	border: 5px;\n"
-            "	border-color: rgb(6, 50, 250);\n"
-            "	border-right-style: inset;\n"
-            "}"
-        )
-
+        self.menuNewButton.setObjectName("menuNewButton")
         self.verticalLayout_8.addWidget(self.menuNewButton)
-
-        self.menuSaveButton = QPushButton(self.menuFrame)
-        self.menuSaveButton.setObjectName(u"menuSaveButton")
-        sizePolicy.setHeightForWidth(
-            self.menuSaveButton.sizePolicy().hasHeightForWidth()
-        )
+        self.menuSaveButton = QtWidgets.QPushButton(self.menuFrame)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.menuSaveButton.sizePolicy().hasHeightForWidth())
         self.menuSaveButton.setSizePolicy(sizePolicy)
-        self.menuSaveButton.setMinimumSize(QSize(0, 40))
+        self.menuSaveButton.setMinimumSize(QtCore.QSize(0, 40))
+        font = QtGui.QFont()
+        font.setFamily("Roboto")
+        font.setPointSize(10)
         self.menuSaveButton.setFont(font)
-        self.menuSaveButton.setStyleSheet(
-            u"QPushButton {	\n"
-            "	color: rgb(249, 249, 249);\n"
-            "	background-color: rgb(18, 18, 18);\n"
-            "	border: none;\n"
-            "}\n"
-            "\n"
-            "QPushButton:hover {\n"
-            "	background-color: rgb(52, 59, 72);\n"
-            "}\n"
-            "QPushButton:pressed {	\n"
-            "	background-color: rgb(85, 170, 255);\n"
-            "}\n"
-            "\n"
-            "QPushButton:checked {\n"
-            "	border: 5px;\n"
-            "	border-color: rgb(6, 50, 250);\n"
-            "	border-right-style: inset;\n"
-            "}"
-        )
-
+        self.menuSaveButton.setObjectName("menuSaveButton")
         self.verticalLayout_8.addWidget(self.menuSaveButton)
-
-        self.menuSaveAsButton = QPushButton(self.menuFrame)
-        self.menuSaveAsButton.setObjectName(u"menuSaveAsButton")
-        sizePolicy.setHeightForWidth(
-            self.menuSaveAsButton.sizePolicy().hasHeightForWidth()
-        )
+        self.menuSaveAsButton = QtWidgets.QPushButton(self.menuFrame)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.menuSaveAsButton.sizePolicy().hasHeightForWidth())
         self.menuSaveAsButton.setSizePolicy(sizePolicy)
-        self.menuSaveAsButton.setMinimumSize(QSize(0, 40))
+        self.menuSaveAsButton.setMinimumSize(QtCore.QSize(0, 40))
+        font = QtGui.QFont()
+        font.setFamily("Roboto")
+        font.setPointSize(10)
         self.menuSaveAsButton.setFont(font)
-        self.menuSaveAsButton.setStyleSheet(
-            u"QPushButton {	\n"
-            "	color: rgb(249, 249, 249);\n"
-            "	background-color: rgb(18, 18, 18);\n"
-            "	border: none;\n"
-            "}\n"
-            "\n"
-            "QPushButton:hover {\n"
-            "	background-color: rgb(52, 59, 72);\n"
-            "}\n"
-            "QPushButton:pressed {	\n"
-            "	background-color: rgb(85, 170, 255);\n"
-            "}\n"
-            "\n"
-            "QPushButton:checked {\n"
-            "	border: 5px;\n"
-            "	border-color: rgb(6, 50, 250);\n"
-            "	border-right-style: inset;\n"
-            "}"
-        )
-
+        self.menuSaveAsButton.setObjectName("menuSaveAsButton")
         self.verticalLayout_8.addWidget(self.menuSaveAsButton)
-
-        self.menuQuitButton = QPushButton(self.menuFrame)
-        self.menuQuitButton.setObjectName(u"menuQuitButton")
-        sizePolicy.setHeightForWidth(
-            self.menuQuitButton.sizePolicy().hasHeightForWidth()
-        )
+        self.menuQuitButton = QtWidgets.QPushButton(self.menuFrame)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.menuQuitButton.sizePolicy().hasHeightForWidth())
         self.menuQuitButton.setSizePolicy(sizePolicy)
-        self.menuQuitButton.setMinimumSize(QSize(0, 40))
+        self.menuQuitButton.setMinimumSize(QtCore.QSize(0, 40))
+        font = QtGui.QFont()
+        font.setFamily("Roboto")
+        font.setPointSize(10)
         self.menuQuitButton.setFont(font)
-        self.menuQuitButton.setStyleSheet(
-            u"QPushButton {	\n"
-            "	color: rgb(249, 249, 249);\n"
-            "	background-color: rgb(18, 18, 18);\n"
-            "	border: none;\n"
-            "}\n"
-            "\n"
-            "QPushButton:hover {\n"
-            "	background-color: rgb(52, 59, 72);\n"
-            "}\n"
-            "QPushButton:pressed {	\n"
-            "	background-color: rgb(85, 170, 255);\n"
-            "}\n"
-            "\n"
-            "QPushButton:checked {\n"
-            "	border: 5px;\n"
-            "	border-color: rgb(6, 50, 250);\n"
-            "	border-right-style: inset;\n"
-            "}"
-        )
-
+        self.menuQuitButton.setObjectName("menuQuitButton")
         self.verticalLayout_8.addWidget(self.menuQuitButton)
 
         self.retranslateUi(MenuWidget)
-
-        QMetaObject.connectSlotsByName(MenuWidget)
-
-    # setupUi
+        QtCore.QMetaObject.connectSlotsByName(MenuWidget)
 
     def retranslateUi(self, MenuWidget):
-        MenuWidget.setWindowTitle(
-            QCoreApplication.translate("MenuWidget", u"Form", None)
-        )
-        self.menuOpenButton.setText(
-            QCoreApplication.translate("MenuWidget", u"OPEN", None)
-        )
-        self.menuNewButton.setText(
-            QCoreApplication.translate("MenuWidget", u"NEW", None)
-        )
-        self.menuSaveButton.setText(
-            QCoreApplication.translate("MenuWidget", u"SAVE", None)
-        )
-        self.menuSaveAsButton.setText(
-            QCoreApplication.translate("MenuWidget", u"SAVE AS", None)
-        )
-        self.menuQuitButton.setText(
-            QCoreApplication.translate("MenuWidget", u"QUIT", None)
-        )
-
-    # retranslateUi
+        MenuWidget.setWindowTitle(QtWidgets.QApplication.translate("MenuWidget", "Form", None, -1))
+        self.menuOpenButton.setText(QtWidgets.QApplication.translate("MenuWidget", "OPEN", None, -1))
+        self.menuNewButton.setText(QtWidgets.QApplication.translate("MenuWidget", "NEW", None, -1))
+        self.menuSaveButton.setText(QtWidgets.QApplication.translate("MenuWidget", "SAVE", None, -1))
+        self.menuSaveAsButton.setText(QtWidgets.QApplication.translate("MenuWidget", "SAVE AS", None, -1))
+        self.menuQuitButton.setText(QtWidgets.QApplication.translate("MenuWidget", "QUIT", None, -1))
