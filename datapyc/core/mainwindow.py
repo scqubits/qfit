@@ -82,6 +82,10 @@ class MainWindow(ResizableFramelessWindow):
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.ui.xyzDataGridFrame.setVisible(False)
+        self.ui.calibrationQFrame.setVisible(False)
+        self.ui.filterQFrame.setVisible(False)
+
         self.ui_menu = Ui_MenuWidget()
         self.ui_menu.setupUi(self)
         self.ui_menu.menuFrame.move(0, 32)
@@ -258,6 +262,7 @@ class MainWindow(ResizableFramelessWindow):
 
     def setupUIXYZComboBoxes(self):
         zDataNames = list(self.measurementData.zCandidates.keys())
+        self.ui.zComboBox.clear()
         self.ui.zComboBox.addItems(zDataNames)
         self.ui.zComboBox.setCurrentText(self.measurementData.currentZ.name)
         self.setupXYDataBoxes()
@@ -600,6 +605,7 @@ class MainWindow(ResizableFramelessWindow):
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
         self.dataSetupConnects()
+        self.setupUIXYZComboBoxes()
         self.updatePlot(initialize=True)
         self.raise_()
 
