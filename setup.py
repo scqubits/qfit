@@ -55,10 +55,11 @@ with open(os.path.join(CURDIR, "requirements.txt")) as requirements:
 
 PACKAGES = ['datapyc',
             'datapyc/core',
+            'datapyc/calibration',
+            'datapyc/canvas',
+            'datapyc/data',
             'datapyc/io_utils',
-            'datapyc/models',
-            'datapyc/ui',
-            'datapyc/views']
+            'datapyc/ui']
 
 PYTHON_VERSION = '>=3.6'
 
