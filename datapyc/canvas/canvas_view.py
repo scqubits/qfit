@@ -8,8 +8,7 @@
 #    This source code is licensed under the BSD-style license found in the
 #    LICENSE file in the root directory of this source tree.
 ############################################################################
-
-
+import numpy as np
 from matplotlib.backend_bases import cursors
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib.figure import Figure
@@ -104,11 +103,12 @@ class NavigationHidden(NavigationToolbar2QT):
         self.canvas.setCursor(QtCore.Qt.CrossCursor)
 
 class SpecialCursor(Cursor):
-    def __init__(self, ax, callback, horizOn=True, vertOn=True, useblit=False,
+    def __init__(self, ax, callback=None, horizOn=True, vertOn=True, useblit=False,
                  **lineprops):
         super().__init__(ax, horizOn=horizOn, vertOn=vertOn, useblit=useblit,
                  **lineprops)
         self.callback = callback
+
 
     def onmove(self, event):
         """Internal event handler to draw the cursor when the mouse moves."""
@@ -130,7 +130,8 @@ class SpecialCursor(Cursor):
         self.linev.set_xdata((event.xdata, event.xdata))
 
         self.lineh.set_ydata((event.ydata, event.ydata))
-        self.cross = self.ax.scatter(event.xdata, event.ydata, c="red",
+        self.cross = self.ax.scatter(self.closest_line(event.xdata), event.ydata,
+                                     c="red",
                               marker="x", s=150, animated=True)
 
 
@@ -139,6 +140,16 @@ class SpecialCursor(Cursor):
         self.lineh.set_visible(self.visible and self.horizOn)
 
         self._update()
+
+    def closest_line(self, xdat):
+        print(self.callback)
+        current_data = self.callback
+        allxdiff = {np.abs(xdat - i):i for i in current_data[0]}
+        if allxdiff:
+            print(allxdiff)
+            return allxdiff[min(allxdiff.keys())]
+        else:
+            return xdat
 
     def _update(self):
         if self.useblit:
@@ -163,6 +174,7 @@ class FigureCanvas(QFrame):
     def __init__(self, parent=None):
         QFrame.__init__(self, parent)
 
+        self.callback = None
         self.canvas = FigureCanvasQTAgg(Figure())
         self.toolbar = NavigationHidden(self.canvas, self)
 
@@ -172,13 +184,16 @@ class FigureCanvas(QFrame):
 
         self._crosshair = None
 
+    def set_callback(self, new_callback):
+        self.callback = new_callback
+
     def axes(self):
         return self.canvas.figure.axes[0]
 
     def select_crosshair(self, horizOn=True, vertOn=True):
         self._crosshair = SpecialCursor(
             self.axes(),
-            callback=True,
+            callback=self.callback,
             useblit=True,
             horizOn=horizOn,
             vertOn=vertOn,

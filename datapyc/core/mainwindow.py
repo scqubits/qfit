@@ -109,6 +109,12 @@ class MainWindow(ResizableFramelessWindow):
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
+        self.selector = mpl.widgets.RectangleSelector(self.axes,
+                                                      self.line_select_callback,
+                          drawtype='box', useblit=True,
+                          button=[3],  # right click
+                          spancoords='pixels',
+                          interactive=True)
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -400,6 +406,7 @@ class MainWindow(ResizableFramelessWindow):
         self.cidCanvas = self.axes.figure.canvas.mpl_connect(
             "button_press_event", self.canvasClickMonitoring
         )
+        self.ui.mplFigureCanvas.set_callback(self.allDatasets.assocDataList[0])
         self.cidMove = self.axes.figure.canvas.mpl_connect("motion_notify_event",
                                                            self.canvasMouseMonitoring)
 
@@ -440,38 +447,48 @@ class MainWindow(ResizableFramelessWindow):
             appstate.state = State.PAN
             self.ui.mplFigureCanvas.panView()
 
+    def line_select_callback(self, eclick, erelease):
+        """
+        Callback for line selection.
+
+        *eclick* and *erelease* are the press and release events.
+        """
+        x1, y1 = eclick.xdata, eclick.ydata
+        x2, y2 = erelease.xdata, erelease.ydata
+        print(f"({x1:3.2f}, {y1:3.2f}) --> ({x2:3.2f}, {y2:3.2f})")
+        print(f" The buttons you used were: {eclick.button} {erelease.button}")
 # TODO: Main place where clicks make data
     @Slot()
     def canvasClickMonitoring(self, event):
         """Main loop for acting on mouse events occurring in the canvas area."""
         if event.xdata is None or event.ydata is None:
             return
+        if event.button == 1:
+            for calibrationLabel in ["X1", "X2", "Y1", "Y2"]:
+                data = event.xdata if (calibrationLabel[0] == "X") else event.ydata
 
-        for calibrationLabel in ["X1", "X2", "Y1", "Y2"]:
-            data = event.xdata if (calibrationLabel[0] == "X") else event.ydata
-
-            if appstate.state == self.calibrationStates[calibrationLabel]:
-                self.rawLineEdits[calibrationLabel].setText(str(data))
-                self.rawLineEdits[calibrationLabel].home(False)
-                self.mapLineEdits[calibrationLabel].selectAll()
-                self.ui.selectViewButton.setChecked(True)
-                self.ui.mplFigureCanvas.selectOn()
-                self.rawLineEdits[calibrationLabel].editingFinished.emit()
-                return
-
-        if appstate.state == State.SELECT:
-            current_data = self.activeDataset.all()
-            if self.matching_mode:
-                x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
-            else:
-                x1y1 = np.asarray([event.xdata, event.ydata])
-            for index, x2y2 in enumerate(current_data.transpose()):
-                if self.isRelativelyClose(x1y1, x2y2):
-                    self.activeDataset.removeColumn(index)
-                    self.updatePlot()
+                if appstate.state == self.calibrationStates[calibrationLabel]:
+                    self.rawLineEdits[calibrationLabel].setText(str(data))
+                    self.rawLineEdits[calibrationLabel].home(False)
+                    self.mapLineEdits[calibrationLabel].selectAll()
+                    self.ui.selectViewButton.setChecked(True)
+                    self.ui.mplFigureCanvas.selectOn()
+                    self.rawLineEdits[calibrationLabel].editingFinished.emit()
                     return
-            self.activeDataset.append(*x1y1)
-            self.updatePlot()
+
+            if appstate.state == State.SELECT:
+                current_data = self.activeDataset.all()
+                if self.matching_mode:
+                    x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
+                else:
+                    x1y1 = np.asarray([event.xdata, event.ydata])
+                for index, x2y2 in enumerate(current_data.transpose()):
+                    if self.isRelativelyClose(x1y1, x2y2):
+                        self.activeDataset.removeColumn(index)
+                        self.updatePlot()
+                        return
+                self.activeDataset.append(*x1y1)
+                self.updatePlot()
     #
     @Slot()
     def canvasMouseMonitoring(self, event):
