@@ -492,29 +492,28 @@ class MainWindow(ResizableFramelessWindow):
     #
     @Slot()
     def canvasMouseMonitoring(self, event):
-        pass
-    #     self.axes.figure.canvas.flush_events()
-    #     self.matching_mode = False
-    #     if self.allDatasets.currentRow != 0:
-    #         self.matching_mode = True
-    #     if not self.matching_mode:
-    #         return
-    #
-    #     if event.xdata is None or event.ydata is None:
-    #         return
-    #
-    #     ypos = event.ydata
-    #     xpos = self.closest_line(event.xdata)
-    #     if self.mousedat:
-    #         self.mousedat.remove()
-    #         del self.mousedat
-    #     full_event = self.axes.scatter(xpos, ypos, c="red",
-    #                           marker="x", s=150, animated=True)
-    #     self.axes.figure.canvas.restore_region(self.background)
-    #     self.axes.draw_artist(full_event)
-    #     self.axes.figure.canvas.blit(self.axes.figure.bbox)
-    #     # self.axes.figure.canvas.draw()
-    #     # self.updatePlot()
+        self.axes.figure.canvas.flush_events()
+        self.matching_mode = False
+        if self.allDatasets.currentRow != 0:
+            self.matching_mode = True
+        if not self.matching_mode:
+            return
+
+        if event.xdata is None or event.ydata is None:
+            return
+
+        ypos = event.ydata
+        xpos = self.closest_line(event.xdata)
+        if self.mousedat:
+            self.mousedat.remove()
+            del self.mousedat
+        full_event = self.axes.scatter(xpos, ypos, c="red",
+                              marker="x", s=150, animated=True)
+        self.axes.figure.canvas.restore_region(self.background)
+        self.axes.draw_artist(full_event)
+        self.axes.figure.canvas.blit(self.axes.figure.bbox)
+        # self.axes.figure.canvas.draw()
+        # self.updatePlot()
 
 
 

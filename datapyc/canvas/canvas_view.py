@@ -142,11 +142,9 @@ class SpecialCursor(Cursor):
         self._update()
 
     def closest_line(self, xdat):
-        print(self.callback)
         current_data = self.callback
         allxdiff = {np.abs(xdat - i):i for i in current_data[0]}
         if allxdiff:
-            print(allxdiff)
             return allxdiff[min(allxdiff.keys())]
         else:
             return xdat
