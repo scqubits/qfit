@@ -114,7 +114,6 @@ class SpecialCursor(Cursor):
 
     def onmove(self, event):
         """Internal event handler to draw the cursor when the mouse moves."""
-        print(self.callback)
         if self.ignore(event):
             return
         if not self.canvas.widgetlock.available(self):
