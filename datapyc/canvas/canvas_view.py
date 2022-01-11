@@ -8,8 +8,7 @@
 #    This source code is licensed under the BSD-style license found in the
 #    LICENSE file in the root directory of this source tree.
 ############################################################################
-
-
+import numpy as np
 from matplotlib.backend_bases import cursors
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib.figure import Figure
@@ -19,6 +18,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFrame, QVBoxLayout
 
 import datapyc.core.app_state as appstate
+from datapyc.data.extracted_data import AllExtractedData
 
 from datapyc.core.app_state import State
 
@@ -103,11 +103,88 @@ class NavigationHidden(NavigationToolbar2QT):
     def set_cursor(self, cursor):
         self.canvas.setCursor(QtCore.Qt.CrossCursor)
 
+class SpecialCursor(Cursor):
+    def __init__(self, ax, callback=None, horizOn=True, vertOn=True, useblit=False,
+                 **lineprops):
+        super().__init__(ax, horizOn=horizOn, vertOn=vertOn, useblit=useblit,
+                 **lineprops)
+        self.callback = callback
+        self.matching_mode = False
+
+
+    def onmove(self, event):
+        """Internal event handler to draw the cursor when the mouse moves."""
+        print(self.callback)
+        if self.ignore(event):
+            return
+        if not self.canvas.widgetlock.available(self):
+            return
+        if event.inaxes != self.ax:
+            self.linev.set_visible(False)
+            self.lineh.set_visible(False)
+
+            if self.needclear:
+                self.canvas.draw()
+                self.needclear = False
+            return
+        self.needclear = True
+        if not self.visible:
+            return
+        self.linev.set_xdata((event.xdata, event.xdata))
+
+        self.lineh.set_ydata((event.ydata, event.ydata))
+        if self.callback.currentRow != 0 and len(self.callback.assocDataList[0][
+                                                        0])>0:
+            self.matching_mode = True
+        if self.matching_mode == True:
+            self.cross = self.ax.scatter(self.closest_line(event.xdata), event.ydata,
+                                         c="red",
+                                         marker="x", s=150, animated=True)
+        else:
+            self.cross = self.ax.scatter(event.xdata, event.ydata,
+                                         c="red",
+                                         marker="x", s=150, animated=True)
+
+
+
+        self.cross.set_visible(self.visible)
+        self.linev.set_visible(self.visible and self.vertOn)
+        self.lineh.set_visible(self.visible and self.horizOn)
+
+        self._update()
+
+    def closest_line(self, xdat):
+        current_data = self.callback.assocDataList[0]
+        allxdiff = {np.abs(xdat - i):i for i in current_data[0]}
+        if allxdiff:
+            return allxdiff[min(allxdiff.keys())]
+        else:
+            return xdat
+
+    def _update(self):
+        if self.useblit:
+            if self.background is not None:
+                self.canvas.restore_region(self.background)
+            self.ax.draw_artist(self.linev)
+            self.ax.draw_artist(self.lineh)
+            self.ax.draw_artist(self.cross)
+            self.canvas.blit(self.ax.bbox)
+        else:
+            self.canvas.draw_idle()
+        return False
+
+    def line_blit_on(self):
+        self.line_blit = True
+
+    def line_blit_off(self):
+        self.line_blit = False
+
 
 class FigureCanvas(QFrame):
     def __init__(self, parent=None):
         QFrame.__init__(self, parent)
 
+        self.callback = None
         self.canvas = FigureCanvasQTAgg(Figure())
         self.toolbar = NavigationHidden(self.canvas, self)
 
@@ -117,12 +194,17 @@ class FigureCanvas(QFrame):
 
         self._crosshair = None
 
+    def set_callback(self, new_callback):
+        self.callback = new_callback
+        self.select_crosshair()
+
     def axes(self):
         return self.canvas.figure.axes[0]
 
     def select_crosshair(self, horizOn=True, vertOn=True):
-        self._crosshair = Cursor(
+        self._crosshair = SpecialCursor(
             self.axes(),
+            callback=self.callback,
             useblit=True,
             horizOn=horizOn,
             vertOn=vertOn,
@@ -130,6 +212,7 @@ class FigureCanvas(QFrame):
             linewidth=1,
         )
         self.canvas.draw()
+        self._crosshair.line_blit_on()
 
     def zoomOn(self):
         self.toolbar.setZoomMode(

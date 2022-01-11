@@ -12,26 +12,22 @@
 
 import copy
 import sys
-
 from functools import partial
 from typing import TYPE_CHECKING, Dict, Tuple, Union
 
 import matplotlib as mpl
 import matplotlib.cm as cm
 import numpy as np
-
 from PySide2.QtCore import QPoint, QRect, QSize, Qt, Slot
 from PySide2.QtGui import QColor, QMouseEvent, Qt
 from PySide2.QtWidgets import (
     QGraphicsDropShadowEffect,
-    QMainWindow,
     QMessageBox,
     QPushButton,
     QStyle,
 )
 
 import datapyc.core.app_state as appstate
-
 from datapyc.calibration.calibration_data import CalibrationData
 from datapyc.calibration.calibration_view import CalibrationView
 from datapyc.core.app_state import State
@@ -40,6 +36,7 @@ from datapyc.data.extracted_data import ActiveExtractedData, AllExtractedData
 from datapyc.data.tagdata_view import TagDataView
 from datapyc.io_utils.import_data import importFile
 from datapyc.io_utils.save_data import saveFile
+from datapyc.settings import color_dict
 from datapyc.ui.resizable_window import ResizableFramelessWindow
 from datapyc.ui.ui_menu import Ui_MenuWidget
 from datapyc.ui.ui_window import Ui_MainWindow
@@ -99,6 +96,9 @@ class MainWindow(ResizableFramelessWindow):
         self.calibrationData = CalibrationData()
         self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
 
+        self.matching_mode = False
+        self.mousedat = None
+
         self.setupUIPlotOptions()
 
         self.measurementData = measurementData
@@ -113,6 +113,12 @@ class MainWindow(ResizableFramelessWindow):
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
+        self.selector = mpl.widgets.RectangleSelector(self.axes,
+                                                      self.line_select_callback,
+                          drawtype='box', useblit=True,
+                          button=[3],  # right click
+                          spancoords='pixels',
+                          interactive=True)
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -403,6 +409,9 @@ class MainWindow(ResizableFramelessWindow):
         self.cidCanvas = self.axes.figure.canvas.mpl_connect(
             "button_press_event", self.canvasClickMonitoring
         )
+        self.ui.mplFigureCanvas.set_callback(self.allDatasets)
+        self.cidMove = self.axes.figure.canvas.mpl_connect("motion_notify_event",
+                                                           self.canvasMouseMonitoring)
 
     def uiMenuConnects(self):
         self.ui.toggleMenuButton.clicked.connect(self.toggleMenu)
@@ -441,40 +450,82 @@ class MainWindow(ResizableFramelessWindow):
             appstate.state = State.PAN
             self.ui.mplFigureCanvas.panView()
 
+    def line_select_callback(self, eclick, erelease):
+        """
+        Callback for line selection.
+
+        *eclick* and *erelease* are the press and release events.
+        """
+        x1, y1 = eclick.xdata, eclick.ydata
+        x2, y2 = erelease.xdata, erelease.ydata
+        print(f"({x1:3.2f}, {y1:3.2f}) --> ({x2:3.2f}, {y2:3.2f})")
+        print(f" The buttons you used were: {eclick.button} {erelease.button}")
     @Slot()
     def canvasClickMonitoring(self, event: mpl.backend_bases.MouseEvent):
         """Main loop for acting on mouse events occurring in the canvas area."""
         if event.xdata is None or event.ydata is None:
             return
+        if event.button == 1:
+            for calibrationLabel in ["X1", "X2", "Y1", "Y2"]:
+                data = event.xdata if (calibrationLabel[0] == "X") else event.ydata
 
-        for calibrationLabel in ["X1", "X2", "Y1", "Y2"]:
-            data = event.xdata if (calibrationLabel[0] == "X") else event.ydata
-
-            if appstate.state == self.calibrationStates[calibrationLabel]:
-                self.rawLineEdits[calibrationLabel].setText(str(data))
-                self.rawLineEdits[calibrationLabel].home(False)
-                self.mapLineEdits[calibrationLabel].selectAll()
-                self.ui.selectViewButton.setChecked(True)
-                self.ui.mplFigureCanvas.selectOn()
-                self.rawLineEdits[calibrationLabel].editingFinished.emit()
-                return
-
-        if appstate.state == State.SELECT:
-            current_data = self.activeDataset.all()
-            x1y1 = np.asarray([event.xdata, event.ydata])
-            for index, x2y2 in enumerate(current_data.transpose()):
-                if self.isRelativelyClose(x1y1, x2y2):
-                    self.activeDataset.removeColumn(index)
-                    self.updatePlot()
+                if appstate.state == self.calibrationStates[calibrationLabel]:
+                    self.rawLineEdits[calibrationLabel].setText(str(data))
+                    self.rawLineEdits[calibrationLabel].home(False)
+                    self.mapLineEdits[calibrationLabel].selectAll()
+                    self.ui.selectViewButton.setChecked(True)
+                    self.ui.mplFigureCanvas.selectOn()
+                    self.rawLineEdits[calibrationLabel].editingFinished.emit()
                     return
-            self.activeDataset.append(*x1y1)
-            self.updatePlot()
+
+            if appstate.state == State.SELECT:
+                current_data = self.activeDataset.all()
+                if self.matching_mode:
+                    x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
+                else:
+                    x1y1 = np.asarray([event.xdata, event.ydata])
+                for index, x2y2 in enumerate(current_data.transpose()):
+                    if self.isRelativelyClose(x1y1, x2y2):
+                        self.activeDataset.removeColumn(index)
+                        self.updatePlot()
+                        return
+                self.activeDataset.append(*x1y1)
+                self.updatePlot()
+    #
+    @Slot()
+    def canvasMouseMonitoring(self, event):
+        self.axes.figure.canvas.flush_events()
+        self.matching_mode = False
+        if self.allDatasets.currentRow != 0 and len(self.allDatasets.assocDataList[
+                                                        0][0])>0:
+            self.matching_mode = True
+        if not self.matching_mode:
+            return
+
+        if event.xdata is None or event.ydata is None:
+            return
+
+
+
+        # ypos = event.ydata
+        # xpos = self.closest_line(event.xdata)
+        # if self.mousedat:
+        #     self.mousedat.remove()
+        #     del self.mousedat
+        # full_event = self.axes.scatter(xpos, ypos, c="red",
+        #                       marker="x", s=150, animated=True)
+        # self.axes.figure.canvas.restore_region(self.background)
+        # self.axes.draw_artist(full_event)
+        # self.axes.figure.canvas.blit(self.axes.figure.bbox)
+
+
 
     @Slot()
     def updatePlot(self, initialize: bool = False, **kwargs):
         """Update the current plot of measurement data and markers of selected data points."""
         if self.disconnectCanvas:
             return
+
         # If this is not the first time of plotting, store the current axes limits and clear the graph.
         if not initialize:
             xlim = self.axes.get_xlim()
@@ -483,6 +534,9 @@ class MainWindow(ResizableFramelessWindow):
 
         # Set the matplotlib colormap according to the selection in the dropdown menu.
         colorStr = self.ui.colorComboBox.currentText()
+        cross_color = color_dict[colorStr]["Cross"]
+        line_color = color_dict[colorStr]["line"]
+        scatter_color = color_dict[colorStr]["Scatter"]
         cmap = copy.copy(getattr(cm, colorStr))
         cmap.set_bad(color="black")
 
@@ -491,7 +545,16 @@ class MainWindow(ResizableFramelessWindow):
         # If there are any extracted data points in the currently active data set, show those via a scatter plot.
         if self.activeDataset.columnCount() > 0:
             dataXY = self.activeDataset.all()
-            self.axes.scatter(dataXY[0], dataXY[1], c="orange", marker="x", s=150)
+            self.axes.scatter(dataXY[0], dataXY[1], c=scatter_color, marker="x", s=150)
+
+        plotted_data = []
+        line_data = self.allDatasets.assocDataList[0]
+        for count, i in enumerate(line_data[0]):
+            if i not in plotted_data:
+                self.axes.axline((i, line_data[1][count]), (i, line_data[1][count] - (
+                    line_data[
+                    1][count]) * 0.1), c=line_color)
+            plotted_data.append(i)
 
         # Make sure that new axes limits match the old ones.
         if not initialize:
@@ -499,6 +562,8 @@ class MainWindow(ResizableFramelessWindow):
             self.axes.set_ylim(ylim)
 
         self.axes.figure.canvas.draw()
+        self.background = self.axes.figure.canvas.copy_from_bbox(self.axes.figure.bbox)
+        self.ui.mplFigureCanvas.set_callback(self.allDatasets)
 
     def toggleMenu(self):
         if self.ui_menu.menuFrame.isHidden():
@@ -647,3 +712,8 @@ class MainWindow(ResizableFramelessWindow):
         self.setGeometry(
             QStyle.alignedRect(Qt.LeftToRight, Qt.AlignCenter, newSize, maxRect)
         )
+
+    def closest_line(self, xdat):
+        current_data = self.allDatasets.assocDataList[0]
+        allxdiff = {np.abs(xdat - i):i for i in current_data[0]}
+        return allxdiff[min(allxdiff.keys())]
