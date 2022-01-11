@@ -309,8 +309,6 @@ class MainWindow(ResizableFramelessWindow):
         # that the canvas display is updated.
         self.allDatasets.layoutChanged.connect(self.updatePlot)
 
-        # TODO: Hook into a method that changes
-
         # Each time the data set is changed on ListView/Model by clicking a data set,
         # the data in ActiveExtractedData is updated to reflect the new selection.
         self.ui.datasetListView.clicked.connect(
@@ -406,7 +404,7 @@ class MainWindow(ResizableFramelessWindow):
         self.cidCanvas = self.axes.figure.canvas.mpl_connect(
             "button_press_event", self.canvasClickMonitoring
         )
-        self.ui.mplFigureCanvas.set_callback(self.allDatasets.assocDataList[0])
+        self.ui.mplFigureCanvas.set_callback(self.allDatasets)
         self.cidMove = self.axes.figure.canvas.mpl_connect("motion_notify_event",
                                                            self.canvasMouseMonitoring)
 
@@ -457,7 +455,6 @@ class MainWindow(ResizableFramelessWindow):
         x2, y2 = erelease.xdata, erelease.ydata
         print(f"({x1:3.2f}, {y1:3.2f}) --> ({x2:3.2f}, {y2:3.2f})")
         print(f" The buttons you used were: {eclick.button} {erelease.button}")
-# TODO: Main place where clicks make data
     @Slot()
     def canvasClickMonitoring(self, event):
         """Main loop for acting on mouse events occurring in the canvas area."""
@@ -494,7 +491,8 @@ class MainWindow(ResizableFramelessWindow):
     def canvasMouseMonitoring(self, event):
         self.axes.figure.canvas.flush_events()
         self.matching_mode = False
-        if self.allDatasets.currentRow != 0:
+        if self.allDatasets.currentRow != 0 and len(self.allDatasets.assocDataList[
+                                                        0][0])>0:
             self.matching_mode = True
         if not self.matching_mode:
             return
@@ -502,18 +500,18 @@ class MainWindow(ResizableFramelessWindow):
         if event.xdata is None or event.ydata is None:
             return
 
-        ypos = event.ydata
-        xpos = self.closest_line(event.xdata)
-        if self.mousedat:
-            self.mousedat.remove()
-            del self.mousedat
-        full_event = self.axes.scatter(xpos, ypos, c="red",
-                              marker="x", s=150, animated=True)
-        self.axes.figure.canvas.restore_region(self.background)
-        self.axes.draw_artist(full_event)
-        self.axes.figure.canvas.blit(self.axes.figure.bbox)
-        # self.axes.figure.canvas.draw()
-        # self.updatePlot()
+
+
+        # ypos = event.ydata
+        # xpos = self.closest_line(event.xdata)
+        # if self.mousedat:
+        #     self.mousedat.remove()
+        #     del self.mousedat
+        # full_event = self.axes.scatter(xpos, ypos, c="red",
+        #                       marker="x", s=150, animated=True)
+        # self.axes.figure.canvas.restore_region(self.background)
+        # self.axes.draw_artist(full_event)
+        # self.axes.figure.canvas.blit(self.axes.figure.bbox)
 
 
 
@@ -560,6 +558,7 @@ class MainWindow(ResizableFramelessWindow):
 
         self.axes.figure.canvas.draw()
         self.background = self.axes.figure.canvas.copy_from_bbox(self.axes.figure.bbox)
+        self.ui.mplFigureCanvas.set_callback(self.allDatasets)
 
     def toggleMenu(self):
         if self.ui_menu.menuFrame.isHidden():

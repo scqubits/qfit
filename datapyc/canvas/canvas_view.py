@@ -18,6 +18,7 @@ from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFrame, QVBoxLayout
 
 import datapyc.core.app_state as appstate
+from datapyc.data.extracted_data import AllExtractedData
 
 from datapyc.core.app_state import State
 
@@ -108,10 +109,12 @@ class SpecialCursor(Cursor):
         super().__init__(ax, horizOn=horizOn, vertOn=vertOn, useblit=useblit,
                  **lineprops)
         self.callback = callback
+        self.matching_mode = False
 
 
     def onmove(self, event):
         """Internal event handler to draw the cursor when the mouse moves."""
+        print(self.callback)
         if self.ignore(event):
             return
         if not self.canvas.widgetlock.available(self):
@@ -130,9 +133,18 @@ class SpecialCursor(Cursor):
         self.linev.set_xdata((event.xdata, event.xdata))
 
         self.lineh.set_ydata((event.ydata, event.ydata))
-        self.cross = self.ax.scatter(self.closest_line(event.xdata), event.ydata,
-                                     c="red",
-                              marker="x", s=150, animated=True)
+        if self.callback.currentRow != 0 and len(self.callback.assocDataList[0][
+                                                        0])>0:
+            self.matching_mode = True
+        if self.matching_mode == True:
+            self.cross = self.ax.scatter(self.closest_line(event.xdata), event.ydata,
+                                         c="red",
+                                         marker="x", s=150, animated=True)
+        else:
+            self.cross = self.ax.scatter(event.xdata, event.ydata,
+                                         c="red",
+                                         marker="x", s=150, animated=True)
+
 
 
         self.cross.set_visible(self.visible)
@@ -142,7 +154,7 @@ class SpecialCursor(Cursor):
         self._update()
 
     def closest_line(self, xdat):
-        current_data = self.callback
+        current_data = self.callback.assocDataList[0]
         allxdiff = {np.abs(xdat - i):i for i in current_data[0]}
         if allxdiff:
             return allxdiff[min(allxdiff.keys())]
@@ -184,6 +196,7 @@ class FigureCanvas(QFrame):
 
     def set_callback(self, new_callback):
         self.callback = new_callback
+        self.select_crosshair()
 
     def axes(self):
         return self.canvas.figure.axes[0]
