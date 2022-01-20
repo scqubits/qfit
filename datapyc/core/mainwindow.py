@@ -113,12 +113,7 @@ class MainWindow(ResizableFramelessWindow):
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
-        self.selector = mpl.widgets.RectangleSelector(self.axes,
-                                                      self.line_select_callback,
-                          drawtype='box', useblit=True,
-                          button=[3],  # right click
-                          spancoords='pixels',
-                          interactive=True)
+
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
