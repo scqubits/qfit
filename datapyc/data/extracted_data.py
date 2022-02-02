@@ -39,7 +39,7 @@ class ActiveExtractedData(QAbstractTableModel):
             numpy array of floats, shape=(2, N)
         """
         super().__init__()
-        self._data = data or np.empty(shape=(2, 0), dtype=np.float_)
+        self._data = data or np.empty(shape=(3, 0), dtype=np.float_)
         self._adaptiveCalibrationFunc = None
 
     @Slot()
@@ -51,7 +51,7 @@ class ActiveExtractedData(QAbstractTableModel):
         -------
         ndarray
         """
-        return self._data
+        return self._data[:2]
 
     @Slot()
     def toggleCalibratedView(self):
@@ -76,7 +76,7 @@ class ActiveExtractedData(QAbstractTableModel):
             value = conversionFunc(
                 [self._data[0, index.column()], self._data[1, index.column()]]
             )
-            return "{:#.6g}".format(value[index.row()])
+            return "{:#.6g}".format(value[index.row()-1])
 
     def rowCount(self, *args):
         """
@@ -117,7 +117,7 @@ class ActiveExtractedData(QAbstractTableModel):
         # section is the index of the column/row.
         if role == Qt.DisplayRole:
             if orientation == Qt.Vertical:
-                return str(["x", "y"][section])
+                return str(["x", "y", "tag"][section])
             elif orientation == Qt.Horizontal:
                 return str(section)
 
@@ -167,7 +167,9 @@ class ActiveExtractedData(QAbstractTableModel):
 
     def insertColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
         self.beginInsertColumns(parent, column, column)
-        self._data = np.insert(self._data, column, np.asarray([0.0, 0.0]), axis=1)
+        self._data = np.insert(self._data, column, np.asarray([0.0, 0.0, 0.0]),
+                               #"None"]),
+                               axis=1)
         self.endInsertColumns()
         self.layoutChanged.emit()
         return True
@@ -184,6 +186,7 @@ class ActiveExtractedData(QAbstractTableModel):
         self.insertColumn(max_col)
         self.setData(self.index(0, max_col), xval, role=Qt.EditRole)
         self.setData(self.index(1, max_col), yval, role=Qt.EditRole)
+        self.setData(self.index(2, max_col), "None")
         self.layoutChanged.emit()
 
     def setAdaptiveCalibrationFunc(self, adaptiveCalibrationCallback: callable):
