@@ -1,4 +1,4 @@
-.. datapyc
+.. qfit
    Copyright (C)  2020, Jens Koch
 
 .. _license:
@@ -46,14 +46,14 @@ Licenses of included open-source code and icons
 =======================================================
 
 `Iconic`:
-   datapyc uses icons from the "Iconic" set by `P. J. Onori <https://pjonori.com/>`_, licensed under
+   qfit uses icons from the "Iconic" set by `P. J. Onori <https://pjonori.com/>`_, licensed under
    Creative Commons Attribution-ShareAlike 3.0 United States (`CC BY-SA 3.0 US
    <https://creativecommons.org/licenses/by-sa/3.0/us/>`_).
 
 `silx toolkit`:
    Copyright (c) European Synchrotron Radiation Facility (ESRF).
 
-   The datapyc GUI incorporates a range slider widget from the `silx toolkit` library,
+   The qfit GUI incorporates a range slider widget from the `silx toolkit` library,
    `silx toolkit` follows the permissive MIT license, requiring inclusion of the subsequent
    permissive notice:
 

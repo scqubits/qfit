@@ -1,6 +1,6 @@
 # canvas_view.py
 #
-# This file is part of datapyc.
+# This file is part of qfit.
 #
 #    Copyright (c) 2020, Jens Koch
 #    All rights reserved.
@@ -17,10 +17,10 @@ from PySide2 import QtCore
 from PySide2.QtCore import Slot
 from PySide2.QtWidgets import QFrame, QVBoxLayout
 
-import datapyc.core.app_state as appstate
-from datapyc.data.extracted_data import AllExtractedData
+import qfit.core.app_state as appstate
+from qfit.data.extracted_data import AllExtractedData
 
-from datapyc.core.app_state import State
+from qfit.core.app_state import State
 
 
 class NavigationHidden(NavigationToolbar2QT):
