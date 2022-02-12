@@ -1,19 +1,19 @@
-datapyc: a tool component of scQubits
+qfit: a tool component of scQubits
 ========================================
 
 [J. Koch](https://github.com/jkochNU)
 
-scQubits is an open-source Python library for simulating superconducting qubits. The datapyc package provides a GUI tool
+scQubits is an open-source Python library for simulating superconducting qubits. The qfit package provides a GUI tool
 for loading and displaying experimental data, such as two-tone spectroscopy data. The GUI simplifies the extraction of 
 data points from measurement results, as required for fitting experimental data to theoretical qubit models.
 
-Install datapyc via
+Install qfit via
 
-    pip install datapyc
+    pip install qfit
 
 Once done, you the application can be launched this way::
 
-    python -m datapyc
+    python -m qfit
 
 
 License
@@ -23,10 +23,10 @@ License
 You are free to use this software, with or without modification, provided that the conditions listed in the LICENSE file
  are satisfied.
  
-datapyc uses icons from the "Iconic" set by ([P. J. Onori](https://pjonori.com/)), licensed under 
+qfit uses icons from the "Iconic" set by ([P. J. Onori](https://pjonori.com/)), licensed under 
 Creative Commons Attribution-ShareAlike 3.0 United States ([CC BY-SA 3.0 US](https://creativecommons.org/licenses/by-sa/3.0/us/)).
 
-The datapyc GUI incorporates a range slider widget from the `silx toolkit` library, Copyright (c) European Synchrotron 
+The qfit GUI incorporates a range slider widget from the `silx toolkit` library, Copyright (c) European Synchrotron 
 Radiation Facility (ESRF). The `silx toolkit` follows the permissive MIT license, requiring inclusion of the subsequent
 permissive notice:
 

@@ -1,4 +1,4 @@
-.. datapyc
+.. qfit
    Copyright (C) 2020, Jens Koch
 
 .. _changelog:

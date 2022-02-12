@@ -1,11 +1,11 @@
-.. datapyc
+.. qfit
    Copyright (C) 2020, Jens Koch
 
 
-datapyc
+qfit
 ========
 
-   datapyc is an open-source GUI tool for point-and-click data extraction:
+   qfit is an open-source GUI tool for point-and-click data extraction:
 
 - Open measurement data files (e.g., data from frequency/flux sweep of transmission).
 
@@ -16,7 +16,7 @@ datapyc
 - Extracted data sets can be saved and then loaded into scqubits for fitting data to a particular superconducting qubit, or coupled system of qubits and resonators.
 
 
-.. figure:: graphics/datapyc-window.png
+.. figure:: graphics/qfit-window.png
    :align: center
    :width: 6in
 

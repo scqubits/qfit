@@ -1,13 +1,13 @@
-"""datapyc: data extraction GUI tool for use with scQuibts
+"""qfit: data extraction GUI tool for use with scQuibts
 ==============================================================
 
-datapyc is part of scQubits, an an open-source Python package for simulating superconducting qubits. The datapyc package
+qfit is part of scQubits, an open-source Python package for simulating superconducting qubits. The qfit package
 provides a GUI tool for loading and displaying data, for example from spectroscopy experiments. The GUI simplifies the
 extraction of data points from measurement results, as required for fitting experimental data to theoretical qubit
 models.
 """
 #
-# This file is part of datapyc.
+# This file is part of qfit.
 #
 #    Copyright (c) 2020, Jens Koch
 #    All rights reserved.
@@ -53,18 +53,18 @@ CURDIR = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(CURDIR, "requirements.txt")) as requirements:
     INSTALL_REQUIRES = requirements.read().splitlines()
 
-PACKAGES = ['datapyc',
-            'datapyc/core',
-            'datapyc/calibration',
-            'datapyc/canvas',
-            'datapyc/data',
-            'datapyc/io_utils',
-            'datapyc/ui']
+PACKAGES = ['qfit',
+            'qfit/core',
+            'qfit/calibration',
+            'qfit/canvas',
+            'qfit/data',
+            'qfit/io_utils',
+            'qfit/ui']
 
 PYTHON_VERSION = '>=3.6'
 
 
-NAME = "datapyc"
+NAME = "qfit"
 AUTHOR = "Jens Koch"
 AUTHOR_EMAIL = "jens-koch@northwestern.edu"
 LICENSE = "BSD"
@@ -94,9 +94,9 @@ if not ISRELEASED:
     FULLVERSION += '.dev'+str(MICRO)+git_short_hash()
 
 
-def write_version_py(filename='datapyc/version.py'):
+def write_version_py(filename='qfit/version.py'):
     cnt = """\
-# THIS FILE IS GENERATED FROM datapyc SETUP.PY
+# THIS FILE IS GENERATED FROM qfit SETUP.PY
 short_version = '%(version)s'
 version = '%(fullversion)s'
 release = %(isrelease)s
@@ -111,11 +111,11 @@ release = %(isrelease)s
 local_path = os.path.dirname(os.path.abspath(sys.argv[0]))
 os.chdir(local_path)
 sys.path.insert(0, local_path)
-sys.path.insert(0, os.path.join(local_path, 'datapyc'))  # to retrieve version
+sys.path.insert(0, os.path.join(local_path, 'qfit'))  # to retrieve version
 
 # always rewrite _version
-if os.path.exists('datapyc/version.py'):
-    os.remove('datapyc/version.py')
+if os.path.exists('qfit/version.py'):
+    os.remove('qfit/version.py')
 
 write_version_py()
 

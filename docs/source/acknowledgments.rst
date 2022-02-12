@@ -1,4 +1,4 @@
-.. datapyc
+.. qfit
    Copyright (C) 2020, Jens Koch
 
 .. _acknowledgments:
@@ -7,7 +7,7 @@
 Funding Acknowledgments
 ***********************
 
-Development of datapyc was partially supported by the Air Force Office of Scientific Research (AFOSR) under
+Development of qfit was partially supported by the Air Force Office of Scientific Research (AFOSR) under
 Grant no. W911NF-15-1-0421, by Northwestern University, and by Northwestern's Center for Applied Physics and
 Superconducting Technologies.
 
