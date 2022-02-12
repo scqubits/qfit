@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PylintConfigService">
+    <option name="customPylintPath" value="C:\Users\drjen\Miniconda3\envs\py36\Scripts\pylint.bat" />
+    <option name="pylintrcPath" value="C:\Users\drjen\PycharmProjects\datapyc\datapyc\.pylintrc" />
+  </component>
+</project>
