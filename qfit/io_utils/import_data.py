@@ -11,7 +11,7 @@
 
 import os
 
-from PySide2.QtWidgets import QFileDialog, QMessageBox
+from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 import qfit.core.qfit_data as fit
 

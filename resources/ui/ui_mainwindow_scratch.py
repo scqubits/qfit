@@ -4,11 +4,11 @@
 # licensing of 'ui_mainwindow.ui' applies.
 #
 # Created: Tue Apr 28 08:02:34 2020
-#      by: pyside2-uic  running on PySide2 5.13.2
+#      by: pyside2-uic  running on PySide6 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -785,6 +785,6 @@ class Ui_MainWindow(object):
 
 from calibration import CalibrationLineEdit
 from datawidgets import ListView, TableView
-from PySide2.QtQuickWidgets import QQuickWidget
+from PySide6.QtQuickWidgets import QQuickWidget
 from mplwidgets import FigureCanvas
 import resources_rc

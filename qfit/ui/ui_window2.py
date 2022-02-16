@@ -4,11 +4,11 @@
 # licensing of '.\window2.ui' applies.
 #
 # Created: Thu Aug 19 06:55:07 2021
-#      by: pyside2-uic  running on PySide2 5.13.2
+#      by: pyside2-uic  running on PySide6 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 import qfit.ui.resources_rc
 
 from qfit.calibration.calibration_view import CalibrationLineEdit
@@ -659,7 +659,7 @@ class Ui_MainWindow(object):
         font = QtGui.QFont()
         font.setFamily("Roboto Medium")
         font.setPointSize(11)
-        font.setWeight(7)
+        font.setWeight(QFont.Light)
         font.setItalic(False)
         font.setBold(False)
         self.label_4.setFont(font)
@@ -874,7 +874,7 @@ class Ui_MainWindow(object):
         font = QtGui.QFont()
         font.setFamily("Roboto Medium")
         font.setPointSize(10)
-        font.setWeight(7)
+        font.setWeight(QFont.Light)
         font.setItalic(False)
         font.setBold(False)
         self.calibrateGroupPushButton.setFont(font)

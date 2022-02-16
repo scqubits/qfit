@@ -20,9 +20,9 @@ import matplotlib as mpl
 import matplotlib.cm as cm
 import numpy as np
 
-from PySide2.QtCore import QPoint, QRect, QSize, Qt, Slot
-from PySide2.QtGui import QColor, QMouseEvent, Qt
-from PySide2.QtWidgets import (
+from PySide6.QtCore import QPoint, QRect, QSize, Qt, Slot
+from PySide6.QtGui import QColor, QMouseEvent, Qt
+from PySide6.QtWidgets import (
     QGraphicsDropShadowEffect,
     QMainWindow,
     QMessageBox,
@@ -412,9 +412,6 @@ class MainWindow(ResizableFramelessWindow):
         self.ui_menu.menuQuitButton.clicked.connect(self.closeApp)
         self.ui_menu.menuOpenButton.clicked.connect(self.openFile)
 
-    #     self.ui.buttonBox.accepted.connect(self.saveAndCloseApp)
-    #     self.ui.buttonBox.rejected.connect(self.closeApp)
-
     def setupXYDataBoxes(self):
         self.ui.xComboBox.clear()
         xDataNames = list(self.measurementData.currentXCompatibles.keys())
@@ -489,6 +486,8 @@ class MainWindow(ResizableFramelessWindow):
         cmap = copy.copy(getattr(cm, colorStr))
         cmap.set_bad(color="black")
 
+        if initialize:    # TODO: REMOVE THIS LINE, JUST FOR DEBUGGING
+            self.measurementData.canvasPlot(self.axes, cmap=cmap)
         self.measurementData.canvasPlot(self.axes, cmap=cmap)
 
         # If there are any extracted data points in the currently active data set, show those via a scatter plot.

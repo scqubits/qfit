@@ -13,7 +13,7 @@ from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
-from PySide2.QtCore import QObject
+from PySide6.QtCore import QObject
 
 import qfit.io_utils.file_io_serializers as serializers
 

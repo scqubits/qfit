@@ -11,24 +11,28 @@
 
 import sys
 
-import PySide2.QtCore
+import PySide6.QtCore
+from PySide6 import QtCore
 
-from PySide2.QtCore import QSize, Qt
-from PySide2.QtGui import QFont
-from PySide2.QtWidgets import QApplication
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QApplication
+
+import matplotlib
+matplotlib.use('qtagg')
 
 from qfit.core.mainwindow import MainWindow
 from qfit.data.measurement_data import dummy_measurement_data
 from qfit.io_utils.import_data import importFile
 
-if hasattr(PySide2.QtCore.Qt, "AA_EnableHighDpiScaling"):
-    PySide2.QtWidgets.QApplication.setAttribute(
-        PySide2.QtCore.Qt.AA_EnableHighDpiScaling, True
+if hasattr(PySide6.QtCore.Qt, "AA_EnableHighDpiScaling"):
+    PySide6.QtWidgets.QApplication.setAttribute(
+        PySide6.QtCore.Qt.AA_EnableHighDpiScaling, True
     )
 
-if hasattr(PySide2.QtCore.Qt, "AA_UseHighDpiPixmaps"):
-    PySide2.QtWidgets.QApplication.setAttribute(
-        PySide2.QtCore.Qt.AA_UseHighDpiPixmaps, True
+if hasattr(PySide6.QtCore.Qt, "AA_UseHighDpiPixmaps"):
+    PySide6.QtWidgets.QApplication.setAttribute(
+        PySide6.QtCore.Qt.AA_UseHighDpiPixmaps, True
     )
 
 
@@ -48,4 +52,4 @@ if __name__ == "__main__":
     window.resizeAndCenter(maxSize)
     window.show()
     window.openFile(initialize=True)
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

@@ -13,9 +13,9 @@
 from typing import Union
 
 import numpy as np
-from PySide2 import QtGui
+from PySide6 import QtGui
 
-from PySide2.QtCore import (
+from PySide6.QtCore import (
     QAbstractListModel,
     QAbstractTableModel,
     QModelIndex,

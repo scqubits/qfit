@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/datapyc.iml" filepath="$PROJECT_DIR$/.idea/datapyc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/qfit.iml" filepath="$PROJECT_DIR$/.idea/qfit.iml" />
     </modules>
   </component>
 </project>

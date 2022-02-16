@@ -4,11 +4,13 @@
 # licensing of '.\menu.ui' applies.
 #
 # Created: Thu Aug 19 07:06:14 2021
-#      by: pyside2-uic  running on PySide2 5.13.2
+#      by: pyside2-uic  running on PySide6 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtGui import QFont
+
 import qfit.ui.resources_rc
 
 
@@ -59,7 +61,7 @@ class Ui_MenuWidget(object):
         font = QtGui.QFont()
         font.setFamily("Roboto Medium")
         font.setPointSize(11)
-        font.setWeight(7)
+        font.setWeight(QFont.Light)
         font.setItalic(False)
         font.setBold(False)
         self.menuOpenButton.setFont(font)
@@ -75,7 +77,7 @@ class Ui_MenuWidget(object):
         font = QtGui.QFont()
         font.setFamily("Roboto Medium")
         font.setPointSize(11)
-        font.setWeight(7)
+        font.setWeight(QFont.Light)
         font.setItalic(False)
         font.setBold(False)
         self.menuNewButton.setFont(font)
@@ -91,7 +93,7 @@ class Ui_MenuWidget(object):
         font = QtGui.QFont()
         font.setFamily("Roboto Medium")
         font.setPointSize(11)
-        font.setWeight(7)
+        font.setWeight(QFont.Light)
         font.setItalic(False)
         font.setBold(False)
         self.menuSaveButton.setFont(font)
@@ -107,7 +109,7 @@ class Ui_MenuWidget(object):
         font = QtGui.QFont()
         font.setFamily("Roboto Medium")
         font.setPointSize(11)
-        font.setWeight(7)
+        font.setWeight(QFont.Light)
         font.setItalic(False)
         font.setBold(False)
         self.menuSaveAsButton.setFont(font)
@@ -123,7 +125,7 @@ class Ui_MenuWidget(object):
         font = QtGui.QFont()
         font.setFamily("Roboto Medium")
         font.setPointSize(11)
-        font.setWeight(7)
+        font.setWeight(QFont.Light)
         font.setItalic(False)
         font.setBold(False)
         self.menuQuitButton.setFont(font)
