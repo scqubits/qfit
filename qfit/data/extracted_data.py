@@ -99,8 +99,9 @@ class ActiveExtractedData(QAbstractTableModel):
         """
         return self._data.shape[1]
 
-    def headerData(self, section: int, orientation: Qt.Orientation,
-                   role=Qt.DisplayRole):
+    def headerData(
+        self, section: int, orientation: Qt.Orientation, role=Qt.DisplayRole
+    ):
         """
         Obtain table header info in string format
 
@@ -224,11 +225,17 @@ class AllExtractedData(
         if role == Qt.DecorationRole:
             icon1 = QtGui.QIcon()
             if self.assocTagList[index.row()].tagType != NO_TAG:
-                icon1.addPixmap(QtGui.QPixmap(":/icons/24x24/cil-list.png"),
-                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
+                icon1.addPixmap(
+                    QtGui.QPixmap(":/icons/24x24/cil-list.png"),
+                    QtGui.QIcon.Normal,
+                    QtGui.QIcon.Off,
+                )
             else:
-                icon1.addPixmap(QtGui.QPixmap(":/icons/24x24/cil-x-circle.png"),
-                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
+                icon1.addPixmap(
+                    QtGui.QPixmap(":/icons/24x24/cil-x-circle.png"),
+                    QtGui.QIcon.Normal,
+                    QtGui.QIcon.Off,
+                )
             return icon1
 
     def setData(self, index, value, role=None):
