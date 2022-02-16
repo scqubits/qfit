@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\window.ui',
-# licensing of '.\window.ui' applies.
+# Form implementation generated from reading ui file '.\window2.ui',
+# licensing of '.\window2.ui' applies.
 #
-# Created: Thu Aug 19 07:05:53 2021
+# Created: Thu Aug 19 06:55:07 2021
 #      by: pyside2-uic  running on PySide6 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtGui import QFont
-
 import qfit.ui.resources_rc
 
 from qfit.calibration.calibration_view import CalibrationLineEdit
@@ -1645,6 +1643,10 @@ class Ui_MainWindow(object):
 "QPushButton:hover {\n"
 "    color: rgb(190, 130, 250);\n"
 "}\n"
+"QPushButton:pressed {    \n"
+"    color: rgb(190, 130, 250);\n"
+"    background-color: rgb(85, 170, 255);\n"
+"}\n"
 "\n"
 "QPushButton:checked {    \n"
 "    color: rgb(190, 130, 250);\n"
@@ -1653,56 +1655,56 @@ class Ui_MainWindow(object):
         self.frame1.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame1.setObjectName("frame1")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.frame1)
-        self.gridLayout_2.setContentsMargins(37, 0, 20, 0)
+        self.gridLayout_2.setContentsMargins(10, 0, 0, 0)
         self.gridLayout_2.setObjectName("gridLayout_2")
+        self.modePlotButton = QtWidgets.QPushButton(self.frame1)
+        self.modePlotButton.setMinimumSize(QtCore.QSize(170, 70))
+        self.modePlotButton.setMaximumSize(QtCore.QSize(120, 70))
+        icon18 = QtGui.QIcon()
+        icon18.addPixmap(QtGui.QPixmap(":/icons/24x24/cil-chart-line.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.modePlotButton.setIcon(icon18)
+        self.modePlotButton.setIconSize(QtCore.QSize(24, 24))
+        self.modePlotButton.setCheckable(True)
+        self.modePlotButton.setAutoExclusive(True)
+        self.modePlotButton.setObjectName("modePlotButton")
+        self.gridLayout_2.addWidget(self.modePlotButton, 2, 1, 1, 2)
+        self.modeFitButton = QtWidgets.QPushButton(self.frame1)
+        self.modeFitButton.setMinimumSize(QtCore.QSize(120, 70))
+        self.modeFitButton.setMaximumSize(QtCore.QSize(120, 70))
+        icon19 = QtGui.QIcon()
+        icon19.addPixmap(QtGui.QPixmap(":/icons/24x24/cil-speedometer.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.modeFitButton.setIcon(icon19)
+        self.modeFitButton.setIconSize(QtCore.QSize(24, 24))
+        self.modeFitButton.setCheckable(True)
+        self.modeFitButton.setAutoExclusive(True)
+        self.modeFitButton.setObjectName("modeFitButton")
+        self.gridLayout_2.addWidget(self.modeFitButton, 3, 1, 1, 1)
         self.modeTagButton = QtWidgets.QPushButton(self.frame1)
         self.modeTagButton.setMinimumSize(QtCore.QSize(120, 70))
         self.modeTagButton.setMaximumSize(QtCore.QSize(120, 70))
-        icon18 = QtGui.QIcon()
-        icon18.addPixmap(QtGui.QPixmap(":/icons/24x24/cil-list.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.modeTagButton.setIcon(icon18)
+        icon20 = QtGui.QIcon()
+        icon20.addPixmap(QtGui.QPixmap(":/icons/24x24/cil-list.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.modeTagButton.setIcon(icon20)
         self.modeTagButton.setIconSize(QtCore.QSize(24, 24))
         self.modeTagButton.setCheckable(True)
         self.modeTagButton.setAutoExclusive(True)
         self.modeTagButton.setObjectName("modeTagButton")
-        self.gridLayout_2.addWidget(self.modeTagButton, 2, 0, 1, 2)
-        spacerItem15 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.gridLayout_2.addItem(spacerItem15, 5, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.modeTagButton, 1, 1, 1, 2)
         self.modeSelectButton = QtWidgets.QPushButton(self.frame1)
         self.modeSelectButton.setMinimumSize(QtCore.QSize(120, 70))
         self.modeSelectButton.setMaximumSize(QtCore.QSize(16777215, 70))
-        icon19 = QtGui.QIcon()
-        icon19.addPixmap(QtGui.QPixmap(":/icons/24x24/cil-location-pin.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.modeSelectButton.setIcon(icon19)
+        icon21 = QtGui.QIcon()
+        icon21.addPixmap(QtGui.QPixmap(":/icons/24x24/cil-location-pin.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.modeSelectButton.setIcon(icon21)
         self.modeSelectButton.setIconSize(QtCore.QSize(24, 24))
         self.modeSelectButton.setCheckable(True)
         self.modeSelectButton.setChecked(True)
         self.modeSelectButton.setAutoExclusive(True)
         self.modeSelectButton.setObjectName("modeSelectButton")
-        self.gridLayout_2.addWidget(self.modeSelectButton, 1, 0, 1, 2)
-        self.modePlotButton = QtWidgets.QPushButton(self.frame1)
-        self.modePlotButton.setMinimumSize(QtCore.QSize(170, 70))
-        self.modePlotButton.setMaximumSize(QtCore.QSize(120, 70))
-        icon20 = QtGui.QIcon()
-        icon20.addPixmap(QtGui.QPixmap(":/icons/24x24/cil-chart-line.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.modePlotButton.setIcon(icon20)
-        self.modePlotButton.setIconSize(QtCore.QSize(24, 24))
-        self.modePlotButton.setCheckable(True)
-        self.modePlotButton.setAutoExclusive(True)
-        self.modePlotButton.setObjectName("modePlotButton")
-        self.gridLayout_2.addWidget(self.modePlotButton, 3, 0, 1, 2)
-        self.modeFitButton = QtWidgets.QPushButton(self.frame1)
-        self.modeFitButton.setMinimumSize(QtCore.QSize(120, 70))
-        self.modeFitButton.setMaximumSize(QtCore.QSize(120, 70))
-        icon21 = QtGui.QIcon()
-        icon21.addPixmap(QtGui.QPixmap(":/icons/24x24/cil-speedometer.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.modeFitButton.setIcon(icon21)
-        self.modeFitButton.setIconSize(QtCore.QSize(24, 24))
-        self.modeFitButton.setCheckable(True)
-        self.modeFitButton.setAutoExclusive(True)
-        self.modeFitButton.setObjectName("modeFitButton")
-        self.gridLayout_2.addWidget(self.modeFitButton, 4, 0, 1, 1)
-        spacerItem16 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        self.gridLayout_2.addWidget(self.modeSelectButton, 0, 1, 1, 2)
+        spacerItem15 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.gridLayout_2.addItem(spacerItem15, 4, 2, 1, 1)
+        spacerItem16 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.gridLayout_2.addItem(spacerItem16, 0, 0, 1, 1)
         self.gridLayout.addWidget(self.frame1, 0, 0, 3, 1)
         self.verticalLayout.addWidget(self.frameCenter)
@@ -1772,7 +1774,7 @@ class Ui_MainWindow(object):
         self.tagCrossingRadioButton.setStatusTip(QtWidgets.QApplication.translate("MainWindow", "RR", None, -1))
         self.tagCrossingDressedRadioButton.setStatusTip(QtWidgets.QApplication.translate("MainWindow", "RR", None, -1))
         self.swapXYButton.setText(QtWidgets.QApplication.translate("MainWindow", "X↔Y", None, -1))
-        self.modeTagButton.setText(QtWidgets.QApplication.translate("MainWindow", "   TAG", None, -1))
-        self.modeSelectButton.setText(QtWidgets.QApplication.translate("MainWindow", "   EXTRACT", None, -1))
         self.modePlotButton.setText(QtWidgets.QApplication.translate("MainWindow", "   PRE-FIT", None, -1))
         self.modeFitButton.setText(QtWidgets.QApplication.translate("MainWindow", "   FIT", None, -1))
+        self.modeTagButton.setText(QtWidgets.QApplication.translate("MainWindow", "   TAG DATA", None, -1))
+        self.modeSelectButton.setText(QtWidgets.QApplication.translate("MainWindow", "   EXTRACT DATA", None, -1))

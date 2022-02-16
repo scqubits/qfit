@@ -13,8 +13,9 @@
 from typing import Union
 
 import numpy as np
+from PySide6 import QtGui
 
-from PySide2.QtCore import (
+from PySide6.QtCore import (
     QAbstractListModel,
     QAbstractTableModel,
     QModelIndex,
@@ -24,14 +25,14 @@ from PySide2.QtCore import (
 
 import qfit.io_utils.file_io_serializers as serializers
 
-from qfit.data.tagdata_view import Tag
+from qfit.data.tagdata_view import NO_TAG, Tag
 
 
 class ActiveExtractedData(QAbstractTableModel):
     """This class holds one data set, as extracted by markers on the canvas. In addition, it references calibration
     data to expose either the raw selected data, or their calibrated counterparts."""
 
-    def __init__(self, data : np.ndarray = None):
+    def __init__(self, data: np.ndarray = None):
         """
         Parameters
         ----------
@@ -220,6 +221,16 @@ class AllExtractedData(
             str_value = self.dataNames[index.row()]
             return str_value
 
+        if role == Qt.DecorationRole:
+            icon1 = QtGui.QIcon()
+            if self.assocTagList[index.row()].tagType != NO_TAG:
+                icon1.addPixmap(QtGui.QPixmap(":/icons/24x24/cil-list.png"),
+                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            else:
+                icon1.addPixmap(QtGui.QPixmap(":/icons/24x24/cil-x-circle.png"),
+                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            return icon1
+
     def setData(self, index, value, role=None):
         if not (index.isValid() and role == Qt.EditRole):
             return False
@@ -357,5 +368,5 @@ class AllExtractedData(
             "taglist": self.assocTagList,
         }
         iodata = serializers.dict_serialize(initdata)
-        iodata.typename = "DatapycData"
+        iodata.typename = "QfitData"
         return iodata

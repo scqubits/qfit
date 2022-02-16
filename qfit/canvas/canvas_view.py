@@ -8,14 +8,22 @@
 #    This source code is licensed under the BSD-style license found in the
 #    LICENSE file in the root directory of this source tree.
 ############################################################################
+
+
 import numpy as np
+
+from PySide6 import QtCore
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import QFrame, QVBoxLayout
+
 from matplotlib.backend_bases import cursors
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
+from matplotlib.backends.backend_qtagg import (
+    FigureCanvas as FigureCanvasQTAgg,
+    NavigationToolbar2QT,
+)
 from matplotlib.figure import Figure
 from matplotlib.widgets import Cursor
-from PySide2 import QtCore
-from PySide2.QtCore import Slot
-from PySide2.QtWidgets import QFrame, QVBoxLayout
+
 
 import qfit.core.app_state as appstate
 from qfit.data.extracted_data import AllExtractedData
@@ -103,14 +111,16 @@ class NavigationHidden(NavigationToolbar2QT):
     def set_cursor(self, cursor):
         self.canvas.setCursor(QtCore.Qt.CrossCursor)
 
+
 class SpecialCursor(Cursor):
-    def __init__(self, ax, callback=None, horizOn=True, vertOn=True, useblit=False,
-                 **lineprops):
-        super().__init__(ax, horizOn=horizOn, vertOn=vertOn, useblit=useblit,
-                 **lineprops)
+    def __init__(
+        self, ax, callback=None, horizOn=True, vertOn=True, useblit=False, **lineprops
+    ):
+        super().__init__(
+            ax, horizOn=horizOn, vertOn=vertOn, useblit=useblit, **lineprops
+        )
         self.callback = callback
         self.matching_mode = False
-
 
     def onmove(self, event):
         """Internal event handler to draw the cursor when the mouse moves."""
@@ -132,19 +142,25 @@ class SpecialCursor(Cursor):
         self.linev.set_xdata((event.xdata, event.xdata))
 
         self.lineh.set_ydata((event.ydata, event.ydata))
-        if self.callback.currentRow != 0 and len(self.callback.assocDataList[0][
-                                                        0])>0:
+        if (
+            self.callback
+            and self.callback.currentRow != 0
+            and len(self.callback.assocDataList[0][0]) > 0
+        ):
             self.matching_mode = True
         if self.matching_mode == True:
-            self.cross = self.ax.scatter(self.closest_line(event.xdata), event.ydata,
-                                         c="red",
-                                         marker="x", s=150, animated=True)
+            self.cross = self.ax.scatter(
+                self.closest_line(event.xdata),
+                event.ydata,
+                c="red",
+                marker="x",
+                s=150,
+                animated=True,
+            )
         else:
-            self.cross = self.ax.scatter(event.xdata, event.ydata,
-                                         c="red",
-                                         marker="x", s=150, animated=True)
-
-
+            self.cross = self.ax.scatter(
+                event.xdata, event.ydata, c="red", marker="x", s=150, animated=True
+            )
 
         self.cross.set_visible(self.visible)
         self.linev.set_visible(self.visible and self.vertOn)
@@ -154,7 +170,7 @@ class SpecialCursor(Cursor):
 
     def closest_line(self, xdat):
         current_data = self.callback.assocDataList[0]
-        allxdiff = {np.abs(xdat - i):i for i in current_data[0]}
+        allxdiff = {np.abs(xdat - i): i for i in current_data[0]}
         if allxdiff:
             return allxdiff[min(allxdiff.keys())]
         else:

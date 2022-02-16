@@ -14,10 +14,10 @@ from collections import OrderedDict
 
 import numpy as np
 
-from PySide2 import QtCore as QtCore
-from PySide2.QtCore import QLocale
-from PySide2.QtGui import QDoubleValidator
-from PySide2.QtWidgets import QLineEdit, QStyledItemDelegate
+from PySide6 import QtCore as QtCore
+from PySide6.QtCore import QLocale
+from PySide6.QtGui import QDoubleValidator
+from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate
 
 
 class EditDelegate(QStyledItemDelegate):

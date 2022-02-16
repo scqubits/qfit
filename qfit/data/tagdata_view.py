@@ -10,12 +10,12 @@
 ############################################################################
 
 
-from PySide2.QtCore import QObject
-from PySide2.QtCore import QRegExp
-from PySide2.QtCore import Signal
-from PySide2.QtGui import QRegExpValidator
-from PySide2.QtGui import QValidator
-from PySide2.QtWidgets import QLineEdit
+from PySide6.QtCore import QObject
+from PySide6.QtCore import QRegularExpression as QRegExp
+from PySide6.QtCore import Signal
+from PySide6.QtGui import QRegularExpressionValidator as QRegExpValidator
+from PySide6.QtGui import QValidator
+from PySide6.QtWidgets import QLineEdit
 
 
 from qfit.io_utils import file_io_serializers as serializers

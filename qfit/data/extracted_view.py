@@ -10,9 +10,9 @@
 ############################################################################
 
 
-from PySide2.QtCore import Slot
-from PySide2.QtGui import QFont
-from PySide2.QtWidgets import QListView, QTableView
+from PySide6.QtCore import Slot
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QListView, QTableView
 
 from qfit.core.helpers import EditDelegate
 

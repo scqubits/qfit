@@ -10,7 +10,7 @@
 ############################################################################
 
 
-from PySide2.QtWidgets import QLineEdit, QMessageBox
+from PySide6.QtWidgets import QLineEdit, QMessageBox
 
 from qfit.core.helpers import DoubleValidator
 

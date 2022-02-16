@@ -3,12 +3,16 @@
 # Form implementation generated from reading ui file '.\menu.ui',
 # licensing of '.\menu.ui' applies.
 #
-# Created: Wed Aug 11 13:37:59 2021
-#      by: pyside2-uic  running on PySide2 5.13.2
+# Created: Thu Aug 19 07:06:14 2021
+#      by: pyside2-uic  running on PySide6 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6.QtGui import QFont
+
+import qfit.ui.resources_rc
+
 
 class Ui_MenuWidget(object):
     def setupUi(self, MenuWidget):
@@ -26,6 +30,7 @@ class Ui_MenuWidget(object):
 "}\n"
 "\n"
 "QPushButton {    \n"
+"    font: 57 11pt \"Roboto Medium\";\n"
 "    color: rgb(249, 249, 249);\n"
 "    background-color: rgb(18, 18, 18);\n"
 "    border: none;\n"
@@ -54,8 +59,11 @@ class Ui_MenuWidget(object):
         self.menuOpenButton.setSizePolicy(sizePolicy)
         self.menuOpenButton.setMinimumSize(QtCore.QSize(0, 40))
         font = QtGui.QFont()
-        font.setFamily("Roboto")
-        font.setPointSize(10)
+        font.setFamily("Roboto Medium")
+        font.setPointSize(11)
+        font.setWeight(QFont.Light)
+        font.setItalic(False)
+        font.setBold(False)
         self.menuOpenButton.setFont(font)
         self.menuOpenButton.setObjectName("menuOpenButton")
         self.verticalLayout_8.addWidget(self.menuOpenButton)
@@ -67,8 +75,11 @@ class Ui_MenuWidget(object):
         self.menuNewButton.setSizePolicy(sizePolicy)
         self.menuNewButton.setMinimumSize(QtCore.QSize(0, 40))
         font = QtGui.QFont()
-        font.setFamily("Roboto")
-        font.setPointSize(10)
+        font.setFamily("Roboto Medium")
+        font.setPointSize(11)
+        font.setWeight(QFont.Light)
+        font.setItalic(False)
+        font.setBold(False)
         self.menuNewButton.setFont(font)
         self.menuNewButton.setObjectName("menuNewButton")
         self.verticalLayout_8.addWidget(self.menuNewButton)
@@ -80,8 +91,11 @@ class Ui_MenuWidget(object):
         self.menuSaveButton.setSizePolicy(sizePolicy)
         self.menuSaveButton.setMinimumSize(QtCore.QSize(0, 40))
         font = QtGui.QFont()
-        font.setFamily("Roboto")
-        font.setPointSize(10)
+        font.setFamily("Roboto Medium")
+        font.setPointSize(11)
+        font.setWeight(QFont.Light)
+        font.setItalic(False)
+        font.setBold(False)
         self.menuSaveButton.setFont(font)
         self.menuSaveButton.setObjectName("menuSaveButton")
         self.verticalLayout_8.addWidget(self.menuSaveButton)
@@ -93,8 +107,11 @@ class Ui_MenuWidget(object):
         self.menuSaveAsButton.setSizePolicy(sizePolicy)
         self.menuSaveAsButton.setMinimumSize(QtCore.QSize(0, 40))
         font = QtGui.QFont()
-        font.setFamily("Roboto")
-        font.setPointSize(10)
+        font.setFamily("Roboto Medium")
+        font.setPointSize(11)
+        font.setWeight(QFont.Light)
+        font.setItalic(False)
+        font.setBold(False)
         self.menuSaveAsButton.setFont(font)
         self.menuSaveAsButton.setObjectName("menuSaveAsButton")
         self.verticalLayout_8.addWidget(self.menuSaveAsButton)
@@ -106,8 +123,11 @@ class Ui_MenuWidget(object):
         self.menuQuitButton.setSizePolicy(sizePolicy)
         self.menuQuitButton.setMinimumSize(QtCore.QSize(0, 40))
         font = QtGui.QFont()
-        font.setFamily("Roboto")
-        font.setPointSize(10)
+        font.setFamily("Roboto Medium")
+        font.setPointSize(11)
+        font.setWeight(QFont.Light)
+        font.setItalic(False)
+        font.setBold(False)
         self.menuQuitButton.setFont(font)
         self.menuQuitButton.setObjectName("menuQuitButton")
         self.verticalLayout_8.addWidget(self.menuQuitButton)

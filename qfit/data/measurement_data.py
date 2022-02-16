@@ -269,31 +269,42 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
 
         if self.checkBoxCallbacks["logColoring"]():
             linthresh = max(abs(zMin), abs(zMax)) / 20.0
-            if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion(
-                "3.2.0"
-            ):
-                add_on_mpl_3_2_0 = {"base": 10}
-            else:
-                add_on_mpl_3_2_0 = {}
+            # if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion(
+            #     "3.2.0"
+            # ):
+            #     add_on_mpl_3_2_0 = {"base": 10}
+            # else:
+            #     add_on_mpl_3_2_0 = {}
             norm = colors.SymLogNorm(
-                linthresh=linthresh, vmin=zMin, vmax=zMax, **add_on_mpl_3_2_0
+                linthresh=linthresh,
+                vmin=zMin,
+                vmax=zMax,  # **add_on_mpl_3_2_0
             )
+            zMin = zMax = None
         else:
             norm = None
 
         if (self.currentX.data is None) or (self.currentY.data is None):
-            _ = axes.pcolormesh(
-                zData, vmin=zMin, vmax=zMax, norm=norm, shading="auto", **kwargs
-            )
-        else:
-            _ = axes.pcolormesh(
-                self.currentX.data,
-                self.currentY.data,
+            _ = axes.imshow(
                 zData,
                 vmin=zMin,
                 vmax=zMax,
                 norm=norm,
-                shading="auto",
+                aspect="auto",
+                interpolation="none",
+                **kwargs
+            )
+        else:
+            _ = axes.imshow(
+                zData,
+                extent=[min(self.currentX.data), max(self.currentX.data),
+                        min(self.currentY.data), max(self.currentY.data)],
+                origin="lower",
+                vmin=zMin,
+                vmax=zMax,
+                norm=norm,
+                aspect="auto",
+                interpolation="none",
                 **kwargs
             )
 
@@ -320,17 +331,17 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
         zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
 
         if self.checkBoxCallbacks["logColoring"]():
-            if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion(
-                "3.2.0"
-            ):
-                add_on_mpl_3_2_0 = {"base": 10}
-            else:
-                add_on_mpl_3_2_0 = {}
+            # if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion(
+            #     "3.2.0"
+            # ):
+            #     add_on_mpl_3_2_0 = {"base": 10}
+            # else:
+            #     add_on_mpl_3_2_0 = {}
             norm = colors.SymLogNorm(
                 linthresh=0.2,
                 vmin=self.currentZ.data.min(),
                 vmax=self.currentZ.data.max(),
-                **add_on_mpl_3_2_0
+                # **add_on_mpl_3_2_0
             )
         else:
             norm = None
