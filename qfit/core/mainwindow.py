@@ -487,6 +487,19 @@ class MainWindow(ResizableFramelessWindow):
             self.updatePlot()
 
     @Slot()
+    def canvasMouseMonitoring(self, event):
+        self.axes.figure.canvas.flush_events()
+        self.matching_mode = False
+        if self.allDatasets.currentRow != 0 and len(self.allDatasets.assocDataList[
+                                                        0][0])>0:
+            self.matching_mode = True
+        if not self.matching_mode:
+            return
+
+        if event.xdata is None or event.ydata is None:
+            return
+
+    @Slot()
     def updatePlot(self, initialize: bool = False, **kwargs):
         """Update the current plot of measurement data and markers of selected data points."""
         if self.disconnectCanvas:
