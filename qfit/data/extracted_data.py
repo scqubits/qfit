@@ -294,6 +294,9 @@ class AllExtractedData(
     def newRow(self, str_value=None):
         rowCount = self.rowCount()
         str_value = str_value or "dataset" + str(rowCount + 1)
+        counter = 1
+        while str_value in self.dataNames:
+            str_value = "dataset" + str(rowCount + 1 + counter)
         self.insertRow(rowCount)
         self.setData(self.index(rowCount, 0), str_value, role=Qt.EditRole)
         self.layoutChanged.emit()
