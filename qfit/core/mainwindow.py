@@ -498,8 +498,10 @@ class MainWindow(ResizableFramelessWindow):
     def canvasMouseMonitoring(self, event):
         self.axes.figure.canvas.flush_events()
         self.matching_mode = False
-        if self.allDatasets.currentRow != 0 and len(self.allDatasets.assocDataList[
-                                                        0][0])>0:
+        if (
+            self.allDatasets.currentRow != 0
+            and len(self.allDatasets.assocDataList[0][0]) > 0
+        ):
             self.matching_mode = True
         if not self.matching_mode:
             return
@@ -509,11 +511,13 @@ class MainWindow(ResizableFramelessWindow):
 
     @Slot()
     def updatePlot(self, initialize: bool = False, **kwargs):
-        """Update the current plot of measurement data and markers of selected data points."""
+        """Update the current plot of measurement data and markers of selected data
+        points."""
         if self.disconnectCanvas:
             return
 
-        # If this is not the first time of plotting, store the current axes limits and clear the graph.
+        # If this is not the first time of plotting, store the current axes limits and
+        # clear the graph.
         if not initialize:
             xlim = self.axes.get_xlim()
             ylim = self.axes.get_ylim()
@@ -529,10 +533,20 @@ class MainWindow(ResizableFramelessWindow):
 
         self.measurementData.canvasPlot(self.axes, cmap=cmap)
 
-        # If there are any extracted data points in the currently active data set, show those via a scatter plot.
+        # If there are any extracted data points in the currently active data set, show
+        # those via a scatter plot.
         if self.activeDataset.columnCount() > 0:
             dataXY = self.activeDataset.all()
             self.axes.scatter(dataXY[0], dataXY[1], c="orange", marker="x", s=150)
+            plotted_data = []
+            for count, i in enumerate(dataXY[0]):
+                if i not in plotted_data:
+                    self.axes.axline(
+                        (i, dataXY[1][count]),
+                        (i, dataXY[1][count] - (dataXY[1][count]) * 0.1),
+                        c="Green",
+                    )
+                plotted_data.append(i)
 
         # Make sure that new axes limits match the old ones.
         if not initialize:
@@ -540,7 +554,6 @@ class MainWindow(ResizableFramelessWindow):
             self.axes.set_ylim(ylim)
 
         self.axes.figure.canvas.draw()
-        self.background = self.axes.figure.canvas.copy_from_bbox(self.axes.figure.bbox)
         self.ui.mplFigureCanvas.set_callback(self.allDatasets)
 
     def toggleMenu(self):
@@ -551,23 +564,26 @@ class MainWindow(ResizableFramelessWindow):
 
     @Slot()
     def calibrate(self, calibrationLabel: str):
-        """Mouse click on one of the calibration buttons prompts switching to calibration mode. Mouse cursor crosshair
-        is adjusted and canvas waits for click setting calibration point x or y component."""
+        """Mouse click on one of the calibration buttons prompts switching to
+        calibration mode. Mouse cursor crosshair is adjusted and canvas waits for
+        click setting calibration point x or y component."""
         appstate.state = self.calibrationStates[calibrationLabel]
         self.ui.mplFigureCanvas.calibrateOn(calibrationLabel[0])
 
     @Slot()
     def updateCalibration(self):
-        """Transfer new calibration data from CalibrationView over to calibrationData instance. If the model is
-        currently applying the calibration, then emit signal to rewrite the table."""
+        """Transfer new calibration data from CalibrationView over to calibrationData
+        instance. If the model is currently applying the calibration, then emit
+        signal to rewrite the table."""
         self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
         if self.calibrationData.applyCalibration:
             self.activeDataset.layoutChanged.emit()
 
     @Slot()
     def toggleCalibration(self):
-        """If calibration check box is changed, toggle the calibration status of the calibrationData. Also induce
-        change at the level of the displayed data of selected points."""
+        """If calibration check box is changed, toggle the calibration status of the
+        calibrationData. Also induce change at the level of the displayed data of
+        selected points."""
         self.calibrationData.toggleCalibration()
         self.activeDataset.toggleCalibratedView()
 
@@ -624,7 +640,8 @@ class MainWindow(ResizableFramelessWindow):
         self.updatePlot(initialize=True)
 
     def isRelativelyClose(self, x1y1: np.ndarray, x2y2: np.ndarray):
-        """Check whether the point x1y1 is relatively close to x2y2, given the current field of view on the canvas."""
+        """Check whether the point x1y1 is relatively close to x2y2, given the current
+        field of view on the canvas."""
         xlim = self.axes.get_xlim()
         ylim = self.axes.get_ylim()
         xmin, xmax = xlim
@@ -678,7 +695,8 @@ class MainWindow(ResizableFramelessWindow):
 
     @Slot()
     def saveAndCloseApp(self):
-        """Save the extracted data and calibration information to file, then exit the application."""
+        """Save the extracted data and calibration information to file, then exit the
+        application."""
         success = saveFile(self)
         if not success:
             return
