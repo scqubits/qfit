@@ -1,13 +1,13 @@
-"""datapyc: data extraction GUI tool for use with scQuibts
+"""qfit: data extraction GUI tool for use with scQuibts
 ==============================================================
 
-datapyc is part of scQubits, an an open-source Python package for simulating superconducting qubits. The datapyc package
+qfit is part of scQubits, an an open-source Python package for simulating superconducting qubits. The qfit package
 provides a GUI tool for loading and displaying data, for example from spectroscopy experiments. The GUI simplifies the
 extraction of data points from measurement results, as required for fitting experimental data to theoretical qubit
 models.
 """
 #
-# This file is part of datapyc.
+# This file is part of qfit.
 #
 #    Copyright (c) 2020, Jens Koch
 #    All rights reserved.
@@ -21,7 +21,7 @@ import sys
 
 import setuptools
 
-DOCLINES = __doc__.split('\n')
+DOCLINES = __doc__.split("\n")
 
 CLASSIFIERS = """\
 Development Status :: 4 - Beta
@@ -47,24 +47,26 @@ MICRO = 0
 ISRELEASED = True
 
 
-VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
+VERSION = "%d.%d.%d" % (MAJOR, MINOR, MICRO)
 
 CURDIR = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(CURDIR, "requirements.txt")) as requirements:
     INSTALL_REQUIRES = requirements.read().splitlines()
 
-PACKAGES = ['datapyc',
-            'datapyc/core',
-            'datapyc/calibration',
-            'datapyc/canvas',
-            'datapyc/data',
-            'datapyc/io_utils',
-            'datapyc/ui']
+PACKAGES = [
+    "qfit",
+    "qfit/core",
+    "qfit/calibration",
+    "qfit/canvas",
+    "qfit/data",
+    "qfit/io_utils",
+    "qfit/ui",
+]
 
-PYTHON_VERSION = '>=3.6'
+PYTHON_VERSION = ">=3.6"
 
 
-NAME = "datapyc"
+NAME = "qfit"
 AUTHOR = "Jens Koch"
 AUTHOR_EMAIL = "jens-koch@northwestern.edu"
 LICENSE = "BSD"
@@ -74,7 +76,7 @@ KEYWORDS = "data extraction, superconducting qubits"
 
 # URL = "https://scqubits.readthedocs.io"
 
-CLASSIFIERS = [_f for _f in CLASSIFIERS.split('\n') if _f]
+CLASSIFIERS = [_f for _f in CLASSIFIERS.split("\n") if _f]
 PLATFORMS = ["Linux", "Mac OSX", "Unix", "Windows"]
 
 
@@ -84,26 +86,33 @@ def git_short_hash():
     except OSError:
         git_str = ""
     else:
-        if git_str == '+':   # fixes setuptools PEP issues with versioning
-            git_str = ''
+        if git_str == "+":  # fixes setuptools PEP issues with versioning
+            git_str = ""
     return git_str
 
 
 FULLVERSION = VERSION
 if not ISRELEASED:
-    FULLVERSION += '.dev'+str(MICRO)+git_short_hash()
+    FULLVERSION += ".dev" + str(MICRO) + git_short_hash()
 
 
-def write_version_py(filename='datapyc/version.py'):
+def write_version_py(filename="qfit/version.py"):
     cnt = """\
-# THIS FILE IS GENERATED FROM datapyc SETUP.PY
+# THIS FILE IS GENERATED FROM qfit SETUP.PY
 short_version = '%(version)s'
 version = '%(fullversion)s'
 release = %(isrelease)s
 """
-    versionfile = open(filename, 'w')
+    versionfile = open(filename, "w")
     try:
-        versionfile.write(cnt % {'version': VERSION, 'fullversion': FULLVERSION, 'isrelease': str(ISRELEASED)})
+        versionfile.write(
+            cnt
+            % {
+                "version": VERSION,
+                "fullversion": FULLVERSION,
+                "isrelease": str(ISRELEASED),
+            }
+        )
     finally:
         versionfile.close()
 
@@ -111,30 +120,31 @@ release = %(isrelease)s
 local_path = os.path.dirname(os.path.abspath(sys.argv[0]))
 os.chdir(local_path)
 sys.path.insert(0, local_path)
-sys.path.insert(0, os.path.join(local_path, 'datapyc'))  # to retrieve version
+sys.path.insert(0, os.path.join(local_path, "qfit"))  # to retrieve version
 
 # always rewrite _version
-if os.path.exists('datapyc/version.py'):
-    os.remove('datapyc/version.py')
+if os.path.exists("qfit/version.py"):
+    os.remove("qfit/version.py")
 
 write_version_py()
 
 # Setup commands go here
-setuptools.setup(name=NAME,
-                 version=FULLVERSION,
-                 packages=PACKAGES,
-                 author=AUTHOR,
-                 author_email=AUTHOR_EMAIL,
-                 license=LICENSE,
-                 description=DESCRIPTION,
-                 long_description=LONG_DESCRIPTION,
-                 keywords=KEYWORDS,
-                 # url=URL,
-                 classifiers=CLASSIFIERS,
-                 platforms=PLATFORMS,
-                 zip_safe=False,
-                 include_package_data=True,
-                 install_requires=INSTALL_REQUIRES,
-                 python_requires=PYTHON_VERSION,
-                 **EXTRA_KWARGS
-                 )
+setuptools.setup(
+    name=NAME,
+    version=FULLVERSION,
+    packages=PACKAGES,
+    author=AUTHOR,
+    author_email=AUTHOR_EMAIL,
+    license=LICENSE,
+    description=DESCRIPTION,
+    long_description=LONG_DESCRIPTION,
+    keywords=KEYWORDS,
+    # url=URL,
+    classifiers=CLASSIFIERS,
+    platforms=PLATFORMS,
+    zip_safe=False,
+    include_package_data=True,
+    install_requires=INSTALL_REQUIRES,
+    python_requires=PYTHON_VERSION,
+    **EXTRA_KWARGS
+)

@@ -103,7 +103,7 @@
   </property>
   <property name="font">
    <font>
-    <family>Roboto</family>
+    <family>Segoe UI</family>
     <pointsize>10</pointsize>
    </font>
   </property>
@@ -633,7 +633,7 @@ QPushButton:pressed {
                </property>
                <property name="font">
                 <font>
-                 <family>Roboto</family>
+                 <family>Segoe UI</family>
                  <pointsize>10</pointsize>
                  <weight>75</weight>
                  <bold>true</bold>
@@ -1403,7 +1403,7 @@ QPushButton:checked {
              </property>
              <property name="font">
               <font>
-               <family>Roboto</family>
+               <family>Segoe UI</family>
                <pointsize>9</pointsize>
               </font>
              </property>
@@ -1427,7 +1427,10 @@ QPushButton:pressed {
 	background-color: rgb(196, 150, 250);
 	border: 0px solid rgb(43, 50, 61);
 }
-</string>
+QPushButton:checked {	
+	background-color: rgb(196, 150, 250);
+	border: 0px solid rgb(43, 50, 61);
+}</string>
              </property>
              <property name="text">
               <string>X↔Y</string>
@@ -1658,7 +1661,7 @@ QPushButton:pressed {
             </property>
             <property name="font">
              <font>
-              <family>Roboto Medium</family>
+              <family>Segoe UI Semibold</family>
               <pointsize>10</pointsize>
               <weight>50</weight>
               <bold>false</bold>
@@ -1702,7 +1705,7 @@ background-color: rgb(47, 47, 47);</string>
                 </property>
                 <property name="font">
                  <font>
-                  <family>Roboto</family>
+                  <family>Segoe UI</family>
                   <pointsize>10</pointsize>
                  </font>
                 </property>
@@ -1714,7 +1717,7 @@ background-color: rgb(47, 47, 47);</string>
                   <widget class="QCheckBox" name="bgndSubtractXCheckBox">
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -1753,7 +1756,7 @@ QCheckBox::indicator:checked {
                   <widget class="QCheckBox" name="bgndSubtractYCheckBox">
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -1786,7 +1789,7 @@ QCheckBox::indicator:checked {
                   <widget class="QCheckBox" name="savgolFilterYCheckBox">
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2018,7 +2021,7 @@ QCheckBox::indicator:checked {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2051,7 +2054,7 @@ QCheckBox::indicator:checked {
                   <widget class="QCheckBox" name="gaussLaplaceCheckBox">
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2099,7 +2102,7 @@ QCheckBox::indicator:checked {
                 </property>
                 <property name="font">
                  <font>
-                  <family>Roboto</family>
+                  <family>Segoe UI</family>
                   <pointsize>10</pointsize>
                  </font>
                 </property>
@@ -2407,7 +2410,7 @@ QComboBox QAbstractItemView {
                   <widget class="QCheckBox" name="logScaleCheckBox">
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2502,7 +2505,7 @@ QComboBox QAbstractItemView {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2735,7 +2738,7 @@ QComboBox QAbstractItemView {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2782,7 +2785,7 @@ QComboBox QAbstractItemView {
                   <widget class="QLabel" name="label_13">
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2798,7 +2801,7 @@ QComboBox QAbstractItemView {
                   <widget class="QLabel" name="label_12">
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2814,7 +2817,7 @@ QComboBox QAbstractItemView {
                   <widget class="QLabel" name="label_14">
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2836,7 +2839,7 @@ QComboBox QAbstractItemView {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2898,7 +2901,7 @@ QComboBox QAbstractItemView {
                 </property>
                 <property name="font">
                  <font>
-                  <family>Roboto</family>
+                  <family>Segoe UI</family>
                   <pointsize>10</pointsize>
                  </font>
                 </property>
@@ -2928,7 +2931,7 @@ QComboBox QAbstractItemView {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -2990,7 +2993,7 @@ QLineEdit:focus {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3038,7 +3041,7 @@ QLineEdit:focus {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3086,7 +3089,7 @@ QLineEdit:focus {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3139,7 +3142,7 @@ QLineEdit:focus {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3158,7 +3161,7 @@ QLineEdit:focus {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3177,7 +3180,7 @@ QLineEdit:focus {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3196,7 +3199,7 @@ QLineEdit:focus {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3262,7 +3265,7 @@ QLineEdit:focus {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3298,7 +3301,7 @@ QLineEdit:focus {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3343,7 +3346,7 @@ QLineEdit:focus {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3393,7 +3396,7 @@ QLineEdit:focus {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3424,7 +3427,7 @@ QLineEdit:focus {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3472,7 +3475,7 @@ QLineEdit:focus {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3508,7 +3511,7 @@ QLineEdit:focus {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3527,7 +3530,7 @@ QLineEdit:focus {
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3562,7 +3565,7 @@ QLineEdit:focus {
                 </property>
                 <property name="font">
                  <font>
-                  <family>Roboto</family>
+                  <family>Segoe UI</family>
                   <pointsize>9</pointsize>
                  </font>
                 </property>
@@ -3611,7 +3614,7 @@ QCheckBox::indicator:checked {
                   <widget class="QRadioButton" name="noTagRadioButton">
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3672,7 +3675,7 @@ QRadioButton::indicator:checked {
                   <widget class="QLabel" name="label_23">
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                      <weight>75</weight>
                      <bold>true</bold>
@@ -3690,7 +3693,7 @@ QRadioButton::indicator:checked {
                   <widget class="QRadioButton" name="tagDispersiveBareRadioButton">
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3732,7 +3735,7 @@ QRadioButton::indicator:checked {
                   <widget class="QRadioButton" name="tagDispersiveDressedRadioButton">
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3790,7 +3793,7 @@ QRadioButton::indicator:checked {
                   <widget class="QLabel" name="label_24">
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                      <weight>75</weight>
                      <bold>true</bold>
@@ -3808,7 +3811,7 @@ QRadioButton::indicator:checked {
                   <widget class="QRadioButton" name="tagCrossingRadioButton">
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3850,7 +3853,7 @@ QRadioButton::indicator:checked {
                   <widget class="QRadioButton" name="tagCrossingDressedRadioButton">
                    <property name="font">
                     <font>
-                     <family>Roboto</family>
+                     <family>Segoe UI</family>
                      <pointsize>9</pointsize>
                     </font>
                    </property>
@@ -3914,7 +3917,7 @@ QRadioButton::indicator:checked {
                 </property>
                 <property name="font">
                  <font>
-                  <family>Roboto</family>
+                  <family>Segoe UI</family>
                   <pointsize>9</pointsize>
                  </font>
                 </property>
@@ -4064,7 +4067,7 @@ QRadioButton::indicator:checked {
                 </property>
                 <property name="font">
                  <font>
-                  <family>Roboto</family>
+                  <family>Segoe UI</family>
                   <pointsize>9</pointsize>
                  </font>
                 </property>
@@ -4390,7 +4393,7 @@ QLineEdit:focus {
                   </property>
                   <property name="font">
                    <font>
-                    <family>Roboto Medium</family>
+                    <family>Segoe UI Semibold</family>
                     <pointsize>9</pointsize>
                    </font>
                   </property>
@@ -4578,7 +4581,7 @@ QPushButton:pressed {
                   </property>
                   <property name="font">
                    <font>
-                    <family>Roboto Medium</family>
+                    <family>Segoe UI Semibold</family>
                     <pointsize>9</pointsize>
                    </font>
                   </property>
@@ -4766,7 +4769,7 @@ QPushButton:pressed {
                   </property>
                   <property name="font">
                    <font>
-                    <family>Roboto Medium</family>
+                    <family>Segoe UI Semibold</family>
                     <pointsize>9</pointsize>
                    </font>
                   </property>
@@ -4972,7 +4975,7 @@ QHeaderView::section:vertical
             </property>
             <property name="font">
              <font>
-              <family>Roboto</family>
+              <family>Segoe UI</family>
               <pointsize>10</pointsize>
              </font>
             </property>

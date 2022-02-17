@@ -1,7 +1,7 @@
-Source for datapyc documentation
+Source for qfit documentation
 ===================================
 
-This directory contains the source files for the datapyc documentation.
+This directory contains the source files for the qfit documentation.
 
 
 Build requirements

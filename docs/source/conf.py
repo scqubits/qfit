@@ -13,37 +13,39 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../../'))
+sys.path.insert(0, os.path.abspath("../../"))
 
 # -- Project information -----------------------------------------------------
 
-project = 'datapyc'
-copyright = '2020, Jens Koch'
-author = 'Jens Koch'
+project = "qfit"
+copyright = "2020, Jens Koch"
+author = "Jens Koch"
 
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.todo',
-              'sphinx.ext.doctest',
-              'sphinx.ext.autosummary',
-              'sphinx.ext.extlinks',
-              'sphinx.ext.viewcode',
-              'sphinx.ext.ifconfig',
-              'sphinx.ext.napoleon',
-              'nbsphinx',
-              'sphinx.ext.mathjax']
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.todo",
+    "sphinx.ext.doctest",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.extlinks",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.ifconfig",
+    "sphinx.ext.napoleon",
+    "nbsphinx",
+    "sphinx.ext.mathjax",
+]
 
 
 html_show_sourcelink = False
 
-autodoc_default_options = {'members': True, 'inherited-members': True}
+autodoc_default_options = {"members": True, "inherited-members": True}
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -52,41 +54,39 @@ master_doc = 'index'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', '**.ipynb_checkpoints']
+exclude_patterns = ["_build", "**.ipynb_checkpoints"]
 
 
 # -- Options for HTML output -------------------------------------------------
 
 # These folders are copied to the documentation's HTML output
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)
 html_context = {
-    'css_files': [
-        '_static/theme_overrides.css',  # override wide tables in RTD theme
-        ],
-     }
+    "css_files": [
+        "_static/theme_overrides.css",  # override wide tables in RTD theme
+    ],
+}
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
 
-html_theme = 'sphinx_rtd_theme'
-html_logo = './logo/app_icon_wide.png'
+html_theme = "sphinx_rtd_theme"
+html_logo = "./logo/app_icon_wide.png"
 full_logo = True
 
-html_theme_options = {
-    'logo_only': False
-}
+html_theme_options = {"logo_only": False}
 # Add any paths that contain custom themes here, relative to this directory.
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-html_title = 'datapyc Documentation'
+html_title = "qfit Documentation"
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-html_short_title = u'datapyc'
+html_short_title = u"qfit"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -94,7 +94,7 @@ html_short_title = u'datapyc'
 # html_static_path = ['_static']
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 add_function_parentheses = False

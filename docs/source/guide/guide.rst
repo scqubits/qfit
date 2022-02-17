@@ -1,4 +1,4 @@
-.. datapyc
+.. qfit
    Copyright (C)  2020, Jens Koch
 
 .. _guide:
@@ -14,14 +14,14 @@ Users Guide
 
 .. _run:
 
-Running datapyc
+Running qfit
 ====================
 
-Following installation, datapyc is started from the command line like this:
+Following installation, qfit is started from the command line like this:
 
 .. code-block:: bash
 
-   python -m datapyc
+   python -m qfit
 
 
 .. _import:
@@ -29,7 +29,7 @@ Following installation, datapyc is started from the command line like this:
 Data import
 ====================
 
-Once launched, datapyc displays a dialog window for selecting a data file to be opened.
+Once launched, qfit displays a dialog window for selecting a data file to be opened.
 As a concrete example, such data might represent a spectroscopy scan recording
 the transmission amplitude (the stored z-axis data) as a function of probe frequency (x axis) and magnetic flux (y axis).
 
