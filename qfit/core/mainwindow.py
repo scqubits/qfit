@@ -458,7 +458,7 @@ class MainWindow(ResizableFramelessWindow):
         print(f" The buttons you used were: {eclick.button} {erelease.button}")
 
     @Slot()
-    def canvasClickMonitoring(self, event: mpl.backend_bases.MouseEvent):
+    def canvasClickMonitoring(self, event):
         """Main loop for acting on mouse events occurring in the canvas area."""
         if event.xdata is None or event.ydata is None:
             return
@@ -477,7 +477,10 @@ class MainWindow(ResizableFramelessWindow):
 
         if appstate.state == State.SELECT:
             current_data = self.activeDataset.all()
-            x1y1 = np.asarray([event.xdata, event.ydata])
+            if self.matching_mode:
+                x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
+            else:
+                x1y1 = np.asarray([event.xdata, event.ydata])
             for index, x2y2 in enumerate(current_data.transpose()):
                 if self.isRelativelyClose(x1y1, x2y2):
                     self.activeDataset.removeColumn(index)
@@ -485,6 +488,11 @@ class MainWindow(ResizableFramelessWindow):
                     return
             self.activeDataset.append(*x1y1)
             self.updatePlot()
+
+        # TODO: how to tell if you're in a different dataset
+        self.matching_mode = False
+        if self.activeDataset.columnCount() >= 5:
+            self.matching_mode = True
 
     @Slot()
     def canvasMouseMonitoring(self, event):
