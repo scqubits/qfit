@@ -21,7 +21,7 @@ import sys
 
 import setuptools
 
-DOCLINES = __doc__.split('\n')
+DOCLINES = __doc__.split("\n")
 
 CLASSIFIERS = """\
 Development Status :: 4 - Beta
@@ -47,21 +47,23 @@ MICRO = 0
 ISRELEASED = True
 
 
-VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
+VERSION = "%d.%d.%d" % (MAJOR, MINOR, MICRO)
 
 CURDIR = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(CURDIR, "requirements.txt")) as requirements:
     INSTALL_REQUIRES = requirements.read().splitlines()
 
-PACKAGES = ['qfit',
-            'qfit/core',
-            'qfit/calibration',
-            'qfit/canvas',
-            'qfit/data',
-            'qfit/io_utils',
-            'qfit/ui']
+PACKAGES = [
+    "qfit",
+    "qfit/core",
+    "qfit/calibration",
+    "qfit/canvas",
+    "qfit/data",
+    "qfit/io_utils",
+    "qfit/ui",
+]
 
-PYTHON_VERSION = '>=3.6'
+PYTHON_VERSION = ">=3.6"
 
 
 NAME = "qfit"
@@ -74,7 +76,7 @@ KEYWORDS = "data extraction, superconducting qubits"
 
 # URL = "https://scqubits.readthedocs.io"
 
-CLASSIFIERS = [_f for _f in CLASSIFIERS.split('\n') if _f]
+CLASSIFIERS = [_f for _f in CLASSIFIERS.split("\n") if _f]
 PLATFORMS = ["Linux", "Mac OSX", "Unix", "Windows"]
 
 
@@ -84,26 +86,33 @@ def git_short_hash():
     except OSError:
         git_str = ""
     else:
-        if git_str == '+':   # fixes setuptools PEP issues with versioning
-            git_str = ''
+        if git_str == "+":  # fixes setuptools PEP issues with versioning
+            git_str = ""
     return git_str
 
 
 FULLVERSION = VERSION
 if not ISRELEASED:
-    FULLVERSION += '.dev'+str(MICRO)+git_short_hash()
+    FULLVERSION += ".dev" + str(MICRO) + git_short_hash()
 
 
-def write_version_py(filename='qfit/version.py'):
+def write_version_py(filename="qfit/version.py"):
     cnt = """\
 # THIS FILE IS GENERATED FROM qfit SETUP.PY
 short_version = '%(version)s'
 version = '%(fullversion)s'
 release = %(isrelease)s
 """
-    versionfile = open(filename, 'w')
+    versionfile = open(filename, "w")
     try:
-        versionfile.write(cnt % {'version': VERSION, 'fullversion': FULLVERSION, 'isrelease': str(ISRELEASED)})
+        versionfile.write(
+            cnt
+            % {
+                "version": VERSION,
+                "fullversion": FULLVERSION,
+                "isrelease": str(ISRELEASED),
+            }
+        )
     finally:
         versionfile.close()
 
@@ -111,30 +120,31 @@ release = %(isrelease)s
 local_path = os.path.dirname(os.path.abspath(sys.argv[0]))
 os.chdir(local_path)
 sys.path.insert(0, local_path)
-sys.path.insert(0, os.path.join(local_path, 'qfit'))  # to retrieve version
+sys.path.insert(0, os.path.join(local_path, "qfit"))  # to retrieve version
 
 # always rewrite _version
-if os.path.exists('qfit/version.py'):
-    os.remove('qfit/version.py')
+if os.path.exists("qfit/version.py"):
+    os.remove("qfit/version.py")
 
 write_version_py()
 
 # Setup commands go here
-setuptools.setup(name=NAME,
-                 version=FULLVERSION,
-                 packages=PACKAGES,
-                 author=AUTHOR,
-                 author_email=AUTHOR_EMAIL,
-                 license=LICENSE,
-                 description=DESCRIPTION,
-                 long_description=LONG_DESCRIPTION,
-                 keywords=KEYWORDS,
-                 # url=URL,
-                 classifiers=CLASSIFIERS,
-                 platforms=PLATFORMS,
-                 zip_safe=False,
-                 include_package_data=True,
-                 install_requires=INSTALL_REQUIRES,
-                 python_requires=PYTHON_VERSION,
-                 **EXTRA_KWARGS
-                 )
+setuptools.setup(
+    name=NAME,
+    version=FULLVERSION,
+    packages=PACKAGES,
+    author=AUTHOR,
+    author_email=AUTHOR_EMAIL,
+    license=LICENSE,
+    description=DESCRIPTION,
+    long_description=LONG_DESCRIPTION,
+    keywords=KEYWORDS,
+    # url=URL,
+    classifiers=CLASSIFIERS,
+    platforms=PLATFORMS,
+    zip_safe=False,
+    include_package_data=True,
+    install_requires=INSTALL_REQUIRES,
+    python_requires=PYTHON_VERSION,
+    **EXTRA_KWARGS
+)
