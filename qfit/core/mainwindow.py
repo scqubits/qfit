@@ -489,11 +489,6 @@ class MainWindow(ResizableFramelessWindow):
             self.activeDataset.append(*x1y1)
             self.updatePlot()
 
-        # TODO: how to tell if you're in a different dataset
-        self.matching_mode = False
-        if self.activeDataset.columnCount() >= 5:
-            self.matching_mode = True
-
     @Slot()
     def canvasMouseMonitoring(self, event):
         self.axes.figure.canvas.flush_events()
@@ -537,16 +532,18 @@ class MainWindow(ResizableFramelessWindow):
         # those via a scatter plot.
         if self.activeDataset.columnCount() > 0:
             dataXY = self.activeDataset.all()
-            self.axes.scatter(dataXY[0], dataXY[1], c="orange", marker="x", s=150)
-            plotted_data = []
-            for count, i in enumerate(dataXY[0]):
-                if i not in plotted_data:
-                    self.axes.axline(
-                        (i, dataXY[1][count]),
-                        (i, dataXY[1][count] - (dataXY[1][count]) * 0.1),
-                        c="Green",
-                    )
-                plotted_data.append(i)
+            self.axes.scatter(dataXY[0], dataXY[1], c=scatter_color, marker="x", s=150)
+
+        plotted_data = []
+        line_data = self.allDatasets.assocDataList[0]
+        for count, i in enumerate(line_data[0]):
+            if i not in plotted_data:
+                self.axes.axline(
+                    (i, line_data[1][count]),
+                    (i, line_data[1][count] - (line_data[1][count]) * 0.1),
+                    c=line_color,
+                )
+            plotted_data.append(i)
 
         # Make sure that new axes limits match the old ones.
         if not initialize:
