@@ -29,8 +29,9 @@ from qfit.data.tagdata_view import NO_TAG, Tag
 
 
 class ActiveExtractedData(QAbstractTableModel):
-    """This class holds one data set, as extracted by markers on the canvas. In addition, it references calibration
-    data to expose either the raw selected data, or their calibrated counterparts."""
+    """This class holds one data set, as extracted by markers on the canvas. In
+    addition, it references calibration data to expose either the raw selected data,
+    or their calibrated counterparts."""
 
     def __init__(self, data: np.ndarray = None):
         """
@@ -58,7 +59,7 @@ class ActiveExtractedData(QAbstractTableModel):
     def toggleCalibratedView(self):
         self.layoutChanged.emit()
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index: QModelIndex, role=Qt.DisplayRole):
         """
         Return data at index `index` in string format, assuming that it is a float.
 
@@ -217,7 +218,7 @@ class AllExtractedData(
     def rowCount(self, *args) -> int:
         return len(self.dataNames)
 
-    def data(self, index, role):
+    def data(self, index: QModelIndex, role):
         if role == Qt.DisplayRole:
             str_value = self.dataNames[index.row()]
             return str_value
@@ -238,7 +239,7 @@ class AllExtractedData(
                 )
             return icon1
 
-    def setData(self, index, value, role=None):
+    def setData(self, index: QModelIndex, value, role=None):
         if not (index.isValid() and role == Qt.EditRole):
             return False
         try:
@@ -261,7 +262,6 @@ class AllExtractedData(
         self.assocDataList.insert(row, np.empty(shape=(2, 0), dtype=np.float_))
         self.assocTagList.insert(row, Tag())
         self.endInsertRows()
-        self.layoutChanged.emit()
         return True
 
     def removeRow(self, row, parent=QModelIndex(), *args, **kwargs):
