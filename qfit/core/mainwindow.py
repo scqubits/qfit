@@ -460,7 +460,6 @@ class MainWindow(ResizableFramelessWindow):
     @Slot()
     def canvasClickMonitoring(self, event):
         """Main loop for acting on mouse events occurring in the canvas area."""
-        print(event.ydata)
         if event.xdata is None or event.ydata is None:
             return
 
