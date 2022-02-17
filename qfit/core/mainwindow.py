@@ -12,7 +12,6 @@
 
 import copy
 import sys
-
 from functools import partial
 from typing import TYPE_CHECKING, Dict, Tuple, Union
 
@@ -31,7 +30,6 @@ from PySide6.QtWidgets import (
 )
 
 import qfit.core.app_state as appstate
-
 from qfit.calibration.calibration_data import CalibrationData
 from qfit.calibration.calibration_view import CalibrationView
 from qfit.core.app_state import State
@@ -40,6 +38,7 @@ from qfit.data.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.data.tagdata_view import TagDataView
 from qfit.io_utils.import_data import importFile
 from qfit.io_utils.save_data import saveFile
+from qfit.settings import color_dict
 from qfit.ui.resizable_window import ResizableFramelessWindow
 from qfit.ui.ui_menu import Ui_MenuWidget
 from qfit.ui.ui_window import Ui_MainWindow
@@ -88,7 +87,6 @@ class MainWindow(ResizableFramelessWindow):
         self.ui.calibrationQFrame.setVisible(False)
         self.ui.filterQFrame.setVisible(False)
 
-
         self.ui_menu = Ui_MenuWidget()
         self.ui_menu.setupUi(self)
         self.ui_menu.menuFrame.move(0, 32)
@@ -101,6 +99,9 @@ class MainWindow(ResizableFramelessWindow):
         self.setupUICalibration()
         self.calibrationData = CalibrationData()
         self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
+
+        self.matching_mode = False
+        self.mousedat = None
 
         self.setupUIPlotOptions()
 
@@ -406,6 +407,10 @@ class MainWindow(ResizableFramelessWindow):
         self.cidCanvas = self.axes.figure.canvas.mpl_connect(
             "button_press_event", self.canvasClickMonitoring
         )
+        self.ui.mplFigureCanvas.set_callback(self.allDatasets)
+        self.cidMove = self.axes.figure.canvas.mpl_connect(
+            "motion_notify_event", self.canvasMouseMonitoring
+        )
 
     def uiMenuConnects(self):
         self.ui.toggleMenuButton.clicked.connect(self.toggleMenu)
@@ -441,8 +446,19 @@ class MainWindow(ResizableFramelessWindow):
             appstate.state = State.PAN
             self.ui.mplFigureCanvas.panView()
 
+    def line_select_callback(self, eclick, erelease):
+        """
+        Callback for line selection.
+
+        *eclick* and *erelease* are the press and release events.
+        """
+        x1, y1 = eclick.xdata, eclick.ydata
+        x2, y2 = erelease.xdata, erelease.ydata
+        print(f"({x1:3.2f}, {y1:3.2f}) --> ({x2:3.2f}, {y2:3.2f})")
+        print(f" The buttons you used were: {eclick.button} {erelease.button}")
+
     @Slot()
-    def canvasClickMonitoring(self, event: mpl.backend_bases.MouseEvent):
+    def canvasClickMonitoring(self, event):
         """Main loop for acting on mouse events occurring in the canvas area."""
         if event.xdata is None or event.ydata is None:
             return
@@ -461,7 +477,10 @@ class MainWindow(ResizableFramelessWindow):
 
         if appstate.state == State.SELECT:
             current_data = self.activeDataset.all()
-            x1y1 = np.asarray([event.xdata, event.ydata])
+            if self.matching_mode:
+                x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
+            else:
+                x1y1 = np.asarray([event.xdata, event.ydata])
             for index, x2y2 in enumerate(current_data.transpose()):
                 if self.isRelativelyClose(x1y1, x2y2):
                     self.activeDataset.removeColumn(index)
@@ -471,11 +490,29 @@ class MainWindow(ResizableFramelessWindow):
             self.updatePlot()
 
     @Slot()
+    def canvasMouseMonitoring(self, event):
+        self.axes.figure.canvas.flush_events()
+        self.matching_mode = False
+        if (
+            self.allDatasets.currentRow != 0
+            and len(self.allDatasets.assocDataList[0][0]) > 0
+        ):
+            self.matching_mode = True
+        if not self.matching_mode:
+            return
+
+        if event.xdata is None or event.ydata is None:
+            return
+
+    @Slot()
     def updatePlot(self, initialize: bool = False, **kwargs):
-        """Update the current plot of measurement data and markers of selected data points."""
+        """Update the current plot of measurement data and markers of selected data
+        points."""
         if self.disconnectCanvas:
             return
-        # If this is not the first time of plotting, store the current axes limits and clear the graph.
+
+        # If this is not the first time of plotting, store the current axes limits and
+        # clear the graph.
         if not initialize:
             xlim = self.axes.get_xlim()
             ylim = self.axes.get_ylim()
@@ -483,17 +520,30 @@ class MainWindow(ResizableFramelessWindow):
 
         # Set the matplotlib colormap according to the selection in the dropdown menu.
         colorStr = self.ui.colorComboBox.currentText()
+        cross_color = color_dict[colorStr]["Cross"]
+        line_color = color_dict[colorStr]["line"]
+        scatter_color = color_dict[colorStr]["Scatter"]
         cmap = copy.copy(getattr(cm, colorStr))
         cmap.set_bad(color="black")
 
-        if initialize:    # TODO: REMOVE THIS LINE, JUST FOR DEBUGGING
-            self.measurementData.canvasPlot(self.axes, cmap=cmap)
         self.measurementData.canvasPlot(self.axes, cmap=cmap)
 
-        # If there are any extracted data points in the currently active data set, show those via a scatter plot.
+        # If there are any extracted data points in the currently active data set, show
+        # those via a scatter plot.
         if self.activeDataset.columnCount() > 0:
             dataXY = self.activeDataset.all()
-            self.axes.scatter(dataXY[0], dataXY[1], c="orange", marker="x", s=150)
+            self.axes.scatter(dataXY[0], dataXY[1], c=scatter_color, marker="x", s=150)
+
+        plotted_data = []
+        line_data = self.allDatasets.assocDataList[0]
+        for count, i in enumerate(line_data[0]):
+            if i not in plotted_data:
+                self.axes.axline(
+                    (i, line_data[1][count]),
+                    (i, line_data[1][count] - (line_data[1][count]) * 0.1),
+                    c=line_color,
+                )
+            plotted_data.append(i)
 
         # Make sure that new axes limits match the old ones.
         if not initialize:
@@ -501,6 +551,7 @@ class MainWindow(ResizableFramelessWindow):
             self.axes.set_ylim(ylim)
 
         self.axes.figure.canvas.draw()
+        self.ui.mplFigureCanvas.set_callback(self.allDatasets)
 
     def toggleMenu(self):
         if self.ui_menu.menuFrame.isHidden():
@@ -510,23 +561,26 @@ class MainWindow(ResizableFramelessWindow):
 
     @Slot()
     def calibrate(self, calibrationLabel: str):
-        """Mouse click on one of the calibration buttons prompts switching to calibration mode. Mouse cursor crosshair
-        is adjusted and canvas waits for click setting calibration point x or y component."""
+        """Mouse click on one of the calibration buttons prompts switching to
+        calibration mode. Mouse cursor crosshair is adjusted and canvas waits for
+        click setting calibration point x or y component."""
         appstate.state = self.calibrationStates[calibrationLabel]
         self.ui.mplFigureCanvas.calibrateOn(calibrationLabel[0])
 
     @Slot()
     def updateCalibration(self):
-        """Transfer new calibration data from CalibrationView over to calibrationData instance. If the model is
-        currently applying the calibration, then emit signal to rewrite the table."""
+        """Transfer new calibration data from CalibrationView over to calibrationData
+        instance. If the model is currently applying the calibration, then emit
+        signal to rewrite the table."""
         self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
         if self.calibrationData.applyCalibration:
             self.activeDataset.layoutChanged.emit()
 
     @Slot()
     def toggleCalibration(self):
-        """If calibration check box is changed, toggle the calibration status of the calibrationData. Also induce
-        change at the level of the displayed data of selected points."""
+        """If calibration check box is changed, toggle the calibration status of the
+        calibrationData. Also induce change at the level of the displayed data of
+        selected points."""
         self.calibrationData.toggleCalibration()
         self.activeDataset.toggleCalibratedView()
 
@@ -583,7 +637,8 @@ class MainWindow(ResizableFramelessWindow):
         self.updatePlot(initialize=True)
 
     def isRelativelyClose(self, x1y1: np.ndarray, x2y2: np.ndarray):
-        """Check whether the point x1y1 is relatively close to x2y2, given the current field of view on the canvas."""
+        """Check whether the point x1y1 is relatively close to x2y2, given the current
+        field of view on the canvas."""
         xlim = self.axes.get_xlim()
         ylim = self.axes.get_ylim()
         xmin, xmax = xlim
@@ -637,7 +692,8 @@ class MainWindow(ResizableFramelessWindow):
 
     @Slot()
     def saveAndCloseApp(self):
-        """Save the extracted data and calibration information to file, then exit the application."""
+        """Save the extracted data and calibration information to file, then exit the
+        application."""
         success = saveFile(self)
         if not success:
             return
@@ -649,3 +705,8 @@ class MainWindow(ResizableFramelessWindow):
         self.setGeometry(
             QStyle.alignedRect(Qt.LeftToRight, Qt.AlignCenter, newSize, maxRect)
         )
+
+    def closest_line(self, xdat):
+        current_data = self.allDatasets.assocDataList[0]
+        allxdiff = {np.abs(xdat - i): i for i in current_data[0]}
+        return allxdiff[min(allxdiff.keys())]
