@@ -25,12 +25,13 @@ from PySide6.QtCore import (
 
 import qfit.io_utils.file_io_serializers as serializers
 
-from qfit.data.tagdata_view import NO_TAG, Tag
+from qfit.widgets.data_tagging import NO_TAG, Tag
 
 
 class ActiveExtractedData(QAbstractTableModel):
-    """This class holds one data set, as extracted by markers on the canvas. In addition, it references calibration
-    data to expose either the raw selected data, or their calibrated counterparts."""
+    """This class holds one data set, as extracted by markers on the canvas. In
+    addition, it references calibration data to expose either the raw selected data,
+    or their calibrated counterparts."""
 
     def __init__(self, data: np.ndarray = None):
         """
@@ -58,7 +59,7 @@ class ActiveExtractedData(QAbstractTableModel):
     def toggleCalibratedView(self):
         self.layoutChanged.emit()
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index: QModelIndex, role=Qt.DisplayRole):
         """
         Return data at index `index` in string format, assuming that it is a float.
 
@@ -99,8 +100,9 @@ class ActiveExtractedData(QAbstractTableModel):
         """
         return self._data.shape[1]
 
-    def headerData(self, section: int, orientation: Qt.Orientation,
-                   role=Qt.DisplayRole):
+    def headerData(
+        self, section: int, orientation: Qt.Orientation, role=Qt.DisplayRole
+    ):
         """
         Obtain table header info in string format
 
@@ -216,7 +218,7 @@ class AllExtractedData(
     def rowCount(self, *args) -> int:
         return len(self.dataNames)
 
-    def data(self, index, role):
+    def data(self, index: QModelIndex, role):
         if role == Qt.DisplayRole:
             str_value = self.dataNames[index.row()]
             return str_value
@@ -224,14 +226,20 @@ class AllExtractedData(
         if role == Qt.DecorationRole:
             icon1 = QtGui.QIcon()
             if self.assocTagList[index.row()].tagType != NO_TAG:
-                icon1.addPixmap(QtGui.QPixmap(":/icons/24x24/cil-list.png"),
-                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
+                icon1.addPixmap(
+                    QtGui.QPixmap(":/icons/24x24/cil-list.png"),
+                    QtGui.QIcon.Normal,
+                    QtGui.QIcon.Off,
+                )
             else:
-                icon1.addPixmap(QtGui.QPixmap(":/icons/24x24/cil-x-circle.png"),
-                                QtGui.QIcon.Normal, QtGui.QIcon.Off)
+                icon1.addPixmap(
+                    QtGui.QPixmap(":/icons/24x24/cil-link-broken.png"),
+                    QtGui.QIcon.Normal,
+                    QtGui.QIcon.Off,
+                )
             return icon1
 
-    def setData(self, index, value, role=None):
+    def setData(self, index: QModelIndex, value, role=None):
         if not (index.isValid() and role == Qt.EditRole):
             return False
         try:
@@ -254,7 +262,6 @@ class AllExtractedData(
         self.assocDataList.insert(row, np.empty(shape=(2, 0), dtype=np.float_))
         self.assocTagList.insert(row, Tag())
         self.endInsertRows()
-        self.layoutChanged.emit()
         return True
 
     def removeRow(self, row, parent=QModelIndex(), *args, **kwargs):
@@ -287,6 +294,9 @@ class AllExtractedData(
     def newRow(self, str_value=None):
         rowCount = self.rowCount()
         str_value = str_value or "dataset" + str(rowCount + 1)
+        counter = 1
+        while str_value in self.dataNames:
+            str_value = "dataset" + str(rowCount + 1 + counter)
         self.insertRow(rowCount)
         self.setData(self.index(rowCount, 0), str_value, role=Qt.EditRole)
         self.layoutChanged.emit()

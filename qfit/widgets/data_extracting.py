@@ -12,9 +12,21 @@
 
 from PySide6.QtCore import Slot
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QListView, QTableView
+from PySide6.QtWidgets import QFrame, QListView, QTableView
 
 from qfit.core.helpers import EditDelegate
+
+
+class DataExtractingWidget(QFrame):
+    pass
+
+
+class DatasetWidget(QFrame):
+    pass
+
+
+class ManageDatasetsWidget(QFrame):
+    pass
 
 
 class TableView(QTableView):

@@ -12,7 +12,7 @@
 
 import qfit.io_utils.file_io_serializers as serializers
 
-from qfit.calibration.calibration_data import CalibrationData
+from qfit.models.calibration_data import CalibrationData
 
 serializers.SERIALIZABLE_REGISTRY["CalibrationData"] = CalibrationData
 

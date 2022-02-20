@@ -1,4 +1,4 @@
-# tagdata_view.py
+# data_tagging.py
 #
 # This file is part of qfit.
 #
@@ -15,7 +15,7 @@ from PySide6.QtCore import QRegularExpression as QRegExp
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QRegularExpressionValidator as QRegExpValidator
 from PySide6.QtGui import QValidator
-from PySide6.QtWidgets import QLineEdit
+from PySide6.QtWidgets import QFrame, QLineEdit
 
 
 from qfit.io_utils import file_io_serializers as serializers
@@ -26,6 +26,10 @@ DISPERSIVE_DRESSED = "DISPERSIVE_DRESSED"
 DISPERSIVE_BARE = "DISPERSIVE_BARE"
 CROSSING = "CROSSING"
 CROSSING_DRESSED = "CROSSING_DRESSED"
+
+
+class DataTaggingWidget(QFrame):
+    pass
 
 
 class Tag(serializers.Serializable):
@@ -127,9 +131,9 @@ class TagDataView(QObject):
         self.ui.tagBareGroupBox.setVisible(True)
         self.ui.tagDressedGroupBox.setVisible(False)
         self.changedTagType.emit()
-        # self.ui.subsysNamesLineEdit.editingFinished.emit()
-        # self.ui.initialStateLineEdit.editingFinished.emit()
-        # self.ui.finalStateLineEdit.editingFinished.emit()
+        # self.ui_designer.subsysNamesLineEdit.editingFinished.emit()
+        # self.ui_designer.initialStateLineEdit.editingFinished.emit()
+        # self.ui_designer.finalStateLineEdit.editingFinished.emit()
 
     def setDispersiveDressedMode(self):
         self.ui.tagDressedGroupBox.setVisible(True)

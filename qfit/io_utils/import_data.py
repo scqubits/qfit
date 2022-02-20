@@ -13,7 +13,7 @@ import os
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
-import qfit.core.qfit_data as fit
+import qfit.models.qfit_data as fit
 
 from qfit.io_utils.io_readers import (
     ImageMeasurementData,
