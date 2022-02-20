@@ -1,4 +1,4 @@
-# __main__.py
+# qfit_app.py
 #
 # This file is part of qfit.
 #
@@ -12,10 +12,9 @@
 import sys
 
 import PySide6.QtCore
-from PySide6 import QtCore
 
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QFont
+from PySide6.QtCore import QSize
+from PySide6.QtGui import QFont, QScreen
 from PySide6.QtWidgets import QApplication
 
 import matplotlib
@@ -23,18 +22,7 @@ import matplotlib
 matplotlib.use("qtagg")
 
 from qfit.core.mainwindow import MainWindow
-from qfit.data.measurement_data import dummy_measurement_data
-from qfit.io_utils.import_data import importFile
-
-if hasattr(PySide6.QtCore.Qt, "AA_EnableHighDpiScaling"):
-    PySide6.QtWidgets.QApplication.setAttribute(
-        PySide6.QtCore.Qt.AA_EnableHighDpiScaling, True
-    )
-
-if hasattr(PySide6.QtCore.Qt, "AA_UseHighDpiPixmaps"):
-    PySide6.QtWidgets.QApplication.setAttribute(
-        PySide6.QtCore.Qt.AA_UseHighDpiPixmaps, True
-    )
+from qfit.models.measurement_data import dummy_measurement_data
 
 
 if __name__ == "__main__":
@@ -48,8 +36,8 @@ if __name__ == "__main__":
     # fileData = readFileData('C:/Users/drjen/Desktop/Spectroscopy.JPEG')
     # fileData = readFileData(r"C:\Users\drjen\PycharmProjects\qfit\qfit\scratch\aug_summary_4_1.hdf5")
     window = MainWindow(measurementData=dummy_measurement_data(), extractedData=None)
-    maxSize = QSize(app.primaryScreen().availableGeometry().size())
-    window.resizeAndCenter(maxSize)
+    # window.resizeAndCenter(maxSize)
+
     window.show()
     window.openFile(initialize=True)
     sys.exit(app.exec())

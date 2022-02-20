@@ -1,4 +1,4 @@
-# canvas_view.py
+# mpl_canvas.py
 #
 # This file is part of qfit.
 #
@@ -26,9 +26,12 @@ from matplotlib.widgets import Cursor
 
 
 import qfit.core.app_state as appstate
-from qfit.data.extracted_data import AllExtractedData
 
 from qfit.core.app_state import State
+
+
+class MplNavButtons(QFrame):
+    pass
 
 
 class NavigationHidden(NavigationToolbar2QT):
@@ -202,7 +205,7 @@ class SpecialCursor(Cursor):
         self.line_blit = False
 
 
-class FigureCanvas(QFrame):
+class MplFigureCanvas(QFrame):
     def __init__(self, parent=None):
         QFrame.__init__(self, parent)
 

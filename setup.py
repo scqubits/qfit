@@ -60,7 +60,7 @@ PACKAGES = [
     "qfit/canvas",
     "qfit/data",
     "qfit/io_utils",
-    "qfit/ui",
+    "qfit/ui_designer",
 ]
 
 PYTHON_VERSION = ">=3.6"

@@ -27,7 +27,7 @@ from qfit.core.helpers import (
     hasIdenticalRows,
     isValid2dArray,
 )
-from qfit.data.measurement_data import ImageMeasurementData, NumericalMeasurementData
+from qfit.models.measurement_data import ImageMeasurementData, NumericalMeasurementData
 
 
 def readFileData(fileName):

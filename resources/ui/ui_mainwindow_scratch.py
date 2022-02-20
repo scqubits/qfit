@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_mainwindow.ui',
-# licensing of 'ui_mainwindow.ui' applies.
+# Form implementation generated from reading ui_designer file 'ui_mainwindow.ui_designer',
+# licensing of 'ui_mainwindow.ui_designer' applies.
 #
 # Created: Tue Apr 28 08:02:34 2020
 #      by: pyside2-uic  running on PySide6 5.13.2

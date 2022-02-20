@@ -25,7 +25,7 @@ from PySide6.QtCore import (
 
 import qfit.io_utils.file_io_serializers as serializers
 
-from qfit.data.tagdata_view import NO_TAG, Tag
+from qfit.widgets.data_tagging import NO_TAG, Tag
 
 
 class ActiveExtractedData(QAbstractTableModel):
@@ -233,7 +233,7 @@ class AllExtractedData(
                 )
             else:
                 icon1.addPixmap(
-                    QtGui.QPixmap(":/icons/24x24/cil-x-circle.png"),
+                    QtGui.QPixmap(":/icons/24x24/cil-link-broken.png"),
                     QtGui.QIcon.Normal,
                     QtGui.QIcon.Off,
                 )

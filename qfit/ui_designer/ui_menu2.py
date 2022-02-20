@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\menu2.ui',
-# licensing of '.\menu2.ui' applies.
+# Form implementation generated from reading ui_designer file '.\menu2.ui_designer',
+# licensing of '.\menu2.ui_designer' applies.
 #
 # Created: Thu Aug 19 06:28:23 2021
 #      by: pyside2-uic  running on PySide6 5.13.2

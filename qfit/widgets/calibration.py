@@ -1,4 +1,4 @@
-# calibration_view.py
+# calibration.py
 #
 # This file is part of qfit.
 #

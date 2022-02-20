@@ -23,29 +23,28 @@ from PySide6.QtCore import QPoint, QRect, QSize, Qt, Slot
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
     QGraphicsDropShadowEffect,
-    QMainWindow,
     QMessageBox,
     QPushButton,
     QStyle,
 )
 
 import qfit.core.app_state as appstate
-from qfit.calibration.calibration_data import CalibrationData
-from qfit.calibration.calibration_view import CalibrationView
+from qfit.models.calibration_data import CalibrationData
+from qfit.widgets.calibration import CalibrationView
 from qfit.core.app_state import State
 from qfit.core.helpers import transposeEach
-from qfit.data.extracted_data import ActiveExtractedData, AllExtractedData
-from qfit.data.tagdata_view import TagDataView
+from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
+from qfit.widgets.data_tagging import TagDataView
 from qfit.io_utils.import_data import importFile
 from qfit.io_utils.save_data import saveFile
 from qfit.settings import color_dict
-from qfit.ui.resizable_window import ResizableFramelessWindow
-from qfit.ui.ui_menu import Ui_MenuWidget
-from qfit.ui.ui_window import Ui_MainWindow
+from qfit.ui_views.resizable_window import ResizableFramelessWindow
+from qfit.ui_designer.ui_window import Ui_MainWindow
+from qfit.widgets.menu import MenuWidget
 
 if TYPE_CHECKING:
-    from qfit.calibration.calibration_view import CalibrationLineEdit
-    from qfit.core.qfit_data import QfitData
+    from qfit.widgets.calibration import CalibrationLineEdit
+    from qfit.models.qfit_data import QfitData
 
 MeasurementDataType = Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]
 
@@ -56,7 +55,7 @@ class MainWindow(ResizableFramelessWindow):
     """Class for the main window of the app."""
 
     ui: Ui_MainWindow
-    ui_menu: Ui_MenuWidget
+    # ui_menu: Ui_MenuWidget
 
     measurementData: MeasurementDataType
     extractedData: "QfitData"
@@ -87,10 +86,8 @@ class MainWindow(ResizableFramelessWindow):
         self.ui.calibrationQFrame.setVisible(False)
         self.ui.filterQFrame.setVisible(False)
 
-        self.ui_menu = Ui_MenuWidget()
-        self.ui_menu.setupUi(self)
-        self.ui_menu.menuFrame.move(0, 32)
-        self.ui_menu.menuFrame.hide()
+        self.ui_menu = MenuWidget(parent=self)
+
         self.setShadows()
 
         self.uiPagesConnects()
@@ -188,18 +185,6 @@ class MainWindow(ResizableFramelessWindow):
             eff.setBlurRadius(18.0)
             eff.setColor(QColor(0, 0, 0, 90))
             button.setGraphicsEffect(eff)
-
-        for panel in [
-            self.ui.frame_3,
-            self.ui.frame_6,
-            self.ui.pagesStackedWidget,
-            self.ui_menu.menuFrame,
-        ]:
-            eff = QGraphicsDropShadowEffect(panel)
-            eff.setOffset(1)
-            eff.setBlurRadius(25.0)
-            eff.setColor(QColor(0, 0, 0, 50))
-            panel.setGraphicsEffect(eff)
 
     def setupUICalibration(self):
         """For the interface that enables calibration of data with respect to x and y axis, group QLineEdit elements
@@ -413,9 +398,9 @@ class MainWindow(ResizableFramelessWindow):
         )
 
     def uiMenuConnects(self):
-        self.ui.toggleMenuButton.clicked.connect(self.toggleMenu)
-        self.ui_menu.menuQuitButton.clicked.connect(self.closeApp)
-        self.ui_menu.menuOpenButton.clicked.connect(self.openFile)
+        self.ui.toggleMenuButton.clicked.connect(self.ui_menu.toggle)
+        # self.ui_menu.menuQuitButton.clicked.connect(self.closeApp)
+        # self.ui_menu.menuOpenButton.clicked.connect(self.openFile)
 
     def setupXYDataBoxes(self):
         self.ui.xComboBox.clear()
@@ -561,11 +546,11 @@ class MainWindow(ResizableFramelessWindow):
         self.axes.figure.canvas.draw()
         self.ui.mplFigureCanvas.set_callback(self.allDatasets)
 
-    def toggleMenu(self):
-        if self.ui_menu.menuFrame.isHidden():
-            self.ui_menu.menuFrame.show()
-        else:
-            self.ui_menu.menuFrame.hide()
+    # def toggleMenu(self):
+    #     if self.menuWidget.menuFrame.isHidden():
+    #         self.menuWidget.menuFrame.show()
+    #     else:
+    #         self.menuWidget.menuFrame.hide()
 
     @Slot()
     def calibrate(self, calibrationLabel: str):
@@ -663,7 +648,7 @@ class MainWindow(ResizableFramelessWindow):
     @Slot()
     def openFile(self, initialize: bool = False):
         if not initialize:
-            self.toggleMenu()
+            self.ui_menu.toggle()
         self.measurementData, self.extractedData = importFile(parent=self)
 
         self.calibrationData.resetCalibration()
