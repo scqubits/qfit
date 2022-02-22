@@ -210,11 +210,13 @@ class AllExtractedData(
 ):
     def __init__(self):
         super().__init__()
-        self.dataNames = ["dataset1"]
+        self.dataNames = ["SnappingData"]
         self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
         self.assocTagList = [Tag()]
         self._calibrationFunc = None
-        self._currentRow = 0
+        self._currentRow = 1
+        self.matching_data_counter = 0
+        self.newRow("dataset1")
 
     def rowCount(self, *args) -> int:
         return len(self.dataNames)
@@ -249,6 +251,15 @@ class AllExtractedData(
             return False
         self.dataChanged.emit(index, index)
         return True
+
+    def matchingColumnCount(self):
+        return self.assocDataList[0].shape[1]
+
+    def appendMatchingData(self, xval, yval):
+        max_col = self.matchingColumnCount()
+        self.assocDataList[0] = np.insert(self.assocDataList[0], max_col, [xval,
+                                                                           yval],
+                                          axis=1)
 
     def flags(self, index):
         flags = super(self.__class__, self).flags(index)
@@ -295,10 +306,10 @@ class AllExtractedData(
     @Slot()
     def newRow(self, str_value=None):
         rowCount = self.rowCount()
-        str_value = str_value or "dataset" + str(rowCount + 1)
+        str_value = str_value or "dataset" + str(rowCount)
         counter = 1
         while str_value in self.dataNames:
-            str_value = "dataset" + str(rowCount + 1 + counter)
+            str_value = "dataset" + str(rowCount + counter)
         self.insertRow(rowCount)
         self.setData(self.index(rowCount, 0), str_value, role=Qt.EditRole)
         self.layoutChanged.emit()
@@ -408,7 +419,7 @@ class MatchingExtractedData(QAbstractTableModel):
         -------
         ndarray
         """
-        return self._data[:2]
+        return self._data
 
     @Slot()
     def toggleCalibratedView(self):

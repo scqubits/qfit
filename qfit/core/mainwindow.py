@@ -34,7 +34,7 @@ from qfit.calibration.calibration_data import CalibrationData
 from qfit.calibration.calibration_view import CalibrationView
 from qfit.core.app_state import State
 from qfit.core.helpers import transposeEach
-from qfit.data.extracted_data import ActiveExtractedData, AllExtractedData, MatchingExtractedData
+from qfit.data.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.data.tagdata_view import TagDataView
 from qfit.io_utils.import_data import importFile
 from qfit.io_utils.save_data import saveFile
@@ -118,7 +118,6 @@ class MainWindow(ResizableFramelessWindow):
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
 
-        self.ghost_mode = False
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -153,10 +152,9 @@ class MainWindow(ResizableFramelessWindow):
             super().mousePressEvent(event)
 
     def keyPressEvent(self, event):
-        # keyPressEvent defined in child
-        if event.key() == 75:
-            self.ghost_mode = not self.ghost_mode
-            print(self.ghost_mode)
+        # keyPressEvent for k to switch
+        if event.key() == 75 and len(self.allDatasets.assocDataList[0][0]) > 0:
+            self.matching_mode = not self.matching_mode
 
     def mouseMoveEvent(self, event: QMouseEvent):
         if self.offset is not None and event.buttons() == Qt.LeftButton:
@@ -266,10 +264,7 @@ class MainWindow(ResizableFramelessWindow):
         self.activeDataset.setAdaptiveCalibrationFunc(
             self.calibrationData.adaptiveConversionFunc
         )
-        self.matchingDataset = MatchingExtractedData()
-        self.matchingDataset.setAdaptiveCalibrationFunc(
-            self.calibrationData.adaptiveConversionFunc
-        )
+
         self.ui.dataTableView.setModel(self.activeDataset)
 
         self.allDatasets = AllExtractedData()
@@ -420,6 +415,7 @@ class MainWindow(ResizableFramelessWindow):
             "button_press_event", self.canvasClickMonitoring
         )
         self.ui.mplFigureCanvas.set_callback(self.allDatasets)
+        self.ui.mplFigureCanvas.set_callback2(self.matching_mode)
         self.cidMove = self.axes.figure.canvas.mpl_connect(
             "motion_notify_event", self.canvasMouseMonitoring
         )
@@ -499,21 +495,13 @@ class MainWindow(ResizableFramelessWindow):
                     self.updatePlot()
                     return
             self.activeDataset.append(*x1y1)
-            if self.ghost_mode:
-                self.matchingDataset.append(*x1y1)
+            if not self.matching_mode:
+                self.allDatasets.appendMatchingData(event.xdata, event.ydata)
             self.updatePlot()
 
     @Slot()
     def canvasMouseMonitoring(self, event):
         self.axes.figure.canvas.flush_events()
-        self.matching_mode = False
-        if (
-            self.allDatasets.currentRow != 0
-            and len(self.allDatasets.assocDataList[0][0]) > 0
-        ):
-            self.matching_mode = True
-        if not self.matching_mode:
-            return
 
         if event.xdata is None or event.ydata is None:
             return
@@ -566,6 +554,7 @@ class MainWindow(ResizableFramelessWindow):
 
         self.axes.figure.canvas.draw()
         self.ui.mplFigureCanvas.set_callback(self.allDatasets)
+        self.ui.mplFigureCanvas.set_callback2(self.matching_mode)
 
     def toggleMenu(self):
         if self.ui_menu.menuFrame.isHidden():
@@ -721,6 +710,6 @@ class MainWindow(ResizableFramelessWindow):
         )
 
     def closest_line(self, xdat):
-        current_data = self.matchingDataset
-        allxdiff = {np.abs(xdat - i): i for i in current_data[0]}
+        current_data = self.allDatasets.assocDataList[0]
+        allxdiff = {np.abs(xdat - float(i)): float(i) for i in current_data[0]}
         return allxdiff[min(allxdiff.keys())]

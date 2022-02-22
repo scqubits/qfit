@@ -114,12 +114,14 @@ class NavigationHidden(NavigationToolbar2QT):
 
 class SpecialCursor(Cursor):
     def __init__(
-        self, ax, callback=None, horizOn=True, vertOn=True, useblit=False, **lineprops
+        self, ax, callback=None, callback2=False, horizOn=True, vertOn=True,
+            useblit=False, **lineprops
     ):
         super().__init__(
             ax, horizOn=horizOn, vertOn=vertOn, useblit=useblit, **lineprops
         )
         self.callback = callback
+        self.callback2 = callback2
         self.matching_mode = False
 
     def onmove(self, event):
@@ -142,11 +144,7 @@ class SpecialCursor(Cursor):
         self.linev.set_xdata((event.xdata, event.xdata))
 
         self.lineh.set_ydata((event.ydata, event.ydata))
-        if (
-            self.callback
-            and self.callback.currentRow != 0
-            and len(self.callback.assocDataList[0][0]) > 0
-        ):
+        if self.callback2 == True:
             self.matching_mode = True
         if self.matching_mode == True:
             self.cross = self.ax.scatter(
@@ -200,6 +198,7 @@ class FigureCanvas(QFrame):
         QFrame.__init__(self, parent)
 
         self.callback = None
+        self.callback2 = False
         self.canvas = FigureCanvasQTAgg(Figure())
         self.toolbar = NavigationHidden(self.canvas, self)
 
@@ -211,6 +210,9 @@ class FigureCanvas(QFrame):
 
     def set_callback(self, new_callback):
         self.callback = new_callback
+
+    def set_callback2(self, new_callback):
+        self.callback2 = new_callback
         self.select_crosshair()
 
     def axes(self):
@@ -220,6 +222,7 @@ class FigureCanvas(QFrame):
         self._crosshair = SpecialCursor(
             self.axes(),
             callback=self.callback,
+            callback2=self.callback2,
             useblit=True,
             horizOn=horizOn,
             vertOn=vertOn,
