@@ -40,7 +40,7 @@ class ActiveExtractedData(QAbstractTableModel):
             numpy array of floats, shape=(2, N)
         """
         super().__init__()
-        self._data = data or np.empty(shape=(3, 0), dtype=np.float_)
+        self._data = data or np.empty(shape=(2, 0), dtype=np.float_)
         self._adaptiveCalibrationFunc = None
 
     @Slot()
@@ -119,7 +119,7 @@ class ActiveExtractedData(QAbstractTableModel):
         # section is the index of the column/row.
         if role == Qt.DisplayRole:
             if orientation == Qt.Vertical:
-                return str(["x", "y", "tag"][section])
+                return str(["x", "y"][section])
             elif orientation == Qt.Horizontal:
                 return str(section)
 
@@ -169,7 +169,7 @@ class ActiveExtractedData(QAbstractTableModel):
 
     def insertColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
         self.beginInsertColumns(parent, column, column)
-        self._data = np.insert(self._data, column, np.asarray([0.0, 0.0, 0.0]),
+        self._data = np.insert(self._data, column, np.asarray([0.0, 0.0]),
                                #"None"]),
                                axis=1)
         self.endInsertColumns()
@@ -188,7 +188,6 @@ class ActiveExtractedData(QAbstractTableModel):
         self.insertColumn(max_col)
         self.setData(self.index(0, max_col), xval, role=Qt.EditRole)
         self.setData(self.index(1, max_col), yval, role=Qt.EditRole)
-        self.setData(self.index(2, max_col), "None")
         self.layoutChanged.emit()
 
     def setAdaptiveCalibrationFunc(self, adaptiveCalibrationCallback: callable):
@@ -383,3 +382,176 @@ class AllExtractedData(
         iodata = serializers.dict_serialize(initdata)
         iodata.typename = "QfitData"
         return iodata
+
+
+class MatchingExtractedData(QAbstractTableModel):
+    """This class holds one data set, as extracted by markers on the canvas. In addition, it references calibration
+    data to expose either the raw selected data, or their calibrated counterparts."""
+
+    def __init__(self, data: np.ndarray = None):
+        """
+        Parameters
+        ----------
+        data: np.ndarray
+            numpy array of floats, shape=(2, N)
+        """
+        super().__init__()
+        self._data = data or np.empty(shape=(2, 0), dtype=np.float_)
+        self._adaptiveCalibrationFunc = None
+
+    @Slot()
+    def all(self) -> np.ndarray:
+        """
+        Return the raw data as a numpy array.
+
+        Returns
+        -------
+        ndarray
+        """
+        return self._data[:2]
+
+    @Slot()
+    def toggleCalibratedView(self):
+        self.layoutChanged.emit()
+
+    def data(self, index, role=Qt.DisplayRole):
+        """
+        Return data at index `index` in string format, assuming that it is a float.
+
+        Parameters
+        ----------
+        index: QModelIndex
+            index of requested data
+        role: int, default=QtCore.Qt.DisplayRole
+
+        Returns
+        -------
+        str
+        """
+        if role == Qt.DisplayRole:
+            conversionFunc = self._adaptiveCalibrationFunc()
+            value = conversionFunc(
+                [self._data[0, index.column()], self._data[1, index.column()]]
+            )
+            return "{:#.6g}".format(value[index.row()-1])
+
+    def rowCount(self, *args):
+        """
+        Return number of rows.
+
+        Returns
+        -------
+        int
+        """
+        return self._data.shape[0]
+
+    def columnCount(self, *args):
+        """
+        Return number of columns.
+
+        Returns
+        -------
+        int
+        """
+        return self._data.shape[1]
+
+    def headerData(
+        self, section: int, orientation: Qt.Orientation, role=Qt.DisplayRole
+    ):
+        """
+        Obtain table header info in string format
+
+        Parameters
+        ----------
+        section: int
+        orientation: Qt.Orientation
+        role: int
+
+        Returns
+        -------
+        str
+            String for the label of the horizontal or vertical header of the table.
+        """
+        # section is the index of the column/row.
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Vertical:
+                return str(["x", "y"][section])
+            elif orientation == Qt.Horizontal:
+                return str(section)
+
+    def setData(self, index: QModelIndex, value: float, role=Qt.EditRole) -> bool:
+        """
+
+        Parameters
+        ----------
+        index: QModelIndex
+            index of element to be set to `value`
+        value: float
+        role: int
+
+        Returns
+        -------
+        bool
+            True if assignment successful
+        """
+        if not (index.isValid() and role == Qt.EditRole):
+            return False
+        try:
+            self._data[index.row(), index.column()] = value
+        except (ValueError, IndexError):
+            return False
+        self.dataChanged.emit(index, index)
+        return True
+
+    @Slot()
+    def setAllData(self, newData: Union[float, np.ndarray]):
+        """
+        Replaces the current table of extracted data points with a new dataset of points
+
+        Parameters
+        ----------
+        newData: np.ndarray of float
+            float array of data points to substitute the current data set
+        """
+        self._data = newData
+        self.layoutChanged.emit()
+
+    def flags(self, index: QModelIndex):
+        flags = super(self.__class__, self).flags(index)
+        flags |= Qt.ItemIsEditable
+        flags |= Qt.ItemIsSelectable
+        flags |= Qt.ItemIsEnabled
+        return flags
+
+    def insertColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
+        self.beginInsertColumns(parent, column, column)
+        self._data = np.insert(self._data, column, np.asarray([0.0, 0.0]),
+                               #"None"]),
+                               axis=1)
+        self.endInsertColumns()
+        self.layoutChanged.emit()
+        return True
+
+    def removeColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
+        self.beginRemoveColumns(parent, column, column)
+        self._data = np.delete(self._data, column, axis=1)
+        self.endRemoveColumns()
+        self.layoutChanged.emit()
+        return True
+
+    def append(self, xval: float, yval: float):
+        max_col = self.columnCount()
+        self.insertColumn(max_col)
+        self.setData(self.index(0, max_col), xval, role=Qt.EditRole)
+        self.setData(self.index(1, max_col), yval, role=Qt.EditRole)
+        self.layoutChanged.emit()
+
+    def setAdaptiveCalibrationFunc(self, adaptiveCalibrationCallback: callable):
+        """
+        Record the CalibrationData instance associated with the data.
+
+        Parameters
+        ----------
+        adaptiveCalibrationCallback: function
+        """
+        self._adaptiveCalibrationFunc = adaptiveCalibrationCallback
