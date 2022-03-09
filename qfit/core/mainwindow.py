@@ -486,14 +486,23 @@ class MainWindow(ResizableFramelessWindow):
         if appstate.state == State.SELECT:
             current_data = self.activeDataset.all()
             if self.matching_mode:
-                x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
+                try:
+                    x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
+                except:
+                    self.matching_mode = not self.matching_mode
+                    x1y1 = np.asarray([event.xdata, event.ydata])
             else:
                 x1y1 = np.asarray([event.xdata, event.ydata])
+            for index, x2y2 in enumerate(self.allDatasets.assocDataList[0].transpose()):
+                if self.isRelativelyClose(x1y1, x2y2):
+                    self.allDatasets.removeMatchingData(index)
+                    self.updatePlot()
             for index, x2y2 in enumerate(current_data.transpose()):
                 if self.isRelativelyClose(x1y1, x2y2):
                     self.activeDataset.removeColumn(index)
                     self.updatePlot()
                     return
+
             self.activeDataset.append(*x1y1)
             if not self.matching_mode:
                 self.allDatasets.appendMatchingData(event.xdata, event.ydata)
