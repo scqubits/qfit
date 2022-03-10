@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Dict, Tuple, Union
 
 import matplotlib as mpl
 import matplotlib.cm as cm
+from matplotlib.widgets import RectangleSelector
 import numpy as np
 
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, Slot
@@ -27,6 +28,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QStyle,
+    QGridLayout
 )
 
 import qfit.core.app_state as appstate
@@ -409,6 +411,7 @@ class MainWindow(ResizableFramelessWindow):
 
     def uiMplCanvasConnects(self):
         """Set up the matplotlib canvas and start monitoring for mouse click events in the canvas area."""
+        print("Hello")
         self.axes = self.ui.mplFigureCanvas.canvas.figure.subplots()
         self.updatePlot(initialize=True)
         self.cidCanvas = self.axes.figure.canvas.mpl_connect(
@@ -419,6 +422,24 @@ class MainWindow(ResizableFramelessWindow):
         self.cidMove = self.axes.figure.canvas.mpl_connect(
             "motion_notify_event", self.canvasMouseMonitoring
         )
+        self.rectangle = mpl.widgets.RectangleSelector(self.axes,
+                                                       self.line_select_callback,
+                                                       drawtype='box', useblit=True,
+                                                       button=[1, 3],
+                                                       minspanx=5, minspany=5,
+                                                       spancoords='pixels',
+                                                       interactive=False,
+                                                       rectprops = dict(
+                                                           facecolor='green',
+                                                           edgecolor = 'black',
+                                                           alpha=0.2, fill=False))
+        self.axes.figure.canvas.mpl_connect('button_press_event', self.on_click)
+
+    def on_click(self, event):
+        if event.button == 1 or event.button == 3 and not self.rs.active:
+            self.rectangle.set_active(True)
+        else:
+            self.rectangle.set_active(False)
 
     def uiMenuConnects(self):
         self.ui.toggleMenuButton.clicked.connect(self.toggleMenu)
@@ -464,6 +485,14 @@ class MainWindow(ResizableFramelessWindow):
         x2, y2 = erelease.xdata, erelease.ydata
         print(f"({x1:3.2f}, {y1:3.2f}) --> ({x2:3.2f}, {y2:3.2f})")
         print(f" The buttons you used were: {eclick.button} {erelease.button}")
+        current_data = self.activeDataset.all()
+        highlights = []
+        for index, x3y3 in enumerate(current_data.transpose()):
+            x3 = x3y3[0]
+            y3 = x3y3[1]
+            if (x1<x3<x2 and y1<y3<y2) or (x1>x3>x2 and y1>y3>y2):
+                highlights.append(index)
+        self.updatePlot(highlight_index=highlights)
 
     @Slot()
     def canvasClickMonitoring(self, event):
@@ -516,7 +545,7 @@ class MainWindow(ResizableFramelessWindow):
             return
 
     @Slot()
-    def updatePlot(self, initialize: bool = False, **kwargs):
+    def updatePlot(self, initialize: bool = False, highlight_index = None, **kwargs):
         """Update the current plot of measurement data and markers of selected data
         points."""
         if self.disconnectCanvas:
@@ -544,6 +573,12 @@ class MainWindow(ResizableFramelessWindow):
         if self.activeDataset.columnCount() > 0:
             dataXY = self.activeDataset.all()
             self.axes.scatter(dataXY[0], dataXY[1], c=scatter_color, marker="x", s=150)
+
+        if highlight_index:
+            dataXY = self.activeDataset.all()
+            datax = [dataXY[0][i] for i in highlight_index]
+            datay = [dataXY[1][i] for i in highlight_index]
+            self.axes.scatter(datax, datay, c="yellow", marker="x", s=150)
 
         plotted_data = []
         line_data = self.allDatasets.assocDataList[0]

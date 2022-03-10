@@ -12,7 +12,7 @@
 
 import numpy as np
 
-from PySide6 import QtCore
+from PySide6 import QtCore, QtGui
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QFrame, QVBoxLayout
 
