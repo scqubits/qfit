@@ -253,7 +253,7 @@ class H5Reader:
     def from_file(self, filename, file_handle=None):
         """
         Either opens a new h5 file for reading or accesses an already opened file via the given h5.Group handle. Reads
-        all data from the three categories of attributes (incl. lists and dicts), ndarrays, and objects.
+        xy_data data from the three categories of attributes (incl. lists and dicts), ndarrays, and objects.
 
         Parameters
         ----------

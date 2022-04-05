@@ -11,10 +11,10 @@
 
 
 import qfit.io_utils.file_io_serializers as serializers
+from qfit.core.data_structures import Calibration
 
-from qfit.models.calibration_data import CalibrationData
 
-serializers.SERIALIZABLE_REGISTRY["CalibrationData"] = CalibrationData
+serializers.SERIALIZABLE_REGISTRY["Calibration"] = Calibration
 
 
 class QfitData(serializers.Serializable):

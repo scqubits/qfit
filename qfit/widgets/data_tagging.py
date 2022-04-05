@@ -51,7 +51,7 @@ class Tag(serializers.Serializable):
         - FOR DISPERSIVE_BARE, initial and final state are specified by a tuple of ints (exc. levels of each subsys)
     photons: int or None
         - For NO_TAG, no photon number is specified.
-        - For all other tag types, this int specifies the photon number rank of the transition.
+        - For xy_data other tag types, this int specifies the photon number rank of the transition.
 
     """
 

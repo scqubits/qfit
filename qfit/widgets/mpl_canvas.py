@@ -25,13 +25,9 @@ from matplotlib.figure import Figure
 from matplotlib.widgets import Cursor
 
 
-import qfit.core.app_state as appstate
+import qfit.core.app_control as appstate
 
-from qfit.core.app_state import State
-
-
-class MplNavButtons(QFrame):
-    pass
+from qfit.core.app_control import State
 
 
 class NavigationHidden(NavigationToolbar2QT):
@@ -139,18 +135,21 @@ class SpecialCursor(Cursor):
                 self.canvas.draw()
                 self.needclear = False
             return
+
         self.needclear = True
         if not self.visible:
             return
-        self.linev.set_xdata((event.xdata, event.xdata))
 
+        self.linev.set_xdata((event.xdata, event.xdata))
         self.lineh.set_ydata((event.ydata, event.ydata))
+
         if (
             self.callback
             and self.callback.currentRow != 0
-            and len(self.callback.assocDataList[0][0]) > 0
+            and len(self.callback.database[0]) > 0
         ):
             self.matching_mode = True
+
         if self.matching_mode == True:
             self.cross = self.ax.scatter(
                 self.closest_line(event.xdata),
@@ -216,8 +215,62 @@ class MplFigureCanvas(QFrame):
         vertical_layout = QVBoxLayout()
         vertical_layout.addWidget(self.canvas)
         self.setLayout(vertical_layout)
-
+        self._canvasFrozen = False
         self._crosshair = None
+
+    @Slot()
+    def toggleSelect(self):
+        if appstate.CENTRAL.state != State.SELECT:
+            appstate.CENTRAL.state = State.SELECT
+            self.selectOn()
+
+    @Slot()
+    def toggleZoom(self):
+        if appstate.CENTRAL.state != "ZOOM":
+            appstate.CENTRAL.state = State.ZOOM
+            self.zoomView()
+
+    @Slot()
+    def togglePan(self):
+        if appstate.CENTRAL.state != "PAN":
+            appstate.CENTRAL.state = State.PAN
+            self.panView()
+
+    @Slot()
+    def swapXY(self):
+        self._canvasFrozen = True
+        self.parent().measurementData.swapXY()
+        self.parent().setupXYDataBoxes()
+
+        self.parent().allDatasets.swapXY()
+        self.parent().allDatasets.layoutChanged.emit()
+
+        xBgndSub = self.parent().ui.bgndSubtractXCheckBox.checkState()
+        yBgndSub = self.parent().ui.bgndSubtractYCheckBox.checkState()
+
+        self.ui.parent().bgndSubtractXCheckBox.setCheckState(yBgndSub)
+        self.ui.parent().bgndSubtractYCheckBox.setCheckState(xBgndSub)
+
+        rawx1 = self.parent().rawLineEdits["X1"].value()
+        rawx2 = self.parent().rawLineEdits["X2"].value()
+        rawy1 = self.parent().rawLineEdits["Y1"].value()
+        rawy2 = self.parent().rawLineEdits["Y2"].value()
+        mapx1 = self.parent().mapLineEdits["X1"].value()
+        mapx2 = self.parent().mapLineEdits["X2"].value()
+        mapy1 = self.parent().mapLineEdits["Y1"].value()
+        mapy2 = self.parent().mapLineEdits["Y2"].value()
+        self.parent().rawLineEdits["X1"].setText(str(rawy1))
+        self.parent().rawLineEdits["Y1"].setText(str(rawx1))
+        self.parent().rawLineEdits["X2"].setText(str(rawy2))
+        self.parent().rawLineEdits["Y2"].setText(str(rawx2))
+        self.parent().mapLineEdits["X1"].setText(str(mapy1))
+        self.parent().mapLineEdits["Y1"].setText(str(mapx1))
+        self.parent().mapLineEdits["X2"].setText(str(mapy2))
+        self.parent().mapLineEdits["Y2"].setText(str(mapx2))
+        self.parent().updateCalibration()
+
+        self._canvasFrozen = False
+        self.parent().updatePlot(initialize=True)
 
     def set_callback(self, new_callback):
         self.callback = new_callback
@@ -244,7 +297,7 @@ class MplFigureCanvas(QFrame):
             on=True
         )  # toggle zoom at the level of the NavigationToolbar2QT, enabling actual
         # zoom functionality
-        appstate.state = State.ZOOM
+        appstate.CENTRAL.state = State.ZOOM
         self.select_crosshair()
 
     def panOn(self):
@@ -252,13 +305,13 @@ class MplFigureCanvas(QFrame):
             on=True
         )  # toggle pan at the level of the NavigationToolbar2QT, enabling actual
         # pan functionality
-        appstate.state = State.PAN
+        appstate.CENTRAL.state = State.PAN
         self.select_crosshair()
 
     def selectOn(self):
         self.toolbar.setZoomMode(on=False)
         self.toolbar.setPanMode(on=False)
-        appstate.state = State.SELECT
+        appstate.CENTRAL.state = State.SELECT
         self.select_crosshair()
 
     def calibrateOn(self, strXY):

@@ -19,7 +19,7 @@ import matplotlib as mpl
 import matplotlib.cm as cm
 import numpy as np
 
-from PySide6.QtCore import QPoint, QRect, QSize, Qt, Slot
+from PySide6.QtCore import QPoint, QRect, QSize, Qt, Signal, Slot
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
     QGraphicsDropShadowEffect,
@@ -28,12 +28,12 @@ from PySide6.QtWidgets import (
     QStyle,
 )
 
-import qfit.core.app_state as appstate
-from qfit.models.calibration_data import CalibrationData
+import qfit.core.app_control as app_control
+from qfit.core.data_structures import Calibration
 from qfit.widgets.calibration import CalibrationView
-from qfit.core.app_state import State
+from qfit.core.app_control import State
 from qfit.core.helpers import transposeEach
-from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
+from qfit.models.extracted_data import CurrentDatasetModel, AllDatasetsModel
 from qfit.widgets.data_tagging import TagDataView
 from qfit.io_utils.import_data import importFile
 from qfit.io_utils.save_data import saveFile
@@ -55,15 +55,14 @@ class MainWindow(ResizableFramelessWindow):
     """Class for the main window of the app."""
 
     ui: Ui_MainWindow
-    # ui_menu: Ui_MenuWidget
 
     measurementData: MeasurementDataType
     extractedData: "QfitData"
-    activeDataset: ActiveExtractedData
-    allDatasets: AllExtractedData
+    activeDataset: CurrentDatasetModel
+    allDatasets: AllDatasetsModel
     tagDataView: TagDataView
 
-    calibrationData: CalibrationData
+    calibration: Calibration
     calibrationView: CalibrationView
     rawLineEdits: Dict[str, "CalibrationLineEdit"]
     mapLineEdits: Dict[str, "CalibrationLineEdit"]
@@ -76,7 +75,7 @@ class MainWindow(ResizableFramelessWindow):
 
     def __init__(self, measurementData, extractedData=None):
         ResizableFramelessWindow.__init__(self)
-        self.disconnectCanvas = False  # used to temporarily switch off canvas updates
+        # self.disconnectCanvas = False  # used to temporarily switch off canvas updates
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -94,8 +93,8 @@ class MainWindow(ResizableFramelessWindow):
         self.uiMenuConnects()
 
         self.setupUICalibration()
-        self.calibrationData = CalibrationData()
-        self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
+        self.calibration = Calibration()
+        self.calibration.setCalibration(*self.calibrationView.calibrationPoints())
 
         self.matching_mode = False
         self.mousedat = None
@@ -108,7 +107,7 @@ class MainWindow(ResizableFramelessWindow):
 
         self.uiColorScaleConnects()
         self.uiCalibrationConnects()
-        self.uiCanvasControlConnects()
+        # self.uiCanvasControlConnects()
         self.uiMplCanvasConnects()
         self.ui.mplFigureCanvas.selectOn()
 
@@ -131,11 +130,11 @@ class MainWindow(ResizableFramelessWindow):
             self.allDatasets.dataNames = self.extractedData.datanames
             self.allDatasets.assocDataList = transposeEach(self.extractedData.datalist)
             self.allDatasets.assocTagList = self.extractedData.tag_data
-            self.calibrationData.setCalibration(
+            self.calibration.setCalibration(
                 *self.extractedData.calibration_data.allCalibrationVecs()
             )
 
-            self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
+            self.calibrationView.setView(*self.calibration.allCalibrationVecs())
             self.activeDataset._data = self.allDatasets.currentAssocItem()
             self.tagDataView.setTag(self.allDatasets.currentTagItem())
             self.allDatasets.layoutChanged.emit()
@@ -159,9 +158,6 @@ class MainWindow(ResizableFramelessWindow):
 
     def setShadows(self):
         for button in [
-            self.ui.newRowButton,
-            self.ui.deleteRowButton,
-            self.ui.clearAllButton,
             self.ui.calibrateX1Button,
             self.ui.calibrateX2Button,
             self.ui.calibrateY1Button,
@@ -173,23 +169,10 @@ class MainWindow(ResizableFramelessWindow):
             eff.setColor(QColor(0, 0, 0, 90))
             button.setGraphicsEffect(eff)
 
-        for button in [
-            self.ui.zoomViewButton,
-            self.ui.resetViewButton,
-            self.ui.panViewButton,
-            self.ui.selectViewButton,
-            self.ui.swapXYButton,
-        ]:
-            eff = QGraphicsDropShadowEffect(button)
-            eff.setOffset(2)
-            eff.setBlurRadius(18.0)
-            eff.setColor(QColor(0, 0, 0, 90))
-            button.setGraphicsEffect(eff)
-
     def setupUICalibration(self):
         """For the interface that enables calibration of data with respect to x and y axis, group QLineEdit elements
         and the corresponding buttons in dicts. Set up a dictionary mapping calibration labels to the corresponding
-        State choices. Finally, set up an instance of CalibrationData and
+        State choices. Finally, set up an instance of Calibration and
         CalibrationView"""
         self.rawLineEdits = {
             "X1": self.ui.rawX1LineEdit,
@@ -237,17 +220,13 @@ class MainWindow(ResizableFramelessWindow):
 
     def setupUIData(self):
         """Set up the main class instances holding the data extracted from placing
-        markers on the canvas. The AllExtractedData instance holds all data, whereas the
-        ActiveExtractedData instance holds data of the currently selected data set."""
-        self.activeDataset = ActiveExtractedData()
-        self.activeDataset.setAdaptiveCalibrationFunc(
-            self.calibrationData.adaptiveConversionFunc
-        )
+        markers on the canvas. The AllDatasetsModel instance holds xy_data data, whereas the
+        CurrentDatasetModel instance holds data of the currently selected data set."""
+        self.activeDataset = CurrentDatasetModel(app_control.DATA.currentSet)
         self.ui.dataTableView.setModel(self.activeDataset)
 
-        self.allDatasets = AllExtractedData()
-        self.allDatasets.setCalibrationFunc(self.calibrationData.calibrateDataset)
-        self.ui.datasetListView.setModel(self.allDatasets)
+        self.allDatasets = AllDatasetsModel(app_control.DATA.callback)
+        self.ui.manageDatasetsWidget.setModel(self.allDatasets)
 
     def setupUIXYZComboBoxes(self):
         zDataNames = list(self.measurementData.zCandidates.keys())
@@ -266,25 +245,25 @@ class MainWindow(ResizableFramelessWindow):
 
     def uiDataConnects(self):
         """Make connections for changes in data."""
-        # Whenever the data layout in the ActiveExtractedData changes, update
-        # the corresponding AllExtractedData data; this includes the important
-        # event of adding extraction points to the ActiveExtractedData
+        # Whenever the data layout in the CurrentDatasetModel changes, update
+        # the corresponding AllDatasetsModel data; this includes the important
+        # event of adding extraction points to the CurrentDatasetModel
         self.activeDataset.layoutChanged.connect(
-            lambda: self.ui.datasetListView.model().updateAssocData(
-                newData=self.activeDataset.all()
+            lambda: self.ui.manageDatasetsWidget.ui.datasetListView.datasetListView.model().updateAssocData(
+                newData=self.activeDataset.xy_data()
             )
         )
 
         # If data in the TableView is changed manually through editing,
         # the 'dataChanged' signal will be emitted. The following connects the signal
-        # to an update in th data stored in the AllExtractedData
+        # to an update in th data stored in the AllDatasetsModel
         self.activeDataset.dataChanged.connect(
-            lambda topLeft, bottomRight: self.ui.datasetListView.model().updateAssocData(
-                newData=self.activeDataset.all()
+            lambda topLeft, bottomRight: self.ui.manageDatasetsWidget.ui.datasetListView.model().updateAssocData(
+                newData=self.activeDataset.xy_data()
             )
         )
 
-        # Whenever the AllExtractedData changes layout - for example, due to
+        # Whenever the AllDatasetsModel changes layout - for example, due to
         # switching from one existing data set to another one, this connection will
         # ensure that the TableView will be updated with the correct data
         self.allDatasets.layoutChanged.connect(
@@ -293,34 +272,23 @@ class MainWindow(ResizableFramelessWindow):
             )
         )
 
-        # Whenever data sets are added or removed from the ListView, this ensures
-        # that the canvas display is updated.
-        self.allDatasets.layoutChanged.connect(self.updatePlot)
+        # TODO: re-enable
+        # # Whenever data sets are added or removed from the ListView, this ensures
+        # # that the canvas display is updated.
+        # self.allDatasets.layoutChanged.connect(self.updatePlot)
 
-        # Each time the data set is changed on ListView/Model by clicking a data set,
-        # the data in ActiveExtractedData is updated to reflect the new selection.
-        self.ui.datasetListView.clicked.connect(
-            lambda: self.activeDataset.setAllData(
-                newData=self.allDatasets.currentAssocItem()
-            )
-        )
-
-        # A new selection of a data set item in ListView is accompanied by an update
-        # of the canvas to show the appropriate plot of selected points
-        self.ui.datasetListView.clicked.connect(lambda: self.updatePlot(init=False))
-
-        # Whenever tag type or tag data is changed, update the AllExtractedData data
-        self.tagDataView.changedTagType.connect(
-            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTag())
-        )
-        self.tagDataView.changedTagData.connect(
-            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTag())
-        )
-
-        # Whenever a new dataset is activated in the AllExtractedData, update the TagDataView
-        self.ui.datasetListView.clicked.connect(
-            lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
-        )
+        # # Whenever tag type or tag data is changed, update the AllDatasetsModel data
+        # self.tagDataView.changedTagType.connect(
+        #     lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTag())
+        # )
+        # self.tagDataView.changedTagData.connect(
+        #     lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTag())
+        # )
+        #
+        # # Whenever a new dataset is activated in the AllDatasetsModel, update the TagDataView
+        # self.ui.datasetListView.clicked.connect(
+        #     lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
+        # )
 
     def uiDataOptionsConnects(self):
         """Connect the UI elements related to display of data"""
@@ -356,29 +324,22 @@ class MainWindow(ResizableFramelessWindow):
         ):
             lineEdit.editingFinished.connect(self.updateCalibration)
 
-    def uiCanvasControlConnects(self):
-        """Connect the UI buttons for reset, zoom, and pan functions of the matplotlib canvas."""
-        self.ui.resetViewButton.clicked.connect(self.ui.mplFigureCanvas.resetView)
-        self.ui.zoomViewButton.clicked.connect(self.toggleZoom)
-        self.ui.panViewButton.clicked.connect(self.togglePan)
-        self.ui.selectViewButton.clicked.connect(self.toggleSelect)
-        self.ui.swapXYButton.clicked.connect(self.swapXY)
-
     def uiDataControlConnects(self):
-        """Connect buttons for inserting and deleting a data set, or clearing all data sets"""
-        self.ui.newRowButton.clicked.connect(self.allDatasets.newRow)
-        self.ui.deleteRowButton.clicked.connect(self.allDatasets.removeCurrentRow)
-        self.ui.clearAllButton.clicked.connect(self.allDatasets.removeAll)
+        """Connect buttons for inserting and deleting a data set, or clearing xy_data data sets"""
+        # self.ui.newRowButton.clicked.connect(self.allDatasets.newRow)
+        # self.ui.deleteRowButton.clicked.connect(self.allDatasets.removeCurrentRow)
+        # self.ui.clearAllButton.clicked.connect(self.allDatasets.removeAll)
 
-        self.ui.newRowButton.clicked.connect(
-            lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
-        )
-        self.ui.deleteRowButton.clicked.connect(
-            lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
-        )
-        self.ui.clearAllButton.clicked.connect(
-            lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
-        )
+        # TODO: re-enable
+        # self.ui.newRowButton.clicked.connect(
+        #     lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
+        # )
+        # self.ui.deleteRowButton.clicked.connect(
+        #     lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
+        # )
+        # self.ui.clearAllButton.clicked.connect(
+        #     lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
+        # )
 
     def uiXYZComboBoxesConnects(self):
         self.ui.zComboBox.activated.connect(self.zDataUpdate)
@@ -388,7 +349,7 @@ class MainWindow(ResizableFramelessWindow):
     def uiMplCanvasConnects(self):
         """Set up the matplotlib canvas and start monitoring for mouse click events in the canvas area."""
         self.axes = self.ui.mplFigureCanvas.canvas.figure.subplots()
-        self.updatePlot(initialize=True)
+        # self.updatePlot(initialize=True)
         self.cidCanvas = self.axes.figure.canvas.mpl_connect(
             "button_press_event", self.canvasClickMonitoring
         )
@@ -413,23 +374,23 @@ class MainWindow(ResizableFramelessWindow):
         self.ui.yComboBox.addItems(yDataNames)
         self.ui.yComboBox.setCurrentText(self.measurementData.currentY.name)
 
-    @Slot()
-    def toggleSelect(self):
-        if appstate.state != State.SELECT:
-            appstate.state = State.SELECT
-            self.ui.mplFigureCanvas.selectOn()
-
-    @Slot()
-    def toggleZoom(self):
-        if appstate.state != "ZOOM":
-            appstate.state = State.ZOOM
-            self.ui.mplFigureCanvas.zoomView()
-
-    @Slot()
-    def togglePan(self):
-        if appstate.state != "PAN":
-            appstate.state = State.PAN
-            self.ui.mplFigureCanvas.panView()
+    # @Slot()
+    # def toggleSelect(self):
+    #     if app_control.CENTRAL.state != State.SELECT:
+    #         app_control.CENTRAL.state = State.SELECT
+    #         self.ui.mplFigureCanvas.selectOn()
+    #
+    # @Slot()
+    # def toggleZoom(self):
+    #     if app_control.CENTRAL.state != "ZOOM":
+    #         app_control.CENTRAL.state = State.ZOOM
+    #         self.ui.mplFigureCanvas.zoomView()
+    #
+    # @Slot()
+    # def togglePan(self):
+    #     if app_control.CENTRAL.state != "PAN":
+    #         app_control.CENTRAL.state = State.PAN
+    #         self.ui.mplFigureCanvas.panView()
 
     def line_select_callback(self, eclick, erelease):
         """
@@ -451,7 +412,7 @@ class MainWindow(ResizableFramelessWindow):
         for calibrationLabel in ["X1", "X2", "Y1", "Y2"]:
             data = event.xdata if (calibrationLabel[0] == "X") else event.ydata
 
-            if appstate.state == self.calibrationStates[calibrationLabel]:
+            if app_control.CENTRAL.state == self.calibrationStates[calibrationLabel]:
                 self.rawLineEdits[calibrationLabel].setText(str(data))
                 self.rawLineEdits[calibrationLabel].home(False)
                 self.mapLineEdits[calibrationLabel].selectAll()
@@ -460,8 +421,8 @@ class MainWindow(ResizableFramelessWindow):
                 self.rawLineEdits[calibrationLabel].editingFinished.emit()
                 return
 
-        if appstate.state == State.SELECT:
-            current_data = self.activeDataset.all()
+        if app_control.CENTRAL.state == State.SELECT:
+            current_data = self.allDatasets.database.currentSetXY()
             if self.matching_mode:
                 x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
             else:
@@ -480,7 +441,7 @@ class MainWindow(ResizableFramelessWindow):
         self.matching_mode = False
         if (
             self.allDatasets.currentRow != 0
-            and len(self.allDatasets.assocDataList[0][0]) > 0
+            and len(self.allDatasets.database[0]) > 0
         ):
             self.matching_mode = True
         if not self.matching_mode:
@@ -493,7 +454,7 @@ class MainWindow(ResizableFramelessWindow):
     def updatePlot(self, initialize: bool = False, **kwargs):
         """Update the current plot of measurement data and markers of selected data
         points."""
-        if self.disconnectCanvas:
+        if self.ui.mplFigureCanvas._canvasFrozen:
             return
 
         # If this is not the first time of plotting, store the current axes limits and
@@ -516,7 +477,7 @@ class MainWindow(ResizableFramelessWindow):
         # If there are any extracted data points in the currently active data set, show
         # those via a scatter plot.
         if self.activeDataset.columnCount() > 0:
-            dataXY = self.activeDataset.all()
+            dataXY = self.activeDataset.xy_data()
             self.axes.scatter(
                 dataXY[0],
                 dataXY[1],
@@ -526,17 +487,17 @@ class MainWindow(ResizableFramelessWindow):
                 alpha=0.5,
             )
 
-        plotted_data = []
-        line_data = self.allDatasets.assocDataList[0]
-        for count, i in enumerate(line_data[0]):
-            if i not in plotted_data:
-                self.axes.axline(
-                    (i, line_data[1][count]),
-                    (i, line_data[1][count] - (line_data[1][count]) * 0.1),
-                    c=line_color,
-                    alpha=0.7,
-                )
-            plotted_data.append(i)
+        # plotted_data = []
+        # line_data = self.allDatasets.assocDataList[0]
+        # for count, i in enumerate(line_data[0]):
+        #     if i not in plotted_data:
+        #         self.axes.axline(
+        #             (i, line_data[1][count]),
+        #             (i, line_data[1][count] - (line_data[1][count]) * 0.1),
+        #             c=line_color,
+        #             alpha=0.7,
+        #         )
+        #     plotted_data.append(i)
 
         # Make sure that new axes limits match the old ones.
         if not initialize:
@@ -557,24 +518,24 @@ class MainWindow(ResizableFramelessWindow):
         """Mouse click on one of the calibration buttons prompts switching to
         calibration mode. Mouse cursor crosshair is adjusted and canvas waits for
         click setting calibration point x or y component."""
-        appstate.state = self.calibrationStates[calibrationLabel]
+        app_control.CENTRAL.state = self.calibrationStates[calibrationLabel]
         self.ui.mplFigureCanvas.calibrateOn(calibrationLabel[0])
 
     @Slot()
     def updateCalibration(self):
-        """Transfer new calibration data from CalibrationView over to calibrationData
+        """Transfer new calibration data from CalibrationView over to calibration
         instance. If the model is currently applying the calibration, then emit
         signal to rewrite the table."""
-        self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
-        if self.calibrationData.applyCalibration:
+        self.calibration.setCalibration(*self.calibrationView.calibrationPoints())
+        if self.calibration.applyCalibration:
             self.activeDataset.layoutChanged.emit()
 
     @Slot()
     def toggleCalibration(self):
         """If calibration check box is changed, toggle the calibration status of the
-        calibrationData. Also induce change at the level of the displayed data of
+        calibration. Also induce change at the level of the displayed data of
         selected points."""
-        self.calibrationData.toggleCalibration()
+        self.calibration.toggleCalibration()
         self.activeDataset.toggleCalibratedView()
 
     @Slot(int)
@@ -591,42 +552,6 @@ class MainWindow(ResizableFramelessWindow):
     @Slot(int)
     def yAxisUpdate(self, itemIndex: int):
         self.measurementData.setCurrentY(itemIndex)
-        self.updatePlot(initialize=True)
-
-    @Slot()
-    def swapXY(self):
-        self.disconnectCanvas = True
-        self.measurementData.swapXY()
-        self.setupXYDataBoxes()
-
-        self.allDatasets.swapXY()
-        self.allDatasets.layoutChanged.emit()
-
-        xBgndSub = self.ui.bgndSubtractXCheckBox.checkState()
-        yBgndSub = self.ui.bgndSubtractYCheckBox.checkState()
-
-        self.ui.bgndSubtractXCheckBox.setCheckState(yBgndSub)
-        self.ui.bgndSubtractYCheckBox.setCheckState(xBgndSub)
-
-        rawx1 = self.rawLineEdits["X1"].value()
-        rawx2 = self.rawLineEdits["X2"].value()
-        rawy1 = self.rawLineEdits["Y1"].value()
-        rawy2 = self.rawLineEdits["Y2"].value()
-        mapx1 = self.mapLineEdits["X1"].value()
-        mapx2 = self.mapLineEdits["X2"].value()
-        mapy1 = self.mapLineEdits["Y1"].value()
-        mapy2 = self.mapLineEdits["Y2"].value()
-        self.rawLineEdits["X1"].setText(str(rawy1))
-        self.rawLineEdits["Y1"].setText(str(rawx1))
-        self.rawLineEdits["X2"].setText(str(rawy2))
-        self.rawLineEdits["Y2"].setText(str(rawx2))
-        self.mapLineEdits["X1"].setText(str(mapy1))
-        self.mapLineEdits["Y1"].setText(str(mapx1))
-        self.mapLineEdits["X2"].setText(str(mapy2))
-        self.mapLineEdits["Y2"].setText(str(mapx2))
-        self.updateCalibration()
-
-        self.disconnectCanvas = False
         self.updatePlot(initialize=True)
 
     def isRelativelyClose(self, x1y1: np.ndarray, x2y2: np.ndarray):
@@ -651,8 +576,8 @@ class MainWindow(ResizableFramelessWindow):
             self.ui_menu.toggle()
         self.measurementData, self.extractedData = importFile(parent=self)
 
-        self.calibrationData.resetCalibration()
-        self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
+        self.calibration.resetCalibration()
+        self.calibrationView.setView(*self.calibration.allCalibrationVecs())
 
         self.dataSetupConnects()
         self.setupUIXYZComboBoxes()

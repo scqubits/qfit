@@ -40,7 +40,7 @@ Operating System :: Microsoft :: Windows
 EXTRA_KWARGS = {}
 
 
-# all information about scqubits goes here
+# xy_data information about scqubits goes here
 MAJOR = 0
 MINOR = 1
 MICRO = 0

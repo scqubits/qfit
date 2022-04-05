@@ -99,7 +99,7 @@ pygments_style = "sphinx"
 # If true, '()' will be appended to :func: etc. cross-reference text.
 add_function_parentheses = False
 
-# If true, the current module name will be prepended to all description
+# If true, the current module name will be prepended to xy_data description
 # unit titles (such as .. function::).
 add_module_names = True
 

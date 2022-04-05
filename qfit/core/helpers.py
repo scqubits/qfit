@@ -82,7 +82,7 @@ def isValid2dArray(array):
     Returns
     -------
     bool:
-        True if all conditions above are satisfied.
+        True if xy_data conditions above are satisfied.
     """
     if array.dtype not in [float, np.float_, np.float64, np.float32]:
         return False

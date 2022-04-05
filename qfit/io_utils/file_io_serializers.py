@@ -37,7 +37,7 @@ class Serializable(ABC):
         return new_instance
 
     def __init_subclass__(cls, **kwargs):
-        """Used to register all non-abstract subclasses as a list in `QuantumSystem.subclasses`."""
+        """Used to register xy_data non-abstract subclasses as a list in `QuantumSystem.subclasses`."""
         super().__init_subclass__(**kwargs)
         if not inspect.isabstract(cls):
             cls._subclasses.append(cls)

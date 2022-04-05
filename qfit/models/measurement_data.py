@@ -104,7 +104,7 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
     Parameters
     ---------
     rawData: list of ndarray
-        list containing all 1d and 2d arrays (floats) extracted from a data file
+        list containing xy_data 1d and 2d arrays (floats) extracted from a data file
     zCandidates: OrderedDictMod [str, ndarray]
         each dict entry records the name associated with the dataset, and the dataset element, which  is a 2d ndarray
         of floats representing a possible set of measurement data (zData)
@@ -126,7 +126,7 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
     @property
     def currentZ(self):
         """
-        Return current dataset describing the z values (measurement data) with all filters etc. applied.
+        Return current dataset describing the z values (measurement data) with xy_data filters etc. applied.
 
         Returns
         -------
