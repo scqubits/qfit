@@ -57,7 +57,6 @@ PACKAGES = [
     "qfit",
     "qfit/core",
     "qfit/models",
-    "qfit/data",
     "qfit/io_utils",
     "qfit/ui_designer",
     "qfit/ui_views",
