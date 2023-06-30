@@ -13,7 +13,7 @@
 from typing import Callable, List, Optional, Tuple, Union
 
 import numpy as np
-from PySide6.QtCore import QAbstractListModel
+from PySide6.QtCore import QAbstractListModel, QModelIndex
 
 from qfit.widgets.data_tagging import NO_TAG
 
