@@ -3,3 +3,4 @@
 /.idea/
 
 danyang_tests/
+*.DS_Store
