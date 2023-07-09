@@ -231,9 +231,7 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         return avgArray
 
     def applyWaveletFilter(self, array):
-        return skimage.restoration.denoise_wavelet(
-            array, rescale_sigma=True
-        )
+        return skimage.restoration.denoise_wavelet(array, rescale_sigma=True)
 
     def applyTopHatFilter(self, array):
         array = array - np.mean(array)
@@ -297,8 +295,12 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         else:
             _ = axes.imshow(
                 zData,
-                extent=[min(self.currentX.data), max(self.currentX.data),
-                        min(self.currentY.data), max(self.currentY.data)],
+                extent=[
+                    min(self.currentX.data),
+                    max(self.currentX.data),
+                    min(self.currentY.data),
+                    max(self.currentY.data),
+                ],
                 origin="lower",
                 vmin=zMin,
                 vmax=zMax,
