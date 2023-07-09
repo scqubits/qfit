@@ -232,7 +232,7 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
 
     def applyWaveletFilter(self, array):
         return skimage.restoration.denoise_wavelet(
-            array, multichannel=True, rescale_sigma=True
+            array, rescale_sigma=True
         )
 
     def applyTopHatFilter(self, array):
