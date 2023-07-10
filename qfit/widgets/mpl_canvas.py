@@ -156,13 +156,20 @@ class SpecialCursor(Cursor):
                 self.closest_line(event.xdata),
                 event.ydata,
                 c="red",
-                marker="x",
-                s=150,
+                marker=r"$\odot$",
+                s=130,
+                alpha=0.5,
                 animated=True,
             )
         else:
             self.cross = self.ax.scatter(
-                event.xdata, event.ydata, c="red", marker="x", s=150, animated=True
+                event.xdata,
+                event.ydata,
+                c="red",
+                marker=r"$\odot$",
+                s=130,
+                alpha=0.5,
+                animated=True,
             )
 
         self.cross.set_visible(self.visible)
@@ -227,7 +234,7 @@ class MplFigureCanvas(QFrame):
             horizOn=horizOn,
             vertOn=vertOn,
             color="black",
-            linewidth=1,
+            alpha=0.5,
         )
         self.canvas.draw()
         self._crosshair.line_blit_on()

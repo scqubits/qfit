@@ -113,7 +113,7 @@ def hasIdenticalCols(array):
 
 def transposeEach(xyDataList):
     """
-    Helper function that transposes each data set in the list. Used when importing DatapycData and converting back
+    Helper function that transposes each data set in the list. Used when importing QfitData and converting back
     to data format used in AllExtractedDataModel
 
     Parameters

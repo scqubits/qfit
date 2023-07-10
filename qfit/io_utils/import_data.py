@@ -36,7 +36,7 @@ def importFile(parent=None):
 
     Returns
     -------
-    MeasurementData, DatapycData
+    MeasurementData, QfitData
     """
     home = os.path.expanduser("~")
 
@@ -62,7 +62,7 @@ def importFile(parent=None):
         else:
             success = True
 
-    if isinstance(fileData, fit.DatapycData):
+    if isinstance(fileData, fit.QfitData):
         extractedData = fileData
         if fileData.image_data is not None:
             measurementData = ImageMeasurementData("image_data", fileData.image_data)

@@ -17,7 +17,7 @@ from qfit.models.calibration_data import CalibrationData
 serializers.SERIALIZABLE_REGISTRY["CalibrationData"] = CalibrationData
 
 
-class DatapycData(serializers.Serializable):
+class QfitData(serializers.Serializable):
     def __init__(
         self,
         datanames,

@@ -236,9 +236,9 @@ class MainWindow(ResizableFramelessWindow):
         return [min_val, max_val]
 
     def setupUIData(self):
-        """Set up the main class instances holding the data extracted from placing markers on the canvas. The
-        AllExtractedData instance holds all data, whereas the ActiveExtractedData instance holds data
-        of the currently selected data set."""
+        """Set up the main class instances holding the data extracted from placing
+        markers on the canvas. The AllExtractedData instance holds all data, whereas the
+        ActiveExtractedData instance holds data of the currently selected data set."""
         self.activeDataset = ActiveExtractedData()
         self.activeDataset.setAdaptiveCalibrationFunc(
             self.calibrationData.adaptiveConversionFunc
@@ -517,7 +517,14 @@ class MainWindow(ResizableFramelessWindow):
         # those via a scatter plot.
         if self.activeDataset.columnCount() > 0:
             dataXY = self.activeDataset.all()
-            self.axes.scatter(dataXY[0], dataXY[1], c=scatter_color, marker="x", s=150)
+            self.axes.scatter(
+                dataXY[0],
+                dataXY[1],
+                c=scatter_color,
+                marker=r"$\odot$",
+                s=130,
+                alpha=0.5,
+            )
 
         plotted_data = []
         line_data = self.allDatasets.assocDataList[0]
@@ -527,6 +534,7 @@ class MainWindow(ResizableFramelessWindow):
                     (i, line_data[1][count]),
                     (i, line_data[1][count] - (line_data[1][count]) * 0.1),
                     c=line_color,
+                    alpha=0.7,
                 )
             plotted_data.append(i)
 

@@ -33,7 +33,7 @@ def saveFile(parent):
     else:
         imageData = None
 
-    fitData = fit.DatapycData(
+    fitData = fit.QfitData(
         datanames=parent.allDatasetsModel.dataNames,
         datalist=parent.allDatasetsModel.allDataSorted(applyCalibration=False),
         x_data=parent.measurementData.currentX.data,

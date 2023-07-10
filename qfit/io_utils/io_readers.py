@@ -169,7 +169,7 @@ def isLikelyLabberFile(h5File):
 
 def isLikelyDatapycFile(h5File):
     # Heuristic inspection to determine whether the h5 file might be from qfit
-    if "__type" in h5File.attrs.keys() and h5File.attrs["__type"] == "DatapycData":
+    if "__type" in h5File.attrs.keys() and h5File.attrs["__type"] == "QfitData":
         return True
     return False
 
