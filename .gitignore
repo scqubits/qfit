@@ -1,9 +1,3 @@
 /scratch/
 /docs/build/
-
 /qfit/.idea/
-
-# Danyang's unwanted files
-.DS_Store
-*.pyc
-/danyang_tests
