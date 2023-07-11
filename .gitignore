@@ -1,2 +1,7 @@
 /scratch/
 /docs/build/
+
+# Danyang's 
+.DS_Store
+*.pyc
+/danyang_tests
