@@ -1,11 +1,11 @@
-.. datapyc
+.. qfit
    Copyright (C)  2020, Jens Koch
 
 .. _developers:
 
 .. note::
 
-   Anyone is welcome to contribute to datapyc.
+   Anyone is welcome to contribute to qfit.
 
 
 ===========

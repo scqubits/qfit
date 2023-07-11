@@ -108,7 +108,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string notr="true">datapyc</string>
+   <string notr="true">qfit</string>
   </property>
   <property name="styleSheet">
    <string notr="true">QMainWindow {background: transparent; }
@@ -643,7 +643,7 @@ QPushButton:pressed {
                 <number>0</number>
                </property>
                <property name="text">
-                <string>datapyc</string>
+                <string>qfit</string>
                </property>
               </widget>
              </item>
