@@ -1,0 +1,7 @@
+qfit
+qfit/core
+qfit/io_utils
+qfit/models
+qfit/ui_designer
+qfit/ui_views
+qfit/widgets

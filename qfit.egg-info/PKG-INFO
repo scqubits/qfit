@@ -1,0 +1,30 @@
+Metadata-Version: 2.1
+Name: qfit
+Version: 0.1.0
+Summary: qfit: data extraction GUI tool for use with scQuibts
+Author: Jens Koch
+Author-email: jens-koch@northwestern.edu
+License: BSD
+Keywords: data extraction,superconducting qubits
+Platform: Linux
+Platform: Mac OSX
+Platform: Unix
+Platform: Windows
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Scientific/Engineering
+Classifier: Operating System :: MacOS
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: Unix
+Classifier: Operating System :: Microsoft :: Windows
+Requires-Python: >=3.6
+License-File: LICENSE
+
+
+qfit is part of scQubits, an an open-source Python package for simulating superconducting qubits. The qfit package
+provides a GUI tool for loading and displaying data, for example from spectroscopy experiments. The GUI simplifies the
+extraction of data points from measurement results, as required for fitting experimental data to theoretical qubit
+models.
