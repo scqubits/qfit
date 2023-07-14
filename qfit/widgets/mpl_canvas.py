@@ -23,11 +23,21 @@ from matplotlib.backends.backend_qtagg import (
 )
 from matplotlib.figure import Figure
 from matplotlib.widgets import Cursor
+<<<<<<< HEAD
 
+=======
+
+
+import qfit.core.app_state as appstate
+>>>>>>> master
 
 import qfit.core.app_control as appstate
 
 from qfit.core.app_control import State
+
+
+class MplNavButtons(QFrame):
+    pass
 
 
 class NavigationHidden(NavigationToolbar2QT):
@@ -142,11 +152,18 @@ class SpecialCursor(Cursor):
 
         self.linev.set_xdata((event.xdata, event.xdata))
         self.lineh.set_ydata((event.ydata, event.ydata))
+<<<<<<< HEAD
 
         if (
             self.callback
             and self.callback.currentRow != 0
             and len(self.callback.database[0]) > 0
+=======
+        if (
+            self.callback
+            and self.callback.currentRow != 0
+            and len(self.callback.assocDataList[0][0]) > 0
+>>>>>>> master
         ):
             self.matching_mode = True
 

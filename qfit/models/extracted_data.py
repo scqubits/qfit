@@ -10,7 +10,11 @@
 ############################################################################
 
 
+<<<<<<< HEAD
 from typing import Callable, Optional, Union
+=======
+from typing import Union
+>>>>>>> master
 
 import numpy as np
 from PySide6 import QtGui
@@ -24,16 +28,24 @@ from PySide6.QtCore import (
 )
 
 import qfit.io_utils.file_io_serializers as serializers
+<<<<<<< HEAD
 from qfit.core.data_structures import Database
+=======
+>>>>>>> master
 
 from qfit.widgets.data_tagging import NO_TAG, Tag
 
 
+<<<<<<< HEAD
 class CurrentDatasetModel(QAbstractTableModel):
+=======
+class ActiveExtractedData(QAbstractTableModel):
+>>>>>>> master
     """This class holds one data set, as extracted by markers on the canvas. In
     addition, it references calibration data to expose either the raw selected data,
     or their calibrated counterparts."""
 
+<<<<<<< HEAD
     def __init__(self, getCurrentSetFunc: Callable):
         """
         Parameters
@@ -48,6 +60,34 @@ class CurrentDatasetModel(QAbstractTableModel):
     def dataset(self):
         return self._getCurrentSetFunc()
     
+=======
+    def __init__(self, data: np.ndarray = None):
+        """
+        Parameters
+        ----------
+        data: np.ndarray
+            numpy array of floats, shape=(2, N)
+        """
+        super().__init__()
+        self._data = data or np.empty(shape=(2, 0), dtype=np.float_)
+        self._adaptiveCalibrationFunc = None
+
+    @Slot()
+    def all(self) -> np.ndarray:
+        """
+        Return the raw data as a numpy array.
+
+        Returns
+        -------
+        ndarray
+        """
+        return self._data
+
+    @Slot()
+    def toggleCalibratedView(self):
+        self.layoutChanged.emit()
+
+>>>>>>> master
     def data(self, index: QModelIndex, role=Qt.DisplayRole):
         """
         Return data at index `index` in string format, assuming that it is a float.
@@ -62,6 +102,7 @@ class CurrentDatasetModel(QAbstractTableModel):
         -------
         str
         """
+<<<<<<< HEAD
         row, col = index.row(), index.column()
         if role == Qt.DisplayRole:
             datapoint = self.dataset[col]
@@ -70,6 +111,24 @@ class CurrentDatasetModel(QAbstractTableModel):
 
     def rowCount(self, *args):
         return 2
+=======
+        if role == Qt.DisplayRole:
+            conversionFunc = self._adaptiveCalibrationFunc()
+            value = conversionFunc(
+                [self._data[0, index.column()], self._data[1, index.column()]]
+            )
+            return "{:#.6g}".format(value[index.row()])
+
+    def rowCount(self, *args):
+        """
+        Return number of rows.
+
+        Returns
+        -------
+        int
+        """
+        return self._data.shape[0]
+>>>>>>> master
 
     def columnCount(self, *args):
         """
@@ -79,7 +138,11 @@ class CurrentDatasetModel(QAbstractTableModel):
         -------
         int
         """
+<<<<<<< HEAD
         return len(self.dataset)
+=======
+        return self._data.shape[1]
+>>>>>>> master
 
     def headerData(
         self, section: int, orientation: Qt.Orientation, role=Qt.DisplayRole
@@ -105,6 +168,46 @@ class CurrentDatasetModel(QAbstractTableModel):
             elif orientation == Qt.Horizontal:
                 return str(section)
 
+<<<<<<< HEAD
+=======
+    def setData(self, index: QModelIndex, value: float, role=Qt.EditRole) -> bool:
+        """
+
+        Parameters
+        ----------
+        index: QModelIndex
+            index of element to be set to `value`
+        value: float
+        role: int
+
+        Returns
+        -------
+        bool
+            True if assignment successful
+        """
+        if not (index.isValid() and role == Qt.EditRole):
+            return False
+        try:
+            self._data[index.row(), index.column()] = value
+        except (ValueError, IndexError):
+            return False
+        self.dataChanged.emit(index, index)
+        return True
+
+    @Slot()
+    def setAllData(self, newData: Union[float, np.ndarray]):
+        """
+        Replaces the current table of extracted data points with a new dataset of points
+
+        Parameters
+        ----------
+        newData: np.ndarray of float
+            float array of data points to substitute the current data set
+        """
+        self._data = newData
+        self.layoutChanged.emit()
+
+>>>>>>> master
     def flags(self, index: QModelIndex):
         flags = super(self.__class__, self).flags(index)
         flags |= Qt.ItemIsEditable
@@ -112,6 +215,7 @@ class CurrentDatasetModel(QAbstractTableModel):
         flags |= Qt.ItemIsEnabled
         return flags
 
+<<<<<<< HEAD
 
 # class ActiveExtractedData2(QAbstractTableModel):
 #     """This class holds one data set, as extracted by markers on the canvas. In
@@ -286,12 +390,45 @@ class CurrentDatasetModel(QAbstractTableModel):
 #         adaptiveCalibrationCallback: function
 #         """
 #         self._adaptiveCalibrationFunc = adaptiveCalibrationCallback
+=======
+    def insertColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
+        self.beginInsertColumns(parent, column, column)
+        self._data = np.insert(self._data, column, np.asarray([0.0, 0.0]), axis=1)
+        self.endInsertColumns()
+        self.layoutChanged.emit()
+        return True
+
+    def removeColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
+        self.beginRemoveColumns(parent, column, column)
+        self._data = np.delete(self._data, column, axis=1)
+        self.endRemoveColumns()
+        self.layoutChanged.emit()
+        return True
+
+    def append(self, xval: float, yval: float):
+        max_col = self.columnCount()
+        self.insertColumn(max_col)
+        self.setData(self.index(0, max_col), xval, role=Qt.EditRole)
+        self.setData(self.index(1, max_col), yval, role=Qt.EditRole)
+        self.layoutChanged.emit()
+
+    def setAdaptiveCalibrationFunc(self, adaptiveCalibrationCallback: callable):
+        """
+        Record the CalibrationData instance associated with the data.
+
+        Parameters
+        ----------
+        adaptiveCalibrationCallback: function
+        """
+        self._adaptiveCalibrationFunc = adaptiveCalibrationCallback
+>>>>>>> master
 
 
 class ListModelMeta(type(QAbstractListModel), type(serializers.Serializable)):
     pass
 
 
+<<<<<<< HEAD
 class AllDatasetsModel(QAbstractListModel):
     def __init__(self, getDatabaseFunc: Callable):
         super().__init__()
@@ -308,15 +445,32 @@ class AllDatasetsModel(QAbstractListModel):
     @property
     def currentSetIndex(self):
         return self.database.currentSetIndex
+=======
+class AllExtractedData(
+    QAbstractListModel, serializers.Serializable, metaclass=ListModelMeta
+):
+    def __init__(self):
+        super().__init__()
+        self.dataNames = ["dataset1"]
+        self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
+        self.assocTagList = [Tag()]
+        self._calibrationFunc = None
+        self._currentRow = 0
+>>>>>>> master
 
     def rowCount(self, *args) -> int:
         return len(self.dataNames)
 
+<<<<<<< HEAD
     def data(self, index: QModelIndex, role: int, *args, **kwargs):
+=======
+    def data(self, index: QModelIndex, role):
+>>>>>>> master
         if role == Qt.DisplayRole:
             str_value = self.dataNames[index.row()]
             return str_value
 
+<<<<<<< HEAD
         dataset = self.database[index.row()]
         if not dataset:
             return None
@@ -324,6 +478,11 @@ class AllDatasetsModel(QAbstractListModel):
         if role == Qt.DecorationRole:
             icon1 = QtGui.QIcon()
             if dataset[0].tag != NO_TAG:
+=======
+        if role == Qt.DecorationRole:
+            icon1 = QtGui.QIcon()
+            if self.assocTagList[index.row()].tagType != NO_TAG:
+>>>>>>> master
                 icon1.addPixmap(
                     QtGui.QPixmap(":/icons/24x24/cil-list.png"),
                     QtGui.QIcon.Normal,
@@ -337,6 +496,7 @@ class AllDatasetsModel(QAbstractListModel):
                 )
             return icon1
 
+<<<<<<< HEAD
     # def setData(self, index: QModelIndex, value, role=None):
     #     if not (index.isValid() and role == Qt.EditRole):
     #         return False
@@ -346,6 +506,17 @@ class AllDatasetsModel(QAbstractListModel):
     #         return False
     #     self.dataChanged.emit(index, index)
     #     return True
+=======
+    def setData(self, index: QModelIndex, value, role=None):
+        if not (index.isValid() and role == Qt.EditRole):
+            return False
+        try:
+            self.dataNames[index.row()] = value
+        except (ValueError, IndexError):
+            return False
+        self.dataChanged.emit(index, index)
+        return True
+>>>>>>> master
 
     def flags(self, index):
         flags = super(self.__class__, self).flags(index)
@@ -354,6 +525,7 @@ class AllDatasetsModel(QAbstractListModel):
         flags |= Qt.ItemIsEnabled
         return flags
 
+<<<<<<< HEAD
     # def insertRow(self, row, parent=QModelIndex(), *args, **kwargs):
     #     self.beginInsertRows(parent, row, row)
     #     self.dataNames.insert(row, "")
@@ -382,10 +554,40 @@ class AllDatasetsModel(QAbstractListModel):
     def isEmpty(self):
         if self.database[0]:
         # if len(self.assocDataList) == 1 and self.assocDataList[0].size == 0:
+=======
+    def insertRow(self, row, parent=QModelIndex(), *args, **kwargs):
+        self.beginInsertRows(parent, row, row)
+        self.dataNames.insert(row, "")
+        self.assocDataList.insert(row, np.empty(shape=(2, 0), dtype=np.float_))
+        self.assocTagList.insert(row, Tag())
+        self.endInsertRows()
+        return True
+
+    def removeRow(self, row, parent=QModelIndex(), *args, **kwargs):
+        if self.rowCount() == 1:
+            self.assocDataList[0] = np.empty(shape=(2, 0), dtype=np.float_)
+            self.assocTagList[0] = Tag()
+            self.layoutChanged.emit()
+            return True
+
+        self.beginRemoveRows(parent, row, row)
+        self.dataNames.pop(row)
+        self.assocDataList.pop(row)
+        self.assocTagList.pop(row)
+        self.endRemoveRows()
+        if self.currentRow == self.rowCount():
+            self._currentRow -= 1
+        self.layoutChanged.emit()
+        return True
+
+    def isEmpty(self):
+        if len(self.assocDataList) == 1 and self.assocDataList[0].size == 0:
+>>>>>>> master
             return True
         return False
 
     def swapXY(self):
+<<<<<<< HEAD
         pass
         # swappedAssocDataList = [array[[1, 0]] for array in self.assocDataList]
         # self.assocDataList = swappedAssocDataList
@@ -393,6 +595,13 @@ class AllDatasetsModel(QAbstractListModel):
     @Slot()
     def newRow(self, str_value=None):
         pass
+=======
+        swappedAssocDataList = [array[[1, 0]] for array in self.assocDataList]
+        self.assocDataList = swappedAssocDataList
+
+    @Slot()
+    def newRow(self, str_value=None):
+>>>>>>> master
         rowCount = self.rowCount()
         str_value = str_value or "dataset" + str(rowCount + 1)
         counter = 1
@@ -404,12 +613,18 @@ class AllDatasetsModel(QAbstractListModel):
 
     @Slot()
     def removeCurrentRow(self):
+<<<<<<< HEAD
         pass
+=======
+>>>>>>> master
         self.removeRow(self.currentRow)
 
     @Slot()
     def removeAll(self):
+<<<<<<< HEAD
         pass
+=======
+>>>>>>> master
         self.beginRemoveRows(QModelIndex(), 0, self.rowCount() - 1)
         self.dataNames = ["dataset1"]
         self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
@@ -420,6 +635,7 @@ class AllDatasetsModel(QAbstractListModel):
 
     @property
     def currentRow(self):
+<<<<<<< HEAD
         return self.database.currentSet()
 
     @Slot()
@@ -437,18 +653,44 @@ class AllDatasetsModel(QAbstractListModel):
 
     def currentTagItem(self):
         pass
+=======
+        return self._currentRow
+
+    @Slot()
+    def setCurrentRow(self, index):
+        self._currentRow = index.row()
+
+    def currentItem(self):
+        return self.data(self.index(self.currentRow, 0), role=Qt.EditRole)
+
+    def currentAssocItem(self):
+        return self.assocDataList[self.currentRow]
+
+    def currentTagItem(self):
+>>>>>>> master
         return self.assocTagList[self.currentRow]
 
     @Slot()
     def updateAssocData(self, newData):
+<<<<<<< HEAD
         pass
+=======
+>>>>>>> master
         self.assocDataList[self.currentRow] = newData
 
     @Slot()
     def updateCurrentTag(self, newTag):
+<<<<<<< HEAD
         pass
         self.assocTagList[self.currentRow] = newTag
 
+=======
+        self.assocTagList[self.currentRow] = newTag
+
+    def setCalibrationFunc(self, calibrationDataCallback):
+        self._calibrationFunc = calibrationDataCallback
+
+>>>>>>> master
     def allDataSorted(self, applyCalibration):
         if applyCalibration:
             data = [self._calibrationFunc(dataSet) for dataSet in self.assocDataList]

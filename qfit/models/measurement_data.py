@@ -231,9 +231,7 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         return avgArray
 
     def applyWaveletFilter(self, array):
-        return skimage.restoration.denoise_wavelet(
-            array, multichannel=True, rescale_sigma=True
-        )
+        return skimage.restoration.denoise_wavelet(array, rescale_sigma=True)
 
     def applyTopHatFilter(self, array):
         array = array - np.mean(array)
@@ -269,10 +267,23 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
 
         if self.checkBoxCallbacks["logColoring"]():
             linthresh = max(abs(zMin), abs(zMax)) / 20.0
+<<<<<<< HEAD
             norm = colors.SymLogNorm(
                 linthresh=linthresh,
                 vmin=zMin,
                 vmax=zMax,
+=======
+            # if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion(
+            #     "3.2.0"
+            # ):
+            #     add_on_mpl_3_2_0 = {"base": 10}
+            # else:
+            #     add_on_mpl_3_2_0 = {}
+            norm = colors.SymLogNorm(
+                linthresh=linthresh,
+                vmin=zMin,
+                vmax=zMax,  # **add_on_mpl_3_2_0
+>>>>>>> master
             )
             zMin = zMax = None
         else:
@@ -329,10 +340,23 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
         zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
 
         if self.checkBoxCallbacks["logColoring"]():
+<<<<<<< HEAD
+=======
+            # if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion(
+            #     "3.2.0"
+            # ):
+            #     add_on_mpl_3_2_0 = {"base": 10}
+            # else:
+            #     add_on_mpl_3_2_0 = {}
+>>>>>>> master
             norm = colors.SymLogNorm(
                 linthresh=0.2,
                 vmin=self.currentZ.data.min(),
                 vmax=self.currentZ.data.max(),
+<<<<<<< HEAD
+=======
+                # **add_on_mpl_3_2_0
+>>>>>>> master
             )
         else:
             norm = None

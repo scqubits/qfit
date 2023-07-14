@@ -19,7 +19,7 @@ import matplotlib as mpl
 import matplotlib.cm as cm
 import numpy as np
 
-from PySide6.QtCore import QPoint, QRect, QSize, Qt, Signal, Slot
+from PySide6.QtCore import QPoint, QRect, QSize, Qt, Slot
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
     QGraphicsDropShadowEffect,
@@ -28,12 +28,12 @@ from PySide6.QtWidgets import (
     QStyle,
 )
 
-import qfit.core.app_control as app_control
-from qfit.core.data_structures import Calibration
+import qfit.core.app_state as appstate
+from qfit.models.calibration_data import CalibrationData
 from qfit.widgets.calibration import CalibrationView
-from qfit.core.app_control import State
+from qfit.core.app_state import State
 from qfit.core.helpers import transposeEach
-from qfit.models.extracted_data import CurrentDatasetModel, AllDatasetsModel
+from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.widgets.data_tagging import TagDataView
 from qfit.io_utils.import_data import importFile
 from qfit.io_utils.save_data import saveFile
@@ -55,11 +55,12 @@ class MainWindow(ResizableFramelessWindow):
     """Class for the main window of the app."""
 
     ui: Ui_MainWindow
+    # ui_menu: Ui_MenuWidget
 
     measurementData: MeasurementDataType
     extractedData: "QfitData"
-    activeDataset: CurrentDatasetModel
-    allDatasets: AllDatasetsModel
+    activeDataset: ActiveExtractedData
+    allDatasets: AllExtractedData
     tagDataView: TagDataView
 
     calibration: Calibration
@@ -169,6 +170,19 @@ class MainWindow(ResizableFramelessWindow):
             eff.setColor(QColor(0, 0, 0, 90))
             button.setGraphicsEffect(eff)
 
+        for button in [
+            self.ui.zoomViewButton,
+            self.ui.resetViewButton,
+            self.ui.panViewButton,
+            self.ui.selectViewButton,
+            self.ui.swapXYButton,
+        ]:
+            eff = QGraphicsDropShadowEffect(button)
+            eff.setOffset(2)
+            eff.setBlurRadius(18.0)
+            eff.setColor(QColor(0, 0, 0, 90))
+            button.setGraphicsEffect(eff)
+
     def setupUICalibration(self):
         """For the interface that enables calibration of data with respect to x and y axis, group QLineEdit elements
         and the corresponding buttons in dicts. Set up a dictionary mapping calibration labels to the corresponding
@@ -220,9 +234,12 @@ class MainWindow(ResizableFramelessWindow):
 
     def setupUIData(self):
         """Set up the main class instances holding the data extracted from placing
-        markers on the canvas. The AllDatasetsModel instance holds xy_data data, whereas the
-        CurrentDatasetModel instance holds data of the currently selected data set."""
-        self.activeDataset = CurrentDatasetModel(app_control.DATA.currentSet)
+        markers on the canvas. The AllExtractedData instance holds all data, whereas the
+        ActiveExtractedData instance holds data of the currently selected data set."""
+        self.activeDataset = ActiveExtractedData()
+        self.activeDataset.setAdaptiveCalibrationFunc(
+            self.calibrationData.adaptiveConversionFunc
+        )
         self.ui.dataTableView.setModel(self.activeDataset)
 
         self.allDatasets = AllDatasetsModel(app_control.DATA.callback)
@@ -412,7 +429,7 @@ class MainWindow(ResizableFramelessWindow):
         for calibrationLabel in ["X1", "X2", "Y1", "Y2"]:
             data = event.xdata if (calibrationLabel[0] == "X") else event.ydata
 
-            if app_control.CENTRAL.state == self.calibrationStates[calibrationLabel]:
+            if appstate.state == self.calibrationStates[calibrationLabel]:
                 self.rawLineEdits[calibrationLabel].setText(str(data))
                 self.rawLineEdits[calibrationLabel].home(False)
                 self.mapLineEdits[calibrationLabel].selectAll()
@@ -421,8 +438,8 @@ class MainWindow(ResizableFramelessWindow):
                 self.rawLineEdits[calibrationLabel].editingFinished.emit()
                 return
 
-        if app_control.CENTRAL.state == State.SELECT:
-            current_data = self.allDatasets.database.currentSetXY()
+        if appstate.state == State.SELECT:
+            current_data = self.activeDataset.all()
             if self.matching_mode:
                 x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
             else:
@@ -441,7 +458,7 @@ class MainWindow(ResizableFramelessWindow):
         self.matching_mode = False
         if (
             self.allDatasets.currentRow != 0
-            and len(self.allDatasets.database[0]) > 0
+            and len(self.allDatasets.assocDataList[0][0]) > 0
         ):
             self.matching_mode = True
         if not self.matching_mode:
@@ -454,7 +471,7 @@ class MainWindow(ResizableFramelessWindow):
     def updatePlot(self, initialize: bool = False, **kwargs):
         """Update the current plot of measurement data and markers of selected data
         points."""
-        if self.ui.mplFigureCanvas._canvasFrozen:
+        if self.disconnectCanvas:
             return
 
         # If this is not the first time of plotting, store the current axes limits and
@@ -477,7 +494,7 @@ class MainWindow(ResizableFramelessWindow):
         # If there are any extracted data points in the currently active data set, show
         # those via a scatter plot.
         if self.activeDataset.columnCount() > 0:
-            dataXY = self.activeDataset.xy_data()
+            dataXY = self.activeDataset.all()
             self.axes.scatter(
                 dataXY[0],
                 dataXY[1],
@@ -487,17 +504,17 @@ class MainWindow(ResizableFramelessWindow):
                 alpha=0.5,
             )
 
-        # plotted_data = []
-        # line_data = self.allDatasets.assocDataList[0]
-        # for count, i in enumerate(line_data[0]):
-        #     if i not in plotted_data:
-        #         self.axes.axline(
-        #             (i, line_data[1][count]),
-        #             (i, line_data[1][count] - (line_data[1][count]) * 0.1),
-        #             c=line_color,
-        #             alpha=0.7,
-        #         )
-        #     plotted_data.append(i)
+        plotted_data = []
+        line_data = self.allDatasets.assocDataList[0]
+        for count, i in enumerate(line_data[0]):
+            if i not in plotted_data:
+                self.axes.axline(
+                    (i, line_data[1][count]),
+                    (i, line_data[1][count] - (line_data[1][count]) * 0.1),
+                    c=line_color,
+                    alpha=0.7,
+                )
+            plotted_data.append(i)
 
         # Make sure that new axes limits match the old ones.
         if not initialize:
@@ -518,24 +535,24 @@ class MainWindow(ResizableFramelessWindow):
         """Mouse click on one of the calibration buttons prompts switching to
         calibration mode. Mouse cursor crosshair is adjusted and canvas waits for
         click setting calibration point x or y component."""
-        app_control.CENTRAL.state = self.calibrationStates[calibrationLabel]
+        appstate.state = self.calibrationStates[calibrationLabel]
         self.ui.mplFigureCanvas.calibrateOn(calibrationLabel[0])
 
     @Slot()
     def updateCalibration(self):
-        """Transfer new calibration data from CalibrationView over to calibration
+        """Transfer new calibration data from CalibrationView over to calibrationData
         instance. If the model is currently applying the calibration, then emit
         signal to rewrite the table."""
-        self.calibration.setCalibration(*self.calibrationView.calibrationPoints())
-        if self.calibration.applyCalibration:
+        self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
+        if self.calibrationData.applyCalibration:
             self.activeDataset.layoutChanged.emit()
 
     @Slot()
     def toggleCalibration(self):
         """If calibration check box is changed, toggle the calibration status of the
-        calibration. Also induce change at the level of the displayed data of
+        calibrationData. Also induce change at the level of the displayed data of
         selected points."""
-        self.calibration.toggleCalibration()
+        self.calibrationData.toggleCalibration()
         self.activeDataset.toggleCalibratedView()
 
     @Slot(int)

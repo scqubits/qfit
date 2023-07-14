@@ -102,7 +102,6 @@ class GenericH5Reader:
 
 class LabberH5Reader:
     def fromFile(self, fileName):
-
         with h5py.File(fileName, "r") as h5File:
             dataEntries = ["Data"]
             dataEntries += [name + "/Data" for name in h5File if name[0:4] == "Log_"]

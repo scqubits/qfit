@@ -11,12 +11,21 @@
 
 
 import qfit.io_utils.file_io_serializers as serializers
+<<<<<<< HEAD
 from qfit.core.data_structures import Calibration
 
 
 serializers.SERIALIZABLE_REGISTRY["Calibration"] = Calibration
 
 
+=======
+
+from qfit.models.calibration_data import CalibrationData
+
+serializers.SERIALIZABLE_REGISTRY["CalibrationData"] = CalibrationData
+
+
+>>>>>>> master
 class QfitData(serializers.Serializable):
     def __init__(
         self,
