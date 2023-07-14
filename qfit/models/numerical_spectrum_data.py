@@ -13,5 +13,20 @@
 from typing import Callable, Optional, Union
 
 import numpy as np
+from matplotlib.axes import Axes
+
 import qfit.io_utils.file_io_serializers as serializers
-from qfit.core.data_structures import Database
+
+class SpectrumData(serializers.Serializable):
+    """
+    Class for storing and manipulating the spectrum data calculated from the scqbits
+    backends. 
+    """
+    def __init__(self, transitions, labels) -> None:
+        pass
+
+    def canvasPlot(self, axes: Axes, **kwargs):
+        pass
+
+    
+
