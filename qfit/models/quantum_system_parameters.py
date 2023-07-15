@@ -1,4 +1,4 @@
-import typing as Dict, Union, overload
+from typing import Dict, Union, overload
 
 EL_range = {"min": 1e-5, "max": 10.0}
 EJ_range = {"min": 1e-5, "max": 70.0}
