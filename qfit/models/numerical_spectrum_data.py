@@ -25,8 +25,11 @@ class SpectrumData(serializers.Serializable):
     def __init__(self, transitions, labels) -> None:
         pass
 
+    def update(self, transitions, labels) -> None:
+        pass
+
     def canvasPlot(self, axes: Axes, **kwargs):
         pass
 
-    
+
 
