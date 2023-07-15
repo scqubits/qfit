@@ -6,3 +6,4 @@
 .DS_Store
 *.pyc
 /danyang_tests
+resources/resources_rc.py
