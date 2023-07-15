@@ -1,3 +1,9 @@
 /scratch/
 /docs/build/
 /qfit/.idea/
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/qfit.iml
+/.idea/vcs.xml
+/.idea/workspace.xml
+/qfit/.ipynb_checkpoints/
+/qfit.egg-info/
