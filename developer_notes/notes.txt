@@ -1,0 +1,19 @@
+QFIT
+
+
+Entry:
+
+qfit_app.py
+---------------> qfit.core.mainwindow.py
+				 |
+				 |
+				 +--->  qfit.ui_designer.ui_window.Ui_MainWindow
+				 		The file qfit/ui_designer/ui_window.py is generated from
+				 		qfit/resources/ui_window.ui
+
+				 		In a terminal, cd into the qfit root directory and do
+
+
+				 		pyside6-uic .\resources\ui_window.ui -o .\qfit\ui_designer\ui_window.py --from-imports
+
+				 		Same for ui_menu.ui
