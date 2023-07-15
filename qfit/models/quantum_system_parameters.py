@@ -1,4 +1,4 @@
-import typing as Dict, Union, overload
+from typing import Dict, Union, overload
 
 EL_range = {"min": 1e-5, "max": 10.0}
 EJ_range = {"min": 1e-5, "max": 70.0}
@@ -16,6 +16,15 @@ class QuantumSystemParameter:
     """
 
     def __init__(self, name, parent, minmax, is_int):
+        pass
+
+class QuantumSystemParameterSlider(QuantumSystemParameter):
+    """
+    Parameter that is connected to a slider.
+    """
+    def __init__(self, name, parent, minmax, is_int):
+        super().__init__(name, parent, minmax, is_int)
+
         self.sliderValueCallback = None
         # TODO: do we want to store minmax?
         # self.minmaxCallback = lambda x: minmax # not yet implemented
