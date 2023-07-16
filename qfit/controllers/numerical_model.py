@@ -115,7 +115,7 @@ class QuantumModel:
 
         pass
 
-    def _generate_update_hilbertspace(self, x) -> None:
+    def _update_hilbertspace_for_ParameterSweep(self, x) -> None:
         """
         Update the HilbertSpace object with the values of parameters and coupling coefficients
         received from the UI when the sweep is running. This method is the callable `update_hilbertspace`
