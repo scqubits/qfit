@@ -1,4 +1,4 @@
-import typing as Dict, Union, overload
+from typing import Dict, Union, overload
 
 EL_range = {"min": 1e-5, "max": 10.0}
 EJ_range = {"min": 1e-5, "max": 70.0}
@@ -10,12 +10,23 @@ float_range = {"min": 0.0, "max": 30.0}
 ncut_range = {"min": 10, "max": 50}
 
 
-class QuantumSystemParameter:
+class QuantumModelParameter:
     """
     A class to store the parameters of a quantum system.
     """
 
     def __init__(self, name, parent, minmax, is_int):
+        pass
+
+
+class QuantumModelParameterSlider(QuantumModelParameter):
+    """
+    Parameter that is connected to a slider.
+    """
+
+    def __init__(self, name, parent, minmax, is_int):
+        super().__init__(name, parent, minmax, is_int)
+
         self.sliderValueCallback = None
         # TODO: do we want to store minmax?
         # self.minmaxCallback = lambda x: minmax # not yet implemented
@@ -35,7 +46,7 @@ class QuantumSystemParameter:
             return currentValue
 
 
-class QuantumSystemParameterSet:
+class QuantumModelParameterSet:
     """
     A class to store all the parameters of a quantum system
     """
@@ -44,7 +55,7 @@ class QuantumSystemParameterSet:
         self.parameters = {}
 
     def add_parameter(self, name, parent, currentvalue, range, is_int):
-        self.parameters[name] = QuantumSystemParameter(
+        self.parameters[name] = QuantumModelParameter(
             name, parent, currentvalue, range, is_int
         )
 
@@ -52,19 +63,19 @@ class QuantumSystemParameterSet:
         self.parameters = {}
 
     @overload
-    def getParameters(self, quantumsystem) -> Dict[str, float]:
+    def getParameters(self, quantummodel) -> Dict[str, float]:
         ...
 
     @overload
-    def getParameters(self, quantumsystem, name: str) -> float:
+    def getParameters(self, quantummodel, name: str) -> float:
         ...
 
     def getParameters(
-        self, quantumsystem, name: Union[str, None] = None
+        self, quantummodel, name: Union[str, None] = None
     ) -> Union[Dict[str, float], float]:
         name_dict = {
             parameter.name: parameter.get_value_from_slider()
-            for parameter in self.parameters[quantumsystem]
+            for parameter in self.parameters[quantummodel]
         }
         if name is None:
             return name_dict

@@ -22,6 +22,9 @@ import numpy as np
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, Slot
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
+    QLabel, 
+    QWidget,
+    QVBoxLayout,
     QGraphicsDropShadowEffect,
     QMessageBox,
     QPushButton,
@@ -41,6 +44,7 @@ from qfit.settings import color_dict
 from qfit.ui_views.resizable_window import ResizableFramelessWindow
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
+from qfit.widgets.grouped_sliders import GroupedSliders
 
 if TYPE_CHECKING:
     from qfit.widgets.calibration import CalibrationLineEdit
@@ -80,6 +84,7 @@ class MainWindow(ResizableFramelessWindow):
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.insertDynamicalSliders()
 
         # fix visibility of collapsible panels
         self.ui.xyzDataGridFrame.setVisible(False)
@@ -114,6 +119,8 @@ class MainWindow(ResizableFramelessWindow):
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
+
+
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -262,6 +269,12 @@ class MainWindow(ResizableFramelessWindow):
         )
         self.ui.modeTagButton.clicked.connect(
             lambda: self.ui.pagesStackedWidget.setCurrentIndex(1)
+        )
+        self.ui.modePlotButton.clicked.connect(
+            lambda: self.ui.pagesStackedWidget.setCurrentIndex(2)
+        )
+        self.ui.modeFitButton.clicked.connect(
+            lambda: self.ui.pagesStackedWidget.setCurrentIndex(3)
         )
 
     def uiDataConnects(self):
@@ -644,6 +657,30 @@ class MainWindow(ResizableFramelessWindow):
         if distance < 0.025:
             return True
         return False
+    
+    def insertDynamicalSliders(self):
+        # create a QWidget for the scrollArea and set a layout for it
+        self.prefitScrollWidget = QWidget()
+        self.ui.prefitScrollArea.setWidget(self.prefitScrollWidget)
+        self.prefitScrollLayout = QVBoxLayout()
+        self.prefitScrollWidget.setLayout(self.prefitScrollLayout)
+
+        self.prefitSliderGroupDict = dict([
+            (f"transmon {i}", GroupedSliders(
+                ["EJ", "EC"], 
+                columns=2, 
+                label_value_position="left_right"
+            )) 
+            for i in range(10)
+        ])
+
+        for key, slider_group in self.prefitSliderGroupDict.items():
+            self.prefitScrollLayout.addWidget(QLabel(key))
+            self.prefitScrollLayout.addWidget(slider_group)
+
+        
+
+
 
     @Slot()
     def openFile(self, initialize: bool = False):

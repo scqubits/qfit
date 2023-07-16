@@ -1,0 +1,29 @@
+QComboBox{
+    background-color: rgb(27, 29, 35);
+    border-radius: 5px;
+    border: 2px solid rgb(27, 29, 35);
+    padding: 5px;
+    padding-left: 10px;
+}
+QComboBox:hover{
+    border: 2px solid rgb(64, 71, 88);
+}
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 25px; 
+    border-left-width: 3px;
+    border-left-color: rgba(39, 44, 54, 150);
+    border-left-style: solid;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;    
+    background-image: url(:/icons/16x16/cil-arrow-bottom.png);
+    background-position: center;
+    background-repeat: no-reperat;
+ }
+QComboBox QAbstractItemView {
+    color: rgb(85, 170, 255);   
+    background-color: rgb(27, 29, 35);
+    padding: 10px;
+    selection-background-color: rgb(39, 44, 54);
+}
