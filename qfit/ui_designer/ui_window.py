@@ -50,6 +50,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
+    QLayout,
     QMainWindow,
     QPushButton,
     QRadioButton,
@@ -878,17 +879,19 @@ class Ui_MainWindow(object):
 
         self.pagesStackedWidget = QStackedWidget(self.windowBodyFrame)
         self.pagesStackedWidget.setObjectName("pagesStackedWidget")
-        sizePolicy1.setHeightForWidth(
+        sizePolicy6.setHeightForWidth(
             self.pagesStackedWidget.sizePolicy().hasHeightForWidth()
         )
-        self.pagesStackedWidget.setSizePolicy(sizePolicy1)
-        self.pagesStackedWidget.setMaximumSize(QSize(420, 620))
+        self.pagesStackedWidget.setSizePolicy(sizePolicy6)
+        self.pagesStackedWidget.setMaximumSize(QSize(420, 800))
         self.extractPointsWidget = DataExtractingWidget()
         self.extractPointsWidget.setObjectName("extractPointsWidget")
         self.verticalLayout_9 = QVBoxLayout(self.extractPointsWidget)
         self.verticalLayout_9.setObjectName("verticalLayout_9")
         self.frame_8 = QFrame(self.extractPointsWidget)
         self.frame_8.setObjectName("frame_8")
+        sizePolicy5.setHeightForWidth(self.frame_8.sizePolicy().hasHeightForWidth())
+        self.frame_8.setSizePolicy(sizePolicy5)
         self.frame_8.setStyleSheet(
             "QPushButton {\n"
             '	font: 57 10pt "Roboto Medium";\n'
@@ -912,6 +915,7 @@ class Ui_MainWindow(object):
             "color: rgb(190, 130, 250);\n" 'font: 57 11pt "Roboto Medium";\n' ""
         )
         self.label_4.setFrameShape(QFrame.NoFrame)
+        self.label_4.setAlignment(Qt.AlignLeading | Qt.AlignLeft | Qt.AlignTop)
         self.label_4.setMargin(3)
 
         self.verticalLayout_12.addWidget(self.label_4)
@@ -1880,9 +1884,49 @@ class Ui_MainWindow(object):
         self.prefitWidget.setObjectName("prefitWidget")
         self.frame_prefit = QFrame(self.prefitWidget)
         self.frame_prefit.setObjectName("frame_prefit")
-        self.frame_prefit.setGeometry(QRect(10, 10, 401, 601))
-        self.frame_prefit.setFrameShape(QFrame.StyledPanel)
-        self.frame_prefit.setFrameShadow(QFrame.Raised)
+        self.frame_prefit.setGeometry(QRect(10, 10, 401, 781))
+        sizePolicy13 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        sizePolicy13.setHorizontalStretch(0)
+        sizePolicy13.setVerticalStretch(0)
+        sizePolicy13.setHeightForWidth(
+            self.frame_prefit.sizePolicy().hasHeightForWidth()
+        )
+        self.frame_prefit.setSizePolicy(sizePolicy13)
+        self.frame_prefit.setFrameShape(QFrame.NoFrame)
+        self.frame_prefit.setFrameShadow(QFrame.Plain)
+        self.verticalLayout_6 = QVBoxLayout(self.frame_prefit)
+        self.verticalLayout_6.setObjectName("verticalLayout_6")
+        self.verticalLayout_6.setSizeConstraint(QLayout.SetDefaultConstraint)
+        self.verticalLayout_6.setContentsMargins(25, 20, 9, -1)
+        self.label_6 = QLabel(self.frame_prefit)
+        self.label_6.setObjectName("label_6")
+        sizePolicy6.setHeightForWidth(self.label_6.sizePolicy().hasHeightForWidth())
+        self.label_6.setSizePolicy(sizePolicy6)
+        self.label_6.setFont(font1)
+        self.label_6.setStyleSheet(
+            "color: rgb(190, 130, 250);\n" 'font: 57 11pt "Roboto Medium";\n' ""
+        )
+        self.label_6.setFrameShape(QFrame.NoFrame)
+        self.label_6.setMargin(3)
+
+        self.verticalLayout_6.addWidget(self.label_6)
+
+        self.prefitScrollArea = QScrollArea(self.frame_prefit)
+        self.prefitScrollArea.setObjectName("prefitScrollArea")
+        self.prefitScrollArea.setStyleSheet("background-color: rgb(33,33,33);")
+        self.prefitScrollArea.setFrameShape(QFrame.NoFrame)
+        self.prefitScrollArea.setFrameShadow(QFrame.Plain)
+        self.prefitScrollArea.setWidgetResizable(True)
+        self.prefitScrollArea.setAlignment(Qt.AlignLeading | Qt.AlignLeft | Qt.AlignTop)
+        self.scrollAreaWidgetContents_2 = QWidget()
+        self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 367, 718))
+        self.verticalLayout_11 = QVBoxLayout(self.scrollAreaWidgetContents_2)
+        self.verticalLayout_11.setObjectName("verticalLayout_11")
+        self.prefitScrollArea.setWidget(self.scrollAreaWidgetContents_2)
+
+        self.verticalLayout_6.addWidget(self.prefitScrollArea)
+
         self.pagesStackedWidget.addWidget(self.prefitWidget)
         self.fitWidget = QWidget()
         self.fitWidget.setObjectName("fitWidget")
@@ -1890,8 +1934,26 @@ class Ui_MainWindow(object):
         self.frame_fit = QFrame(self.fitWidget)
         self.frame_fit.setObjectName("frame_fit")
         self.frame_fit.setGeometry(QRect(9, 9, 401, 601))
+        sizePolicy1.setHeightForWidth(self.frame_fit.sizePolicy().hasHeightForWidth())
+        self.frame_fit.setSizePolicy(sizePolicy1)
         self.frame_fit.setFrameShape(QFrame.NoFrame)
         self.frame_fit.setFrameShadow(QFrame.Plain)
+        self.verticalLayout_8 = QVBoxLayout(self.frame_fit)
+        self.verticalLayout_8.setObjectName("verticalLayout_8")
+        self.verticalLayout_8.setContentsMargins(25, 25, -1, -1)
+        self.label_7 = QLabel(self.frame_fit)
+        self.label_7.setObjectName("label_7")
+        sizePolicy1.setHeightForWidth(self.label_7.sizePolicy().hasHeightForWidth())
+        self.label_7.setSizePolicy(sizePolicy1)
+        self.label_7.setFont(font1)
+        self.label_7.setStyleSheet(
+            "color: rgb(190, 130, 250);\n" 'font: 57 11pt "Roboto Medium";\n' ""
+        )
+        self.label_7.setFrameShape(QFrame.NoFrame)
+        self.label_7.setMargin(3)
+
+        self.verticalLayout_8.addWidget(self.label_7)
+
         self.pagesStackedWidget.addWidget(self.fitWidget)
 
         self.gridLayout.addWidget(self.pagesStackedWidget, 0, 1, 1, 1)
@@ -1901,13 +1963,13 @@ class Ui_MainWindow(object):
         self.datasetListView = ListView(self.allDataSetsFrame)
         self.datasetListView.setObjectName("datasetListView")
         self.datasetListView.setGeometry(QRect(150, 11, 230, 100))
-        sizePolicy13 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
-        sizePolicy13.setHorizontalStretch(0)
-        sizePolicy13.setVerticalStretch(0)
-        sizePolicy13.setHeightForWidth(
+        sizePolicy14 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+        sizePolicy14.setHorizontalStretch(0)
+        sizePolicy14.setVerticalStretch(0)
+        sizePolicy14.setHeightForWidth(
             self.datasetListView.sizePolicy().hasHeightForWidth()
         )
-        self.datasetListView.setSizePolicy(sizePolicy13)
+        self.datasetListView.setSizePolicy(sizePolicy14)
         self.datasetListView.setMinimumSize(QSize(0, 100))
         self.datasetListView.setMaximumSize(QSize(230, 100))
         self.datasetListView.setStyleSheet("background-color: rgb(47, 47, 47)")
@@ -1990,10 +2052,15 @@ class Ui_MainWindow(object):
 
         self.mplFigureCanvas = MplFigureCanvas(self.windowBodyFrame)
         self.mplFigureCanvas.setObjectName("mplFigureCanvas")
-        sizePolicy.setHeightForWidth(
+        sizePolicy15 = QSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding
+        )
+        sizePolicy15.setHorizontalStretch(0)
+        sizePolicy15.setVerticalStretch(0)
+        sizePolicy15.setHeightForWidth(
             self.mplFigureCanvas.sizePolicy().hasHeightForWidth()
         )
-        self.mplFigureCanvas.setSizePolicy(sizePolicy)
+        self.mplFigureCanvas.setSizePolicy(sizePolicy15)
         self.mplFigureCanvas.setMinimumSize(QSize(0, 60))
         self.mplFigureCanvas.setMaximumSize(QSize(16777215, 16777215))
         self.mplFigureCanvas.setStyleSheet(
@@ -2235,6 +2302,8 @@ class Ui_MainWindow(object):
             QCoreApplication.translate("MainWindow", "RR", None)
         )
         # endif // QT_CONFIG(statustip)
+        self.label_6.setText(QCoreApplication.translate("MainWindow", "PRE-FIT", None))
+        self.label_7.setText(QCoreApplication.translate("MainWindow", "FIT", None))
         self.resetViewButton.setText("")
         self.panViewButton.setText("")
         self.zoomViewButton.setText("")

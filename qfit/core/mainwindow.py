@@ -266,7 +266,7 @@ class MainWindow(ResizableFramelessWindow):
         self.ui.modePlotButton.clicked.connect(
             lambda: self.ui.pagesStackedWidget.setCurrentIndex(2)
         )
-        self.ui.modePlotButton.clicked.connect(
+        self.ui.modeFitButton.clicked.connect(
             lambda: self.ui.pagesStackedWidget.setCurrentIndex(3)
         )
 
