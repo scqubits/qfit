@@ -263,6 +263,12 @@ class MainWindow(ResizableFramelessWindow):
         self.ui.modeTagButton.clicked.connect(
             lambda: self.ui.pagesStackedWidget.setCurrentIndex(1)
         )
+        self.ui.modePlotButton.clicked.connect(
+            lambda: self.ui.pagesStackedWidget.setCurrentIndex(2)
+        )
+        self.ui.modeFitButton.clicked.connect(
+            lambda: self.ui.pagesStackedWidget.setCurrentIndex(3)
+        )
 
     def uiDataConnects(self):
         """Make connections for changes in data."""
