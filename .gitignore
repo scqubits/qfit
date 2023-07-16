@@ -7,3 +7,4 @@
 *.pyc
 /danyang_tests
 resources/resources_rc.py
+qfit.egg-info
