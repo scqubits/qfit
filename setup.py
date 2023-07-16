@@ -56,9 +56,8 @@ with open(os.path.join(CURDIR, "requirements.txt")) as requirements:
 PACKAGES = [
     "qfit",
     "qfit/core",
-    "qfit/calibration",
-    "qfit/canvas",
-    "qfit/data",
+    "qfit/models",
+    "qfit/widgets",
     "qfit/io_utils",
     "qfit/ui_designer",
 ]
