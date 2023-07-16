@@ -36,7 +36,7 @@ class QuantumModel:
         self.parameter_set: QuantumModelParameterSet = self.getParamNames(
             self.hilbertspace
         )
-        self.sweep = self._generateSweep()
+        self.sweep = self._generateParameterSweep()
 
     @staticmethod
     def getParamNames(hilbertspace: HilbertSpace) -> QuantumModelParameterSet:
@@ -77,7 +77,7 @@ class QuantumModel:
         """
         pass
 
-    def _generateSweep(self) -> ParameterSweep:
+    def _generateParameterSweep(self) -> ParameterSweep:
         """
         Generate a ParameterSweep object from the HilbertSpace object.
 
