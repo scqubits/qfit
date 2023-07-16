@@ -7,3 +7,8 @@
 /.idea/workspace.xml
 /qfit/.ipynb_checkpoints/
 /qfit.egg-info/
+
+# Danyang's unwanted files
+.DS_Store
+*.pyc
+/danyang_tests
