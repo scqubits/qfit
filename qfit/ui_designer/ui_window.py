@@ -1918,12 +1918,12 @@ class Ui_MainWindow(object):
         self.prefitScrollArea.setFrameShadow(QFrame.Plain)
         self.prefitScrollArea.setWidgetResizable(True)
         self.prefitScrollArea.setAlignment(Qt.AlignLeading | Qt.AlignLeft | Qt.AlignTop)
-        self.scrollAreaWidgetContents_2 = QWidget()
-        self.scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 367, 718))
-        self.verticalLayout_11 = QVBoxLayout(self.scrollAreaWidgetContents_2)
+        self.prefitScrollAreaWidget = QWidget()
+        self.prefitScrollAreaWidget.setObjectName("prefitScrollAreaWidget")
+        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 367, 718))
+        self.verticalLayout_11 = QVBoxLayout(self.prefitScrollAreaWidget)
         self.verticalLayout_11.setObjectName("verticalLayout_11")
-        self.prefitScrollArea.setWidget(self.scrollAreaWidgetContents_2)
+        self.prefitScrollArea.setWidget(self.prefitScrollAreaWidget)
 
         self.verticalLayout_6.addWidget(self.prefitScrollArea)
 

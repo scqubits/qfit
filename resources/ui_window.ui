@@ -2983,7 +2983,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                  <property name="alignment">
                   <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
                  </property>
-                 <widget class="QWidget" name="scrollAreaWidgetContents_2">
+                 <widget class="QWidget" name="prefitScrollAreaWidget">
                   <property name="geometry">
                    <rect>
                     <x>0</x>
