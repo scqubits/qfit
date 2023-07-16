@@ -8,11 +8,14 @@ from scqubits.core.qubit_base import QuantumSystem
 
 from typing import Dict, List, Tuple, Union
 
-from qfit.models.quantum_system_parameters import QuantumSystemParameter, QuantumSystemParameterSet
+from qfit.models.quantum_model_parameters import (
+    QuantumModelParameter,
+    QuantumModelParameterSet,
+)
 from qfit.models.numerical_spectrum_data import SpectrumData
 
 
-class NumericalModel():
+class QuantumModel:
     """
     Class for handling the HilbertSpace object, including: (1) identifying parameters in each subsystem of the Hamiltonian
     and coupling coefficients of the interaction terms, (2) receiving updated values of parameters and coupling coefficients
@@ -23,21 +26,20 @@ class NumericalModel():
     ----------
     hilbertspace: HilbertSpace
     """
+
     def __init__(
         self,
         hilbertspace: HilbertSpace,
     ):
-        
         super().__init__()
         self.hilbertspace: HilbertSpace = hilbertspace
-        self.parameter_set: QuantumSystemParameterSet = self.getParamNames(
+        self.parameter_set: QuantumModelParameterSet = self.getParamNames(
             self.hilbertspace
         )
-        self.sweep = self._generateSweep() 
-        
+        self.sweep = self._generateSweep()
 
     @staticmethod
-    def getParamNames(hilbertspace: HilbertSpace) -> QuantumSystemParameterSet:
+    def getParamNames(hilbertspace: HilbertSpace) -> QuantumModelParameterSet:
         """
         Get the names of all parameters (excluding offset charges and external fluxes) in the HilbertSpace object.
         The returned dictionary has subsystem id strings as keys and dictionaries of different types of parameters
@@ -55,18 +57,18 @@ class NumericalModel():
         """
 
         return
-    
+
     @staticmethod
-    def _map1D(x: float, coeffs, biases) -> Tuple[QuantumSystemParameter, ...]:
+    def _map1D(x: float, coeffs, biases) -> Tuple[QuantumModelParameter, ...]:
         """
-        The actual swept parameters (flux, ng, ...) are linearly related to the value of 
+        The actual swept parameters (flux, ng, ...) are linearly related to the value of
         the x axis of the transition plot. This funcition serves as a map between the two.
         """
         return
-    
+
     def setSweptParameter(
-        self, 
-        parameters: Union[str, List[str]], 
+        self,
+        parameters: Union[str, List[str]],
         parents: Union[QuantumSystem, List[QuantumSystem]],
     ) -> None:
         """
@@ -74,7 +76,6 @@ class NumericalModel():
         instead be swept over as the x axis of the transition plot. This function sets the
         """
         pass
-
 
     def _generateSweep(self) -> ParameterSweep:
         """
@@ -89,9 +90,9 @@ class NumericalModel():
 
         pass
 
-    def _updateHilbertspace(self, parameter: QuantumSystemParameter) -> None:
+    def _updateQuantumModelParameter(self, parameter: QuantumModelParameter) -> None:
         """
-        Update the HilbertSpace object with the value of a parameter received from the UI.
+        Update HilbertSpace object with the value of a parameter received from the UI.
 
         Parameters
         ----------
@@ -100,9 +101,11 @@ class NumericalModel():
 
         pass
 
-    def _updateHilbertspaceBySlider(self, parameter_set: QuantumSystemParameterSet) -> None:
+    def _updateQuantumModelBySlider(
+        self, parameter_set: QuantumModelParameterSet
+    ) -> None:
         """
-        Update the HilbertSpace object with the values of parameters and coupling coefficients 
+        Update the HilbertSpace object with the values of parameters and coupling coefficients
         received from the UI.
 
         Parameters
@@ -112,28 +115,28 @@ class NumericalModel():
 
         pass
 
-    def _updateHilbertspaceInSweep(self, x) -> None:
+    def _generate_update_hilbertspace(self, x) -> None:
         """
-        Update the HilbertSpace object with the values of parameters and coupling coefficients 
-        received from the UI when the sweep is running.
+        Update the HilbertSpace object with the values of parameters and coupling coefficients
+        received from the UI when the sweep is running. This method is the callable `update_hilbertspace`
+        that is passed to the ParameterSweep object.
         """
 
         # use _map1D to get the values of parameters and coupling coefficients from x
 
         pass
 
-
-    def _updateSweepBySlider(self) -> None:
+    def _updateParameterSweepBySlider(self) -> None:
         """
-        Update the ParameterSweep object with the values of parameters and coupling coefficients 
-        received from the UI. 
+        Update/regenerate the ParameterSweep object with the values of parameters and coupling coefficients
+        received from the UI.
         """
 
         pass
 
     def _computeSpectrum(self) -> None:
         """
-        Compute the transition spectrum from the ParameterSweep object and send data to 
+        Compute the transition spectrum from the ParameterSweep object and send data to
         the spectrum model.
         """
 
