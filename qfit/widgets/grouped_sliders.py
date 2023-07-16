@@ -19,11 +19,11 @@ class LabeledSlider(QWidget):
         self.slider = QSlider(Qt.Horizontal, self)
         self.value = QLabel("0", self)
 
-        # insert the widgets into the layout
-        self._insert_widgets(label_value_position)
-        
         # initialize the layout
-        self.layout = QGridLayout(self)
+        self.sliderLayout = QGridLayout(self)
+
+        # insert the widgets into the layout
+        self._insertWidgets(label_value_position)
         
         # connect the slider to the value label
         self.slider.valueChanged.connect(self.updateValue)
@@ -45,9 +45,9 @@ class LabeledSlider(QWidget):
         else:
             raise ValueError(f"Unknown label_value_position: {label_value_position}")
         
-        self.layout.addWidget(self.slider, *slider_position)
-        self.layout.addWidget(self.label, *label_position)
-        self.layout.addWidget(self.value, *value_position)
+        self.sliderLayout.addWidget(self.slider, *slider_position)
+        self.sliderLayout.addWidget(self.label, *label_position)
+        self.sliderLayout.addWidget(self.value, *value_position)
     
     def updateValue(self, value):
         self.value.setText(str(value))
@@ -63,23 +63,23 @@ class GroupedSliders(QWidget):
     ):
         super().__init__(parent)
         
-        self.layout = QGridLayout(self)
+        self.gridLayout = QGridLayout(self)
         self.sliders = {}
         self.columns = columns
         self.label_value_position = label_value_position
 
-        self.insertSliders(slider_names)
+        self.createSliders(slider_names)
 
-    def insertSliders(self, slider_names):
+    def createSliders(self, slider_names):
         # Clear existing sliders
         self.clearLayout()
 
         for idx, name in enumerate(slider_names):
             slider = LabeledSlider(label_text=name, label_value_position=self.label_value_position)
             self.sliders[name] = slider
-            self.layout.addWidget(slider, idx // self.columns, idx % self.columns)
+            self.gridLayout.addWidget(slider, idx // self.columns, idx % self.columns)
             
     def clearLayout(self):
-        for i in reversed(range(self.layout.count())): 
-            self.layout.itemAt(i).widget().setParent(None)
+        for i in reversed(range(self.gridLayout.count())): 
+            self.gridLayout.itemAt(i).widget().setParent(None)
         self.sliders.clear()
