@@ -3,9 +3,13 @@ from PySide6.QtWidgets import (
     QLineEdit, 
     QLabel, 
     QWidget, 
-    QGridLayout
+    QGridLayout,
+    QVBoxLayout,
+    QGroupBox
 )
 from PySide6.QtCore import Qt
+
+from typing import Dict, List, Tuple, Union
 
 class LabeledSlider(QWidget):
     """A widget that contains a slider as well as its name and value as QLineEdit."""
@@ -62,7 +66,6 @@ class LabeledSlider(QWidget):
             self.slider.setValue(int(value))
 
 
-
 class GroupedSliders(QWidget):
     def __init__(
         self, 
@@ -80,6 +83,18 @@ class GroupedSliders(QWidget):
 
         self.createSliders(slider_names)
 
+    def keys(self):
+        return self.sliders.keys()
+    
+    def values(self):
+        return self.sliders.values()
+    
+    def items(self):
+        return self.sliders.items()
+    
+    def __getitem__(self, key) -> LabeledSlider:
+        return self.sliders[key]
+
     def createSliders(self, slider_names):
         # Clear existing sliders
         self.clearLayout()
@@ -93,3 +108,80 @@ class GroupedSliders(QWidget):
         for i in reversed(range(self.gridLayout.count())): 
             self.gridLayout.itemAt(i).widget().setParent(None)
         self.sliders.clear()
+
+
+class FoldableWidget(QGroupBox):
+    def __init__(self, title='Foldable', content_widget=None, parent=None):
+        super().__init__(parent)
+
+        self.setTitle(title)
+        self.setCheckable(True)
+
+        self.boxLayout = QVBoxLayout(self)
+        self.content_widget = content_widget if content_widget else QLabel("No Content", self)
+        self.boxLayout.addWidget(self.content_widget)
+
+        self.setChecked(False)
+        self.toggleContent(self.isChecked())
+        self.toggled.connect(self.toggleContent)
+
+    def toggleContent(self, checked):
+        self.content_widget.setVisible(checked)
+
+    def setConentWidget(self, content_widget):
+        # remove
+        self.boxLayout.removeWidget(self.content_widget)
+
+        # add
+        self.content_widget = content_widget
+        self.boxLayout.addWidget(self.content_widget)
+
+
+class GroupedSliderSet(QWidget):
+    def __init__(
+        self, 
+        columns=2, 
+        label_value_position='left_right',
+        parent=None
+    ):
+        super().__init__(parent)
+
+        self.sliderSetParent = parent
+        self.columns = columns
+        self.labelValuePosition = label_value_position
+
+        self.sliderSetLayout = QVBoxLayout(self)
+        self.slider_groups: Dict[str, GroupedSliders] = {}
+
+    def keys(self):
+        return self.slider_groups.keys()
+    
+    def values(self):
+        return self.slider_groups.values()
+    
+    def items(self):
+        return self.slider_groups.items()
+    
+    def __getitem__(self, key):
+        return self.slider_groups[key]
+    
+    def addGroupedSliders(
+        self, 
+        set_name: str, 
+        slider_names: List[str], 
+    ):
+        # store the sliders
+        self.slider_groups[set_name] = GroupedSliders(
+            slider_names, 
+            columns=self.columns, 
+            label_value_position=self.labelValuePosition,
+            parent=self.sliderSetParent,
+        )
+
+        # add the sliders to the layout
+        self.sliderSetLayout.addWidget(FoldableWidget(
+            set_name,
+            self.slider_groups[set_name],
+        ))
+
+    
