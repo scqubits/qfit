@@ -1,6 +1,9 @@
-from PySide6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, 
-                               QSlider, QLabel, QWidget, QScrollArea, 
-                               QGridLayout)
+from PySide6.QtWidgets import (
+    QSlider, 
+    QLabel, 
+    QWidget, 
+    QGridLayout
+)
 from PySide6.QtCore import Qt
 
 
