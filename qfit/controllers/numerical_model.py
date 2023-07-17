@@ -162,16 +162,34 @@ class QuantumModel:
 
         pass
 
-    def _updateQuantumModelParameter(self, parameter: QuantumModelParameter) -> None:
+    def _updateQuantumModelParameter(
+        self, parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
+    ) -> None:
         """
         Update HilbertSpace object with the value of a parameter received from the UI.
 
         Parameters
         ----------
-        parameter: QuantumModelParameter
+        parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
         """
-
-        pass
+        hilbertspace = self.hilbertspace
+        subsystems = hilbertspace.subsystem_list
+        # first, check if the parameter belongs to the HilbertSpace object
+        if parameter.parent == hilbertspace:
+            # the parameter in this case is always an interaction strength
+            # add the if condition here in case if we want to adjust other parameters in the future
+            if parameter.param_type == "interaction_strength":
+                interaction_index = int(parameter.name[1:]) - 1
+                interaction = hilbertspace.interaction_list[interaction_index]
+                interaction.g_strength = parameter.value
+        # otherwise, the parameters are class parameters of the subsystems
+        else:
+            # find out the parent of the parameter
+            for subsystem in subsystems:
+                if parameter.parent == subsystem:
+                    setattr(subsystem, parameter.name, parameter.value)
+                    # TODO: for future, phi grid min/max would need special care here
+                    break
 
     def _updateQuantumModelBySlider(
         self, parameter_set: QuantumModelParameterSet
