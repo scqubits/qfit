@@ -2,6 +2,7 @@ import numpy as np
 
 from typing import overload
 
+import scqubits as scq
 from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.param_sweep import ParameterSweep
 from scqubits.core.qubit_base import QuantumSystem
@@ -17,6 +18,37 @@ from qfit.models.quantum_model_parameters import (
 from qfit.models.numerical_spectrum_data import SpectrumData
 
 from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
+
+def test_hilert_space():
+    resonator = scq.Oscillator(
+        E_osc = 6.0,
+        l_osc = 1.0,
+        truncated_dim = 4,
+        id_str = "resonator"
+    )
+        
+    fluxonium = scq.Fluxonium(
+        EJ = 5.0,
+        EC = 1,
+        EL = 0.1,
+        flux = 0.0,
+        cutoff = 100,
+        truncated_dim = 5,
+        id_str = "fluxonium"
+    )
+
+    hilbertspace = scq.HilbertSpace([resonator, fluxonium])
+
+    hilbertspace.add_interaction(
+        g = 0.01,
+        op1 = resonator.n_operator,
+        op2 = fluxonium.n_operator,
+        add_hc = False,
+        id_str = "res-qubit"
+    )
+
+    return hilbertspace
+
 
 
 class QuantumModel:
@@ -35,30 +67,26 @@ class QuantumModel:
         self,
         hilbertspace: HilbertSpace,
     ):
-        super().__init__()
         self.hilbertspace: HilbertSpace = hilbertspace
-        self.parameter_set: QuantumModelParameterSet = self.generateParameterSets(
-            self.hilbertspace
-        )
+        self.parameter_set: QuantumModelParameterSet = self.generateParameterSets()
         self.sweep = self._generateParameterSweep()
 
-    @overload
-    def generateParameterSets(
-        hilbertspace: HilbertSpace,
-        included_parameter_type: List[ParameterType],
-    ) -> QuantumModelParameterSet:
-        ...
+    # @overload
+    # def generateParameterSets(
+    #     self,
+    #     included_parameter_type: List[ParameterType],
+    # ) -> QuantumModelParameterSet:
+    #     ...
 
-    @overload
-    def generateParameterSets(
-        hilbertspace: HilbertSpace,
-        excluded_parameter_type: List[ParameterType],
-    ) -> QuantumModelParameterSet:
-        ...
+    # @overload
+    # def generateParameterSets(
+    #     self,
+    #     excluded_parameter_type: List[ParameterType],
+    # ) -> QuantumModelParameterSet:
+    #     ...
 
-    @staticmethod
     def generateParameterSets(
-        hilbertspace: HilbertSpace,
+        self,
         included_parameter_type: Union[List[ParameterType], None] = None,
         excluded_parameter_type: Union[List[ParameterType], None] = None,
     ) -> QuantumModelParameterSet:
@@ -84,7 +112,7 @@ class QuantumModel:
             )
         # first, obtain all the parameters in the subsystems of the HilbertSpace object
         parameter_set = QuantumModelParameterSet()
-        subsystems = hilbertspace.subsystem_list
+        subsystems = self.hilbertspace.subsystem_list
         for subsystem in subsystems:
             # obtain the parameter names in the subsystem
             # first identify the type of the subsystem
@@ -120,11 +148,11 @@ class QuantumModel:
         ):
             return parameter_set
         else:
-            interactions = hilbertspace.interaction_list
+            interactions = self.hilbertspace.interaction_list
             for interaction_term_index in range(len(interactions)):
                 parameter_set.add_parameter(
                     f"g{interaction_term_index+1}",
-                    hilbertspace,
+                    self.hilbertspace,
                     DEFAULT_PARAM_MINMAX["interaction_strength"],
                     "interaction_strength",
                 )

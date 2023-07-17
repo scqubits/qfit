@@ -44,7 +44,10 @@ from qfit.settings import color_dict
 from qfit.ui_views.resizable_window import ResizableFramelessWindow
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
-from qfit.widgets.grouped_sliders import GroupedSliders
+
+from qfit.models.quantum_model_parameters import QuantumModelParameterSet
+from qfit.controllers.numerical_model import QuantumModel
+from qfit.widgets.grouped_sliders import GroupedSliders, GroupedSliderSet
 
 if TYPE_CHECKING:
     from qfit.widgets.calibration import CalibrationLineEdit
@@ -74,17 +77,19 @@ class MainWindow(ResizableFramelessWindow):
     calibrationButtons: Dict[str, QPushButton]
     calibrationStates: Dict[str, State]
 
+    sliderParameterSet: QuantumModelParameterSet
+    sliderSet: GroupedSliderSet
+
     axes: mpl.axes.Axes
     cidCanvas: int
     offset: Union[None, QPoint]
 
-    def __init__(self, measurementData, extractedData=None):
+    def __init__(self, measurementData, hilbert_space, extractedData=None):
         ResizableFramelessWindow.__init__(self)
         self.disconnectCanvas = False  # used to temporarily switch off canvas updates
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.insertDynamicalSliders()
 
         # fix visibility of collapsible panels
         self.ui.xyzDataGridFrame.setVisible(False)
@@ -120,7 +125,11 @@ class MainWindow(ResizableFramelessWindow):
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
 
-
+        # prefit: controller, two models and their connection to view (sliders)
+        self.quantumModel = QuantumModel(hilbert_space)
+        self.sliderGroups = []
+        self.dynamicalSlidersInserts()
+        self.dynamicalSlidersConnects()
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -658,28 +667,41 @@ class MainWindow(ResizableFramelessWindow):
             return True
         return False
     
-    def insertDynamicalSliders(self):
+    def dynamicalSlidersInserts(self):
         # create a QWidget for the scrollArea and set a layout for it
         self.prefitScrollWidget = QWidget()
         self.ui.prefitScrollArea.setWidget(self.prefitScrollWidget)
         self.prefitScrollLayout = QVBoxLayout()
         self.prefitScrollWidget.setLayout(self.prefitScrollLayout)
 
-        self.prefitSliderGroupDict = dict([
-            (f"transmon {i}", GroupedSliders(
-                ["EJ", "EC"], 
-                columns=2, 
-                label_value_position="left_right"
-            )) 
-            for i in range(10)
-        ])
+        # get parameter sets
+        self.sliderParameterSet = self.quantumModel.generateParameterSets(excluded_parameter_type=["ng", "flux"])
 
-        for key, slider_group in self.prefitSliderGroupDict.items():
-            self.prefitScrollLayout.addWidget(QLabel(key))
-            self.prefitScrollLayout.addWidget(slider_group)
+        # generate sliders using the parameter set
+        self.sliderSet = GroupedSliderSet(
+            columns=1, label_value_position="left_right"
+        )
+        for key, para_dict in self.sliderParameterSet.items():
+            try:
+                group_name = key.id_str
+            except AttributeError:
+                group_name = "interactions"
 
-        
+            self.sliderSet.addGroupedSliders(
+                group_name, 
+                list(para_dict.keys()),
+            )
 
+        self.prefitScrollLayout.addWidget(self.sliderSet)
+
+    def dynamicalSlidersConnects(self):
+        # for key, para_list in self.sliderParameterSet.items():
+        #     try:
+        #         group_name = key.id_str
+        #     except AttributeError:
+        #         group_name = "interactions"
+
+        return
 
 
     @Slot()
