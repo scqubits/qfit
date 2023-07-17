@@ -44,6 +44,7 @@ from qfit.settings import color_dict
 from qfit.ui_views.resizable_window import ResizableFramelessWindow
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
+from qfit.controllers.numerical_model import QuantumModel
 from qfit.widgets.grouped_sliders import GroupedSliders
 
 if TYPE_CHECKING:
@@ -78,13 +79,12 @@ class MainWindow(ResizableFramelessWindow):
     cidCanvas: int
     offset: Union[None, QPoint]
 
-    def __init__(self, measurementData, extractedData=None):
+    def __init__(self, measurementData, hilbert_space, extractedData=None):
         ResizableFramelessWindow.__init__(self)
         self.disconnectCanvas = False  # used to temporarily switch off canvas updates
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.insertDynamicalSliders()
 
         # fix visibility of collapsible panels
         self.ui.xyzDataGridFrame.setVisible(False)
@@ -120,7 +120,11 @@ class MainWindow(ResizableFramelessWindow):
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
 
-
+        # prefit: controller, two models and their connection to view (sliders)
+        self.quantumModel = QuantumModel(hilbert_space)
+        self.sliderGroups = []
+        self.dynamicalSlidersInserts()
+        self.dynamicalSlidersConnects()
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -658,12 +662,15 @@ class MainWindow(ResizableFramelessWindow):
             return True
         return False
     
-    def insertDynamicalSliders(self):
+    def dynamicalSlidersInserts(self):
         # create a QWidget for the scrollArea and set a layout for it
         self.prefitScrollWidget = QWidget()
         self.ui.prefitScrollArea.setWidget(self.prefitScrollWidget)
         self.prefitScrollLayout = QVBoxLayout()
         self.prefitScrollWidget.setLayout(self.prefitScrollLayout)
+
+        # get parameter sets
+        # self.quantumModel.
 
         self.prefitSliderGroupDict = dict([
             (f"transmon {i}", GroupedSliders(
@@ -678,7 +685,8 @@ class MainWindow(ResizableFramelessWindow):
             self.prefitScrollLayout.addWidget(QLabel(key))
             self.prefitScrollLayout.addWidget(slider_group)
 
-        
+    def dynamicalSlidersConnects(self):
+        pass
 
 
 
