@@ -1,14 +1,14 @@
 from PySide6.QtWidgets import (
     QSlider, 
+    QLineEdit, 
     QLabel, 
     QWidget, 
     QGridLayout
 )
 from PySide6.QtCore import Qt
 
-
 class LabeledSlider(QWidget):
-    """A widget that contains a slider as well as its name and value as labels."""
+    """A widget that contains a slider as well as its name and value as QLineEdit."""
     def __init__(
         self, 
         label_text='Slider', 
@@ -20,7 +20,8 @@ class LabeledSlider(QWidget):
         # initialize the widgets
         self.label = QLabel(label_text, self)
         self.slider = QSlider(Qt.Horizontal, self)
-        self.value = QLabel("0", self)
+        self.value = QLineEdit("0", self)
+        self.value.setMaximumWidth(50)
 
         # initialize the layout
         self.sliderLayout = QGridLayout(self)
@@ -28,8 +29,9 @@ class LabeledSlider(QWidget):
         # insert the widgets into the layout
         self._insertWidgets(label_value_position)
         
-        # connect the slider to the value label
+        # connect the slider to the value line edit
         self.slider.valueChanged.connect(self.updateValue)
+        self.value.textChanged.connect(self.updateSlider)
 
     def _insertWidgets(self, label_value_position):
         """add the widgets to the layout according to the label_value_position"""
@@ -54,6 +56,11 @@ class LabeledSlider(QWidget):
     
     def updateValue(self, value):
         self.value.setText(str(value))
+        
+    def updateSlider(self, value):
+        if value.isdigit():
+            self.slider.setValue(int(value))
+
 
 
 class GroupedSliders(QWidget):
