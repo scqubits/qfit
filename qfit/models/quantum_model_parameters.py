@@ -106,29 +106,41 @@ class QuantumModelParameterSet:
             List[Union[QuantumModelSliderParameter, QuantumModelParameter]],
         ] = {}
 
-    @overload
+    def keys(self):
+        return self.parameters.keys()
+    
+    def values(self):
+        return self.parameters.values()
+    
+    def items(self):
+        return self.parameters.items()
+    
+    def __getitem__(self, key):
+        return self.parameters[key]
+    
+    # @overload
+    # def add_parameter(
+    #     self,
+    #     name: str,
+    #     parent_system: Union[QuantumSystem, HilbertSpace],
+    #     param_type: ParameterType,
+    #     minmax: Union[Tuple[int], Tuple[float]],
+    # ):
+    #     ...
+
+    # @overload
+    # def add_parameter(
+    #     self,
+    #     name: str,
+    #     parent_system: Union[QuantumSystem, HilbertSpace],
+    #     param_type: ParameterType,
+    #     value: Union[float, int],
+    # ):
+    #     ...
+
     def add_parameter(
         self,
         name: str,
-        parent_system: Union[QuantumSystem, HilbertSpace],
-        param_type: ParameterType,
-        minmax: Union[Tuple[int], Tuple[float]],
-    ):
-        ...
-
-    @overload
-    def add_parameter(
-        self,
-        name: str,
-        parent_system: Union[QuantumSystem, HilbertSpace],
-        param_type: ParameterType,
-        value: Union[float, int],
-    ):
-        ...
-
-    def add_parameter(
-        self,
-        name,
         parent_system,
         param_type,
         minmax: Union[Tuple[int], Tuple[float], None] = None,
