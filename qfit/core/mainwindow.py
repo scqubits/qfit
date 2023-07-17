@@ -681,7 +681,7 @@ class MainWindow(ResizableFramelessWindow):
         self.sliderSet = GroupedSliderSet(
             columns=1, label_value_position="left_right"
         )
-        for key, para_list in self.sliderParameterSet.items():
+        for key, para_dict in self.sliderParameterSet.items():
             try:
                 group_name = key.id_str
             except AttributeError:
@@ -689,19 +689,19 @@ class MainWindow(ResizableFramelessWindow):
 
             self.sliderSet.addGroupedSliders(
                 group_name, 
-                [para.name for para in para_list],
+                list(para_dict.keys()),
             )
 
         self.prefitScrollLayout.addWidget(self.sliderSet)
 
     def dynamicalSlidersConnects(self):
-        for key, para_list in self.sliderParameterSet.items():
-            try:
-                group_name = key.id_str
-            except AttributeError:
-                group_name = "interactions"
+        # for key, para_list in self.sliderParameterSet.items():
+        #     try:
+        #         group_name = key.id_str
+        #     except AttributeError:
+        #         group_name = "interactions"
 
-
+        return
 
 
     @Slot()

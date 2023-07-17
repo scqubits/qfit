@@ -103,7 +103,7 @@ class QuantumModelParameterSet:
     def __init__(self):
         self.parameters: Dict[
             Union[HilbertSpace, QuantumSystem],
-            List[Union[QuantumModelSliderParameter, QuantumModelParameter]],
+            Dict[str, Union[QuantumModelSliderParameter, QuantumModelParameter]],
         ] = {}
 
     def keys(self):
@@ -143,7 +143,7 @@ class QuantumModelParameterSet:
         name: str,
         parent_system,
         param_type,
-        minmax: Union[Tuple[int], Tuple[float], None] = None,
+        minmax: Union[Tuple[int, int], Tuple[float, float], None] = None,
         value: Union[float, int, None] = None,
     ):
         """
@@ -187,16 +187,16 @@ class QuantumModelParameterSet:
         # if the parent system is not in the parameter set, add it and set its value to
         # an empty list
         if parent_system not in self.parameters:
-            self.parameters[parent_system] = []
+            self.parameters[parent_system] = {}
         # if the parameter is not a slider parameter, add it to the parameter set
         if minmax is None:
-            self.parameters[parent_system].append(
-                QuantumModelParameter(name, parent_system, param_type, value)
+            self.parameters[parent_system][name] = (
+                QuantumModelParameter(name, parent_system, value, param_type)
             )
         # if the parameter is a slider parameter, add it to the parameter set
         else:
-            self.parameters[parent_system].append(
-                QuantumModelSliderParameter(name, parent_system, param_type, minmax)
+            self.parameters[parent_system][name] = (
+                QuantumModelSliderParameter(name, parent_system, minmax, param_type)
             )
 
     def clean(self):
