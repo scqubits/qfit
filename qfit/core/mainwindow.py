@@ -44,8 +44,10 @@ from qfit.settings import color_dict
 from qfit.ui_views.resizable_window import ResizableFramelessWindow
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
+
+from qfit.models.quantum_model_parameters import QuantumModelParameterSet
 from qfit.controllers.numerical_model import QuantumModel
-from qfit.widgets.grouped_sliders import GroupedSliders
+from qfit.widgets.grouped_sliders import GroupedSliders, GroupedSliderSet
 
 if TYPE_CHECKING:
     from qfit.widgets.calibration import CalibrationLineEdit
@@ -74,6 +76,9 @@ class MainWindow(ResizableFramelessWindow):
     mapLineEdits: Dict[str, "CalibrationLineEdit"]
     calibrationButtons: Dict[str, QPushButton]
     calibrationStates: Dict[str, State]
+
+    sliderParameterSet: QuantumModelParameterSet
+    sliderSet: GroupedSliderSet
 
     axes: mpl.axes.Axes
     cidCanvas: int
@@ -670,23 +675,32 @@ class MainWindow(ResizableFramelessWindow):
         self.prefitScrollWidget.setLayout(self.prefitScrollLayout)
 
         # get parameter sets
-        # self.quantumModel.
+        self.sliderParameterSet = self.quantumModel.generateParameterSets(excluded_parameter_type=["ng", "flux"])
 
-        self.prefitSliderGroupDict = dict([
-            (f"transmon {i}", GroupedSliders(
-                ["EJ", "EC"], 
-                columns=2, 
-                label_value_position="left_right"
-            )) 
-            for i in range(10)
-        ])
+        # generate sliders using the parameter set
+        self.sliderSet = GroupedSliderSet(
+            columns=1, label_value_position="left_right"
+        )
+        for key, para_list in self.sliderParameterSet.items():
+            try:
+                group_name = key.id_str
+            except AttributeError:
+                group_name = "interactions"
 
-        for key, slider_group in self.prefitSliderGroupDict.items():
-            self.prefitScrollLayout.addWidget(QLabel(key))
-            self.prefitScrollLayout.addWidget(slider_group)
+            self.sliderSet.addGroupedSliders(
+                group_name, 
+                [para.name for para in para_list],
+            )
+
+        self.prefitScrollLayout.addWidget(self.sliderSet)
 
     def dynamicalSlidersConnects(self):
-        pass
+        for key, para_list in self.sliderParameterSet.items():
+            try:
+                group_name = key.id_str
+            except AttributeError:
+                group_name = "interactions"
+
 
 
 
