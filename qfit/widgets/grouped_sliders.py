@@ -12,8 +12,16 @@ from PySide6.QtCore import Qt
 from typing import Dict, List, Tuple, Union
 
 class LabeledSlider(QWidget):
-    """A widget that contains a slider as well as its name and value as QLineEdit."""
+    """
+    A widget that contains a slider as well as its name and value as QLineEdit.
+
+    When user are using either the slider or the value box, functions can be set 
+    to achieve that the other one will be updated accordingly. Endless call loops will
+    be avoided.
+    
+    """
     user_is_sliding = False
+    user_is_typing = False
 
     def __init__(
         self, 
@@ -38,6 +46,8 @@ class LabeledSlider(QWidget):
         # connect the widgets
         self.slider.sliderPressed.connect(self.sliderPressed)
         self.slider.sliderReleased.connect(self.sliderReleased)
+        self.value.textChanged.connect(self.boxTextChanged)
+        self.value.editingFinished.connect(self.editingFinished)
 
     def _insertWidgets(self, label_value_position):
         """add the widgets to the layout according to the label_value_position"""
@@ -66,23 +76,40 @@ class LabeledSlider(QWidget):
     def sliderReleased(self):
         self.user_is_sliding = False
 
+    def boxTextChanged(self):
+        if not self.user_is_sliding:
+            self.user_is_typing = True
+        else:
+            self.user_is_typing = False
+
+    def editingFinished(self):
+        self.user_is_typing = False
+
     def sliderValueChangedConnect(self, func):
         """
-        Make the slider only call the function when the user is sliding. 
-
-        The value box will update the slider value, but will not call the function.
+        Since the value box will update the slider value, but it won't trigger the
+        slider.valueChanged signal, we need to connect the value box to the function
         """
         def func_wrapper(*args, **kwargs):
-            if self.user_is_sliding:
+            if self.user_is_sliding and not self.user_is_typing:
                 func(*args, **kwargs)
         self.slider.valueChanged.connect(func_wrapper)
-
+    
     def valueTextChangeConnect(self, func):
         """
-        Just make things consistent. 
+        Make the value box only call the function when the user is typing.
         """
-        self.value.textChanged.connect(func)
-    
+        def func_wrapper(*args, **kwargs):
+            if self.user_is_typing and not self.user_is_sliding:
+                func(*args, **kwargs)
+
+        self.value.textChanged.connect(func_wrapper)
+
+    def editingFinishedConnect(self, func):
+        self.value.editingFinished.connect(func)
+        self.slider.sliderReleased.connect(func)
+
+
 
 class GroupedSliders(QWidget):
     def __init__(
