@@ -152,7 +152,7 @@ class QuantumModelSliderParameter:
         boxValue = self.boxValueCallback()
 
         if boxValue == "":
-            return
+            return 0
         
         return self._toInt(float(boxValue))
 
