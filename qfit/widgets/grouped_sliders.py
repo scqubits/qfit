@@ -13,6 +13,8 @@ from typing import Dict, List, Tuple, Union
 
 class LabeledSlider(QWidget):
     """A widget that contains a slider as well as its name and value as QLineEdit."""
+    user_is_sliding = False
+
     def __init__(
         self, 
         label_text='Slider', 
@@ -32,10 +34,10 @@ class LabeledSlider(QWidget):
 
         # insert the widgets into the layout
         self._insertWidgets(label_value_position)
-        
-        # connect the slider to the value line edit
-        self.slider.valueChanged.connect(self.updateValue)
-        self.value.textChanged.connect(self.updateSlider)
+
+        # connect the widgets
+        self.slider.sliderPressed.connect(self.sliderPressed)
+        self.slider.sliderReleased.connect(self.sliderReleased)
 
     def _insertWidgets(self, label_value_position):
         """add the widgets to the layout according to the label_value_position"""
@@ -57,14 +59,30 @@ class LabeledSlider(QWidget):
         self.sliderLayout.addWidget(self.slider, *slider_position)
         self.sliderLayout.addWidget(self.label, *label_position)
         self.sliderLayout.addWidget(self.value, *value_position)
-    
-    def updateValue(self, value):
-        self.value.setText(str(value))
-        
-    def updateSlider(self, value):
-        if value.isdigit():
-            self.slider.setValue(int(value))
 
+    def sliderPressed(self):
+        self.user_is_sliding = True
+
+    def sliderReleased(self):
+        self.user_is_sliding = False
+
+    def sliderValueChangedConnect(self, func):
+        """
+        Make the slider only call the function when the user is sliding. 
+
+        The value box will update the slider value, but will not call the function.
+        """
+        def func_wrapper(*args, **kwargs):
+            if self.user_is_sliding:
+                func(*args, **kwargs)
+        self.slider.valueChanged.connect(func_wrapper)
+
+    def valueTextChangeConnect(self, func):
+        """
+        Just make things consistent. 
+        """
+        self.value.textChanged.connect(func)
+    
 
 class GroupedSliders(QWidget):
     def __init__(
