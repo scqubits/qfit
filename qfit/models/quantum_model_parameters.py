@@ -186,12 +186,13 @@ class QuantumModelParameterSet:
     """
     A class to store all the parameters of a quantum system
     """
-
     def __init__(self):
         self.parameters: Dict[
             Union[HilbertSpace, QuantumSystem],
             Dict[str, Union[QuantumModelSliderParameter, QuantumModelParameter]],
         ] = {}
+
+        self.group_name_maps: Dict[Union[HilbertSpace, QuantumSystem], str] = {}
 
     def keys(self):
         return self.parameters.keys()
@@ -204,6 +205,17 @@ class QuantumModelParameterSet:
     
     def __getitem__(self, key):
         return self.parameters[key]
+    
+    def generateNameMap(self):
+        """
+        given a key (parent of parameters), return the name of the group which will be 
+        displayed in the UI
+        """
+        for parent in self.parameters:
+            if isinstance(parent, HilbertSpace):
+                self.group_name_maps[parent] = "Interactions"
+            elif isinstance(parent, QuantumSystem):
+                self.group_name_maps[parent] = parent.id_str
     
     # @overload
     # def add_parameter(
@@ -299,11 +311,15 @@ class QuantumModelParameterSet:
                 param_type = param_type,
             )
 
+        # update the name map
+        self.generateNameMap()
+
     def clean(self):
         """
         Clean the parameter set.
         """
         self.parameters = {}
+        self.group_name_maps = {}
 
     @overload
     def getParameters(self, parent_system) -> Dict[str, float]:
@@ -338,8 +354,8 @@ class QuantumModelParameterSet:
         # TODO: we may want to add a check to see if the parent_system is in the parameter set
         # generate a dict with keys being the parameter names and values being the parameter
         name_dict = {
-            parameter.name: parameter.value
-            for parameter in self.parameters[parent_system]
+            name: para.value
+            for name, para in self.parameters[parent_system].items()
         }
         if name is None:
             return name_dict

@@ -19,6 +19,8 @@ import matplotlib as mpl
 import matplotlib.cm as cm
 import numpy as np
 
+from scqubits.core.hilbert_space import HilbertSpace
+
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, Slot
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
@@ -683,10 +685,7 @@ class MainWindow(ResizableFramelessWindow):
             columns=1, label_value_position="left_right"
         )
         for key, para_dict in self.sliderParameterSet.items():
-            try:
-                group_name = key.id_str
-            except AttributeError:
-                group_name = "interactions"
+            group_name = self.sliderParameterSet.group_name_maps[key]
 
             self.sliderSet.addGroupedSliders(
                 group_name, 
@@ -697,10 +696,7 @@ class MainWindow(ResizableFramelessWindow):
 
     def dynamicalSlidersConnects(self):
         for key, para_dict in self.sliderParameterSet.items():
-            try:
-                group_name = key.id_str
-            except AttributeError:
-                group_name = "interactions"
+            group_name = self.sliderParameterSet.group_name_maps[key]
 
             for para_name, para in para_dict.items():
                 para: QuantumModelSliderParameter
