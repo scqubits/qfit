@@ -124,10 +124,10 @@ class QuantumModel:
                     continue
                 for parameter_name in parameter_names:
                     parameter_set.add_parameter(
-                        parameter_name,
-                        subsystem,
-                        DEFAULT_PARAM_MINMAX[parameter_type],
-                        parameter_type,
+                        name = parameter_name,
+                        parent_system = subsystem,
+                        param_type = parameter_type,
+                        **DEFAULT_PARAM_MINMAX[parameter_type]
                     )
         # then add interaction strengths to the parameter set
         if (
@@ -142,10 +142,10 @@ class QuantumModel:
             interactions = self.hilbertspace.interaction_list
             for interaction_term_index in range(len(interactions)):
                 parameter_set.add_parameter(
-                    f"g{interaction_term_index+1}",
-                    self.hilbertspace,
-                    DEFAULT_PARAM_MINMAX["interaction_strength"],
-                    "interaction_strength",
+                    name = f"g{interaction_term_index+1}",
+                    parent_system = self.hilbertspace,
+                    param_type = "interaction_strength",
+                    **DEFAULT_PARAM_MINMAX["interaction_strength"]
                 )
             return parameter_set
 
@@ -214,22 +214,21 @@ class QuantumModel:
         parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
         """
         for parameters in parameter_set.values():
-            for parameter in parameters:
+            for parameter in parameters.values():
                 self._updateQuantumModelParameter(parameter)
 
-    def _updateQuantumModelBySlider(
-        self, parameter_set: QuantumModelParameterSet
-    ) -> None:
+    def onParameterChange(self, parameter_set: QuantumModelParameterSet) -> None:
         """
-        Update the HilbertSpace object with the values of parameters and coupling coefficients
-        received from the UI.
+        It is connected to the signal emitted by the UI when the user changes the slider
+        of a parameter. It receives a QuantumModelParameterSet object and updates the
+        the HilbertSpace object. If auto run is on, it will also compute the spectrum.
 
         Parameters
         ----------
-        parameter_set: QuantumModelParameterSet
+        parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
         """
-
-        pass
+        self._updateQuantumModelParameterSet(parameter_set)
+        self._computeSpectrum()
 
     def _update_hilbertspace_for_ParameterSweep(self, x) -> None:
         """

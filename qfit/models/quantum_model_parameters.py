@@ -1,8 +1,11 @@
-from typing import Dict, List, Union, overload, Tuple
-from qfit.models.parameter_settings import ParameterType
+import numpy as np
 
 from scqubits import HilbertSpace
 from scqubits.core.qubit_base import QuantumSystem
+
+from qfit.models.parameter_settings import ParameterType
+
+from typing import Dict, List, Union, overload, Tuple, Callable
 
 
 class QuantumModelSliderParameter:
@@ -17,8 +20,10 @@ class QuantumModelSliderParameter:
         Name of the parameter
     parent: Union[QuantumSystem, HilbertSpace]
         The parent object of the parameter
-    minmax: Union[Tuple[int, int], Tuple[float, float]]
-        The range of the parameter
+    min: Union[int, float]
+        The minimum value of the parameter
+    max: Union[int, float]
+        The maximum value of the parameter
     param_type: Literal[
         "EC",
         "EJ",
@@ -34,47 +39,120 @@ class QuantumModelSliderParameter:
         The type of the parameter
     """
 
+    sliderValueCallback: Callable
+    sliderValueSetter: Callable
+    boxValueCallback: Callable
+    boxValueSetter: Callable
+
     def __init__(
         self,
         name: str,
         parent: Union[QuantumSystem, HilbertSpace],
-        minmax: Union[Tuple[int, int], Tuple[float, float]],
+        min: Union[int, float],
+        max: Union[int, float],
         param_type: ParameterType,
     ):
         self.name = name
         self.parent = parent
-        self.minmax = minmax
+        self.min = min
+        self.max = max
         self.param_type = param_type
         # a placeholder for the callback function that returns the value of the slider
         # this callback function is set by the UI
-        self.sliderValueCallback = None
 
     # TODO: in future, we may wish to let user specify the min and max of parameters in the slider,
     # do we want to store minmax by then? If so, we may need:
     # self.minmaxCallback = lambda x: minmax # not yet implemented
 
-    def _get_value_from_slider(self) -> Union[int, float]:
+    def setupUICallbacks(
+        self,
+        sliderValueCallback,
+        sliderValueSetter,
+        boxValueCallback,
+        boxValueSetter,
+    ):
+        self.sliderValueCallback = sliderValueCallback
+        self.sliderValueSetter = sliderValueSetter
+        self.boxValueCallback = boxValueCallback
+        self.boxValueSetter = boxValueSetter
+
+    def _toInt(self, value: Union[int, float]) -> Union[int, float]:
         """
-        Get the value of the parameter from the slider.
+        Convert the value to an integer if the parameter type is cutoff or truncated_dim.
+        """
+        if self.param_type in ["cutoff", "truncated_dim"]:
+            return np.round(value).astype(int)
+        else:
+            return value
+
+    def _toIntString(self, value: Union[int, float]) -> str:
+        """
+        Convert the value to an integer if the parameter type is cutoff or truncated_dim.
+        """
+        if self.param_type in ["cutoff", "truncated_dim"]:
+            return f"{value:.0f}"
+        else:
+            return f"{value:.2f}"
+
+    def _normalizeValue(self, value: Union[int, float]) -> int:
+        """
+        Normalize the value of the parameter to a value between 0 and 100.
+        """
+        normalizedValue = (value - self.min) / (self.max - self.min) * 100
+        return np.round(normalizedValue).astype(int)
+
+    def _denormalizeValue(self, value: int) -> Union[int, float]:
+        """
+        Denormalize the value of the parameter to a value between min and max.
+        """
+        denormalizedValue = self.min + value / 100 * (self.max - self.min)
+
+        return self._toInt(denormalizedValue)
+
+    def _onSliderValueChanged(self, *args, **kwargs):
+        """
+        When the value of the slider is changed, update the value of the box
+        """
+        sliderValue = self.sliderValueCallback()
+
+        denormalizedValue = self._denormalizeValue(sliderValue)
+
+        self.boxValueSetter(self._toIntString(denormalizedValue))
+
+    def _onBoxValueChanged(self, *args, **kwargs):
+        """
+        When the value of the box is changed, update the value of the slider
+        """
+        boxValue = self.boxValueCallback()
+
+        if boxValue == "":
+            return
+
+        normalizedValue = self._normalizeValue(float(boxValue))
+
+        self.sliderValueSetter(normalizedValue)
+
+    def _getUiValue(self) -> Union[int, float]:
+        """
+        Get the value of the parameter from the box. We should trust the number in the
+        box more than the number on the slider, because the number on the box is directly
+        input by the user, while the number on the slider is calculated and may be rounded.
 
         Returns
         -------
         The value of the parameter
         """
-        # obtain the value of the slider
-        sliderValue = self.sliderValueCallback()
-        # convert the slider value to the parameter value, sliderValue is in [0, 100]
-        currentValue = self.minmax[0] + sliderValue / 100 * (
-            self.minmax[1] - self.minmax[0]
-        )
-        if self.param_type in ["cutoff", "truncated_dim"]:
-            return int(currentValue)
-        else:
-            return currentValue
+
+        boxValue = self.boxValueCallback()
+
+        if boxValue == "":
+            return 0
+
+        return self._toInt(float(boxValue))
 
     @property
     def value(self):
-        return self._get_value_from_slider()
+        return self._getUiValue()
 
 
 class QuantumModelParameter:
@@ -86,7 +164,7 @@ class QuantumModelParameter:
         self,
         name: str,
         parent: Union[QuantumSystem, HilbertSpace],
-        value: float,
+        value: Union[float, int],
         param_type: ParameterType,
     ):
         self.name = name
@@ -106,6 +184,8 @@ class QuantumModelParameterSet:
             Dict[str, Union[QuantumModelSliderParameter, QuantumModelParameter]],
         ] = {}
 
+        self.group_name_maps: Dict[Union[HilbertSpace, QuantumSystem], str] = {}
+
     def keys(self):
         return self.parameters.keys()
 
@@ -117,6 +197,17 @@ class QuantumModelParameterSet:
 
     def __getitem__(self, key):
         return self.parameters[key]
+
+    def generateNameMap(self):
+        """
+        given a key (parent of parameters), return the name of the group which will be
+        displayed in the UI
+        """
+        for parent in self.parameters:
+            if isinstance(parent, HilbertSpace):
+                self.group_name_maps[parent] = "Interactions"
+            elif isinstance(parent, QuantumSystem):
+                self.group_name_maps[parent] = parent.id_str
 
     # @overload
     # def add_parameter(
@@ -143,7 +234,8 @@ class QuantumModelParameterSet:
         name: str,
         parent_system,
         param_type,
-        minmax: Union[Tuple[int, int], Tuple[float, float], None] = None,
+        min: Union[float, int, None] = None,
+        max: Union[float, int, None] = None,
         value: Union[float, int, None] = None,
     ):
         """
@@ -178,32 +270,44 @@ class QuantumModelParameterSet:
             object is added
         """
         # only one of minmax and value can be provided
-        if (minmax is None and value is None) or (
-            minmax is not None and value is not None
+
+        minmax_provided = min is not None and max is not None
+        minmax_not_provided = min is None or max is None
+        if (minmax_not_provided and value is None) or (
+            minmax_provided and value is not None
         ):
             raise ValueError(
                 "Either minmax or value need to be provided, but not both."
             )
+
         # if the parent system is not in the parameter set, add it and set its value to
         # an empty list
         if parent_system not in self.parameters:
             self.parameters[parent_system] = {}
         # if the parameter is not a slider parameter, add it to the parameter set
-        if minmax is None:
+        if minmax_not_provided:
             self.parameters[parent_system][name] = QuantumModelParameter(
-                name, parent_system, value, param_type
+                name=name, parent=parent_system, value=value, param_type=param_type
             )
         # if the parameter is a slider parameter, add it to the parameter set
         else:
             self.parameters[parent_system][name] = QuantumModelSliderParameter(
-                name, parent_system, minmax, param_type
+                name=name,
+                parent=parent_system,
+                min=min,
+                max=max,
+                param_type=param_type,
             )
+
+        # update the name map
+        self.generateNameMap()
 
     def clean(self):
         """
         Clean the parameter set.
         """
         self.parameters = {}
+        self.group_name_maps = {}
 
     @overload
     def getParameters(self, parent_system) -> Dict[str, float]:
@@ -238,8 +342,7 @@ class QuantumModelParameterSet:
         # TODO: we may want to add a check to see if the parent_system is in the parameter set
         # generate a dict with keys being the parameter names and values being the parameter
         name_dict = {
-            parameter.name: parameter.value
-            for parameter in self.parameters[parent_system]
+            name: para.value for name, para in self.parameters[parent_system].items()
         }
         if name is None:
             return name_dict

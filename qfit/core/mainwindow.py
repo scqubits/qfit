@@ -19,6 +19,8 @@ import matplotlib as mpl
 import matplotlib.cm as cm
 import numpy as np
 
+from scqubits.core.hilbert_space import HilbertSpace
+
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, Slot
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
@@ -45,7 +47,8 @@ from qfit.ui_views.resizable_window import ResizableFramelessWindow
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
 
-from qfit.models.quantum_model_parameters import QuantumModelParameterSet
+from qfit.models.quantum_model_parameters import (
+    QuantumModelSliderParameter, QuantumModelParameterSet)
 from qfit.controllers.numerical_model import QuantumModel
 from qfit.widgets.grouped_sliders import GroupedSliders, GroupedSliderSet
 
@@ -682,10 +685,7 @@ class MainWindow(ResizableFramelessWindow):
             columns=1, label_value_position="left_right"
         )
         for key, para_dict in self.sliderParameterSet.items():
-            try:
-                group_name = key.id_str
-            except AttributeError:
-                group_name = "interactions"
+            group_name = self.sliderParameterSet.group_name_maps[key]
 
             self.sliderSet.addGroupedSliders(
                 group_name, 
@@ -695,14 +695,30 @@ class MainWindow(ResizableFramelessWindow):
         self.prefitScrollLayout.addWidget(self.sliderSet)
 
     def dynamicalSlidersConnects(self):
-        # for key, para_list in self.sliderParameterSet.items():
-        #     try:
-        #         group_name = key.id_str
-        #     except AttributeError:
-        #         group_name = "interactions"
+        for key, para_dict in self.sliderParameterSet.items():
+            group_name = self.sliderParameterSet.group_name_maps[key]
 
-        return
+            for para_name, para in para_dict.items():
+                para: QuantumModelSliderParameter
+                labeled_slider = self.sliderSet[group_name][para_name]
 
+                para.setupUICallbacks(
+                    labeled_slider.slider.value,
+                    labeled_slider.slider.setValue,
+                    labeled_slider.value.text,
+                    labeled_slider.value.setText,
+                )
+
+                # synchronize slider and box
+                labeled_slider.sliderValueChangedConnect(
+                    para._onSliderValueChanged)
+                labeled_slider.valueTextChangeConnect(
+                    para._onBoxValueChanged)   
+
+                # connect to the controller to update the spectrum
+                labeled_slider.editingFinishedConnect(
+                    lambda *args, **kwargs: self.quantumModel.onParameterChange(self.sliderParameterSet)
+                )
 
     @Slot()
     def openFile(self, initialize: bool = False):
