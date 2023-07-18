@@ -700,19 +700,25 @@ class MainWindow(ResizableFramelessWindow):
 
             for para_name, para in para_dict.items():
                 para: QuantumModelSliderParameter
-                labled_slider = self.sliderSet[group_name][para_name]
+                labeled_slider = self.sliderSet[group_name][para_name]
 
                 para.setupUICallbacks(
-                    labled_slider.slider.value,
-                    labled_slider.slider.setValue,
-                    labled_slider.value.text,
-                    labled_slider.value.setText,
+                    labeled_slider.slider.value,
+                    labeled_slider.slider.setValue,
+                    labeled_slider.value.text,
+                    labeled_slider.value.setText,
                 )
 
-                labled_slider.sliderValueChangedConnect(
+                # synchronize slider and box
+                labeled_slider.sliderValueChangedConnect(
                     para._onSliderValueChanged)
-                labled_slider.valueTextChangeConnect(
-                    para._onBoxValueChanged)    
+                labeled_slider.valueTextChangeConnect(
+                    para._onBoxValueChanged)   
+
+                # connect to the controller to update the spectrum
+                labeled_slider.editingFinishedConnect(
+                    lambda *args, **kwargs: self.quantumModel.onParameterChange(self.sliderParameterSet)
+                )
 
     @Slot()
     def openFile(self, initialize: bool = False):
