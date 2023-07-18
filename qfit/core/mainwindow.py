@@ -671,6 +671,10 @@ class MainWindow(ResizableFramelessWindow):
         return False
     
     def dynamicalSlidersInserts(self):
+        """
+        Insert a set of sliders for the prefit parameters according to the parameter set
+        """
+
         # create a QWidget for the scrollArea and set a layout for it
         self.prefitScrollWidget = QWidget()
         self.ui.prefitScrollArea.setWidget(self.prefitScrollWidget)
@@ -695,6 +699,9 @@ class MainWindow(ResizableFramelessWindow):
         self.prefitScrollLayout.addWidget(self.sliderSet)
 
     def dynamicalSlidersConnects(self):
+        """
+        Connect the sliders to the controller - update hilbertspace and spectrum
+        """
         for key, para_dict in self.sliderParameterSet.items():
             group_name = self.sliderParameterSet.group_name_maps[key]
 
