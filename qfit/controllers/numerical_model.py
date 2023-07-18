@@ -19,36 +19,27 @@ from qfit.models.numerical_spectrum_data import SpectrumData
 
 from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
 
+
 def test_hilert_space():
     resonator = scq.Oscillator(
-        E_osc = 6.0,
-        l_osc = 1.0,
-        truncated_dim = 4,
-        id_str = "resonator"
+        E_osc=6.0, l_osc=1.0, truncated_dim=4, id_str="resonator"
     )
-        
+
     fluxonium = scq.Fluxonium(
-        EJ = 5.0,
-        EC = 1,
-        EL = 0.1,
-        flux = 0.0,
-        cutoff = 100,
-        truncated_dim = 5,
-        id_str = "fluxonium"
+        EJ=5.0, EC=1, EL=0.1, flux=0.0, cutoff=100, truncated_dim=5, id_str="fluxonium"
     )
 
     hilbertspace = scq.HilbertSpace([resonator, fluxonium])
 
     hilbertspace.add_interaction(
-        g = 0.01,
-        op1 = resonator.n_operator,
-        op2 = fluxonium.n_operator,
-        add_hc = False,
-        id_str = "res-qubit"
+        g=0.01,
+        op1=resonator.n_operator,
+        op2=fluxonium.n_operator,
+        add_hc=False,
+        id_str="res-qubit",
     )
 
     return hilbertspace
-
 
 
 class QuantumModel:
@@ -190,16 +181,41 @@ class QuantumModel:
 
         pass
 
-    def _updateQuantumModelParameter(self, parameter: QuantumModelParameter) -> None:
+    def _updateQuantumModelParameter(
+        self, parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
+    ) -> None:
         """
-        Update HilbertSpace object with the value of a parameter received from the UI.
+        Update HilbertSpace object with a parameter.
 
         Parameters
         ----------
-        parameter: QuantumModelParameter
+        parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
         """
+        if parameter.parent.__class__ == HilbertSpace:
+            # the parameter in this case is always an interaction strength
+            # add the if condition here in case if we want to adjust other parameters in the future
+            if parameter.param_type == "interaction_strength":
+                interaction_index = int(parameter.name[1:]) - 1
+                interaction = parameter.parent.interaction_list[interaction_index]
+                interaction.g_strength = parameter.value
+        # otherwise, the parameters are class parameters of the subsystems
+        else:
+            setattr(parameter.parent, parameter.name, parameter.value)
+            # TODO: for future, phi grid min/max would need special care here
 
-        pass
+    def _updateQuantumModelParameterSet(
+        self, parameter_set: QuantumModelParameterSet
+    ) -> None:
+        """
+        Update HilbertSpace object with a set of parameters in QuantumModelParameterSet.
+
+        Parameters
+        ----------
+        parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
+        """
+        for parameters in parameter_set.values():
+            for parameter in parameters:
+                self._updateQuantumModelParameter(parameter)
 
     def _updateQuantumModelBySlider(
         self, parameter_set: QuantumModelParameterSet
