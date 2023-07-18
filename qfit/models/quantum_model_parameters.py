@@ -119,12 +119,7 @@ class QuantumModelSliderParameter:
         """
         sliderValue = self.sliderValueCallback()
 
-        print("sliderValue", sliderValue)
-
         denormalizedValue = self._denormalizeValue(sliderValue)
-
-        if np.abs(denormalizedValue - float(self.boxValueCallback())) < 1e-14:
-            return
         
         self.boxValueSetter(self._toIntString(denormalizedValue))
 
@@ -137,12 +132,8 @@ class QuantumModelSliderParameter:
         if boxValue == "":
             return
 
-        print("boxValue", boxValue)
-
         normalizedValue = self._normalizeValue(float(boxValue))
 
-        if normalizedValue == self.sliderValueCallback():
-            return
         self.sliderValueSetter(normalizedValue)
 
     def _getUiValue(self) -> Union[int, float]:
@@ -157,7 +148,11 @@ class QuantumModelSliderParameter:
         """
         
         boxValue = self.boxValueCallback()
-        return self._toInt(boxValue)
+
+        if boxValue == "":
+            return
+        
+        return self._toInt(float(boxValue))
 
     @property
     def value(self):
