@@ -214,7 +214,7 @@ class QuantumModel:
         parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
         """
         for parameters in parameter_set.values():
-            for parameter in parameters:
+            for parameter in parameters.values():
                 self._updateQuantumModelParameter(parameter)
 
     def _updateQuantumModelBySlider(
