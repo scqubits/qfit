@@ -45,7 +45,8 @@ from qfit.ui_views.resizable_window import ResizableFramelessWindow
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
 
-from qfit.models.quantum_model_parameters import QuantumModelParameterSet
+from qfit.models.quantum_model_parameters import (
+    QuantumModelSliderParameter, QuantumModelParameterSet)
 from qfit.controllers.numerical_model import QuantumModel
 from qfit.widgets.grouped_sliders import GroupedSliders, GroupedSliderSet
 
@@ -695,14 +696,27 @@ class MainWindow(ResizableFramelessWindow):
         self.prefitScrollLayout.addWidget(self.sliderSet)
 
     def dynamicalSlidersConnects(self):
-        # for key, para_list in self.sliderParameterSet.items():
-        #     try:
-        #         group_name = key.id_str
-        #     except AttributeError:
-        #         group_name = "interactions"
+        for key, para_dict in self.sliderParameterSet.items():
+            try:
+                group_name = key.id_str
+            except AttributeError:
+                group_name = "interactions"
 
-        return
+            for para_name, para in para_dict.items():
+                para: QuantumModelSliderParameter
+                labled_slider = self.sliderSet[group_name][para_name]
 
+                para.setupUICallbacks(
+                    labled_slider.slider.value,
+                    labled_slider.slider.setValue,
+                    labled_slider.value.text,
+                    labled_slider.value.setText,
+                )
+
+                labled_slider.sliderValueChangedConnect(
+                    para._onSliderValueChanged)
+                labled_slider.valueTextChangeConnect(
+                    para._onBoxValueChanged)    
 
     @Slot()
     def openFile(self, initialize: bool = False):
