@@ -133,10 +133,10 @@ class QuantumModel:
                     continue
                 for parameter_name in parameter_names:
                     parameter_set.add_parameter(
-                        parameter_name,
-                        subsystem,
-                        DEFAULT_PARAM_MINMAX[parameter_type],
-                        parameter_type,
+                        name = parameter_name,
+                        parent_system = subsystem,
+                        param_type = parameter_type,
+                        **DEFAULT_PARAM_MINMAX[parameter_type]
                     )
         # then add interaction strengths to the parameter set
         if (
@@ -151,10 +151,10 @@ class QuantumModel:
             interactions = self.hilbertspace.interaction_list
             for interaction_term_index in range(len(interactions)):
                 parameter_set.add_parameter(
-                    f"g{interaction_term_index+1}",
-                    self.hilbertspace,
-                    DEFAULT_PARAM_MINMAX["interaction_strength"],
-                    "interaction_strength",
+                    name = f"g{interaction_term_index+1}",
+                    parent_system = self.hilbertspace,
+                    param_type = "interaction_strength",
+                    **DEFAULT_PARAM_MINMAX["interaction_strength"]
                 )
             return parameter_set
 
