@@ -43,6 +43,8 @@ class QuantumModelSliderParameter:
     boxValueCallback: Callable
     boxValueSetter: Callable
 
+    intergerParameterTypes = ["cutoff", "truncated_dim"]
+
     def __init__(
         self,
         name: str,
@@ -80,7 +82,7 @@ class QuantumModelSliderParameter:
         """
         Convert the value to an integer if the parameter type is cutoff or truncated_dim.
         """
-        if self.param_type in ["cutoff", "truncated_dim"]:
+        if self.param_type in self.intergerParameterTypes:
             return np.round(value).astype(int)
         else:
             return value
@@ -89,7 +91,7 @@ class QuantumModelSliderParameter:
         """
         Convert the value to an integer if the parameter type is cutoff or truncated_dim.
         """
-        if self.param_type in ["cutoff", "truncated_dim"]:
+        if self.param_type in self.intergerParameterTypes:
             return f"{value:.0f}"
         else:
             return f"{value:.2f}"
