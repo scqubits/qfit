@@ -108,16 +108,16 @@ class QuantumModelParameterSet:
 
     def keys(self):
         return self.parameters.keys()
-    
+
     def values(self):
         return self.parameters.values()
-    
+
     def items(self):
         return self.parameters.items()
-    
+
     def __getitem__(self, key):
         return self.parameters[key]
-    
+
     # @overload
     # def add_parameter(
     #     self,
@@ -190,13 +190,13 @@ class QuantumModelParameterSet:
             self.parameters[parent_system] = {}
         # if the parameter is not a slider parameter, add it to the parameter set
         if minmax is None:
-            self.parameters[parent_system][name] = (
-                QuantumModelParameter(name, parent_system, value, param_type)
+            self.parameters[parent_system][name] = QuantumModelParameter(
+                name, parent_system, value, param_type
             )
         # if the parameter is a slider parameter, add it to the parameter set
         else:
-            self.parameters[parent_system][name] = (
-                QuantumModelSliderParameter(name, parent_system, minmax, param_type)
+            self.parameters[parent_system][name] = QuantumModelSliderParameter(
+                name, parent_system, minmax, param_type
             )
 
     def clean(self):
