@@ -207,7 +207,9 @@ class QuantumModelParameterSet:
             if isinstance(parent, HilbertSpace):
                 self.group_name_maps[parent] = "Interactions"
             elif isinstance(parent, QuantumSystem):
-                self.group_name_maps[parent] = parent.id_str
+                self.group_name_maps[
+                    parent
+                ] = f"{parent.id_str} ({parent.__class__.__name__})"
 
     # @overload
     # def add_parameter(
@@ -229,7 +231,7 @@ class QuantumModelParameterSet:
     # ):
     #     ...
 
-    def add_parameter(
+    def addParameter(
         self,
         name: str,
         parent_system,
@@ -281,7 +283,7 @@ class QuantumModelParameterSet:
             )
 
         # if the parent system is not in the parameter set, add it and set its value to
-        # an empty list
+        # an empty dictionary
         if parent_system not in self.parameters:
             self.parameters[parent_system] = {}
         # if the parameter is not a slider parameter, add it to the parameter set

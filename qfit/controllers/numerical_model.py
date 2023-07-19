@@ -123,11 +123,11 @@ class QuantumModel:
                 ):
                     continue
                 for parameter_name in parameter_names:
-                    parameter_set.add_parameter(
-                        name = parameter_name,
-                        parent_system = subsystem,
-                        param_type = parameter_type,
-                        **DEFAULT_PARAM_MINMAX[parameter_type]
+                    parameter_set.addParameter(
+                        name=parameter_name,
+                        parent_system=subsystem,
+                        param_type=parameter_type,
+                        **DEFAULT_PARAM_MINMAX[parameter_type],
                     )
         # then add interaction strengths to the parameter set
         if (
@@ -141,32 +141,22 @@ class QuantumModel:
         else:
             interactions = self.hilbertspace.interaction_list
             for interaction_term_index in range(len(interactions)):
-                parameter_set.add_parameter(
-                    name = f"g{interaction_term_index+1}",
-                    parent_system = self.hilbertspace,
-                    param_type = "interaction_strength",
-                    **DEFAULT_PARAM_MINMAX["interaction_strength"]
+                parameter_set.addParameter(
+                    name=f"g{interaction_term_index+1}",
+                    parent_system=self.hilbertspace,
+                    param_type="interaction_strength",
+                    **DEFAULT_PARAM_MINMAX["interaction_strength"],
                 )
             return parameter_set
 
-    @staticmethod
-    def _map1D(x: float, coeffs, biases) -> Tuple[QuantumModelParameter, ...]:
-        """
-        The actual swept parameters (flux, ng, ...) are linearly related to the value of
-        the x axis of the transition plot. This funcition serves as a map between the two.
-        """
-        return
-
-    def setSweptParameter(
-        self,
-        parameters: Union[str, List[str]],
-        parents: Union[QuantumSystem, List[QuantumSystem]],
-    ) -> None:
-        """
-        Some parameter in self.parameter_set should not be controlled by the slider, but
-        instead be swept over as the x axis of the transition plot. This function sets the
-        """
-        pass
+    # TODO: in future implement this function (for multiple ng and flux case)
+    # @staticmethod
+    # def _map1D(x: float, coeffs, biases) -> Tuple[QuantumModelParameter, ...]:
+    #     """
+    #     The actual swept parameters (flux, ng, ...) are linearly related to the value of
+    #     the x axis of the transition plot. This funcition serves as a map between the two.
+    #     """
+    #     return
 
     def _generateParameterSweep(self) -> ParameterSweep:
         """
@@ -176,10 +166,20 @@ class QuantumModel:
         -------
         ParameterSweep
         """
-
+        paramvals_by_name = {}
+        subsys_update_info = {}
+        update_hilbertspace = self._update_hilbertspace_for_ParameterSweep()
+        param_sweep = ParameterSweep(
+            hilbertspace=self.hilbertspace,
+            paramvals_by_name=paramvals_by_name,
+            update_hilbertspace=update_hilbertspace,
+            evals_count=20,
+            subsys_update_info=subsys_update_info,
+            autorun=False,
+            num_cpus=1,
+        )
         # auto run = False !!!!!!!!!!!!
-
-        pass
+        return param_sweep
 
     def _updateQuantumModelParameter(
         self, parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
@@ -238,14 +238,6 @@ class QuantumModel:
         """
 
         # use _map1D to get the values of parameters and coupling coefficients from x
-
-        pass
-
-    def _updateParameterSweepBySlider(self) -> None:
-        """
-        Update/regenerate the ParameterSweep object with the values of parameters and coupling coefficients
-        received from the UI.
-        """
 
         pass
 
