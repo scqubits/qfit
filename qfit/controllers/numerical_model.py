@@ -8,6 +8,8 @@ from scqubits.core.param_sweep import ParameterSweep
 from scqubits.core.qubit_base import QuantumSystem
 
 from typing import Dict, List, Tuple, Union
+from typing_extensions import Literal
+
 from qfit.models.parameter_settings import ParameterType
 
 from qfit.models.quantum_model_parameters import (
@@ -163,6 +165,17 @@ class QuantumModel:
     #     """
     #     return
 
+    def _generateXcoordinateList(self, data ) -> np.ndarray:
+        """ 
+        Generate a list of x coordinates for parameter sweeps. The x coordinates can be either
+        obtained from the collected data of the two-tone spectroscopy or a default grid that
+        corresponds to 30 points evenly spaced in [0, 1] for flux or ng.
+
+        Returns
+        -------
+        np.ndarray
+        """
+    
     def _generateParameterSweep(self) -> ParameterSweep:
         """
         Generate a ParameterSweep object from the HilbertSpace object.
