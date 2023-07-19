@@ -14,6 +14,7 @@ from typing import Callable, Optional, Union
 
 import numpy as np
 from matplotlib.axes import Axes
+from scqubits.core.param_sweep import ParameterSweep
 
 import qfit.io_utils.file_io_serializers as serializers
 
@@ -22,14 +23,32 @@ class SpectrumData(serializers.Serializable):
     Class for storing and manipulating the spectrum data calculated from the scqbits
     backends. 
     """
-    def __init__(self, transitions, labels) -> None:
+    def __init__(self) -> None:
+        self.parameter_sweep: Optional[ParameterSweep] = None
         pass
 
-    def update(self, transitions, labels) -> None:
+    def setupUICallbacks(
+        self,
+    ):
+        """
+        Plot options from the UI
+        """
         pass
+
+    def update(self, parameter_sweep: ParameterSweep) -> None:
+        self.parameter_sweep = parameter_sweep
 
     def canvasPlot(self, axes: Axes, **kwargs):
-        pass
+
+        xlim = axes.get_xlim()
+        ylim = axes.get_ylim()
+
+        # plot random data for now
+        x = np.linspace(xlim[0], xlim[1], 100)
+        y = np.random.rand(100) * (ylim[1] - ylim[0]) + ylim[0]
+
+        axes.scatter(x, y, **kwargs)
+
 
 
 
