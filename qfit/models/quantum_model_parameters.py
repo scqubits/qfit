@@ -78,23 +78,39 @@ class QuantumModelSliderParameter:
         self.boxValueCallback = boxValueCallback
         self.boxValueSetter = boxValueSetter
 
+    def _strToFloat(self, value: str) -> float:
+        """
+        Convert the string value to float. When failed, return the minimum value of the 
+        parameter.
+        """
+        try:
+            return float(value)
+        except ValueError:
+            return self.min
+
     def _toInt(self, value: Union[int, float]) -> Union[int, float]:
         """
         Convert the value to an integer if the parameter type is cutoff or truncated_dim.
         """
+        if isinstance(value, str):
+            value = self._strToFloat(value)
+        
         if self.param_type in self.intergerParameterTypes:
             return np.round(value).astype(int)
         else:
             return value
         
-    def _toIntString(self, value: Union[int, float]) -> str:
+    def _toIntString(self, value: Union[int, float], precision=4) -> str:
         """
         Convert the value to an integer if the parameter type is cutoff or truncated_dim.
         """
+        if isinstance(value, str):
+            value = self._strToFloat(value)
+
         if self.param_type in self.intergerParameterTypes:
             return f"{value:.0f}"
         else:
-            return f"{value:.2f}"
+            return f"{value:.{precision}f}".rstrip('0').rstrip('.')
 
     def _normalizeValue(self, value: Union[int, float]) -> int:
         """
@@ -115,7 +131,7 @@ class QuantumModelSliderParameter:
 
         return self._toInt(denormalizedValue)
 
-    def _onSliderValueChanged(self, *args, **kwargs):
+    def _sliderValueToBox(self, *args, **kwargs):
         """
         When the value of the slider is changed, update the value of the box
         """
@@ -125,7 +141,7 @@ class QuantumModelSliderParameter:
         
         self.boxValueSetter(self._toIntString(denormalizedValue))
 
-    def _onBoxValueChanged(self, *args, **kwargs):
+    def _boxValueToSlider(self, *args, **kwargs):
         """
         When the value of the box is changed, update the value of the slider
         """
@@ -134,15 +150,42 @@ class QuantumModelSliderParameter:
         if boxValue == "":
             return
 
-        normalizedValue = self._normalizeValue(float(boxValue))
+        try:
+            normalizedValue = self._normalizeValue(self._strToFloat(boxValue))
+        except ValueError:
+            # cannot convert the box value to float, do nothing
+            return
 
         self.sliderValueSetter(normalizedValue)
+
+    def _onBoxEditingFinished(self, *args, **kwargs):
+        """
+        When the user is done editing the box, update the value of the box and make the 
+        value consistent with the parameter type.
+
+        Special note: Will not take care of the case when the user input is not a number.
+        """
+        boxValue = self.boxValueCallback()
+
+        if boxValue == "":
+            return 
+        
+        try:
+            float_boxValue = float(boxValue)
+        except ValueError:
+            # cannot convert the box value to float, do nothing
+            return
+
+        self.boxValueSetter(self._toIntString(float_boxValue))
 
     def _getUiValue(self) -> Union[int, float]:
         """
         Get the value of the parameter from the box. We should trust the number in the
         box more than the number on the slider, because the number on the box is directly 
         input by the user, while the number on the slider is calculated and may be rounded.
+
+        Special note: Will raise a ValueError if user input is not a number. Should be 
+        taken care of by the UI/controller.
 
         Returns
         -------
@@ -152,12 +195,21 @@ class QuantumModelSliderParameter:
         boxValue = self.boxValueCallback()
 
         if boxValue == "":
-            return 0
+            raise ValueError("Box value is empty.")
+            
+        try: 
+            float_boxValue = float(boxValue)
+        except ValueError:
+            raise ValueError(f"Cannot convert {boxValue} to float.")
         
-        return self._toInt(float(boxValue))
+        return self._toInt(float_boxValue)
 
     @property
     def value(self):
+        """
+        Special note: Will raise a ValueError if user input is not a number. Should be 
+        taken care of by the UI/controller.
+        """
         return self._getUiValue()
 
 

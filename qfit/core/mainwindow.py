@@ -718,9 +718,11 @@ class MainWindow(ResizableFramelessWindow):
 
                 # synchronize slider and box
                 labeled_slider.sliderValueChangedConnect(
-                    para._onSliderValueChanged)
+                    para._sliderValueToBox)
                 labeled_slider.valueTextChangeConnect(
-                    para._onBoxValueChanged)   
+                    para._boxValueToSlider)   
+                labeled_slider.value.editingFinished.connect(
+                    para._onBoxEditingFinished)
 
                 # connect to the controller to update the spectrum
                 labeled_slider.editingFinishedConnect(
