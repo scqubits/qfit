@@ -49,6 +49,7 @@ from qfit.widgets.menu import MenuWidget
 
 from qfit.models.quantum_model_parameters import (
     QuantumModelSliderParameter, QuantumModelParameterSet)
+from qfit.models.numerical_spectrum_data import SpectrumData
 from qfit.controllers.numerical_model import QuantumModel
 from qfit.widgets.grouped_sliders import GroupedSliders, GroupedSliderSet
 
@@ -80,8 +81,6 @@ class MainWindow(ResizableFramelessWindow):
     calibrationButtons: Dict[str, QPushButton]
     calibrationStates: Dict[str, State]
 
-    sliderParameterSet: QuantumModelParameterSet
-    sliderSet: GroupedSliderSet
 
     axes: mpl.axes.Axes
     cidCanvas: int
@@ -119,20 +118,29 @@ class MainWindow(ResizableFramelessWindow):
         self.extractedData = extractedData
         self.dataSetupConnects()
 
+        # prefit: controller, two models and their connection to view (sliders)
+        self.sliderParameterSet = QuantumModelParameterSet()
+        self.spectrumData = SpectrumData()
+        self.quantumModel = QuantumModel(hilbert_space)
+        self.quantumModel.generateSliderParameterSets(
+            self.sliderParameterSet,
+            excluded_parameter_type=["ng", "flux"]
+        )
+        self.dynamicalSlidersInserts()
+
+        # setup mpl canvas
         self.uiColorScaleConnects()
         self.uiCalibrationConnects()
         self.uiCanvasControlConnects()
         self.uiMplCanvasConnects()
         self.ui.mplFigureCanvas.selectOn()
 
+        # connect the data model to the sliders, canvas, boxes etc. Should be done after
+        # the canvas is set up.
+        self.dynamicalSlidersConnects()
+
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
-
-        # prefit: controller, two models and their connection to view (sliders)
-        self.quantumModel = QuantumModel(hilbert_space)
-        self.sliderGroups = []
-        self.dynamicalSlidersInserts()
-        self.dynamicalSlidersConnects()
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -536,7 +544,11 @@ class MainWindow(ResizableFramelessWindow):
         cmap = copy.copy(getattr(cm, colorStr))
         cmap.set_bad(color="black")
 
+        # plot the background data
         self.measurementData.canvasPlot(self.axes, cmap=cmap)
+
+        # plot the numerically calculated spectrum
+        self.spectrumData.canvasPlot(self.axes)
 
         # If there are any extracted data points in the currently active data set, show
         # those via a scatter plot.
@@ -671,19 +683,21 @@ class MainWindow(ResizableFramelessWindow):
         return False
     
     def dynamicalSlidersInserts(self):
+        """
+        Insert a set of sliders for the prefit parameters according to the parameter set
+        """
+
         # create a QWidget for the scrollArea and set a layout for it
-        self.prefitScrollWidget = QWidget()
-        self.ui.prefitScrollArea.setWidget(self.prefitScrollWidget)
-        self.prefitScrollLayout = QVBoxLayout()
-        self.prefitScrollWidget.setLayout(self.prefitScrollLayout)
+        prefitScrollWidget = QWidget()
+        self.ui.prefitScrollArea.setWidget(prefitScrollWidget)
+        prefitScrollLayout = QVBoxLayout()
+        prefitScrollWidget.setLayout(prefitScrollLayout)
 
-        # get parameter sets
-        self.sliderParameterSet = self.quantumModel.generateParameterSets(excluded_parameter_type=["ng", "flux"])
-
-        # generate sliders using the parameter set
+        # generate the slider set
         self.sliderSet = GroupedSliderSet(
             columns=1, label_value_position="left_right"
         )
+
         for key, para_dict in self.sliderParameterSet.items():
             group_name = self.sliderParameterSet.group_name_maps[key]
 
@@ -692,9 +706,12 @@ class MainWindow(ResizableFramelessWindow):
                 list(para_dict.keys()),
             )
 
-        self.prefitScrollLayout.addWidget(self.sliderSet)
+        prefitScrollLayout.addWidget(self.sliderSet)
 
     def dynamicalSlidersConnects(self):
+        """
+        Connect the sliders to the controller - update hilbertspace and spectrum
+        """
         for key, para_dict in self.sliderParameterSet.items():
             group_name = self.sliderParameterSet.group_name_maps[key]
 
@@ -711,13 +728,21 @@ class MainWindow(ResizableFramelessWindow):
 
                 # synchronize slider and box
                 labeled_slider.sliderValueChangedConnect(
-                    para._onSliderValueChanged)
+                    para._sliderValueToBox)
                 labeled_slider.valueTextChangeConnect(
-                    para._onBoxValueChanged)   
+                    para._boxValueToSlider)   
+                labeled_slider.value.editingFinished.connect(
+                    para._onBoxEditingFinished)
 
                 # connect to the controller to update the spectrum
                 labeled_slider.editingFinishedConnect(
-                    lambda *args, **kwargs: self.quantumModel.onParameterChange(self.sliderParameterSet)
+                    lambda *args, **kwargs: self.quantumModel.onParameterChange(
+                        self.sliderParameterSet,
+                        self.spectrumData,
+                    )
+                )
+                labeled_slider.editingFinishedConnect(
+                    self.updatePlot
                 )
 
     @Slot()

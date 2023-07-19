@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Optional
 
 
 class LabeledSlider(QWidget):
@@ -18,20 +18,40 @@ class LabeledSlider(QWidget):
 
     When user are using either the slider or the value box, functions can be set
     to achieve that the other one will be updated accordingly. Endless call loops will
-    be avoided.
+    be avoided if using the provided methods.
 
+    Parameters
+    ----------
+    label_text : str
+        The name of the slider, will be displayed as a QLabel.
+    label_value_position : str
+        The position of the label and the value box.
+        - 'left_right': label, slider, value
+        - 'right_left': slider, label, value
+        - 'both_bottom': slider, (line break), label, value
+        - 'value_left': slider, value
+        - 'value_right': value, slider
+    auto_connect : bool
+        If True, the slider and the value box will be connected in a simplest way: box displays
+        the raw value of the slider.
+    parent : QWidget
+        The parent widget.
     """
 
     user_is_sliding = False
     user_is_typing = False
 
     def __init__(
-        self, label_text="Slider", label_value_position="left_right", parent=None
+        self, 
+        label_text: str = 'Slider', 
+        label_value_position: str = 'left_right', 
+        auto_connect: bool = False,
+        parent: Optional[QWidget] = None
     ):
         super().__init__(parent)
 
         # initialize the widgets
-        self.label = QLabel(label_text, self)
+        self.label = QLabel(label_text)
         self.slider = QSlider(Qt.Horizontal, self)
         self.value = QLineEdit("0", self)
         self.value.setMaximumWidth(50)
@@ -48,9 +68,15 @@ class LabeledSlider(QWidget):
         self.value.textChanged.connect(self.boxTextChanged)
         self.value.editingFinished.connect(self.editingFinished)
 
+        # connect the slider and the value box in a simplest way
+        if auto_connect:
+            self._defaultConnect()
+
     def _insertWidgets(self, label_value_position):
         """add the widgets to the layout according to the label_value_position"""
-        if label_value_position == "left_right":
+        with_label = label_value_position in ['left_right', 'right_left', 'both_bottom']
+
+        if label_value_position == 'left_right':
             slider_position = (0, 1)
             label_position = (0, 0)
             value_position = (0, 2)
@@ -62,12 +88,32 @@ class LabeledSlider(QWidget):
             slider_position = (0, 0, 1, 2)
             label_position = (1, 0)
             value_position = (1, 1)
+        elif label_value_position == 'value_left':
+            slider_position = (0, 1)
+            label_position = None
+            value_position = (0, 0)
+        elif label_value_position == 'value_right':
+            slider_position = (0, 0)
+            label_position = None
+            value_position = (0, 1)
         else:
             raise ValueError(f"Unknown label_value_position: {label_value_position}")
-
-        self.sliderLayout.addWidget(self.slider, *slider_position)
+        
+        if with_label:
+            self.sliderLayout.addWidget(self.slider, *slider_position)
         self.sliderLayout.addWidget(self.label, *label_position)
         self.sliderLayout.addWidget(self.value, *value_position)
+
+    def _defaultConnect(self):
+        """
+        The simplest way to connect the slider and the value box.
+        """
+        def updateValue():
+            self.value.setText(str(self.slider.value()))
+        def updateSlider():
+            self.slider.setValue(int(self.value.text()))
+        self.sliderValueChangedConnect(updateValue)
+        self.valueTextChangeConnect(updateSlider)
 
     def sliderPressed(self):
         self.user_is_sliding = True
@@ -86,8 +132,9 @@ class LabeledSlider(QWidget):
 
     def sliderValueChangedConnect(self, func):
         """
-        Since the value box will update the slider value, but it won't trigger the
-        slider.valueChanged signal, we need to connect the value box to the function
+        Both user and (potentially) box value change will emit the slider.valueChanged 
+        signal. This function will react to the signal only when the user is sliding
+        (not typing). It will also avoid endless call loops.
         """
 
         def func_wrapper(*args, **kwargs):
@@ -98,7 +145,9 @@ class LabeledSlider(QWidget):
 
     def valueTextChangeConnect(self, func):
         """
-        Make the value box only call the function when the user is typing.
+        Both user and (potentially) slider value change will emit the value.textChanged
+        signal. This function will react to the signal only when the user is typing
+        (not sliding). It will also avoid endless call loops.
         """
 
         def func_wrapper(*args, **kwargs):
@@ -108,11 +157,25 @@ class LabeledSlider(QWidget):
         self.value.textChanged.connect(func_wrapper)
 
     def editingFinishedConnect(self, func):
+        """
+        Emit the signal when the user is done typing / sliding.
+        """
+
+        # remove the last connection, which is always self.editingFinished
+        self.value.editingFinished.disconnect(self.editingFinished)
+
+        # connect
         self.value.editingFinished.connect(func)
         self.slider.sliderReleased.connect(func)
 
+        # put the self.editingFinished back
+        self.value.editingFinished.connect(self.editingFinished)
 
 class GroupedSliders(QWidget):
+    """
+    A class that contains multiple LabeledSlider widgets. The sliders will be displayed
+    in a grid layout.
+    """
     def __init__(
         self, slider_names, columns=2, label_value_position="left_right", parent=None
     ):
@@ -155,7 +218,11 @@ class GroupedSliders(QWidget):
 
 
 class FoldableWidget(QGroupBox):
-    def __init__(self, title="Foldable", content_widget=None, parent=None):
+    """
+    A widget that contains a title and a content widget. The content widget will be
+    hidden when the widget is not checked.
+    """
+    def __init__(self, title='Foldable', content_widget=None, parent=None):
         super().__init__(parent)
 
         self.setTitle(title)
@@ -184,7 +251,15 @@ class FoldableWidget(QGroupBox):
 
 
 class GroupedSliderSet(QWidget):
-    def __init__(self, columns=2, label_value_position="left_right", parent=None):
+    """
+    Represent a set of grouped sliders. Each group will be displayed in a FoldableWidget.
+    """
+    def __init__(
+        self, 
+        columns=2, 
+        label_value_position='left_right',
+        parent=None
+    ):
         super().__init__(parent)
 
         self.sliderSetParent = parent

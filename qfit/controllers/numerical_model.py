@@ -59,8 +59,6 @@ class QuantumModel:
         hilbertspace: HilbertSpace,
     ):
         self.hilbertspace: HilbertSpace = hilbertspace
-        self.parameter_set: QuantumModelParameterSet = self.generateParameterSets()
-        self.sweep = self._generateParameterSweep()
 
     # @overload
     # def generateParameterSets(
@@ -76,25 +74,33 @@ class QuantumModel:
     # ) -> QuantumModelParameterSet:
     #     ...
 
-    def generateParameterSets(
+    def generateSliderParameterSets(
         self,
+        parameter_set: QuantumModelParameterSet,
         included_parameter_type: Union[List[ParameterType], None] = None,
         excluded_parameter_type: Union[List[ParameterType], None] = None,
-    ) -> QuantumModelParameterSet:
+    ) -> None:
         """
-        Get the names of all parameters (excluding offset charges and external fluxes) in the HilbertSpace object.
-        The returned dictionary has subsystem id strings as keys and dictionaries of different types of parameters
-        as values. For example, if the HilbertSpace object contains two capacitively coupled transmon qubits,
-        the returned QuantumModelParameterSet object will have a parameter object (a dictionary):
+        Get the names of parameters in the HilbertSpace object. User may optionally specify
+        parameter types that are excluded/included. The returned dictionary has subsystem
+        id strings as keys and dictionaries of different types of parameters as values. 
+        For example, if the HilbertSpace object contains two capacitively coupled transmon 
+        qubits, the parameter_set (a QuantumModelParameterSet object) will have a parameter object 
+        (a dictionary):
 
         {tmon1: {"EJ": ["EJ"], "EC": ["EC"], "cutoffs": ["ncut"], "truncated_dim": ["truncated_dim"]},
         tmon2: {"EJ": ["EJ"], "EC": ["EC"], "cutoffs": ["ncut"], "truncated_dim": ["truncated_dim"]},
         hilbertspace: {"interaction_strength": ["g1"]}
         }
 
-        Returns
-        -------
-            A QuantumModelParameterSet object that stores all the parameters in the HilbertSpace object.
+        Parameters:
+        -----------
+        parameter_set: QuantumModelParameterSet
+            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object.
+        included_parameter_type: List[ParameterType]
+            A list of parameter types that are included in the returned parameter set.
+        excluded_parameter_type: List[ParameterType]
+            A list of parameter types that are excluded in the returned parameter set.
         """
         # only one of the included_parameter_type or excluded_parameter_type can be specified
         if included_parameter_type is not None and excluded_parameter_type is not None:
@@ -102,7 +108,6 @@ class QuantumModel:
                 "Only one of included_parameter_type or excluded_parameter_type can be specified."
             )
         # first, obtain all the parameters in the subsystems of the HilbertSpace object
-        parameter_set = QuantumModelParameterSet()
         subsystems = self.hilbertspace.subsystem_list
         for subsystem in subsystems:
             # obtain the parameter names in the subsystem
@@ -217,7 +222,11 @@ class QuantumModel:
             for parameter in parameters.values():
                 self._updateQuantumModelParameter(parameter)
 
-    def onParameterChange(self, parameter_set: QuantumModelParameterSet) -> None:
+    def onParameterChange(
+        self, 
+        parameter_set: QuantumModelParameterSet,
+        spectrum_data: SpectrumData,
+    ) -> None:
         """
         It is connected to the signal emitted by the UI when the user changes the slider
         of a parameter. It receives a QuantumModelParameterSet object and updates the
@@ -228,7 +237,13 @@ class QuantumModel:
         parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
         """
         self._updateQuantumModelParameterSet(parameter_set)
-        self._computeSpectrum()
+        # self._computeSpectrum()
+
+        # mse calculation
+
+        # update spectrum_data
+        # do not need call spectrum_data.canvasPlot(). It is done in the mainwindow with 
+        # another connection
 
     def _update_hilbertspace_for_ParameterSweep(self, x) -> None:
         """
