@@ -106,9 +106,15 @@ class LabeledSlider(QWidget):
         self.value.textChanged.connect(func_wrapper)
 
     def editingFinishedConnect(self, func):
+        # remove the last connection, which is always self.editingFinished
+        self.value.editingFinished.disconnect(self.editingFinished)
+
+        # connect
         self.value.editingFinished.connect(func)
         self.slider.sliderReleased.connect(func)
 
+        # put the self.editingFinished back
+        self.value.editingFinished.connect(self.editingFinished)
 
 
 class GroupedSliders(QWidget):

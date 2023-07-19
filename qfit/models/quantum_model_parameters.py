@@ -103,6 +103,8 @@ class QuantumModelSliderParameter:
     def _toIntString(self, value: Union[int, float], precision=4) -> str:
         """
         Convert the value to an integer if the parameter type is cutoff or truncated_dim.
+
+        For now, if the value has higher precision, the code breaks. We may want to fix this.
         """
         if isinstance(value, str):
             value = self._strToFloat(value)
@@ -195,7 +197,7 @@ class QuantumModelSliderParameter:
         boxValue = self.boxValueCallback()
 
         if boxValue == "":
-            raise ValueError("Box value is empty.")
+            raise ValueError("Box is empty.")
             
         try: 
             float_boxValue = float(boxValue)
