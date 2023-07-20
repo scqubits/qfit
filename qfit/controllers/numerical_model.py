@@ -1,5 +1,7 @@
 import numpy as np
 
+from numpy import ndarray
+
 from typing import overload
 
 import scqubits as scq
@@ -87,9 +89,9 @@ class QuantumModel:
         """
         Get the names of parameters in the HilbertSpace object. User may optionally specify
         parameter types that are excluded/included. The returned dictionary has subsystem
-        id strings as keys and dictionaries of different types of parameters as values. 
-        For example, if the HilbertSpace object contains two capacitively coupled transmon 
-        qubits, the parameter_set (a QuantumModelParameterSet object) will have a parameter object 
+        id strings as keys and dictionaries of different types of parameters as values.
+        For example, if the HilbertSpace object contains two capacitively coupled transmon
+        qubits, the parameter_set (a QuantumModelParameterSet object) will have a parameter object
         (a dictionary):
 
         {tmon1: {"EJ": ["EJ"], "EC": ["EC"], "cutoffs": ["ncut"], "truncated_dim": ["truncated_dim"]},
@@ -167,8 +169,10 @@ class QuantumModel:
     #     """
     #     return
 
-    def _generateXcoordinateList(self, data ) -> np.ndarray:
-        """ 
+    def _generateMarkedPointParameterList(
+        self, extracted_data: AllExtractedData
+    ) -> np.ndarray:
+        """
         Generate a list of x coordinates for parameter sweeps. The x coordinates can be either
         obtained from the collected data of the two-tone spectroscopy or a default grid that
         corresponds to 30 points evenly spaced in [0, 1] for flux or ng.
@@ -177,7 +181,31 @@ class QuantumModel:
         -------
         np.ndarray
         """
-    
+        # obtain the x-axis coordinate of the extracted data; since the x-coordinates of the
+        # sample points are fixed by the first set of the data, we extract the x-coordinates
+        # from the first set of the data
+        x_coordinates = extracted_data.allDataSorted(applyCalibration=False)[0][:, 0]
+        return x_coordinates
+
+    def _xmap(
+        self, x_coordinate_list: ndarray
+    ) -> ndarray:
+        """
+        Convert the x coordinate of the transition plot to the parameter value.
+
+        Parameters
+        ----------
+        x_coordinate: float
+            The x coordinate of the transition plot.
+
+        Returns
+        -------
+        float
+            The parameter value corresponding to the x coordinate.
+        """
+        # TODO in future, implement this function for multiple ng and flux case
+        return self._calibrationFunc(x_coordinate_list)
+
     def _generateParameterSweep(self) -> ParameterSweep:
         """
         Generate a ParameterSweep object from the HilbertSpace object.
@@ -238,7 +266,7 @@ class QuantumModel:
                 self._updateQuantumModelParameter(parameter)
 
     def onParameterChange(
-        self, 
+        self,
         parameter_set: QuantumModelParameterSet,
         spectrum_data: SpectrumData,
         calibration_data: CalibrationData,
@@ -259,8 +287,9 @@ class QuantumModel:
         # mse calculation
 
         # update spectrum_data
-        # do not need call spectrum_data.canvasPlot(). It is done in the mainwindow with 
+        # do not need call spectrum_data.canvasPlot(). It is done in the mainwindow with
         # another connection
+        # print(self._generateXcoordinateList(extracted_data=extracted_data))
 
     def _update_hilbertspace_for_ParameterSweep(self, x) -> None:
         """

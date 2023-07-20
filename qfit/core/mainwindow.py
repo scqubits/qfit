@@ -741,6 +741,7 @@ class MainWindow(ResizableFramelessWindow):
                         self.spectrumData,
                         self.calibrationData,
                         self.allDatasets,
+                        # self.axes,
                     )
                 )
                 labeled_slider.editingFinishedConnect(
