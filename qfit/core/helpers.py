@@ -94,6 +94,12 @@ def isValid2dArray(array):
 
 
 def isValid1dArray(array):
+    """
+    A valid 1d array must satisfy the following conditions:
+    * Array entries must be real-valued
+    * The array is strictly one-dimensional, i.e., number of rows=1 or number of cols=1
+    * The array increases monotonically
+    """
     if array.dtype not in [float, np.float_, np.float64, np.float32]:
         return False
     if array.ndim == 1:
