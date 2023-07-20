@@ -23,7 +23,7 @@ matplotlib.use("qtagg")
 
 from qfit.core.mainwindow import MainWindow
 from qfit.models.measurement_data import dummy_measurement_data
-from qfit.controllers.numerical_model import test_hilert_space
+from qfit.controllers.numerical_model import test_hilbert_space
 
 
 if __name__ == "__main__":
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     # fileData = readFileData(r"C:\Users\drjen\PycharmProjects\qfit\qfit\scratch\aug_summary_4_1.hdf5")
     window = MainWindow(
         measurementData=dummy_measurement_data(), 
-        hilbert_space=test_hilert_space(),
+        hilbert_space=test_hilbert_space(),
         extractedData=None
     )
     # window.resizeAndCenter(maxSize)
