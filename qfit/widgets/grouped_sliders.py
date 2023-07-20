@@ -68,7 +68,7 @@ class LabeledSlider(QWidget):
 
         # connect the slider and the value box in a simplest way
         if auto_connect:
-            self._defaultConnect()
+            self._naiveConnection()
 
     def _insertWidgets(self, label_value_position):
         """add the widgets to the layout according to the label_value_position"""
@@ -102,7 +102,7 @@ class LabeledSlider(QWidget):
         self.sliderLayout.addWidget(self.label, *label_position)
         self.sliderLayout.addWidget(self.value, *value_position)
 
-    def _defaultConnect(self):
+    def _naiveConnection(self):
         """
         The simplest way to connect the slider and the value box.
         """
@@ -165,6 +165,13 @@ class LabeledSlider(QWidget):
 
         # put the self.editingFinished back
         self.value.editingFinished.connect(self.editingFinished)
+
+    def setBoxValue(self, str_value: str):
+        self.user_is_typing = True
+        self.user_is_sliding = False
+        self.value.setText(str_value)
+        self.user_is_typing = False
+        self.user_is_sliding = False
 
 
 class GroupedSliders(QWidget):
