@@ -124,7 +124,9 @@ class MainWindow(ResizableFramelessWindow):
         self.quantumModel = QuantumModel(hilbert_space)
         self.quantumModel.generateSliderParameterSets(
             self.sliderParameterSet,
-            excluded_parameter_type=["ng", "flux"]
+            excluded_parameter_type = [
+                "ng", "flux", "cutoff", "truncated_dim"
+            ]
         )
         self.dynamicalSlidersInserts()
 
@@ -135,10 +137,11 @@ class MainWindow(ResizableFramelessWindow):
         self.uiMplCanvasConnects()
         self.ui.mplFigureCanvas.selectOn()
 
-        # connect the data model to the sliders, canvas, boxes etc. Should be done after
+        # prefit: connect the data model to the sliders, canvas, boxes etc. Should be done after
         # the canvas is set up.
         self.dynamicalSlidersConnects()
-
+        self.setUpSpectrumDataConnects()
+        
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
 
@@ -708,6 +711,7 @@ class MainWindow(ResizableFramelessWindow):
 
         prefitScrollLayout.addWidget(self.sliderSet)
 
+
     def dynamicalSlidersConnects(self):
         """
         Connect the sliders to the controller - update hilbertspace and spectrum
@@ -746,6 +750,16 @@ class MainWindow(ResizableFramelessWindow):
                 labeled_slider.editingFinishedConnect(
                     self.updatePlot
                 )
+
+                # set the initial value
+                # for test only
+                # ------------------------------------------------------------------------------
+                # put all sliders initially to the middle
+                labeled_slider.setBoxValue(f"{(para.max + para.min) / 5 + para.min:.0f}")
+                # ------------------------------------------------------------------------------
+
+    def setUpSpectrumDataConnects(self):
+        self.spectrumData.setupUICallbacks()
 
     @Slot()
     def openFile(self, initialize: bool = False):
