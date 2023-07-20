@@ -140,8 +140,15 @@ class LabeledSlider(QWidget):
         (not typing). It will also avoid endless call loops.
         """
         def func_wrapper(*args, **kwargs):
+            # when user is sliding
             if self.user_is_sliding and not self.user_is_typing:
                 func(*args, **kwargs)
+            # when user just clicked the slider and change the value
+            elif not self.user_is_sliding and not self.user_is_typing:
+                self.user_is_sliding = True
+                func(*args, **kwargs)
+                self.user_is_sliding = False
+        
         self.slider.valueChanged.connect(func_wrapper)
     
     def valueTextChangeConnect(self, func):
