@@ -25,17 +25,17 @@ ParameterType = Literal[
 
 # default ranges for different types of parameters
 DEFAULT_PARAM_MINMAX = {
-    "EJ": {"min": 1e-5, "max": 70.0},
-    "EC": {"min": 1e-5, "max": 10.0},
-    "EL": {"min": 1e-5, "max": 10.0},
+    "EJ": {"min": 1e-5, "max": 50.0},
+    "EC": {"min": 1e-5, "max": 5.0},
+    "EL": {"min": 1e-5, "max": 5.0},
     "E_osc": {"min": 1e-5, "max": 20.0},
     "l_osc": {"min": 1e-5, "max": 10.0},
-    "K": {"min": 1e-5, "max": 10.0},
+    "K": {"min": 1e-5, "max": 1.0},
     "disorder": {"min": -1 + 1e-5, "max": 1 - 1e-5},
     "ng": {"min": 0.0, "max": 1.0},
     "flux": {"min": 0.0, "max": 1.0},
     "cutoff": {"min": 10, "max": 50},
-    "interaction_strength": {"min": -10.0, "max": 10.0},
+    "interaction_strength": {"min": -1.0, "max": 1.0},
     "truncated_dim": {"min": 1, "max": 30},
 }
 
