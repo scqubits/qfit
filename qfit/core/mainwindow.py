@@ -140,7 +140,7 @@ class MainWindow(ResizableFramelessWindow):
         # prefit: connect the data model to the sliders, canvas, boxes etc. Should be done after
         # the canvas is set up.
         self.dynamicalSlidersConnects()
-        self.setUpSpectrumDataConnects()
+        self.setUpSpectrumPlotConnects()
         
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
@@ -758,8 +758,9 @@ class MainWindow(ResizableFramelessWindow):
                 labeled_slider.setBoxValue(f"{(para.max + para.min) / 5 + para.min:.0f}")
                 # ------------------------------------------------------------------------------
 
-    def setUpSpectrumDataConnects(self):
+    def setUpSpectrumPlotConnects(self):
         self.spectrumData.setupUICallbacks()
+        self.quantumModel.setupUICallbacks()
 
     @Slot()
     def openFile(self, initialize: bool = False):
