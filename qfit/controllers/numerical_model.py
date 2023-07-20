@@ -25,8 +25,9 @@ from qfit.models.extracted_data import AllExtractedData
 
 from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
 
-
-def test_hilert_space():
+# for test only
+# ------------------------------------------------------------------------------
+def test_hilbert_space():
     resonator = scq.Oscillator(
         E_osc=6.0, l_osc=1.0, truncated_dim=4, id_str="resonator"
     )
@@ -46,6 +47,7 @@ def test_hilert_space():
     )
 
     return hilbertspace
+# ------------------------------------------------------------------------------
 
 
 class QuantumModel:
@@ -282,6 +284,12 @@ class QuantumModel:
         parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
         """
         self._updateQuantumModelParameterSet(parameter_set)
+
+        # for test only
+        # ##############################################################################
+        spectrum_data.test_update(self.hilbertspace)
+        # ##############################################################################
+
         # self._computeSpectrum()
 
         # mse calculation
