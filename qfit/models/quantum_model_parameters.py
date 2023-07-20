@@ -4,6 +4,7 @@ from scqubits import HilbertSpace
 from scqubits.core.qubit_base import QuantumSystem
 
 from qfit.models.parameter_settings import ParameterType
+from qfit.widgets.grouped_sliders import SLIDER_RANGE
 
 from typing import Dict, List, Union, overload, Tuple, Callable
 
@@ -116,16 +117,20 @@ class QuantumModelSliderParameter:
 
     def _normalizeValue(self, value: Union[int, float]) -> int:
         """
-        Normalize the value of the parameter to a value between 0 and 100.
+        Normalize the value of the parameter to a value between 0 and SLIDER_RANGE.
         """
-        normalizedValue = (value - self.min) / (self.max - self.min) * 100
+        normalizedValue = (value - self.min) / (
+            self.max - self.min
+        ) * SLIDER_RANGE
         return np.round(normalizedValue).astype(int)
 
     def _denormalizeValue(self, value: int) -> Union[int, float]:
         """
         Denormalize the value of the parameter to a value between min and max.
         """
-        denormalizedValue = self.min + value / 100 * (self.max - self.min)
+        denormalizedValue = self.min + value / SLIDER_RANGE * (
+            self.max - self.min
+        )
 
         return self._toInt(denormalizedValue)
 

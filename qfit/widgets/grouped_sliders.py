@@ -11,6 +11,7 @@ from PySide6.QtCore import Qt
 
 from typing import Dict, List, Tuple, Union, Optional
 
+SLIDER_RANGE = 100
 
 class LabeledSlider(QWidget):
     """
@@ -53,6 +54,9 @@ class LabeledSlider(QWidget):
         # initialize the widgets
         self.label = QLabel(label_text)
         self.slider = QSlider(Qt.Horizontal, self)
+        self.slider.setMinimum(1)
+        self.slider.setMaximum(SLIDER_RANGE)
+        self.slider.setSingleStep(1)
         self.value = QLineEdit("0", self)
         self.value.setMaximumWidth(50)
 

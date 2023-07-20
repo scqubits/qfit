@@ -3,6 +3,7 @@ import numpy as np
 from numpy import ndarray
 
 from typing import overload
+import copy
 
 import scqubits as scq
 from scqubits.core.hilbert_space import HilbertSpace
@@ -49,7 +50,18 @@ def test_hilbert_space():
 
     return hilbertspace
 
+def test_param_sweep(hilbertspace, bias = 0.0, scale = 1.0) -> ParameterSweep:
 
+    # bias serves as a calibration parameter
+    def update_hilbertspace(x):
+        hilbertspace["fluxonium"].flux = x * scale + bias
+
+    sweep = ParameterSweep(
+        hilbertspace = hilbertspace,
+        paramvals_by_name = {"x": np.linspace(-bias/scale, (1-bias)/scale, 21)},
+        update_hilbertspace = update_hilbertspace,
+    )
+    return sweep
 # ------------------------------------------------------------------------------
 
 
@@ -70,6 +82,50 @@ class QuantumModel:
         hilbertspace: HilbertSpace,
     ):
         self.hilbertspace: HilbertSpace = hilbertspace
+
+    def setupUICallbacks(self):
+        """
+        Obtain information from UI including:
+        * plot options
+        * ...
+        """
+
+        # for test only
+        # ------------------------------------------------------------------------------
+        self.plot_subsystem_names = lambda *args: ["fluxonium"]
+        self.initial_state_str = lambda *args: "0"
+        self.final_state_str = lambda *args: ""
+        # ------------------------------------------------------------------------------
+
+        pass
+
+    def subsystems(self):
+        return [self.hilbertspace.subsys_by_id_str(name) for name in self.plot_subsystem_names()]
+    
+    @staticmethod
+    def _state_str_2_label(state_str: str):
+        # convert string to state label
+
+        # empty string means None
+        if state_str == "":
+            return None
+        
+        # comma separated string means tuple
+        if "," in state_str:
+            return tuple(int(x) for x in state_str.split(","))
+
+        # otherwise, try to interpret it as an integer
+        try:
+            return int(state_str)
+        except ValueError:
+            return None
+    
+    def initial_state(self):
+        return self._state_str_2_label(self.initial_state_str())
+    
+    def final_state(self):
+        return self._state_str_2_label(self.final_state_str())
+
 
     # @overload
     # def generateParameterSets(
@@ -326,11 +382,24 @@ class QuantumModel:
         self._updateQuantumModelParameterSet(parameter_set)
 
         # for test only
-        # ##############################################################################
-        spectrum_data.test_update(self.hilbertspace)
-        # ##############################################################################
+        # ------------------------------------------------------------------------------
+        self.sweep = test_param_sweep(self.hilbertspace, bias=0.0, scale=0.01)
+        
+        specdata_for_highlighting = self.sweep.transitions(
+            subsystems=self.plot_subsystem_names(),
+            initial=self.initial_state(),
+            final=self.final_state(),
+            # sidebands=sidebands,
+            # photon_number=photon_number,
+            make_positive=True,
+            as_specdata=True,
+        )
 
-        # self._computeSpectrum()
+        spectrum_data.update(
+            copy.deepcopy(self.sweep.dressed_specdata),
+            specdata_for_highlighting,
+        )
+        # ------------------------------------------------------------------------------
 
         # mse calculation
 

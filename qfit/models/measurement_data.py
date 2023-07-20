@@ -203,16 +203,12 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
     def findXYData(self):
         xyCandidates = OrderedDictMod()
         for name, theObject in self.rawData.items():
-            print(name, theObject.shape)
             if isinstance(theObject, np.ndarray):
                 if isValid1dArray(theObject):
-                    print("\t is 1d array")
                     xyCandidates[name] = theObject.flatten()
                 if isValid2dArray(theObject) and hasIdenticalRows(theObject):
-                    print("\t is 2d array, row identical")
                     xyCandidates[name] = theObject[0]
                 if isValid2dArray(theObject) and hasIdenticalCols(theObject):
-                    print("\t is 2d array, col identical")
                     xyCandidates[name] = theObject[:, 0]
         return xyCandidates
 
