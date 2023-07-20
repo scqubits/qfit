@@ -339,7 +339,7 @@ class QuantumModel:
 
         # substract the ground state energy
         overall_specdata = copy.deepcopy(self.sweep[(slice(None),)].dressed_specdata)
-        overall_specdata.energy_table -= overall_specdata.energy_table[..., 0:1]
+        overall_specdata.energy_table -= specdata_for_highlighting.subtract
 
         spectrum_data.update(
             overall_specdata,
