@@ -63,7 +63,7 @@ class SpectrumData(serializers.Serializable):
 
         self.highlighted_specdata.plot_evals_vs_paramvals(
             color = "gainsboro", 
-            linewidth = 0.75
+            linewidth = 0.75,
             fig_ax = (fig, axes),
         )     
 
