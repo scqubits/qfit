@@ -18,6 +18,8 @@ from qfit.models.quantum_model_parameters import (
     QuantumModelParameterSet,
 )
 from qfit.models.numerical_spectrum_data import SpectrumData
+from qfit.models.calibration_data import CalibrationData
+from qfit.models.extracted_data import AllExtractedData
 
 from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
 
@@ -239,6 +241,8 @@ class QuantumModel:
         self, 
         parameter_set: QuantumModelParameterSet,
         spectrum_data: SpectrumData,
+        calibration_data: CalibrationData,
+        extracted_data: AllExtractedData,
     ) -> None:
         """
         It is connected to the signal emitted by the UI when the user changes the slider

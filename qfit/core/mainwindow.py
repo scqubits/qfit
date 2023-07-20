@@ -739,6 +739,8 @@ class MainWindow(ResizableFramelessWindow):
                     lambda *args, **kwargs: self.quantumModel.onParameterChange(
                         self.sliderParameterSet,
                         self.spectrumData,
+                        self.calibrationData,
+                        self.allDatasets,
                     )
                 )
                 labeled_slider.editingFinishedConnect(
