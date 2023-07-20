@@ -80,7 +80,7 @@ class QuantumModelSliderParameter:
 
     def _strToFloat(self, value: str) -> float:
         """
-        Convert the string value to float. When failed, return the minimum value of the 
+        Convert the string value to float. When failed, return the minimum value of the
         parameter.
         """
         try:
@@ -94,12 +94,12 @@ class QuantumModelSliderParameter:
         """
         if isinstance(value, str):
             value = self._strToFloat(value)
-        
+
         if self.param_type in self.intergerParameterTypes:
             return np.round(value).astype(int)
         else:
             return value
-        
+
     def _toIntString(self, value: Union[int, float], precision=4) -> str:
         """
         Convert the value to an integer if the parameter type is cutoff or truncated_dim.
@@ -112,7 +112,7 @@ class QuantumModelSliderParameter:
         if self.param_type in self.intergerParameterTypes:
             return f"{value:.0f}"
         else:
-            return f"{value:.{precision}f}".rstrip('0').rstrip('.')
+            return f"{value:.{precision}f}".rstrip("0").rstrip(".")
 
     def _normalizeValue(self, value: Union[int, float]) -> int:
         """
@@ -158,7 +158,7 @@ class QuantumModelSliderParameter:
 
     def _onBoxEditingFinished(self, *args, **kwargs):
         """
-        When the user is done editing the box, update the value of the box and make the 
+        When the user is done editing the box, update the value of the box and make the
         value consistent with the parameter type.
 
         Special note: Will not take care of the case when the user input is not a number.
@@ -166,8 +166,8 @@ class QuantumModelSliderParameter:
         boxValue = self.boxValueCallback()
 
         if boxValue == "":
-            return 
-        
+            return
+
         try:
             float_boxValue = float(boxValue)
         except ValueError:
@@ -182,7 +182,7 @@ class QuantumModelSliderParameter:
         box more than the number on the slider, because the number on the box is directly
         input by the user, while the number on the slider is calculated and may be rounded.
 
-        Special note: Will raise a ValueError if user input is not a number. Should be 
+        Special note: Will raise a ValueError if user input is not a number. Should be
         taken care of by the UI/controller.
 
         Returns
@@ -194,18 +194,18 @@ class QuantumModelSliderParameter:
 
         if boxValue == "":
             raise ValueError("Box is empty.")
-            
-        try: 
+
+        try:
             float_boxValue = float(boxValue)
         except ValueError:
             raise ValueError(f"Cannot convert {boxValue} to float.")
-        
+
         return self._toInt(float_boxValue)
 
     @property
     def value(self):
         """
-        Special note: Will raise a ValueError if user input is not a number. Should be 
+        Special note: Will raise a ValueError if user input is not a number. Should be
         taken care of by the UI/controller.
         """
         return self._getUiValue()
@@ -213,7 +213,19 @@ class QuantumModelSliderParameter:
 
 class QuantumModelParameter:
     """
-    A class for parameters that are not adjustable by a slider.
+    A class for parameters that are not adjustable by a slider. Primarily used for
+    ng and flux parameters in qubits.
+
+    Parameters
+    ----------
+    name: str
+        The name of the parameter
+    parent: Union[QuantumSystem, HilbertSpace]
+        The parent of the parameter
+    value: Union[float, int]
+        The value of the parameter
+    param_type: ParameterType
+        The type of the parameter
     """
 
     def __init__(
@@ -227,6 +239,7 @@ class QuantumModelParameter:
         self.parent = parent
         self.value = value
         self.param_type = param_type
+        self.calibration_func = None
 
 
 class QuantumModelParameterSet:

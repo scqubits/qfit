@@ -9,7 +9,7 @@ from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.param_sweep import ParameterSweep
 from scqubits.core.qubit_base import QuantumSystem
 
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Callable
 from typing_extensions import Literal
 
 from qfit.models.parameter_settings import ParameterType
@@ -24,6 +24,7 @@ from qfit.models.calibration_data import CalibrationData
 from qfit.models.extracted_data import AllExtractedData
 
 from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
+
 
 # for test only
 # ------------------------------------------------------------------------------
@@ -47,6 +48,8 @@ def test_hilbert_space():
     )
 
     return hilbertspace
+
+
 # ------------------------------------------------------------------------------
 
 
@@ -175,9 +178,13 @@ class QuantumModel:
         self, extracted_data: AllExtractedData
     ) -> np.ndarray:
         """
-        Generate a list of x coordinates for parameter sweeps. The x coordinates can be either
-        obtained from the collected data of the two-tone spectroscopy or a default grid that
-        corresponds to 30 points evenly spaced in [0, 1] for flux or ng.
+        Generate a list of parameter values for parameter sweeps from the extracted data;
+        the extracted data contains the x coordinate of the two-tone spectroscopy plot.
+
+        Parameters
+        ----------
+        extracted_data: AllExtractedData
+            The extracted data from the two-tone spectroscopy experiment.
 
         Returns
         -------
@@ -189,34 +196,67 @@ class QuantumModel:
         x_coordinates = extracted_data.allDataSorted(applyCalibration=False)[0][:, 0]
         return x_coordinates
 
+    @classmethod
+    def _setCalibrationFunction(
+        parameter: QuantumModelParameter, calibration_func: Callable
+    ) -> None:
+        """
+        Set the calibration function for a parameter.
+
+        Parameters
+        ----------
+        parameter: QuantumModelParameter
+            The parameter to be calibrated.
+        calibration_func: Callable
+            The calibration function.
+        """
+        parameter.calibration_func = calibration_func
+
     def _xmap(
-        self, x_coordinate_list: ndarray
-    ) -> ndarray:
+        self,
+        flux_ng_parameter_set: QuantumModelParameterSet,
+        x_coordinate_list: ndarray,
+    ) -> Dict[QuantumModelParameter, ndarray]:
         """
         Convert the x coordinate of the transition plot to the parameter value.
 
         Parameters
         ----------
-        x_coordinate: float
+        flux_ng_parameter_set: QuantumModelParameterSet
+            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object.
+        x_coordinate_list: ndarray
             The x coordinate of the transition plot.
+        The keys are the parameters and the values are the corrsponding functions.
 
         Returns
         -------
         float
             The parameter value corresponding to the x coordinate.
         """
-        # TODO in future, implement this function for multiple ng and flux case
-        return self._calibrationFunc(x_coordinate_list)
+        # currently the code only works for single ng and flux case
+        parameter_value_for_sweep = {}
+        # the following two for loops are looping over all the parameters in the parameter set
+        for parameters in flux_ng_parameter_set.values():
+            for parameter in parameters:
+                parameter_value_for_sweep[parameter] = parameter.calibration_func(
+                    x_coordinate_list
+                )
+        return parameter_value_for_sweep
 
-    def _generateParameterSweep(self) -> ParameterSweep:
+    def _generateParameterSweep(
+        self,
+        x_coordinate_list: ndarray,
+        flux_ng_parameter_set: QuantumModelParameterSet,
+    ) -> ParameterSweep:
         """
         Generate a ParameterSweep object from the HilbertSpace object.
 
         Returns
         -------
-        ParameterSweep
+        A ParameterSweep object.
         """
-        paramvals_by_name = {}
+        paramvals_by_name = {"x-coordinate": x_coordinate_list}
+        # track changes for
         subsys_update_info = {}
         update_hilbertspace = self._update_hilbertspace_for_ParameterSweep()
         param_sweep = ParameterSweep(
@@ -305,8 +345,6 @@ class QuantumModel:
         received from the UI when the sweep is running. This method is the callable `update_hilbertspace`
         that is passed to the ParameterSweep object.
         """
-
-        # use _map1D to get the values of parameters and coupling coefficients from x
 
         pass
 
