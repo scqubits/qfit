@@ -21,11 +21,11 @@ import qfit.io_utils.file_io_serializers as serializers
 # for test only
 # ------------------------------------------------------------------------------
 import scqubits as scq
-def test_param_sweep(hilbertspace, xlim: Tuple[float, float], bias = 0.0) -> ParameterSweep:
+def test_param_sweep(hilbertspace, xlim: Tuple[float, float], bias = 0.0, scale = 1.0) -> ParameterSweep:
 
     # bias serves as a calibration parameter
     def update_hilbertspace(x):
-        hilbertspace["fluxonium"].flux = (x - xlim[0]) / (xlim[1] - xlim[0]) + bias
+        hilbertspace["fluxonium"].flux = (x - xlim[0]) / (xlim[1] - xlim[0]) * scale + bias
 
     sweep = ParameterSweep(
         hilbertspace = hilbertspace,
@@ -108,7 +108,8 @@ class SpectrumData(serializers.Serializable):
             self.parameter_sweep = test_param_sweep(
                 self.hilbertspace, 
                 axes.get_xlim(),
-                bias = 0.5
+                bias = -0.05,
+                scale = 1.0,
             )
         except AttributeError:
             return 
@@ -133,12 +134,18 @@ class SpectrumData(serializers.Serializable):
         # )
 
         # just a naive scaling:
+        # ------------------------------------------------------------------------------
         plot_x = self.parameter_sweep.parameters.paramvals_by_name["x"]
         plot_y = self.parameter_sweep["evals"]
-        plot_y = plot_y - plot_y[:, 0:1]
+        plot_y0 = plot_y - plot_y[:, 0:1]
         axes.plot(
-            plot_x, plot_y, **kwargs            
+            plot_x, plot_y0, **kwargs            
         )
+        plot_y1 = plot_y[:, 1:] - plot_y[:, 1:2]
+        axes.plot(
+            plot_x, plot_y1, **kwargs
+        )
+        # ------------------------------------------------------------------------------
 
 
 
