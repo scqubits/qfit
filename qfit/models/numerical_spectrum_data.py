@@ -61,14 +61,18 @@ class SpectrumData(serializers.Serializable):
         
         fig = axes.get_figure()
 
-        self.highlighted_specdata.plot_evals_vs_paramvals(
-            color = "gainsboro", 
-            linewidth = 0.75,
+        self.overall_specdata.plot_evals_vs_paramvals(
+            color = "black", 
+            linewidth = 2,
+            linestyle = "--",
+            alpha = 0.3,
             fig_ax = (fig, axes),
-        )     
+
+        )
 
         self.highlighted_specdata.plot_evals_vs_paramvals(
             # label_list = self.highlighted_specdata.labels,
+            linewidth = 2,
             fig_ax = (fig, axes),
         )     
 

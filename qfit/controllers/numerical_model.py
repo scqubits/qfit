@@ -94,19 +94,29 @@ class QuantumModel:
 
         # for test only
         # ------------------------------------------------------------------------------
-        self.plot_subsystem_names = lambda *args: ["fluxonium"]
-        self.initial_state_str = lambda *args: "0"
+        self.subsystem_names_to_plot = lambda *args: "fluxonium"
+        self.initial_state_str = lambda *args: "0,0"
         self.final_state_str = lambda *args: ""
         # ------------------------------------------------------------------------------
 
         pass
 
-    def subsystems(self):
-        return [
-            self.hilbertspace.subsys_by_id_str(name)
-            for name in self.plot_subsystem_names()
-        ]
+    def subsystems_to_plot(self):
+        subsys_names = self.subsystem_names_to_plot()
 
+        if isinstance(subsys_names, str):
+            return self.hilbertspace.subsys_by_id_str(subsys_names)
+        
+        elif isinstance(subsys_names, list):
+            return [
+                self.hilbertspace.subsys_by_id_str(name) for name in subsys_names
+            ]
+
+        else:
+            raise TypeError(
+                f"subsystem_names_to_plot() should give a string or a list of strings, not {type(subsys_names)}."
+            )
+    
     @staticmethod
     def _state_str_2_label(state_str: str):
         # convert string to state label
@@ -117,7 +127,8 @@ class QuantumModel:
 
         # comma separated string means tuple
         if "," in state_str:
-            return tuple(int(x) for x in state_str.split(","))
+            label_str = state_str.split(",")
+            return tuple(int(x) for x in label_str if x != "") # delete '' in the tuple
 
         # otherwise, try to interpret it as an integer
         try:
@@ -418,8 +429,13 @@ class QuantumModel:
         # # ------------------------------------------------------------------------------
         # self.sweep = test_param_sweep(self.hilbertspace, bias=0.0, scale=0.01)
 
+        try:
+            subsys = self.subsystems_to_plot()
+        except ValueError:
+            return
+
         specdata_for_highlighting = self.sweep.transitions(
-            subsystems=self.plot_subsystem_names(),
+            subsystems=subsys,
             initial=self.initial_state(),
             final=self.final_state(),
             # sidebands=sidebands,
@@ -428,8 +444,14 @@ class QuantumModel:
             as_specdata=True,
         )
 
+        # TODO: scale with calibration data
+
+        # substract the ground state energy
+        overall_specdata = copy.deepcopy(self.sweep[(slice(None),)].dressed_specdata)
+        overall_specdata.energy_table -= specdata_for_highlighting.subtract
+
         spectrum_data.update(
-            copy.deepcopy(self.sweep.dressed_specdata),
+            overall_specdata,
             specdata_for_highlighting,
         )
         # ------------------------------------------------------------------------------
