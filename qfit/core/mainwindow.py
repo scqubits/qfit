@@ -121,19 +121,20 @@ class MainWindow(ResizableFramelessWindow):
 
         # prefit: controller, two models and their connection to view (sliders)
         self.sliderParameterSet = QuantumModelParameterSet()
-        self.sweptParameterSet = QuantumModelParameterSet()
+        self.sweepParameterSet = QuantumModelParameterSet()
         self.spectrumData = SpectrumData()
         self.quantumModel = QuantumModel(hilbert_space)
         self.quantumModel.addParametersToParameterSet(
             self.sliderParameterSet,
-            parameter_type="slider",
+            parameter_usage="slider",
             excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim"],
         )
         self.quantumModel.addParametersToParameterSet(
-            self.sweptParameterSet,
-            parameter_type="sweep",
+            self.sweepParameterSet,
+            parameter_usage="sweep",
             included_parameter_type=["ng", "flux"],
         )
+
         self.dynamicalSlidersInserts()
 
         # setup mpl canvas
@@ -741,10 +742,11 @@ class MainWindow(ResizableFramelessWindow):
                 # connect to the controller to update the spectrum
                 labeled_slider.editingFinishedConnect(
                     lambda *args, **kwargs: self.quantumModel.onSliderParameterChange(
-                        self.sliderParameterSet,
-                        self.spectrumData,
-                        self.calibrationData,
-                        self.allDatasets,
+                        slider_parameter_set=self.sliderParameterSet,
+                        sweep_parameter_set=self.sweepParameterSet,
+                        spectrum_data=self.spectrumData,
+                        calibration_data=self.calibrationData,
+                        extracted_data=self.allDatasets,
                         # self.axes,
                     )
                 )

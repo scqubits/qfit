@@ -106,17 +106,15 @@ class QuantumModel:
 
         if isinstance(subsys_names, str):
             return self.hilbertspace.subsys_by_id_str(subsys_names)
-        
+
         elif isinstance(subsys_names, list):
-            return [
-                self.hilbertspace.subsys_by_id_str(name) for name in subsys_names
-            ]
+            return [self.hilbertspace.subsys_by_id_str(name) for name in subsys_names]
 
         else:
             raise TypeError(
                 f"subsystem_names_to_plot() should give a string or a list of strings, not {type(subsys_names)}."
             )
-    
+
     @staticmethod
     def _state_str_2_label(state_str: str):
         # convert string to state label
@@ -128,7 +126,7 @@ class QuantumModel:
         # comma separated string means tuple
         if "," in state_str:
             label_str = state_str.split(",")
-            return tuple(int(x) for x in label_str if x != "") # delete '' in the tuple
+            return tuple(int(x) for x in label_str if x != "")  # delete '' in the tuple
 
         # otherwise, try to interpret it as an integer
         try:
@@ -159,7 +157,7 @@ class QuantumModel:
     def addParametersToParameterSet(
         self,
         parameter_set: QuantumModelParameterSet,
-        parameter_type: Literal["slider", "sweep"],
+        parameter_usage: Literal["slider", "sweep", "fit"],
         included_parameter_type: Union[List[ParameterType], None] = None,
         excluded_parameter_type: Union[List[ParameterType], None] = None,
     ) -> None:
@@ -172,7 +170,7 @@ class QuantumModel:
         -----------
         parameter_set: QuantumModelParameterSet
             A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object.
-        parameter_type: Literal["slider", "sweep"]
+        parameter_type: Literal["slider", "sweep", "fit"]
             The type of the parameter.
         included_parameter_type: List[ParameterType]
             A list of parameter types that are included in the returned parameter set.
@@ -205,14 +203,14 @@ class QuantumModel:
                 ):
                     continue
                 for parameter_name in parameter_names:
-                    if parameter_type == "slider":
+                    if parameter_usage == "slider":
                         parameter_set.addParameter(
                             name=parameter_name,
                             parent_system=subsystem,
                             param_type=parameter_type,
                             **DEFAULT_PARAM_MINMAX[parameter_type],
                         )
-                    elif parameter_type == "sweep":
+                    elif (parameter_usage == "sweep") or (parameter_usage == "fit"):
                         parameter_set.addParameter(
                             name=parameter_name,
                             parent_system=subsystem,
@@ -227,25 +225,24 @@ class QuantumModel:
             (excluded_parameter_type is not None)
             and ("interaction_strength" in excluded_parameter_type)
         ):
-            return parameter_set
+            pass
         else:
             interactions = self.hilbertspace.interaction_list
             for interaction_term_index in range(len(interactions)):
-                if parameter_type == "slider":
+                if parameter_usage == "slider":
                     parameter_set.addParameter(
                         name=f"g{interaction_term_index+1}",
                         parent_system=self.hilbertspace,
                         param_type="interaction_strength",
                         **DEFAULT_PARAM_MINMAX["interaction_strength"],
                     )
-                elif parameter_type == "sweep":
+                elif (parameter_usage == "sweep") or (parameter_usage == "fit"):
                     parameter_set.addParameter(
                         name=f"g{interaction_term_index+1}",
                         parent_system=self.hilbertspace,
                         param_type="interaction_strength",
                         value=0,
                     )
-            return parameter_set
 
     # TODO: in future implement this function (for multiple ng and flux case)
     # @staticmethod
@@ -296,12 +293,14 @@ class QuantumModel:
         # generate a list of x coordinates for the prefit
         x_coordinates_uniform = np.linspace(
             min(x_coordinates_from_data), max(x_coordinates_from_data), 20
-        )[1:-1].tolist()
-        x_coordinates_all = x_coordinates_from_data + x_coordinates_uniform
-        x_coordinates_all.sort()
-        return np.array(x_coordinates_all)
+        )[1:-1]
+        x_coordinates_all = np.concatenate(
+            [x_coordinates_from_data, x_coordinates_uniform]
+        )
 
-    @classmethod
+        return np.sort(x_coordinates_all)
+
+    @staticmethod
     def setCalibrationFunction(
         parameter: QuantumModelParameter, calibration_data: CalibrationData
     ) -> None:
@@ -318,7 +317,10 @@ class QuantumModel:
             The calibration function.
         """
         # TODO generalize this function to multiple ng and flux case in future
-        parameter.calibration_func = calibration_data.calibrateDataset
+        # notice that the `calibrateDataset` function below takes
+        parameter.calibration_func = lambda x: calibration_data.calibrateDataPoint(
+            [x, 0]
+        )[0]
 
     def generateParameterSweep(
         self,
@@ -345,14 +347,16 @@ class QuantumModel:
         # set subsys_update_info
         subsys_update_info = {"x-coordinate": list(sweep_parameter_set.keys())}
         # set update_hilbertspace
-        update_hilbertspace = self._update_hilbertspace_for_ParameterSweep()
+        update_hilbertspace = self._update_hilbertspace_for_ParameterSweep(
+            sweep_parameter_set
+        )
         param_sweep = ParameterSweep(
             hilbertspace=self.hilbertspace,
             paramvals_by_name=paramvals_by_name,
             update_hilbertspace=update_hilbertspace,
             evals_count=20,  # change this later to connect to the number from the view
             subsys_update_info=subsys_update_info,
-            autorun=False,
+            autorun=True,  # TODO set to false by default later
             num_cpus=1,  # change this later to connect to the number from the view
         )
         return param_sweep
@@ -466,7 +470,6 @@ class QuantumModel:
     def _update_hilbertspace_for_ParameterSweep(
         self,
         sweptParameterSet: QuantumModelParameterSet,
-        x: float,
     ) -> None:
         """
         Update the HilbertSpace object with the values of parameters and coupling coefficients
