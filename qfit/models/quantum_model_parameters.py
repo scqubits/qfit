@@ -79,6 +79,18 @@ class QuantumModelSliderParameter:
         self.boxValueCallback = boxValueCallback
         self.boxValueSetter = boxValueSetter
 
+    def setParameterForParent(self):
+        """
+        Set the parameter for the parent
+        """
+        # TODO: include more "special" parameter types here in future
+        if self.param_type == "interaction_strength":
+            interaction_index = int(self.name[1:]) - 1
+            interaction = self.parent.interaction_list[interaction_index]
+            interaction.g_strength = self.value
+        else:
+            setattr(self.parent, self.name, self.value)
+
     def _strToFloat(self, value: str) -> float:
         """
         Convert the string value to float. When failed, return the minimum value of the
@@ -119,18 +131,14 @@ class QuantumModelSliderParameter:
         """
         Normalize the value of the parameter to a value between 0 and SLIDER_RANGE.
         """
-        normalizedValue = (value - self.min) / (
-            self.max - self.min
-        ) * SLIDER_RANGE
+        normalizedValue = (value - self.min) / (self.max - self.min) * SLIDER_RANGE
         return np.round(normalizedValue).astype(int)
 
     def _denormalizeValue(self, value: int) -> Union[int, float]:
         """
         Denormalize the value of the parameter to a value between min and max.
         """
-        denormalizedValue = self.min + value / SLIDER_RANGE * (
-            self.max - self.min
-        )
+        denormalizedValue = self.min + value / SLIDER_RANGE * (self.max - self.min)
 
         return self._toInt(denormalizedValue)
 
@@ -245,6 +253,24 @@ class QuantumModelParameter:
         self.value = value
         self.param_type = param_type
         self.calibration_func = None
+
+    def setParameterForParent(self):
+        """
+        Set the parameter for the parent
+        """
+        # TODO: include more "special" parameter types here in future
+        if self.param_type == "interaction_strength":
+            interaction_index = int(self.name[1:]) - 1
+            interaction = self.parent.interaction_list[interaction_index]
+            interaction.g_strength = self.value
+        else:
+            setattr(self.parent, self.name, self.value)
+
+    def setCalibrationFunc(self, func):
+        """
+        Set the calibration function for the parameter
+        """
+        self.calibration_func = func
 
 
 class QuantumModelParameterSet:

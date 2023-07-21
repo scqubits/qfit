@@ -24,7 +24,7 @@ from scqubits.core.hilbert_space import HilbertSpace
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, Slot
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
-    QLabel, 
+    QLabel,
     QWidget,
     QVBoxLayout,
     QGraphicsDropShadowEffect,
@@ -48,7 +48,9 @@ from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
 
 from qfit.models.quantum_model_parameters import (
-    QuantumModelSliderParameter, QuantumModelParameterSet)
+    QuantumModelSliderParameter,
+    QuantumModelParameterSet,
+)
 from qfit.models.numerical_spectrum_data import SpectrumData
 from qfit.controllers.numerical_model import QuantumModel
 from qfit.widgets.grouped_sliders import GroupedSliders, GroupedSliderSet
@@ -80,7 +82,6 @@ class MainWindow(ResizableFramelessWindow):
     mapLineEdits: Dict[str, "CalibrationLineEdit"]
     calibrationButtons: Dict[str, QPushButton]
     calibrationStates: Dict[str, State]
-
 
     axes: mpl.axes.Axes
     cidCanvas: int
@@ -120,13 +121,18 @@ class MainWindow(ResizableFramelessWindow):
 
         # prefit: controller, two models and their connection to view (sliders)
         self.sliderParameterSet = QuantumModelParameterSet()
+        self.sweptParameterSet = QuantumModelParameterSet()
         self.spectrumData = SpectrumData()
         self.quantumModel = QuantumModel(hilbert_space)
-        self.quantumModel.generateSliderParameterSets(
+        self.quantumModel.addParametersToParameterSet(
             self.sliderParameterSet,
-            excluded_parameter_type = [
-                "ng", "flux", "cutoff", "truncated_dim"
-            ]
+            parameter_type="slider",
+            excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim"],
+        )
+        self.quantumModel.addParametersToParameterSet(
+            self.sweptParameterSet,
+            parameter_type="sweep",
+            included_parameter_type=["ng", "flux"],
         )
         self.dynamicalSlidersInserts()
 
@@ -141,7 +147,7 @@ class MainWindow(ResizableFramelessWindow):
         # the canvas is set up.
         self.dynamicalSlidersConnects()
         self.setUpSpectrumPlotConnects()
-        
+
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
 
@@ -684,7 +690,7 @@ class MainWindow(ResizableFramelessWindow):
         if distance < 0.025:
             return True
         return False
-    
+
     def dynamicalSlidersInserts(self):
         """
         Insert a set of sliders for the prefit parameters according to the parameter set
@@ -697,20 +703,17 @@ class MainWindow(ResizableFramelessWindow):
         prefitScrollWidget.setLayout(prefitScrollLayout)
 
         # generate the slider set
-        self.sliderSet = GroupedSliderSet(
-            columns=1, label_value_position="left_right"
-        )
+        self.sliderSet = GroupedSliderSet(columns=1, label_value_position="left_right")
 
         for key, para_dict in self.sliderParameterSet.items():
             group_name = self.sliderParameterSet.group_name_maps[key]
 
             self.sliderSet.addGroupedSliders(
-                group_name, 
+                group_name,
                 list(para_dict.keys()),
             )
 
         prefitScrollLayout.addWidget(self.sliderSet)
-
 
     def dynamicalSlidersConnects(self):
         """
@@ -731,16 +734,13 @@ class MainWindow(ResizableFramelessWindow):
                 )
 
                 # synchronize slider and box
-                labeled_slider.sliderValueChangedConnect(
-                    para._sliderValueToBox)
-                labeled_slider.valueTextChangeConnect(
-                    para._boxValueToSlider)   
-                labeled_slider.value.editingFinished.connect(
-                    para._onBoxEditingFinished)
+                labeled_slider.sliderValueChangedConnect(para._sliderValueToBox)
+                labeled_slider.valueTextChangeConnect(para._boxValueToSlider)
+                labeled_slider.value.editingFinished.connect(para._onBoxEditingFinished)
 
                 # connect to the controller to update the spectrum
                 labeled_slider.editingFinishedConnect(
-                    lambda *args, **kwargs: self.quantumModel.onParameterChange(
+                    lambda *args, **kwargs: self.quantumModel.onSliderParameterChange(
                         self.sliderParameterSet,
                         self.spectrumData,
                         self.calibrationData,
@@ -748,15 +748,15 @@ class MainWindow(ResizableFramelessWindow):
                         # self.axes,
                     )
                 )
-                labeled_slider.editingFinishedConnect(
-                    self.updatePlot
-                )
+                labeled_slider.editingFinishedConnect(self.updatePlot)
 
                 # set the initial value
                 # for test only
                 # ------------------------------------------------------------------------------
                 # put all sliders initially to the middle
-                labeled_slider.setBoxValue(f"{(para.max + para.min) / 5 + para.min:.0f}")
+                labeled_slider.setBoxValue(
+                    f"{(para.max + para.min) / 5 + para.min:.0f}"
+                )
                 # ------------------------------------------------------------------------------
 
     def setUpSpectrumPlotConnects(self):
