@@ -9,15 +9,22 @@
 #    LICENSE file in the root directory of this source tree.
 ############################################################################
 
-
+import os, time
 from collections import OrderedDict
 
 import numpy as np
+import pandas as pd
+
+import matplotlib.pyplot as plt
+from matplotlib import colormaps
 
 from PySide6 import QtCore as QtCore
 from PySide6.QtCore import QLocale
 from PySide6.QtGui import QDoubleValidator
 from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate
+
+from typing import Dict, List, Literal, Optional, Tuple, Union
+
 
 
 class EditDelegate(QStyledItemDelegate):
@@ -137,3 +144,151 @@ def transposeEach(xyDataList):
 
 def remove_nones(dict_data):
     return {key: value for key, value in dict_data.items() if value is not None}
+
+
+# Plot #########################################################################
+def filter(c, filter_name):
+    if filter_name in ["translucent", "trans"]:
+        r, g, b, a = c
+        return [r, g, b, a * 0.2]
+    elif filter_name in ["emphsize", "emph"]:
+        r, g, b, a = c
+        factor = 3
+        return [r ** factor, g ** factor, b ** factor, a]
+
+class Cmap():
+    def __init__(
+        self, 
+        upper: float, 
+        lower: float = 0, 
+        cmap_name="rainbow"
+    ):
+        self.upper = upper
+        self.lower = lower
+        self.cmap_name = cmap_name
+
+        self.cmap = colormaps[self.cmap_name]
+        self.norm = plt.Normalize(self.lower, self.upper)
+        self.mappable = plt.cm.ScalarMappable(norm=self.norm, cmap=self.cmap)
+    
+    def __call__(self, val):
+        # return self.mappable.cmap(val)
+        return self.cmap(self.norm(val))
+    
+
+# Save csv ######################################################################
+
+def datetime_dir(
+    save_dir="./",
+    dir_suffix=None,
+):
+    """
+    Initialize a directory with the current datetime. 
+
+    Parameters & Examples
+    ---------------------
+    save_dir : str
+        The directory to save the data, default to be "./". Say the current
+        datetime is 2021-01-31 12:34, then the directory will be
+        "save_dir/Jan/31_12-34/".
+    dir_suffix : str
+        The suffix of the directory, default to be None. Say the current
+        datetime is 2021-01-31 12:34, then the directory will be
+        "save_dir/Jan/31_12-34_dir_suffix/".
+
+    Returns
+    -------
+    current_date_dir : str
+    """
+    save_dir = os.path.normpath(save_dir)
+    
+    current_time = time.localtime()
+    current_month_dir = save_dir + time.strftime("/%h/", current_time)
+    current_date_dir = current_month_dir + \
+        time.strftime("%d_%H-%M", current_time)
+
+    if dir_suffix != "" and dir_suffix is not None:
+        current_date_dir = current_date_dir + "_" + dir_suffix + "/"
+    else:
+        current_date_dir = current_date_dir + "/"
+
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    if not os.path.exists(current_month_dir):
+        os.mkdir(current_month_dir)
+    if not os.path.exists(current_date_dir):
+        os.mkdir(current_date_dir)
+
+    print(f"Current datetime directory: {current_date_dir}")
+    return current_date_dir
+
+def save_variable_dict(file_name, variable_dict: Dict[str, float]):
+    """
+    Save a dictionary contains name-value pairs to a csv file.
+    """
+    new_dict = dict([(key, [val]) for key, val in variable_dict.items()])
+    pd.DataFrame.from_dict(
+        new_dict,
+        orient="columns",
+    ).to_csv(file_name)
+
+def load_variable_dict(file_name) -> Dict[str, float]:
+    """
+    Load a dictionary contains name-value pairs from a csv file. The file should be 
+    saved by save_variable_dict.
+    """
+    list_dict = pd.read_csv(
+        file_name, 
+        index_col=0,
+        header=0
+    ).to_dict(orient='list')
+    new_dict = dict([(key, val[0]) for key, val in list_dict.items()])
+    return new_dict
+
+def save_variable_list_dict(
+    file_name, 
+    variable_list_dict: Dict[str, np.ndarray], 
+    orient: Literal['columns', 'index'] = 'columns',
+) -> None:
+    """
+    Save a dictionary contains name-value_list pairs to a csv file.
+
+    orient = 'index' SHOULD be used when variable list are not equal in length
+    """
+    pd.DataFrame.from_dict(
+        variable_list_dict,
+        orient=orient,
+    ).to_csv(file_name)
+
+def load_variable_list_dict(
+    file_name, 
+    throw_nan = True, 
+    orient: Literal['columns', 'index'] = 'columns'
+) -> Dict[str, np.ndarray]:
+    """
+    Load a dictionary contains name-value_list pairs from a csv file. The file should be
+    saved by save_variable_list_dict.
+
+    throw_nan : bool
+        If True, remove nan in the list. It's useful when the list is not equal in length.
+
+    orient = 'index' should be used when variable list are not equal in length
+    """
+    if orient == 'index':
+        variable_list_dict = pd.read_csv(
+            file_name, index_col=0, header=0).transpose().to_dict(orient='list')
+    elif orient == 'columns':
+        variable_list_dict = pd.read_csv(
+            file_name, index_col=0, header=0).to_dict(orient='list')
+    else:
+        raise ValueError("only recognize 'index' or 'columns' for orient")
+
+    if not throw_nan:
+        return dict([(key, np.array(val)) for key, val in variable_list_dict.items()])
+
+    for key, val in variable_list_dict.items():
+        new_val = np.array(val)
+        new_val = new_val[~np.isnan(val)]
+        variable_list_dict[key] = new_val
+    return variable_list_dict
+
