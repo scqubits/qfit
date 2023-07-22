@@ -55,7 +55,8 @@ from qfit.models.quantum_model_parameters import (
 )
 from qfit.models.numerical_spectrum_data import SpectrumData
 from qfit.controllers.numerical_model import QuantumModel
-from qfit.widgets.grouped_sliders import GroupedSliders, GroupedSliderSet
+from qfit.widgets.grouped_sliders import (
+    LabeledSlider, GroupedWidget, GroupedWidgetSet)
 
 if TYPE_CHECKING:
     from qfit.widgets.calibration import CalibrationLineEdit
@@ -707,13 +708,18 @@ class MainWindow(ResizableFramelessWindow):
         prefitScrollWidget.setLayout(prefitScrollLayout)
 
         # generate the slider set
-        self.sliderSet = GroupedSliderSet(columns=1, label_value_position="left_right")
+        self.sliderSet = GroupedWidgetSet(
+            widget_class = LabeledSlider,
+            init_kwargs = {"label_value_position": "left_right"},
+            columns = 1, 
+            parent = prefitScrollWidget
+        )
 
         for key, para_dict in self.sliderParameterSet.items():
             group_name = self.sliderParameterSet.group_name_maps[key]
 
-            self.sliderSet.addGroupedSliders(
-                group_name,
+            self.sliderSet.addGroupedWidgets(
+                group_name, 
                 list(para_dict.keys()),
             )
 
@@ -739,7 +745,7 @@ class MainWindow(ResizableFramelessWindow):
 
             for para_name, para in para_dict.items():
                 para: QuantumModelSliderParameter
-                labeled_slider = self.sliderSet[group_name][para_name]
+                labeled_slider: LabeledSlider = self.sliderSet[group_name][para_name]
 
                 para.setupUICallbacks(
                     labeled_slider.slider.value,
