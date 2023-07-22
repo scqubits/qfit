@@ -310,7 +310,7 @@ class QuantumModel:
         return np.sort(x_coordinates_all)
 
     @staticmethod
-    def setCalibrationFunction(
+    def _setCalibrationFunction(
         parameter: QuantumModelParameter, calibration_data: CalibrationData
     ) -> None:
         """
@@ -331,7 +331,7 @@ class QuantumModel:
             [x, 0]
         )[0]
 
-    def generateParameterSweep(
+    def _generateParameterSweep(
         self,
         x_coordinate_list: ndarray,
         sweep_parameter_set: QuantumModelParameterSet,
@@ -431,10 +431,10 @@ class QuantumModel:
         # set calibration function for the parameters in the sweep parameter set
         for parameters in sweep_parameter_set.values():
             for parameter in parameters.values():
-                self.setCalibrationFunction(parameter, calibration_data)
+                self._setCalibrationFunction(parameter, calibration_data)
 
         # generate parameter sweep
-        self.sweep = self.generateParameterSweep(
+        self.sweep = self._generateParameterSweep(
             self._generateXcoordinateListForPrefit(extracted_data), sweep_parameter_set
         )
 
