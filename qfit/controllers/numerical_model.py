@@ -397,9 +397,9 @@ class QuantumModel:
             for parameter in parameters.values():
                 self._updateQuantumModelParameter(parameter)
 
-    def onSliderParameterChange(
+    def onParameterChange(
         self,
-        slider_parameter_set: QuantumModelParameterSet,
+        parameter_set: QuantumModelParameterSet,
         sweep_parameter_set: QuantumModelParameterSet,
         spectrum_data: SpectrumData,
         calibration_data: CalibrationData,
@@ -412,7 +412,7 @@ class QuantumModel:
 
         Parameters
         ----------
-        slider_parameter_set: QuantumModelParameterSet
+        parameter_set: QuantumModelParameterSet
             A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
             which are controlled by sliders.
         sweep_parameter_set: QuantumModelParameterSet
@@ -426,7 +426,7 @@ class QuantumModel:
             The extracted data from the two-tone spectroscopy experiment.
         """
         # update the HilbertSpace object with the slider parameter
-        self._updateQuantumModelFromParameterSet(slider_parameter_set)
+        self._updateQuantumModelFromParameterSet(parameter_set)
 
         # set calibration function for the parameters in the sweep parameter set
         for parameters in sweep_parameter_set.values():
@@ -511,4 +511,30 @@ class QuantumModel:
         the spectrum model.
         """
 
+        pass
+
+    def calculateMSE(self, extracted_data: AllExtractedData) -> float:
+        """
+        Calculate the mean square error between the extracted data and the simulated data
+        from the parameter sweep. Currently, the MSE is calculated from the transition
+        spectrum of the self.sweep attribute (i.e. the ParameterSweep object is stored in
+        the controller). This method is supposed to be called after running the parameter
+        sweep.
+
+        Parameters
+        ----------
+        extracted_data: AllExtractedData
+            The extracted data from the two-tone spectroscopy experiment.
+
+        Returns
+        -------
+        float
+            The mean square error.
+        """
+        # Steps:
+        # 1. obtain tags from the extracted data for each data point
+        # 2. according to the tags, fetch the corresponding frequency from the transition data
+        # 3. if no transition can be found with the tag, find out the closest transition from the
+        #    transition calculation
+        # 4. calculate the MSE
         pass
