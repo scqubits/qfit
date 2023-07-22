@@ -443,14 +443,10 @@ class QuantumModel:
 
     def onButtonRunClicked(self, spectrum_data: SpectrumData):
         """
-        It is connected to the signal emitted by the UI when the user clicks the run button.
-        It runs the parameter sweep.
+        It is connected to the signal emitted by the UI when the user clicks the run button
+        for the prefit stage. It runs the parameter sweep and then generate the plots.
         """
         self.sweep.run()
-
-        # # for test only
-        # # ------------------------------------------------------------------------------
-        # self.sweep = test_param_sweep(self.hilbertspace, bias=0.0, scale=0.01)
 
         try:
             subsys = self.subsystems_to_plot()
