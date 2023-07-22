@@ -13,6 +13,7 @@ from typing import Dict, List, Tuple, Union, Optional
 
 SLIDER_RANGE = 100
 
+
 class LabeledSlider(QWidget):
     """
     A widget that contains a slider as well as its name and value as QLineEdit.
@@ -43,11 +44,11 @@ class LabeledSlider(QWidget):
     user_is_typing = False
 
     def __init__(
-        self, 
-        label_text: str = 'Slider', 
-        label_value_position: str = 'left_right', 
+        self,
+        label_text: str = "Slider",
+        label_value_position: str = "left_right",
         auto_connect: bool = False,
-        parent: Optional[QWidget] = None
+        parent: Optional[QWidget] = None,
     ):
         super().__init__(parent)
 
@@ -78,9 +79,9 @@ class LabeledSlider(QWidget):
 
     def _insertWidgets(self, label_value_position):
         """add the widgets to the layout according to the label_value_position"""
-        with_label = label_value_position in ['left_right', 'right_left', 'both_bottom']
+        with_label = label_value_position in ["left_right", "right_left", "both_bottom"]
 
-        if label_value_position == 'left_right':
+        if label_value_position == "left_right":
             slider_position = (0, 1)
             label_position = (0, 0)
             value_position = (0, 2)
@@ -92,17 +93,17 @@ class LabeledSlider(QWidget):
             slider_position = (0, 0, 1, 2)
             label_position = (1, 0)
             value_position = (1, 1)
-        elif label_value_position == 'value_left':
+        elif label_value_position == "value_left":
             slider_position = (0, 1)
             label_position = None
             value_position = (0, 0)
-        elif label_value_position == 'value_right':
+        elif label_value_position == "value_right":
             slider_position = (0, 0)
             label_position = None
             value_position = (0, 1)
         else:
             raise ValueError(f"Unknown label_value_position: {label_value_position}")
-        
+
         if with_label:
             self.sliderLayout.addWidget(self.slider, *slider_position)
         self.sliderLayout.addWidget(self.label, *label_position)
@@ -112,10 +113,13 @@ class LabeledSlider(QWidget):
         """
         The simplest way to connect the slider and the value box.
         """
+
         def updateValue():
             self.value.setText(str(self.slider.value()))
+
         def updateSlider():
             self.slider.setValue(int(self.value.text()))
+
         self.sliderValueChangedConnect(updateValue)
         self.valueTextChangeConnect(updateSlider)
 
@@ -136,7 +140,7 @@ class LabeledSlider(QWidget):
 
     def sliderValueChangedConnect(self, func):
         """
-        Both user and (potentially) box value change will emit the slider.valueChanged 
+        Both user and (potentially) box value change will emit the slider.valueChanged
         signal. This function will react to the signal only when the user is sliding
         (not typing). It will also avoid endless call loops.
         """
@@ -150,7 +154,7 @@ class LabeledSlider(QWidget):
                 self.user_is_sliding = True
                 func(*args, **kwargs)
                 self.user_is_sliding = False
-        
+
         self.slider.valueChanged.connect(func_wrapper)
 
     def valueTextChangeConnect(self, func):
@@ -194,6 +198,7 @@ class GroupedSliders(QWidget):
     A class that contains multiple LabeledSlider widgets. The sliders will be displayed
     in a grid layout.
     """
+
     def __init__(
         self, slider_names, columns=2, label_value_position="left_right", parent=None
     ):
@@ -240,7 +245,8 @@ class FoldableWidget(QGroupBox):
     A widget that contains a title and a content widget. The content widget will be
     hidden when the widget is not checked.
     """
-    def __init__(self, title='Foldable', content_widget=None, parent=None):
+
+    def __init__(self, title="Foldable", content_widget=None, parent=None):
         super().__init__(parent)
 
         self.setTitle(title)
@@ -272,12 +278,8 @@ class GroupedSliderSet(QWidget):
     """
     Represent a set of grouped sliders. Each group will be displayed in a FoldableWidget.
     """
-    def __init__(
-        self, 
-        columns=2, 
-        label_value_position='left_right',
-        parent=None
-    ):
+
+    def __init__(self, columns=2, label_value_position="left_right", parent=None):
         super().__init__(parent)
 
         self.sliderSetParent = parent

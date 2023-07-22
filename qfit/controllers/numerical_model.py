@@ -85,9 +85,9 @@ class QuantumModel:
     ):
         self.hilbertspace: HilbertSpace = hilbertspace
 
-    def setupUICallbacks(self):
+    def setupPlotUICallbacks(self):
         """
-        Obtain information from UI including:
+        Obtain information from plot option UI including:
         * plot options
         * ...
         """
@@ -97,9 +97,18 @@ class QuantumModel:
         self.subsystem_names_to_plot = lambda *args: "fluxonium"
         self.initial_state_str = lambda *args: "0,0"
         self.final_state_str = lambda *args: ""
+
         # ------------------------------------------------------------------------------
 
-        pass
+    def setupAutorunCallbacks(
+        self,
+        autorun_callback: Callable,
+    ):
+        """
+        Obtain information from autorun UI including
+        """
+        # set autorun callback
+        self.autorun_callback = autorun_callback
 
     def subsystems_to_plot(self):
         subsys_names = self.subsystem_names_to_plot()
@@ -356,7 +365,7 @@ class QuantumModel:
             update_hilbertspace=update_hilbertspace,
             evals_count=20,  # change this later to connect to the number from the view
             subsys_update_info=subsys_update_info,
-            autorun=True,  # TODO set to false by default later
+            autorun=False,  # TODO set to false by default later
             num_cpus=1,  # change this later to connect to the number from the view
         )
         return param_sweep
@@ -428,6 +437,16 @@ class QuantumModel:
         self.sweep = self.generateParameterSweep(
             self._generateXcoordinateListForPrefit(extracted_data), sweep_parameter_set
         )
+
+        if self.autorun_callback():
+            self.onButtonRunClicked(spectrum_data)
+
+    def onButtonRunClicked(self, spectrum_data: SpectrumData):
+        """
+        It is connected to the signal emitted by the UI when the user clicks the run button.
+        It runs the parameter sweep.
+        """
+        self.sweep.run()
 
         # # for test only
         # # ------------------------------------------------------------------------------

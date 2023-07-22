@@ -27,10 +27,12 @@ from PySide6.QtWidgets import (
     QLabel,
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
     QGraphicsDropShadowEffect,
     QMessageBox,
     QPushButton,
     QStyle,
+    QCheckBox,
 )
 
 import qfit.core.app_state as appstate
@@ -148,6 +150,7 @@ class MainWindow(ResizableFramelessWindow):
         # the canvas is set up.
         self.dynamicalSlidersConnects()
         self.setUpSpectrumPlotConnects()
+        self.setUpUIConnects()
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
@@ -714,6 +717,17 @@ class MainWindow(ResizableFramelessWindow):
                 list(para_dict.keys()),
             )
 
+        # test: autorun checkbox and button (in future, to be replaced by Qt designer generated widget)
+        # autorunWidget = QWidget()
+        # autorunLayout = QHBoxLayout()
+        # autorunWidget.setLayout(autorunLayout)
+        # self.autorunCheckBox = QCheckBox()
+        # self.autorunButton = QPushButton("Run")
+        # autorunLayout.addWidget(QLabel("Autorun:"))
+        # autorunLayout.addWidget(self.autorunCheckBox)
+        # autorunLayout.addWidget(self.autorunButton)
+        # prefitScrollLayout.addWidget(autorunWidget)
+
         prefitScrollLayout.addWidget(self.sliderSet)
 
     def dynamicalSlidersConnects(self):
@@ -761,9 +775,17 @@ class MainWindow(ResizableFramelessWindow):
                 )
                 # ------------------------------------------------------------------------------
 
+    def setUpUIConnects(self):
+        """
+        Set up the connects for the UI elements (except dynamically generated sliders)
+        """
+        self.quantumModel.setupPlotUICallbacks()
+        self.quantumModel.setupAutorunCallbacks(
+            autorun_callback=lambda: True
+        )  # TODO in the future, set it to self.autorunCheckBox.isChecked
+
     def setUpSpectrumPlotConnects(self):
         self.spectrumData.setupUICallbacks()
-        self.quantumModel.setupUICallbacks()
 
     @Slot()
     def openFile(self, initialize: bool = False):
