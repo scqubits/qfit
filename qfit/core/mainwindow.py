@@ -151,7 +151,7 @@ class MainWindow(ResizableFramelessWindow):
         # the canvas is set up.
         self.dynamicalSlidersConnects()
         self.setUpSpectrumPlotConnects()
-        self.setUpUIConnects()
+        self.setUpQuantumModelConnects()
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
@@ -781,7 +781,7 @@ class MainWindow(ResizableFramelessWindow):
                 )
                 # ------------------------------------------------------------------------------
 
-    def setUpUIConnects(self):
+    def setUpQuantumModelConnects(self):
         """
         Set up the connects for the UI elements (except dynamically generated sliders)
         """
