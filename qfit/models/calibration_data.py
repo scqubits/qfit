@@ -89,6 +89,20 @@ class CalibrationData(serializers.Serializable):
         return np.apply_along_axis(self.calibrateDataPoint, axis=0, arr=array)
 
     def calibrateDataPoint(self, rawVec: Union[List[float], np.ndarray]) -> np.ndarray:
+        """
+        Apply the calibration to a single (or multiple) data point(s). The form of the rawVec can be either a
+        list [x,y] or a list of [x,y] coordinates.
+
+        Parameters
+        ----------
+        rawVec: list or ndarray
+            A single data point or a list of data points. Each data point is a list of two floats [x,y].
+
+        Returns
+        -------
+        mVec: ndarray
+            The calibrated data point(s). If rawVec is a list of data points, mVec is a list of calibrated data points.
+        """
         if isinstance(rawVec, list):
             rawVec = np.asarray(rawVec)
         mVec = np.matmul(self.alphaMat, rawVec) + self.bVec

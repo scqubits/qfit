@@ -8,6 +8,7 @@ from qfit.widgets.grouped_sliders import SLIDER_RANGE
 
 from typing import Dict, List, Union, overload, Tuple, Callable
 
+
 class QuantumModelSliderParameter:
     """
     A class for parameters that are connected to a slider. The slider value is stored elsewhere,
@@ -62,7 +63,6 @@ class QuantumModelSliderParameter:
         # a placeholder for the callback function that returns the value of the slider
         # this callback function is set by the UI
 
-
     # TODO: in future, we may wish to let user specify the min and max of parameters in the slider,
     # do we want to store minmax by then? If so, we may need:
     # self.minmaxCallback = lambda x: minmax # not yet implemented
@@ -73,15 +73,27 @@ class QuantumModelSliderParameter:
         sliderValueSetter,
         boxValueCallback,
         boxValueSetter,
-    ): 
+    ):
         self.sliderValueCallback = sliderValueCallback
         self.sliderValueSetter = sliderValueSetter
         self.boxValueCallback = boxValueCallback
         self.boxValueSetter = boxValueSetter
 
+    def setParameterForParent(self):
+        """
+        Set the parameter for the parent
+        """
+        # TODO: include more "special" parameter types here in future
+        if self.param_type == "interaction_strength":
+            interaction_index = int(self.name[1:]) - 1
+            interaction = self.parent.interaction_list[interaction_index]
+            interaction.g_strength = self.value
+        else:
+            setattr(self.parent, self.name, self.value)
+
     def _strToFloat(self, value: str) -> float:
         """
-        Convert the string value to float. When failed, return the minimum value of the 
+        Convert the string value to float. When failed, return the minimum value of the
         parameter.
         """
         try:
@@ -95,12 +107,12 @@ class QuantumModelSliderParameter:
         """
         if isinstance(value, str):
             value = self._strToFloat(value)
-        
+
         if self.param_type in self.intergerParameterTypes:
             return np.round(value).astype(int)
         else:
             return value
-        
+
     def _toIntString(self, value: Union[int, float], precision=4) -> str:
         """
         Convert the value to an integer if the parameter type is cutoff or truncated_dim.
@@ -113,24 +125,20 @@ class QuantumModelSliderParameter:
         if self.param_type in self.intergerParameterTypes:
             return f"{value:.0f}"
         else:
-            return f"{value:.{precision}f}".rstrip('0').rstrip('.')
+            return f"{value:.{precision}f}".rstrip("0").rstrip(".")
 
     def _normalizeValue(self, value: Union[int, float]) -> int:
         """
         Normalize the value of the parameter to a value between 0 and SLIDER_RANGE.
         """
-        normalizedValue = (value - self.min) / (
-            self.max - self.min
-        ) * SLIDER_RANGE
+        normalizedValue = (value - self.min) / (self.max - self.min) * SLIDER_RANGE
         return np.round(normalizedValue).astype(int)
-    
+
     def _denormalizeValue(self, value: int) -> Union[int, float]:
         """
         Denormalize the value of the parameter to a value between min and max.
         """
-        denormalizedValue = self.min + value / SLIDER_RANGE * (
-            self.max - self.min
-        )
+        denormalizedValue = self.min + value / SLIDER_RANGE * (self.max - self.min)
 
         return self._toInt(denormalizedValue)
 
@@ -141,7 +149,7 @@ class QuantumModelSliderParameter:
         sliderValue = self.sliderValueCallback()
 
         denormalizedValue = self._denormalizeValue(sliderValue)
-        
+
         self.boxValueSetter(self._toIntString(denormalizedValue))
 
     def _boxValueToSlider(self, *args, **kwargs):
@@ -163,7 +171,7 @@ class QuantumModelSliderParameter:
 
     def _onBoxEditingFinished(self, *args, **kwargs):
         """
-        When the user is done editing the box, update the value of the box and make the 
+        When the user is done editing the box, update the value of the box and make the
         value consistent with the parameter type.
 
         Special note: Will not take care of the case when the user input is not a number.
@@ -171,8 +179,8 @@ class QuantumModelSliderParameter:
         boxValue = self.boxValueCallback()
 
         if boxValue == "":
-            return 
-        
+            return
+
         try:
             float_boxValue = float(boxValue)
         except ValueError:
@@ -184,33 +192,33 @@ class QuantumModelSliderParameter:
     def _getUiValue(self) -> Union[int, float]:
         """
         Get the value of the parameter from the box. We should trust the number in the
-        box more than the number on the slider, because the number on the box is directly 
+        box more than the number on the slider, because the number on the box is directly
         input by the user, while the number on the slider is calculated and may be rounded.
 
-        Special note: Will raise a ValueError if user input is not a number. Should be 
+        Special note: Will raise a ValueError if user input is not a number. Should be
         taken care of by the UI/controller.
 
         Returns
         -------
         The value of the parameter
         """
-        
+
         boxValue = self.boxValueCallback()
 
         if boxValue == "":
             raise ValueError("Box is empty.")
-            
-        try: 
+
+        try:
             float_boxValue = float(boxValue)
         except ValueError:
             raise ValueError(f"Cannot convert {boxValue} to float.")
-        
+
         return self._toInt(float_boxValue)
 
     @property
     def value(self):
         """
-        Special note: Will raise a ValueError if user input is not a number. Should be 
+        Special note: Will raise a ValueError if user input is not a number. Should be
         taken care of by the UI/controller.
         """
         return self._getUiValue()
@@ -218,7 +226,19 @@ class QuantumModelSliderParameter:
 
 class QuantumModelParameter:
     """
-    A class for parameters that are not adjustable by a slider.
+    A class for parameters that are not adjustable by a slider. Primarily used for
+    ng and flux parameters in qubits.
+
+    Parameters
+    ----------
+    name: str
+        The name of the parameter
+    parent: Union[QuantumSystem, HilbertSpace]
+        The parent of the parameter
+    value: Union[float, int]
+        The value of the parameter
+    param_type: ParameterType
+        The type of the parameter
     """
 
     def __init__(
@@ -232,12 +252,32 @@ class QuantumModelParameter:
         self.parent = parent
         self.value = value
         self.param_type = param_type
+        self.calibration_func = None
+
+    def setParameterForParent(self):
+        """
+        Set the parameter for the parent
+        """
+        # TODO: include more "special" parameter types here in future
+        if self.param_type == "interaction_strength":
+            interaction_index = int(self.name[1:]) - 1
+            interaction = self.parent.interaction_list[interaction_index]
+            interaction.g_strength = self.value
+        else:
+            setattr(self.parent, self.name, self.value)
+
+    def setCalibrationFunc(self, func):
+        """
+        Set the calibration function for the parameter
+        """
+        self.calibration_func = func
 
 
 class QuantumModelParameterSet:
     """
     A class to store all the parameters of a quantum system
     """
+
     def __init__(self):
         self.parameters: Dict[
             Union[HilbertSpace, QuantumSystem],
@@ -248,27 +288,29 @@ class QuantumModelParameterSet:
 
     def keys(self):
         return self.parameters.keys()
-    
+
     def values(self):
         return self.parameters.values()
-    
+
     def items(self):
         return self.parameters.items()
-    
+
     def __getitem__(self, key):
         return self.parameters[key]
-    
+
     def generateNameMap(self):
         """
-        given a key (parent of parameters), return the name of the group which will be 
+        given a key (parent of parameters), return the name of the group which will be
         displayed in the UI
         """
         for parent in self.parameters:
             if isinstance(parent, HilbertSpace):
                 self.group_name_maps[parent] = "Interactions"
             elif isinstance(parent, QuantumSystem):
-                self.group_name_maps[parent] = parent.id_str
-    
+                self.group_name_maps[
+                    parent
+                ] = f"{parent.id_str} ({parent.__class__.__name__})"
+
     # @overload
     # def add_parameter(
     #     self,
@@ -289,7 +331,7 @@ class QuantumModelParameterSet:
     # ):
     #     ...
 
-    def add_parameter(
+    def addParameter(
         self,
         name: str,
         parent_system,
@@ -333,34 +375,30 @@ class QuantumModelParameterSet:
 
         minmax_provided = min is not None and max is not None
         minmax_not_provided = min is None or max is None
-        if (
-            (minmax_not_provided and value is None) 
-            or (minmax_provided and value is not None)
+        if (minmax_not_provided and value is None) or (
+            minmax_provided and value is not None
         ):
             raise ValueError(
                 "Either minmax or value need to be provided, but not both."
             )
-    
+
         # if the parent system is not in the parameter set, add it and set its value to
-        # an empty list
+        # an empty dictionary
         if parent_system not in self.parameters:
             self.parameters[parent_system] = {}
         # if the parameter is not a slider parameter, add it to the parameter set
         if minmax_not_provided:
             self.parameters[parent_system][name] = QuantumModelParameter(
-                name = name, 
-                parent = parent_system, 
-                value = value, 
-                param_type = param_type
+                name=name, parent=parent_system, value=value, param_type=param_type
             )
         # if the parameter is a slider parameter, add it to the parameter set
         else:
             self.parameters[parent_system][name] = QuantumModelSliderParameter(
-                name = name, 
-                parent = parent_system, 
-                min = min,
-                max = max, 
-                param_type = param_type,
+                name=name,
+                parent=parent_system,
+                min=min,
+                max=max,
+                param_type=param_type,
             )
 
         # update the name map
@@ -406,8 +444,7 @@ class QuantumModelParameterSet:
         # TODO: we may want to add a check to see if the parent_system is in the parameter set
         # generate a dict with keys being the parameter names and values being the parameter
         name_dict = {
-            name: para.value
-            for name, para in self.parameters[parent_system].items()
+            name: para.value for name, para in self.parameters[parent_system].items()
         }
         if name is None:
             return name_dict

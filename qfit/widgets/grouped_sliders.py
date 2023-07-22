@@ -1,12 +1,13 @@
 from PySide6.QtWidgets import (
-    QSlider, 
-    QLineEdit, 
-    QLabel, 
-    QWidget, 
+    QSlider,
+    QLineEdit,
+    QLabel,
+    QWidget,
     QGridLayout,
     QVBoxLayout,
     QHBoxLayout,
     QGroupBox,
+    QCheckBox,
 )
 from PySide6.QtCore import Qt
 
@@ -14,11 +15,12 @@ from typing import Dict, List, Tuple, Union, Optional, Any
 
 SLIDER_RANGE = 100
 
+
 class LabeledSlider(QWidget):
     """
     A widget that contains a slider as well as its name and value as QLineEdit.
 
-    When user are using either the slider or the value box, functions can be set 
+    When user are using either the slider or the value box, functions can be set
     to achieve that the other one will be updated accordingly. Endless call loops will
     be avoided if using the provided methods.
 
@@ -39,6 +41,7 @@ class LabeledSlider(QWidget):
     parent : QWidget
         The parent widget.
     """
+
     user_is_sliding = False
     user_is_typing = False
 
@@ -47,10 +50,10 @@ class LabeledSlider(QWidget):
         name: str = 'Slider', 
         label_value_position: str = 'left_right', 
         auto_connect: bool = False,
-        parent: Optional[QWidget] = None
+        parent: Optional[QWidget] = None,
     ):
         super().__init__(parent)
-        
+
         # initialize the widgets
         self.label = QLabel(name)
         self.slider = QSlider(Qt.Horizontal, self)
@@ -78,31 +81,31 @@ class LabeledSlider(QWidget):
 
     def _insertWidgets(self, label_value_position):
         """add the widgets to the layout according to the label_value_position"""
-        with_label = label_value_position in ['left_right', 'right_left', 'both_bottom']
+        with_label = label_value_position in ["left_right", "right_left", "both_bottom"]
 
-        if label_value_position == 'left_right':
+        if label_value_position == "left_right":
             slider_position = (0, 1)
             label_position = (0, 0)
             value_position = (0, 2)
-        elif label_value_position == 'right_left':
+        elif label_value_position == "right_left":
             slider_position = (0, 1)
             label_position = (0, 2)
             value_position = (0, 0)
-        elif label_value_position == 'both_bottom':
+        elif label_value_position == "both_bottom":
             slider_position = (0, 0, 1, 2)
             label_position = (1, 0)
             value_position = (1, 1)
-        elif label_value_position == 'value_left':
+        elif label_value_position == "value_left":
             slider_position = (0, 1)
             label_position = None
             value_position = (0, 0)
-        elif label_value_position == 'value_right':
+        elif label_value_position == "value_right":
             slider_position = (0, 0)
             label_position = None
             value_position = (0, 1)
         else:
             raise ValueError(f"Unknown label_value_position: {label_value_position}")
-        
+
         if with_label:
             self.sliderLayout.addWidget(self.slider, *slider_position)
         self.sliderLayout.addWidget(self.label, *label_position)
@@ -112,10 +115,13 @@ class LabeledSlider(QWidget):
         """
         The simplest way to connect the slider and the value box.
         """
+
         def updateValue():
             self.value.setText(str(self.slider.value()))
+
         def updateSlider():
             self.slider.setValue(int(self.value.text()))
+
         self.sliderValueChangedConnect(updateValue)
         self.valueTextChangeConnect(updateSlider)
 
@@ -136,10 +142,11 @@ class LabeledSlider(QWidget):
 
     def sliderValueChangedConnect(self, func):
         """
-        Both user and (potentially) box value change will emit the slider.valueChanged 
+        Both user and (potentially) box value change will emit the slider.valueChanged
         signal. This function will react to the signal only when the user is sliding
         (not typing). It will also avoid endless call loops.
         """
+
         def func_wrapper(*args, **kwargs):
             # when user is sliding
             if self.user_is_sliding and not self.user_is_typing:
@@ -149,15 +156,16 @@ class LabeledSlider(QWidget):
                 self.user_is_sliding = True
                 func(*args, **kwargs)
                 self.user_is_sliding = False
-        
+
         self.slider.valueChanged.connect(func_wrapper)
-    
+
     def valueTextChangeConnect(self, func):
         """
         Both user and (potentially) slider value change will emit the value.textChanged
         signal. This function will react to the signal only when the user is typing
         (not sliding). It will also avoid endless call loops.
         """
+
         def func_wrapper(*args, **kwargs):
             if self.user_is_typing and not self.user_is_sliding:
                 func(*args, **kwargs)
@@ -192,6 +200,7 @@ class GroupedWidget(QWidget):
     A class that contains multiple LabeledSlider widgets. The sliders will be displayed
     in a grid layout.
     """
+
     def __init__(
         self, 
         widget_class,
@@ -234,7 +243,7 @@ class GroupedWidget(QWidget):
             self.gridLayout.addWidget(widget, idx // self.columns, idx % self.columns)
             
     def clearLayout(self):
-        for i in reversed(range(self.gridLayout.count())): 
+        for i in reversed(range(self.gridLayout.count())):
             self.gridLayout.itemAt(i).widget().setParent(None)
         self.widgets.clear()
 
@@ -244,14 +253,17 @@ class FoldableWidget(QGroupBox):
     A widget that contains a title and a content widget. The content widget will be
     hidden when the widget is not checked.
     """
-    def __init__(self, title='Foldable', content_widget=None, parent=None):
+
+    def __init__(self, title="Foldable", content_widget=None, parent=None):
         super().__init__(parent)
 
         self.setTitle(title)
         self.setCheckable(True)
 
         self.boxLayout = QVBoxLayout(self)
-        self.content_widget = content_widget if content_widget else QLabel("No Content", self)
+        self.content_widget = (
+            content_widget if content_widget else QLabel("No Content", self)
+        )
         self.boxLayout.addWidget(self.content_widget)
 
         self.setChecked(False)

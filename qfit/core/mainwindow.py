@@ -24,13 +24,15 @@ from scqubits.core.hilbert_space import HilbertSpace
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, Slot
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
-    QLabel, 
+    QLabel,
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
     QGraphicsDropShadowEffect,
     QMessageBox,
     QPushButton,
     QStyle,
+    QCheckBox,
 )
 
 import qfit.core.app_state as appstate
@@ -48,7 +50,9 @@ from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
 
 from qfit.models.quantum_model_parameters import (
-    QuantumModelSliderParameter, QuantumModelParameterSet)
+    QuantumModelSliderParameter,
+    QuantumModelParameterSet,
+)
 from qfit.models.numerical_spectrum_data import SpectrumData
 from qfit.controllers.numerical_model import QuantumModel
 from qfit.widgets.grouped_sliders import (
@@ -81,7 +85,6 @@ class MainWindow(ResizableFramelessWindow):
     mapLineEdits: Dict[str, "CalibrationLineEdit"]
     calibrationButtons: Dict[str, QPushButton]
     calibrationStates: Dict[str, State]
-
 
     axes: mpl.axes.Axes
     cidCanvas: int
@@ -121,14 +124,20 @@ class MainWindow(ResizableFramelessWindow):
 
         # prefit: controller, two models and their connection to view (sliders)
         self.sliderParameterSet = QuantumModelParameterSet()
+        self.sweepParameterSet = QuantumModelParameterSet()
         self.spectrumData = SpectrumData()
         self.quantumModel = QuantumModel(hilbert_space)
-        self.quantumModel.generateSliderParameterSets(
+        self.quantumModel.addParametersToParameterSet(
             self.sliderParameterSet,
-            excluded_parameter_type = [
-                "ng", "flux", "cutoff", "truncated_dim"
-            ]
+            parameter_usage="slider",
+            excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim"],
         )
+        self.quantumModel.addParametersToParameterSet(
+            self.sweepParameterSet,
+            parameter_usage="sweep",
+            included_parameter_type=["ng", "flux"],
+        )
+
         self.dynamicalSlidersInserts()
 
         # setup mpl canvas
@@ -142,7 +151,8 @@ class MainWindow(ResizableFramelessWindow):
         # the canvas is set up.
         self.dynamicalSlidersConnects()
         self.setUpSpectrumPlotConnects()
-        
+        self.setUpUIConnects()
+
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
 
@@ -713,8 +723,18 @@ class MainWindow(ResizableFramelessWindow):
                 list(para_dict.keys()),
             )
 
-        prefitScrollLayout.addWidget(self.sliderSet)
+        # test: autorun checkbox and button (in future, to be replaced by Qt designer generated widget)
+        # autorunWidget = QWidget()
+        # autorunLayout = QHBoxLayout()
+        # autorunWidget.setLayout(autorunLayout)
+        # self.autorunCheckBox = QCheckBox()
+        # self.autorunButton = QPushButton("Run")
+        # autorunLayout.addWidget(QLabel("Autorun:"))
+        # autorunLayout.addWidget(self.autorunCheckBox)
+        # autorunLayout.addWidget(self.autorunButton)
+        # prefitScrollLayout.addWidget(autorunWidget)
 
+        prefitScrollLayout.addWidget(self.sliderSet)
 
     def dynamicalSlidersConnects(self):
         """
@@ -735,36 +755,43 @@ class MainWindow(ResizableFramelessWindow):
                 )
 
                 # synchronize slider and box
-                labeled_slider.sliderValueChangedConnect(
-                    para._sliderValueToBox)
-                labeled_slider.valueTextChangeConnect(
-                    para._boxValueToSlider)   
-                labeled_slider.value.editingFinished.connect(
-                    para._onBoxEditingFinished)
+                labeled_slider.sliderValueChangedConnect(para._sliderValueToBox)
+                labeled_slider.valueTextChangeConnect(para._boxValueToSlider)
+                labeled_slider.value.editingFinished.connect(para._onBoxEditingFinished)
 
                 # connect to the controller to update the spectrum
                 labeled_slider.editingFinishedConnect(
-                    lambda *args, **kwargs: self.quantumModel.onParameterChange(
-                        self.sliderParameterSet,
-                        self.spectrumData,
-                        self.calibrationData,
-                        self.allDatasets,
+                    lambda *args, **kwargs: self.quantumModel.onSliderParameterChange(
+                        slider_parameter_set=self.sliderParameterSet,
+                        sweep_parameter_set=self.sweepParameterSet,
+                        spectrum_data=self.spectrumData,
+                        calibration_data=self.calibrationData,
+                        extracted_data=self.allDatasets,
+                        # self.axes,
                     )
                 )
-                labeled_slider.editingFinishedConnect(
-                    self.updatePlot
-                )
+                labeled_slider.editingFinishedConnect(self.updatePlot)
 
                 # set the initial value
                 # for test only
                 # ------------------------------------------------------------------------------
                 # put all sliders initially to the middle
-                labeled_slider.setBoxValue(f"{(para.max + para.min) / 5 + para.min:.0f}")
+                labeled_slider.setBoxValue(
+                    f"{(para.max + para.min) / 5 + para.min:.0f}"
+                )
                 # ------------------------------------------------------------------------------
+
+    def setUpUIConnects(self):
+        """
+        Set up the connects for the UI elements (except dynamically generated sliders)
+        """
+        self.quantumModel.setupPlotUICallbacks()
+        self.quantumModel.setupAutorunCallbacks(
+            autorun_callback=lambda: True
+        )  # TODO in the future, set it to self.autorunCheckBox.isChecked
 
     def setUpSpectrumPlotConnects(self):
         self.spectrumData.setupUICallbacks()
-        self.quantumModel.setupUICallbacks()
 
     @Slot()
     def openFile(self, initialize: bool = False):

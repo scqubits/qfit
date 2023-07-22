@@ -1,5 +1,7 @@
 import numpy as np
 
+from numpy import ndarray
+
 from typing import overload
 import copy
 
@@ -8,7 +10,9 @@ from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.param_sweep import ParameterSweep
 from scqubits.core.qubit_base import QuantumSystem
 
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Callable
+from typing_extensions import Literal
+
 from qfit.models.parameter_settings import ParameterType
 
 from qfit.models.quantum_model_parameters import (
@@ -21,6 +25,7 @@ from qfit.models.calibration_data import CalibrationData
 from qfit.models.extracted_data import AllExtractedData
 
 from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
+
 
 # for test only
 # ------------------------------------------------------------------------------
@@ -45,18 +50,20 @@ def test_hilbert_space():
 
     return hilbertspace
 
-def test_param_sweep(hilbertspace, bias = 0.0, scale = 1.0) -> ParameterSweep:
 
+def test_param_sweep(hilbertspace, bias=0.0, scale=1.0) -> ParameterSweep:
     # bias serves as a calibration parameter
     def update_hilbertspace(x):
         hilbertspace["fluxonium"].flux = x * scale + bias
 
     sweep = ParameterSweep(
-        hilbertspace = hilbertspace,
-        paramvals_by_name = {"x": np.linspace(-bias/scale, (1-bias)/scale, 21)},
-        update_hilbertspace = update_hilbertspace,
+        hilbertspace=hilbertspace,
+        paramvals_by_name={"x": np.linspace(-bias / scale, (1 - bias) / scale, 21)},
+        update_hilbertspace=update_hilbertspace,
     )
     return sweep
+
+
 # ------------------------------------------------------------------------------
 
 
@@ -78,9 +85,9 @@ class QuantumModel:
     ):
         self.hilbertspace: HilbertSpace = hilbertspace
 
-    def setupUICallbacks(self):
+    def setupPlotUICallbacks(self):
         """
-        Obtain information from UI including:
+        Obtain information from plot option UI including:
         * plot options
         * ...
         """
@@ -90,26 +97,33 @@ class QuantumModel:
         self.subsystem_names_to_plot = lambda *args: "fluxonium"
         self.initial_state_str = lambda *args: "0,0"
         self.final_state_str = lambda *args: ""
+
         # ------------------------------------------------------------------------------
 
-        pass
+    def setupAutorunCallbacks(
+        self,
+        autorun_callback: Callable,
+    ):
+        """
+        Obtain information from autorun UI including
+        """
+        # set autorun callback
+        self.autorun_callback = autorun_callback
 
     def subsystems_to_plot(self):
         subsys_names = self.subsystem_names_to_plot()
 
         if isinstance(subsys_names, str):
             return self.hilbertspace.subsys_by_id_str(subsys_names)
-        
+
         elif isinstance(subsys_names, list):
-            return [
-                self.hilbertspace.subsys_by_id_str(name) for name in subsys_names
-            ]
+            return [self.hilbertspace.subsys_by_id_str(name) for name in subsys_names]
 
         else:
             raise TypeError(
                 f"subsystem_names_to_plot() should give a string or a list of strings, not {type(subsys_names)}."
             )
-    
+
     @staticmethod
     def _state_str_2_label(state_str: str):
         # convert string to state label
@@ -117,24 +131,23 @@ class QuantumModel:
         # empty string means None
         if state_str == "":
             return None
-        
+
         # comma separated string means tuple
         if "," in state_str:
             label_str = state_str.split(",")
-            return tuple(int(x) for x in label_str if x != "") # delete '' in the tuple
+            return tuple(int(x) for x in label_str if x != "")  # delete '' in the tuple
 
         # otherwise, try to interpret it as an integer
         try:
             return int(state_str)
         except ValueError:
             return None
-    
+
     def initial_state(self):
         return self._state_str_2_label(self.initial_state_str())
-    
+
     def final_state(self):
         return self._state_str_2_label(self.final_state_str())
-
 
     # @overload
     # def generateParameterSets(
@@ -150,29 +163,24 @@ class QuantumModel:
     # ) -> QuantumModelParameterSet:
     #     ...
 
-    def generateSliderParameterSets(
+    def addParametersToParameterSet(
         self,
         parameter_set: QuantumModelParameterSet,
+        parameter_usage: Literal["slider", "sweep", "fit"],
         included_parameter_type: Union[List[ParameterType], None] = None,
         excluded_parameter_type: Union[List[ParameterType], None] = None,
     ) -> None:
         """
-        Get the names of parameters in the HilbertSpace object. User may optionally specify
-        parameter types that are excluded/included. The returned dictionary has subsystem
-        id strings as keys and dictionaries of different types of parameters as values. 
-        For example, if the HilbertSpace object contains two capacitively coupled transmon 
-        qubits, the parameter_set (a QuantumModelParameterSet object) will have a parameter object 
-        (a dictionary):
-
-        {tmon1: {"EJ": ["EJ"], "EC": ["EC"], "cutoffs": ["ncut"], "truncated_dim": ["truncated_dim"]},
-        tmon2: {"EJ": ["EJ"], "EC": ["EC"], "cutoffs": ["ncut"], "truncated_dim": ["truncated_dim"]},
-        hilbertspace: {"interaction_strength": ["g1"]}
-        }
+        Add parameters to a QuantumModelParameterSet object for the HilbertSpace object
+        for parameters that are supposed to be adjusted by using sliders or by using parameter sweeps.
+        User may optionally specify parameter types that are excluded/included.
 
         Parameters:
         -----------
         parameter_set: QuantumModelParameterSet
             A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object.
+        parameter_type: Literal["slider", "sweep", "fit"]
+            The type of the parameter.
         included_parameter_type: List[ParameterType]
             A list of parameter types that are included in the returned parameter set.
         excluded_parameter_type: List[ParameterType]
@@ -204,12 +212,20 @@ class QuantumModel:
                 ):
                     continue
                 for parameter_name in parameter_names:
-                    parameter_set.add_parameter(
-                        name = parameter_name,
-                        parent_system = subsystem,
-                        param_type = parameter_type,
-                        **DEFAULT_PARAM_MINMAX[parameter_type]
-                    )
+                    if parameter_usage == "slider":
+                        parameter_set.addParameter(
+                            name=parameter_name,
+                            parent_system=subsystem,
+                            param_type=parameter_type,
+                            **DEFAULT_PARAM_MINMAX[parameter_type],
+                        )
+                    elif (parameter_usage == "sweep") or (parameter_usage == "fit"):
+                        parameter_set.addParameter(
+                            name=parameter_name,
+                            parent_system=subsystem,
+                            param_type=parameter_type,
+                            value=0,  # TODO: change this value later
+                        )
         # then add interaction strengths to the parameter set
         if (
             (included_parameter_type is not None)
@@ -218,49 +234,141 @@ class QuantumModel:
             (excluded_parameter_type is not None)
             and ("interaction_strength" in excluded_parameter_type)
         ):
-            return parameter_set
+            pass
         else:
             interactions = self.hilbertspace.interaction_list
             for interaction_term_index in range(len(interactions)):
-                parameter_set.add_parameter(
-                    name = f"g{interaction_term_index+1}",
-                    parent_system = self.hilbertspace,
-                    param_type = "interaction_strength",
-                    **DEFAULT_PARAM_MINMAX["interaction_strength"]
-                )
-            return parameter_set
+                if parameter_usage == "slider":
+                    parameter_set.addParameter(
+                        name=f"g{interaction_term_index+1}",
+                        parent_system=self.hilbertspace,
+                        param_type="interaction_strength",
+                        **DEFAULT_PARAM_MINMAX["interaction_strength"],
+                    )
+                elif (parameter_usage == "sweep") or (parameter_usage == "fit"):
+                    parameter_set.addParameter(
+                        name=f"g{interaction_term_index+1}",
+                        parent_system=self.hilbertspace,
+                        param_type="interaction_strength",
+                        value=0,
+                    )
 
-    @staticmethod
-    def _map1D(x: float, coeffs, biases) -> Tuple[QuantumModelParameter, ...]:
-        """
-        The actual swept parameters (flux, ng, ...) are linearly related to the value of
-        the x axis of the transition plot. This funcition serves as a map between the two.
-        """
-        return
+    # TODO: in future implement this function (for multiple ng and flux case)
+    # @staticmethod
+    # def _map1D(x: float, coeffs, biases) -> Tuple[QuantumModelParameter, ...]:
+    #     """
+    #     The actual swept parameters (flux, ng, ...) are linearly related to the value of
+    #     the x axis of the transition plot. This funcition serves as a map between the two.
+    #     """
+    #     return
 
-    def setSweptParameter(
-        self,
-        parameters: Union[str, List[str]],
-        parents: Union[QuantumSystem, List[QuantumSystem]],
-    ) -> None:
+    def _generateXcoordinateListForMarkedPoints(
+        self, extracted_data: AllExtractedData
+    ) -> np.ndarray:
         """
-        Some parameter in self.parameter_set should not be controlled by the slider, but
-        instead be swept over as the x axis of the transition plot. This function sets the
-        """
-        pass
+        Generate a list of parameter values for parameter sweeps from the extracted data;
+        the extracted data contains the x coordinate of the two-tone spectroscopy plot.
 
-    def _generateParameterSweep(self) -> ParameterSweep:
-        """
-        Generate a ParameterSweep object from the HilbertSpace object.
+        Parameters
+        ----------
+        extracted_data: AllExtractedData
+            The extracted data from the two-tone spectroscopy experiment.
 
         Returns
         -------
-        ParameterSweep
+        np.ndarray
         """
+        # obtain the x-axis coordinate of the extracted data; since the x-coordinates of the
+        # sample points are fixed by the first set of the data, we extract the x-coordinates
+        # from the first set of the data
+        x_coordinates = extracted_data.allDataSorted(applyCalibration=False)[0][:, 0]
+        return x_coordinates
 
-        # auto run = False !!!!!!!!!!!!
+    def _generateXcoordinateListForPrefit(
+        self, extracted_data: AllExtractedData
+    ) -> np.ndarray:
+        """
+        Generate a list of x coordinates for the prefit. The x coordinates are
+        currently made of (1) a uniformly distributed list of x coordinates in
+        between the min and max of the x-coordinates of the extracted data, and
+        (2) the x-coordinates of the extracted data.
+        """
+        # obtain the x-axis coordinate of the extracted data; since the x-coordinates of the
+        # sample points are fixed by the first set of the data, we extract the x-coordinates
+        # from the first set of the data
+        x_coordinates_from_data = extracted_data.allDataSorted(applyCalibration=False)[
+            0
+        ][:, 0]
+        # generate a list of x coordinates for the prefit
+        x_coordinates_uniform = np.linspace(
+            min(x_coordinates_from_data), max(x_coordinates_from_data), 20
+        )[1:-1]
+        x_coordinates_all = np.concatenate(
+            [x_coordinates_from_data, x_coordinates_uniform]
+        )
 
-        pass
+        return np.sort(x_coordinates_all)
+
+    @staticmethod
+    def setCalibrationFunction(
+        parameter: QuantumModelParameter, calibration_data: CalibrationData
+    ) -> None:
+        """
+        Set the calibration function for a parameter. By now, the calibration function is
+        obtained from the calibrateDataset function in the CalibrationData object. Only one
+        ng or flux is assumed in the model.
+
+        Parameters
+        ----------
+        parameter: QuantumModelParameter
+            The parameter to be calibrated.
+        calibration_func: Callable
+            The calibration function.
+        """
+        # TODO generalize this function to multiple ng and flux case in future
+        # notice that the `calibrateDataset` function below takes
+        parameter.calibration_func = lambda x: calibration_data.calibrateDataPoint(
+            [x, 0]
+        )[0]
+
+    def generateParameterSweep(
+        self,
+        x_coordinate_list: ndarray,
+        sweep_parameter_set: QuantumModelParameterSet,
+    ) -> ParameterSweep:
+        """
+        Generate a ParameterSweep object from the HilbertSpace object.
+
+        Parameters
+        ----------
+        x_coordinate_list: ndarray
+            The x coordinate of the transition plot.
+        sweep_parameter_set: QuantumModelParameterSet
+            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object.
+            All the parameters in the parameter set must have the calibration_func attribute.
+
+        Returns
+        -------
+        A ParameterSweep object.
+        """
+        # set paramvals_by_name
+        paramvals_by_name = {"x-coordinate": x_coordinate_list}
+        # set subsys_update_info
+        subsys_update_info = {"x-coordinate": list(sweep_parameter_set.keys())}
+        # set update_hilbertspace
+        update_hilbertspace = self._update_hilbertspace_for_ParameterSweep(
+            sweep_parameter_set
+        )
+        param_sweep = ParameterSweep(
+            hilbertspace=self.hilbertspace,
+            paramvals_by_name=paramvals_by_name,
+            update_hilbertspace=update_hilbertspace,
+            evals_count=20,  # change this later to connect to the number from the view
+            subsys_update_info=subsys_update_info,
+            autorun=False,  # TODO set to false by default later
+            num_cpus=1,  # change this later to connect to the number from the view
+        )
+        return param_sweep
 
     def _updateQuantumModelParameter(
         self, parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
@@ -272,19 +380,10 @@ class QuantumModel:
         ----------
         parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
         """
-        if parameter.parent.__class__ == HilbertSpace:
-            # the parameter in this case is always an interaction strength
-            # add the if condition here in case if we want to adjust other parameters in the future
-            if parameter.param_type == "interaction_strength":
-                interaction_index = int(parameter.name[1:]) - 1
-                interaction = parameter.parent.interaction_list[interaction_index]
-                interaction.g_strength = parameter.value
-        # otherwise, the parameters are class parameters of the subsystems
-        else:
-            setattr(parameter.parent, parameter.name, parameter.value)
-            # TODO: for future, phi grid min/max would need special care here
+        parameter.setParameterForParent()
+        # TODO: for future, phi grid min/max would need special care here
 
-    def _updateQuantumModelParameterSet(
+    def _updateQuantumModelFromParameterSet(
         self, parameter_set: QuantumModelParameterSet
     ) -> None:
         """
@@ -298,9 +397,10 @@ class QuantumModel:
             for parameter in parameters.values():
                 self._updateQuantumModelParameter(parameter)
 
-    def onParameterChange(
-        self, 
-        parameter_set: QuantumModelParameterSet,
+    def onSliderParameterChange(
+        self,
+        slider_parameter_set: QuantumModelParameterSet,
+        sweep_parameter_set: QuantumModelParameterSet,
         spectrum_data: SpectrumData,
         calibration_data: CalibrationData,
         extracted_data: AllExtractedData,
@@ -312,13 +412,45 @@ class QuantumModel:
 
         Parameters
         ----------
-        parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
+        slider_parameter_set: QuantumModelParameterSet
+            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
+            which are controlled by sliders.
+        sweep_parameter_set: QuantumModelParameterSet
+            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
+            which are subject to changes in the parameter sweep.
+        spectrum_data: SpectrumData
+            The SpectrumData object that stores the spectrum data.
+        calibration_data: CalibrationData
+            The CalibrationData object that stores the calibration data.
+        extracted_data: AllExtractedData
+            The extracted data from the two-tone spectroscopy experiment.
         """
-        self._updateQuantumModelParameterSet(parameter_set)
+        # update the HilbertSpace object with the slider parameter
+        self._updateQuantumModelFromParameterSet(slider_parameter_set)
 
-        # for test only
-        # ------------------------------------------------------------------------------
-        self.sweep = test_param_sweep(self.hilbertspace, bias=0.0, scale=0.01)
+        # set calibration function for the parameters in the sweep parameter set
+        for parameters in sweep_parameter_set.values():
+            for parameter in parameters.values():
+                self.setCalibrationFunction(parameter, calibration_data)
+
+        # generate parameter sweep
+        self.sweep = self.generateParameterSweep(
+            self._generateXcoordinateListForPrefit(extracted_data), sweep_parameter_set
+        )
+
+        if self.autorun_callback():
+            self.onButtonRunClicked(spectrum_data)
+
+    def onButtonRunClicked(self, spectrum_data: SpectrumData):
+        """
+        It is connected to the signal emitted by the UI when the user clicks the run button.
+        It runs the parameter sweep.
+        """
+        self.sweep.run()
+
+        # # for test only
+        # # ------------------------------------------------------------------------------
+        # self.sweep = test_param_sweep(self.hilbertspace, bias=0.0, scale=0.01)
 
         try:
             subsys = self.subsystems_to_plot()
@@ -350,27 +482,28 @@ class QuantumModel:
         # mse calculation
 
         # update spectrum_data
-        # do not need call spectrum_data.canvasPlot(). It is done in the mainwindow with 
+        # do not need call spectrum_data.canvasPlot(). It is done in the mainwindow with
         # another connection
+        # print(self._generateXcoordinateList(extracted_data=extracted_data))
 
-    def _update_hilbertspace_for_ParameterSweep(self, x) -> None:
+    def _update_hilbertspace_for_ParameterSweep(
+        self,
+        sweptParameterSet: QuantumModelParameterSet,
+    ) -> None:
         """
         Update the HilbertSpace object with the values of parameters and coupling coefficients
-        received from the UI when the sweep is running. This method is the callable `update_hilbertspace`
-        that is passed to the ParameterSweep object.
+        received from the UI when the sweep is running. This method returns a callable for
+        `update_hilbertspace` that is passed to the ParameterSweep object.
         """
 
-        # use _map1D to get the values of parameters and coupling coefficients from x
+        # update parameters according to the x-coordinate
+        def update_hilbertspace(x) -> None:
+            for parameters in sweptParameterSet.values():
+                for parameter in parameters.values():
+                    parameter.value = parameter.calibration_func(x)
+                    parameter.setParameterForParent()
 
-        pass
-
-    def _updateParameterSweepBySlider(self) -> None:
-        """
-        Update/regenerate the ParameterSweep object with the values of parameters and coupling coefficients
-        received from the UI.
-        """
-
-        pass
+        return update_hilbertspace
 
     def _computeSpectrum(self) -> None:
         """
