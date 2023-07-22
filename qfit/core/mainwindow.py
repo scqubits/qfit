@@ -755,8 +755,8 @@ class MainWindow(ResizableFramelessWindow):
 
                 # connect to the controller to update the spectrum
                 labeled_slider.editingFinishedConnect(
-                    lambda *args, **kwargs: self.quantumModel.onParameterChange(
-                        parameter_set=self.sliderParameterSet,
+                    lambda *args, **kwargs: self.quantumModel.onSliderParameterChange(
+                        slider_parameter_set=self.sliderParameterSet,
                         sweep_parameter_set=self.sweepParameterSet,
                         spectrum_data=self.spectrumData,
                         calibration_data=self.calibrationData,

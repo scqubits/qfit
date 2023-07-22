@@ -397,9 +397,9 @@ class QuantumModel:
             for parameter in parameters.values():
                 self._updateQuantumModelParameter(parameter)
 
-    def onParameterChange(
+    def onSliderParameterChange(
         self,
-        parameter_set: QuantumModelParameterSet,
+        slider_parameter_set: QuantumModelParameterSet,
         sweep_parameter_set: QuantumModelParameterSet,
         spectrum_data: SpectrumData,
         calibration_data: CalibrationData,
@@ -412,7 +412,7 @@ class QuantumModel:
 
         Parameters
         ----------
-        parameter_set: QuantumModelParameterSet
+        slider_parameter_set: QuantumModelParameterSet
             A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
             which are controlled by sliders.
         sweep_parameter_set: QuantumModelParameterSet
@@ -425,21 +425,50 @@ class QuantumModel:
         extracted_data: AllExtractedData
             The extracted data from the two-tone spectroscopy experiment.
         """
-        # update the HilbertSpace object with the slider parameter
-        self._updateQuantumModelFromParameterSet(parameter_set)
-
         # set calibration function for the parameters in the sweep parameter set
+        # TODO consider moving this part (update calibration function) to somewhere else
         for parameters in sweep_parameter_set.values():
             for parameter in parameters.values():
                 self._setCalibrationFunction(parameter, calibration_data)
 
-        # generate parameter sweep
-        self.sweep = self._generateParameterSweep(
-            self._generateXcoordinateListForPrefit(extracted_data), sweep_parameter_set
+        # update the HilbertSpace object and generate parameter sweep
+        self.onParameterChange(
+            update_parameter_set=slider_parameter_set,
+            sweep_parameter_set=sweep_parameter_set,
+            x_coordinate_list=self._generateXcoordinateListForPrefit(extracted_data),
         )
 
+        # if autorun, perform the rest of the steps (compute spectrum, plot, calculate MSE)
         if self.autorun_callback():
             self.onButtonRunClicked(spectrum_data)
+
+    def onParameterChange(
+        self,
+        update_parameter_set: QuantumModelParameterSet,
+        sweep_parameter_set: QuantumModelParameterSet,
+        x_coordinate_list: ndarray,
+    ) -> None:
+        """
+        Perform parameter change from a parameter set and generate `self.sweep` attribute.
+
+        Parameters
+        ----------
+        update_parameter_set: QuantumModelParameterSet
+            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
+            which are updated (but not swept).
+        sweep_parameter_set: QuantumModelParameterSet
+            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
+            which are subject to changes in the parameter sweep. Parameters in this set must have
+            the updated calibration_func attribute.
+        x_coordinate_list: ndarray
+            The x coordinates of the sweep.
+        """
+        # update the HilbertSpace object with the slider parameter
+        self._updateQuantumModelFromParameterSet(update_parameter_set)
+        # generate parameter sweep
+        self.sweep = self._generateParameterSweep(
+            x_coordinate_list=x_coordinate_list, sweep_parameter_set=sweep_parameter_set
+        )
 
     def onButtonRunClicked(self, spectrum_data: SpectrumData):
         """
