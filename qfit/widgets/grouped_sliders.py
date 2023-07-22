@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QGridLayout,
     QVBoxLayout,
+    QHBoxLayout,
     QGroupBox,
 )
 from PySide6.QtCore import Qt
@@ -282,42 +283,133 @@ class GroupedSliderSet(QWidget):
     def __init__(self, columns=2, label_value_position="left_right", parent=None):
         super().__init__(parent)
 
-        self.sliderSetParent = parent
         self.columns = columns
         self.labelValuePosition = label_value_position
 
         self.sliderSetLayout = QVBoxLayout(self)
-        self.slider_groups: Dict[str, GroupedSliders] = {}
+        self.sliderGroups: Dict[str, GroupedSliders] = {}
 
     def keys(self):
-        return self.slider_groups.keys()
-
+        return self.sliderGroups.keys()
+    
     def values(self):
-        return self.slider_groups.values()
-
+        return self.sliderGroups.values()
+    
     def items(self):
-        return self.slider_groups.items()
-
+        return self.sliderGroups.items()
+    
     def __getitem__(self, key):
-        return self.slider_groups[key]
-
+        return self.sliderGroups[key]
+    
     def addGroupedSliders(
         self,
         set_name: str,
         slider_names: List[str],
     ):
         # store the sliders
-        self.slider_groups[set_name] = GroupedSliders(
-            slider_names,
-            columns=self.columns,
+        self.sliderGroups[set_name] = GroupedSliders(
+            slider_names, 
+            columns=self.columns, 
             label_value_position=self.labelValuePosition,
-            parent=self.sliderSetParent,
         )
 
         # add the sliders to the layout
-        self.sliderSetLayout.addWidget(
-            FoldableWidget(
-                set_name,
-                self.slider_groups[set_name],
-            )
+        self.sliderSetLayout.addWidget(FoldableWidget(
+            set_name,
+            self.sliderGroups[set_name],
+        ))
+
+    
+class GroupedCheckBoxes(QWidget):
+    def __init__(
+        self, 
+        slider_names, 
+        columns=2, 
+        parent=None
+    ):
+        super().__init__(parent)
+        
+        self.gridLayout = QGridLayout(self)
+        self.checkBoxes = {}
+        self.columns = columns
+
+        self.createCheckBoxes(slider_names)
+
+    def createCheckBoxes(self, slider_names):
+        # Clear existing sliders
+        self.clearLayout()
+
+        for idx, name in enumerate(slider_names):
+            checkBox = QCheckBox(name, self)
+            self.checkBoxes[name] = checkBox
+
+            label_box = QWidget(self)
+            label_box_layout = QHBoxLayout(label_box)
+            label_box_layout.addWidget(QLabel(name))
+            label_box_layout.addWidget(checkBox)
+
+            self.gridLayout.addWidget(label_box, idx // self.columns, idx % self.columns)
+
+    def clearLayout(self):
+        for i in reversed(range(self.gridLayout.count())): 
+            self.gridLayout.itemAt(i).widget().setParent(None)
+        self.checkBoxes.clear()
+
+    def keys(self):
+        return self.checkBoxes.keys()
+    
+    def values(self):
+        return self.checkBoxes.values()
+    
+    def items(self):
+        return self.checkBoxes.items()
+    
+    def __getitem__(self, key):
+        return self.checkBoxes[key]
+    
+class GroupedCheckBoxSet(QWidget):
+    """
+    Represent a set of grouped sliders. Each group will be displayed in a FoldableWidget.
+    """
+    def __init__(
+        self, 
+        columns=2, 
+        parent=None
+    ):
+        super().__init__(parent)
+
+        self.checkBoxSetParent = parent
+        self.columns = columns
+
+        self.checkBoxSetLayout = QVBoxLayout(self)
+        self.checkBoxGroups: Dict[str, GroupedCheckBoxes] = {}
+
+    def keys(self):
+        return self.checkBoxGroups.keys()
+    
+    def values(self):
+        return self.checkBoxGroups.values()
+    
+    def items(self):
+        return self.checkBoxGroups.items()
+    
+    def __getitem__(self, key):
+        return self.checkBoxGroups[key]
+    
+    def addGroupedCheckBoxes(
+        self, 
+        set_name: str, 
+        slider_names: List[str], 
+    ):
+        # store the sliders
+        self.checkBoxGroups[set_name] = GroupedCheckBoxes(
+            slider_names, 
+            columns=self.columns, 
+            parent=self.checkBoxSetParent,
         )
+
+        # add the sliders to the layout
+        self.checkBoxSetLayout.addWidget(FoldableWidget(
+            set_name,
+            self.checkBoxGroups[set_name],
+        ))
