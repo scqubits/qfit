@@ -195,10 +195,43 @@ class LabeledSlider(QWidget):
         self.user_is_sliding = False
 
 
+class LabeledCheckBox(QWidget):
+    def __init__(self, name: str = 'CheckBox', parent: Optional[QWidget] = None):
+        super().__init__(parent)
+
+        self.checkBox = QCheckBox(name, self)
+        self.checkBox.setChecked(False)
+
+        self.boxLayout = QHBoxLayout(self)
+        self.boxLayout.addWidget(QLabel(name))
+        self.boxLayout.addWidget(self.checkBox)
+
+    def setChecked(self, checked: bool):
+        self.checkBox.setChecked(checked)
+
+    def isChecked(self):
+        return self.checkBox.isChecked()
+    
+    def toggledConnect(self, func):
+        self.checkBox.toggled.connect(func)
+
 class GroupedWidget(QWidget):
     """
     A class that contains multiple LabeledSlider widgets. The sliders will be displayed
     in a grid layout.
+
+    Parameters
+    ----------
+    widget_class : QWidget
+        The class of the widget to be grouped. The initialization of the widget should
+        accept a name as it's first positional argument (even if the name is not displayed).
+    widget_names : List[str]
+        The names of the widgets to be grouped.
+    init_kwargs : Dict[str, Any]
+        The keyword arguments to be passed to the initialization of the widget.
+    columns : int
+        The number of columns in the grid layout.
+    parent : QWidget
     """
 
     def __init__(
