@@ -49,6 +49,7 @@ from qfit.ui_views.resizable_window import ResizableFramelessWindow
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
 
+# pre-fit
 from qfit.models.quantum_model_parameters import (
     QuantumModelSliderParameter,
     QuantumModelParameterSet,
@@ -56,7 +57,12 @@ from qfit.models.quantum_model_parameters import (
 from qfit.models.numerical_spectrum_data import SpectrumData
 from qfit.controllers.numerical_model import QuantumModel
 from qfit.widgets.grouped_sliders import (
-    LabeledSlider, GroupedWidget, GroupedWidgetSet)
+    LabeledSlider,
+    GroupedWidget, GroupedWidgetSet
+)
+
+# fit
+from qfit.controllers.fit import NumericalFitting
 
 if TYPE_CHECKING:
     from qfit.widgets.calibration import CalibrationLineEdit
@@ -130,7 +136,7 @@ class MainWindow(ResizableFramelessWindow):
         self.quantumModel.addParametersToParameterSet(
             self.sliderParameterSet,
             parameter_usage="slider",
-            excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim"],
+            excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
         )
         self.quantumModel.addParametersToParameterSet(
             self.sweepParameterSet,
@@ -138,7 +144,7 @@ class MainWindow(ResizableFramelessWindow):
             included_parameter_type=["ng", "flux"],
         )
 
-        self.dynamicalSlidersInserts()
+        self.prefitSlidersInserts()
 
         # setup mpl canvas
         self.uiColorScaleConnects()
@@ -149,12 +155,16 @@ class MainWindow(ResizableFramelessWindow):
 
         # prefit: connect the data model to the sliders, canvas, boxes etc. Should be done after
         # the canvas is set up.
-        self.dynamicalSlidersConnects()
+        self.prefitSlidersConnects()
         self.setUpSpectrumPlotConnects()
-        self.setUpUIConnects()
+        self.setUpQuantumModelConnects()
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
+
+        # fit
+        self.fitCheckBoxInserts()
+        self.fitCheckBoxConnects()
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -696,7 +706,7 @@ class MainWindow(ResizableFramelessWindow):
             return True
         return False
 
-    def dynamicalSlidersInserts(self):
+    def prefitSlidersInserts(self):
         """
         Insert a set of sliders for the prefit parameters according to the parameter set
         """
@@ -716,7 +726,7 @@ class MainWindow(ResizableFramelessWindow):
         )
 
         for key, para_dict in self.sliderParameterSet.items():
-            group_name = self.sliderParameterSet.group_name_maps[key]
+            group_name = self.sliderParameterSet.parentNameByObj[key]
 
             self.sliderSet.addGroupedWidgets(
                 group_name, 
@@ -736,12 +746,12 @@ class MainWindow(ResizableFramelessWindow):
 
         prefitScrollLayout.addWidget(self.sliderSet)
 
-    def dynamicalSlidersConnects(self):
+    def prefitSlidersConnects(self):
         """
         Connect the sliders to the controller - update hilbertspace and spectrum
         """
         for key, para_dict in self.sliderParameterSet.items():
-            group_name = self.sliderParameterSet.group_name_maps[key]
+            group_name = self.sliderParameterSet.parentNameByObj[key]
 
             for para_name, para in para_dict.items():
                 para: QuantumModelSliderParameter
@@ -752,6 +762,7 @@ class MainWindow(ResizableFramelessWindow):
                     labeled_slider.slider.setValue,
                     labeled_slider.value.text,
                     labeled_slider.value.setText,
+                    labeled_slider.setValue
                 )
 
                 # synchronize slider and box
@@ -772,16 +783,38 @@ class MainWindow(ResizableFramelessWindow):
                 )
                 labeled_slider.editingFinishedConnect(self.updatePlot)
 
-                # set the initial value
-                # for test only
+                # set the initial value, for test only
                 # ------------------------------------------------------------------------------
                 # put all sliders initially to the middle
-                labeled_slider.setBoxValue(
+                labeled_slider.setValue(
                     f"{(para.max + para.min) / 5 + para.min:.0f}"
                 )
                 # ------------------------------------------------------------------------------
 
-    def setUpUIConnects(self):
+    def fitCheckBoxInserts(self):
+        # temporarily insert checkboxes in the prefit scroll area
+        prefitScrollLayout = self.sliderSet.parent().layout()
+
+        self.fitCheckBoxeSet = GroupedWidgetSet(
+            QCheckBox, 
+            columns=3,
+        )
+
+        for key, para_dict in self.sliderParameterSet.items():
+            group_name = self.sliderParameterSet.parentNameByObj[key]
+
+            self.fitCheckBoxeSet.addGroupedWidgets(
+                group_name, 
+                list(para_dict.keys()),
+            )
+
+        prefitScrollLayout.addWidget(self.fitCheckBoxeSet)
+
+    def fitCheckBoxConnects(self):
+        pass
+
+
+    def setUpQuantumModelConnects(self):
         """
         Set up the connects for the UI elements (except dynamically generated sliders)
         """
