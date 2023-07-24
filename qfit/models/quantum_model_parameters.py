@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod, abstractproperty
 import numpy as np
 
 from scqubits import HilbertSpace
@@ -6,10 +7,55 @@ from scqubits.core.qubit_base import QuantumSystem
 from qfit.models.parameter_settings import ParameterType
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
 
-from typing import Dict, List, Union, overload, Tuple, Callable
+from typing import Dict, List, Union, overload, Tuple, Callable, Literal
+
+ParentSystem = Union[QuantumSystem, HilbertSpace]
+
+class ParameterBase(ABC):
+
+    intergerParameterTypes = ["cutoff", "truncated_dim"]
+
+    def __init__(
+        self,
+        name: str,
+        parent: ParentSystem,
+        param_type: ParameterType,
+    ):
+        self.name = name
+        self.parent = parent
+        self.param_type = param_type
+
+    def setParameterForParent(self):
+        """
+        Set the parameter for the parent
+        """
+        # TODO: include more "special" parameter types here in future
+        if self.param_type == "interaction_strength":
+            interaction_index = int(self.name[1:]) - 1
+            interaction = self.parent.interaction_list[interaction_index]
+            interaction.g_strength = self.value
+        else:
+            setattr(self.parent, self.name, self.value)
+
+    def _toInt(self, value: Union[int, float]) -> Union[int, float]:
+        """
+        Convert the value to an integer if the parameter type is cutoff or truncated_dim.
+        """
+        if self.param_type in self.intergerParameterTypes:
+            return np.round(value).astype(int)
+        else:
+            return value
+
+    @abstractproperty
+    def value(self) -> Union[int, float]:
+        pass
+
+    @value.setter
+    def value(self, value):
+        pass
 
 
-class QuantumModelSliderParameter:
+class QuantumModelSliderParameter(ParameterBase):
     """
     A class for parameters that are connected to a slider. The slider value is stored elsewhere,
     and this method stores the name of the parameter, the parent object, the min and max of parameters,
@@ -44,22 +90,20 @@ class QuantumModelSliderParameter:
     sliderValueSetter: Callable
     boxValueCallback: Callable
     boxValueSetter: Callable
-
-    intergerParameterTypes = ["cutoff", "truncated_dim"]
+    overallValueSetter: Callable
 
     def __init__(
         self,
         name: str,
-        parent: Union[QuantumSystem, HilbertSpace],
+        parent: ParentSystem,
         min: Union[int, float],
         max: Union[int, float],
         param_type: ParameterType,
     ):
-        self.name = name
-        self.parent = parent
+        super().__init__(name=name, parent=parent, param_type=param_type)
+        
         self.min = min
         self.max = max
-        self.param_type = param_type
         # a placeholder for the callback function that returns the value of the slider
         # this callback function is set by the UI
 
@@ -73,23 +117,13 @@ class QuantumModelSliderParameter:
         sliderValueSetter,
         boxValueCallback,
         boxValueSetter,
+        overallValueSetter,
     ):
         self.sliderValueCallback = sliderValueCallback
         self.sliderValueSetter = sliderValueSetter
         self.boxValueCallback = boxValueCallback
         self.boxValueSetter = boxValueSetter
-
-    def setParameterForParent(self):
-        """
-        Set the parameter for the parent
-        """
-        # TODO: include more "special" parameter types here in future
-        if self.param_type == "interaction_strength":
-            interaction_index = int(self.name[1:]) - 1
-            interaction = self.parent.interaction_list[interaction_index]
-            interaction.g_strength = self.value
-        else:
-            setattr(self.parent, self.name, self.value)
+        self.overallValueSetter = overallValueSetter
 
     def _strToFloat(self, value: str) -> float:
         """
@@ -100,18 +134,6 @@ class QuantumModelSliderParameter:
             return float(value)
         except ValueError:
             return self.min
-
-    def _toInt(self, value: Union[int, float]) -> Union[int, float]:
-        """
-        Convert the value to an integer if the parameter type is cutoff or truncated_dim.
-        """
-        if isinstance(value, str):
-            value = self._strToFloat(value)
-
-        if self.param_type in self.intergerParameterTypes:
-            return np.round(value).astype(int)
-        else:
-            return value
 
     def _toIntString(self, value: Union[int, float], precision=4) -> str:
         """
@@ -222,9 +244,18 @@ class QuantumModelSliderParameter:
         taken care of by the UI/controller.
         """
         return self._getUiValue()
+    
+    @value.setter
+    def value(self, value: Union[int, float]):
+        """
+        Set the value of the parameter. Will update both value of the UI and the controller.
+        """
+        value = self._toInt(value)
+        self.overallValueSetter(value)
+        self.setParameterForParent()
 
 
-class QuantumModelParameter:
+class QuantumModelParameter(ParameterBase):
     """
     A class for parameters that are not adjustable by a slider. Primarily used for
     ng and flux parameters in qubits.
@@ -244,33 +275,36 @@ class QuantumModelParameter:
     def __init__(
         self,
         name: str,
-        parent: Union[QuantumSystem, HilbertSpace],
+        parent: ParentSystem,
         value: Union[float, int],
         param_type: ParameterType,
     ):
-        self.name = name
-        self.parent = parent
-        self.value = value
-        self.param_type = param_type
-        self.calibration_func = None
+        super().__init__(name=name, parent=parent, param_type=param_type)
 
-    def setParameterForParent(self):
-        """
-        Set the parameter for the parent
-        """
-        # TODO: include more "special" parameter types here in future
-        if self.param_type == "interaction_strength":
-            interaction_index = int(self.name[1:]) - 1
-            interaction = self.parent.interaction_list[interaction_index]
-            interaction.g_strength = self.value
-        else:
-            setattr(self.parent, self.name, self.value)
+        self._value = value
+        self.calibration_func = None
 
     def setCalibrationFunc(self, func):
         """
         Set the calibration function for the parameter
         """
         self.calibration_func = func
+
+    @property
+    def value(self) -> Union[int, float]:
+        """
+        Get the value of the parameter
+        """
+        return self._value
+    
+    @value.setter
+    def value(self, value: Union[int, float]):
+        """
+        Set the value of the parameter. Will update the both the parameter stored and the 
+        parent object.
+        """
+        self._value = self._toInt(value)
+        self.setParameterForParent()
 
 
 class QuantumModelParameterSet:
@@ -280,11 +314,11 @@ class QuantumModelParameterSet:
 
     def __init__(self):
         self.parameters: Dict[
-            Union[HilbertSpace, QuantumSystem],
+            ParentSystem,
             Dict[str, Union[QuantumModelSliderParameter, QuantumModelParameter]],
         ] = {}
 
-        self.group_name_maps: Dict[Union[HilbertSpace, QuantumSystem], str] = {}
+        self.group_name_maps: Dict[ParentSystem, str] = {}
 
     def keys(self):
         return self.parameters.keys()
@@ -297,19 +331,48 @@ class QuantumModelParameterSet:
 
     def __getitem__(self, key):
         return self.parameters[key]
+    
+    @overload
+    def generateNameMap(self, with_type: bool, from_name: Literal[True]) -> Dict[str, ParentSystem]:
+        ...
+    
+    @overload
+    def generateNameMap(self, with_type: bool, from_name: Literal[False]) -> Dict[ParentSystem, str]:
+        ...
 
-    def generateNameMap(self):
+    def generateNameMap(self, with_type: bool = True, from_name: bool = False) -> Union[
+        Dict[ParentSystem, str],
+        Dict[str, ParentSystem]
+    ]:
         """
-        given a key (parent of parameters), return the name of the group which will be
-        displayed in the UI
+        Generate a map from the parent system to the group name. 
+
+        Parameters
+        ----------
+        with_type: bool
+            Whether to include the type of the parent system in the group name
         """
+        group_name_maps = {}
         for parent in self.parameters:
             if isinstance(parent, HilbertSpace):
-                self.group_name_maps[parent] = "Interactions"
+                group_name_maps[parent] = "Interactions"
             elif isinstance(parent, QuantumSystem):
-                self.group_name_maps[
-                    parent
-                ] = f"{parent.id_str} ({parent.__class__.__name__})"
+                parent_name = f"{parent.id_str}"
+                if with_type:
+                    parent_name += f" ({parent.__class__.__name__})"
+                group_name_maps[parent] = parent_name
+            else:
+                raise ValueError(
+                    f"Parent of parameter {parent} is not a QuantumSystem or HilbertSpace object."
+                )
+            
+        if from_name:
+            inverse_map = {}
+            for parent, group_name in group_name_maps.items():
+                inverse_map[group_name] = parent
+            return inverse_map
+        
+        return group_name_maps
 
     # @overload
     # def add_parameter(
@@ -401,8 +464,7 @@ class QuantumModelParameterSet:
                 param_type=param_type,
             )
 
-        # update the name map
-        self.generateNameMap()
+        self.group_name_maps = self.generateNameMap(with_type=True, from_name=False)
 
     def clean(self):
         """
@@ -421,7 +483,7 @@ class QuantumModelParameterSet:
 
     def getParameters(
         self,
-        parent_system: Union[QuantumSystem, HilbertSpace],
+        parent_system: ParentSystem,
         name: Union[str, None] = None,
     ) -> Union[Dict[str, float], float]:
         """
@@ -450,3 +512,16 @@ class QuantumModelParameterSet:
             return name_dict
         else:
             return name_dict[name]
+        
+    # def toDict(self) -> Dict[str, Union[float, int]]:
+    #     """
+    #     Convert the parameter set to a stationary dictionary (not connected to UI anymore). 
+    #     With key "<parent_name>.<para_name>", 
+    #     """
+    #     group_2_name = self.generateNameMap(with_type=False, from_name=False)
+
+    #     param_dict = {}
+    #     for parent in self.parameters:
+    #         for para_name, para in self.parameters[parent].items():
+    #             param_dict[f"{group_2_name[parent]}.{para_name}"] = para.value
+    #     return param_dict
