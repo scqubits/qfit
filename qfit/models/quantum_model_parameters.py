@@ -318,7 +318,8 @@ class QuantumModelParameterSet:
             Dict[str, Union[QuantumModelSliderParameter, QuantumModelParameter]],
         ] = {}
 
-        self.group_name_maps: Dict[ParentSystem, str] = {}
+        self.parentNameByObj: Dict[ParentSystem, str] = {}
+        self.parentObjByName: Dict[str, ParentSystem] = {}
 
     def keys(self):
         return self.parameters.keys()
@@ -332,48 +333,28 @@ class QuantumModelParameterSet:
     def __getitem__(self, key):
         return self.parameters[key]
     
-    @overload
-    def generateNameMap(self, with_type: bool, from_name: Literal[True]) -> Dict[str, ParentSystem]:
-        ...
-    
-    @overload
-    def generateNameMap(self, with_type: bool, from_name: Literal[False]) -> Dict[ParentSystem, str]:
-        ...
-
-    def generateNameMap(self, with_type: bool = True, from_name: bool = False) -> Union[
-        Dict[ParentSystem, str],
-        Dict[str, ParentSystem]
-    ]:
-        """
-        Generate a map from the parent system to the group name. 
-
-        Parameters
-        ----------
-        with_type: bool
-            Whether to include the type of the parent system in the group name
-        """
-        group_name_maps = {}
-        for parent in self.parameters:
-            if isinstance(parent, HilbertSpace):
-                group_name_maps[parent] = "Interactions"
-            elif isinstance(parent, QuantumSystem):
-                parent_name = f"{parent.id_str}"
-                if with_type:
-                    parent_name += f" ({parent.__class__.__name__})"
-                group_name_maps[parent] = parent_name
-            else:
-                raise ValueError(
-                    f"Parent of parameter {parent} is not a QuantumSystem or HilbertSpace object."
-                )
-            
-        if from_name:
-            inverse_map = {}
-            for parent, group_name in group_name_maps.items():
-                inverse_map[group_name] = parent
-            return inverse_map
+    def _parentSystemNames(
+        self, 
+        parent: ParentSystem,
+        with_type: bool = True,
+    ) -> str:
+        if isinstance(parent, HilbertSpace):
+            return "Interactions"
+        elif isinstance(parent, QuantumSystem):
+            parent_name = f"{parent.id_str}"
+            if with_type:
+                parent_name += f" ({parent.__class__.__name__})"
+            return parent_name
+        else:
+            raise ValueError(
+                f"Parent of parameter {parent} is not a QuantumSystem or HilbertSpace object."
+            )
         
-        return group_name_maps
-
+    def _updateNameMap(self, parent: ParentSystem, with_type: bool = True):
+        name = self._parentSystemNames(parent, with_type=with_type)
+        self.parentNameByObj[parent] = name
+        self.parentObjByName[name] = parent
+    
     # @overload
     # def add_parameter(
     #     self,
@@ -397,8 +378,8 @@ class QuantumModelParameterSet:
     def addParameter(
         self,
         name: str,
-        parent_system,
-        param_type,
+        parent_system: ParentSystem,
+        param_type: ParameterType,
         min: Union[float, int, None] = None,
         max: Union[float, int, None] = None,
         value: Union[float, int, None] = None,
@@ -464,26 +445,27 @@ class QuantumModelParameterSet:
                 param_type=param_type,
             )
 
-        self.group_name_maps = self.generateNameMap(with_type=True, from_name=False)
+        self._updateNameMap(parent_system)
 
     def clean(self):
         """
         Clean the parameter set.
         """
         self.parameters = {}
-        self.group_name_maps = {}
+        self.parentNameByObj = {}
+        self.parentObjByName = {}
 
     @overload
-    def getParameters(self, parent_system) -> Dict[str, float]:
+    def getParameter(self, parent_system) -> Dict[str, float]:
         ...
 
     @overload
-    def getParameters(self, parent_system, name: str) -> float:
+    def getParameter(self, parent_system, name: str) -> float:
         ...
 
-    def getParameters(
+    def getParameter(
         self,
-        parent_system: ParentSystem,
+        parent_system: Union[ParentSystem, str],
         name: Union[str, None] = None,
     ) -> Union[Dict[str, float], float]:
         """
@@ -503,25 +485,58 @@ class QuantumModelParameterSet:
         The value of the parameter(s)
         """
 
-        # TODO: we may want to add a check to see if the parent_system is in the parameter set
-        # generate a dict with keys being the parameter names and values being the parameter
+        if isinstance(parent_system, str):
+            try:
+                parent_system = self.parentObjByName[parent_system]
+            except KeyError:
+                raise KeyError(f"Cannot find parent system {parent_system} in the parameter set.")
+        
+        try:
+            para_dict = self.parameters[parent_system]
+        except KeyError:
+            raise KeyError(f"Cannot find parent system {parent_system} in the parameter set.")
+
         name_dict = {
-            name: para.value for name, para in self.parameters[parent_system].items()
+            name: para.value for name, para in para_dict.items()
         }
+
         if name is None:
             return name_dict
         else:
             return name_dict[name]
         
-    # def toDict(self) -> Dict[str, Union[float, int]]:
-    #     """
-    #     Convert the parameter set to a stationary dictionary (not connected to UI anymore). 
-    #     With key "<parent_name>.<para_name>", 
-    #     """
-    #     group_2_name = self.generateNameMap(with_type=False, from_name=False)
+    def setParameter(
+        self, 
+        parent_system: Union[ParentSystem, str], 
+        name: str, 
+        value: Union[int, float]
+    ):
+        """
+        Set the value of the parameter of a parent system (either a QuantumSystem
+        object or a HilbertSpace object).
 
-    #     param_dict = {}
-    #     for parent in self.parameters:
-    #         for para_name, para in self.parameters[parent].items():
-    #             param_dict[f"{group_2_name[parent]}.{para_name}"] = para.value
-    #     return param_dict
+        Parameters
+        ----------
+        parent_system: Union[QuantumSystem, HilbertSpace]
+            The quantum model
+        name: str
+            The name of the parameter
+        value: Union[float, int]
+            The value of the parameter
+        """
+
+        if isinstance(parent_system, str):
+            try:
+                parent_system = self.parentObjByName[parent_system]
+            except KeyError:
+                raise KeyError(f"Cannot find parent system {parent_system} in the parameter set.")
+
+        try:
+            para_dict = self.parameters[parent_system]
+        except KeyError:
+            raise KeyError(f"Cannot find parent system {parent_system} in the parameter set.")
+
+        try:
+            para_dict[name].value = value
+        except KeyError:
+            raise KeyError(f"Cannot find parameter {name} in the parameter set.")
