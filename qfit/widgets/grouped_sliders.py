@@ -70,10 +70,13 @@ class LabeledSlider(QWidget):
         self._insertWidgets(label_value_position)
 
         # connect the widgets
-        self.slider.sliderPressed.connect(self.sliderPressed)
-        self.slider.sliderReleased.connect(self.sliderReleased)
-        self.value.textChanged.connect(self.boxTextChanged)
-        self.value.editingFinished.connect(self.editingFinished)
+        # This is the most important part of this class. We assume the slider and the value
+        # will later be connected by the user. This class will keep track of the user's
+        # behavior and avoid endless call loops, realized by the following connections.
+        self.slider.sliderPressed.connect(self._userSliding)
+        self.slider.sliderReleased.connect(self._userSlidingEnds)
+        self.value.textChanged.connect(self._userTyping)
+        self.value.editingFinished.connect(self._userTypingEnds)
 
         # connect the slider and the value box in a simplest way
         if auto_connect:
@@ -125,19 +128,19 @@ class LabeledSlider(QWidget):
         self.sliderValueChangedConnect(updateValue)
         self.valueTextChangeConnect(updateSlider)
 
-    def sliderPressed(self):
+    def _userSliding(self):
         self.user_is_sliding = True
 
-    def sliderReleased(self):
+    def _userSlidingEnds(self):
         self.user_is_sliding = False
 
-    def boxTextChanged(self):
+    def _userTyping(self):
         if not self.user_is_sliding:
             self.user_is_typing = True
         else:
             self.user_is_typing = False
 
-    def editingFinished(self):
+    def _userTypingEnds(self):
         self.user_is_typing = False
 
     def sliderValueChangedConnect(self, func):
@@ -178,42 +181,25 @@ class LabeledSlider(QWidget):
         """
 
         # remove the last connection, which is always self.editingFinished
-        self.value.editingFinished.disconnect(self.editingFinished)
+        self.value.editingFinished.disconnect(self._userTypingEnds)
 
         # connect
         self.value.editingFinished.connect(func)
         self.slider.sliderReleased.connect(func)
 
         # put the self.editingFinished back
-        self.value.editingFinished.connect(self.editingFinished)
+        self.value.editingFinished.connect(self._userTypingEnds)
 
-    def setBoxValue(self, str_value: str):
+    def setValue(self, value: Union[str, float, int]):
+        if isinstance(value, Union[float, int]):
+            value = str(value)
+
         self.user_is_typing = True
         self.user_is_sliding = False
-        self.value.setText(str_value)
+        self.value.setText(value)
         self.user_is_typing = False
         self.user_is_sliding = False
 
-
-class LabeledCheckBox(QWidget):
-    def __init__(self, name: str = 'CheckBox', parent: Optional[QWidget] = None):
-        super().__init__(parent)
-
-        self.checkBox = QCheckBox(name, self)
-        self.checkBox.setChecked(False)
-
-        self.boxLayout = QHBoxLayout(self)
-        self.boxLayout.addWidget(QLabel(name))
-        self.boxLayout.addWidget(self.checkBox)
-
-    def setChecked(self, checked: bool):
-        self.checkBox.setChecked(checked)
-
-    def isChecked(self):
-        return self.checkBox.isChecked()
-    
-    def toggledConnect(self, func):
-        self.checkBox.toggled.connect(func)
 
 class GroupedWidget(QWidget):
     """
