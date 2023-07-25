@@ -1,7 +1,7 @@
 import warnings
 import os
 import copy 
-from typing import Callable, Dict, List, Any, overload
+from typing import Callable, Dict, List, Any, overload, Union
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -59,7 +59,6 @@ class OptTraj():
         para_name: List[str],
         para_traj: np.ndarray,
         target_traj: np.ndarray,
-        constr_traj: np.ndarray,
         fixed_para: Dict[str, float] = {},
     ):
         """
@@ -72,9 +71,6 @@ class OptTraj():
         target_traj : np.ndarray
             The trajectory of the target function evaluations. 
             The shape should be (iteration, ).
-        constr_traj : np.ndarray
-            The trajectory of the constraint function evaluations.
-            The shape should be (iteration, ).
         fixed_para : Dict[str, float], optional
             The parameters that are fixed during the optimization. Should be specified by
             a dictionary with name and value pairs, by default {}. 
@@ -82,7 +78,6 @@ class OptTraj():
         self.para_name = para_name
         self.para_traj = para_traj
         self.target_traj = target_traj
-        self.constr_traj = constr_traj
 
         self.length = self.para_traj.shape[0]
 
@@ -101,7 +96,7 @@ class OptTraj():
         traj_dict = load_variable_list_dict(file_name, throw_nan=False)
 
         para_name = [name for name in traj_dict.keys() if name not in [
-            "target", "constr"]]
+            "target"]]
 
         para_shape = [len(traj_dict[para_name[0]]), len(para_name)]
         para_traj = np.zeros(para_shape)
@@ -117,7 +112,6 @@ class OptTraj():
             para_name,
             para_traj,
             traj_dict["target"],
-            traj_dict["constr"],
             fixed_para
         )
 
@@ -126,13 +120,11 @@ class OptTraj():
     def __getitem__(self, name) -> np.ndarray:
         if name == "target":
             return self.target_traj
-        elif name == "constr":
-            return self.constr_traj
         else:
             idx = self.para_name.index(name)
             return self.para_traj[:, idx]
 
-    def _x_arr_2_dict(self, x: np.ndarray | List):
+    def _x_arr_2_dict(self, x: Union[np.ndarray, List]):
         return dict(zip(self.para_name, x))
 
     def _x_dict_2_arr(self, x: dict):
@@ -203,12 +195,11 @@ class OptTraj():
             self.para_name,
             self.para_traj.copy(),
             self.target_traj.copy(),
-            self.constr_traj.copy(),
             self.fixed_para.copy(),
         )
         return new_result
 
-    def append(self, para_dict: Dict[str, float], target: float, constr: float) -> None:
+    def append(self, para_dict: Dict[str, float], target: float) -> None:
         """
         Append a record from a new iteration to the OptTraj object.
 
@@ -218,14 +209,10 @@ class OptTraj():
             The free parameters of the new iteration, in the form of a dictionary.
         target : float
             The target function value of the new iteration.
-        constr : float
-            The constraint function value of the new iteration.
-        
         """
         para_arr = self._x_dict_2_arr(para_dict)
         self.para_traj = np.append(self.para_traj, [para_arr], axis=0)
         self.target_traj = np.append(self.target_traj, target)
-        self.constr_traj = np.append(self.constr_traj, constr)
         self.length += 1
 
     def to_dict(self) -> Dict:
@@ -245,7 +232,6 @@ class OptTraj():
         for idx, key in enumerate(self.para_name):
             traj_dict[key] = self.para_traj[:, idx]
         traj_dict["target"] = self.target_traj
-        traj_dict["constr"] = self.constr_traj
         return traj_dict
 
     def _normalize_para(self, para_range_dict: dict = {}) -> np.ndarray:
@@ -267,7 +253,7 @@ class OptTraj():
     def plot(self, para_range_dict: dict = {}, ax = None) -> None:
         """
         Plot the optimization trajectory. With x axis as the iteration number, and y axis
-        as the normalized parameters, target, and constraints.
+        as the normalized parameters, target.
         """
         # need further updating: use twin y axis for the target_traj
         normalized_para = self._normalize_para(para_range_dict)
@@ -281,8 +267,6 @@ class OptTraj():
         ax.plot(range(self.length), normalized_para, label=self.para_name)
         ax.plot(range(self.length), self.target_traj /
             max_target, label="normed_target")
-        ax.plot(range(self.length), self.constr_traj /
-            max_target, label="normed_constr")
         ax.legend()
         ax.set_xlabel("Iterations")
         ax.set_ylabel("Normalized Parameters")
@@ -297,7 +281,7 @@ class OptTraj():
         y_name,
         c: str = "white",
         destination_only: bool = True, 
-        background_interp: Callable | None = None,
+        background_interp: Union[Callable, None] = None,
     ) -> None:
         """
         Plot the optimization trajectory in 2D. With x axis as the normalized x parameter,
@@ -441,8 +425,8 @@ class MultiTraj():
     
     def __getitem__(
         self,
-        idx: int | slice,
-    ) -> "OptTraj | MultiTraj":
+        idx: Union[int, slice],
+    ) -> "Union[OptTraj, MultiTraj]":
         if isinstance(idx, int):
             return self.traj_list[idx]
         elif isinstance(idx, slice):
@@ -676,7 +660,7 @@ class Optimization():
     def _fix(
         self,
         variable: str,
-        value: float | None = None,
+        value: Union[float, None] = None,
     ):
         self._check_exist(variable)
 
@@ -740,7 +724,7 @@ class Optimization():
 
     def free(
         self,
-        variables: Dict | None = None,
+        variables: Union[Dict, None] = None,
         fix_rest: bool = False,
         **kwargs,
     ):
@@ -798,7 +782,7 @@ class Optimization():
     def _denormalize_output(self, output):
         return output * TARGET_NORMALIZE
 
-    def _x_arr_2_dict(self, x: np.ndarray | List):
+    def _x_arr_2_dict(self, x: Union[np.ndarray, List]):
         return dict(zip(self.free_name_list, x))
 
     def _x_dict_2_arr(self, x: Dict):
@@ -891,9 +875,8 @@ class Optimization():
 
         target = self.target_func(
             self.fixed_variables | denorm_x, **self.target_kwargs)
-        constr = 0
 
-        return denorm_x, target, constr
+        return denorm_x, target
             
     @staticmethod
     def _running_filename(file_name: str) -> str:
@@ -902,10 +885,10 @@ class Optimization():
     
     def _construct_call_back(
         self,
-        user_call_back: Callable | None,
+        user_call_back: Union[Callable, None],
         result: OptTraj,
-        file_name: str | None,
-        fixed_para_file_name: str | None,
+        file_name: Union[str, None],
+        fixed_para_file_name: Union[str, None],
     ) -> Callable:
         """
         Construct the callback function for the optimizer. The callback function will
@@ -913,11 +896,10 @@ class Optimization():
         """
         def opt_call_back(x, convergence=None):
             # record the result
-            denorm_x, target, constr = self._evaluate_record(x)
+            denorm_x, target = self._evaluate_record(x)
             result.append(
                 denorm_x,
                 target,
-                constr
             )
 
             # save the result on the fly
@@ -929,7 +911,6 @@ class Optimization():
                 user_call_back(
                     denorm_x.copy(),
                     target=target,
-                    constr=target,
                 )
 
         return opt_call_back
@@ -937,11 +918,11 @@ class Optimization():
     def run(
         self,
         init_x: dict = {},
-        call_back: Callable | None = None,
+        call_back: Union[Callable, None] = None,
         check_func: Callable = lambda x: True,
         check_kwargs: dict = {},
-        file_name: str | None = None,
-        fixed_para_file_name: str | None = None,
+        file_name: Union[str, None] = None,
+        fixed_para_file_name: Union[str, None] = None,
     ):
         """
         Run the optimization.
@@ -958,7 +939,6 @@ class Optimization():
             - free_var: the free variables of the current iteration, in the form of a
                 dictionary.
             - target: the target function value of the current iteration.
-            - constr: the constraint function value of the current iteration. \n
         check_func : Callable, optional
             The function to check whether the initialization is legal, by default is 
             (lambda *args, **kwargs: True). The function should take a dictionary as 
@@ -982,12 +962,11 @@ class Optimization():
         
         init_x_arr = self._x_dict_2_arr(self._normalize_input(init_x_combined))
 
-        init_denorm_x, init_target, init_constr = self._evaluate_record(init_x_arr)
+        init_denorm_x, init_target = self._evaluate_record(init_x_arr)
         result = OptTraj(
             self.free_name_list,
             np.array([self._x_dict_2_arr(init_denorm_x)]),
             np.array([init_target]),
-            np.array([init_constr]),
             fixed_para = self.fixed_variables
         )
 
@@ -1100,10 +1079,10 @@ class MultiOpt():
     def run(
         self,
         run_num: int,
-        call_back: Callable | None = None,
+        call_back: Union[Callable, None] = None,
         check_func: Callable = lambda x: True,
         check_kwargs: dict = {},
-        save_path: str | None = None,
+        save_path: Union[str, None] = None,
         cpu_num: int = 1,
     ) -> MultiTraj:
         """
@@ -1119,7 +1098,6 @@ class MultiOpt():
             - free_var: the free variables of the current iteration, in the form of a
                 dictionary.
             - target: the target function value of the current iteration.
-            - constr: the constraint function value of the current iteration.
         check_func : Callable, optional
             The function to check whether the initialization is legal, by default
             is (lambda *args, **kwargs: True). The function should take a dictionary as
