@@ -218,13 +218,24 @@ class QuantumModel:
                             parent_system=subsystem,
                             param_type=parameter_type,
                             **DEFAULT_PARAM_MINMAX[parameter_type],
+                            param_usage="slider",
                         )
-                    elif (parameter_usage == "sweep") or (parameter_usage == "fit"):
+                    elif parameter_usage == "sweep":
                         parameter_set.addParameter(
                             name=parameter_name,
                             parent_system=subsystem,
                             param_type=parameter_type,
                             value=0,  # TODO: change this value later
+                            param_usage="static",
+                        )
+                    elif parameter_usage == "fit":
+                        parameter_set.addParameter(
+                            name=parameter_name,
+                            parent_system=subsystem,
+                            param_type=parameter_type,
+                            value=0,  # TODO: change this value later
+                            **DEFAULT_PARAM_MINMAX[parameter_type],
+                            param_usage="fitting",
                         )
         # then add interaction strengths to the parameter set
         if (
@@ -244,13 +255,24 @@ class QuantumModel:
                         parent_system=self.hilbertspace,
                         param_type="interaction_strength",
                         **DEFAULT_PARAM_MINMAX["interaction_strength"],
+                        param_usage="slider",
                     )
-                elif (parameter_usage == "sweep") or (parameter_usage == "fit"):
+                elif parameter_usage == "sweep":
                     parameter_set.addParameter(
                         name=f"g{interaction_term_index+1}",
                         parent_system=self.hilbertspace,
                         param_type="interaction_strength",
-                        value=0,
+                        value=0,  # TODO: change this value later
+                        param_usage="static",
+                    )
+                elif parameter_usage == "fit":
+                    parameter_set.addParameter(
+                        name=f"g{interaction_term_index+1}",
+                        parent_system=self.hilbertspace,
+                        param_type="interaction_strength",
+                        value=0,  # TODO: change this value later
+                        **DEFAULT_PARAM_MINMAX["interaction_strength"],
+                        param_usage="fitting",
                     )
 
     # TODO: in future implement this function (for multiple ng and flux case)

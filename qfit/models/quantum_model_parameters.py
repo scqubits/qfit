@@ -216,20 +216,12 @@ class QuantumModelSliderParameter(ParameterBase):
 
         self.boxValueSetter(self._toIntString(float_boxValue))
 
-    def _getUiValue(self) -> Union[int, float]:
+    @property
+    def value(self) -> Union[int, float]:
         """
-        Get the value of the parameter from the box. We should trust the number in the
-        box more than the number on the slider, because the number on the box is directly
-        input by the user, while the number on the slider is calculated and may be rounded.
-
         Special note: Will raise a ValueError if user input is not a number. Should be
         taken care of by the UI/controller.
-
-        Returns
-        -------
-        The value of the parameter
         """
-
         boxValue = self.boxValueCallback()
 
         if boxValue == "":
@@ -241,14 +233,6 @@ class QuantumModelSliderParameter(ParameterBase):
             raise ValueError(f"Cannot convert {boxValue} to float.")
 
         return self._toInt(float_boxValue)
-
-    @property
-    def value(self) -> Union[int, float]:
-        """
-        Special note: Will raise a ValueError if user input is not a number. Should be
-        taken care of by the UI/controller.
-        """
-        return self._getUiValue()
     
     @value.setter
     def value(self, value: Union[int, float]):
@@ -312,6 +296,80 @@ class QuantumModelParameter(ParameterBase):
         self._value = self._toInt(value)
 
 
+class QuantumModelFittingParameter(ParameterBase):
+    def __init__(
+        self,
+        name: str,
+        parent: ParentSystem,
+        value: Union[float, int],
+        min: Union[float, int],
+        max: Union[float, int],
+        param_type: ParameterType,
+    ):
+        super().__init__(name=name, parent=parent, param_type=param_type)
+
+        self.value = value
+        self.min = min
+        self.max = max
+
+    @property
+    def min(self) -> Union[int, float]:
+        """
+        Get the minimum value of the parameter from the UI
+        """
+        pass 
+        
+    @min.setter
+    def min(self, value: Union[int, float]):
+        """
+        Set the minimum value of the parameter in the UI
+        """
+        pass
+
+    @property
+    def max(self) -> Union[int, float]:
+        """
+        Get the maximum value of the parameter from the UI
+        """
+        pass
+
+    @max.setter
+    def max(self, value: Union[int, float]):    
+        """
+        Set the maximum value of the parameter in the UI
+        """
+        pass
+
+    @property
+    def value(self) -> Union[int, float]:
+        """
+        Get the value of the parameter from the UI
+        """
+        pass
+
+    @value.setter
+    def value(self, value: Union[int, float]):
+        """
+        Set the value of the parameter in the UI
+        """
+        pass
+
+    @property
+    def isFixed(self) -> bool:
+        """
+        Check if the parameter is fixed
+        """
+        pass
+
+    @isFixed.setter
+    def isFixed(self, value: bool):
+        """
+        Set the parameter to be fixed or not
+        """
+        pass
+
+        
+
 class QuantumModelParameterSet:
     """
     A class to store all the parameters of a quantum system
@@ -320,7 +378,11 @@ class QuantumModelParameterSet:
     def __init__(self):
         self.parameters: Dict[
             ParentSystem,
-            Dict[str, Union[QuantumModelSliderParameter, QuantumModelParameter]],
+            Dict[str, Union[
+                QuantumModelSliderParameter, 
+                QuantumModelParameter,
+                QuantumModelFittingParameter,
+            ]],
         ] = {}
 
         self.parentNameByObj: Dict[ParentSystem, str] = {}
@@ -385,6 +447,7 @@ class QuantumModelParameterSet:
         name: str,
         parent_system: ParentSystem,
         param_type: ParameterType,
+        param_usage: Literal["slider", "static", "fitting"],
         min: Union[float, int, None] = None,
         max: Union[float, int, None] = None,
         value: Union[float, int, None] = None,
@@ -420,28 +483,30 @@ class QuantumModelParameterSet:
             The value of the parameter, only needed when a QuantumModelParameter
             object is added
         """
-        # only one of minmax and value can be provided
 
-        minmax_provided = min is not None and max is not None
-        minmax_not_provided = min is None or max is None
-        if (minmax_not_provided and value is None) or (
-            minmax_provided and value is not None
-        ):
-            raise ValueError(
-                "Either minmax or value need to be provided, but not both."
-            )
-
-        # if the parent system is not in the parameter set, add it and set its value to
-        # an empty dictionary
+        # if the parent system is not in the parameter set, create a new entry
         if parent_system not in self.parameters:
             self.parameters[parent_system] = {}
+            self._updateNameMap(parent_system)
+
         # if the parameter is not a slider parameter, add it to the parameter set
-        if minmax_not_provided:
+        if param_usage == "static":
+            # check if the value is provided
+            if value is None:
+                raise ValueError(
+                    f"Value of parameter {name} is not provided for a static parameter."
+                )
             self.parameters[parent_system][name] = QuantumModelParameter(
                 name=name, parent=parent_system, value=value, param_type=param_type
             )
+
         # if the parameter is a slider parameter, add it to the parameter set
-        else:
+        elif param_usage == "slider":
+            # check if minmax is provided
+            if min is None or max is None:
+                raise ValueError(
+                    f"Min or max of parameter {name} is not provided for a slider parameter."
+                )
             self.parameters[parent_system][name] = QuantumModelSliderParameter(
                 name=name,
                 parent=parent_system,
@@ -449,8 +514,22 @@ class QuantumModelParameterSet:
                 max=max,
                 param_type=param_type,
             )
-
-        self._updateNameMap(parent_system)
+        elif param_usage == "fitting":
+            # check if minmax and value are provided
+            if min is None or max is None or value is None:
+                raise ValueError(
+                    f"Min, max, or value of parameter {name} is not provided for a fitting parameter."
+                )
+            self.parameters[parent_system][name] = QuantumModelFittingParameter(
+                name=name,
+                parent=parent_system,
+                param_type=param_type,
+                value=value,
+                min=min,
+                max=max,
+            )
+        else:
+            raise ValueError(f"Unknown parameter usage {param_usage}.")
 
     def clean(self):
         """
