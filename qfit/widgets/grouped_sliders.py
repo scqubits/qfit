@@ -190,15 +190,13 @@ class LabeledSlider(QWidget):
         # put the self.editingFinished back
         self.value.editingFinished.connect(self._userTypingEnds)
 
-    def setValue(self, value: Union[str, float, int]):
-        if isinstance(value, Union[float, int]):
-            value = str(value)
-
-        self.user_is_typing = True
-        self.user_is_sliding = False
+    def setValue(self, value: str):
+        """
+        A wrapper of self.value.setText() that will NOT trigger any signals.
+        """
+        self.user_is_typing = False
         self.value.setText(value)
         self.user_is_typing = False
-        self.user_is_sliding = False
 
 
 class GroupedWidget(QWidget):
