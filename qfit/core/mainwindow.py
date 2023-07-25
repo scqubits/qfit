@@ -260,14 +260,26 @@ class MainWindow(ResizableFramelessWindow):
         self.ui.modeSelectButton.clicked.connect(
             lambda: self.ui.pagesStackedWidget.setCurrentIndex(0)
         )
+        self.ui.modeSelectButton.clicked.connect(
+            lambda: self.ui.bottomStackedWidget.setCurrentIndex(0)
+        )
         self.ui.modeTagButton.clicked.connect(
             lambda: self.ui.pagesStackedWidget.setCurrentIndex(1)
         )
-        self.ui.modePlotButton.clicked.connect(
+        self.ui.modeTagButton.clicked.connect(
+            lambda: self.ui.bottomStackedWidget.setCurrentIndex(0)
+        )
+        self.ui.modePrefitButton.clicked.connect(
             lambda: self.ui.pagesStackedWidget.setCurrentIndex(2)
+        )
+        self.ui.modePrefitButton.clicked.connect(
+            lambda: self.ui.bottomStackedWidget.setCurrentIndex(1)
         )
         self.ui.modeFitButton.clicked.connect(
             lambda: self.ui.pagesStackedWidget.setCurrentIndex(3)
+        )
+        self.ui.modeFitButton.clicked.connect(
+            lambda: self.ui.bottomStackedWidget.setCurrentIndex(2)
         )
 
     def uiDataConnects(self):
