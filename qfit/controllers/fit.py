@@ -1,9 +1,10 @@
 from typing import List, Dict, Tuple, Callable, Union
 
 from qfit.controllers.wrapped_optimizer import Optimization, OptTraj
-from qfit.models.quantum_model_parameters import QuantumModelParameter
-
-
+from qfit.models.quantum_model_parameters import (
+    QuantumModelFittingParameter,
+    QuantumModelParameterSet,
+)
 
 class NumericalFitting():
     opt: Optimization
@@ -19,29 +20,35 @@ class NumericalFitting():
 
     def _targetFunctionWrapper(
         self,
-        paramDict,
-        parameterSet,
-        MSE,
+        paramDict: Dict[str, float],
+        parameterSet: QuantumModelParameterSet,
+        MSE: Callable,
         # any other models needed when calculating the MSE
     ):
-        parameterSet.fromDict(paramDict)
+        parameterSet.fromAttrDict(paramDict)
         return MSE(parameterSet)
-    
-    def _fixedParameters(self) -> Dict[str, float]:
-        return {}
-    
-    def _freeParameterRanges(self) -> Dict[str, List[float]]:
-        return {}
     
     def setUpObtimization(
         self,
-        parameterSet,
-        MSE,
+        parameterSet: QuantumModelParameterSet,
+        MSE: Callable,
         # any other models needed when fitting
     ):
+        # generate the fixed parameters and free parameter ranges
+        fixed_params = {}
+        free_param_ranges = {}
+        param_dict = parameterSet.toParamDict()
+        for key, params in param_dict.items():
+            params: QuantumModelFittingParameter
+            if params.isFixed:
+                fixed_params[key] = params.initValue
+            else:
+                free_param_ranges[key] = [params.min, params.max]
+
+        # set up the optimization
         self.opt = Optimization(
-            self._fixedParameters(),
-            self._freeParameterRanges(),
+            fixed_params,
+            free_param_ranges,
             self._targetFunctionWrapper,
             target_kwargs={
                 "parameterSet": parameterSet,
@@ -53,20 +60,41 @@ class NumericalFitting():
         self,
         freeParams: Dict[str, float],
         targetValue: float,
+        parameterSet: QuantumModelParameterSet,
     ):
         # update the free parameters in the parameter set and display the target value
-        pass
+
+        parameterSet.fromAttrDict(freeParams)
+
+
+
         
     def runOptimization(
         self,
+        parameterSet: QuantumModelParameterSet,
     ):
         """once the user clicks the optimize button, run the optimization"""
+
+
         # disable all the line edits, sliders, etc
-        # run the optimization
+        
+
+        # initial parameter
+
+        try:
+            traj = self.opt.run(
+                init_x = parameterSet.toAttrDict("initValue"),
+                callback = self._optCallback,
+                callback_kwargs = {"parameterSet": parameterSet},
+                # file_name = ...,
+            )
+        except AttributeError:
+            # the optimization hasn't been set up yet
+            pass
+
+
         # display the results, optimizer's termination message
         # enable all the line edits, sliders, etc
-
-        self.opt.run()
 
 
 
