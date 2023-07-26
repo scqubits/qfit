@@ -2646,8 +2646,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>367</width>
-                    <height>718</height>
+                    <width>100</width>
+                    <height>30</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_11"/>
@@ -3459,124 +3459,6 @@ TableView
              </layout>
             </widget>
             <widget class="QWidget" name="prefitPage">
-             <layout class="QHBoxLayout" name="horizontalLayout_10">
-              <item>
-               <widget class="QFrame" name="frame_3">
-                <property name="frameShape">
-                 <enum>QFrame::StyledPanel</enum>
-                </property>
-                <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
-                </property>
-                <widget class="QLabel" name="label_45">
-                 <property name="geometry">
-                  <rect>
-                   <x>10</x>
-                   <y>10</y>
-                   <width>81</width>
-                   <height>19</height>
-                  </rect>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">font: 57 11pt &quot;Roboto Medium&quot;;
-</string>
-                 </property>
-                 <property name="text">
-                  <string>SETTINGS</string>
-                 </property>
-                </widget>
-                <widget class="QFrame" name="frame_5">
-                 <property name="geometry">
-                  <rect>
-                   <x>100</x>
-                   <y>20</y>
-                   <width>901</width>
-                   <height>151</height>
-                  </rect>
-                 </property>
-                 <property name="frameShape">
-                  <enum>QFrame::NoFrame</enum>
-                 </property>
-                 <property name="frameShadow">
-                  <enum>QFrame::Raised</enum>
-                 </property>
-                 <layout class="QGridLayout" name="gridLayout_6">
-                  <item row="1" column="2">
-                   <widget class="QLabel" name="label_49">
-                    <property name="text">
-                     <string>STATUS:</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="2" rowspan="2" colspan="2">
-                   <widget class="QLabel" name="statusTextLabel_2">
-                    <property name="text">
-                     <string>Status Text</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-                    </property>
-                    <property name="wordWrap">
-                     <bool>true</bool>
-                    </property>
-                    <property name="margin">
-                     <number>5</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <spacer name="horizontalSpacer_7">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeType">
-                     <enum>QSizePolicy::Fixed</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item row="0" column="2" colspan="2">
-                   <widget class="QLabel" name="mseLabel_2">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="font">
-                     <font>
-                      <family>Roboto</family>
-                      <pointsize>9</pointsize>
-                      <bold>true</bold>
-                     </font>
-                    </property>
-                    <property name="text">
-                     <string>MSE:  0.647 GHz^2   (+0.86%)</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0" rowspan="4">
-                   <widget class="QFrame" name="prefitSettingsFrame">
-                    <property name="frameShape">
-                     <enum>QFrame::StyledPanel</enum>
-                    </property>
-                    <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="fitPage">
              <layout class="QHBoxLayout" name="horizontalLayout_9">
               <item>
                <widget class="QFrame" name="frame_2">
@@ -3812,6 +3694,124 @@ TableView
                     </property>
                     <property name="margin">
                      <number>5</number>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="fitPage">
+             <layout class="QHBoxLayout" name="horizontalLayout_10">
+              <item>
+               <widget class="QFrame" name="frame_3">
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <widget class="QLabel" name="label_45">
+                 <property name="geometry">
+                  <rect>
+                   <x>10</x>
+                   <y>10</y>
+                   <width>81</width>
+                   <height>19</height>
+                  </rect>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">font: 57 11pt &quot;Roboto Medium&quot;;
+</string>
+                 </property>
+                 <property name="text">
+                  <string>SETTINGS</string>
+                 </property>
+                </widget>
+                <widget class="QFrame" name="frame_5">
+                 <property name="geometry">
+                  <rect>
+                   <x>100</x>
+                   <y>20</y>
+                   <width>901</width>
+                   <height>151</height>
+                  </rect>
+                 </property>
+                 <property name="frameShape">
+                  <enum>QFrame::NoFrame</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Raised</enum>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_6">
+                  <item row="1" column="2">
+                   <widget class="QLabel" name="label_49">
+                    <property name="text">
+                     <string>STATUS:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="2" rowspan="2" colspan="2">
+                   <widget class="QLabel" name="statusTextLabel_2">
+                    <property name="text">
+                     <string>Status Text</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                    </property>
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                    <property name="margin">
+                     <number>5</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <spacer name="horizontalSpacer_7">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeType">
+                     <enum>QSizePolicy::Fixed</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item row="0" column="2" colspan="2">
+                   <widget class="QLabel" name="mseLabel_2">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>Roboto</family>
+                      <pointsize>9</pointsize>
+                      <bold>true</bold>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>MSE:  0.647 GHz^2   (+0.86%)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0" rowspan="4">
+                   <widget class="QFrame" name="prefitSettingsFrame">
+                    <property name="frameShape">
+                     <enum>QFrame::StyledPanel</enum>
+                    </property>
+                    <property name="frameShadow">
+                     <enum>QFrame::Raised</enum>
                     </property>
                    </widget>
                   </item>

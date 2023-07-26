@@ -1549,7 +1549,7 @@ class Ui_MainWindow(object):
         self.prefitScrollArea.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.prefitScrollAreaWidget = QWidget()
         self.prefitScrollAreaWidget.setObjectName(u"prefitScrollAreaWidget")
-        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 367, 718))
+        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 100, 30))
         self.verticalLayout_11 = QVBoxLayout(self.prefitScrollAreaWidget)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.prefitScrollArea.setWidget(self.prefitScrollAreaWidget)
@@ -1981,72 +1981,9 @@ class Ui_MainWindow(object):
         self.bottomStackedWidget.addWidget(self.datapointsPage)
         self.prefitPage = QWidget()
         self.prefitPage.setObjectName(u"prefitPage")
-        self.horizontalLayout_10 = QHBoxLayout(self.prefitPage)
-        self.horizontalLayout_10.setObjectName(u"horizontalLayout_10")
-        self.frame_3 = QFrame(self.prefitPage)
-        self.frame_3.setObjectName(u"frame_3")
-        self.frame_3.setFrameShape(QFrame.StyledPanel)
-        self.frame_3.setFrameShadow(QFrame.Raised)
-        self.label_45 = QLabel(self.frame_3)
-        self.label_45.setObjectName(u"label_45")
-        self.label_45.setGeometry(QRect(10, 10, 81, 19))
-        self.label_45.setStyleSheet(u"font: 57 11pt \"Roboto Medium\";\n"
-"")
-        self.frame_5 = QFrame(self.frame_3)
-        self.frame_5.setObjectName(u"frame_5")
-        self.frame_5.setGeometry(QRect(100, 20, 901, 151))
-        self.frame_5.setFrameShape(QFrame.NoFrame)
-        self.frame_5.setFrameShadow(QFrame.Raised)
-        self.gridLayout_6 = QGridLayout(self.frame_5)
-        self.gridLayout_6.setObjectName(u"gridLayout_6")
-        self.label_49 = QLabel(self.frame_5)
-        self.label_49.setObjectName(u"label_49")
-
-        self.gridLayout_6.addWidget(self.label_49, 1, 2, 1, 1)
-
-        self.statusTextLabel_2 = QLabel(self.frame_5)
-        self.statusTextLabel_2.setObjectName(u"statusTextLabel_2")
-        self.statusTextLabel_2.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
-        self.statusTextLabel_2.setWordWrap(True)
-        self.statusTextLabel_2.setMargin(5)
-
-        self.gridLayout_6.addWidget(self.statusTextLabel_2, 2, 2, 2, 2)
-
-        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
-
-        self.gridLayout_6.addItem(self.horizontalSpacer_7, 0, 1, 1, 1)
-
-        self.mseLabel_2 = QLabel(self.frame_5)
-        self.mseLabel_2.setObjectName(u"mseLabel_2")
-        sizePolicy16 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
-        sizePolicy16.setHorizontalStretch(0)
-        sizePolicy16.setVerticalStretch(0)
-        sizePolicy16.setHeightForWidth(self.mseLabel_2.sizePolicy().hasHeightForWidth())
-        self.mseLabel_2.setSizePolicy(sizePolicy16)
-        font3 = QFont()
-        font3.setFamilies([u"Roboto"])
-        font3.setPointSize(9)
-        font3.setBold(True)
-        self.mseLabel_2.setFont(font3)
-
-        self.gridLayout_6.addWidget(self.mseLabel_2, 0, 2, 1, 2)
-
-        self.prefitSettingsFrame = QFrame(self.frame_5)
-        self.prefitSettingsFrame.setObjectName(u"prefitSettingsFrame")
-        self.prefitSettingsFrame.setFrameShape(QFrame.StyledPanel)
-        self.prefitSettingsFrame.setFrameShadow(QFrame.Raised)
-
-        self.gridLayout_6.addWidget(self.prefitSettingsFrame, 0, 0, 4, 1)
-
-
-        self.horizontalLayout_10.addWidget(self.frame_3)
-
-        self.bottomStackedWidget.addWidget(self.prefitPage)
-        self.fitPage = QWidget()
-        self.fitPage.setObjectName(u"fitPage")
-        self.horizontalLayout_9 = QHBoxLayout(self.fitPage)
+        self.horizontalLayout_9 = QHBoxLayout(self.prefitPage)
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
-        self.frame_2 = QFrame(self.fitPage)
+        self.frame_2 = QFrame(self.prefitPage)
         self.frame_2.setObjectName(u"frame_2")
         self.frame_2.setFrameShape(QFrame.StyledPanel)
         self.frame_2.setFrameShadow(QFrame.Raised)
@@ -2076,6 +2013,9 @@ class Ui_MainWindow(object):
 
         self.label_42 = QLabel(self.frame_4)
         self.label_42.setObjectName(u"label_42")
+        sizePolicy16 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        sizePolicy16.setHorizontalStretch(0)
+        sizePolicy16.setVerticalStretch(0)
         sizePolicy16.setHeightForWidth(self.label_42.sizePolicy().hasHeightForWidth())
         self.label_42.setSizePolicy(sizePolicy16)
 
@@ -2120,6 +2060,10 @@ class Ui_MainWindow(object):
         self.mseLabel.setObjectName(u"mseLabel")
         sizePolicy16.setHeightForWidth(self.mseLabel.sizePolicy().hasHeightForWidth())
         self.mseLabel.setSizePolicy(sizePolicy16)
+        font3 = QFont()
+        font3.setFamilies([u"Roboto"])
+        font3.setPointSize(9)
+        font3.setBold(True)
         self.mseLabel.setFont(font3)
 
         self.gridLayout_3.addWidget(self.mseLabel, 0, 5, 1, 2)
@@ -2166,6 +2110,62 @@ class Ui_MainWindow(object):
 
 
         self.horizontalLayout_9.addWidget(self.frame_2)
+
+        self.bottomStackedWidget.addWidget(self.prefitPage)
+        self.fitPage = QWidget()
+        self.fitPage.setObjectName(u"fitPage")
+        self.horizontalLayout_10 = QHBoxLayout(self.fitPage)
+        self.horizontalLayout_10.setObjectName(u"horizontalLayout_10")
+        self.frame_3 = QFrame(self.fitPage)
+        self.frame_3.setObjectName(u"frame_3")
+        self.frame_3.setFrameShape(QFrame.StyledPanel)
+        self.frame_3.setFrameShadow(QFrame.Raised)
+        self.label_45 = QLabel(self.frame_3)
+        self.label_45.setObjectName(u"label_45")
+        self.label_45.setGeometry(QRect(10, 10, 81, 19))
+        self.label_45.setStyleSheet(u"font: 57 11pt \"Roboto Medium\";\n"
+"")
+        self.frame_5 = QFrame(self.frame_3)
+        self.frame_5.setObjectName(u"frame_5")
+        self.frame_5.setGeometry(QRect(100, 20, 901, 151))
+        self.frame_5.setFrameShape(QFrame.NoFrame)
+        self.frame_5.setFrameShadow(QFrame.Raised)
+        self.gridLayout_6 = QGridLayout(self.frame_5)
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.label_49 = QLabel(self.frame_5)
+        self.label_49.setObjectName(u"label_49")
+
+        self.gridLayout_6.addWidget(self.label_49, 1, 2, 1, 1)
+
+        self.statusTextLabel_2 = QLabel(self.frame_5)
+        self.statusTextLabel_2.setObjectName(u"statusTextLabel_2")
+        self.statusTextLabel_2.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
+        self.statusTextLabel_2.setWordWrap(True)
+        self.statusTextLabel_2.setMargin(5)
+
+        self.gridLayout_6.addWidget(self.statusTextLabel_2, 2, 2, 2, 2)
+
+        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
+
+        self.gridLayout_6.addItem(self.horizontalSpacer_7, 0, 1, 1, 1)
+
+        self.mseLabel_2 = QLabel(self.frame_5)
+        self.mseLabel_2.setObjectName(u"mseLabel_2")
+        sizePolicy16.setHeightForWidth(self.mseLabel_2.sizePolicy().hasHeightForWidth())
+        self.mseLabel_2.setSizePolicy(sizePolicy16)
+        self.mseLabel_2.setFont(font3)
+
+        self.gridLayout_6.addWidget(self.mseLabel_2, 0, 2, 1, 2)
+
+        self.prefitSettingsFrame = QFrame(self.frame_5)
+        self.prefitSettingsFrame.setObjectName(u"prefitSettingsFrame")
+        self.prefitSettingsFrame.setFrameShape(QFrame.StyledPanel)
+        self.prefitSettingsFrame.setFrameShadow(QFrame.Raised)
+
+        self.gridLayout_6.addWidget(self.prefitSettingsFrame, 0, 0, 4, 1)
+
+
+        self.horizontalLayout_10.addWidget(self.frame_3)
 
         self.bottomStackedWidget.addWidget(self.fitPage)
 
@@ -2271,10 +2271,6 @@ class Ui_MainWindow(object):
         self.zoomViewButton.setText("")
         self.selectViewButton.setText("")
         self.swapXYButton.setText(QCoreApplication.translate("MainWindow", u"X\u2194Y", None))
-        self.label_45.setText(QCoreApplication.translate("MainWindow", u"SETTINGS", None))
-        self.label_49.setText(QCoreApplication.translate("MainWindow", u"STATUS:", None))
-        self.statusTextLabel_2.setText(QCoreApplication.translate("MainWindow", u"Status Text", None))
-        self.mseLabel_2.setText(QCoreApplication.translate("MainWindow", u"MSE:  0.647 GHz^2   (+0.86%)", None))
         self.label_11.setText(QCoreApplication.translate("MainWindow", u"SETTINGS", None))
         self.autoRunCheckBox.setText(QCoreApplication.translate("MainWindow", u"AUTORUN", None))
         self.label_42.setText(QCoreApplication.translate("MainWindow", u"EVALS COUNT", None))
@@ -2284,6 +2280,10 @@ class Ui_MainWindow(object):
         self.label_44.setText(QCoreApplication.translate("MainWindow", u"TRANSITIONS", None))
         self.label_43.setText(QCoreApplication.translate("MainWindow", u"POINTS ADDED", None))
         self.statusTextLabel.setText(QCoreApplication.translate("MainWindow", u"Status Text", None))
+        self.label_45.setText(QCoreApplication.translate("MainWindow", u"SETTINGS", None))
+        self.label_49.setText(QCoreApplication.translate("MainWindow", u"STATUS:", None))
+        self.statusTextLabel_2.setText(QCoreApplication.translate("MainWindow", u"Status Text", None))
+        self.mseLabel_2.setText(QCoreApplication.translate("MainWindow", u"MSE:  0.647 GHz^2   (+0.86%)", None))
         pass
     # retranslateUi
 
