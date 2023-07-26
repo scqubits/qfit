@@ -520,7 +520,8 @@ class QuantumModel:
 
         # mse calculation
         mse = self.calculateMSE(extracted_data=extracted_data)
-        print(mse)
+        # test
+        # print(mse)
 
         # update spectrum_data
         # do not need call spectrum_data.canvasPlot(). It is done in the mainwindow with
@@ -595,7 +596,8 @@ class QuantumModel:
             extracted_data_y_calibrated, extracted_data.assocTagList
         ):
             # loop over data points in the extracted data set
-            print(tag)
+            # test
+            # print(tag)
             for data_point in extracted_data_set:
                 # obtain the transition frequency from the transition data
                 # if NO_TAG, provide an extra argument for notag_freq
