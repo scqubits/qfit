@@ -440,6 +440,12 @@ class QuantumModelFittingParameter(DisplayedParameterBase):
         self.value = self.initValue
         self.isFixed = False
 
+    def valueToInitial(self):
+        """
+        Set the value of the parameter to the initial value
+        """
+        self.value = self.initValue
+
         
 class QuantumModelParameterSet:
     """

@@ -828,26 +828,26 @@ class MainWindow(ResizableFramelessWindow):
 
             for para_name, para in para_dict.items():
                 para: QuantumModelFittingParameter
-                table = self.fitTableSet[group_name][para_name]
+                single_row = self.fitTableSet[group_name][para_name]
 
                 # connect the UI and the model
                 para.setupUICallbacks(
-                    table.initialValue.text,
-                    table.initialValue.setText,
-                    table.currentValue.text,
-                    table.currentValue.setText,
-                    table.minValue.text,
-                    table.minValue.setText,
-                    table.maxValue.text,
-                    table.maxValue.setText,
-                    table.fixCheckbox.isChecked,
-                    table.fixCheckbox.setChecked,
+                    single_row.initialValue.text,
+                    single_row.initialValue.setText,
+                    single_row.currentValue.text,
+                    single_row.currentValue.setText,
+                    single_row.minValue.text,
+                    single_row.minValue.setText,
+                    single_row.maxValue.text,
+                    single_row.maxValue.setText,
+                    single_row.fixCheckbox.isChecked,
+                    single_row.fixCheckbox.setChecked,
                 )
 
                 # format the user's input
-                table.initialValue.editingFinished.connect(para.onInitValueEditingFinished)
-                table.minValue.editingFinished.connect(para.onMinEditingFinished)
-                table.maxValue.editingFinished.connect(para.onMaxEditingFinished)
+                single_row.initialValue.editingFinished.connect(para.onInitValueEditingFinished)
+                single_row.minValue.editingFinished.connect(para.onMinEditingFinished)
+                single_row.maxValue.editingFinished.connect(para.onMaxEditingFinished)
 
                 para.initialize()
 
