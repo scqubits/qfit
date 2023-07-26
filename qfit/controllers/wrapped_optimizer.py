@@ -885,10 +885,11 @@ class Optimization():
     
     def _construct_call_back(
         self,
-        user_call_back: Union[Callable, None],
+        user_callback: Union[Callable, None],
         result: OptTraj,
         file_name: Union[str, None],
         fixed_para_file_name: Union[str, None],
+        callback_kwargs: Dict = {},
     ) -> Callable:
         """
         Construct the callback function for the optimizer. The callback function will
@@ -907,10 +908,11 @@ class Optimization():
                 result.save(self._running_filename(file_name), fixed_para_file_name)
 
             # call the user specified callback function
-            if user_call_back is not None:
-                user_call_back(
+            if user_callback is not None:
+                user_callback(
                     denorm_x.copy(),
                     target=target,
+                    **callback_kwargs
                 )
 
         return opt_call_back
@@ -918,7 +920,8 @@ class Optimization():
     def run(
         self,
         init_x: dict = {},
-        call_back: Union[Callable, None] = None,
+        callback: Union[Callable, None] = None,
+        callback_kwargs: dict = {},
         check_func: Callable = lambda x: True,
         check_kwargs: dict = {},
         file_name: Union[str, None] = None,
@@ -971,8 +974,9 @@ class Optimization():
         )
 
         opt_call_back = self._construct_call_back(
-            call_back, result, 
-            file_name, fixed_para_file_name
+            callback, result, 
+            file_name, fixed_para_file_name,
+            callback_kwargs
         )
 
         # run the scipy optimizer
@@ -1059,7 +1063,7 @@ class MultiOpt():
         try: 
             result = self.optimize.run(
                 init_x=init_x,  
-                call_back=call_back,
+                callback=call_back,
                 check_func=check_func,
                 check_kwargs=check_kwargs,
                 **save_kwargs,

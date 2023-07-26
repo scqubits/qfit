@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QGroupBox,
     QCheckBox,
+    QTableWidget,
 )
 from PySide6.QtCore import Qt
 
@@ -349,4 +350,142 @@ class GroupedWidgetSet(QWidget):
         self.widgetSetLayout.addWidget(FoldableWidget(
             set_name,
             self.widgetGroups[set_name],
+        ))
+
+
+class FittingParameterRow(QWidget):
+    """
+    A collection of widgets that represents a row in the FittingParameterTable.
+    """
+
+    entry_types = ["Name", "Fix", "Initial", "Current", "Min", "Max"]
+
+    def __init__(
+        self,
+        name: str,
+    ):
+        self.name = name
+
+        self.nameLabel = QLabel(name)
+        self.fixCheckbox = QCheckBox()
+        self.initialValue = QLineEdit("")
+        self.currentValue = QLabel("")
+        self.minValue = QLineEdit("")
+        self.maxValue = QLineEdit("")
+
+        self.widgetForInserting = {
+            "Name": self.alignCenter(self.nameLabel),
+            "Fix": self.alignCenter(self.fixCheckbox),
+            "Initial": self.initialValue,
+            "Current": self.alignCenter(self.currentValue),
+            "Min": self.minValue,
+            "Max": self.maxValue,
+        }      
+
+    @staticmethod
+    def alignCenter(widget) -> QWidget:
+        container_widget = QWidget()
+        layout = QHBoxLayout(container_widget)
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(widget)
+        return container_widget
+
+
+class FittingParameterTable(QTableWidget):
+
+    columns = FittingParameterRow.entry_types
+
+    def __init__(
+        self,
+        row_names: List[str], 
+        parent=None, 
+    ):
+        super().__init__(parent)
+
+        # Set the table dimensions.
+        self.setColumnCount(len(self.columns))
+        self.setRowCount(0)
+
+        # Set the column headers.
+        self.setHorizontalHeaderLabels(self.columns)
+
+        # configure the table layout
+        self.configure()
+
+        # insert the rows
+        self.parameterWidgets: Dict[str, FittingParameterRow] = {}
+        for name in row_names:
+            self.insertParameter(name)
+
+    def configure(self):
+        # Set the column widths.
+        for idx, entry_type in enumerate(self.columns):
+            width = 40 if entry_type in ["Name", "Fix"] else 60
+            self.setColumnWidth(idx, width)
+        
+        # configure
+        self.verticalHeader().setVisible(False)
+        self.setShowGrid(False)
+        self.horizontalHeader().setStyleSheet("color: white")
+
+    def insertParameter(self, name):
+        self.insertRow(self.rowCount())
+        self.parameterWidgets[name] = FittingParameterRow(name)
+        for idx, entry_type in enumerate(self.columns):
+            self.setCellWidget(
+                self.rowCount() - 1,
+                idx,
+                self.parameterWidgets[name].widgetForInserting[entry_type],
+            )
+
+    def keys(self):
+        return self.parameterWidgets.keys()
+    
+    def values(self):
+        return self.parameterWidgets.values()
+    
+    def items(self):
+        return self.parameterWidgets.items()
+    
+    def __getitem__(self, key):
+        return self.parameterWidgets[key]
+    
+
+class FittingParameterTableSet(QWidget):
+    def __init__(
+        self, 
+        parent=None
+    ):
+        super().__init__(parent)
+        self.widgetSetLayout = QVBoxLayout(self)
+        self.tables: Dict[str, FittingParameterTable] = {}
+
+    def keys(self):
+        return self.tables.keys()
+    
+    def values(self):
+        return self.tables.values()
+    
+    def items(self):
+        return self.tables.items()
+    
+    def __getitem__(self, key) -> FittingParameterTable:
+        return self.tables[key]
+    
+    def addGroupedWidgets(
+        self, 
+        set_name: str, 
+        row_names: List[str], 
+    ):
+        # store the group
+        self.tables[set_name] = FittingParameterTable(
+            row_names = row_names,
+            parent = self,
+        )
+
+        # add the group to the layout
+        self.widgetSetLayout.addWidget(FoldableWidget(
+            set_name,
+            self.tables[set_name],
         ))

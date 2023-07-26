@@ -53,10 +53,15 @@ from qfit.widgets.menu import MenuWidget
 from qfit.models.quantum_model_parameters import (
     QuantumModelSliderParameter,
     QuantumModelParameterSet,
+    QuantumModelFittingParameter,
 )
 from qfit.models.numerical_spectrum_data import SpectrumData
 from qfit.controllers.numerical_model import QuantumModel
-from qfit.widgets.grouped_sliders import LabeledSlider, GroupedWidget, GroupedWidgetSet
+from qfit.widgets.grouped_sliders import (
+    LabeledSlider,
+    GroupedWidgetSet,
+    FittingParameterTableSet,
+)
 
 # fit
 from qfit.controllers.fit import NumericalFitting
@@ -160,8 +165,15 @@ class MainWindow(ResizableFramelessWindow):
         self.offset = None
 
         # fit
-        self.fitCheckBoxInserts()
-        self.fitCheckBoxConnects()
+        self.fitParameterSet = QuantumModelParameterSet()
+        self.quantumModel.addParametersToParameterSet(
+            self.fitParameterSet,
+            parameter_usage="fit",
+            excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
+        )
+
+        self.fitTableInserts()
+        self.fitTableConnects()
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -762,9 +774,11 @@ class MainWindow(ResizableFramelessWindow):
                 )
 
                 # synchronize slider and box
-                labeled_slider.sliderValueChangedConnect(para._sliderValueToBox)
-                labeled_slider.valueTextChangeConnect(para._boxValueToSlider)
-                labeled_slider.value.editingFinished.connect(para._onBoxEditingFinished)
+                labeled_slider.sliderValueChangedConnect(para.sliderValueToBox)
+                labeled_slider.valueTextChangeConnect(para.boxValueToSlider)
+
+                # format the user's input
+                labeled_slider.value.editingFinished.connect(para.onBoxEditingFinished)
 
                 # connect to the controller to update the spectrum
                 labeled_slider.editingFinishedConnect(
@@ -793,34 +807,64 @@ class MainWindow(ResizableFramelessWindow):
                 #     )
                 # )
 
-                # set the initial value, for test only
-                # ------------------------------------------------------------------------------
-                # put all sliders initially to the middle
-                para.value = (para.max + para.min) / 5 + para.min
+                para.initialize()
                 para.setParameterForParent()
-                # ------------------------------------------------------------------------------
 
-    def fitCheckBoxInserts(self):
-        # temporarily insert checkboxes in the prefit scroll area
-        prefitScrollLayout = self.sliderSet.parent().layout()
+    def fitTableInserts(self):
+        """
+        Insert a set of tables for the fitting parameters
+        """
 
-        self.fitCheckBoxeSet = GroupedWidgetSet(
-            QCheckBox,
-            columns=3,
-        )
+        # temporary solution: put the fitting widget in the prefit scroll area
+        prefitScrollWidget = self.sliderSet.parent()
+        prefitScrollLayout = prefitScrollWidget.layout()
 
-        for key, para_dict in self.sliderParameterSet.items():
-            group_name = self.sliderParameterSet.parentNameByObj[key]
+        self.fitTableSet = FittingParameterTableSet(prefitScrollWidget)
 
-            self.fitCheckBoxeSet.addGroupedWidgets(
+        for key, para_dict in self.fitParameterSet.items():
+            group_name = self.fitParameterSet.parentNameByObj[key]
+
+            self.fitTableSet.addGroupedWidgets(
                 group_name,
                 list(para_dict.keys()),
             )
 
-        prefitScrollLayout.addWidget(self.fitCheckBoxeSet)
+        prefitScrollLayout.addWidget(self.fitTableSet)
 
-    def fitCheckBoxConnects(self):
-        pass
+    def fitTableConnects(self):
+        """
+        Connect the tables to the model - two parameter sets
+        """
+
+        for key, para_dict in self.fitParameterSet.items():
+            group_name = self.fitParameterSet.parentNameByObj[key]
+
+            for para_name, para in para_dict.items():
+                para: QuantumModelFittingParameter
+                table = self.fitTableSet[group_name][para_name]
+
+                # connect the UI and the model
+                para.setupUICallbacks(
+                    table.initialValue.text,
+                    table.initialValue.setText,
+                    table.currentValue.text,
+                    table.currentValue.setText,
+                    table.minValue.text,
+                    table.minValue.setText,
+                    table.maxValue.text,
+                    table.maxValue.setText,
+                    table.fixCheckbox.isChecked,
+                    table.fixCheckbox.setChecked,
+                )
+
+                # format the user's input
+                table.initialValue.editingFinished.connect(
+                    para.onInitValueEditingFinished
+                )
+                table.minValue.editingFinished.connect(para.onMinEditingFinished)
+                table.maxValue.editingFinished.connect(para.onMaxEditingFinished)
+
+                para.initialize()
 
     def setUpQuantumModelConnects(self):
         """
