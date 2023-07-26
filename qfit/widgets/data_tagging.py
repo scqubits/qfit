@@ -64,6 +64,15 @@ class Tag(serializers.Serializable):
         self.photons = photons
         self.subsysList = subsysList
 
+    def __str__(self):
+        return "Tag: {0} {1} {2} {3} {4}".format(
+            self.tagType,
+            str(self.initial),
+            str(self.final),
+            str(self.photons),
+            str(self.subsysList),
+        )
+
 
 class TagDataView(QObject):
     changedTagType = Signal()
@@ -108,19 +117,10 @@ class TagDataView(QObject):
         self.ui.subsysNamesLineEdit.editingFinished.connect(self.changedTagData.emit)
         self.ui.initialStateLineEdit.editingFinished.connect(self.changedTagData.emit)
         self.ui.finalStateLineEdit.editingFinished.connect(self.changedTagData.emit)
-        self.ui.phNumberBareSpinBox.valueChanged.connect(
-            lambda x: self.changedTagData.emit
-        )
-
-        self.ui.initialStateSpinBox.valueChanged.connect(
-            lambda x: self.changedTagData.emit
-        )
-        self.ui.finalStateSpinBox.valueChanged.connect(
-            lambda x: self.changedTagData.emit
-        )
-        self.ui.phNumberDressedSpinBox.valueChanged.connect(
-            lambda x: self.changedTagData.emit
-        )
+        self.ui.phNumberBareSpinBox.valueChanged.connect(lambda: self.changedTagData.emit())
+        self.ui.initialStateSpinBox.valueChanged.connect(lambda: self.changedTagData.emit())
+        self.ui.finalStateSpinBox.valueChanged.connect(lambda: self.changedTagData.emit())
+        self.ui.phNumberDressedSpinBox.valueChanged.connect(lambda: self.changedTagData.emit())
 
     def setNoTagMode(self):
         self.ui.tagBareGroupBox.setVisible(False)
@@ -131,9 +131,9 @@ class TagDataView(QObject):
         self.ui.tagBareGroupBox.setVisible(True)
         self.ui.tagDressedGroupBox.setVisible(False)
         self.changedTagType.emit()
-        # self.ui_designer.subsysNamesLineEdit.editingFinished.emit()
-        # self.ui_designer.initialStateLineEdit.editingFinished.emit()
-        # self.ui_designer.finalStateLineEdit.editingFinished.emit()
+        self.ui.subsysNamesLineEdit.editingFinished.emit()
+        self.ui.initialStateLineEdit.editingFinished.emit()
+        self.ui.finalStateLineEdit.editingFinished.emit()
 
     def setDispersiveDressedMode(self):
         self.ui.tagDressedGroupBox.setVisible(True)
@@ -179,7 +179,7 @@ class TagDataView(QObject):
     def isValid(self):
         return self.isValidInitialBare() and self.isValidFinalBare()
 
-    def getTag(self):
+    def getTagFromUI(self):
         tag = Tag()
         if self.ui.noTagRadioButton.isChecked() or not self.isValid():
             tag.tagType = NO_TAG
