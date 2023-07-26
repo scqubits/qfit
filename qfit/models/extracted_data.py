@@ -10,7 +10,7 @@
 ############################################################################
 
 
-from typing import Union
+from typing import Union, Literal
 
 import numpy as np
 from PySide6 import QtGui
@@ -343,9 +343,14 @@ class AllExtractedData(
     def setCalibrationFunc(self, calibrationDataCallback):
         self._calibrationFunc = calibrationDataCallback
 
-    def allDataSorted(self, applyCalibration):
+    def allDataSorted(
+        self, applyCalibration, calibration_axis: Literal["xy", "x", "y"] = "xy"
+    ):
         if applyCalibration:
-            data = [self._calibrationFunc(dataSet) for dataSet in self.assocDataList]
+            data = [
+                self._calibrationFunc(dataSet, calibration_axis=calibration_axis)
+                for dataSet in self.assocDataList
+            ]
         else:
             data = self.assocDataList
         sortIndices = [np.argsort(xValues) for xValues, _ in data]

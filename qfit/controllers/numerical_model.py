@@ -360,7 +360,7 @@ class QuantumModel:
         # TODO generalize this function to multiple ng and flux case in future
         # notice that the `calibrateDataset` function below takes
         parameter.calibration_func = lambda x: calibration_data.calibrateDataPoint(
-            [x, 0]
+            [x, 0], calibration_axis="x"
         )[0]
 
     def _generateParameterSweep(
@@ -598,21 +598,9 @@ class QuantumModel:
         mse = 0
         # calibrate the data in the following way: keep the x-coordinate unchanged, but calibrate
         # the y-coordinate
-        extracted_data_xy_calibrated = extracted_data.allDataSorted(
-            applyCalibration=True
+        extracted_data_y_calibrated = extracted_data.allDataSorted(
+            applyCalibration=True, calibration_axis="y"
         )
-        extracted_data_uncalibrated = extracted_data.allDataSorted(
-            applyCalibration=False
-        )
-        extracted_data_y_calibrated = [
-            np.array(
-                [
-                    extracted_data_uncalibrated[set_idx][:, 0],
-                    extracted_data_xy_calibrated[set_idx][:, 1],
-                ]
-            ).T
-            for set_idx in range(len(extracted_data_xy_calibrated))
-        ]
         # loop over extracted data sets and the corresponding tags
         for extracted_data_set, tag in zip(
             extracted_data_y_calibrated, extracted_data.assocTagList
