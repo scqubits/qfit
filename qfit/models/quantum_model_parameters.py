@@ -47,11 +47,18 @@ class ParameterBase(ABC):
             return value
 
     @abstractproperty
-    def value(self) -> Union[int, float]:
+    def value(self):
+        """
+        Get the value of the parameter
+        """
         pass
+        
 
     @value.setter
     def value(self, value):
+        """
+        Set the value of the parameter
+        """
         pass
 
 
@@ -117,13 +124,11 @@ class QuantumModelSliderParameter(ParameterBase):
         sliderValueSetter,
         boxValueCallback,
         boxValueSetter,
-        overallValueSetter,
     ):
         self.sliderValueCallback = sliderValueCallback
         self.sliderValueSetter = sliderValueSetter
         self.boxValueCallback = boxValueCallback
         self.boxValueSetter = boxValueSetter
-        self.overallValueSetter = overallValueSetter
 
     def _strToFloat(self, value: str) -> float:
         """
@@ -238,7 +243,7 @@ class QuantumModelSliderParameter(ParameterBase):
         return self._toInt(float_boxValue)
 
     @property
-    def value(self):
+    def value(self) -> Union[int, float]:
         """
         Special note: Will raise a ValueError if user input is not a number. Should be
         taken care of by the UI/controller.
@@ -251,8 +256,9 @@ class QuantumModelSliderParameter(ParameterBase):
         Set the value of the parameter. Will update both value of the UI and the controller.
         """
         value = self._toInt(value)
-        self.overallValueSetter(value)
-        self.setParameterForParent()
+
+        self.boxValueSetter(self._toIntString(value))
+        self.sliderValueSetter(self._normalizeValue(value))
 
 
 class QuantumModelParameter(ParameterBase):
@@ -304,7 +310,6 @@ class QuantumModelParameter(ParameterBase):
         parent object.
         """
         self._value = self._toInt(value)
-        self.setParameterForParent()
 
 
 class QuantumModelParameterSet:
@@ -540,3 +545,26 @@ class QuantumModelParameterSet:
             para_dict[name].value = value
         except KeyError:
             raise KeyError(f"Cannot find parameter {name} in the parameter set.")
+        
+    def toDict(self):
+        """
+        Convert the parameter set to a dictionary. Keys are "<parent name>.<parameter name>"
+        and values are the value of the parameter.
+        """
+        paramval_dict: Dict[str, float] = {}
+        for parent_system, para_dict in self.parameters.items():
+            parent_name = self.parentNameByObj[parent_system]
+            for name, para in para_dict.items():
+                paramval_dict[f"{parent_name}.{name}"] = para.value
+                
+        return paramval_dict
+    
+    def fromDict(self, paramval_dict: Dict[str, float]):
+        """
+        Update the parameter set from a dictionary. Keys are "<parent name>.<parameter name>"
+        and values are the value of the parameter.
+        """
+        for key, value in paramval_dict.items():
+            parent_name, name = key.split(".")
+            parent_system = self.parentObjByName[parent_name]
+            self.setParameter(parent_system, name, value)

@@ -758,7 +758,6 @@ class MainWindow(ResizableFramelessWindow):
                     labeled_slider.slider.value,
                     labeled_slider.slider.setValue,
                     labeled_slider.value.text,
-                    labeled_slider.value.setText,
                     labeled_slider.setValue,
                 )
 
@@ -797,7 +796,8 @@ class MainWindow(ResizableFramelessWindow):
                 # set the initial value, for test only
                 # ------------------------------------------------------------------------------
                 # put all sliders initially to the middle
-                labeled_slider.setValue(f"{(para.max + para.min) / 5 + para.min:.0f}")
+                para.value = (para.max + para.min) / 5 + para.min
+                para.setParameterForParent()
                 # ------------------------------------------------------------------------------
 
     def fitCheckBoxInserts(self):
