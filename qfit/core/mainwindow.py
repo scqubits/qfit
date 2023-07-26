@@ -56,10 +56,7 @@ from qfit.models.quantum_model_parameters import (
 )
 from qfit.models.numerical_spectrum_data import SpectrumData
 from qfit.controllers.numerical_model import QuantumModel
-from qfit.widgets.grouped_sliders import (
-    LabeledSlider,
-    GroupedWidget, GroupedWidgetSet
-)
+from qfit.widgets.grouped_sliders import LabeledSlider, GroupedWidget, GroupedWidgetSet
 
 # fit
 from qfit.controllers.fit import NumericalFitting
@@ -719,17 +716,17 @@ class MainWindow(ResizableFramelessWindow):
 
         # generate the slider set
         self.sliderSet = GroupedWidgetSet(
-            widget_class = LabeledSlider,
-            init_kwargs = {"label_value_position": "left_right"},
-            columns = 1, 
-            parent = prefitScrollWidget
+            widget_class=LabeledSlider,
+            init_kwargs={"label_value_position": "left_right"},
+            columns=1,
+            parent=prefitScrollWidget,
         )
 
         for key, para_dict in self.sliderParameterSet.items():
             group_name = self.sliderParameterSet.parentNameByObj[key]
 
             self.sliderSet.addGroupedWidgets(
-                group_name, 
+                group_name,
                 list(para_dict.keys()),
             )
 
@@ -762,7 +759,7 @@ class MainWindow(ResizableFramelessWindow):
                     labeled_slider.slider.setValue,
                     labeled_slider.value.text,
                     labeled_slider.value.setText,
-                    labeled_slider.setValue
+                    labeled_slider.setValue,
                 )
 
                 # synchronize slider and box
@@ -782,13 +779,25 @@ class MainWindow(ResizableFramelessWindow):
                     )
                 )
                 labeled_slider.editingFinishedConnect(self.updatePlot)
+                # labeled_slider.editingFinishedConnect(
+                #     lambda: print(self.allDatasets.assocTagList)
+                # )
+                # labeled_slider.editingFinishedConnect(
+                #     lambda: print(self.allDatasets.assocTagList[0])
+                # )
+                # labeled_slider.editingFinishedConnect(
+                #     lambda: print(self.allDatasets.allDataSorted(applyCalibration=True))
+                # )
+                # labeled_slider.editingFinishedConnect(
+                #     lambda: print(
+                #         self.allDatasets.allDataSorted(applyCalibration=False)
+                #     )
+                # )
 
                 # set the initial value, for test only
                 # ------------------------------------------------------------------------------
                 # put all sliders initially to the middle
-                labeled_slider.setValue(
-                    f"{(para.max + para.min) / 5 + para.min:.0f}"
-                )
+                labeled_slider.setValue(f"{(para.max + para.min) / 5 + para.min:.0f}")
                 # ------------------------------------------------------------------------------
 
     def fitCheckBoxInserts(self):
@@ -796,7 +805,7 @@ class MainWindow(ResizableFramelessWindow):
         prefitScrollLayout = self.sliderSet.parent().layout()
 
         self.fitCheckBoxeSet = GroupedWidgetSet(
-            QCheckBox, 
+            QCheckBox,
             columns=3,
         )
 
@@ -804,7 +813,7 @@ class MainWindow(ResizableFramelessWindow):
             group_name = self.sliderParameterSet.parentNameByObj[key]
 
             self.fitCheckBoxeSet.addGroupedWidgets(
-                group_name, 
+                group_name,
                 list(para_dict.keys()),
             )
 
@@ -812,7 +821,6 @@ class MainWindow(ResizableFramelessWindow):
 
     def fitCheckBoxConnects(self):
         pass
-
 
     def setUpQuantumModelConnects(self):
         """

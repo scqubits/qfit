@@ -23,8 +23,18 @@ from qfit.models.quantum_model_parameters import (
 from qfit.models.numerical_spectrum_data import SpectrumData
 from qfit.models.calibration_data import CalibrationData
 from qfit.models.extracted_data import AllExtractedData
+from qfit.widgets.data_tagging import (
+    NO_TAG,
+    DISPERSIVE_DRESSED,
+    DISPERSIVE_BARE,
+    CROSSING,
+    CROSSING_DRESSED,
+    Tag,
+)
 
 from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
+
+# scq.settings.FUZZY_SLICING = True
 
 
 # for test only
@@ -440,7 +450,7 @@ class QuantumModel:
 
         # if autorun, perform the rest of the steps (compute spectrum, plot, calculate MSE)
         if self.autorun_callback():
-            self.onButtonRunClicked(spectrum_data)
+            self.onButtonRunClicked(spectrum_data, extracted_data)
 
     def onParameterChange(
         self,
@@ -470,7 +480,11 @@ class QuantumModel:
             x_coordinate_list=x_coordinate_list, sweep_parameter_set=sweep_parameter_set
         )
 
-    def onButtonRunClicked(self, spectrum_data: SpectrumData):
+    def onButtonRunClicked(
+        self,
+        spectrum_data: SpectrumData,
+        extracted_data: AllExtractedData,
+    ):
         """
         It is connected to the signal emitted by the UI when the user clicks the run button
         for the prefit stage. It runs the parameter sweep and then generate the plots.
@@ -505,6 +519,8 @@ class QuantumModel:
         # ------------------------------------------------------------------------------
 
         # mse calculation
+        mse = self.calculateMSE(extracted_data=extracted_data)
+        print(mse)
 
         # update spectrum_data
         # do not need call spectrum_data.canvasPlot(). It is done in the mainwindow with
@@ -522,6 +538,7 @@ class QuantumModel:
         """
 
         # update parameters according to the x-coordinate
+        # TODO consider adding hilbertspace regeneration here
         def update_hilbertspace(x) -> None:
             for parameters in sweptParameterSet.values():
                 for parameter in parameters.values():
@@ -529,14 +546,6 @@ class QuantumModel:
                     parameter.setParameterForParent()
 
         return update_hilbertspace
-
-    def _computeSpectrum(self) -> None:
-        """
-        Compute the transition spectrum from the ParameterSweep object and send data to
-        the spectrum model.
-        """
-
-        pass
 
     def calculateMSE(self, extracted_data: AllExtractedData) -> float:
         """
@@ -562,4 +571,113 @@ class QuantumModel:
         # 3. if no transition can be found with the tag, find out the closest transition from the
         #    transition calculation
         # 4. calculate the MSE
-        pass
+
+        mse = 0
+        # calibrate the data in the following way: keep the x-coordinate unchanged, but calibrate
+        # the y-coordinate
+        extracted_data_xy_calibrated = extracted_data.allDataSorted(
+            applyCalibration=True
+        )
+        extracted_data_uncalibrated = extracted_data.allDataSorted(
+            applyCalibration=False
+        )
+        extracted_data_y_calibrated = [
+            np.array(
+                [
+                    extracted_data_uncalibrated[set_idx][:, 0],
+                    extracted_data_xy_calibrated[set_idx][:, 1],
+                ]
+            ).T
+            for set_idx in range(len(extracted_data_xy_calibrated))
+        ]
+        # loop over extracted data sets and the corresponding tags
+        for extracted_data_set, tag in zip(
+            extracted_data_y_calibrated, extracted_data.assocTagList
+        ):
+            # loop over data points in the extracted data set
+            print(tag)
+            for data_point in extracted_data_set:
+                # obtain the transition frequency from the transition data
+                # if NO_TAG, provide an extra argument for notag_freq
+                if tag.tagType is NO_TAG:
+                    transition_freq = self._getTransitionFrequencyFromParamSweep(
+                        x_coord=data_point[0],
+                        sweep=self.sweep,
+                        tag=tag,
+                        notag_freq=data_point[1],
+                    )
+                else:
+                    transition_freq = self._getTransitionFrequencyFromParamSweep(
+                        x_coord=data_point[0], sweep=self.sweep, tag=tag
+                    )
+                # calculate the MSE
+                mse += (data_point[1] - transition_freq) ** 2
+                # print(mse)
+        # normalize the MSE
+        mse /= sum(
+            [
+                len(extracted_data_set)
+                for extracted_data_set in extracted_data_y_calibrated
+            ]
+        )
+        return mse
+
+    def _getTransitionFrequencyFromParamSweep(
+        self,
+        x_coord: float,
+        sweep: ParameterSweep,
+        tag: Tag,
+        notag_freq: Union[float, None] = None,
+    ) -> float:
+        """
+        Obtain the cooresponding transition frequency provided by the tag from a ParameterSweep
+        instance.
+
+        Parameters
+        ----------
+        x_coord: float
+            The x coordinate of the transition plot.
+        sweep: ParameterSweep
+            The ParameterSweep instance. The sweep must be performed and is swept over the x coordinate.
+        """
+        # raise error if no tag is provided
+        # TODO need to catch errors whenever DISPERSIVE_DRESSED, CROSSING_DRESSED and DISPERSIVE_BARE
+        # fails to find out a transition frequency.
+        if tag.tagType is NO_TAG:
+            raise ValueError("Tag is missing.")
+        else:
+            # provided dressed label
+            if tag.tagType is DISPERSIVE_DRESSED or tag.tagType is CROSSING_DRESSED:
+                initial_energy = sweep["evals"]["x-coordinate":x_coord][tag.initial]
+                final_energy = sweep["evals"]["x-coordinate":x_coord][tag.final]
+            # provided bare label
+            elif tag.tagType is DISPERSIVE_BARE:
+                initial_energy = sweep["x-coordinate":x_coord].energy_by_bare_index(
+                    tag.initial
+                )
+                final_energy = sweep["x-coordinate":x_coord].energy_by_bare_index(
+                    tag.final
+                )
+                if initial_energy is np.nan or final_energy is np.nan:
+                    raise ValueError(
+                        f"Cannot find transition frequency for {tag.tagType} tag {tag.initial}->{tag.final} at x-coordinate {x_coord}."
+                    )
+            # provided no label
+            elif tag.tagType is CROSSING:
+                # calculate all the possible (positive) transitions and find the closest one
+                possible_transitions = []
+                eigenenergies = sweep["evals"]["x-coordinate":x_coord]
+                # currently only consider the case where the initial state is the ground state
+                # TODO: generalize this to the case where the initial state is not the ground state
+                possible_transitions = np.array(
+                    [
+                        eigenenergy - eigenenergies[0]
+                        for eigenenergy in eigenenergies[1:]
+                    ]
+                )
+                # find the closest transition
+                closest_traansition_index = (
+                    np.abs(possible_transitions - notag_freq)
+                ).argmin()
+                return possible_transitions[closest_traansition_index]
+            return final_energy - initial_energy
