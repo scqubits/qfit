@@ -66,6 +66,9 @@ from qfit.widgets.grouped_sliders import (
 # fit
 from qfit.controllers.fit import NumericalFitting
 
+# message
+from qfit.models.status_result_data import Result
+
 if TYPE_CHECKING:
     from qfit.widgets.calibration import CalibrationLineEdit
     from qfit.models.qfit_data import QfitData
@@ -134,6 +137,7 @@ class MainWindow(ResizableFramelessWindow):
         self.sliderParameterSet = QuantumModelParameterSet()
         self.sweepParameterSet = QuantumModelParameterSet()
         self.spectrumData = SpectrumData()
+        self.prefitResult = Result()
         self.quantumModel = QuantumModel(hilbert_space)
         self.quantumModel.addParametersToParameterSet(
             self.sliderParameterSet,
@@ -793,6 +797,7 @@ class MainWindow(ResizableFramelessWindow):
                         spectrum_data=self.spectrumData,
                         calibration_data=self.calibrationData,
                         extracted_data=self.allDatasets,
+                        prefit_result=self.prefitResult,
                         # self.axes,
                     )
                 )
@@ -834,7 +839,7 @@ class MainWindow(ResizableFramelessWindow):
         # notice that parameter update is done in the slider connects
         self.ui.runFitButton.clicked.connect(
             lambda: self.quantumModel.onButtonRunClicked(
-                spectrum_data=self.spectrumData, extracted_data=self.allDatasets
+                spectrum_data=self.spectrumData, extracted_data=self.allDatasets, result=self.prefitResult
             )
         )
         # update plot after the fit button is clicked

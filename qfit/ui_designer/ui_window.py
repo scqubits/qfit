@@ -2276,14 +2276,14 @@ class Ui_MainWindow(object):
         self.label_42.setText(QCoreApplication.translate("MainWindow", u"EVALS COUNT", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"INITIAL STATE", None))
         self.label_46.setText(QCoreApplication.translate("MainWindow", u"STATUS:", None))
-        self.mseLabel.setText(QCoreApplication.translate("MainWindow", u"MSE:  0.647 GHz^2   (+0.86%)", None))
+        self.mseLabel.setText(QCoreApplication.translate("MainWindow", u"MSE:", None))
         self.label_44.setText(QCoreApplication.translate("MainWindow", u"TRANSITIONS", None))
         self.label_43.setText(QCoreApplication.translate("MainWindow", u"POINTS ADDED", None))
-        self.statusTextLabel.setText(QCoreApplication.translate("MainWindow", u"Status Text", None))
+        self.statusTextLabel.setText(QCoreApplication.translate("MainWindow", u" ", None))
         self.label_45.setText(QCoreApplication.translate("MainWindow", u"SETTINGS", None))
         self.label_49.setText(QCoreApplication.translate("MainWindow", u"STATUS:", None))
-        self.statusTextLabel_2.setText(QCoreApplication.translate("MainWindow", u"Status Text", None))
-        self.mseLabel_2.setText(QCoreApplication.translate("MainWindow", u"MSE:  0.647 GHz^2   (+0.86%)", None))
+        self.statusTextLabel_2.setText(QCoreApplication.translate("MainWindow", u" ", None))
+        self.mseLabel_2.setText(QCoreApplication.translate("MainWindow", u"MSE:", None))
         pass
     # retranslateUi
 
