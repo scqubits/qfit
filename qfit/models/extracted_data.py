@@ -338,6 +338,7 @@ class AllExtractedData(
 
     @Slot()
     def updateCurrentTag(self, newTag):
+        # print("updating: ", newTag)
         self.assocTagList[self.currentRow] = newTag
 
     def setCalibrationFunc(self, calibrationDataCallback):

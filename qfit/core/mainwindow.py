@@ -390,10 +390,10 @@ class MainWindow(ResizableFramelessWindow):
 
         # Whenever tag type or tag data is changed, update the AllExtractedData data
         self.tagDataView.changedTagType.connect(
-            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTag())
+            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTagFromUI())
         )
         self.tagDataView.changedTagData.connect(
-            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTag())
+            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTagFromUI())
         )
 
         # Whenever a new dataset is activated in the AllExtractedData, update the TagDataView
@@ -518,8 +518,8 @@ class MainWindow(ResizableFramelessWindow):
         """
         x1, y1 = eclick.xdata, eclick.ydata
         x2, y2 = erelease.xdata, erelease.ydata
-        print(f"({x1:3.2f}, {y1:3.2f}) --> ({x2:3.2f}, {y2:3.2f})")
-        print(f" The buttons you used were: {eclick.button} {erelease.button}")
+        # print(f"({x1:3.2f}, {y1:3.2f}) --> ({x2:3.2f}, {y2:3.2f})")
+        # print(f" The buttons you used were: {eclick.button} {erelease.button}")
 
     @Slot()
     def canvasClickMonitoring(self, event):
