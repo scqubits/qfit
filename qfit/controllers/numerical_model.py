@@ -112,7 +112,8 @@ class QuantumModel:
         # for test only
         # ------------------------------------------------------------------------------
         self.subsystem_names_to_plot = lambda: (
-            QuantumModelParameterSet.parentSystemIdstrByName(subsystemNameCallback()))
+            QuantumModelParameterSet.parentSystemIdstrByName(subsystemNameCallback())
+        )
         self.initialStateCallback = initialStateCallback
         self.evalCountCallback = evalsCountCallback
         self.pointsAddCallback = pointsAddCallback
@@ -160,7 +161,9 @@ class QuantumModel:
                 )
 
             try:
-                return tuple(int(x) for x in label_str if x != "")  # delete '' in the tuple
+                return tuple(
+                    int(x) for x in label_str if x != ""
+                )  # delete '' in the tuple
             except ValueError:
                 raise ValueError(
                     f"Cannot convert {state_str} to a state label. Please check the format."
@@ -356,8 +359,7 @@ class QuantumModel:
             raise ValueError("Expect an integer for the number of points to add.")
 
         x_coordinates_uniform = np.linspace(
-            min(x_coordinates_from_data), max(x_coordinates_from_data), 
-            points_add
+            min(x_coordinates_from_data), max(x_coordinates_from_data), points_add
         )[1:-1]
         x_coordinates_all = np.concatenate(
             [x_coordinates_from_data, x_coordinates_uniform]
@@ -546,7 +548,12 @@ class QuantumModel:
         """
         try:
             self.sweep.run()
+            result.status_type = "COMPUTING"
         except AttributeError:
+            result.status_type = "ERROR"
+            result.status_text = (
+                "The parameter sweep is not generated. Please play with sliders first."
+            )
             raise AttributeError(
                 "The parameter sweep is not generated. Please play with sliders first."
             )
@@ -557,6 +564,7 @@ class QuantumModel:
         except ValueError:
             return
 
+        # generate specdata for highlighting
         specdata_for_highlighting = self.sweep.transitions(
             subsystems=subsys,
             initial=self.initial_state(),
@@ -643,35 +651,63 @@ class QuantumModel:
         # 4. calculate the MSE
 
         mse = 0
+        status_type = ""
+        status_text = ""
+        dataNames_without_tag = []
+        dataNames_with_unidentifiable_tag = []
         # calibrate the data in the following way: keep the x-coordinate unchanged, but calibrate
         # the y-coordinate
         extracted_data_y_calibrated = extracted_data.allDataSorted(
             applyCalibration=True, calibration_axis="y"
         )
+        # for all the extracted data, identify any NO_TAG or CROSSING tagged sets
+        for dataName, tag in zip(extracted_data.dataNames, extracted_data.assocTagList):
+            if tag.tagType is NO_TAG or tag.tagType is CROSSING:
+                dataNames_without_tag.append(dataName)
+        # if there is any NO_TAG or CROSSING tagged sets, add a warning message and set status type to WARNING
+        if dataNames_without_tag != []:
+            status_text += (
+                f"Data sets {dataNames_without_tag} are not tagged."
+                "Selected transition frequencies are matched to the closest ones in the model, "
+                "starting from the ground state.\n"
+            )
+            status_type = "WARNING"
         # loop over extracted data sets and the corresponding tags
-        for extracted_data_set, tag in zip(
-            extracted_data_y_calibrated, extracted_data.assocTagList
+        for dataName, extracted_data_set, tag in zip(
+            extracted_data.dataNames,
+            extracted_data_y_calibrated,
+            extracted_data.assocTagList,
         ):
-            # loop over data points in the extracted data set
-            # test
-            # print(tag)
             for data_point in extracted_data_set:
                 # obtain the transition frequency from the transition data
-                # if NO_TAG or CROSSING, provide an extra argument for notag_freq
-                if tag.tagType is NO_TAG or tag.tagType is CROSSING:
-                    transition_freq, status = self._getTransitionFrequencyFromParamSweep(
-                        x_coord=data_point[0],
-                        sweep=self.sweep,
-                        tag=tag,
-                        data_freq=data_point[1],
+                (
+                    transition_freq,
+                    get_transition_freq_status,
+                ) = self._getTransitionFrequencyFromParamSweep(
+                    x_coord=data_point[0],
+                    sweep=self.sweep,
+                    tag=tag,
+                    data_freq=data_point[1],
+                )
+                # if the transition_freq is None, return directly with a mse of None
+                if transition_freq is None:
+                    mse = None
+                    status_type = "ERROR"
+                    status_text = (
+                        f"The {tag.tagType} tag {tag.initial}->{tag.final} includes"
+                        " state label(s) that exceed evals count."
                     )
-                else:
-                    transition_freq, status = self._getTransitionFrequencyFromParamSweep(x_coord=data_point[0], sweep=self.sweep, tag=tag)
-                    # TODO: handle error when transition_freq is None
-                    transition_freq /= tag.photons  # divided by photon number of the process
-                # calculate the MSE
+                    return mse, status_type, status_text
+                # if the return status is not SUCCESS, add a warning message and set status type to WARNING
+                if get_transition_freq_status != "SUCCESS":
+                    status_type = "WARNING"
+                    # append the dataName to the list of dataNames_with_unidentifiable_tag
+                    # only if the name is not already in the list
+                    if dataName not in dataNames_with_unidentifiable_tag:
+                        dataNames_with_unidentifiable_tag.append(dataName)
+                transition_freq /= tag.photons
+                # add to the MSE
                 mse += (data_point[1] - transition_freq) ** 2
-                # print(mse)
         # normalize the MSE
         mse /= sum(
             [
@@ -679,7 +715,16 @@ class QuantumModel:
                 for extracted_data_set in extracted_data_y_calibrated
             ]
         )
-        return mse, "success", "MSE calculated successfully."
+        # add to the status text if there is any unidentifiable tag
+        if dataNames_with_unidentifiable_tag != []:
+            status_text += (
+                f"Data sets {dataNames_with_unidentifiable_tag} have unidentifiable tag(s). "
+                "Selected transition frequencies are matched to the closest ones in the model, "
+                "starting from the ground state.\n"
+            )
+        if status_type == "":
+            status_type = "SUCCESS"
+        return mse, status_type, status_text
 
     def _getTransitionFrequencyFromParamSweep(
         self,

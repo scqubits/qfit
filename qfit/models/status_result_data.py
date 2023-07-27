@@ -55,6 +55,12 @@ class Result(serializers.Serializable):
         return f"STATUS:  {self.status_type}"
 
     @property
+    def displayed_status_text(self):
+        if self.status_text is None:
+            return "-"
+        return self.status_text
+
+    @property
     def displayed_MSE(self):
         if self.current_mse is None:
             return "MSE:  -  (- %)"
