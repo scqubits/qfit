@@ -9,8 +9,11 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QCheckBox,
     QTableWidget,
+    QPushButton,
+    QSizePolicy,
 )
-from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
+from PySide6.QtCore import Qt, QSize, QCoreApplication
 
 from typing import Dict, List, Tuple, Union, Optional, Any
 
@@ -47,9 +50,9 @@ class LabeledSlider(QWidget):
     user_is_typing = False
 
     def __init__(
-        self, 
-        name: str = 'Slider', 
-        label_value_position: str = 'left_right', 
+        self,
+        name: str = "Slider",
+        label_value_position: str = "left_right",
         auto_connect: bool = False,
         parent: Optional[QWidget] = None,
     ):
@@ -220,16 +223,15 @@ class GroupedWidget(QWidget):
     """
 
     def __init__(
-        self, 
+        self,
         widget_class,
-        widget_names: List[str], 
+        widget_names: List[str],
         init_kwargs: Dict[str, Any] = {},
-        columns: int = 2, 
-        parent = None
+        columns: int = 2,
+        parent=None,
     ):
         super().__init__(parent)
-        
-        
+
         self.widget_class = widget_class
         self.widgets = {}
         self.init_kwargs = init_kwargs
@@ -238,16 +240,18 @@ class GroupedWidget(QWidget):
         self.gridLayout = QGridLayout(self)
 
         self.createWidgets(widget_names)
+        # set the layout that no vertical space between the widgets (labelled sliders here)
+        self.gridLayout.setVerticalSpacing(0)
 
     def keys(self):
         return self.widgets.keys()
-    
+
     def values(self):
         return self.widgets.values()
-    
+
     def items(self):
         return self.widgets.items()
-    
+
     def __getitem__(self, key):
         return self.widgets[key]
 
@@ -259,7 +263,7 @@ class GroupedWidget(QWidget):
             widget = self.widget_class(name, **self.init_kwargs)
             self.widgets[name] = widget
             self.gridLayout.addWidget(widget, idx // self.columns, idx % self.columns)
-            
+
     def clearLayout(self):
         for i in reversed(range(self.gridLayout.count())):
             self.gridLayout.itemAt(i).widget().setParent(None)
@@ -274,19 +278,59 @@ class FoldableWidget(QGroupBox):
 
     def __init__(self, title="Foldable", content_widget=None, parent=None):
         super().__init__(parent)
+        # set fold push button
+        self.foldPushButton = QPushButton(self)
+        self.setObjectName("foldPushButton")
+        # icon
+        icon = QIcon()
+        icon.addFile(
+            ":/icons/16x16/cil-caret-right.png",
+            QSize(),
+            QIcon.Normal,
+            QIcon.Off,
+        )
+        icon.addFile(
+            ":/icons/16x16/cil-caret-bottom.png",
+            QSize(),
+            QIcon.Normal,
+            QIcon.On,
+        )
+        # set the style sheet (which controls the font, color, text align, border, etc.)
+        self.foldPushButton.setStyleSheet(
+            "QPushButton {\n"
+            '	font: 57 10pt "Roboto Medium";\n'
+            "	color: rgb(170, 170, 170);\n"
+            "	text-align: left;\n"
+            "	border: none;\n"
+            "}"
+        )
+        self.foldPushButton.setIcon(icon)
+        # set title
+        self.foldPushButton.setText(
+            QCoreApplication.translate("MainWindow", title, None)
+        )
+        # set checkable
+        self.foldPushButton.setCheckable(True)
+        self.foldPushButton.setChecked(False)
 
-        self.setTitle(title)
-        self.setCheckable(True)
-
+        # set the box layout
         self.boxLayout = QVBoxLayout(self)
+        # add push button to the layout
+        self.boxLayout.addWidget(self.foldPushButton)
+        # add content widget
         self.content_widget = (
             content_widget if content_widget else QLabel("No Content", self)
         )
         self.boxLayout.addWidget(self.content_widget)
 
-        self.setChecked(False)
-        self.toggleContent(self.isChecked())
-        self.toggled.connect(self.toggleContent)
+        # connect the push button to the setVisible method
+        self.foldPushButton.clicked.connect(
+            lambda: self.toggleContent(self.foldPushButton.isChecked())
+        )
+        # initialize the content
+        self.toggleContent(self.foldPushButton.isChecked())
+        # set the size policy for the foldable widget: expand along horizontal, fixed along vertical
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
     def toggleContent(self, checked):
         self.content_widget.setVisible(checked)
@@ -304,12 +348,9 @@ class GroupedWidgetSet(QWidget):
     """
     Represent a set of grouped sliders. Each group will be displayed in a FoldableWidget.
     """
+
     def __init__(
-        self, 
-        widget_class,
-        init_kwargs: Dict[str, Any] = {},
-        columns=2, 
-        parent=None
+        self, widget_class, init_kwargs: Dict[str, Any] = {}, columns=2, parent=None
     ):
         super().__init__(parent)
 
@@ -318,39 +359,45 @@ class GroupedWidgetSet(QWidget):
 
         self.columns = columns
         self.widgetSetLayout = QVBoxLayout(self)
+        self.widgetSetLayout.setSpacing(0)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        # self.widgetSetLayout.setObjectName("WidgetSetLayout")
+        # self.widgetSetLayout.setContentsMargins(0, 0, 0, 0)
         self.widgetGroups: Dict[str, Any] = {}
 
     def keys(self):
         return self.widgetGroups.keys()
-    
+
     def values(self):
         return self.widgetGroups.values()
-    
+
     def items(self):
         return self.widgetGroups.items()
-    
+
     def __getitem__(self, key):
         return self.widgetGroups[key]
-    
+
     def addGroupedWidgets(
-        self, 
-        set_name: str, 
-        widget_names: List[str], 
+        self,
+        set_name: str,
+        widget_names: List[str],
     ):
         # store the group
         self.widgetGroups[set_name] = GroupedWidget(
-            widget_class = self.widget_class,
-            widget_names = widget_names, 
-            init_kwargs = self.init_kwargs,
-            columns = self.columns, 
-            parent = self,
+            widget_class=self.widget_class,
+            widget_names=widget_names,
+            init_kwargs=self.init_kwargs,
+            columns=self.columns,
+            parent=self,
         )
 
         # add the group to the layout
-        self.widgetSetLayout.addWidget(FoldableWidget(
-            set_name,
-            self.widgetGroups[set_name],
-        ))
+        self.widgetSetLayout.addWidget(
+            FoldableWidget(
+                set_name,
+                self.widgetGroups[set_name],
+            )
+        )
 
 
 class FittingParameterRow(QWidget):
@@ -380,7 +427,7 @@ class FittingParameterRow(QWidget):
             "Current": self.alignCenter(self.currentValue),
             "Min": self.minValue,
             "Max": self.maxValue,
-        }      
+        }
 
     @staticmethod
     def alignCenter(widget) -> QWidget:
@@ -393,13 +440,12 @@ class FittingParameterRow(QWidget):
 
 
 class FittingParameterTable(QTableWidget):
-
     columns = FittingParameterRow.entry_types
 
     def __init__(
         self,
-        row_names: List[str], 
-        parent=None, 
+        row_names: List[str],
+        parent=None,
     ):
         super().__init__(parent)
 
@@ -423,7 +469,7 @@ class FittingParameterTable(QTableWidget):
         for idx, entry_type in enumerate(self.columns):
             width = 40 if entry_type in ["Name", "Fix"] else 60
             self.setColumnWidth(idx, width)
-        
+
         # configure
         self.verticalHeader().setVisible(False)
         self.setShowGrid(False)
@@ -441,51 +487,50 @@ class FittingParameterTable(QTableWidget):
 
     def keys(self):
         return self.parameterWidgets.keys()
-    
+
     def values(self):
         return self.parameterWidgets.values()
-    
+
     def items(self):
         return self.parameterWidgets.items()
-    
+
     def __getitem__(self, key):
         return self.parameterWidgets[key]
-    
+
 
 class FittingParameterTableSet(QWidget):
-    def __init__(
-        self, 
-        parent=None
-    ):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.widgetSetLayout = QVBoxLayout(self)
         self.tables: Dict[str, FittingParameterTable] = {}
 
     def keys(self):
         return self.tables.keys()
-    
+
     def values(self):
         return self.tables.values()
-    
+
     def items(self):
         return self.tables.items()
-    
+
     def __getitem__(self, key) -> FittingParameterTable:
         return self.tables[key]
-    
+
     def addGroupedWidgets(
-        self, 
-        set_name: str, 
-        row_names: List[str], 
+        self,
+        set_name: str,
+        row_names: List[str],
     ):
         # store the group
         self.tables[set_name] = FittingParameterTable(
-            row_names = row_names,
-            parent = self,
+            row_names=row_names,
+            parent=self,
         )
 
         # add the group to the layout
-        self.widgetSetLayout.addWidget(FoldableWidget(
-            set_name,
-            self.tables[set_name],
-        ))
+        self.widgetSetLayout.addWidget(
+            FoldableWidget(
+                set_name,
+                self.tables[set_name],
+            )
+        )

@@ -82,7 +82,7 @@ class QuantumModel:
     Class for handling the HilbertSpace object, including: (1) identifying parameters in each subsystem of the Hamiltonian
     and coupling coefficients of the interaction terms, (2) receiving updated values of parameters and coupling coefficients
     from the UI and reflect changes in the HilbertSpace object, (3) generating a ParameterSweep object, (4) compute the relevant
-    transition spectrum.
+    transition spectrum. Primarily designed for prefit.
 
     Parameters
     ----------
@@ -534,6 +534,9 @@ class QuantumModel:
         overall_specdata = copy.deepcopy(self.sweep[(slice(None),)].dressed_specdata)
         overall_specdata.energy_table -= specdata_for_highlighting.subtract
 
+        # update spectrum_data
+        # do not need call spectrum_data.canvasPlot(). It is done in the mainwindow with
+        # another connection
         spectrum_data.update(
             overall_specdata,
             specdata_for_highlighting,
@@ -542,13 +545,8 @@ class QuantumModel:
 
         # mse calculation
         mse = self.calculateMSE(extracted_data=extracted_data)
-        # test
-        # print(mse)
 
-        # update spectrum_data
-        # do not need call spectrum_data.canvasPlot(). It is done in the mainwindow with
-        # another connection
-        # print(self._generateXcoordinateList(extracted_data=extracted_data))
+        # pass MSE and status messages to the model
 
     def _update_hilbertspace_for_ParameterSweep(
         self,
@@ -619,8 +617,11 @@ class QuantumModel:
                         notag_freq=data_point[1],
                     )
                 else:
-                    transition_freq = self._getTransitionFrequencyFromParamSweep(
-                        x_coord=data_point[0], sweep=self.sweep, tag=tag
+                    transition_freq = (
+                        self._getTransitionFrequencyFromParamSweep(
+                            x_coord=data_point[0], sweep=self.sweep, tag=tag
+                        )
+                        / tag.photons # divided by photon number of the process
                     )
                 # calculate the MSE
                 mse += (data_point[1] - transition_freq) ** 2

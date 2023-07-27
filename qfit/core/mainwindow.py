@@ -159,7 +159,8 @@ class MainWindow(ResizableFramelessWindow):
         # the canvas is set up.
         self.prefitSlidersConnects()
         self.setUpSpectrumPlotConnects()
-        self.setUpQuantumModelConnects()
+        self.setUpPrefitOptionsConnects()
+        self.setUpPrefitRunConnects()
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
@@ -172,8 +173,8 @@ class MainWindow(ResizableFramelessWindow):
             excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
         )
 
-        self.fitTableInserts()
-        self.fitTableConnects()
+        # self.fitTableInserts()
+        # self.fitTableConnects()
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -738,6 +739,9 @@ class MainWindow(ResizableFramelessWindow):
         prefitScrollLayout = QVBoxLayout()
         prefitScrollWidget.setLayout(prefitScrollLayout)
 
+        # set the alignment of the entire prefit scroll layout
+        prefitScrollLayout.setAlignment(Qt.AlignTop)
+
         # generate the slider set
         self.sliderSet = GroupedWidgetSet(
             widget_class=LabeledSlider,
@@ -753,17 +757,6 @@ class MainWindow(ResizableFramelessWindow):
                 group_name,
                 list(para_dict.keys()),
             )
-
-        # test: autorun checkbox and button (in future, to be replaced by Qt designer generated widget)
-        # autorunWidget = QWidget()
-        # autorunLayout = QHBoxLayout()
-        # autorunWidget.setLayout(autorunLayout)
-        # self.autorunCheckBox = QCheckBox()
-        # self.autorunButton = QPushButton("Run")
-        # autorunLayout.addWidget(QLabel("Autorun:"))
-        # autorunLayout.addWidget(self.autorunCheckBox)
-        # autorunLayout.addWidget(self.autorunButton)
-        # prefitScrollLayout.addWidget(autorunWidget)
 
         prefitScrollLayout.addWidget(self.sliderSet)
 
@@ -804,20 +797,6 @@ class MainWindow(ResizableFramelessWindow):
                     )
                 )
                 labeled_slider.editingFinishedConnect(self.updatePlot)
-                # labeled_slider.editingFinishedConnect(
-                #     lambda: print(self.allDatasets.assocTagList)
-                # )
-                # labeled_slider.editingFinishedConnect(
-                #     lambda: print(self.allDatasets.assocTagList[0])
-                # )
-                # labeled_slider.editingFinishedConnect(
-                #     lambda: print(self.allDatasets.allDataSorted(applyCalibration=True))
-                # )
-                # labeled_slider.editingFinishedConnect(
-                #     lambda: print(
-                #         self.allDatasets.allDataSorted(applyCalibration=False)
-                #     )
-                # )
 
                 para.initialize()
                 para.setParameterForParent()
@@ -878,14 +857,26 @@ class MainWindow(ResizableFramelessWindow):
 
                 para.initialize()
 
-    def setUpQuantumModelConnects(self):
+    def setUpPrefitOptionsConnects(self):
         """
-        Set up the connects for the UI elements (except dynamically generated sliders)
+        Set up the connects for the prefit options for UI
         """
         self.quantumModel.setupPlotUICallbacks()
+
+    def setUpPrefitRunConnects(self):
+        # connect the autorun checkbox callback
         self.quantumModel.setupAutorunCallbacks(
-            autorun_callback=lambda: True
-        )  # TODO in the future, set it to self.autorunCheckBox.isChecked
+            autorun_callback=self.ui.autoRunCheckBox.isChecked,
+        )
+        # connect the run button callback to the generation and run of parameter sweep
+        # notice that parameter update is done in the slider connects
+        self.ui.runFitButton.clicked.connect(
+            lambda: self.quantumModel.onButtonRunClicked(
+                spectrum_data=self.spectrumData, extracted_data=self.allDatasets
+            )
+        )
+        # update plot after the fit button is clicked
+        self.ui.runFitButton.clicked.connect(self.updatePlot)
 
     def setUpSpectrumPlotConnects(self):
         self.spectrumData.setupUICallbacks()
