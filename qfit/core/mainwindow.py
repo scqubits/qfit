@@ -21,7 +21,7 @@ import numpy as np
 
 from scqubits.core.hilbert_space import HilbertSpace
 
-from PySide6.QtCore import QPoint, QRect, QSize, Qt, Slot
+from PySide6.QtCore import QPoint, QRect, QSize, Qt, Slot, QCoreApplication
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
     QLabel,
@@ -168,6 +168,9 @@ class MainWindow(ResizableFramelessWindow):
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
+
+        # result panel connect
+        self.setUpPrefitResultConnects()
 
         # fit
         self.fitParameterSet = QuantumModelParameterSet()
@@ -820,6 +823,33 @@ class MainWindow(ResizableFramelessWindow):
         for subsys_name in subsys_name_list:
             self.ui.subsysComboBox.insertItem(0, subsys_name)
 
+    def setUpPrefitResultConnects(self):
+        """
+        connect the prefit result to the relevant UI textboxes; whenever there is
+        a change in the UI, reflect in the UI text change
+        """
+        status_type_ui_setter = lambda: self.ui.label_46.setText(
+            QCoreApplication.translate(
+                "MainWindow", self.prefitResult.displayed_status_type, None
+            )
+        )
+        status_text_ui_setter = lambda: self.ui.statusTextLabel.setText(
+            QCoreApplication.translate(
+                "MainWindow", self.prefitResult.status_text, None
+            )
+        )
+        mse_change_ui_setter = lambda: self.ui.mseLabel.setText(
+            QCoreApplication.translate(
+                "MainWindow", self.prefitResult.displayed_MSE, None
+            )
+        )
+
+        self.prefitResult.setupUISetters(
+            status_type_ui_setter=status_type_ui_setter,
+            status_text_ui_setter=status_text_ui_setter,
+            mse_change_ui_setter=mse_change_ui_setter,
+        )
+
     def setUpPrefitOptionsConnects(self):
         """
         Set up the connects for the prefit options for UI
@@ -839,7 +869,9 @@ class MainWindow(ResizableFramelessWindow):
         # notice that parameter update is done in the slider connects
         self.ui.runFitButton.clicked.connect(
             lambda: self.quantumModel.onButtonRunClicked(
-                spectrum_data=self.spectrumData, extracted_data=self.allDatasets, result=self.prefitResult
+                spectrum_data=self.spectrumData,
+                extracted_data=self.allDatasets,
+                result=self.prefitResult,
             )
         )
         # update plot after the fit button is clicked

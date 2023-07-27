@@ -2279,10 +2279,10 @@ class Ui_MainWindow(object):
         self.mseLabel.setText(QCoreApplication.translate("MainWindow", u"MSE:", None))
         self.label_44.setText(QCoreApplication.translate("MainWindow", u"TRANSITIONS", None))
         self.label_43.setText(QCoreApplication.translate("MainWindow", u"POINTS ADDED", None))
-        self.statusTextLabel.setText(QCoreApplication.translate("MainWindow", u" ", None))
+        self.statusTextLabel.setText(QCoreApplication.translate("MainWindow", u"STATUS TEXT", None))
         self.label_45.setText(QCoreApplication.translate("MainWindow", u"SETTINGS", None))
         self.label_49.setText(QCoreApplication.translate("MainWindow", u"STATUS:", None))
-        self.statusTextLabel_2.setText(QCoreApplication.translate("MainWindow", u" ", None))
+        self.statusTextLabel_2.setText(QCoreApplication.translate("MainWindow", u"STATUS TEXT", None))
         self.mseLabel_2.setText(QCoreApplication.translate("MainWindow", u"MSE:", None))
         pass
     # retranslateUi
