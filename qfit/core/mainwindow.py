@@ -801,7 +801,13 @@ class MainWindow(ResizableFramelessWindow):
                 para.initialize()
                 para.setParameterForParent()
 
-    def prefitSettingConnects(self):
+    def setUpSpectrumPlotConnects(self):
+        self.spectrumData.setupUICallbacks()
+
+    def prefitSubsystemComboBoxConnects(self):
+        """
+        loading the subsystem names to the combo box (drop down menu)
+        """
         subsys_name_list = [
             QuantumModelParameterSet.parentSystemNames(subsys)
             for subsys in self.quantumModel.hilbertspace.subsys_list
@@ -809,8 +815,30 @@ class MainWindow(ResizableFramelessWindow):
         for subsys_name in subsys_name_list:
             self.ui.subsysComboBox.insertItem(0, subsys_name)
 
-    def setUpSpectrumPlotConnects(self):
-        self.spectrumData.setupUICallbacks()
+    def setUpPrefitOptionsConnects(self):
+        """
+        Set up the connects for the prefit options for UI
+        """
+        self.quantumModel.setupPlotUICallbacks(
+            subsystemNameCallback=lambda: "fluxonium",
+            initialStateCallback=lambda: "0",
+            finalStateCallback=lambda: "2",
+        )  # TODO: placeholder by now, need to connect to the UI
+
+    def setUpPrefitRunConnects(self):
+        # connect the autorun checkbox callback
+        self.quantumModel.setupAutorunCallbacks(
+            autorun_callback=self.ui.autoRunCheckBox.isChecked,
+        )
+        # connect the run button callback to the generation and run of parameter sweep
+        # notice that parameter update is done in the slider connects
+        self.ui.runFitButton.clicked.connect(
+            lambda: self.quantumModel.onButtonRunClicked(
+                spectrum_data=self.spectrumData, extracted_data=self.allDatasets
+            )
+        )
+        # update plot after the fit button is clicked
+        self.ui.runFitButton.clicked.connect(self.updatePlot)
 
     def fitTableInserts(self):
         """
@@ -867,30 +895,6 @@ class MainWindow(ResizableFramelessWindow):
                 single_row.maxValue.editingFinished.connect(para.onMaxEditingFinished)
 
                 para.initialize()
-
-    def setUpPrefitOptionsConnects(self):
-        """
-        Set up the connects for the prefit options for UI
-        """
-        self.quantumModel.setupPlotUICallbacks()
-
-    def setUpPrefitRunConnects(self):
-        # connect the autorun checkbox callback
-        self.quantumModel.setupAutorunCallbacks(
-            autorun_callback=self.ui.autoRunCheckBox.isChecked,
-        )
-        # connect the run button callback to the generation and run of parameter sweep
-        # notice that parameter update is done in the slider connects
-        self.ui.runFitButton.clicked.connect(
-            lambda: self.quantumModel.onButtonRunClicked(
-                spectrum_data=self.spectrumData, extracted_data=self.allDatasets
-            )
-        )
-        # update plot after the fit button is clicked
-        self.ui.runFitButton.clicked.connect(self.updatePlot)
-
-    def setUpSpectrumPlotConnects(self):
-        self.spectrumData.setupUICallbacks()
 
     @Slot()
     def openFile(self, initialize: bool = False):
