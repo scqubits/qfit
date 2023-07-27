@@ -160,6 +160,7 @@ class MainWindow(ResizableFramelessWindow):
         self.prefitSlidersConnects()
         self.setUpSpectrumPlotConnects()
         self.setUpQuantumModelConnects()
+        self.prefitSettingConnects()
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
@@ -809,6 +810,28 @@ class MainWindow(ResizableFramelessWindow):
                 para.initialize()
                 para.setParameterForParent()
 
+    def prefitSettingConnects(self):
+        subsys_name_list = [
+            QuantumModelParameterSet.parentSystemNames(subsys) 
+            for subsys in self.quantumModel.hilbertspace.subsys_list
+        ]
+        for subsys_name in subsys_name_list:
+            self.ui.subsysComboBox.insertItem(0, subsys_name)
+
+    def setUpQuantumModelConnects(self):
+        """
+        Set up the connects for the UI elements (except dynamically generated sliders)
+        """
+        self.quantumModel.setupPlotUICallbacks(
+            self.ui.subsysComboBox.currentText,
+        )
+        self.quantumModel.setupAutorunCallbacks(
+            autorun_callback=lambda: True
+        )  # TODO in the future, set it to self.autorunCheckBox.isChecked
+
+    def setUpSpectrumPlotConnects(self):
+        self.spectrumData.setupUICallbacks()
+
     def fitTableInserts(self):
         """
         Insert a set of tables for the fitting parameters 
@@ -862,18 +885,6 @@ class MainWindow(ResizableFramelessWindow):
                 single_row.maxValue.editingFinished.connect(para.onMaxEditingFinished)
 
                 para.initialize()
-
-    def setUpQuantumModelConnects(self):
-        """
-        Set up the connects for the UI elements (except dynamically generated sliders)
-        """
-        self.quantumModel.setupPlotUICallbacks()
-        self.quantumModel.setupAutorunCallbacks(
-            autorun_callback=lambda: True
-        )  # TODO in the future, set it to self.autorunCheckBox.isChecked
-
-    def setUpSpectrumPlotConnects(self):
-        self.spectrumData.setupUICallbacks()
 
     @Slot()
     def openFile(self, initialize: bool = False):
