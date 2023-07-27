@@ -440,6 +440,12 @@ class QuantumModelFittingParameter(DisplayedParameterBase):
         self.value = self.initValue
         self.isFixed = False
 
+    def valueToInitial(self):
+        """
+        Set the value of the parameter to the initial value
+        """
+        self.value = self.initValue
+
         
 class QuantumModelParameterSet:
     """
@@ -467,8 +473,8 @@ class QuantumModelParameterSet:
     def __getitem__(self, key):
         return self.parameters[key]
     
-    def _parentSystemNames(
-        self, 
+    @staticmethod
+    def parentSystemNames(
         parent: ParentSystem,
         with_type: bool = True,
     ) -> str:
@@ -483,9 +489,13 @@ class QuantumModelParameterSet:
             raise ValueError(
                 f"Parent of parameter {parent} is not a QuantumSystem or HilbertSpace object."
             )
+    
+    @staticmethod
+    def parentSystemIdstrByName(name: str) -> str:
+        return name.split(" ")[0]
         
     def _updateNameMap(self, parent: ParentSystem, with_type: bool = True):
-        name = self._parentSystemNames(parent, with_type=with_type)
+        name = self.parentSystemNames(parent, with_type=with_type)
         self.parentNameByObj[parent] = name
         self.parentObjByName[name] = parent
     

@@ -390,10 +390,10 @@ class MainWindow(ResizableFramelessWindow):
 
         # Whenever tag type or tag data is changed, update the AllExtractedData data
         self.tagDataView.changedTagType.connect(
-            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTag())
+            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTagFromUI())
         )
         self.tagDataView.changedTagData.connect(
-            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTag())
+            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTagFromUI())
         )
 
         # Whenever a new dataset is activated in the AllExtractedData, update the TagDataView
@@ -518,8 +518,8 @@ class MainWindow(ResizableFramelessWindow):
         """
         x1, y1 = eclick.xdata, eclick.ydata
         x2, y2 = erelease.xdata, erelease.ydata
-        print(f"({x1:3.2f}, {y1:3.2f}) --> ({x2:3.2f}, {y2:3.2f})")
-        print(f" The buttons you used were: {eclick.button} {erelease.button}")
+        # print(f"({x1:3.2f}, {y1:3.2f}) --> ({x2:3.2f}, {y2:3.2f})")
+        # print(f" The buttons you used were: {eclick.button} {erelease.button}")
 
     @Slot()
     def canvasClickMonitoring(self, event):
@@ -801,6 +801,17 @@ class MainWindow(ResizableFramelessWindow):
                 para.initialize()
                 para.setParameterForParent()
 
+    def prefitSettingConnects(self):
+        subsys_name_list = [
+            QuantumModelParameterSet.parentSystemNames(subsys)
+            for subsys in self.quantumModel.hilbertspace.subsys_list
+        ]
+        for subsys_name in subsys_name_list:
+            self.ui.subsysComboBox.insertItem(0, subsys_name)
+
+    def setUpSpectrumPlotConnects(self):
+        self.spectrumData.setupUICallbacks()
+
     def fitTableInserts(self):
         """
         Insert a set of tables for the fitting parameters
@@ -832,28 +843,28 @@ class MainWindow(ResizableFramelessWindow):
 
             for para_name, para in para_dict.items():
                 para: QuantumModelFittingParameter
-                table = self.fitTableSet[group_name][para_name]
+                single_row = self.fitTableSet[group_name][para_name]
 
                 # connect the UI and the model
                 para.setupUICallbacks(
-                    table.initialValue.text,
-                    table.initialValue.setText,
-                    table.currentValue.text,
-                    table.currentValue.setText,
-                    table.minValue.text,
-                    table.minValue.setText,
-                    table.maxValue.text,
-                    table.maxValue.setText,
-                    table.fixCheckbox.isChecked,
-                    table.fixCheckbox.setChecked,
+                    single_row.initialValue.text,
+                    single_row.initialValue.setText,
+                    single_row.currentValue.text,
+                    single_row.currentValue.setText,
+                    single_row.minValue.text,
+                    single_row.minValue.setText,
+                    single_row.maxValue.text,
+                    single_row.maxValue.setText,
+                    single_row.fixCheckbox.isChecked,
+                    single_row.fixCheckbox.setChecked,
                 )
 
                 # format the user's input
-                table.initialValue.editingFinished.connect(
+                single_row.initialValue.editingFinished.connect(
                     para.onInitValueEditingFinished
                 )
-                table.minValue.editingFinished.connect(para.onMinEditingFinished)
-                table.maxValue.editingFinished.connect(para.onMaxEditingFinished)
+                single_row.minValue.editingFinished.connect(para.onMinEditingFinished)
+                single_row.maxValue.editingFinished.connect(para.onMaxEditingFinished)
 
                 para.initialize()
 

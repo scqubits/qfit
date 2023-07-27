@@ -95,7 +95,12 @@ class QuantumModel:
     ):
         self.hilbertspace: HilbertSpace = hilbertspace
 
-    def setupPlotUICallbacks(self):
+    def setupPlotUICallbacks(
+        self,
+        subsystemNameCallback: Callable,
+        initialStateCallback: Callable,
+        finalStateCallback: Callable,
+    ):
         """
         Obtain information from plot option UI including:
         * plot options
@@ -104,9 +109,10 @@ class QuantumModel:
 
         # for test only
         # ------------------------------------------------------------------------------
-        self.subsystem_names_to_plot = lambda *args: "fluxonium"
-        self.initial_state_str = lambda *args: "0,0"
-        self.final_state_str = lambda *args: ""
+        self.subsystem_names_to_plot = lambda *args: (
+            QuantumModelParameterSet.parentSystemIdstrByName(subsystemNameCallback()))
+        self.initial_state_str = initialStateCallback
+        self.final_state_str = finalStateCallback
 
         # ------------------------------------------------------------------------------
 
