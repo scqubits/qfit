@@ -159,6 +159,7 @@ class MainWindow(ResizableFramelessWindow):
         # the canvas is set up.
         self.prefitSlidersConnects()
         self.setUpSpectrumPlotConnects()
+        self.prefitSubsystemComboBoxLoads()
         self.setUpPrefitOptionsConnects()
         self.setUpPrefitRunConnects()
 
@@ -727,6 +728,21 @@ class MainWindow(ResizableFramelessWindow):
         if distance < 0.025:
             return True
         return False
+    
+    def onSliderParameterChange(self):
+        return self.quantumModel.onSliderParameterChange(
+            slider_parameter_set=self.sliderParameterSet,
+            sweep_parameter_set=self.sweepParameterSet,
+            spectrum_data=self.spectrumData,
+            calibration_data=self.calibrationData,
+            extracted_data=self.allDatasets,
+            # self.axes,
+        )
+    
+    def onPrefitRunClicked(self):
+        return self.quantumModel.onButtonRunClicked(
+            spectrum_data=self.spectrumData, extracted_data=self.allDatasets
+        )
 
     def prefitSlidersInserts(self):
         """
@@ -787,14 +803,7 @@ class MainWindow(ResizableFramelessWindow):
 
                 # connect to the controller to update the spectrum
                 labeled_slider.editingFinishedConnect(
-                    lambda *args, **kwargs: self.quantumModel.onSliderParameterChange(
-                        slider_parameter_set=self.sliderParameterSet,
-                        sweep_parameter_set=self.sweepParameterSet,
-                        spectrum_data=self.spectrumData,
-                        calibration_data=self.calibrationData,
-                        extracted_data=self.allDatasets,
-                        # self.axes,
-                    )
+                    self.onSliderParameterChange
                 )
                 labeled_slider.editingFinishedConnect(self.updatePlot)
 
@@ -804,26 +813,45 @@ class MainWindow(ResizableFramelessWindow):
     def setUpSpectrumPlotConnects(self):
         self.spectrumData.setupUICallbacks()
 
-    def prefitSubsystemComboBoxConnects(self):
+    def prefitSubsystemComboBoxLoads(self):
         """
         loading the subsystem names to the combo box (drop down menu)
         """
         subsys_name_list = [
             QuantumModelParameterSet.parentSystemNames(subsys)
-            for subsys in self.quantumModel.hilbertspace.subsys_list
+            for subsys in self.quantumModel.hilbertspace.subsys_list[::-1]
         ]
         for subsys_name in subsys_name_list:
             self.ui.subsysComboBox.insertItem(0, subsys_name)
+
 
     def setUpPrefitOptionsConnects(self):
         """
         Set up the connects for the prefit options for UI
         """
+        self.ui.evalsCountLineEdit.setText("20")
+        self.ui.pointsAddLineEdit.setText("10")
+
         self.quantumModel.setupPlotUICallbacks(
-            subsystemNameCallback=lambda: "fluxonium",
-            initialStateCallback=lambda: "0",
-            finalStateCallback=lambda: "2",
+            subsystemNameCallback=self.ui.subsysComboBox.currentText,
+            initialStateCallback=self.ui.initStateLineEdit.text,
+            evalsCountCallback=self.ui.evalsCountLineEdit.text,
+            pointsAddCallback=self.ui.pointsAddLineEdit.text,
         )  # TODO: placeholder by now, need to connect to the UI
+
+        self.ui.subsysComboBox.currentIndexChanged.connect(
+            self.onPrefitRunClicked)
+        self.ui.initStateLineEdit.editingFinished.connect(
+            self.onPrefitRunClicked)
+        self.ui.evalsCountLineEdit.editingFinished.connect(
+            self.onSliderParameterChange)
+        self.ui.pointsAddLineEdit.editingFinished.connect(
+            self.onSliderParameterChange)
+
+        self.ui.subsysComboBox.currentIndexChanged.connect(self.updatePlot)
+        self.ui.initStateLineEdit.editingFinished.connect(self.updatePlot)
+        self.ui.evalsCountLineEdit.editingFinished.connect(self.updatePlot)
+        self.ui.pointsAddLineEdit.editingFinished.connect(self.updatePlot)
 
     def setUpPrefitRunConnects(self):
         # connect the autorun checkbox callback
@@ -835,8 +863,7 @@ class MainWindow(ResizableFramelessWindow):
         self.ui.runFitButton.clicked.connect(
             lambda: self.quantumModel.onButtonRunClicked(
                 spectrum_data=self.spectrumData, extracted_data=self.allDatasets
-            )
-        )
+        ))
         # update plot after the fit button is clicked
         self.ui.runFitButton.clicked.connect(self.updatePlot)
 

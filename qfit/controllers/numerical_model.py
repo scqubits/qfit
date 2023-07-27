@@ -99,7 +99,8 @@ class QuantumModel:
         self,
         subsystemNameCallback: Callable,
         initialStateCallback: Callable,
-        finalStateCallback: Callable,
+        evalsCountCallback: Callable,
+        pointsAddCallback: Callable,
     ):
         """
         Obtain information from plot option UI including:
@@ -109,11 +110,11 @@ class QuantumModel:
 
         # for test only
         # ------------------------------------------------------------------------------
-        self.subsystem_names_to_plot = lambda *args: (
+        self.subsystem_names_to_plot = lambda: (
             QuantumModelParameterSet.parentSystemIdstrByName(subsystemNameCallback()))
-        self.initial_state_str = initialStateCallback
-        self.final_state_str = finalStateCallback
-
+        self.initialStateCallback = initialStateCallback
+        self.evalCountCallback = evalsCountCallback
+        self.pointsAddCallback = pointsAddCallback
         # ------------------------------------------------------------------------------
 
     def setupAutorunCallbacks(
@@ -132,16 +133,15 @@ class QuantumModel:
         if isinstance(subsys_names, str):
             return self.hilbertspace.subsys_by_id_str(subsys_names)
 
-        elif isinstance(subsys_names, list):
-            return [self.hilbertspace.subsys_by_id_str(name) for name in subsys_names]
+        # elif isinstance(subsys_names, list):
+        #     return [self.hilbertspace.subsys_by_id_str(name) for name in subsys_names]
 
         else:
             raise TypeError(
-                f"subsystem_names_to_plot() should give a string or a list of strings, not {type(subsys_names)}."
+                f"subsystem_names_to_plot() should give a string, not {type(subsys_names)}."
             )
 
-    @staticmethod
-    def _state_str_2_label(state_str: str):
+    def _state_str_2_label(self, state_str: str):
         # convert string to state label
 
         # empty string means None
@@ -151,19 +151,30 @@ class QuantumModel:
         # comma separated string means tuple
         if "," in state_str:
             label_str = state_str.split(",")
-            return tuple(int(x) for x in label_str if x != "")  # delete '' in the tuple
+
+            if len(label_str) != self.hilbertspace.subsystem_count:
+                raise ValueError(
+                    f"The state label length {len(label_str)} does not match the subsystem "
+                    f"count {self.hilbertspace.subsystem_count}."
+                )
+
+            try:
+                return tuple(int(x) for x in label_str if x != "")  # delete '' in the tuple
+            except ValueError:
+                raise ValueError(
+                    f"Cannot convert {state_str} to a state label. Please check the format."
+                )
 
         # otherwise, try to interpret it as an integer
         try:
             return int(state_str)
         except ValueError:
-            return None
+            raise ValueError(
+                f"Cannot convert {state_str} to a state label. Please check the format."
+            )
 
     def initial_state(self):
-        return self._state_str_2_label(self.initial_state_str())
-
-    def final_state(self):
-        return self._state_str_2_label(self.final_state_str())
+        return self._state_str_2_label(self.initialStateCallback())
 
     # @overload
     # def generateParameterSets(
@@ -338,8 +349,14 @@ class QuantumModel:
             0
         ][:, 0]
         # generate a list of x coordinates for the prefit
+        try:
+            points_add = np.round(float(self.pointsAddCallback())).astype(int)
+        except ValueError:
+            raise ValueError("Expect an integer for the number of points to add.")
+
         x_coordinates_uniform = np.linspace(
-            min(x_coordinates_from_data), max(x_coordinates_from_data), 20
+            min(x_coordinates_from_data), max(x_coordinates_from_data), 
+            points_add
         )[1:-1]
         x_coordinates_all = np.concatenate(
             [x_coordinates_from_data, x_coordinates_uniform]
@@ -397,11 +414,18 @@ class QuantumModel:
         update_hilbertspace = self._update_hilbertspace_for_ParameterSweep(
             sweep_parameter_set
         )
+
+        try:
+            evals_count = np.round(float(self.evalCountCallback())).astype(int)
+        except ValueError:
+            raise ValueError("Expect an integer for the number of energy levels.")
+        # TODO: When evals_count is greater than the total dim, raise an error message
+
         param_sweep = ParameterSweep(
             hilbertspace=self.hilbertspace,
             paramvals_by_name=paramvals_by_name,
             update_hilbertspace=update_hilbertspace,
-            evals_count=20,  # change this later to connect to the number from the view
+            evals_count=evals_count,  # change this later to connect to the number from the view
             subsys_update_info=subsys_update_info,
             autorun=False,  # TODO set to false by default later
             num_cpus=1,  # change this later to connect to the number from the view
@@ -517,7 +541,13 @@ class QuantumModel:
         It is connected to the signal emitted by the UI when the user clicks the run button
         for the prefit stage. It runs the parameter sweep and then generate the plots.
         """
-        self.sweep.run()
+        try:
+            self.sweep.run()
+        except AttributeError:
+            raise AttributeError(
+                "The parameter sweep is not generated. Please play with sliders first."
+            )
+        # TODO: generate a sweep when there is no sweep available
 
         try:
             subsys = self.subsystems_to_plot()
@@ -527,7 +557,6 @@ class QuantumModel:
         specdata_for_highlighting = self.sweep.transitions(
             subsystems=subsys,
             initial=self.initial_state(),
-            final=self.final_state(),
             # sidebands=sidebands,
             # photon_number=photon_number,
             make_positive=True,
