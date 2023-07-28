@@ -837,7 +837,24 @@ class QuantumModel:
         simulation_freq = possible_transitions[closest_traansition_index]
         return simulation_freq, status
 
-
-    def MSEByParameters(self, parameterSet: QuantumModelParameterSet, extracted_data: AllExtractedData):
-        self._updateQuantumModelFromParameterSet(parameterSet)
+    def MSEByParametersForFit(
+        self, 
+        parameterSet: QuantumModelParameterSet, 
+        sweep_parameter_set: QuantumModelParameterSet, 
+        calibration_data: CalibrationData, 
+        extracted_data: AllExtractedData
+    ):
+        # set calibration functions for the parameters in the sweep parameter set
+        for parameters in sweep_parameter_set.values():
+            for parameter in parameters.values():
+                self._setCalibrationFunction(parameter, calibration_data)
+        # update the HilbertSpace object and generate parameter sweep
+        # this step is after the setup of calibration functions because the update_hilbertspace in ParameterSweep need the calibration information
+        self.onParameterChange(
+            update_parameter_set=parameterSet,
+            sweep_parameter_set=sweep_parameter_set,
+            x_coordinate_list=self._generateXcoordinateListForMarkedPoints(extracted_data),
+        )
+        # run sweep
+        self.sweep.run()
         return self.calculateMSE(extracted_data)[0]

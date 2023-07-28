@@ -1,7 +1,10 @@
+import numpy as np
+
 from typing import List, Dict, Tuple, Callable, Union
 
 from qfit.controllers.wrapped_optimizer import Optimization, OptTraj
 from qfit.models.extracted_data import AllExtractedData
+from qfit.models.calibration_data import CalibrationData
 from qfit.models.quantum_model_parameters import (
     QuantumModelFittingParameter,
     QuantumModelParameterSet,
@@ -25,15 +28,26 @@ class NumericalFitting():
         parameterSet: QuantumModelParameterSet,
         MSE: Callable,
         extractedData: AllExtractedData,
+        sweepParameterSet: QuantumModelParameterSet,
+        calibrationData: CalibrationData,
     ):
-        parameterSet.loadAttrDict(paramDict)
-        return MSE(parameterSet, extractedData)
+        # print("para:", paramDict["fluxonium (Fluxonium).EL"])
+        parameterSet.loadAttrDict(paramDict, "value")
+        # print("actual EL:", parameterSet.parentObjByName["fluxonium (Fluxonium)"].EL)
+        return np.sqrt(MSE(
+            parameterSet, 
+            sweepParameterSet,
+            calibrationData,
+            extractedData, 
+        ))
     
     def setupOptimization(
         self,
         parameterSet: QuantumModelParameterSet,
         MSE: Callable,
         extractedData: AllExtractedData,
+        sweepParameterSet: QuantumModelParameterSet,
+        calibrationData: CalibrationData,
     ):
         # generate the fixed parameters and free parameter ranges
         fixed_params = {}
@@ -46,6 +60,7 @@ class NumericalFitting():
             else:
                 free_param_ranges[key] = [params.min, params.max]
 
+
         # set up the optimization
         self.opt = Optimization(
             fixed_params,
@@ -55,7 +70,13 @@ class NumericalFitting():
                 "parameterSet": parameterSet,
                 "MSE": MSE,
                 "extractedData": extractedData,
+                "sweepParameterSet": sweepParameterSet,
+                "calibrationData": calibrationData,
             },
+            optimizer="Nelder-Mead",
+            opt_options={
+                "disp": True,
+            }
         )
 
     def _optCallback(
@@ -63,19 +84,15 @@ class NumericalFitting():
         freeParams: Dict[str, float],
         targetValue: float,
         parameterSet: QuantumModelParameterSet,
-        extractedData: AllExtractedData,
     ):
         # update the free parameters in the parameter set and display the target value
 
         parameterSet.loadAttrDict(freeParams, "value")
-
-        print(targetValue)
-
+        print(targetValue**2)   # cost function is sqrt(MSE)
         
     def runOptimization(
         self,
         parameterSet: QuantumModelParameterSet,
-        extractedData: AllExtractedData,
     ):
         """once the user clicks the optimize button, run the optimization"""
 
@@ -94,13 +111,14 @@ class NumericalFitting():
                 callback = self._optCallback,
                 callback_kwargs = {
                     "parameterSet": parameterSet,
-                    "extractedData": extractedData,
-                    },
+                },
                 # file_name = ...,
             )
         except AttributeError:
             # the optimization hasn't been set up yet
-            pass
+            return
+
+        print(traj.final_full_para, traj.final_target**2)
 
         # display the results, optimizer's termination message
         # enable all the line edits, sliders, etc
