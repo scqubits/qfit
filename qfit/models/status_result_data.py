@@ -48,6 +48,27 @@ class Result(serializers.Serializable):
     def status_text(self):
         return self._status_text
 
+    @property
+    def displayed_status_type(self):
+        if self.status_type is None:
+            return "STATUS:  -"
+        return f"STATUS:  {self.status_type}"
+
+    @property
+    def displayed_status_text(self):
+        if self.status_text is None:
+            return "-"
+        return self.status_text
+
+    @property
+    def displayed_MSE(self):
+        if self.current_mse is None:
+            return "MSE:  -  (- %)"
+        plus_minus = "-" if self.mse_change < 0 else "+"
+        return (
+            f"MSE:  {self.current_mse:.3f} GHz\u00B2  ({plus_minus}{self.mse_change} %)"
+        )
+
     @mse_change.setter
     def mse_change(self, value: float):
         self._mse_change = value
