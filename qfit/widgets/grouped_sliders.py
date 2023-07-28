@@ -20,7 +20,8 @@ import numpy as np
 from typing import Dict, List, Tuple, Union, Optional, Any
 
 SLIDER_RANGE = 100
-
+SPACING = 0
+MARGIN = 0
 
 class LabeledSlider(QWidget):
     """
@@ -83,6 +84,10 @@ class LabeledSlider(QWidget):
         self.slider.sliderReleased.connect(self._userSlidingEnds)
         self.value.textChanged.connect(self._userTyping)
         self.value.editingFinished.connect(self._userTypingEnds)
+
+        # margin and spacing
+        self.sliderLayout.setContentsMargins(0, 0, 0, 0)
+        self.sliderLayout.setSpacing(SPACING)
 
         # connect the slider and the value box in a simplest way
         if auto_connect:
@@ -242,7 +247,9 @@ class GroupedWidget(QWidget):
         self.gridLayout = QGridLayout(self)
 
         self.createWidgets(widget_names)
+
         # set the layout that no vertical space between the widgets (labelled sliders here)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setVerticalSpacing(0)
 
     def keys(self):
@@ -331,8 +338,11 @@ class FoldableWidget(QGroupBox):
         )
         # initialize the content
         self.toggleContent(self.foldPushButton.isChecked())
+
         # set the size policy for the foldable widget: expand along horizontal, fixed along vertical
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.boxLayout.setContentsMargins(0, MARGIN, 0, MARGIN)  # Remove the margins
+        self.boxLayout.setSpacing(SPACING)
 
     def toggleContent(self, checked):
         self.content_widget.setVisible(checked)
@@ -362,7 +372,7 @@ class GroupedWidgetSet(QWidget):
         self.columns = columns
         self.widgetSetLayout = QVBoxLayout(self)
         self.widgetSetLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
-        self.widgetSetLayout.setSpacing(0)
+        self.widgetSetLayout.setSpacing(SPACING)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.widgetGroups: Dict[str, Any] = {}
 
@@ -488,7 +498,7 @@ class FittingParameterTable(QTableWidget):
             + np.sum([self.verticalHeader().sectionSize(i) for i in range(self.rowCount())])
             + 2 * self.frameWidth()
             + self.horizontalScrollBar().height()
-            + 10
+            + 20
         )
 
     def insertParameter(self, name):
@@ -519,7 +529,8 @@ class FittingParameterTableSet(QWidget):
         super().__init__(parent)
         self.widgetSetLayout = QVBoxLayout(self)
         self.widgetSetLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
-        self.widgetSetLayout.setSpacing(0)  # Remove the spacing
+        self.widgetSetLayout.setSpacing(SPACING)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.tables: Dict[str, FittingParameterTable] = {}
 
     def keys(self):
