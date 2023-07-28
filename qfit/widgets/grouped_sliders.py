@@ -15,6 +15,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt, QSize, QCoreApplication
 
+import numpy as np
+
 from typing import Dict, List, Tuple, Union, Optional, Any
 
 SLIDER_RANGE = 100
@@ -359,10 +361,9 @@ class GroupedWidgetSet(QWidget):
 
         self.columns = columns
         self.widgetSetLayout = QVBoxLayout(self)
+        self.widgetSetLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
         self.widgetSetLayout.setSpacing(0)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        # self.widgetSetLayout.setObjectName("WidgetSetLayout")
-        # self.widgetSetLayout.setContentsMargins(0, 0, 0, 0)
         self.widgetGroups: Dict[str, Any] = {}
 
     def keys(self):
@@ -456,13 +457,16 @@ class FittingParameterTable(QTableWidget):
         # Set the column headers.
         self.setHorizontalHeaderLabels(self.columns)
 
-        # configure the table layout
-        self.configure()
-
         # insert the rows
         self.parameterWidgets: Dict[str, FittingParameterRow] = {}
         for name in row_names:
             self.insertParameter(name)
+
+        # size policy
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+        # configure the table layout
+        self.configure()
 
     def configure(self):
         # Set the column widths.
@@ -470,10 +474,22 @@ class FittingParameterTable(QTableWidget):
             width = 40 if entry_type in ["Name", "Fix"] else 60
             self.setColumnWidth(idx, width)
 
-        # configure
+        # disable the vertical header, grid, and frame
         self.verticalHeader().setVisible(False)
         self.setShowGrid(False)
+        self.setFrameShape(QTableWidget.NoFrame)
+
+        # set header style
         self.horizontalHeader().setStyleSheet("color: white")
+
+        # fix the height of the table
+        self.setFixedHeight(
+            self.horizontalHeader().height() 
+            + np.sum([self.verticalHeader().sectionSize(i) for i in range(self.rowCount())])
+            + 2 * self.frameWidth()
+            + self.horizontalScrollBar().height()
+            + 10
+        )
 
     def insertParameter(self, name):
         self.insertRow(self.rowCount())
@@ -502,6 +518,8 @@ class FittingParameterTableSet(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.widgetSetLayout = QVBoxLayout(self)
+        self.widgetSetLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
+        self.widgetSetLayout.setSpacing(0)  # Remove the spacing
         self.tables: Dict[str, FittingParameterTable] = {}
 
     def keys(self):
