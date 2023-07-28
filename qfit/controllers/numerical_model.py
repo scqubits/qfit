@@ -547,8 +547,8 @@ class QuantumModel:
         for the prefit stage. It runs the parameter sweep and then generate the plots.
         """
         try:
-            self.sweep.run()
             result.status_type = "COMPUTING"
+            self.sweep.run()
         except AttributeError:
             result.status_type = "ERROR"
             result.status_text = (

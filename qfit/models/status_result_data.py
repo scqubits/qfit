@@ -64,15 +64,16 @@ class Result(serializers.Serializable):
     def displayed_MSE(self):
         if self.current_mse is None:
             return "MSE:  -  (- %)"
-        plus_minus = "-" if self.mse_change < 0 else "+"
-        return (
-            f"MSE:  {self.current_mse:.3f} GHz\u00B2  ({plus_minus}{self.mse_change} %)"
-        )
+        elif self.previous_mse is None:
+            return f"MSE:  {self.current_mse:.3f} GHz\u00B2  (- %)"
+        else:
+            plus_minus = "" if self.mse_change < 0 else "+"
+            return f"MSE:  {self.current_mse:.3f} GHz\u00B2  ({plus_minus}{self.mse_change} %)"
 
     @mse_change.setter
     def mse_change(self, value: float):
         self._mse_change = value
-        self.mse_change_ui_setter(value)
+        self.mse_change_ui_setter()
 
     @previous_mse.setter
     def previous_mse(self, value: float):
@@ -88,12 +89,12 @@ class Result(serializers.Serializable):
     @status_type.setter
     def status_type(self, value: Literal["SUCCESS", "WARNING", "ERROR", "COMPUTING"]):
         self._status_type = value
-        self.status_type_ui_setter(value)
+        self.status_type_ui_setter()
 
     @status_text.setter
     def status_text(self, value: str):
         self._status_text = value
-        self.status_text_ui_setter(value)
+        self.status_text_ui_setter()
 
     def _compute_relative_change(self):
         """
