@@ -836,3 +836,8 @@ class QuantumModel:
         closest_traansition_index = (np.abs(possible_transitions - data_freq)).argmin()
         simulation_freq = possible_transitions[closest_traansition_index]
         return simulation_freq, status
+
+
+    def MSEByParameters(self, parameterSet: QuantumModelParameterSet, extracted_data: AllExtractedData):
+        self._updateQuantumModelFromParameterSet(parameterSet)
+        return self.calculateMSE(extracted_data)[0]

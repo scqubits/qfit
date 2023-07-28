@@ -715,7 +715,7 @@ class QuantumModelParameterSet:
 
         return param_dict
         
-    def toAttrDict(self, attribute: str = "value") -> Union[
+    def exportAttrDict(self, attribute: str = "value") -> Union[
         Dict[str, float], 
         Dict[str, int], 
     ]:
@@ -735,7 +735,7 @@ class QuantumModelParameterSet:
                 
         return paramval_dict
     
-    def fromAttrDict(
+    def loadAttrDict(
         self, 
         paramval_dict: Union[Dict[str, float], Dict[str, int]], 
         attribute: str = "value"

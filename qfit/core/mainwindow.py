@@ -180,9 +180,12 @@ class MainWindow(ResizableFramelessWindow):
             parameter_usage="fit",
             excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
         )
+        self.numericalFitting = NumericalFitting()
 
-        # self.fitTableInserts()
-        # self.fitTableConnects()
+        self.fitTableInserts()
+        self.fitTableConnects()
+        self.addFittingPushButton()         # for test only
+        self.fitPushButtonConnects()
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -760,10 +763,9 @@ class MainWindow(ResizableFramelessWindow):
         """
 
         # create a QWidget for the scrollArea and set a layout for it
-        prefitScrollWidget = QWidget()
-        self.ui.prefitScrollArea.setWidget(prefitScrollWidget)
-        prefitScrollLayout = QVBoxLayout()
-        prefitScrollWidget.setLayout(prefitScrollLayout)
+        prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
+        prefitScrollLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
+        prefitScrollLayout.setSpacing(0)  # Remove the spacing
 
         # set the alignment of the entire prefit scroll layout
         prefitScrollLayout.setAlignment(Qt.AlignTop)
@@ -773,7 +775,7 @@ class MainWindow(ResizableFramelessWindow):
             widget_class=LabeledSlider,
             init_kwargs={"label_value_position": "left_right"},
             columns=1,
-            parent=prefitScrollWidget,
+            parent=self.ui.prefitScrollAreaWidget,
         )
 
         for key, para_dict in self.sliderParameterSet.items():
@@ -827,7 +829,7 @@ class MainWindow(ResizableFramelessWindow):
         """
         subsys_name_list = [
             QuantumModelParameterSet.parentSystemNames(subsys)
-            for subsys in self.quantumModel.hilbertspace.subsys_list[::-1]
+            for subsys in self.quantumModel.hilbertspace.subsystem_list[::-1]
         ]
         for subsys_name in subsys_name_list:
             self.ui.subsysComboBox.insertItem(0, subsys_name)
@@ -894,10 +896,9 @@ class MainWindow(ResizableFramelessWindow):
         """
 
         # temporary solution: put the fitting widget in the prefit scroll area
-        prefitScrollWidget = self.sliderSet.parent()
-        prefitScrollLayout = prefitScrollWidget.layout()
+        prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
 
-        self.fitTableSet = FittingParameterTableSet(prefitScrollWidget)
+        self.fitTableSet = FittingParameterTableSet(self.ui.prefitScrollAreaWidget)
 
         for key, para_dict in self.fitParameterSet.items():
             group_name = self.fitParameterSet.parentNameByObj[key]
@@ -908,6 +909,56 @@ class MainWindow(ResizableFramelessWindow):
             )
 
         prefitScrollLayout.addWidget(self.fitTableSet)
+
+    def addFittingPushButton(self):
+        # add a fit button, for test only
+        prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
+
+        self.tmpFitButton = QPushButton("Fit")
+        self.tmpFitButton.setStyleSheet("color: white")
+        prefitScrollLayout.addWidget(self.tmpFitButton)
+
+        self.tmpPrefitExportButton = QPushButton("import from prefit")
+        self.tmpPrefitExportButton.setStyleSheet("color: white")
+        prefitScrollLayout.addWidget(self.tmpPrefitExportButton)
+
+    def prefitParameterTransfer(self):
+        init_value_dict = self.sliderParameterSet.exportAttrDict("value")
+        self.fitParameterSet.loadAttrDict(
+            init_value_dict, "initValue"
+        )
+        self.fitParameterSet.loadAttrDict(
+            init_value_dict, "value"
+        )
+        max_value_dict = {key: value * 1.1 for key, value in init_value_dict.items()}
+        self.fitParameterSet.loadAttrDict(
+            max_value_dict, "max"
+        )
+        min_value_dict = {key: value * 0.9 for key, value in init_value_dict.items()}
+        self.fitParameterSet.loadAttrDict(
+            min_value_dict, "min"
+        )
+
+    def fitPushButtonConnects(self):
+        # the prefit parameter transfer
+        self.tmpPrefitExportButton.clicked.connect(
+            self.prefitParameterTransfer
+        )
+
+        # setup the optimization
+        self.tmpFitButton.clicked.connect(
+            lambda: self.numericalFitting.setupOptimization(
+                self.fitParameterSet,
+                self.quantumModel.MSEByParameters,
+                self.allDatasets,
+        ))
+
+        # connect the fit button to the fitting function
+        self.tmpFitButton.clicked.connect(
+            lambda: self.numericalFitting.runOptimization(
+            self.fitParameterSet,
+            self.allDatasets,
+        ))
 
     def fitTableConnects(self):
         """
