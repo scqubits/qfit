@@ -295,6 +295,8 @@ class QuantumModelFittingParameter(DisplayedParameterBase):
         param_type: ParameterType,
     ):
         super().__init__(name=name, parent=parent, param_type=param_type)
+        self._initValue = None
+        self._value = None
 
     def setupUICallbacks(
         self,
@@ -381,13 +383,18 @@ class QuantumModelFittingParameter(DisplayedParameterBase):
         """
         Get the initial value of the parameter from the UI
         """
-        return float(self.initValueCallback())
+        if self._initValue is None:
+            # self._initValue = float(self.initValueCallback())
+            raise ValueError("Initial value of fitting parameter is not set yet.")
+
+        return self._initValue
     
     @initValue.setter
     def initValue(self, value: Union[int, float]):
         """
         Set the initial value of the parameter in the UI
         """
+        self._initValue = value
         self.initValueSetter(self._toIntString(value))
 
     def onInitValueEditingFinished(self, *args, **kwargs):
@@ -409,13 +416,18 @@ class QuantumModelFittingParameter(DisplayedParameterBase):
         """
         Get the value of the parameter from the UI
         """
-        return float(self.valueCallback())   # will raise a ValueError if user input is not a number
+        if self._value is None:
+            # self._value = float(self.valueCallback())
+            raise ValueError("Initial value of fitting parameter is not set yet.")
+
+        return self._value
 
     @value.setter
     def value(self, value: Union[int, float]):
         """
         Set the value of the parameter in the UI
         """
+        self._value = value
         self.valueSetter(self._toIntString(value))
 
     @property
@@ -446,7 +458,7 @@ class QuantumModelFittingParameter(DisplayedParameterBase):
         """
         self.value = self.initValue
 
-        
+
 class QuantumModelParameterSet:
     """
     A class to store all the parameters of a quantum system
