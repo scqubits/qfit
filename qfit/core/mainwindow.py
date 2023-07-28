@@ -838,19 +838,13 @@ class MainWindow(ResizableFramelessWindow):
         a change in the UI, reflect in the UI text change
         """
         status_type_ui_setter = lambda: self.ui.label_46.setText(
-            QCoreApplication.translate(
-                "MainWindow", self.prefitResult.displayed_status_type, None
-            )
+            self.prefitResult.displayed_status_type
         )
         status_text_ui_setter = lambda: self.ui.statusTextLabel.setText(
-            QCoreApplication.translate(
-                "MainWindow", self.prefitResult.status_text, None
-            )
+            self.prefitResult.status_text
         )
         mse_change_ui_setter = lambda: self.ui.mseLabel.setText(
-            QCoreApplication.translate(
-                "MainWindow", self.prefitResult.displayed_MSE, None
-            )
+            self.prefitResult.displayed_MSE
         )
 
         self.prefitResult.setupUISetters(
