@@ -73,7 +73,7 @@ class NumericalFitting():
                 "sweepParameterSet": sweepParameterSet,
                 "calibrationData": calibrationData,
             },
-            optimizer="Nelder-Mead",
+            optimizer="L-BFGS-B",
             opt_options={
                 "disp": True,
             }
