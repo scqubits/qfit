@@ -765,7 +765,6 @@ class MainWindow(ResizableFramelessWindow):
         # create a QWidget for the scrollArea and set a layout for it
         prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
         prefitScrollLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
-        prefitScrollLayout.setSpacing(0)  # Remove the spacing
 
         # set the alignment of the entire prefit scroll layout
         prefitScrollLayout.setAlignment(Qt.AlignTop)
@@ -918,47 +917,68 @@ class MainWindow(ResizableFramelessWindow):
         self.tmpFitButton.setStyleSheet("color: white")
         prefitScrollLayout.addWidget(self.tmpFitButton)
 
-        self.tmpPrefitExportButton = QPushButton("import from prefit")
+        self.tmpPrefitExportButton = QPushButton("prefit to initial")
         self.tmpPrefitExportButton.setStyleSheet("color: white")
         prefitScrollLayout.addWidget(self.tmpPrefitExportButton)
 
-    def prefitParameterTransfer(self):
-        init_value_dict = self.sliderParameterSet.exportAttrDict("value")
+        self.tmpInitByCurrentButton = QPushButton("current to initial")
+        self.tmpInitByCurrentButton.setStyleSheet("color: white")
+        prefitScrollLayout.addWidget(self.tmpInitByCurrentButton)
+
+        self.tmpPrefitByCurrentButton = QPushButton("current to frefit")
+        self.tmpPrefitByCurrentButton.setStyleSheet("color: white")
+        prefitScrollLayout.addWidget(self.tmpPrefitByCurrentButton)
+
+    def fittingParameterLoad(self, source: QuantumModelParameterSet):
+        init_value_dict = source.exportAttrDict("value")
         self.fitParameterSet.loadAttrDict(
             init_value_dict, "initValue"
         )
         self.fitParameterSet.loadAttrDict(
             init_value_dict, "value"
         )
-        max_value_dict = {key: value * 1.1 for key, value in init_value_dict.items()}
+        max_value_dict = {key: (value * 1.1 if value > 0 else value * 0.9) 
+            for key, value in init_value_dict.items()}
         self.fitParameterSet.loadAttrDict(
             max_value_dict, "max"
         )
-        min_value_dict = {key: value * 0.9 for key, value in init_value_dict.items()}
+        min_value_dict = {key: (value * 0.9 if value > 0 else value * 1.1)
+            for key, value in init_value_dict.items()}
         self.fitParameterSet.loadAttrDict(
             min_value_dict, "min"
         )
 
     def fitPushButtonConnects(self):
-        # the prefit parameter transfer
-        self.tmpPrefitExportButton.clicked.connect(
-            self.prefitParameterTransfer
-        )
-
         # setup the optimization
         self.tmpFitButton.clicked.connect(
             lambda: self.numericalFitting.setupOptimization(
                 self.fitParameterSet,
-                self.quantumModel.MSEByParameters,
+                self.quantumModel.MSEByParametersForFit,
                 self.allDatasets,
+                self.sweepParameterSet,
+                self.calibrationData,
         ))
 
         # connect the fit button to the fitting function
         self.tmpFitButton.clicked.connect(
             lambda: self.numericalFitting.runOptimization(
             self.fitParameterSet,
-            self.allDatasets,
         ))
+
+        # the prefit parameter export
+        self.tmpPrefitExportButton.clicked.connect(
+            lambda: self.fittingParameterLoad(self.sliderParameterSet)
+        )
+
+        # the prefit parameter transfer
+        self.tmpInitByCurrentButton.clicked.connect(
+            lambda: self.fittingParameterLoad(self.fitParameterSet)
+        )
+
+        # the prefit parameter import
+        self.tmpPrefitByCurrentButton.clicked.connect(
+            lambda: self.sliderParameterSet.update(self.fitParameterSet)
+        )
 
     def fitTableConnects(self):
         """
