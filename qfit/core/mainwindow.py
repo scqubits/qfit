@@ -21,7 +21,15 @@ import numpy as np
 
 from scqubits.core.hilbert_space import HilbertSpace
 
-from PySide6.QtCore import QPoint, QRect, QSize, Qt, Slot, QCoreApplication
+from PySide6.QtCore import (
+    QPoint,
+    QRect,
+    QSize,
+    Qt,
+    Slot,
+    QCoreApplication,
+    QThreadPool,
+)
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
     QLabel,
@@ -33,6 +41,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QStyle,
     QCheckBox,
+    QSizePolicy,
 )
 
 import qfit.core.app_state as appstate
@@ -60,8 +69,8 @@ from qfit.controllers.numerical_model import QuantumModel
 from qfit.widgets.grouped_sliders import (
     LabeledSlider,
     GroupedWidgetSet,
-    FittingParameterTableSet,
 )
+from qfit.widgets.fitting_table import FittingParameterTableSet
 
 # fit
 from qfit.controllers.fit import NumericalFitting
@@ -170,10 +179,11 @@ class MainWindow(ResizableFramelessWindow):
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
 
-        # result panel connect
+        # refit result panel connect
         self.setUpPrefitResultConnects()
 
         # fit
+        self.threadpool = QThreadPool()
         self.fitParameterSet = QuantumModelParameterSet()
         self.quantumModel.addParametersToParameterSet(
             self.fitParameterSet,
@@ -181,11 +191,15 @@ class MainWindow(ResizableFramelessWindow):
             excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
         )
         self.numericalFitting = NumericalFitting()
+        self.fitResult = Result()
 
         self.fitTableInserts()
         self.fitTableConnects()
-        self.addFittingPushButton()  # for test only
+        self.fittingCallbackConnects()
         self.fitPushButtonConnects()
+
+        # fit result panel connect
+        self.setUpFitResultConnects()
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -746,8 +760,7 @@ class MainWindow(ResizableFramelessWindow):
             spectrum_data=self.spectrumData,
             calibration_data=self.calibrationData,
             extracted_data=self.allDatasets,
-            prefit_result=self.prefitResult
-            # self.axes,
+            prefit_result=self.prefitResult,
         )
 
     def onPrefitRunClicked(self):
@@ -765,7 +778,6 @@ class MainWindow(ResizableFramelessWindow):
         # create a QWidget for the scrollArea and set a layout for it
         prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
         prefitScrollLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
-        prefitScrollLayout.setSpacing(0)  # Remove the spacing
 
         # set the alignment of the entire prefit scroll layout
         prefitScrollLayout.setAlignment(Qt.AlignTop)
@@ -855,6 +867,27 @@ class MainWindow(ResizableFramelessWindow):
             mse_change_ui_setter=mse_change_ui_setter,
         )
 
+    def setUpFitResultConnects(self):
+        """
+        connect the prefit result to the relevant UI textboxes; whenever there is
+        a change in the UI, reflect in the UI text change
+        """
+        status_type_ui_setter = lambda: self.ui.label_49.setText(
+            self.fitResult.displayed_status_type
+        )
+        status_text_ui_setter = lambda: self.ui.statusTextLabel_2.setText(
+            self.fitResult.status_text
+        )
+        mse_change_ui_setter = lambda: self.ui.mseLabel_2.setText(
+            self.fitResult.displayed_MSE
+        )
+
+        self.fitResult.setupUISetters(
+            status_type_ui_setter=status_type_ui_setter,
+            status_text_ui_setter=status_text_ui_setter,
+            mse_change_ui_setter=mse_change_ui_setter,
+        )
+
     def setUpPrefitOptionsConnects(self):
         """
         Set up the connects for the prefit options for UI
@@ -884,6 +917,7 @@ class MainWindow(ResizableFramelessWindow):
         self.quantumModel.setupAutorunCallbacks(
             autorun_callback=self.ui.autoRunCheckBox.isChecked,
         )
+        self.ui.autoRunCheckBox.setChecked(True)
         # connect the run button callback to the generation and run of parameter sweep
         # notice that parameter update is done in the slider connects
         self.ui.plotButton.clicked.connect(self.onPrefitRunClicked)
@@ -896,7 +930,13 @@ class MainWindow(ResizableFramelessWindow):
         """
 
         # temporary solution: put the fitting widget in the prefit scroll area
-        prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
+        fitScrollWidget = self.ui.fitScrollArea.widget()
+        fitScrollLayout = QVBoxLayout(fitScrollWidget)
+
+        # configure this layout
+        fitScrollLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
+        self.ui.fitScrollArea.setStyleSheet(f"background-color: rgb(33, 33, 33);")
+        fitScrollWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         self.fitTableSet = FittingParameterTableSet(self.ui.prefitScrollAreaWidget)
 
@@ -908,48 +948,76 @@ class MainWindow(ResizableFramelessWindow):
                 list(para_dict.keys()),
             )
 
-        prefitScrollLayout.addWidget(self.fitTableSet)
+        fitScrollLayout.addWidget(self.fitTableSet)
 
-    def addFittingPushButton(self):
-        # add a fit button, for test only
-        prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
-
-        self.tmpFitButton = QPushButton("Fit")
-        self.tmpFitButton.setStyleSheet("color: white")
-        prefitScrollLayout.addWidget(self.tmpFitButton)
-
-        self.tmpPrefitExportButton = QPushButton("import from prefit")
-        self.tmpPrefitExportButton.setStyleSheet("color: white")
-        prefitScrollLayout.addWidget(self.tmpPrefitExportButton)
-
-    def prefitParameterTransfer(self):
-        init_value_dict = self.sliderParameterSet.exportAttrDict("value")
+    def fittingParameterLoad(self, source: QuantumModelParameterSet):
+        init_value_dict = source.exportAttrDict("value")
         self.fitParameterSet.loadAttrDict(init_value_dict, "initValue")
         self.fitParameterSet.loadAttrDict(init_value_dict, "value")
-        max_value_dict = {key: value * 1.1 for key, value in init_value_dict.items()}
+        max_value_dict = {
+            key: (value * 1.1 if value > 0 else value * 0.9)
+            for key, value in init_value_dict.items()
+        }
         self.fitParameterSet.loadAttrDict(max_value_dict, "max")
-        min_value_dict = {key: value * 0.9 for key, value in init_value_dict.items()}
+        min_value_dict = {
+            key: (value * 0.9 if value > 0 else value * 1.1)
+            for key, value in init_value_dict.items()
+        }
         self.fitParameterSet.loadAttrDict(min_value_dict, "min")
 
-    def fitPushButtonConnects(self):
-        # the prefit parameter transfer
-        self.tmpPrefitExportButton.clicked.connect(self.prefitParameterTransfer)
+    def _backgroundOptimization(self):
+        """
+        The optimization + things to do before it
+        """
+        self.ui.fitButton.setEnabled(False)
+        self.sliderSet.setEnabled(False)
 
+        # start the optimization
+        self.threadpool.start(self.numericalFitting)
+
+    def _onOptFinished(self):
+        self.ui.fitButton.setEnabled(True)
+        self.sliderSet.setEnabled(True)
+        self.onSliderParameterChange()
+        self.updatePlot()
+
+        # the numericalFitting object will be deleted after background running
+        # TODO: these lines don't fix the issue, and causing memory leakage...
+        self.numericalFitting = NumericalFitting()
+        self.fittingCallbackConnects()
+
+    def fittingCallbackConnects(self):
+        self.numericalFitting.signals.optFinished.connect(self._onOptFinished)
+
+    def fitPushButtonConnects(self):
         # setup the optimization
-        self.tmpFitButton.clicked.connect(
+        self.ui.fitButton.clicked.connect(
             lambda: self.numericalFitting.setupOptimization(
                 self.fitParameterSet,
-                self.quantumModel.MSEByParameters,
+                self.quantumModel.MSEByParametersForFit,
                 self.allDatasets,
+                self.sweepParameterSet,
+                self.calibrationData,
+                self.fitResult,
             )
         )
 
         # connect the fit button to the fitting function
-        self.tmpFitButton.clicked.connect(
-            lambda: self.numericalFitting.runOptimization(
-                self.fitParameterSet,
-                self.allDatasets,
-            )
+        self.ui.fitButton.clicked.connect(self._backgroundOptimization)
+
+        # the prefit parameter export
+        self.ui.exportToFitButton.clicked.connect(
+            lambda: self.fittingParameterLoad(self.sliderParameterSet)
+        )
+
+        # the prefit parameter transfer
+        self.ui.pushButton_2.clicked.connect(
+            lambda: self.fittingParameterLoad(self.fitParameterSet)
+        )
+
+        # the prefit parameter import
+        self.ui.exportToPrefitButton.clicked.connect(
+            lambda: self.sliderParameterSet.update(self.fitParameterSet)
         )
 
     def fitTableConnects(self):

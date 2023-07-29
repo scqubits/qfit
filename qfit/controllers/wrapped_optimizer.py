@@ -911,7 +911,7 @@ class Optimization():
             if user_callback is not None:
                 user_callback(
                     denorm_x.copy(),
-                    target=target,
+                    target,
                     **callback_kwargs
                 )
 

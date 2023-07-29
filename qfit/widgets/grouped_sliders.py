@@ -15,12 +15,12 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import Qt, QSize, QCoreApplication
 
-import numpy as np
-
 from typing import Dict, List, Tuple, Union, Optional, Any
 
 SLIDER_RANGE = 100
-
+SPACING = 10
+MARGIN = 10
+SPACING_BETWEEN_SLIDERS = 10
 
 class LabeledSlider(QWidget):
     """
@@ -83,6 +83,10 @@ class LabeledSlider(QWidget):
         self.slider.sliderReleased.connect(self._userSlidingEnds)
         self.value.textChanged.connect(self._userTyping)
         self.value.editingFinished.connect(self._userTypingEnds)
+
+        # margin and spacing
+        self.sliderLayout.setContentsMargins(0, 0, 0, 0)
+        self.sliderLayout.setSpacing(SPACING)
 
         # connect the slider and the value box in a simplest way
         if auto_connect:
@@ -242,8 +246,10 @@ class GroupedWidget(QWidget):
         self.gridLayout = QGridLayout(self)
 
         self.createWidgets(widget_names)
+
         # set the layout that no vertical space between the widgets (labelled sliders here)
-        self.gridLayout.setVerticalSpacing(0)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setVerticalSpacing(SPACING_BETWEEN_SLIDERS)
 
     def keys(self):
         return self.widgets.keys()
@@ -270,6 +276,10 @@ class GroupedWidget(QWidget):
         for i in reversed(range(self.gridLayout.count())):
             self.gridLayout.itemAt(i).widget().setParent(None)
         self.widgets.clear()
+
+    def setEnabled(self, value):
+        for widget in self.values():
+            widget.setEnabled(value)
 
 
 class FoldableWidget(QGroupBox):
@@ -313,7 +323,7 @@ class FoldableWidget(QGroupBox):
         )
         # set checkable
         self.foldPushButton.setCheckable(True)
-        self.foldPushButton.setChecked(False)
+        self.foldPushButton.setChecked(True)
 
         # set the box layout
         self.boxLayout = QVBoxLayout(self)
@@ -331,8 +341,11 @@ class FoldableWidget(QGroupBox):
         )
         # initialize the content
         self.toggleContent(self.foldPushButton.isChecked())
+
         # set the size policy for the foldable widget: expand along horizontal, fixed along vertical
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.boxLayout.setContentsMargins(0, MARGIN, 0, MARGIN)  # Remove the margins
+        self.boxLayout.setSpacing(SPACING)
 
     def toggleContent(self, checked):
         self.content_widget.setVisible(checked)
@@ -362,9 +375,9 @@ class GroupedWidgetSet(QWidget):
         self.columns = columns
         self.widgetSetLayout = QVBoxLayout(self)
         self.widgetSetLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
-        self.widgetSetLayout.setSpacing(0)
+        self.widgetSetLayout.setSpacing(SPACING)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.widgetGroups: Dict[str, Any] = {}
+        self.widgetGroups: Dict[str, GroupedWidget] = {}
 
     def keys(self):
         return self.widgetGroups.keys()
@@ -400,155 +413,6 @@ class GroupedWidgetSet(QWidget):
             )
         )
 
-
-class FittingParameterRow(QWidget):
-    """
-    A collection of widgets that represents a row in the FittingParameterTable.
-    """
-
-    entry_types = ["Name", "Fix", "Initial", "Current", "Min", "Max"]
-
-    def __init__(
-        self,
-        name: str,
-    ):
-        self.name = name
-
-        self.nameLabel = QLabel(name)
-        self.fixCheckbox = QCheckBox()
-        self.initialValue = QLineEdit("")
-        self.currentValue = QLabel("")
-        self.minValue = QLineEdit("")
-        self.maxValue = QLineEdit("")
-
-        self.widgetForInserting = {
-            "Name": self.alignCenter(self.nameLabel),
-            "Fix": self.alignCenter(self.fixCheckbox),
-            "Initial": self.initialValue,
-            "Current": self.alignCenter(self.currentValue),
-            "Min": self.minValue,
-            "Max": self.maxValue,
-        }
-
-    @staticmethod
-    def alignCenter(widget) -> QWidget:
-        container_widget = QWidget()
-        layout = QHBoxLayout(container_widget)
-        layout.setAlignment(Qt.AlignCenter)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(widget)
-        return container_widget
-
-
-class FittingParameterTable(QTableWidget):
-    columns = FittingParameterRow.entry_types
-
-    def __init__(
-        self,
-        row_names: List[str],
-        parent=None,
-    ):
-        super().__init__(parent)
-
-        # Set the table dimensions.
-        self.setColumnCount(len(self.columns))
-        self.setRowCount(0)
-
-        # Set the column headers.
-        self.setHorizontalHeaderLabels(self.columns)
-
-        # insert the rows
-        self.parameterWidgets: Dict[str, FittingParameterRow] = {}
-        for name in row_names:
-            self.insertParameter(name)
-
-        # size policy
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-
-        # configure the table layout
-        self.configure()
-
-    def configure(self):
-        # Set the column widths.
-        for idx, entry_type in enumerate(self.columns):
-            width = 40 if entry_type in ["Name", "Fix"] else 60
-            self.setColumnWidth(idx, width)
-
-        # disable the vertical header, grid, and frame
-        self.verticalHeader().setVisible(False)
-        self.setShowGrid(False)
-        self.setFrameShape(QTableWidget.NoFrame)
-
-        # set header style
-        self.horizontalHeader().setStyleSheet("color: white")
-
-        # fix the height of the table
-        self.setFixedHeight(
-            self.horizontalHeader().height() 
-            + np.sum([self.verticalHeader().sectionSize(i) for i in range(self.rowCount())])
-            + 2 * self.frameWidth()
-            + self.horizontalScrollBar().height()
-            + 10
-        )
-
-    def insertParameter(self, name):
-        self.insertRow(self.rowCount())
-        self.parameterWidgets[name] = FittingParameterRow(name)
-        for idx, entry_type in enumerate(self.columns):
-            self.setCellWidget(
-                self.rowCount() - 1,
-                idx,
-                self.parameterWidgets[name].widgetForInserting[entry_type],
-            )
-
-    def keys(self):
-        return self.parameterWidgets.keys()
-
-    def values(self):
-        return self.parameterWidgets.values()
-
-    def items(self):
-        return self.parameterWidgets.items()
-
-    def __getitem__(self, key):
-        return self.parameterWidgets[key]
-
-
-class FittingParameterTableSet(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.widgetSetLayout = QVBoxLayout(self)
-        self.widgetSetLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
-        self.widgetSetLayout.setSpacing(0)  # Remove the spacing
-        self.tables: Dict[str, FittingParameterTable] = {}
-
-    def keys(self):
-        return self.tables.keys()
-
-    def values(self):
-        return self.tables.values()
-
-    def items(self):
-        return self.tables.items()
-
-    def __getitem__(self, key) -> FittingParameterTable:
-        return self.tables[key]
-
-    def addGroupedWidgets(
-        self,
-        set_name: str,
-        row_names: List[str],
-    ):
-        # store the group
-        self.tables[set_name] = FittingParameterTable(
-            row_names=row_names,
-            parent=self,
-        )
-
-        # add the group to the layout
-        self.widgetSetLayout.addWidget(
-            FoldableWidget(
-                set_name,
-                self.tables[set_name],
-            )
-        )
+    def setEnabled(self, value):
+        for group in self.values():
+            group.setEnabled(value)
