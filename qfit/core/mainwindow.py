@@ -21,7 +21,15 @@ import numpy as np
 
 from scqubits.core.hilbert_space import HilbertSpace
 
-from PySide6.QtCore import QPoint, QRect, QSize, Qt, Slot, QCoreApplication
+from PySide6.QtCore import (
+    QPoint, 
+    QRect, 
+    QSize, 
+    Qt, 
+    Slot, 
+    QCoreApplication,
+    QThreadPool,
+)
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
     QLabel,
@@ -171,10 +179,11 @@ class MainWindow(ResizableFramelessWindow):
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
 
-        # result panel connect
+        # refit result panel connect
         self.setUpPrefitResultConnects()
 
         # fit
+        self.threadpool = QThreadPool()
         self.fitParameterSet = QuantumModelParameterSet()
         self.quantumModel.addParametersToParameterSet(
             self.fitParameterSet,
@@ -182,10 +191,15 @@ class MainWindow(ResizableFramelessWindow):
             excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
         )
         self.numericalFitting = NumericalFitting()
+        self.fitResult = Result()
 
         self.fitTableInserts()
         self.fitTableConnects()
+        self.fittingCallbackConnects()
         self.fitPushButtonConnects()
+
+        # fit result panel connect
+        self.setUpFitResultConnects()
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -747,7 +761,6 @@ class MainWindow(ResizableFramelessWindow):
             calibration_data=self.calibrationData,
             extracted_data=self.allDatasets,
             prefit_result=self.prefitResult
-            # self.axes,
         )
 
     def onPrefitRunClicked(self):
@@ -854,6 +867,27 @@ class MainWindow(ResizableFramelessWindow):
             mse_change_ui_setter=mse_change_ui_setter,
         )
 
+    def setUpFitResultConnects(self):
+        """
+        connect the prefit result to the relevant UI textboxes; whenever there is
+        a change in the UI, reflect in the UI text change
+        """
+        status_type_ui_setter = lambda: self.ui.label_49.setText(
+            self.fitResult.displayed_status_type
+        )
+        status_text_ui_setter = lambda: self.ui.statusTextLabel_2.setText(
+            self.fitResult.status_text
+        )
+        mse_change_ui_setter = lambda: self.ui.mseLabel_2.setText(
+            self.fitResult.displayed_MSE
+        )
+
+        self.fitResult.setupUISetters(
+            status_type_ui_setter=status_type_ui_setter,
+            status_text_ui_setter=status_text_ui_setter,
+            mse_change_ui_setter=mse_change_ui_setter,
+        )
+
     def setUpPrefitOptionsConnects(self):
         """
         Set up the connects for the prefit options for UI
@@ -883,6 +917,7 @@ class MainWindow(ResizableFramelessWindow):
         self.quantumModel.setupAutorunCallbacks(
             autorun_callback=self.ui.autoRunCheckBox.isChecked,
         )
+        self.ui.autoRunCheckBox.setChecked(True)
         # connect the run button callback to the generation and run of parameter sweep
         # notice that parameter update is done in the slider connects
         self.ui.plotButton.clicked.connect(self.onPrefitRunClicked)
@@ -934,6 +969,32 @@ class MainWindow(ResizableFramelessWindow):
             min_value_dict, "min"
         )
 
+    def _backgroundOptimization(self):
+        """
+        The optimization + things to do before it
+        """
+        self.ui.fitButton.setEnabled(False)
+        self.sliderSet.setEnabled(False)
+
+        # start the optimization
+        self.threadpool.start(self.numericalFitting)
+
+    def _onOptFinished(self):
+        self.ui.fitButton.setEnabled(True)
+        self.sliderSet.setEnabled(True)
+        self.onSliderParameterChange()
+        self.updatePlot()
+
+        # the numericalFitting object will be deleted after background running
+        # TODO: these lines don't fix the issue, and causing memory leakage...
+        self.numericalFitting = NumericalFitting()
+        self.fittingCallbackConnects()
+
+    def fittingCallbackConnects(self):
+        self.numericalFitting.signals.optFinished.connect(
+            self._onOptFinished
+        )
+
     def fitPushButtonConnects(self):
         # setup the optimization
         self.ui.fitButton.clicked.connect(
@@ -943,13 +1004,12 @@ class MainWindow(ResizableFramelessWindow):
                 self.allDatasets,
                 self.sweepParameterSet,
                 self.calibrationData,
+                self.fitResult,
         ))
 
         # connect the fit button to the fitting function
         self.ui.fitButton.clicked.connect(
-            lambda: self.numericalFitting.runOptimization(
-            self.fitParameterSet,
-        ))
+            self._backgroundOptimization)
 
         # the prefit parameter export
         self.ui.exportToFitButton.clicked.connect(
