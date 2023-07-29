@@ -579,7 +579,7 @@ class QuantumModel:
             initial=self.initial_state(),
             # sidebands=sidebands,
             # photon_number=photon_number,
-            make_positive=True,
+            make_positive=False,
             as_specdata=True,
         )
 

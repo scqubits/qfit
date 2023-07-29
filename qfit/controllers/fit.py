@@ -13,7 +13,6 @@ from qfit.models.quantum_model_parameters import (
 from qfit.models.status_result_data import Result
 
 class WorkerSignals(QObject):
-    optCallback = Signal()
     optFinished = Signal()
 
 class NumericalFitting(QRunnable):
@@ -40,6 +39,10 @@ class NumericalFitting(QRunnable):
         sweepParameterSet: QuantumModelParameterSet,
         calibrationData: CalibrationData,
     ):
+        """
+        A wrapper for the target function, which takes a dictionary of parameters and 
+        returns the square root of the MSE. 
+        """
         parameterSet.loadAttrDict(paramDict, "value")
         return np.sqrt(MSE(
             parameterSet, 

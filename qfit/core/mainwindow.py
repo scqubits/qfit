@@ -986,7 +986,7 @@ class MainWindow(ResizableFramelessWindow):
         self.updatePlot()
 
         # the numericalFitting object will be deleted after background running
-        # TODO: these lines don't fix the issue, and causing memory leakage...
+        # so we need to create a new one and connect the signals again
         self.numericalFitting = NumericalFitting()
         self.fittingCallbackConnects()
 
