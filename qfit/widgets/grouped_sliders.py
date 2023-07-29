@@ -277,6 +277,10 @@ class GroupedWidget(QWidget):
             self.gridLayout.itemAt(i).widget().setParent(None)
         self.widgets.clear()
 
+    def setEnabled(self, value):
+        for widget in self.values():
+            widget.setEnabled(value)
+
 
 class FoldableWidget(QGroupBox):
     """
@@ -373,7 +377,7 @@ class GroupedWidgetSet(QWidget):
         self.widgetSetLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
         self.widgetSetLayout.setSpacing(SPACING)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.widgetGroups: Dict[str, Any] = {}
+        self.widgetGroups: Dict[str, GroupedWidget] = {}
 
     def keys(self):
         return self.widgetGroups.keys()
@@ -409,3 +413,6 @@ class GroupedWidgetSet(QWidget):
             )
         )
 
+    def setEnabled(self, value):
+        for group in self.values():
+            group.setEnabled(value)
