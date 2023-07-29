@@ -22,11 +22,11 @@ import numpy as np
 from scqubits.core.hilbert_space import HilbertSpace
 
 from PySide6.QtCore import (
-    QPoint, 
-    QRect, 
-    QSize, 
-    Qt, 
-    Slot, 
+    QPoint,
+    QRect,
+    QSize,
+    Qt,
+    Slot,
     QCoreApplication,
     QThreadPool,
 )
@@ -760,7 +760,7 @@ class MainWindow(ResizableFramelessWindow):
             spectrum_data=self.spectrumData,
             calibration_data=self.calibrationData,
             extracted_data=self.allDatasets,
-            prefit_result=self.prefitResult
+            prefit_result=self.prefitResult,
         )
 
     def onPrefitRunClicked(self):
@@ -952,22 +952,18 @@ class MainWindow(ResizableFramelessWindow):
 
     def fittingParameterLoad(self, source: QuantumModelParameterSet):
         init_value_dict = source.exportAttrDict("value")
-        self.fitParameterSet.loadAttrDict(
-            init_value_dict, "initValue"
-        )
-        self.fitParameterSet.loadAttrDict(
-            init_value_dict, "value"
-        )
-        max_value_dict = {key: (value * 1.1 if value > 0 else value * 0.9) 
-            for key, value in init_value_dict.items()}
-        self.fitParameterSet.loadAttrDict(
-            max_value_dict, "max"
-        )
-        min_value_dict = {key: (value * 0.9 if value > 0 else value * 1.1)
-            for key, value in init_value_dict.items()}
-        self.fitParameterSet.loadAttrDict(
-            min_value_dict, "min"
-        )
+        self.fitParameterSet.loadAttrDict(init_value_dict, "initValue")
+        self.fitParameterSet.loadAttrDict(init_value_dict, "value")
+        max_value_dict = {
+            key: (value * 1.1 if value > 0 else value * 0.9)
+            for key, value in init_value_dict.items()
+        }
+        self.fitParameterSet.loadAttrDict(max_value_dict, "max")
+        min_value_dict = {
+            key: (value * 0.9 if value > 0 else value * 1.1)
+            for key, value in init_value_dict.items()
+        }
+        self.fitParameterSet.loadAttrDict(min_value_dict, "min")
 
     def _backgroundOptimization(self):
         """
@@ -991,9 +987,7 @@ class MainWindow(ResizableFramelessWindow):
         self.fittingCallbackConnects()
 
     def fittingCallbackConnects(self):
-        self.numericalFitting.signals.optFinished.connect(
-            self._onOptFinished
-        )
+        self.numericalFitting.signals.optFinished.connect(self._onOptFinished)
 
     def fitPushButtonConnects(self):
         # setup the optimization
@@ -1005,11 +999,11 @@ class MainWindow(ResizableFramelessWindow):
                 self.sweepParameterSet,
                 self.calibrationData,
                 self.fitResult,
-        ))
+            )
+        )
 
         # connect the fit button to the fitting function
-        self.ui.fitButton.clicked.connect(
-            self._backgroundOptimization)
+        self.ui.fitButton.clicked.connect(self._backgroundOptimization)
 
         # the prefit parameter export
         self.ui.exportToFitButton.clicked.connect(
