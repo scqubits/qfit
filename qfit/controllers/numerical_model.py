@@ -498,11 +498,18 @@ class QuantumModel:
                 self._setCalibrationFunction(parameter, calibration_data)
 
         # update the HilbertSpace object and generate parameter sweep
-        self.onParameterChange(
-            update_parameter_set=slider_parameter_set,
-            sweep_parameter_set=sweep_parameter_set,
-            x_coordinate_list=self._generateXcoordinateListForPrefit(extracted_data),
-        )
+        try:
+            self.onParameterChange(
+                update_parameter_set=slider_parameter_set,
+                sweep_parameter_set=sweep_parameter_set,
+                x_coordinate_list=self._generateXcoordinateListForPrefit(extracted_data),
+            )
+        except Exception as e:
+            # will not be triggered by the users I think
+            prefit_result.status_type = "ERROR"
+            prefit_result.status_text = (f"Fail to initialize the parameter sweep with "
+                                        f"{type(e).__name__}: {e}")
+            return
 
         # if autorun, perform the rest of the steps (compute spectrum, plot, calculate MSE)
         if self.autorun_callback():
@@ -562,6 +569,8 @@ class QuantumModel:
         try:
             subsys = self.subsystems_to_plot()
         except ValueError:
+            result.status_type = "ERROR"
+            result.status_text = "Subsystems to plot is invalid."
             return
 
         # generate specdata for highlighting
