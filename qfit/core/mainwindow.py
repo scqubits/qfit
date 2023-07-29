@@ -753,9 +753,9 @@ class MainWindow(ResizableFramelessWindow):
             return True
         return False
 
-    def onSliderParameterChange(self):
-        return self.quantumModel.onSliderParameterChange(
-            slider_parameter_set=self.sliderParameterSet,
+    def onParameterChange(self, slider_or_fit_parameter_set: QuantumModelParameterSet):
+        return self.quantumModel.onSliderOrFitParameterChange(
+            slider_or_fit_parameter_set=slider_or_fit_parameter_set,
             sweep_parameter_set=self.sweepParameterSet,
             spectrum_data=self.spectrumData,
             calibration_data=self.calibrationData,
@@ -826,7 +826,9 @@ class MainWindow(ResizableFramelessWindow):
                 labeled_slider.value.editingFinished.connect(para.onBoxEditingFinished)
 
                 # connect to the controller to update the spectrum
-                labeled_slider.editingFinishedConnect(self.onSliderParameterChange)
+                labeled_slider.editingFinishedConnect(
+                    lambda: self.onParameterChange(self.sliderParameterSet)
+                )
                 labeled_slider.editingFinishedConnect(self.updatePlot)
 
                 para.initialize()
@@ -900,12 +902,16 @@ class MainWindow(ResizableFramelessWindow):
             initialStateCallback=self.ui.initStateLineEdit.text,
             evalsCountCallback=self.ui.evalsCountLineEdit.text,
             pointsAddCallback=self.ui.pointsAddLineEdit.text,
-        )  # TODO: placeholder by now, need to connect to the UI
+        )
 
         self.ui.subsysComboBox.currentIndexChanged.connect(self.onPrefitPlotClicked)
         self.ui.initStateLineEdit.editingFinished.connect(self.onPrefitPlotClicked)
-        self.ui.evalsCountLineEdit.editingFinished.connect(self.onSliderParameterChange)
-        self.ui.pointsAddLineEdit.editingFinished.connect(self.onSliderParameterChange)
+        self.ui.evalsCountLineEdit.editingFinished.connect(
+            lambda: self.onParameterChange(self.sliderParameterSet)
+        )
+        self.ui.pointsAddLineEdit.editingFinished.connect(
+            lambda: self.onParameterChange(self.sliderParameterSet)
+        )
 
         self.ui.subsysComboBox.currentIndexChanged.connect(self.updatePlot)
         self.ui.initStateLineEdit.editingFinished.connect(self.updatePlot)
@@ -920,6 +926,11 @@ class MainWindow(ResizableFramelessWindow):
         self.ui.autoRunCheckBox.setChecked(True)
         # connect the run button callback to the generation and run of parameter sweep
         # notice that parameter update is done in the slider connects
+        # TODO: here is a bug, since the parameter update is done in the slider connects,
+        # if parameters are updated due to the fitting step, and the fitting result parameters
+        # are not imported to the prefit parameters, then the HilbertSpace is still using the
+        # fit parameters; if user want to plot with prefit parameters, clicking the plot button
+        # in the prefit will not update the parameters based on the sliders.
         self.ui.plotButton.clicked.connect(self.onPrefitPlotClicked)
         # update plot after the fit button is clicked
         self.ui.plotButton.clicked.connect(self.updatePlot)
@@ -978,7 +989,7 @@ class MainWindow(ResizableFramelessWindow):
     def _onOptFinished(self):
         self.ui.fitButton.setEnabled(True)
         self.sliderSet.setEnabled(True)
-        self.onSliderParameterChange()
+        self.onParameterChange(self.fitParameterSet)
         self.updatePlot()
 
         # the numericalFitting object will be deleted after background running
@@ -1016,8 +1027,13 @@ class MainWindow(ResizableFramelessWindow):
         )
 
         # the prefit parameter import
+        # first update the slider parameter set, then perform the necessary changes
+        # as slider parameter changes
         self.ui.exportToPrefitButton.clicked.connect(
             lambda: self.sliderParameterSet.update(self.fitParameterSet)
+        )
+        self.ui.exportToPrefitButton.clicked.connect(
+            lambda: self.onParameterChange(self.sliderParameterSet)
         )
 
     def fitTableConnects(self):

@@ -462,9 +462,9 @@ class QuantumModel:
             for parameter in parameters.values():
                 self._updateQuantumModelParameter(parameter)
 
-    def onSliderParameterChange(
+    def onSliderOrFitParameterChange(
         self,
-        slider_parameter_set: QuantumModelParameterSet,
+        slider_or_fit_parameter_set: QuantumModelParameterSet,
         sweep_parameter_set: QuantumModelParameterSet,
         spectrum_data: SpectrumData,
         calibration_data: CalibrationData,
@@ -499,8 +499,8 @@ class QuantumModel:
 
         # update the HilbertSpace object and generate parameter sweep
         try:
-            self.onParameterChange(
-                update_parameter_set=slider_parameter_set,
+            self.regenerateSweepOnParameterChange(
+                update_parameter_set=slider_or_fit_parameter_set,
                 sweep_parameter_set=sweep_parameter_set,
                 x_coordinate_list=self._generateXcoordinateListForPrefit(
                     extracted_data
@@ -525,7 +525,7 @@ class QuantumModel:
         if self.autorun_callback():
             self.onButtonPrefitPlotClicked(spectrum_data, extracted_data, prefit_result)
 
-    def onParameterChange(
+    def regenerateSweepOnParameterChange(
         self,
         update_parameter_set: QuantumModelParameterSet,
         sweep_parameter_set: QuantumModelParameterSet,
@@ -882,7 +882,7 @@ class QuantumModel:
                 self._setCalibrationFunction(parameter, calibration_data)
         # update the HilbertSpace object and generate parameter sweep
         # this step is after the setup of calibration functions because the update_hilbertspace in ParameterSweep need the calibration information
-        self.onParameterChange(
+        self.regenerateSweepOnParameterChange(
             update_parameter_set=parameterSet,
             sweep_parameter_set=sweep_parameter_set,
             x_coordinate_list=self._generateXcoordinateListForMarkedPoints(
