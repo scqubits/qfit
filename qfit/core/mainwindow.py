@@ -184,7 +184,7 @@ class MainWindow(ResizableFramelessWindow):
 
         self.fitTableInserts()
         self.fitTableConnects()
-        self.addFittingPushButton()         # for test only
+        self.addFittingPushButton()  # for test only
         self.fitPushButtonConnects()
 
     def dataSetupConnects(self):
@@ -886,9 +886,9 @@ class MainWindow(ResizableFramelessWindow):
         )
         # connect the run button callback to the generation and run of parameter sweep
         # notice that parameter update is done in the slider connects
-        self.ui.runFitButton.clicked.connect(self.onPrefitRunClicked)
+        self.ui.plotButton.clicked.connect(self.onPrefitRunClicked)
         # update plot after the fit button is clicked
-        self.ui.runFitButton.clicked.connect(self.updatePlot)
+        self.ui.plotButton.clicked.connect(self.updatePlot)
 
     def fitTableInserts(self):
         """
@@ -924,26 +924,16 @@ class MainWindow(ResizableFramelessWindow):
 
     def prefitParameterTransfer(self):
         init_value_dict = self.sliderParameterSet.exportAttrDict("value")
-        self.fitParameterSet.loadAttrDict(
-            init_value_dict, "initValue"
-        )
-        self.fitParameterSet.loadAttrDict(
-            init_value_dict, "value"
-        )
+        self.fitParameterSet.loadAttrDict(init_value_dict, "initValue")
+        self.fitParameterSet.loadAttrDict(init_value_dict, "value")
         max_value_dict = {key: value * 1.1 for key, value in init_value_dict.items()}
-        self.fitParameterSet.loadAttrDict(
-            max_value_dict, "max"
-        )
+        self.fitParameterSet.loadAttrDict(max_value_dict, "max")
         min_value_dict = {key: value * 0.9 for key, value in init_value_dict.items()}
-        self.fitParameterSet.loadAttrDict(
-            min_value_dict, "min"
-        )
+        self.fitParameterSet.loadAttrDict(min_value_dict, "min")
 
     def fitPushButtonConnects(self):
         # the prefit parameter transfer
-        self.tmpPrefitExportButton.clicked.connect(
-            self.prefitParameterTransfer
-        )
+        self.tmpPrefitExportButton.clicked.connect(self.prefitParameterTransfer)
 
         # setup the optimization
         self.tmpFitButton.clicked.connect(
@@ -951,14 +941,16 @@ class MainWindow(ResizableFramelessWindow):
                 self.fitParameterSet,
                 self.quantumModel.MSEByParameters,
                 self.allDatasets,
-        ))
+            )
+        )
 
         # connect the fit button to the fitting function
         self.tmpFitButton.clicked.connect(
             lambda: self.numericalFitting.runOptimization(
-            self.fitParameterSet,
-            self.allDatasets,
-        ))
+                self.fitParameterSet,
+                self.allDatasets,
+            )
+        )
 
     def fitTableConnects(self):
         """
