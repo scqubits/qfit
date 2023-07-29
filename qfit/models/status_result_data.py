@@ -68,7 +68,7 @@ class Result(serializers.Serializable):
             return f"MSE:  {self.current_mse:.3f} GHz\u00B2  (- %)"
         else:
             plus_minus = "" if self.mse_change < 0 else "+"
-            return f"MSE:  {self.current_mse:.3f} GHz\u00B2  ({plus_minus}{self.mse_change} %)"
+            return f"MSE:  {self.current_mse:.4f} GHz\u00B2  ({plus_minus}{self.mse_change:.2f} %)"
 
     @mse_change.setter
     def mse_change(self, value: float):
