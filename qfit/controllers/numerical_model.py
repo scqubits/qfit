@@ -507,13 +507,23 @@ class QuantumModel:
         except Exception as e:
             # will not be triggered by the users I think
             prefit_result.status_type = "ERROR"
-            prefit_result.status_text = (f"Fail to initialize the parameter sweep with "
-                                        f"{type(e).__name__}: {e}")
+            if str(e).startswith("min()"):
+                prefit_result.status_text = (
+                    f"Please extract data before running the prefit."
+                )
+            else:
+                prefit_result.status_text = (f"Fail to initialize the parameter sweep with "
+                                            f"{type(e).__name__}: {e}")
             return
+        
+        prefit_result.status_type = "SUCCESS"
+        prefit_result.status_text = (f"")
 
         # if autorun, perform the rest of the steps (compute spectrum, plot, calculate MSE)
         if self.autorun_callback():
             self.onButtonRunClicked(spectrum_data, extracted_data, prefit_result)
+        
+
 
     def onParameterChange(
         self,
@@ -599,13 +609,26 @@ class QuantumModel:
         # ------------------------------------------------------------------------------
 
         # mse calculation
-        mse, status_type, status_text = self.calculateMSE(extracted_data=extracted_data)
+        try:
+            mse, status_type, status_text = self.calculateMSE(extracted_data=extracted_data)
+        except Exception as e:
+            result.status_type = "ERROR"
+            if str(e).startswith("unsupported operand"):
+                result.status_text = (
+                    "Fail to calculate MSE. Please tag your points before using pre-fit."
+                )
+            else:
+                result.status_text = (f"Fail to calculate MSE with {type(e).__name__}: {e}")
+            return
 
         # pass MSE and status messages to the model
         result.previous_mse = result.current_mse
         result.current_mse = mse
         result.status_type = status_type
         result.status_text = status_text
+
+        result.status_type = "SUCCESS"
+        result.status_text = ""
 
     def _update_hilbertspace_for_ParameterSweep(
         self,
