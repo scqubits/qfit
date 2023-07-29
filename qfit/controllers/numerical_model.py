@@ -502,18 +502,22 @@ class QuantumModel:
             self.onParameterChange(
                 update_parameter_set=slider_parameter_set,
                 sweep_parameter_set=sweep_parameter_set,
-                x_coordinate_list=self._generateXcoordinateListForPrefit(extracted_data),
+                x_coordinate_list=self._generateXcoordinateListForPrefit(
+                    extracted_data
+                ),
             )
         except Exception as e:
             # will not be triggered by the users I think
             prefit_result.status_type = "ERROR"
-            prefit_result.status_text = (f"Fail to initialize the parameter sweep with "
-                                        f"{type(e).__name__}: {e}")
+            prefit_result.status_text = (
+                f"Fail to initialize the parameter sweep with "
+                f"{type(e).__name__}: {e}"
+            )
             return
 
         # if autorun, perform the rest of the steps (compute spectrum, plot, calculate MSE)
         if self.autorun_callback():
-            self.onButtonRunClicked(spectrum_data, extracted_data, prefit_result)
+            self.onButtonPrefitPlotClicked(spectrum_data, extracted_data, prefit_result)
 
     def onParameterChange(
         self,
@@ -543,14 +547,14 @@ class QuantumModel:
             x_coordinate_list=x_coordinate_list, sweep_parameter_set=sweep_parameter_set
         )
 
-    def onButtonRunClicked(
+    def onButtonPrefitPlotClicked(
         self,
         spectrum_data: SpectrumData,
         extracted_data: AllExtractedData,
         result: Result,
     ):
         """
-        It is connected to the signal emitted by the UI when the user clicks the run button
+        It is connected to the signal emitted by the UI when the user clicks the plot button
         for the prefit stage. It runs the parameter sweep and then generate the plots.
         """
         try:
@@ -847,11 +851,11 @@ class QuantumModel:
         return simulation_freq, status
 
     def MSEByParametersForFit(
-        self, 
-        parameterSet: QuantumModelParameterSet, 
-        sweep_parameter_set: QuantumModelParameterSet, 
-        calibration_data: CalibrationData, 
-        extracted_data: AllExtractedData
+        self,
+        parameterSet: QuantumModelParameterSet,
+        sweep_parameter_set: QuantumModelParameterSet,
+        calibration_data: CalibrationData,
+        extracted_data: AllExtractedData,
     ):
         # set calibration functions for the parameters in the sweep parameter set
         for parameters in sweep_parameter_set.values():
@@ -862,7 +866,9 @@ class QuantumModel:
         self.onParameterChange(
             update_parameter_set=parameterSet,
             sweep_parameter_set=sweep_parameter_set,
-            x_coordinate_list=self._generateXcoordinateListForMarkedPoints(extracted_data),
+            x_coordinate_list=self._generateXcoordinateListForMarkedPoints(
+                extracted_data
+            ),
         )
         # run sweep
         self.sweep.run()

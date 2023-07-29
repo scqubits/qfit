@@ -763,8 +763,8 @@ class MainWindow(ResizableFramelessWindow):
             prefit_result=self.prefitResult,
         )
 
-    def onPrefitRunClicked(self):
-        return self.quantumModel.onButtonRunClicked(
+    def onPrefitPlotClicked(self):
+        return self.quantumModel.onButtonPrefitPlotClicked(
             spectrum_data=self.spectrumData,
             extracted_data=self.allDatasets,
             result=self.prefitResult,
@@ -902,8 +902,8 @@ class MainWindow(ResizableFramelessWindow):
             pointsAddCallback=self.ui.pointsAddLineEdit.text,
         )  # TODO: placeholder by now, need to connect to the UI
 
-        self.ui.subsysComboBox.currentIndexChanged.connect(self.onPrefitRunClicked)
-        self.ui.initStateLineEdit.editingFinished.connect(self.onPrefitRunClicked)
+        self.ui.subsysComboBox.currentIndexChanged.connect(self.onPrefitPlotClicked)
+        self.ui.initStateLineEdit.editingFinished.connect(self.onPrefitPlotClicked)
         self.ui.evalsCountLineEdit.editingFinished.connect(self.onSliderParameterChange)
         self.ui.pointsAddLineEdit.editingFinished.connect(self.onSliderParameterChange)
 
@@ -920,7 +920,7 @@ class MainWindow(ResizableFramelessWindow):
         self.ui.autoRunCheckBox.setChecked(True)
         # connect the run button callback to the generation and run of parameter sweep
         # notice that parameter update is done in the slider connects
-        self.ui.plotButton.clicked.connect(self.onPrefitRunClicked)
+        self.ui.plotButton.clicked.connect(self.onPrefitPlotClicked)
         # update plot after the fit button is clicked
         self.ui.plotButton.clicked.connect(self.updatePlot)
 

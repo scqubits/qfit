@@ -160,7 +160,7 @@ class NumericalFitting(QRunnable):
             self.signals.optFinished.emit()
             return
         
-        # if hit the boundary, raise error
+        # if hit the boundary, raise warning
         if self._paramHitBound(self.parameterSet):
             self.result.status_type = "WARNING"
             self.result.status_text = "The optimized parameters may hit the bound."
