@@ -609,26 +609,23 @@ class QuantumModel:
         # ------------------------------------------------------------------------------
 
         # mse calculation
-        try:
-            mse, status_type, status_text = self.calculateMSE(extracted_data=extracted_data)
-        except Exception as e:
-            result.status_type = "ERROR"
-            if str(e).startswith("unsupported operand"):
-                result.status_text = (
-                    "Fail to calculate MSE. Please tag your points before using pre-fit."
-                )
-            else:
-                result.status_text = (f"Fail to calculate MSE with {type(e).__name__}: {e}")
-            return
+        # try:
+        mse, status_type, status_text = self.calculateMSE(extracted_data=extracted_data)
+        # except Exception as e:
+        #     result.status_type = "ERROR"
+        #     if str(e).startswith("unsupported operand"):
+        #         result.status_text = (
+        #             "Fail to calculate MSE. Please tag your points before using pre-fit."
+        #         )
+        #     else:
+        #         result.status_text = (f"Fail to calculate MSE with {type(e).__name__}: {e}")
+        #     return
 
         # pass MSE and status messages to the model
         result.previous_mse = result.current_mse
         result.current_mse = mse
         result.status_type = status_type
         result.status_text = status_text
-
-        result.status_type = "SUCCESS"
-        result.status_text = ""
 
     def _update_hilbertspace_for_ParameterSweep(
         self,
@@ -685,7 +682,7 @@ class QuantumModel:
         mse = 0
         status_type = ""
         status_text = ""
-        dataNames_without_tag = []
+        # dataNames_without_tag = []
         dataNames_with_unidentifiable_tag = []
         # calibrate the data in the following way: keep the x-coordinate unchanged, but calibrate
         # the y-coordinate
@@ -693,17 +690,17 @@ class QuantumModel:
             applyCalibration=True, calibration_axis="y"
         )
         # for all the extracted data, identify any NO_TAG or CROSSING tagged sets
-        for dataName, tag in zip(extracted_data.dataNames, extracted_data.assocTagList):
-            if tag.tagType is NO_TAG or tag.tagType is CROSSING:
-                dataNames_without_tag.append(dataName)
-        # if there is any NO_TAG or CROSSING tagged sets, add a warning message and set status type to WARNING
-        if dataNames_without_tag != []:
-            status_text += (
-                f"Data sets {dataNames_without_tag} are not tagged."
-                "Selected transition frequencies are matched to the closest ones in the model, "
-                "starting from the ground state.\n"
-            )
-            status_type = "WARNING"
+        # for dataName, tag in zip(extracted_data.dataNames, extracted_data.assocTagList):
+        #     if tag.tagType is NO_TAG or tag.tagType is CROSSING:
+        #         dataNames_without_tag.append(dataName)
+        # # if there is any NO_TAG or CROSSING tagged sets, add a warning message and set status type to WARNING
+        # if dataNames_without_tag != []:
+        #     status_text += (
+        #         f"Data sets {dataNames_without_tag} are not tagged."
+        #         "Selected transition frequencies are matched to the closest ones in the model, "
+        #         "starting from the ground state.\n"
+        #     )
+        #     status_type = "WARNING"
         # loop over extracted data sets and the corresponding tags
         for dataName, extracted_data_set, tag in zip(
             extracted_data.dataNames,
@@ -737,7 +734,13 @@ class QuantumModel:
                     # only if the name is not already in the list
                     if dataName not in dataNames_with_unidentifiable_tag:
                         dataNames_with_unidentifiable_tag.append(dataName)
-                transition_freq /= tag.photons
+
+                if tag.photons is None:
+                    photons = 1     # NO_TAG
+                else:
+                    photons = tag.photons
+                transition_freq /= photons
+
                 # add to the MSE
                 mse += (data_point[1] - transition_freq) ** 2
         # normalize the MSE
@@ -750,7 +753,8 @@ class QuantumModel:
         # add to the status text if there is any unidentifiable tag
         if dataNames_with_unidentifiable_tag != []:
             status_text += (
-                f"Data sets {dataNames_with_unidentifiable_tag} have unidentifiable tag(s). "
+                f"Data sets {dataNames_with_unidentifiable_tag} have unidentifiable state "
+                "labels or are untagged. "
                 "Selected transition frequencies are matched to the closest ones in the model, "
                 "starting from the ground state.\n"
             )
