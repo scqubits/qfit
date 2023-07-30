@@ -26,8 +26,12 @@ class NumericalFitting(QRunnable):
         self.signals = WorkerSignals()
         return
 
-    def setupUICallbacks(self):
+    def setupUICallbacks(
+        self,
+        optimizerCallback: Callable,
+    ):
         # set up callbacks for the UI
+        self.optimizer = optimizerCallback
         return
 
     def _targetFunctionWrapper(
@@ -90,7 +94,7 @@ class NumericalFitting(QRunnable):
                     "sweepParameterSet": sweepParameterSet,
                     "calibrationData": calibrationData,
                 },
-                optimizer="L-BFGS-B",
+                optimizer=self.optimizer(),
                 opt_options={
                     "disp": True,
                 }

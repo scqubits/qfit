@@ -193,6 +193,7 @@ class MainWindow(ResizableFramelessWindow):
         self.numericalFitting = NumericalFitting()
         self.fitResult = Result()
 
+        self.setupFitConnects()
         self.fitTableInserts()
         self.fitTableConnects()
         self.fittingCallbackConnects()
@@ -935,6 +936,11 @@ class MainWindow(ResizableFramelessWindow):
         # update plot after the fit button is clicked
         self.ui.plotButton.clicked.connect(self.updatePlot)
 
+    def setupFitConnects(self):
+        self.numericalFitting.setupUICallbacks(
+            lambda: "Nelder-Mead",
+        )
+
     def fitTableInserts(self):
         """
         Insert a set of tables for the fitting parameters
@@ -966,12 +972,12 @@ class MainWindow(ResizableFramelessWindow):
         self.fitParameterSet.loadAttrDict(init_value_dict, "initValue")
         self.fitParameterSet.loadAttrDict(init_value_dict, "value")
         max_value_dict = {
-            key: (value * 1.1 if value > 0 else value * 0.9)
+            key: (value * 1.2 if value > 0 else value * 0.8)
             for key, value in init_value_dict.items()
         }
         self.fitParameterSet.loadAttrDict(max_value_dict, "max")
         min_value_dict = {
-            key: (value * 0.9 if value > 0 else value * 1.1)
+            key: (value * 0.8 if value > 0 else value * 1.2)
             for key, value in init_value_dict.items()
         }
         self.fitParameterSet.loadAttrDict(min_value_dict, "min")
@@ -995,6 +1001,7 @@ class MainWindow(ResizableFramelessWindow):
         # the numericalFitting object will be deleted after background running
         # so we need to create a new one and connect the signals again
         self.numericalFitting = NumericalFitting()
+        self.setupFitConnects()
         self.fittingCallbackConnects()
 
     def fittingCallbackConnects(self):
