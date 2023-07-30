@@ -404,7 +404,7 @@ class QuantumModelFittingParameter(DisplayedParameterBase):
 
         """
         try:
-            boxValue = float(self.valueCallback())
+            boxValue = float(self.initValueCallback())
         except ValueError:
             # cannot convert the box value to float, do nothing
             return
