@@ -2,9 +2,7 @@
     <qresource prefix="/">
         <file>icons/bwr.png</file>
         <file>icons/cividis.png</file>
-        <file>icons/delete.png</file>
         <file>icons/gray.png</file>
-        <file>icons/logo.png</file>
         <file>icons/magma.png</file>
         <file>icons/PuOr.png</file>
         <file>icons/RdYlBu.png</file>

@@ -595,11 +595,11 @@ class Ui_MainWindow(object):
         self.colorComboBox.setObjectName(u"colorComboBox")
         sizePolicy2.setHeightForWidth(self.colorComboBox.sizePolicy().hasHeightForWidth())
         self.colorComboBox.setSizePolicy(sizePolicy2)
-        self.colorComboBox.setMinimumSize(QSize(0, 30))
+        self.colorComboBox.setMinimumSize(QSize(100, 30))
 #if QT_CONFIG(tooltip)
         self.colorComboBox.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
-        self.colorComboBox.setIconSize(QSize(100, 10))
+        self.colorComboBox.setIconSize(QSize(150, 20))
         self.colorComboBox.setFrame(True)
 
         self.gridLayout_9.addWidget(self.colorComboBox, 1, 0, 1, 1)
