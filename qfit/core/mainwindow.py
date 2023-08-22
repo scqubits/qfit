@@ -23,6 +23,7 @@ from PySide6.QtCore import QPoint, QRect, QSize, Qt, Slot
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
     QGraphicsDropShadowEffect,
+    QMainWindow,
     QMessageBox,
     QPushButton,
     QStyle,
@@ -51,7 +52,7 @@ MeasurementDataType = Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]
 mpl.rcParams["toolbar"] = "None"
 
 
-class MainWindow(ResizableFramelessWindow):
+class MainWindow(QMainWindow):
     """Class for the main window of the app."""
 
     ui: Ui_MainWindow
@@ -75,7 +76,7 @@ class MainWindow(ResizableFramelessWindow):
     offset: Union[None, QPoint]
 
     def __init__(self, measurementData, extractedData=None):
-        ResizableFramelessWindow.__init__(self)
+        QMainWindow.__init__(self)
         self.disconnectCanvas = False  # used to temporarily switch off canvas updates
 
         self.ui = Ui_MainWindow()
