@@ -23,12 +23,6 @@
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
-  <property name="font">
-   <font>
-    <family>Roboto</family>
-    <pointsize>9</pointsize>
-   </font>
-  </property>
   <property name="windowTitle">
    <string notr="true">qfit</string>
   </property>
@@ -55,7 +49,7 @@ QToolTip {
 }
 
 QWidget {
-	font-family: Roboto;
+	font-family: &quot;Roboto Medium&quot;;
 	font-size: 9pt;
 }
 
@@ -731,7 +725,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                         <item row="1" column="0">
                          <widget class="QComboBox" name="colorComboBox">
                           <property name="sizePolicy">
-                           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                             <horstretch>0</horstretch>
                             <verstretch>0</verstretch>
                            </sizepolicy>
@@ -931,6 +925,12 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                         </item>
                         <item row="3" column="0">
                          <widget class="QCheckBox" name="bgndSubtractXCheckBox">
+                          <property name="font">
+                           <font>
+                            <family>Roboto Medium</family>
+                            <pointsize>9</pointsize>
+                           </font>
+                          </property>
                           <property name="toolTip">
                            <string notr="true">Background subtraction along X</string>
                           </property>
@@ -987,6 +987,12 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                         </property>
                         <item>
                          <widget class="QCheckBox" name="topHatCheckBox">
+                          <property name="font">
+                           <font>
+                            <family>Roboto Medium</family>
+                            <pointsize>9</pointsize>
+                           </font>
+                          </property>
                           <property name="toolTip">
                            <string notr="true"/>
                           </property>
@@ -1074,6 +1080,9 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                             <width>250</width>
                             <height>30</height>
                            </size>
+                          </property>
+                          <property name="autoFillBackground">
+                           <bool>false</bool>
                           </property>
                           <property name="styleSheet">
                            <string notr="true">background-color: rgb(47,47,47);</string>
@@ -1253,7 +1262,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                               <string/>
                              </property>
                              <property name="icon">
-                              <iconset>
+                              <iconset resource="resources.qrc">
                                <normaloff>:/icons/svg/cil-at.svg</normaloff>:/icons/svg/cil-at.svg</iconset>
                              </property>
                             </widget>
@@ -1273,7 +1282,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                               <string/>
                              </property>
                              <property name="icon">
-                              <iconset>
+                              <iconset resource="resources.qrc">
                                <normaloff>:/icons/svg/cil-at.svg</normaloff>:/icons/svg/cil-at.svg</iconset>
                              </property>
                             </widget>
@@ -1562,7 +1571,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                               <string/>
                              </property>
                              <property name="icon">
-                              <iconset>
+                              <iconset resource="resources.qrc">
                                <normaloff>:/icons/svg/cil-at.svg</normaloff>:/icons/svg/cil-at.svg</iconset>
                              </property>
                             </widget>
@@ -1688,7 +1697,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                               <string/>
                              </property>
                              <property name="icon">
-                              <iconset>
+                              <iconset resource="resources.qrc">
                                <normaloff>:/icons/svg/cil-at.svg</normaloff>:/icons/svg/cil-at.svg</iconset>
                              </property>
                             </widget>
@@ -2397,8 +2406,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>367</width>
-                    <height>681</height>
+                    <width>100</width>
+                    <height>30</height>
                    </rect>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_11"/>
@@ -2479,8 +2488,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>33</width>
-                      <height>16</height>
+                      <width>98</width>
+                      <height>28</height>
                      </rect>
                     </property>
                    </widget>
@@ -2895,8 +2904,8 @@ QPushButton:checked {
               </property>
               <property name="iconSize">
                <size>
-                <width>24</width>
-                <height>24</height>
+                <width>18</width>
+                <height>18</height>
                </size>
               </property>
              </widget>
@@ -3110,7 +3119,7 @@ QPushButton:pressed {
                        <string notr="true">NEW   </string>
                       </property>
                       <property name="icon">
-                       <iconset>
+                       <iconset resource="resources.qrc">
                         <normaloff>:/icons/svg/cil-plus.svg</normaloff>:/icons/svg/cil-plus.svg</iconset>
                       </property>
                      </widget>
@@ -3136,7 +3145,7 @@ QPushButton:pressed {
                        <string notr="true">DELETE  </string>
                       </property>
                       <property name="icon">
-                       <iconset>
+                       <iconset resource="resources.qrc">
                         <normaloff>:/icons/svg/cil-minus.svg</normaloff>:/icons/svg/cil-minus.svg</iconset>
                       </property>
                      </widget>
@@ -3365,7 +3374,7 @@ TableView
                     </property>
                     <property name="font">
                      <font>
-                      <family>Roboto</family>
+                      <family>Roboto Medium</family>
                       <pointsize>9</pointsize>
                       <bold>true</bold>
                      </font>
@@ -3629,7 +3638,7 @@ TableView
                     </property>
                     <property name="font">
                      <font>
-                      <family>Roboto</family>
+                      <family>Roboto Medium</family>
                       <pointsize>9</pointsize>
                       <bold>true</bold>
                      </font>

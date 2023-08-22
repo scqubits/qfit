@@ -29,5 +29,9 @@
         <file>icons/svg/cil-reload.svg</file>
         <file>icons/svg/cil-chart-line.svg</file>
         <file>icons/svg/cil-menu.svg</file>
+        <file>fonts/Roboto-Light.ttf</file>
+        <file>fonts/Roboto-Medium.ttf</file>
+        <file>fonts/Roboto-Regular.ttf</file>
+        <file>fonts/Roboto-Thin.ttf</file>
     </qresource>
 </RCC>

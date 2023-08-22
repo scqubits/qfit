@@ -14,7 +14,7 @@ import sys
 import PySide6.QtCore
 
 from PySide6.QtCore import QSize
-from PySide6.QtGui import QFont, QScreen
+from PySide6.QtGui import QFont, QFontDatabase, QScreen
 from PySide6.QtWidgets import QApplication
 
 import matplotlib
@@ -27,9 +27,12 @@ from qfit.models.measurement_data import dummy_measurement_data
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    font = QFont()
-    font.setFamily("Roboto Medium")
-    font.setPointSize(9)
+    QFontDatabase.addApplicationFont(":/fonts/Roboto-Regular.ttf")
+    QFontDatabase.addApplicationFont(":/fonts/Roboto-Medium.ttf")
+    font = QFont("Roboto Medium", 10, 1)
+
+    # font.setFamily("Roboto Medium")
+    # font.setPointSize(9)
     app.setFont(font)
 
     # fileData = readFileData('C:/Users/drjen/PycharmProjects/DataSelector/scratch/00000_twotoneVsPowerTransmission.h5')
