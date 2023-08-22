@@ -28,8 +28,8 @@ from qfit.models.measurement_data import dummy_measurement_data
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     QFontDatabase.addApplicationFont(":/fonts/Roboto-Regular.ttf")
-    QFontDatabase.addApplicationFont(":/fonts/Roboto-Medium.ttf")
-    font = QFont("Roboto Medium", 10, 1)
+    font = QFontDatabase.font("Roboto", "", 10)
+    font.setWeight(QFont.Normal)
     app.setFont(font)
 
     # fileData = readFileData('C:/Users/drjen/PycharmProjects/DataSelector/scratch/00000_twotoneVsPowerTransmission.h5')
