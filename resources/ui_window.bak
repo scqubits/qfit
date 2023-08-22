@@ -49,7 +49,7 @@ QToolTip {
 }
 
 QWidget {
-	font-family: &quot;Roboto Medium&quot;;
+	font-family: Roboto;
 	font-size: 9pt;
 }
 
@@ -523,7 +523,7 @@ ListView::item:selected {
            <number>0</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="bottomMargin">
            <number>0</number>
@@ -903,9 +903,6 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                          <height>0</height>
                         </size>
                        </property>
-                       <property name="layoutDirection">
-                        <enum>Qt::LeftToRight</enum>
-                       </property>
                        <layout class="QGridLayout" name="gridLayout_8">
                         <property name="topMargin">
                          <number>4</number>
@@ -918,12 +915,6 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                         </property>
                         <item row="3" column="1">
                          <widget class="QCheckBox" name="bgndSubtractYCheckBox">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
                           <property name="toolTip">
                            <string notr="true">Background subtraction along Y</string>
                           </property>
@@ -934,18 +925,6 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                         </item>
                         <item row="3" column="0">
                          <widget class="QCheckBox" name="bgndSubtractXCheckBox">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="font">
-                           <font>
-                            <family>Roboto Medium</family>
-                            <pointsize>9</pointsize>
-                           </font>
-                          </property>
                           <property name="toolTip">
                            <string notr="true">Background subtraction along X</string>
                           </property>
@@ -1004,7 +983,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                          <widget class="QCheckBox" name="topHatCheckBox">
                           <property name="font">
                            <font>
-                            <family>Roboto Medium</family>
+                            <family>Roboto</family>
                             <pointsize>9</pointsize>
                            </font>
                           </property>
@@ -2503,7 +2482,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>43</width>
+                      <width>33</width>
                       <height>16</height>
                      </rect>
                     </property>
@@ -2841,6 +2820,225 @@ QPushButton:pressed {
             </layout>
            </widget>
           </item>
+          <item row="0" column="3">
+           <widget class="MplFigureCanvas" name="mplFigureCanvas">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>60</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(37, 37, 42);
+color: rgb(200, 200, 200);</string>
+            </property>
+            <widget class="MplNavButtons" name="mplFigureButtons" native="true">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>10</y>
+               <width>361</width>
+               <height>60</height>
+              </rect>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QFrame {
+	background-color: transparent;
+}
+
+QPushButton {
+	border: 0px solid rgb(52, 59, 72);
+	border-radius: 18px;	
+	background-color: rgb(93, 93, 93);
+}
+
+QPushButton:hover {
+	background-color: rgb(196, 150, 250);
+	border: 0px solid rgb(61, 70, 86);
+}
+QPushButton:pressed {	
+	background-color: rgb(196, 150, 250);
+	border: 0px solid rgb(43, 50, 61);
+}
+QPushButton:checked {	
+	background-color: rgb(196, 150, 250);
+	border: 0px solid rgb(43, 50, 61);
+}2</string>
+             </property>
+             <widget class="QPushButton" name="resetViewButton">
+              <property name="geometry">
+               <rect>
+                <x>30</x>
+                <y>10</y>
+                <width>40</width>
+                <height>40</height>
+               </rect>
+              </property>
+              <property name="toolTip">
+               <string notr="true">Reset plot area</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="icon">
+               <iconset resource="resources.qrc">
+                <normaloff>:/icons/svg/cil-reload.svg</normaloff>:/icons/svg/cil-reload.svg</iconset>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>18</width>
+                <height>18</height>
+               </size>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="panViewButton">
+              <property name="geometry">
+               <rect>
+                <x>90</x>
+                <y>10</y>
+                <width>40</width>
+                <height>40</height>
+               </rect>
+              </property>
+              <property name="cursor">
+               <cursorShape>ArrowCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string notr="true">Pan mode: move plot region by dragging</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="icon">
+               <iconset resource="resources.qrc">
+                <normaloff>:/icons/svg/cil-move.svg</normaloff>:/icons/svg/cil-move.svg</iconset>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="autoExclusive">
+               <bool>true</bool>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="zoomViewButton">
+              <property name="geometry">
+               <rect>
+                <x>150</x>
+                <y>10</y>
+                <width>40</width>
+                <height>40</height>
+               </rect>
+              </property>
+              <property name="cursor">
+               <cursorShape>ArrowCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string notr="true">Zoom mode: select a plot region to enlarge</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="icon">
+               <iconset resource="resources.qrc">
+                <normaloff>:/icons/svg/cil-zoom.svg</normaloff>:/icons/svg/cil-zoom.svg</iconset>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="autoExclusive">
+               <bool>true</bool>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="selectViewButton">
+              <property name="geometry">
+               <rect>
+                <x>210</x>
+                <y>10</y>
+                <width>41</width>
+                <height>41</height>
+               </rect>
+              </property>
+              <property name="cursor">
+               <cursorShape>CrossCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string notr="true"/>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="icon">
+               <iconset resource="resources.qrc">
+                <normaloff>:/icons/svg/cil-location-pin.svg</normaloff>:/icons/svg/cil-location-pin.svg</iconset>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+              <property name="autoExclusive">
+               <bool>true</bool>
+              </property>
+             </widget>
+             <widget class="QPushButton" name="swapXYButton">
+              <property name="geometry">
+               <rect>
+                <x>270</x>
+                <y>10</y>
+                <width>71</width>
+                <height>41</height>
+               </rect>
+              </property>
+              <property name="cursor">
+               <cursorShape>CrossCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string notr="true"/>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+	border: 0px solid rgb(52, 59, 72);
+	border-radius: 15px;	
+	background-color: rgb(93, 93, 93);
+}
+QPushButton:hover {
+	background-color: rgb(196, 150, 250);
+	border: 0px solid rgb(61, 70, 86);
+}
+QPushButton:pressed {	
+	background-color: rgb(196, 150, 250);
+	border: 0px solid rgb(43, 50, 61);
+}</string>
+              </property>
+              <property name="text">
+               <string>X↔Y</string>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+              <property name="autoExclusive">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </widget>
+           </widget>
+          </item>
           <item row="1" column="1" colspan="3">
            <widget class="QStackedWidget" name="bottomStackedWidget">
             <property name="sizePolicy">
@@ -3170,7 +3368,7 @@ TableView
                     </property>
                     <property name="font">
                      <font>
-                      <family>Roboto Medium</family>
+                      <family>Roboto</family>
                       <pointsize>9</pointsize>
                       <bold>true</bold>
                      </font>
@@ -3434,7 +3632,7 @@ TableView
                     </property>
                     <property name="font">
                      <font>
-                      <family>Roboto Medium</family>
+                      <family>Roboto</family>
                       <pointsize>9</pointsize>
                       <bold>true</bold>
                      </font>
@@ -3542,231 +3740,6 @@ TableView
                </widget>
               </item>
              </layout>
-            </widget>
-           </widget>
-          </item>
-          <item row="0" column="2" colspan="2">
-           <widget class="MplFigureCanvas" name="mplFigureCanvas">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>60</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">background-color: rgb(255, 255, 255);
-color: rgb(200, 200, 200);</string>
-            </property>
-            <property name="lineWidth">
-             <number>0</number>
-            </property>
-            <widget class="MplNavButtons" name="mplFigureButtons" native="true">
-             <property name="geometry">
-              <rect>
-               <x>0</x>
-               <y>0</y>
-               <width>621</width>
-               <height>60</height>
-              </rect>
-             </property>
-             <property name="autoFillBackground">
-              <bool>false</bool>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">QFrame {
-	background-color: rgb(255, 255, 255);
-}
-
-QPushButton {
-	border: 0px solid rgb(52, 59, 72);
-	border-radius: 18px;	
-	background-color: rgb(93, 93, 93);
-}
-
-QPushButton:hover {
-	background-color: rgb(196, 150, 250);
-	border: 0px solid rgb(61, 70, 86);
-}
-QPushButton:pressed {	
-	background-color: rgb(196, 150, 250);
-	border: 0px solid rgb(43, 50, 61);
-}
-QPushButton:checked {	
-	background-color: rgb(196, 150, 250);
-	border: 0px solid rgb(43, 50, 61);
-}</string>
-             </property>
-             <widget class="QPushButton" name="resetViewButton">
-              <property name="geometry">
-               <rect>
-                <x>30</x>
-                <y>10</y>
-                <width>40</width>
-                <height>40</height>
-               </rect>
-              </property>
-              <property name="toolTip">
-               <string notr="true">Reset plot area</string>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="icon">
-               <iconset resource="resources.qrc">
-                <normaloff>:/icons/svg/cil-reload.svg</normaloff>:/icons/svg/cil-reload.svg</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>18</width>
-                <height>18</height>
-               </size>
-              </property>
-             </widget>
-             <widget class="QPushButton" name="panViewButton">
-              <property name="geometry">
-               <rect>
-                <x>90</x>
-                <y>10</y>
-                <width>40</width>
-                <height>40</height>
-               </rect>
-              </property>
-              <property name="cursor">
-               <cursorShape>ArrowCursor</cursorShape>
-              </property>
-              <property name="toolTip">
-               <string notr="true">Pan mode: move plot region by dragging</string>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="icon">
-               <iconset resource="resources.qrc">
-                <normaloff>:/icons/svg/cil-move.svg</normaloff>:/icons/svg/cil-move.svg</iconset>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-              <property name="autoExclusive">
-               <bool>true</bool>
-              </property>
-             </widget>
-             <widget class="QPushButton" name="zoomViewButton">
-              <property name="geometry">
-               <rect>
-                <x>150</x>
-                <y>10</y>
-                <width>40</width>
-                <height>40</height>
-               </rect>
-              </property>
-              <property name="cursor">
-               <cursorShape>ArrowCursor</cursorShape>
-              </property>
-              <property name="toolTip">
-               <string notr="true">Zoom mode: select a plot region to enlarge</string>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="icon">
-               <iconset resource="resources.qrc">
-                <normaloff>:/icons/svg/cil-zoom.svg</normaloff>:/icons/svg/cil-zoom.svg</iconset>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-              <property name="autoExclusive">
-               <bool>true</bool>
-              </property>
-             </widget>
-             <widget class="QPushButton" name="selectViewButton">
-              <property name="geometry">
-               <rect>
-                <x>210</x>
-                <y>10</y>
-                <width>41</width>
-                <height>41</height>
-               </rect>
-              </property>
-              <property name="cursor">
-               <cursorShape>CrossCursor</cursorShape>
-              </property>
-              <property name="toolTip">
-               <string notr="true"/>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="icon">
-               <iconset resource="resources.qrc">
-                <normaloff>:/icons/svg/cil-location-pin.svg</normaloff>:/icons/svg/cil-location-pin.svg</iconset>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-              <property name="autoExclusive">
-               <bool>true</bool>
-              </property>
-             </widget>
-             <widget class="QPushButton" name="swapXYButton">
-              <property name="geometry">
-               <rect>
-                <x>270</x>
-                <y>10</y>
-                <width>71</width>
-                <height>41</height>
-               </rect>
-              </property>
-              <property name="cursor">
-               <cursorShape>CrossCursor</cursorShape>
-              </property>
-              <property name="toolTip">
-               <string notr="true"/>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QPushButton {
-	border: 0px solid rgb(52, 59, 72);
-	border-radius: 15px;	
-	background-color: rgb(93, 93, 93);
-}
-QPushButton:hover {
-	background-color: rgb(196, 150, 250);
-	border: 0px solid rgb(61, 70, 86);
-}
-QPushButton:pressed {	
-	background-color: rgb(196, 150, 250);
-	border: 0px solid rgb(43, 50, 61);
-}</string>
-              </property>
-              <property name="text">
-               <string>X↔Y</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-              <property name="autoExclusive">
-               <bool>true</bool>
-              </property>
-             </widget>
             </widget>
            </widget>
           </item>
