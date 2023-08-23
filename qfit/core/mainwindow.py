@@ -37,6 +37,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QGraphicsDropShadowEffect,
+    QMainWindow,
     QMessageBox,
     QPushButton,
     QStyle,
@@ -87,7 +88,7 @@ MeasurementDataType = Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]
 mpl.rcParams["toolbar"] = "None"
 
 
-class MainWindow(ResizableFramelessWindow):
+class MainWindow(QMainWindow):
     """Class for the main window of the app."""
 
     ui: Ui_MainWindow
@@ -111,7 +112,8 @@ class MainWindow(ResizableFramelessWindow):
     offset: Union[None, QPoint]
 
     def __init__(self, measurementData, hilbert_space, extractedData=None):
-        ResizableFramelessWindow.__init__(self)
+        # ResizableFramelessWindow.__init__(self)
+        QMainWindow.__init__(self)
         self.disconnectCanvas = False  # used to temporarily switch off canvas updates
 
         self.ui = Ui_MainWindow()
