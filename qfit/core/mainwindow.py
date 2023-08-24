@@ -770,6 +770,7 @@ class MainWindow(QMainWindow):
         return self.quantumModel.onButtonPrefitPlotClicked(
             spectrum_data=self.spectrumData,
             extracted_data=self.allDatasets,
+            calibration_data=self.calibrationData,
             result=self.prefitResult,
         )
 
