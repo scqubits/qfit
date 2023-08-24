@@ -65,7 +65,7 @@ from qfit.models.quantum_model_parameters import (
     QuantumModelParameterSet,
     QuantumModelFittingParameter,
 )
-from qfit.models.numerical_spectrum_data import SpectrumData
+from qfit.models.numerical_spectrum_data import CalculatedSpecData
 from qfit.controllers.numerical_model import QuantumModel
 from qfit.widgets.grouped_sliders import (
     LabeledSlider,
@@ -147,7 +147,7 @@ class MainWindow(QMainWindow):
         # prefit: controller, two models and their connection to view (sliders)
         self.sliderParameterSet = QuantumModelParameterSet()
         self.sweepParameterSet = QuantumModelParameterSet()
-        self.spectrumData = SpectrumData()
+        self.spectrumData = CalculatedSpecData()
         self.prefitResult = Result()
         self.quantumModel = QuantumModel(hilbert_space)
         self.quantumModel.addParametersToParameterSet(

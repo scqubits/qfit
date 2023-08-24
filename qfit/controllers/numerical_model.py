@@ -21,7 +21,7 @@ from qfit.models.quantum_model_parameters import (
     QuantumModelParameterSet,
 )
 from qfit.models.status_result_data import Result
-from qfit.models.numerical_spectrum_data import SpectrumData
+from qfit.models.numerical_spectrum_data import CalculatedSpecData
 from qfit.models.calibration_data import CalibrationData
 from qfit.models.extracted_data import AllExtractedData
 from qfit.widgets.data_tagging import (
@@ -430,7 +430,7 @@ class QuantumModel:
             update_hilbertspace=update_hilbertspace,
             evals_count=evals_count,  # change this later to connect to the number from the view
             subsys_update_info=subsys_update_info,
-            autorun=False,  # TODO set to false by default later
+            autorun=False, 
             num_cpus=1,  # change this later to connect to the number from the view
         )
         return param_sweep
@@ -466,7 +466,7 @@ class QuantumModel:
         self,
         slider_or_fit_parameter_set: QuantumModelParameterSet,
         sweep_parameter_set: QuantumModelParameterSet,
-        spectrum_data: SpectrumData,
+        spectrum_data: CalculatedSpecData,
         calibration_data: CalibrationData,
         extracted_data: AllExtractedData,
         prefit_result: Result,
@@ -484,8 +484,8 @@ class QuantumModel:
         sweep_parameter_set: QuantumModelParameterSet
             A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
             which are subject to changes in the parameter sweep.
-        spectrum_data: SpectrumData
-            The SpectrumData object that stores the spectrum data.
+        spectrum_data: CalculatedSpecData
+            The CalculatedSpecData object that stores the spectrum data.
         calibration_data: CalibrationData
             The CalibrationData object that stores the calibration data.
         extracted_data: AllExtractedData
@@ -555,7 +555,7 @@ class QuantumModel:
 
     def onButtonPrefitPlotClicked(
         self,
-        spectrum_data: SpectrumData,
+        spectrum_data: CalculatedSpecData,
         extracted_data: AllExtractedData,
         result: Result,
     ):
