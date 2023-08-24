@@ -31,5 +31,12 @@
         <file>fonts/Roboto-Medium.ttf</file>
         <file>fonts/Roboto-Regular.ttf</file>
         <file>fonts/Roboto-Thin.ttf</file>
+        <file>icons/svg/qfit-icon.svg</file>
+        <file>icons/svg/cil-lock-locked.svg</file>
+        <file>icons/svg/cil-lock-unlocked.svg</file>
+        <file>icons/svg/cil-link.svg</file>
+        <file>icons/svg/cil-link-alt.svg</file>
+        <file>icons/svg/cil-link-broken.svg</file>
+        <file>icons/svg/cil-vertical-align-center.svg</file>
     </qresource>
 </RCC>
