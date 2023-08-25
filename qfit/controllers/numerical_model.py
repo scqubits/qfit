@@ -613,7 +613,7 @@ class QuantumModel:
                     energy_idx
                 ] = calibration_data.inverseCalibrateDataPoint(
                     [0, overall_specdata.energy_table[param_idx][energy_idx]],
-                    calibration_axis="y",
+                    inverse_calibration_axis="y",
                 )[
                     1
                 ]
@@ -625,7 +625,7 @@ class QuantumModel:
                     energy_idx
                 ] = calibration_data.inverseCalibrateDataPoint(
                     [0, specdata_for_highlighting.energy_table[param_idx][energy_idx]],
-                    calibration_axis="y",
+                    inverse_calibration_axis="y",
                 )[
                     1
                 ]
