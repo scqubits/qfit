@@ -11,6 +11,8 @@
 
 import sys
 
+from copy import deepcopy
+
 from PySide6.QtGui import QFont, QFontDatabase
 from PySide6.QtWidgets import QApplication
 
@@ -33,9 +35,10 @@ class qfit:
         font.setWeight(QFont.Normal)
         self.app.setFont(font)
 
+        _hilbert_space = deepcopy(hilbert_space)
         self.window = MainWindow(
             measurementData=dummy_measurement_data(),
-            hilbert_space=hilbert_space,
+            hilbert_space=_hilbert_space,
             extractedData=None,
         )
 
