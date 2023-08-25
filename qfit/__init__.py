@@ -23,21 +23,21 @@ from qfit.models.measurement_data import dummy_measurement_data
 from qfit.controllers.numerical_model import test_hilbert_space
 
 
-def qfit():
-    app = QApplication.instance()
-    if not app:
-        app = QApplication(sys.argv)
-    app = QApplication.instance()
-    QFontDatabase.addApplicationFont(":/fonts/Roboto-Regular.ttf")
-    font = QFontDatabase.font("Roboto", "", 10)
-    font.setWeight(QFont.Normal)
-    app.setFont(font)
+class qfit:
+    def __init__(self, hilbert_space):
+        self.app = QApplication.instance()
+        if self.app is None:
+            self.app = QApplication(sys.argv)
+        QFontDatabase.addApplicationFont(":/fonts/Roboto-Regular.ttf")
+        font = QFontDatabase.font("Roboto", "", 10)
+        font.setWeight(QFont.Normal)
+        self.app.setFont(font)
 
-    window = MainWindow(
-        measurementData=dummy_measurement_data(),
-        hilbert_space=test_hilbert_space(),
-        extractedData=None,
-    )
+        self.window = MainWindow(
+            measurementData=dummy_measurement_data(),
+            hilbert_space=hilbert_space,
+            extractedData=None,
+        )
 
-    window.show()
-    window.openFile(initialize=True)
+        self.window.show()
+        self.window.openFile(initialize=True)
