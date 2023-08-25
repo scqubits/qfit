@@ -24,6 +24,10 @@ from qfit.core.mainwindow import MainWindow
 from qfit.models.measurement_data import dummy_measurement_data
 from qfit.controllers.numerical_model import test_hilbert_space
 
+import scqubits as scq
+
+scq.settings.PROGRESSBAR_DISABLED = True
+
 
 class qfit:
     def __init__(self, hilbert_space):
