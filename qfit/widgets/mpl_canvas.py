@@ -117,13 +117,20 @@ class NavigationHidden(NavigationToolbar2QT):
 
 class SpecialCursor(Cursor):
     def __init__(
-        self, ax, callback=None, horizOn=True, vertOn=True, useblit=False, **lineprops
+        self,
+        ax,
+        callback=None,
+        matching_mode=None,
+        horizOn=True,
+        vertOn=True,
+        useblit=False,
+        **lineprops
     ):
         super().__init__(
             ax, horizOn=horizOn, vertOn=vertOn, useblit=useblit, **lineprops
         )
         self.callback = callback
-        self.matching_mode = False
+        self.matching_mode = matching_mode
 
     def onmove(self, event):
         """Internal event handler to draw the cursor when the mouse moves."""
@@ -145,12 +152,6 @@ class SpecialCursor(Cursor):
         self.linev.set_xdata((event.xdata, event.xdata))
 
         self.lineh.set_ydata((event.ydata, event.ydata))
-        if (
-            self.callback
-            and self.callback.currentRow != 0
-            and len(self.callback.assocDataList[0][0]) > 0
-        ):
-            self.matching_mode = True
         if self.matching_mode == True:
             self.cross = self.ax.scatter(
                 self.closest_line(event.xdata),
@@ -179,12 +180,18 @@ class SpecialCursor(Cursor):
         self._update()
 
     def closest_line(self, xdat):
-        current_data = self.callback.assocDataList[0]
-        allxdiff = {np.abs(xdat - i): i for i in current_data[0]}
+        all_x_list = self.distinctXValues()
+        allxdiff = {np.abs(xdat - i): i for i in all_x_list}
         if allxdiff:
             return allxdiff[min(allxdiff.keys())]
         else:
             return xdat
+
+    def distinctXValues(self):
+        all_x_list = np.array([])
+        for dataset in self.callback.assocDataList:
+            all_x_list = np.concatenate((all_x_list, dataset[0]))
+        return np.unique(all_x_list)
 
     def _update(self):
         if self.useblit:
@@ -227,9 +234,13 @@ class MplFigureCanvas(QFrame):
         return self.canvas.figure.axes[0]
 
     def select_crosshair(self, horizOn=True, vertOn=True):
+        """
+        set up the crosshair cursor
+        """
         self._crosshair = SpecialCursor(
             self.axes(),
             callback=self.callback,
+            matching_mode=self.matching_mode,
             useblit=True,
             horizOn=horizOn,
             vertOn=vertOn,
