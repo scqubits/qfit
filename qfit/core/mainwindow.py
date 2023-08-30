@@ -49,7 +49,10 @@ import qfit.core.app_state as appstate
 from qfit.models.calibration_data import CalibrationData
 from qfit.widgets.calibration import CalibrationView
 from qfit.core.app_state import State
-from qfit.core.helpers import transposeEach
+from qfit.core.helpers import (
+    transposeEach,
+    clearChildren,
+)
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.widgets.data_tagging import TagDataView
 from qfit.io_utils.import_data import importFile
@@ -120,6 +123,8 @@ class MainWindow(QMainWindow):
         # ResizableFramelessWindow.__init__(self)
         QMainWindow.__init__(self)
         self.disconnectCanvas = False  # used to temporarily switch off canvas updates
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.offset = None
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -159,34 +164,8 @@ class MainWindow(QMainWindow):
         self.ui.mplFigureCanvas.selectOn()
 
         # prefit: controller, two models and their connection to view (sliders)
-        self.sliderParameterSet = QuantumModelParameterSet("sliderParameterSet")
-        self.sweepParameterSet = QuantumModelParameterSet("sweepParameterSet")
-        self.spectrumData = CalculatedSpecData()
-        self.prefitResult = Result()
-        self.quantumModel = QuantumModel(hilbert_space)
-        self.quantumModel.addParametersToParameterSet(
-            self.sliderParameterSet,
-            parameter_usage="slider",
-            excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
-        )
-        self.quantumModel.addParametersToParameterSet(
-            self.sweepParameterSet,
-            parameter_usage="sweep",
-            included_parameter_type=["ng", "flux"],
-        )
-        self.prefitSlidersInserts()
-
-        self.prefitSlidersConnects()
-        self.setUpSpectrumPlotConnects()
-        self.prefitSubsystemComboBoxLoads()
-        self.setUpPrefitOptionsConnects()
-        self.setUpPrefitRunConnects()
-
-        self.setFocusPolicy(Qt.StrongFocus)
-        self.offset = None
-
-        # refit result panel connect
-        self.setUpPrefitResultConnects()
+        self.prefitDynamicalElements(hilbert_space)
+        self.prefitStaticElements()
 
         # fit
         self.threadpool = QThreadPool()
@@ -208,7 +187,7 @@ class MainWindow(QMainWindow):
         # fit result panel connect
         self.setUpFitResultConnects()
 
-        # register all the data to the registry
+        # register all the data
 
 
     def dataSetupConnects(self):
@@ -791,6 +770,34 @@ class MainWindow(QMainWindow):
         if distance < 0.025:
             return True
         return False
+    
+    # Pre-fit ##########################################################
+    # ##################################################################
+
+    def prefitDynamicalElements(self, hilbert_space: HilbertSpace):
+        self.sliderParameterSet = QuantumModelParameterSet("sliderParameterSet")
+        self.sweepParameterSet = QuantumModelParameterSet("sweepParameterSet")
+        self.quantumModel = QuantumModel(hilbert_space)
+        self.quantumModel.addParametersToParameterSet(
+            self.sliderParameterSet,
+            parameter_usage="slider",
+            excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
+        )
+        self.quantumModel.addParametersToParameterSet(
+            self.sweepParameterSet,
+            parameter_usage="sweep",
+            included_parameter_type=["ng", "flux"],
+        )
+        self.prefitSlidersInserts()
+        self.prefitSlidersConnects()
+        self.prefitSubsystemComboBoxLoads()
+        self.setUpPrefitOptionsConnects()
+        self.setUpPrefitRunConnects()
+
+    def prefitStaticElements(self):
+        self.prefitResult = Result()
+        self.spectrumData = CalculatedSpecData()
+        self.setUpPrefitResultConnects()
 
     def onParameterChange(self, slider_or_fit_parameter_set: QuantumModelParameterSet):
         return self.quantumModel.onSliderOrFitParameterChange(
@@ -814,10 +821,8 @@ class MainWindow(QMainWindow):
         """
         Insert a set of sliders for the prefit parameters according to the parameter set
         """
-        # # remove the existing widgets, if we somehow want to rebuild the sliders
-        # if self.ui.prefitScrollAreaWidget.layout() is not None:
-        #     for i in reversed(range(self.ui.prefitScrollAreaWidget.layout().count())):
-        #         self.ui.prefitScrollAreaWidget.layout().itemAt(i).widget().setParent(None)
+        # remove the existing widgets, if we somehow want to rebuild the sliders
+        clearChildren(self.ui.prefitScrollAreaWidget)
 
         # create a QWidget for the scrollArea and set a layout for it
         prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
@@ -878,13 +883,13 @@ class MainWindow(QMainWindow):
                 para.initialize()
                 para.setParameterForParent()
 
-    def setUpSpectrumPlotConnects(self):
-        self.spectrumData.setupUICallbacks()
-
     def prefitSubsystemComboBoxLoads(self):
         """
         loading the subsystem names to the combo box (drop down menu)
         """
+        # clear the existing items
+        self.ui.subsysComboBox.clear()
+
         subsys_name_list = [
             QuantumModelParameterSet.parentSystemNames(subsys)
             for subsys in self.quantumModel.hilbertspace.subsystem_list[::-1]
@@ -913,30 +918,13 @@ class MainWindow(QMainWindow):
             mse_change_ui_setter=mse_change_ui_setter,
         )
 
-    def setUpFitResultConnects(self):
-        """
-        connect the prefit result to the relevant UI textboxes; whenever there is
-        a change in the UI, reflect in the UI text change
-        """
-        status_type_ui_setter = lambda: self.ui.label_49.setText(
-            self.fitResult.displayed_status_type
-        )
-        status_text_ui_setter = lambda: self.ui.statusTextLabel_2.setText(
-            self.fitResult.status_text
-        )
-        mse_change_ui_setter = lambda: self.ui.mseLabel_2.setText(
-            self.fitResult.displayed_MSE
-        )
-
-        self.fitResult.setupUISetters(
-            status_type_ui_setter=status_type_ui_setter,
-            status_text_ui_setter=status_text_ui_setter,
-            mse_change_ui_setter=mse_change_ui_setter,
-        )
-
     def setUpPrefitOptionsConnects(self):
         """
-        Set up the connects for the prefit options for UI
+        Set up the connects for the prefit options for UI:
+        1. subsystem combo box
+        2. initial state line edit
+        3. evals count line edit
+        4. points add line edit
         """
         self.ui.evalsCountLineEdit.setText("20")
         self.ui.pointsAddLineEdit.setText("10")
@@ -963,6 +951,11 @@ class MainWindow(QMainWindow):
         self.ui.pointsAddLineEdit.editingFinished.connect(self.updatePlot)
 
     def setUpPrefitRunConnects(self):
+        """
+        Set up the connects for the prefit run for UI:
+        1. autorun checkbox
+        2. run (or "plot") button
+        """
         # connect the autorun checkbox callback
         self.quantumModel.setupAutorunCallbacks(
             autorun_callback=self.ui.autoRunCheckBox.isChecked,
@@ -978,6 +971,9 @@ class MainWindow(QMainWindow):
         self.ui.plotButton.clicked.connect(self.onPrefitPlotClicked)
         # update plot after the fit button is clicked
         self.ui.plotButton.clicked.connect(self.updatePlot)
+
+    # Fit ##############################################################
+    # ##################################################################
 
     def setupFitConnects(self):
         self.numericalFitting.setupUICallbacks(
@@ -1121,6 +1117,31 @@ class MainWindow(QMainWindow):
 
                 para.initialize()
 
+    
+    def setUpFitResultConnects(self):
+        """
+        connect the prefit result to the relevant UI textboxes; 
+        whenever there is a change in the UI, reflect in the UI text change
+        """
+        status_type_ui_setter = lambda: self.ui.label_49.setText(
+            self.fitResult.displayed_status_type
+        )
+        status_text_ui_setter = lambda: self.ui.statusTextLabel_2.setText(
+            self.fitResult.status_text
+        )
+        mse_change_ui_setter = lambda: self.ui.mseLabel_2.setText(
+            self.fitResult.displayed_MSE
+        )
+
+        self.fitResult.setupUISetters(
+            status_type_ui_setter=status_type_ui_setter,
+            status_text_ui_setter=status_text_ui_setter,
+            mse_change_ui_setter=mse_change_ui_setter,
+        )
+
+    # IO ###############################################################
+    # ##################################################################
+
     def register(self):
         self.registry = Registry()
 
@@ -1133,17 +1154,25 @@ class MainWindow(QMainWindow):
         self.registry.register(self.fitParameterSet)
         self.registry.register(self.sweepParameterSet)
 
+        # not yet finished
+
     @Slot()
     def openFile(self, initialize: bool = False):
         if not initialize:
             self.ui_menu.toggle()
         self.measurementData, self.extractedData = importFile(parent=self)
 
+        # also a new hilbert space, many more things... 
+
         self.calibrationData.resetCalibration()
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
         self.dataSetupConnects()
         self.setupUIXYZComboBoxes()
+
+        # test: hilbert space not changed
+        self.prefitDynamicalElements(self.quantumModel.hilbertspace)
+
         self.updatePlot(initialize=True)
         self.raise_()
 

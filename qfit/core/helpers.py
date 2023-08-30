@@ -21,7 +21,7 @@ from matplotlib import colormaps
 from PySide6 import QtCore as QtCore
 from PySide6.QtCore import QLocale
 from PySide6.QtGui import QDoubleValidator
-from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate
+from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate, QWidget
 
 from typing import Dict, List, Literal, Optional, Tuple, Union
 
@@ -144,6 +144,18 @@ def transposeEach(xyDataList):
 
 def remove_nones(dict_data):
     return {key: value for key, value in dict_data.items() if value is not None}
+
+
+# widgets ######################################################################
+def clearChildren(widget: QWidget):
+    layout = widget.layout()
+    if layout is None:
+        return
+    for i in reversed(range(layout.count())):
+        widget = layout.itemAt(i).widget()
+        if widget:  # Check if the item is a widget
+            widget.setParent(None)
+            widget.deleteLater()
 
 
 # Plot #########################################################################
