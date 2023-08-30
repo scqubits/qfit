@@ -580,6 +580,7 @@ class MainWindow(QMainWindow):
         if event.xdata is None or event.ydata is None:
             return
 
+        # calibration mode
         for calibrationLabel in ["X1", "X2", "Y1", "Y2"]:
             data = event.xdata if (calibrationLabel[0] == "X") else event.ydata
 
@@ -592,12 +593,15 @@ class MainWindow(QMainWindow):
                 self.rawLineEdits[calibrationLabel].editingFinished.emit()
                 return
 
+        # select mode
         if appstate.state == State.SELECT:
             current_data = self.activeDataset.all()
             if self.matching_mode:
                 x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
             else:
                 x1y1 = np.asarray([event.xdata, event.ydata])
+                # turn on the horizontal snap automatically, if the user turned it off
+                self.ui.horizontalSnapButton.setChecked(True)
             for index, x2y2 in enumerate(current_data.transpose()):
                 if self.isRelativelyClose(x1y1, x2y2):
                     self.activeDataset.removeColumn(index)

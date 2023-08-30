@@ -22,6 +22,11 @@ from qfit.io_utils.io_readers import (
 )
 
 
+class StopExecution(Exception):
+    def _render_traceback_(self):
+        pass
+
+
 def importFile(parent=None):
     """
     Opens a standard file dialog box for the user to select a file to be opened. Supported files types are
@@ -45,7 +50,9 @@ def importFile(parent=None):
         fileCategories = "Data files (*.h5 *.mat *.csv *.jpg *.jpeg *.png *.hdf5)"
         fileName, _ = QFileDialog.getOpenFileName(parent, "Open", home, fileCategories)
         if not fileName:
-            exit()
+            parent.close()
+            # parent.deleteLater()
+            raise StopExecution
 
         fileData = readFileData(fileName)
 

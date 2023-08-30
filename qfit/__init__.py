@@ -31,13 +31,13 @@ scq.settings.PROGRESSBAR_DISABLED = True
 
 class qfit:
     def __init__(self, hilbert_space):
-        self.app = QApplication.instance()
-        if self.app is None:
-            self.app = QApplication(sys.argv)
+        # self.app = QApplication.instance()
+        # if self.app is None:
+        #     self.app = QApplication(sys.argv)
         QFontDatabase.addApplicationFont(":/fonts/Roboto-Regular.ttf")
         font = QFontDatabase.font("Roboto", "", 10)
         font.setWeight(QFont.Normal)
-        self.app.setFont(font)
+        # self.app.setFont(font)
 
         _hilbert_space = deepcopy(hilbert_space)
         self.window = MainWindow(
@@ -47,4 +47,5 @@ class qfit:
         )
 
         self.window.show()
+        # self.window.closeEvent = lambda event: self.app.quit()
         self.window.openFile(initialize=True)
