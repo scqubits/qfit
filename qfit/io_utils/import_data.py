@@ -14,6 +14,7 @@ import os
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 import qfit.models.qfit_data as fit
+from qfit.core.helpers import StopExecution
 
 from qfit.io_utils.io_readers import (
     ImageMeasurementData,
@@ -45,7 +46,8 @@ def importFile(parent=None):
         fileCategories = "Data files (*.h5 *.mat *.csv *.jpg *.jpeg *.png *.hdf5)"
         fileName, _ = QFileDialog.getOpenFileName(parent, "Open", home, fileCategories)
         if not fileName:
-            exit()
+            parent.closeApp()
+            raise StopExecution
 
         fileData = readFileData(fileName)
 
