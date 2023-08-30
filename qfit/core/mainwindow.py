@@ -49,7 +49,7 @@ import qfit.core.app_state as appstate
 from qfit.models.calibration_data import CalibrationData
 from qfit.widgets.calibration import CalibrationView
 from qfit.core.app_state import State
-from qfit.core.helpers import transposeEach
+from qfit.core.helpers import transposeEach, executed_in_ipython, StopExecution
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.widgets.data_tagging import TagDataView
 from qfit.io_utils.import_data import importFile
@@ -114,6 +114,7 @@ class MainWindow(QMainWindow):
     def __init__(self, measurementData, hilbert_space, extractedData=None):
         # ResizableFramelessWindow.__init__(self)
         QMainWindow.__init__(self)
+        self.openFromIPython = executed_in_ipython()
         self.disconnectCanvas = False  # used to temporarily switch off canvas updates
 
         self.ui = Ui_MainWindow()
@@ -1133,7 +1134,12 @@ class MainWindow(QMainWindow):
     def closeApp(self):
         """End the application"""
         if self.allDatasets.isEmpty():
-            sys.exit()
+            # if run through ipython, no need to perform sys.exit, just close and delete
+            # the window
+            if self.openFromIPython:
+                self.closeAppIPython()
+            else:
+                sys.exit()
         else:
             msgBox = QMessageBox()
             msgBox.setWindowTitle("qfit")
@@ -1150,8 +1156,54 @@ class MainWindow(QMainWindow):
             if reply == QMessageBox.Save:
                 self.saveAndCloseApp()
             elif reply == QMessageBox.Discard:
-                sys.exit()
+                if self.openFromIPython:
+                    self.closeAppIPython()
+                else:
+                    sys.exit()
             return
+
+    def closeEvent(self, event):
+        """End the application"""
+        if self.allDatasets.isEmpty():
+            # if run through ipython, no need to perform sys.exit, just close and delete
+            # the window
+            if self.openFromIPython:
+                self.closeAppIPython()
+            else:
+                sys.exit()
+        else:
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle("qfit")
+            msgBox.setIcon(QMessageBox.Question)
+            msgBox.setInformativeText("Do you want to save changes?")
+            msgBox.setText("This document has been modified.")
+            msgBox.setStandardButtons(
+                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
+            )
+            msgBox.setDefaultButton(QMessageBox.Save)
+
+            reply = msgBox.exec_()
+
+            if reply == QMessageBox.Save:
+                self.saveAndCloseApp()
+                event.accept()
+            elif reply == QMessageBox.Discard:
+                if self.openFromIPython:
+                    self.closeAppIPython()
+                    event.accept()
+                else:
+                    sys.exit()
+            else:
+                event.ignore()
+
+    def closeAppIPython(self):
+        """
+        Close the app when running in ipython
+        """
+        self.close()
+        self.deleteLater()
+        self.destroy()
+        # raise StopExecution
 
     @Slot()
     def saveAndCloseApp(self):
@@ -1160,7 +1212,10 @@ class MainWindow(QMainWindow):
         success = saveFile(self)
         if not success:
             return
-        sys.exit()
+        if self.openFromIPython:
+            self.closeAppIPython()
+        else:
+            sys.exit()
 
     def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)

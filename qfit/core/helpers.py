@@ -222,6 +222,20 @@ def datetime_dir(
     print(f"Current datetime directory: {current_date_dir}")
     return current_date_dir
 
+# Function checking whether code is run from a jupyter notebook or inside ipython
+def executed_in_ipython():
+    try:  # inside ipython, the function get_ipython is always in globals()
+        shell = get_ipython().__class__.__name__
+        if shell in ["ZMQInteractiveShell", "TerminalInteractiveShell"]:
+            return True  # Jupyter notebook or qtconsole of IPython
+        return False  # Other type (?)
+    except NameError:
+        return False  # Probably standard Python interpreter
+
+class StopExecution(Exception):
+    def _render_traceback_(self):
+        pass
+
 # def save_variable_dict(file_name, variable_dict: Dict[str, float]):
 #     """
 #     Save a dictionary contains name-value pairs to a csv file.

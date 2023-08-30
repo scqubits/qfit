@@ -47,5 +47,4 @@ class qfit:
         )
 
         self.window.show()
-        # self.window.closeEvent = lambda event: self.app.quit()
         self.window.openFile(initialize=True)
