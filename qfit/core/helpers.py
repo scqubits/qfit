@@ -13,7 +13,7 @@ import os, time
 from collections import OrderedDict
 
 import numpy as np
-import pandas as pd
+# import pandas as pd
 
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
@@ -222,73 +222,73 @@ def datetime_dir(
     print(f"Current datetime directory: {current_date_dir}")
     return current_date_dir
 
-def save_variable_dict(file_name, variable_dict: Dict[str, float]):
-    """
-    Save a dictionary contains name-value pairs to a csv file.
-    """
-    new_dict = dict([(key, [val]) for key, val in variable_dict.items()])
-    pd.DataFrame.from_dict(
-        new_dict,
-        orient="columns",
-    ).to_csv(file_name)
+# def save_variable_dict(file_name, variable_dict: Dict[str, float]):
+#     """
+#     Save a dictionary contains name-value pairs to a csv file.
+#     """
+#     new_dict = dict([(key, [val]) for key, val in variable_dict.items()])
+#     pd.DataFrame.from_dict(
+#         new_dict,
+#         orient="columns",
+#     ).to_csv(file_name)
 
-def load_variable_dict(file_name) -> Dict[str, float]:
-    """
-    Load a dictionary contains name-value pairs from a csv file. The file should be 
-    saved by save_variable_dict.
-    """
-    list_dict = pd.read_csv(
-        file_name, 
-        index_col=0,
-        header=0
-    ).to_dict(orient='list')
-    new_dict = dict([(key, val[0]) for key, val in list_dict.items()])
-    return new_dict
+# def load_variable_dict(file_name) -> Dict[str, float]:
+#     """
+#     Load a dictionary contains name-value pairs from a csv file. The file should be 
+#     saved by save_variable_dict.
+#     """
+#     list_dict = pd.read_csv(
+#         file_name, 
+#         index_col=0,
+#         header=0
+#     ).to_dict(orient='list')
+#     new_dict = dict([(key, val[0]) for key, val in list_dict.items()])
+#     return new_dict
 
-def save_variable_list_dict(
-    file_name, 
-    variable_list_dict: Dict[str, np.ndarray], 
-    orient: Literal['columns', 'index'] = 'columns',
-) -> None:
-    """
-    Save a dictionary contains name-value_list pairs to a csv file.
+# def save_variable_list_dict(
+#     file_name, 
+#     variable_list_dict: Dict[str, np.ndarray], 
+#     orient: Literal['columns', 'index'] = 'columns',
+# ) -> None:
+#     """
+#     Save a dictionary contains name-value_list pairs to a csv file.
 
-    orient = 'index' SHOULD be used when variable list are not equal in length
-    """
-    pd.DataFrame.from_dict(
-        variable_list_dict,
-        orient=orient,
-    ).to_csv(file_name)
+#     orient = 'index' SHOULD be used when variable list are not equal in length
+#     """
+#     pd.DataFrame.from_dict(
+#         variable_list_dict,
+#         orient=orient,
+#     ).to_csv(file_name)
 
-def load_variable_list_dict(
-    file_name, 
-    throw_nan = True, 
-    orient: Literal['columns', 'index'] = 'columns'
-) -> Dict[str, np.ndarray]:
-    """
-    Load a dictionary contains name-value_list pairs from a csv file. The file should be
-    saved by save_variable_list_dict.
+# def load_variable_list_dict(
+#     file_name, 
+#     throw_nan = True, 
+#     orient: Literal['columns', 'index'] = 'columns'
+# ) -> Dict[str, np.ndarray]:
+#     """
+#     Load a dictionary contains name-value_list pairs from a csv file. The file should be
+#     saved by save_variable_list_dict.
 
-    throw_nan : bool
-        If True, remove nan in the list. It's useful when the list is not equal in length.
+#     throw_nan : bool
+#         If True, remove nan in the list. It's useful when the list is not equal in length.
 
-    orient = 'index' should be used when variable list are not equal in length
-    """
-    if orient == 'index':
-        variable_list_dict = pd.read_csv(
-            file_name, index_col=0, header=0).transpose().to_dict(orient='list')
-    elif orient == 'columns':
-        variable_list_dict = pd.read_csv(
-            file_name, index_col=0, header=0).to_dict(orient='list')
-    else:
-        raise ValueError("only recognize 'index' or 'columns' for orient")
+#     orient = 'index' should be used when variable list are not equal in length
+#     """
+#     if orient == 'index':
+#         variable_list_dict = pd.read_csv(
+#             file_name, index_col=0, header=0).transpose().to_dict(orient='list')
+#     elif orient == 'columns':
+#         variable_list_dict = pd.read_csv(
+#             file_name, index_col=0, header=0).to_dict(orient='list')
+#     else:
+#         raise ValueError("only recognize 'index' or 'columns' for orient")
 
-    if not throw_nan:
-        return dict([(key, np.array(val)) for key, val in variable_list_dict.items()])
+#     if not throw_nan:
+#         return dict([(key, np.array(val)) for key, val in variable_list_dict.items()])
 
-    for key, val in variable_list_dict.items():
-        new_val = np.array(val)
-        new_val = new_val[~np.isnan(val)]
-        variable_list_dict[key] = new_val
-    return variable_list_dict
+#     for key, val in variable_list_dict.items():
+#         new_val = np.array(val)
+#         new_val = new_val[~np.isnan(val)]
+#         variable_list_dict[key] = new_val
+#     return variable_list_dict
 

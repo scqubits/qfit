@@ -37,6 +37,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QGraphicsDropShadowEffect,
+    QMainWindow,
     QMessageBox,
     QPushButton,
     QStyle,
@@ -64,7 +65,7 @@ from qfit.models.quantum_model_parameters import (
     QuantumModelParameterSet,
     QuantumModelFittingParameter,
 )
-from qfit.models.numerical_spectrum_data import SpectrumData
+from qfit.models.numerical_spectrum_data import CalculatedSpecData
 from qfit.controllers.numerical_model import QuantumModel
 from qfit.widgets.grouped_sliders import (
     LabeledSlider,
@@ -87,7 +88,7 @@ MeasurementDataType = Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]
 mpl.rcParams["toolbar"] = "None"
 
 
-class MainWindow(ResizableFramelessWindow):
+class MainWindow(QMainWindow):
     """Class for the main window of the app."""
 
     ui: Ui_MainWindow
@@ -111,7 +112,8 @@ class MainWindow(ResizableFramelessWindow):
     offset: Union[None, QPoint]
 
     def __init__(self, measurementData, hilbert_space, extractedData=None):
-        ResizableFramelessWindow.__init__(self)
+        # ResizableFramelessWindow.__init__(self)
+        QMainWindow.__init__(self)
         self.disconnectCanvas = False  # used to temporarily switch off canvas updates
 
         self.ui = Ui_MainWindow()
@@ -145,7 +147,7 @@ class MainWindow(ResizableFramelessWindow):
         # prefit: controller, two models and their connection to view (sliders)
         self.sliderParameterSet = QuantumModelParameterSet()
         self.sweepParameterSet = QuantumModelParameterSet()
-        self.spectrumData = SpectrumData()
+        self.spectrumData = CalculatedSpecData()
         self.prefitResult = Result()
         self.quantumModel = QuantumModel(hilbert_space)
         self.quantumModel.addParametersToParameterSet(
@@ -193,6 +195,7 @@ class MainWindow(ResizableFramelessWindow):
         self.numericalFitting = NumericalFitting()
         self.fitResult = Result()
 
+        self.setupFitConnects()
         self.fitTableInserts()
         self.fitTableConnects()
         self.fittingCallbackConnects()
@@ -767,6 +770,7 @@ class MainWindow(ResizableFramelessWindow):
         return self.quantumModel.onButtonPrefitPlotClicked(
             spectrum_data=self.spectrumData,
             extracted_data=self.allDatasets,
+            calibration_data=self.calibrationData,
             result=self.prefitResult,
         )
 
@@ -935,6 +939,11 @@ class MainWindow(ResizableFramelessWindow):
         # update plot after the fit button is clicked
         self.ui.plotButton.clicked.connect(self.updatePlot)
 
+    def setupFitConnects(self):
+        self.numericalFitting.setupUICallbacks(
+            lambda: "Nelder-Mead",
+        )
+
     def fitTableInserts(self):
         """
         Insert a set of tables for the fitting parameters
@@ -966,12 +975,12 @@ class MainWindow(ResizableFramelessWindow):
         self.fitParameterSet.loadAttrDict(init_value_dict, "initValue")
         self.fitParameterSet.loadAttrDict(init_value_dict, "value")
         max_value_dict = {
-            key: (value * 1.1 if value > 0 else value * 0.9)
+            key: (value * 1.2 if value > 0 else value * 0.8)
             for key, value in init_value_dict.items()
         }
         self.fitParameterSet.loadAttrDict(max_value_dict, "max")
         min_value_dict = {
-            key: (value * 0.9 if value > 0 else value * 1.1)
+            key: (value * 0.8 if value > 0 else value * 1.2)
             for key, value in init_value_dict.items()
         }
         self.fitParameterSet.loadAttrDict(min_value_dict, "min")
@@ -995,6 +1004,7 @@ class MainWindow(ResizableFramelessWindow):
         # the numericalFitting object will be deleted after background running
         # so we need to create a new one and connect the signals again
         self.numericalFitting = NumericalFitting()
+        self.setupFitConnects()
         self.fittingCallbackConnects()
 
     def fittingCallbackConnects(self):

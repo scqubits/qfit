@@ -227,13 +227,13 @@ class AllExtractedData(
             icon1 = QtGui.QIcon()
             if self.assocTagList[index.row()].tagType != NO_TAG:
                 icon1.addPixmap(
-                    QtGui.QPixmap(":/icons/24x24/cil-list.png"),
+                    QtGui.QPixmap(":/icons/svg/cil-list.svg"),
                     QtGui.QIcon.Normal,
                     QtGui.QIcon.Off,
                 )
             else:
                 icon1.addPixmap(
-                    QtGui.QPixmap(":/icons/24x24/cil-link-broken.png"),
+                    QtGui.QPixmap(":/icons/svg/cil-link-broken.svg"),
                     QtGui.QIcon.Normal,
                     QtGui.QIcon.Off,
                 )

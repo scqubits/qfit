@@ -19,7 +19,7 @@ from scqubits.core.storage import SpectrumData
 
 import qfit.io_utils.file_io_serializers as serializers
 
-class SpectrumData(serializers.Serializable):
+class CalculatedSpecData(serializers.Serializable):
     """
     Class for storing and manipulating the spectrum data calculated from the scqbits
     backends. 

@@ -21,7 +21,7 @@ from qfit.models.quantum_model_parameters import (
     QuantumModelParameterSet,
 )
 from qfit.models.status_result_data import Result
-from qfit.models.numerical_spectrum_data import SpectrumData
+from qfit.models.numerical_spectrum_data import CalculatedSpecData
 from qfit.models.calibration_data import CalibrationData
 from qfit.models.extracted_data import AllExtractedData
 from qfit.widgets.data_tagging import (
@@ -430,7 +430,7 @@ class QuantumModel:
             update_hilbertspace=update_hilbertspace,
             evals_count=evals_count,  # change this later to connect to the number from the view
             subsys_update_info=subsys_update_info,
-            autorun=False,  # TODO set to false by default later
+            autorun=False,
             num_cpus=1,  # change this later to connect to the number from the view
         )
         return param_sweep
@@ -466,7 +466,7 @@ class QuantumModel:
         self,
         slider_or_fit_parameter_set: QuantumModelParameterSet,
         sweep_parameter_set: QuantumModelParameterSet,
-        spectrum_data: SpectrumData,
+        spectrum_data: CalculatedSpecData,
         calibration_data: CalibrationData,
         extracted_data: AllExtractedData,
         prefit_result: Result,
@@ -484,8 +484,8 @@ class QuantumModel:
         sweep_parameter_set: QuantumModelParameterSet
             A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
             which are subject to changes in the parameter sweep.
-        spectrum_data: SpectrumData
-            The SpectrumData object that stores the spectrum data.
+        spectrum_data: CalculatedSpecData
+            The CalculatedSpecData object that stores the spectrum data.
         calibration_data: CalibrationData
             The CalibrationData object that stores the calibration data.
         extracted_data: AllExtractedData
@@ -514,16 +514,23 @@ class QuantumModel:
                     f"Please extract data before running the prefit."
                 )
             else:
-                prefit_result.status_text = (f"Fail to initialize the parameter sweep with "
-                                            f"{type(e).__name__}: {e}")
+                prefit_result.status_text = (
+                    f"Fail to initialize the parameter sweep with "
+                    f"{type(e).__name__}: {e}"
+                )
             return
-        
+
         prefit_result.status_type = "SUCCESS"
-        prefit_result.status_text = (f"")
+        prefit_result.status_text = f""
 
         # if autorun, perform the rest of the steps (compute spectrum, plot, calculate MSE)
         if self.autorun_callback():
-            self.onButtonPrefitPlotClicked(spectrum_data, extracted_data, prefit_result)
+            self.onButtonPrefitPlotClicked(
+                spectrum_data=spectrum_data,
+                extracted_data=extracted_data,
+                calibration_data=calibration_data,
+                result=prefit_result,
+            )
 
     def regenerateSweepOnParameterChange(
         self,
@@ -555,8 +562,9 @@ class QuantumModel:
 
     def onButtonPrefitPlotClicked(
         self,
-        spectrum_data: SpectrumData,
+        spectrum_data: CalculatedSpecData,
         extracted_data: AllExtractedData,
+        calibration_data: CalibrationData,
         result: Result,
     ):
         """
@@ -593,11 +601,34 @@ class QuantumModel:
             as_specdata=True,
         )
 
-        # TODO: scale with calibration data
-
         # substract the ground state energy
         overall_specdata = copy.deepcopy(self.sweep[(slice(None),)].dressed_specdata)
         overall_specdata.energy_table -= specdata_for_highlighting.subtract
+
+        # scale the spectrum data accordingly, based on the calibration
+        # this step is carried out based on the inverse calibration function in the calibration data
+        for param_idx in range(len(overall_specdata.energy_table)):
+            for energy_idx in range(len(overall_specdata.energy_table[param_idx])):
+                overall_specdata.energy_table[param_idx][
+                    energy_idx
+                ] = calibration_data.inverseCalibrateDataPoint(
+                    [0, overall_specdata.energy_table[param_idx][energy_idx]],
+                    calibration_axis="y",
+                )[
+                    1
+                ]
+        for param_idx in range(len(specdata_for_highlighting.energy_table)):
+            for energy_idx in range(
+                len(specdata_for_highlighting.energy_table[param_idx])
+            ):
+                specdata_for_highlighting.energy_table[param_idx][
+                    energy_idx
+                ] = calibration_data.inverseCalibrateDataPoint(
+                    [0, specdata_for_highlighting.energy_table[param_idx][energy_idx]],
+                    calibration_axis="y",
+                )[
+                    1
+                ]
 
         # update spectrum_data
         # do not need call spectrum_data.canvasPlot(). It is done in the mainwindow with
@@ -736,7 +767,7 @@ class QuantumModel:
                         dataNames_with_unidentifiable_tag.append(dataName)
 
                 if tag.photons is None:
-                    photons = 1     # NO_TAG
+                    photons = 1  # NO_TAG
                 else:
                     photons = tag.photons
                 transition_freq /= photons
