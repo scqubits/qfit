@@ -74,11 +74,10 @@ class ParameterBase(ABC):
             # self.setParameterForParent()
 
         return RegistryEntry(
-            name=self.name,
-            value=getattr(self, attribute),
-            quantity_type=self.param_type,
-            setter=setter_func,
-            getter=lambda: getattr(self, attribute),
+            name = self.name,
+            quantity_type = "r+",
+            getter = lambda: getattr(self, attribute),
+            setter = setter_func,
         )
     
     def registerAll(self,) -> Dict[str, RegistryEntry]:
@@ -834,18 +833,18 @@ class QuantumModelParameterSet:
         """
         registry = {}
         for parent_system, para_dict in self.parameters.items():
-            for name, para in para_dict.items():
+            for para_name, para in para_dict.items():
                 entry_dict = para.registerAll()
+
                 # update the name of the parameter
-                for entry in entry_dict.values():
+                for attr_name, entry in entry_dict.items():
                     new_name = (
                         f"{self.name}"
                         f".{self.parentNameByObj[parent_system]}"
-                        f".{name}"
+                        f".{para_name}"
+                        f".{attr_name}"
                     )
                     entry.name = new_name
-                    entry_dict[new_name] = entry_dict.pop(name)
-
-                registry.update(entry_dict)
+                    registry[new_name] = entry
 
         return registry

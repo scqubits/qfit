@@ -30,7 +30,10 @@ scq.settings.PROGRESSBAR_DISABLED = True
 
 
 class qfit:
-    def __init__(self, hilbert_space):
+    def __init__(
+        self, 
+        hilbert_space,
+    ):
         self.app = QApplication.instance()
         if self.app is None:
             self.app = QApplication(sys.argv)

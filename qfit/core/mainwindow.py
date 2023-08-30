@@ -79,6 +79,9 @@ from qfit.controllers.fit import NumericalFitting
 # message
 from qfit.models.status_result_data import Result
 
+# registry
+from qfit.io_utils.registry import Registry
+
 if TYPE_CHECKING:
     from qfit.widgets.calibration import CalibrationLineEdit
     from qfit.models.qfit_data import QfitData
@@ -110,6 +113,8 @@ class MainWindow(QMainWindow):
     axes: mpl.axes.Axes
     cidCanvas: int
     offset: Union[None, QPoint]
+
+    registry: Registry
 
     def __init__(self, measurementData, hilbert_space, extractedData=None):
         # ResizableFramelessWindow.__init__(self)
@@ -146,6 +151,13 @@ class MainWindow(QMainWindow):
         self.extractedData = extractedData
         self.dataSetupConnects()
 
+        # setup mpl canvas
+        self.uiColorScaleConnects()
+        self.uiCalibrationConnects()
+        self.uiCanvasControlConnects()
+        self.uiMplCanvasConnects()
+        self.ui.mplFigureCanvas.selectOn()
+
         # prefit: controller, two models and their connection to view (sliders)
         self.sliderParameterSet = QuantumModelParameterSet("sliderParameterSet")
         self.sweepParameterSet = QuantumModelParameterSet("sweepParameterSet")
@@ -162,18 +174,8 @@ class MainWindow(QMainWindow):
             parameter_usage="sweep",
             included_parameter_type=["ng", "flux"],
         )
-
         self.prefitSlidersInserts()
 
-        # setup mpl canvas
-        self.uiColorScaleConnects()
-        self.uiCalibrationConnects()
-        self.uiCanvasControlConnects()
-        self.uiMplCanvasConnects()
-        self.ui.mplFigureCanvas.selectOn()
-
-        # prefit: connect the data model to the sliders, canvas, boxes etc. Should be done after
-        # the canvas is set up.
         self.prefitSlidersConnects()
         self.setUpSpectrumPlotConnects()
         self.prefitSubsystemComboBoxLoads()
@@ -205,6 +207,9 @@ class MainWindow(QMainWindow):
 
         # fit result panel connect
         self.setUpFitResultConnects()
+
+        # register all the data to the registry
+
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -418,7 +423,7 @@ class MainWindow(QMainWindow):
 
         # A new selection of a data set item in ListView is accompanied by an update
         # of the canvas to show the appropriate plot of selected points
-        self.ui.datasetListView.clicked.connect(lambda: self.updatePlot(init=False))
+        self.ui.datasetListView.clicked.connect(lambda: self.updatePlot(initialize=False))
 
         # Whenever tag type or tag data is changed, update the AllExtractedData data
         self.tagDataView.changedTagType.connect(
@@ -531,8 +536,8 @@ class MainWindow(QMainWindow):
 
     def uiMenuConnects(self):
         self.ui.toggleMenuButton.clicked.connect(self.ui_menu.toggle)
-        # self.ui_menu.menuQuitButton.clicked.connect(self.closeApp)
-        # self.ui_menu.menuOpenButton.clicked.connect(self.openFile)
+        # self.ui_menu.ui.menuQuitButton.clicked.connect(self.closeApp)
+        self.ui_menu.ui.menuOpenButton.clicked.connect(self.openFile)
 
     def setupXYDataBoxes(self):
         self.ui.xComboBox.clear()
@@ -643,7 +648,8 @@ class MainWindow(QMainWindow):
         self.measurementData.canvasPlot(self.axes, cmap=cmap)
 
         # plot the numerically calculated spectrum
-        self.spectrumData.canvasPlot(self.axes)
+        if not initialize:
+            self.spectrumData.canvasPlot(self.axes)
 
         # If there are any extracted data points in the currently active data set, show
         # those via a scatter plot.
@@ -808,6 +814,10 @@ class MainWindow(QMainWindow):
         """
         Insert a set of sliders for the prefit parameters according to the parameter set
         """
+        # # remove the existing widgets, if we somehow want to rebuild the sliders
+        # if self.ui.prefitScrollAreaWidget.layout() is not None:
+        #     for i in reversed(range(self.ui.prefitScrollAreaWidget.layout().count())):
+        #         self.ui.prefitScrollAreaWidget.layout().itemAt(i).widget().setParent(None)
 
         # create a QWidget for the scrollArea and set a layout for it
         prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
@@ -1110,6 +1120,18 @@ class MainWindow(QMainWindow):
                 single_row.maxValue.editingFinished.connect(para.onMaxEditingFinished)
 
                 para.initialize()
+
+    def register(self):
+        self.registry = Registry()
+
+        # special registry: 
+        self.registry.register(self.quantumModel.hilbertspace)
+        self.registry.register(self.measurementData)
+
+        # parameters
+        self.registry.register(self.sliderParameterSet)
+        self.registry.register(self.fitParameterSet)
+        self.registry.register(self.sweepParameterSet)
 
     @Slot()
     def openFile(self, initialize: bool = False):
