@@ -1,7 +1,7 @@
 
 from typing import Callable, Any, Dict
 
-class RegistedEntry:
+class RegistryEntry:
     def __init__(
         self, 
         name: str,
@@ -61,30 +61,23 @@ class RegistedEntry:
 
         
 class Registry:
-    _registry: Dict[str, RegistedEntry] = {}
+    _registry: Dict[str, RegistryEntry] = {}
     def __init__(self):
         pass
 
     def register(
         self,
-        name: str,
-        value,
-        quantity_type: str,
-        setter: Callable[[Any], None],
-        getter: Callable[[], Any],
+        item: RegistryEntry
     ):
-        self._registry[name] = RegistedEntry(
-            name,
-            value,
-            quantity_type,
-            setter,
-            getter,
-        )
-
+        self._registry[item.name] = item
+    
     def export(self) -> Dict[str, Any]:
         full_dict = {}
         for entry in self._registry.values():
             full_dict.update(entry.export())
         
         return full_dict
+    
+    def exportPkl(self,):
+        pass
     

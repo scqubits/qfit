@@ -145,8 +145,8 @@ class MainWindow(QMainWindow):
         self.dataSetupConnects()
 
         # prefit: controller, two models and their connection to view (sliders)
-        self.sliderParameterSet = QuantumModelParameterSet()
-        self.sweepParameterSet = QuantumModelParameterSet()
+        self.sliderParameterSet = QuantumModelParameterSet("sliderParameterSet")
+        self.sweepParameterSet = QuantumModelParameterSet("sweepParameterSet")
         self.spectrumData = SpectrumData()
         self.prefitResult = Result()
         self.quantumModel = QuantumModel(hilbert_space)
@@ -186,7 +186,7 @@ class MainWindow(QMainWindow):
 
         # fit
         self.threadpool = QThreadPool()
-        self.fitParameterSet = QuantumModelParameterSet()
+        self.fitParameterSet = QuantumModelParameterSet("fitParameterSet")
         self.quantumModel.addParametersToParameterSet(
             self.fitParameterSet,
             parameter_usage="fit",

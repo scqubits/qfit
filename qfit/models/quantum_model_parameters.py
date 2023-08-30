@@ -5,6 +5,7 @@ from scqubits import HilbertSpace
 from scqubits.core.qubit_base import QuantumSystem
 
 from qfit.models.parameter_settings import ParameterType
+from qfit.io_utils.registry import RegistryEntry
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
 
 from typing import Dict, List, Union, overload, Tuple, Callable, Literal, Any
@@ -14,6 +15,7 @@ ParentSystem = Union[QuantumSystem, HilbertSpace]
 class ParameterBase(ABC):
 
     intergerParameterTypes = ["cutoff", "truncated_dim"]
+    attrToRegister: List[str] = ["value"]
 
     def __init__(
         self,
@@ -61,6 +63,31 @@ class ParameterBase(ABC):
         """
         pass
 
+    def _toRegistryEntry(self, attribute: str = "value") -> RegistryEntry:
+        """
+        Convert the parameter to a RegistryEntry object. The name of the
+        RegistryEntry object is not complete, and should be updated later.
+        """
+
+        def setter_func(value):
+            setattr(self, attribute, value)
+            # self.setParameterForParent()
+
+        return RegistryEntry(
+            name=self.name,
+            value=getattr(self, attribute),
+            quantity_type=self.param_type,
+            setter=setter_func,
+            getter=lambda: getattr(self, attribute),
+        )
+    
+    def registerAll(self,) -> Dict[str, RegistryEntry]:
+        """
+        Register all the attributes of the parameter
+        """
+        return {attr: self._toRegistryEntry(attribute=attr) 
+                for attr in self.attrToRegister}
+        
 
 class DisplayedParameterBase(ParameterBase):
 
@@ -94,6 +121,8 @@ class QuantumModelParameter(ParameterBase):
     param_type: ParameterType
         The type of the parameter
     """
+
+    attrToRegister = ["value"]
 
     def __init__(
         self,
@@ -165,6 +194,8 @@ class QuantumModelSliderParameter(DisplayedParameterBase):
     boxValueCallback: Callable
     boxValueSetter: Callable
     overallValueSetter: Callable
+
+    attrToRegister = ["value"]
 
     def __init__(
         self,
@@ -287,6 +318,8 @@ class QuantumModelFittingParameter(DisplayedParameterBase):
     maxSetter: Callable
     fixCallback: Callable
     fixSetter: Callable
+
+    attrToRegister = ["initValue", "value", "min", "max", "isFixed"]
     
     def __init__(
         self,
@@ -464,7 +497,10 @@ class QuantumModelParameterSet:
     A class to store all the parameters of a quantum system
     """
 
-    def __init__(self):
+    def __init__(self, name):
+
+        self.name = name
+
         self.parameters: Dict[
             ParentSystem,
             Dict[str, ParameterBase],
@@ -792,4 +828,24 @@ class QuantumModelParameterSet:
                 except KeyError:
                     continue
 
-    
+    def registerAll(self,) -> Dict[str, RegistryEntry]:
+        """
+        Register all the parameters in the parameter set
+        """
+        registry = {}
+        for parent_system, para_dict in self.parameters.items():
+            for name, para in para_dict.items():
+                entry_dict = para.registerAll()
+                # update the name of the parameter
+                for entry in entry_dict.values():
+                    new_name = (
+                        f"{self.name}"
+                        f".{self.parentNameByObj[parent_system]}"
+                        f".{name}"
+                    )
+                    entry.name = new_name
+                    entry_dict[new_name] = entry_dict.pop(name)
+
+                registry.update(entry_dict)
+
+        return registry
