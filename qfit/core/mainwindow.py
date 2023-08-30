@@ -127,6 +127,8 @@ class MainWindow(QMainWindow):
         self.ui_menu = MenuWidget(parent=self)
 
         self.setShadows()
+        # TODO let Jens disable setAutoExclusive for vertical snap button
+        self.ui.verticalSnapButton.setAutoExclusive(False)
 
         self.uiPagesConnects()
         self.uiMenuConnects()
@@ -251,6 +253,8 @@ class MainWindow(QMainWindow):
             self.ui.newRowButton,
             self.ui.deleteRowButton,
             self.ui.clearAllButton,
+            self.ui.horizontalSnapButton,
+            self.ui.verticalSnapButton,
             self.ui.calibrateX1Button,
             self.ui.calibrateX2Button,
             self.ui.calibrateY1Button,
@@ -429,6 +433,9 @@ class MainWindow(QMainWindow):
             lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
         )
 
+        # Whenever a new selection of data set is made, update the matching mode and the cursor
+        self.ui.datasetListView.clicked.connect(self.updateMatchingModeAndCursor)
+
     def uiDataOptionsConnects(self):
         """Connect the UI elements related to display of data"""
         self.ui.topHatCheckBox.toggled.connect(lambda x: self.updatePlot())
@@ -492,6 +499,22 @@ class MainWindow(QMainWindow):
         self.ui.xComboBox.activated.connect(self.xAxisUpdate)
         self.ui.yComboBox.activated.connect(self.yAxisUpdate)
 
+    def updateMatchingModeAndCursor(self):
+        """
+        Callback for updating the matching mode and the cursor
+        """
+        self.matching_mode = False
+        self.ui.mplFigureCanvas.matching_mode = False
+        if (
+            self.allDatasets
+            and self.allDatasets.currentRow != 0
+            and len(self.allDatasets.assocDataList[0][0]) > 0
+            and self.ui.horizontalSnapButton.isChecked()
+        ):
+            self.matching_mode = True
+            self.ui.mplFigureCanvas.matching_mode = True
+        self.ui.mplFigureCanvas.select_crosshair()
+
     def uiMplCanvasConnects(self):
         """Set up the matplotlib canvas and start monitoring for mouse click events in the canvas area."""
         self.axes = self.ui.mplFigureCanvas.canvas.figure.subplots()
@@ -499,6 +522,8 @@ class MainWindow(QMainWindow):
         self.cidCanvas = self.axes.figure.canvas.mpl_connect(
             "button_press_event", self.canvasClickMonitoring
         )
+        self.ui.horizontalSnapButton.toggled.connect(self.updateMatchingModeAndCursor)
+        self.ui.mplFigureCanvas.matching_mode = self.matching_mode
         self.ui.mplFigureCanvas.set_callback(self.allDatasets)
         self.cidMove = self.axes.figure.canvas.mpl_connect(
             "motion_notify_event", self.canvasMouseMonitoring
@@ -581,15 +606,11 @@ class MainWindow(QMainWindow):
             self.activeDataset.append(*x1y1)
             self.updatePlot()
 
+        # TODO implement peak-finding algorithm and x-snapping rule here
+
     @Slot()
     def canvasMouseMonitoring(self, event):
         self.axes.figure.canvas.flush_events()
-        self.matching_mode = False
-        if (
-            self.allDatasets.currentRow != 0
-            and len(self.allDatasets.assocDataList[0][0]) > 0
-        ):
-            self.matching_mode = True
         if not self.matching_mode:
             return
 
@@ -638,16 +659,24 @@ class MainWindow(QMainWindow):
             )
 
         plotted_data = []
-        line_data = self.allDatasets.assocDataList[0]
-        for count, i in enumerate(line_data[0]):
-            if i not in plotted_data:
-                self.axes.axline(
-                    (i, line_data[1][count]),
-                    (i, line_data[1][count] - (line_data[1][count]) * 0.1),
-                    c=line_color,
-                    alpha=0.7,
-                )
-            plotted_data.append(i)
+        # line_data = self.allDatasets.assocDataList[0]
+        x_list = self.distinctXValues()
+        for x_value in x_list:
+            self.axes.axline(
+                (x_value, 1),
+                (x_value, 2),
+                c=line_color,
+                alpha=0.7,
+            )
+        # for count, i in enumerate(line_data[0]):
+        #     if i not in plotted_data:
+        #         self.axes.axline(
+        #             (i, line_data[1][count]),
+        #             (i, line_data[1][count] - (line_data[1][count]) * 0.1),
+        #             c=line_color,
+        #             alpha=0.7,
+        #         )
+        #     plotted_data.append(i)
 
         # Make sure that new axes limits match the old ones.
         if not initialize:
@@ -655,6 +684,7 @@ class MainWindow(QMainWindow):
             self.axes.set_ylim(ylim)
 
         self.axes.figure.canvas.draw()
+        self.ui.mplFigureCanvas.matching_mode = self.matching_mode
         self.ui.mplFigureCanvas.set_callback(self.allDatasets)
 
     # def toggleMenu(self):
@@ -1136,6 +1166,12 @@ class MainWindow(QMainWindow):
         )
 
     def closest_line(self, xdat):
-        current_data = self.allDatasets.assocDataList[0]
-        allxdiff = {np.abs(xdat - i): i for i in current_data[0]}
+        all_x_list = self.distinctXValues()
+        allxdiff = {np.abs(xdat - i): i for i in all_x_list}
         return allxdiff[min(allxdiff.keys())]
+
+    def distinctXValues(self):
+        all_x_list = np.array([])
+        for dataset in self.allDatasets.assocDataList:
+            all_x_list = np.concatenate((all_x_list, dataset[0]))
+        return np.unique(all_x_list)
