@@ -125,7 +125,7 @@ class MainWindow(QMainWindow):
     projectFile: Union[str, None] = None
 
 
-    def __init__(self, measurementData, hilbertspace, extractedData=None):
+    def __init__(self, measurementData: MeasurementDataType, hilbertspace: HilbertSpace):
         # ResizableFramelessWindow.__init__(self)
         QMainWindow.__init__(self)
         self.openFromIPython = executed_in_ipython()
@@ -159,7 +159,7 @@ class MainWindow(QMainWindow):
         self.setupUIPlotOptions()
 
         self.measurementData = measurementData
-        self.extractedData = extractedData
+        self.extractedData = None
         self.dataSetupConnects()
 
         # setup mpl canvas

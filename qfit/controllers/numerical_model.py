@@ -38,9 +38,7 @@ from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMA
 # scq.settings.FUZZY_SLICING = True
 
 
-# for test only
-# ------------------------------------------------------------------------------
-def test_hilbert_space():
+def dummy_hilbert_space():
     resonator = scq.Oscillator(
         E_osc=6.0, l_osc=1.0, truncated_dim=4, id_str="resonator"
     )
@@ -60,22 +58,6 @@ def test_hilbert_space():
     )
 
     return hilbertspace
-
-
-def test_param_sweep(hilbertspace, bias=0.0, scale=1.0) -> ParameterSweep:
-    # bias serves as a calibration parameter
-    def update_hilbertspace(x):
-        hilbertspace["fluxonium"].flux = x * scale + bias
-
-    sweep = ParameterSweep(
-        hilbertspace=hilbertspace,
-        paramvals_by_name={"x": np.linspace(-bias / scale, (1 - bias) / scale, 21)},
-        update_hilbertspace=update_hilbertspace,
-    )
-    return sweep
-
-
-# ------------------------------------------------------------------------------
 
 
 class QuantumModel:

@@ -21,30 +21,75 @@ import matplotlib
 matplotlib.use("qtagg")
 
 from qfit.core.mainwindow import MainWindow
-from qfit.models.measurement_data import dummy_measurement_data
-from qfit.controllers.numerical_model import test_hilbert_space
+from qfit.models.measurement_data import (
+    dummy_measurement_data,
+    MeasurementDataType,
+)
+from qfit.controllers.numerical_model import dummy_hilbert_space
+from qfit.core.helpers import executed_in_ipython
+
+from typing import Union
 
 import scqubits as scq
+from scqubits.core.hilbert_space import HilbertSpace
 
 scq.settings.PROGRESSBAR_DISABLED = True
 
 
-class qfit:
-    def __init__(self, hilbert_space):
-        # self.app = QApplication.instance()
-        # if self.app is None:
-        #     self.app = QApplication(sys.argv)
-        QFontDatabase.addApplicationFont(":/fonts/Roboto-Regular.ttf")
-        font = QFontDatabase.font("Roboto", "", 10)
-        font.setWeight(QFont.Normal)
-        # self.app.setFont(font)
 
-        _hilbert_space = deepcopy(hilbert_space)
-        self.window = MainWindow(
-            measurementData=dummy_measurement_data(),
-            hilbertspace=_hilbert_space,
-            extractedData=None,
+class qfit:
+    window: MainWindow
+    _hilbertSpace: HilbertSpace
+
+    def __new__(
+        cls, 
+        hilbertSpace: HilbertSpace, 
+        measurementData: MeasurementDataType
+    ):
+        # Create a new instance
+        instance = object.__new__(cls)
+
+        if not executed_in_ipython():
+            app = QApplication.instance()
+            if app is None:
+                app = QApplication(sys.argv)
+
+            # QFontDatabase.addApplicationFont(":/fonts/Roboto-Regular.ttf")
+            # font = QFontDatabase.font("Roboto", "", 10)
+            # font.setWeight(QFont.Normal)
+            # instance.app.setFont(font)
+        else:
+            # TODO
+            pass
+
+        instance._hilbertSpace = deepcopy(hilbertSpace)
+
+        instance.window = MainWindow(
+            measurementData = measurementData,
+            hilbertspace = instance._hilbertSpace,
         )
 
-        self.window.show()
+        instance.window.show()
+
+        return instance
+
+    def __init__(self, hilbertSpace: HilbertSpace):
         self.window.ioMenuCtrl.newProject()
+
+    @property
+    def hilbertSpace(self) -> HilbertSpace:
+        return self._hilbertSpace
+
+    # @classmethod
+    # def open(
+    #     cls,
+    #     hilbertSpace: HilbertSpace,
+    #     measurementDataPath: Union[str, None] = None,
+    # ):
+        
+    #     self = cls.__new__(cls, hilbertSpace, )
+
+
+    #     self.window.ioMenuCtrl.openFile(measurementDataPath)
+
+
