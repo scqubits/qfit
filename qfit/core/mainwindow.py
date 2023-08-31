@@ -1223,6 +1223,18 @@ class MainWindow(QMainWindow):
 
         self.raise_()
 
+    def closeEvent(self, event):
+        """
+        Override the original class method to add a confirmation dialog before
+        closing the application. Will be triggered when the user clicks the "X"
+        or call the close() method.
+        """
+        status = self.ioMenuCtrl.closeApp()
+
+        if status: 
+            event.accept()
+        else: 
+            event.ignore()
 
     def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)

@@ -26,13 +26,16 @@ if TYPE_CHECKING:
 class IOMenuCtrl:
     """
     This controller handles the menu bar and related IO operations, including:
-    - register objects when initialized
     - new project
     - open file
     - save file
     - save file as
     - close app
     
+    # TODO:
+    - export hs?
+    - export extracted data?
+
     """
     def __init__(
         self, 
@@ -50,7 +53,7 @@ class IOMenuCtrl:
     def setConnects(self):
         self.mainWindow.ui.toggleMenuButton.clicked.connect(self.menu.toggle)
 
-        self.menu.ui.menuQuitButton.clicked.connect(self.closeApp)
+        self.menu.ui.menuQuitButton.clicked.connect(self.mainWindow.close)
         self.menu.ui.menuOpenButton.clicked.connect(self.openFile)
         self.menu.ui.menuNewButton.clicked.connect(self.newProject)
         self.menu.ui.menuSaveButton.clicked.connect(self.saveFile)
@@ -179,7 +182,6 @@ class IOMenuCtrl:
         self.registry.exportPkl(fileName) 
         self.mainWindow.projectFile = fileName
 
-
     @Slot()
     def newProject(self, from_menu: bool = True):
         measurementData = self._importMeasurementData()
@@ -204,16 +206,20 @@ class IOMenuCtrl:
         if not from_menu:
             self.menu.toggle()
 
-    @Slot()
-    def closeApp(self):
+    def _quit(self):
+        if self.mainWindow.openFromIPython:
+            self.closeAppIPython()
+        else:
+            sys.exit()
+
+    def closeApp(self) -> bool:
         """End the application"""
         if self.mainWindow.allDatasets.isEmpty():
             # if run through ipython, no need to perform sys.exit, just close and delete
             # the window
-            if self.mainWindow.openFromIPython:
-                self.closeAppIPython()
-            else:
-                sys.exit()
+            self._quit()
+            return True
+            
         else:
             msgBox = QMessageBox()
             msgBox.setWindowTitle("qfit")
@@ -229,46 +235,13 @@ class IOMenuCtrl:
 
             if reply == QMessageBox.Save:
                 self.saveAndCloseApp()
+                return True
             elif reply == QMessageBox.Discard:
-                if self.mainWindow.openFromIPython:
-                    self.closeAppIPython()
-                else:
-                    sys.exit()
-            return
-
-    def closeEvent(self, event):
-        """End the application"""
-        if self.mainWindow.allDatasets.isEmpty():
-            # if run through ipython, no need to perform sys.exit, just close and delete
-            # the window
-            if self.mainWindow.openFromIPython:
-                self.closeAppIPython()
-            else:
-                sys.exit()
-        else:
-            msgBox = QMessageBox()
-            msgBox.setWindowTitle("qfit")
-            msgBox.setIcon(QMessageBox.Question)
-            msgBox.setInformativeText("Do you want to save changes?")
-            msgBox.setText("This document has been modified.")
-            msgBox.setStandardButtons(
-                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
-            )
-            msgBox.setDefaultButton(QMessageBox.Save)
-
-            reply = msgBox.exec_()
-
-            if reply == QMessageBox.Save:
-                self.saveAndCloseApp()
-                event.accept()
-            elif reply == QMessageBox.Discard:
-                if self.mainWindow.openFromIPython:
-                    self.closeAppIPython()
-                    event.accept()
-                else:
-                    sys.exit()
-            else:
-                event.ignore()
+                self._quit()
+                return True
+            else:   # reply == QMessageBox.Cancel
+                self.menu.toggle()
+                return False
 
     def closeAppIPython(self):
         """
@@ -286,7 +259,7 @@ class IOMenuCtrl:
 
         self.menu.toggle()
 
-
+    @Slot()
     def saveFileAs(self):
         """Save the extracted data and calibration information to file."""
         self._saveProject(save_as = True)
@@ -300,7 +273,4 @@ class IOMenuCtrl:
         success = self.saveFile()
         if not success:
             return
-        if self.mainWindow.openFromIPython:
-            self.closeAppIPython()
-        else:
-            sys.exit()
+        self._quit()
