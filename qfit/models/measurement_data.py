@@ -26,6 +26,7 @@ from matplotlib import colors as colors
 from scipy.ndimage import gaussian_laplace
 
 import qfit.io_utils.file_io_serializers as serializers
+from qfit.io_utils.registry import Registry, Registerable, RegistryEntry
 
 from qfit.core.helpers import (
     DataItem,
@@ -95,7 +96,7 @@ class MeasurementData(abc.ABC):
         pass
 
 
-class NumericalMeasurementData(MeasurementData, serializers.Serializable):
+class NumericalMeasurementData(MeasurementData, Registerable, serializers.Serializable):
     """
     Class for storing and manipulating measurement data. The primary measurement data (zData) is expected to be a
     2d float ndarray representing, for example, a two-tone spectroscopy amplitude as a function of probe frequency
@@ -122,6 +123,28 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         self.zCandidates = OrderedDictMod(zCandidates)
         self._currentZ = self.zCandidates.itemByIndex(0)
         self.inferXYData()
+
+    def registerAll(
+        self,
+    ) -> Dict[str, RegistryEntry]:
+        """
+        Register all the attributes of the parameter
+        """
+
+        def getter():
+            return self.rawData, self.zCandidates
+
+        def setter(rawData, zCandidates):
+            self.__init__(rawData, zCandidates)
+
+        return {
+            "numerical_measurement_data": RegistryEntry(
+                name="measurementData",
+                quantity_type="r+",
+                getter=getter,
+                setter=setter,
+            )
+        }
 
     @property
     def currentZ(self):
@@ -316,6 +339,30 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
         super().__init__(None)
         self._currentZ = DataItem(fileName, image)
         self.zCandidates = {fileName: image}
+
+    def registerAll(
+        self,
+    ) -> Dict[str, RegistryEntry]:
+        """
+        Register all the attributes of the parameter
+        """
+
+        def getter():
+            return self._currentZ, self.zCandidates
+
+        def setter(currentZ, zCandidates):
+            super().__init__(None)
+            self._currentZ = currentZ
+            self.zCandidates = zCandidates
+
+        return {
+            "image_measurement_data": RegistryEntry(
+                name="measurementData",
+                quantity_type="r+",
+                getter=getter,
+                setter=setter,
+            )
+        }
 
     def canvasPlot(self, axes, **kwargs):
         zData = (

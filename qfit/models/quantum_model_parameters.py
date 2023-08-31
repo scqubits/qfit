@@ -5,14 +5,14 @@ from scqubits import HilbertSpace
 from scqubits.core.qubit_base import QuantumSystem
 
 from qfit.models.parameter_settings import ParameterType
-from qfit.io_utils.registry import RegistryEntry
+from qfit.io_utils.registry import RegistryEntry, Registerable
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
 
 from typing import Dict, List, Union, overload, Tuple, Callable, Literal, Any
 
 ParentSystem = Union[QuantumSystem, HilbertSpace]
 
-class ParameterBase(ABC):
+class ParameterBase(Registerable, ABC):
 
     intergerParameterTypes = ["cutoff", "truncated_dim"]
     attrToRegister: List[str] = ["value"]

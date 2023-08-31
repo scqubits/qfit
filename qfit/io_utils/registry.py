@@ -1,14 +1,28 @@
 from typing import Callable, Any, Dict, Literal, Union
 import pickle
 
+from abc import ABC
+
 QuantityType = Union[Literal["r+"], Literal["r"]]
+
 
 def READONLY_SETTER(*args, **kwargs):
     raise ValueError("Cannot set value to read-only entry.")
 
+
+class Registerable(ABC):
+    """Mix-in class that makes descendant classes registerable."""
+
+    def registerAll(self) -> Dict[str, "RegistryEntry"]:
+        """Register all the quantities in the class. This should be
+        implemented by the descendant class.
+        """
+        raise NotImplementedError
+
+
 class RegistryEntry:
     """
-    Registry entry for a single quantity, storing the name, type, getter, 
+    Registry entry for a single quantity, storing the name, type, getter,
     and setter.
 
     Parameters
@@ -16,19 +30,20 @@ class RegistryEntry:
     name : str
         Name of the quantity.
     quantity_type : str
-        Type of the quantity. "r+" (read and write) and "r" (read-only) 
-        are supported. When "r+" is used, a setter must be provided. 
-        Usually, read-only quantities have their own way of setting and 
+        Type of the quantity. "r+" (read and write) and "r" (read-only)
+        are supported. When "r+" is used, a setter must be provided.
+        Usually, read-only quantities have their own way of setting and
         can't be simply set by a function.
     getter : Callable[[], Any]
         Getter function for the quantity.
     setter : Union[Callable[[Any], None], None]
         Setter function for the quantity. This is required when "r+" is
         used.
-    
+
     """
+
     def __init__(
-        self, 
+        self,
         name: str,
         quantity_type: QuantityType,
         getter: Callable[[], Any],
@@ -51,7 +66,7 @@ class RegistryEntry:
 
     def export(self) -> Dict[str, Any]:
         return {self.name: self.getter()}
-    
+
     def _processValue(self, value):
         """
         Based on the type of the entry, process the value.
@@ -60,14 +75,15 @@ class RegistryEntry:
         return value
 
     def load(self, value):
-        """Load the entry from existed entry. They should have the same 
+        """Load the entry from existed entry. They should have the same
         and the same type.
         """
         self.setter(self._processValue(value))
 
-        
+
 class Registry:
     _registry: Dict[str, RegistryEntry] = {}
+
     def __init__(self):
         pass
 
@@ -75,8 +91,7 @@ class Registry:
         self,
         obj: Any,
     ):
-        """Register the object to the registry.
-        """
+        """Register the object to the registry."""
         try:
             reg_dict = obj.registerAll()
             self._registry.update(reg_dict)
@@ -88,14 +103,14 @@ class Registry:
                 lambda: obj,
             )
             self._registry[name] = entry
-    
+
     def export(self) -> Dict[str, Any]:
         full_dict: Dict[str, Any] = {}
         for entry in self._registry.values():
             full_dict.update(entry.export())
-        
+
         return full_dict
-    
+
     def exportPkl(self, filename: str) -> None:
         try:
             with open(filename, "wb") as f:
