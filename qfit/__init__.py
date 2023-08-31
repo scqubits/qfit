@@ -44,7 +44,7 @@ class qfit:
     def __new__(
         cls, 
         hilbertSpace: HilbertSpace, 
-        measurementData: MeasurementDataType
+        measurementData: Union[MeasurementDataType, None] = None
     ):
         # Create a new instance
         instance = object.__new__(cls)
@@ -63,6 +63,8 @@ class qfit:
             pass
 
         instance._hilbertSpace = deepcopy(hilbertSpace)
+        if measurementData is None:
+            measurementData = dummy_measurement_data()
 
         instance.window = MainWindow(
             measurementData = measurementData,
@@ -73,7 +75,11 @@ class qfit:
 
         return instance
 
-    def __init__(self, hilbertSpace: HilbertSpace):
+    def __init__(
+        self, 
+        hilbertSpace: HilbertSpace, 
+        measurementData: Union[MeasurementDataType, None] = None
+    ):
         self.window.ioMenuCtrl.newProject()
 
     @property

@@ -26,7 +26,7 @@ from matplotlib import colors as colors
 from scipy.ndimage import gaussian_laplace
 
 import qfit.io_utils.file_io_serializers as serializers
-from qfit.io_utils.registry import Registry, Registerable, RegistryEntry
+from qfit.models.registry import Registry, Registerable, RegistryEntry
 
 from qfit.core.helpers import (
     DataItem,
