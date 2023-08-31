@@ -71,6 +71,9 @@ class Registry:
     def __init__(self):
         pass
 
+    def __getitem__(self, key: str) -> Any:
+        return self._registry[key].getter()
+
     def register(
         self,
         obj: Any,
@@ -103,7 +106,8 @@ class Registry:
         except FileNotFoundError:
             print(f"Error: File '{filename}' not found. Cannot export data.")
 
-    def loadPkl(self, filename: str) -> None:
+    @classmethod
+    def fromFile(cls, filename: str) -> Union["Registry", None]:
         """
         Skip the entries that are
         - neither in the file nor in the current registry
@@ -113,14 +117,21 @@ class Registry:
             with open(filename, "rb") as f:
                 data: Dict[str, Any] = pickle.load(f)
         except FileNotFoundError:
-            print(f"Error: File '{filename}' not found. Cannot load data.")
-            return
+            # print(f"Error: File '{filename}' not found. Cannot load data.")
+            return None     # indicate that the file is not found
+        
+        new_registry = cls()
 
         for name, value in data.items():
             try:
-                if self._registry[name].quantity_type == "r":
+                if new_registry._registry[name].quantity_type == "r":
                     continue
-                self._registry[name].load(value)
+                new_registry._registry[name].load(value)
             except KeyError:
                 print(f"Key {name} not found in registry. Skipping.")
                 continue
+
+        return new_registry
+    
+    def clear(self):
+        self._registry.clear()
