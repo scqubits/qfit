@@ -993,18 +993,17 @@ class MainWindow(QMainWindow):
             parameter_usage="fit",
             excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
         )
-        self.fitResult = Result()
-
         self.fitTableInserts()
         self.fitTableConnects()
-        self.fitPushButtonConnects()
 
     def fitStaticElementsBuild(self):
         self.threadpool = QThreadPool()
         self.numericalFitting = NumericalFitting()
-
         self.setupFitConnects()
         self.fittingCallbackConnects()
+        self.fitPushButtonConnects()
+
+        self.fitResult = Result()
         self.setUpFitResultConnects()
 
     def setupFitConnects(self):
@@ -1021,7 +1020,6 @@ class MainWindow(QMainWindow):
 
         # remove the existing widgets, if we somehow want to rebuild the sliders
         clearChildren(fitScrollWidget)
-
         if fitScrollWidget.layout() is None:
             fitScrollLayout = QVBoxLayout(fitScrollWidget)
         else:
@@ -1062,6 +1060,7 @@ class MainWindow(QMainWindow):
         }
         self.fitParameterSet.loadAttrDict(min_value_dict, "min")
 
+    @Slot()
     def _backgroundOptimization(self):
         """
         The optimization + things to do before it
@@ -1072,6 +1071,7 @@ class MainWindow(QMainWindow):
         # start the optimization
         self.threadpool.start(self.numericalFitting)
 
+    @Slot()
     def _onOptFinished(self):
         self.ui.fitButton.setEnabled(True)
         self.sliderSet.setEnabled(True)
@@ -1091,6 +1091,17 @@ class MainWindow(QMainWindow):
         """
         self.numericalFitting.signals.optFinished.connect(self._onOptFinished)
 
+    @Slot()
+    def _setupOptimization(self):
+        self.numericalFitting.setupOptimization(
+            self.fitParameterSet,
+            self.quantumModel.MSEByParametersForFit,
+            self.allDatasets,
+            self.sweepParameterSet,
+            self.calibrationData,
+            self.fitResult,
+        )
+
     def fitPushButtonConnects(self):
         """
         Connect the buttons for
@@ -1100,16 +1111,7 @@ class MainWindow(QMainWindow):
         4. parameters transfer: fit result to fit
         """
         # setup the optimization
-        self.ui.fitButton.clicked.connect(
-            lambda: self.numericalFitting.setupOptimization(
-                self.fitParameterSet,
-                self.quantumModel.MSEByParametersForFit,
-                self.allDatasets,
-                self.sweepParameterSet,
-                self.calibrationData,
-                self.fitResult,
-            )
-        )
+        self.ui.fitButton.clicked.connect(self._setupOptimization)
 
         # connect the fit button to the fitting function
         self.ui.fitButton.clicked.connect(self._backgroundOptimization)
@@ -1136,7 +1138,7 @@ class MainWindow(QMainWindow):
 
     def fitTableConnects(self):
         """
-        Connect the tables to the model - two parameter sets
+        Connect the tables (ui) to the model - two parameter sets
         """
 
         for key, para_dict in self.fitParameterSet.items():
