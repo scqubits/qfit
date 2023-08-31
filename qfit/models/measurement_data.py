@@ -36,6 +36,7 @@ from qfit.core.helpers import (
     isValid2dArray,
 )
 
+from typing import Union
 
 class MeasurementData(abc.ABC):
     """Abstract basis class to enforce implementation of a data type specific plot method"""
@@ -361,3 +362,8 @@ def dummy_measurement_data() -> NumericalMeasurementData:
     return NumericalMeasurementData(
         {"param": xData, "frequency": yData, "S21": zData}, {"S21": zData}
     )
+
+
+MeasurementDataType = Union[
+    NumericalMeasurementData, ImageMeasurementData
+]
