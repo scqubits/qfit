@@ -10,6 +10,7 @@
 ############################################################################
 
 import sys
+import os
 
 from copy import deepcopy
 
@@ -27,6 +28,8 @@ from qfit.models.measurement_data import (
 )
 from qfit.controllers.numerical_model import dummy_hilbert_space
 from qfit.core.helpers import executed_in_ipython
+from qfit.io_utils.measurement_file_readers import readMeasurementFile
+from qfit.controllers.io_menu import IOMenuCtrl
 
 from typing import Union
 
@@ -36,16 +39,16 @@ from scqubits.core.hilbert_space import HilbertSpace
 scq.settings.PROGRESSBAR_DISABLED = True
 
 
-
 class qfit:
     window: MainWindow
     _hilbertSpace: HilbertSpace
 
-    def __new__(
+    @classmethod
+    def _newProject(
         cls, 
         hilbertSpace: HilbertSpace, 
         measurementData: Union[MeasurementDataType, None] = None
-    ):
+    ) -> "qfit":
         # Create a new instance
         instance = object.__new__(cls)
 
@@ -74,11 +77,21 @@ class qfit:
         instance.window.show()
 
         return instance
+    
+    def __new__(
+        cls,
+        hilbertSpace: HilbertSpace, 
+        measurementData: Union[str, None] = None
+    ) -> "qfit":
+        instance = cls._newProject(
+            hilbertSpace, None) 
+
+        return instance           
 
     def __init__(
         self, 
         hilbertSpace: HilbertSpace, 
-        measurementData: Union[MeasurementDataType, None] = None
+        measurementData: Union[str, None] = None
     ):
         self.window.ioMenuCtrl.newProject()
 
@@ -86,16 +99,82 @@ class qfit:
     def hilbertSpace(self) -> HilbertSpace:
         return self._hilbertSpace
 
-    # @classmethod
-    # def open(
-    #     cls,
-    #     hilbertSpace: HilbertSpace,
-    #     measurementDataPath: Union[str, None] = None,
-    # ):
+    @classmethod
+    def new(
+        cls,
+        hilbertSpace: HilbertSpace,
+        measurementFileName: Union[str, None] = None,
+    ) -> Union["qfit", None]:
+        """
+        Create a qfit project with a `HilbertSpace object` from `scqubits` and
+        a measurement file.
+
+        Parameters
+        ----------
+        hilbertSpace: HilbertSpace
+            HilbertSpace object from scqubits
+        measurementFileName: str
+            Name of measurement file to be loaded. If left blank, a window
+            will pop up to ask for a file.
+
+        Returns
+        -------
+        qfit project
+        """
+
+        # check if file exists
+        if measurementFileName is not None:
+            if not os.path.isfile(measurementFileName):   
+                print(f"File '{measurementFileName}' does not exist.")
+                return None
+            
+        instance = cls._newProject(
+            hilbertSpace, dummy_measurement_data())
         
-    #     self = cls.__new__(cls, hilbertSpace, )
+        # load measurement data
+        if measurementFileName is not None:
+            if not os.path.isfile(measurementFileName):
+                print(f"File '{measurementFileName}' does not exist.")
+                return None
+            measurementData = IOMenuCtrl.measurementDataFromFile(measurementFileName)
+            instance.window.ioMenuCtrl.newProjectWithData(measurementData)
+        else:
+            instance.window.ioMenuCtrl.newProject()
 
+        return instance
 
-    #     self.window.ioMenuCtrl.openFile(measurementDataPath)
+    @classmethod
+    def open(
+        cls, 
+        fileName: Union[str, None] | None = None,
+    ) -> Union["qfit", None]:
+        """
+        Open a qfit project from a file.
 
+        Parameters
+        ----------
+        fileName: str
+            Name of file to be opened.
 
+        Returns
+        -------
+        qfit project
+        """
+
+        # check if file exists
+        if fileName is not None:
+            if not os.path.isfile(fileName):
+                print(f"File '{fileName}' does not exist.")
+                return None
+
+        instance = cls._newProject(
+            dummy_hilbert_space(), dummy_measurement_data())
+        
+        # load registry
+        if fileName is None:
+            fileName = instance.window.ioMenuCtrl.openFile()
+        else:
+            registry = IOMenuCtrl.registryFromFile(fileName)
+            instance.window.ioMenuCtrl.newProjectWithRegistry(registry)
+
+        return instance
