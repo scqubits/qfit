@@ -125,6 +125,7 @@ class NumericalMeasurementData(MeasurementData, Registerable, serializers.Serial
         self.zCandidates = OrderedDictMod(zCandidates)
         self._currentZ = self.zCandidates.itemByIndex(0)
         self.inferXYData()
+        print("numerical measurement data created")
 
     def registerAll(
         self,
@@ -134,17 +135,14 @@ class NumericalMeasurementData(MeasurementData, Registerable, serializers.Serial
         """
 
         def getter():
-            return self.rawData, self.zCandidates
-
-        def setter(rawData, zCandidates):
-            self.__init__(rawData, zCandidates)
+            inputFileType = "numerical"
+            return (inputFileType, self.rawData, self.zCandidates)
 
         return {
-            "numerical_measurement_data": RegistryEntry(
+            "measurementData": RegistryEntry(
                 name="measurementData",
-                quantity_type="r+",
+                quantity_type="r",
                 getter=getter,
-                setter=setter,
             )
         }
 
@@ -341,6 +339,7 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
         super().__init__(None)
         self._currentZ = DataItem(fileName, image)
         self.zCandidates = {fileName: image}
+        print("image measurement data created")
 
     def registerAll(
         self,
@@ -350,19 +349,16 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
         """
 
         def getter():
-            return self._currentZ, self.zCandidates
-
-        def setter(currentZ, zCandidates):
-            super().__init__(None)
-            self._currentZ = currentZ
-            self.zCandidates = zCandidates
+            fileName = list(self.zCandidates.keys())[0]
+            image = list(self.zCandidates.values())[0]
+            inputFileType = "image"
+            return (inputFileType, fileName, image)
 
         return {
-            "image_measurement_data": RegistryEntry(
+            "measurementData": RegistryEntry(
                 name="measurementData",
-                quantity_type="r+",
+                quantity_type="r",
                 getter=getter,
-                setter=setter,
             )
         }
 

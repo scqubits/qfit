@@ -1205,8 +1205,10 @@ class MainWindow(QMainWindow):
     def initializeDynamicalElements(
         self, 
         hilbertspace: HilbertSpace,
-        measurementData,
+        measurementData: MeasurementDataType,
     ):
+        # here, the measurementData is a instance of MeasurementData, which is 
+        # regenerated from the data file
         self.measurementData = measurementData
         self.calibrationData.resetCalibration()
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
