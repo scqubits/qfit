@@ -167,28 +167,28 @@ class MainWindow(QMainWindow):
         self.ui.mplFigureCanvas.selectOn()
 
         # prefit: controller, two models and their connection to view (sliders)
-        self.prefitDynamicalElements(hilbert_space)
-        self.prefitStaticElements()
+        self.prefitDynamicalElementsBuild(hilbert_space)
+        self.prefitStaticElementsBuild()
 
         # fit
-        self.threadpool = QThreadPool()
-        self.fitParameterSet = QuantumModelParameterSet("fitParameterSet")
-        self.quantumModel.addParametersToParameterSet(
-            self.fitParameterSet,
-            parameter_usage="fit",
-            excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
-        )
-        self.numericalFitting = NumericalFitting()
-        self.fitResult = Result()
+        # self.threadpool = QThreadPool()
+        # self.fitParameterSet = QuantumModelParameterSet("fitParameterSet")
+        # self.quantumModel.addParametersToParameterSet(
+        #     self.fitParameterSet,
+        #     parameter_usage="fit",
+        #     excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
+        # )
+        # self.numericalFitting = NumericalFitting()
+        # self.fitResult = Result()
 
-        self.setupFitConnects()
-        self.fitTableInserts()
-        self.fitTableConnects()
-        self.fittingCallbackConnects()
-        self.fitPushButtonConnects()
-
-        # fit result panel connect
-        self.setUpFitResultConnects()
+        # self.setupFitConnects()
+        # self.fitTableInserts()
+        # self.fitTableConnects()
+        # self.fittingCallbackConnects()
+        # self.fitPushButtonConnects()
+        # self.setUpFitResultConnects()
+        self.fitDynamicalElementsBuild()
+        self.fitStaticElementsBuild()
 
         # register all the data
 
@@ -781,7 +781,7 @@ class MainWindow(QMainWindow):
     # Pre-fit ##########################################################
     # ##################################################################
 
-    def prefitDynamicalElements(self, hilbert_space: HilbertSpace):
+    def prefitDynamicalElementsBuild(self, hilbert_space: HilbertSpace):
         self.sliderParameterSet = QuantumModelParameterSet("sliderParameterSet")
         self.sweepParameterSet = QuantumModelParameterSet("sweepParameterSet")
         self.quantumModel = QuantumModel(hilbert_space)
@@ -801,7 +801,7 @@ class MainWindow(QMainWindow):
         self.setUpPrefitOptionsConnects()
         self.setUpPrefitRunConnects()
 
-    def prefitStaticElements(self):
+    def prefitStaticElementsBuild(self):
         self.prefitResult = Result()
         self.spectrumData = CalculatedSpecData()
         self.setUpPrefitResultConnects()
@@ -894,7 +894,8 @@ class MainWindow(QMainWindow):
         """
         loading the subsystem names to the combo box (drop down menu)
         """
-        # clear the existing items
+        # clear the existing items and temporarily disable the signal
+        self.ui.subsysComboBox.blockSignals(True)
         self.ui.subsysComboBox.clear()
 
         subsys_name_list = [
@@ -903,6 +904,9 @@ class MainWindow(QMainWindow):
         ]
         for subsys_name in subsys_name_list:
             self.ui.subsysComboBox.insertItem(0, subsys_name)
+
+        # enable the signal
+        self.ui.subsysComboBox.blockSignals(False)
 
     def setUpPrefitResultConnects(self):
         """
@@ -982,9 +986,30 @@ class MainWindow(QMainWindow):
     # Fit ##############################################################
     # ##################################################################
 
+    def fitDynamicalElementsBuild(self):
+        self.fitParameterSet = QuantumModelParameterSet("fitParameterSet")
+        self.quantumModel.addParametersToParameterSet(
+            self.fitParameterSet,
+            parameter_usage="fit",
+            excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
+        )
+        self.fitResult = Result()
+
+        self.fitTableInserts()
+        self.fitTableConnects()
+        self.fitPushButtonConnects()
+
+    def fitStaticElementsBuild(self):
+        self.threadpool = QThreadPool()
+        self.numericalFitting = NumericalFitting()
+
+        self.setupFitConnects()
+        self.fittingCallbackConnects()
+        self.setUpFitResultConnects()
+
     def setupFitConnects(self):
         self.numericalFitting.setupUICallbacks(
-            lambda: "Nelder-Mead",
+            lambda: "L-BFGS-B",
         )
 
     def fitTableInserts(self):
@@ -992,9 +1017,15 @@ class MainWindow(QMainWindow):
         Insert a set of tables for the fitting parameters
         """
 
-        # temporary solution: put the fitting widget in the prefit scroll area
         fitScrollWidget = self.ui.fitScrollArea.widget()
-        fitScrollLayout = QVBoxLayout(fitScrollWidget)
+
+        # remove the existing widgets, if we somehow want to rebuild the sliders
+        clearChildren(fitScrollWidget)
+
+        if fitScrollWidget.layout() is None:
+            fitScrollLayout = QVBoxLayout(fitScrollWidget)
+        else:
+            fitScrollLayout = fitScrollWidget.layout()
 
         # configure this layout
         fitScrollLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
@@ -1014,6 +1045,9 @@ class MainWindow(QMainWindow):
         fitScrollLayout.addWidget(self.fitTableSet)
 
     def fittingParameterLoad(self, source: QuantumModelParameterSet):
+        """
+        Load the initial value, min, and max from the source parameter set
+        """
         init_value_dict = source.exportAttrDict("value")
         self.fitParameterSet.loadAttrDict(init_value_dict, "initValue")
         self.fitParameterSet.loadAttrDict(init_value_dict, "value")
@@ -1051,9 +1085,20 @@ class MainWindow(QMainWindow):
         self.fittingCallbackConnects()
 
     def fittingCallbackConnects(self):
+        """
+        when the optimization is finished, send a signal that triggers
+        the `_onOptFinished` function
+        """
         self.numericalFitting.signals.optFinished.connect(self._onOptFinished)
 
     def fitPushButtonConnects(self):
+        """
+        Connect the buttons for
+        1. run fit
+        2. parameters transfer: prefit to fit
+        3. parameters transfer: fit to prefit
+        4. parameters transfer: fit result to fit
+        """
         # setup the optimization
         self.ui.fitButton.clicked.connect(
             lambda: self.numericalFitting.setupOptimization(
@@ -1165,8 +1210,8 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def openFile(self, initialize: bool = False):
-        if not initialize:
-            self.ui_menu.toggle()
+        print("open file")
+        
         self.measurementData, self.extractedData = importFile(parent=self)
 
         # also a new hilbert space, many more things... 
@@ -1178,9 +1223,14 @@ class MainWindow(QMainWindow):
         self.setupUIXYZComboBoxes()
 
         # test: hilbert space not changed
-        self.prefitDynamicalElements(self.quantumModel.hilbertspace)
+        self.prefitDynamicalElementsBuild(self.quantumModel.hilbertspace)
+        self.fitDynamicalElementsBuild()
 
         self.updatePlot(initialize=True)
+
+        if not initialize:
+            self.ui_menu.toggle()
+
         self.raise_()
 
     @Slot()

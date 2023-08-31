@@ -5,6 +5,10 @@ import qfit.io_utils.file_io_serializers as serializers
 
 
 class Result(serializers.Serializable):
+    mse_change_ui_setter: Callable
+    status_type_ui_setter: Callable
+    status_text_ui_setter: Callable
+    
     def __init__(
         self,
     ):
