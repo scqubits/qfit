@@ -226,9 +226,17 @@ class IOMenuCtrl:
         New project with a exsisted registry object.
         To load a registry from file, use ioMenuCtrl.registryFromFile
         """
+        hilbertspace = registry["HilbertSpace"]
+        # here, the measurement data is regenerated
+        data = registry["measurementData"]
+        print(f"open file: {data[0]}")
+        if data[0] == "image":
+            measurementData = ImageMeasurementData(data[1], data[2])
+        elif data[0] == "numerical":
+            measurementData = NumericalMeasurementData(data[1], data[2])
         self.mainWindow.initializeDynamicalElements(
-            hilbertspace = registry["hilbertspace"],
-            measurementData = registry["measurementData"],
+            hilbertspace=hilbertspace,
+            measurementData=measurementData,
         )
 
     @Slot()
@@ -246,18 +254,7 @@ class IOMenuCtrl:
 
         self.newProjectWithRegistry(registry)
         # hilbertspace
-        hilbertspace = registry["HilbertSpace"]
-        # here, the measurement data is regenerated
-        data = registry["measurementData"]
-        print(f"open file: {data[0]}")
-        if data[0] == "image":
-            measurementData = ImageMeasurementData(data[1], data[2])
-        elif data[0] == "numerical":
-            measurementData = NumericalMeasurementData(data[1], data[2])
-        self.mainWindow.initializeDynamicalElements(
-            hilbertspace=hilbertspace,
-            measurementData=measurementData,
-        )
+        
 
         if not from_menu:
             self.menu.toggle()
