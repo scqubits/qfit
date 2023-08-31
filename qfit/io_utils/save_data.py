@@ -15,7 +15,7 @@ from PySide6.QtWidgets import QFileDialog
 
 import qfit.models.qfit_data as fit
 
-from qfit.io_utils.io_readers import ImageMeasurementData
+from qfit.io_utils.measurement_file_readers import ImageMeasurementData
 
 
 def saveFile(parent):

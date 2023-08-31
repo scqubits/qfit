@@ -42,9 +42,9 @@ class qfit:
         _hilbert_space = deepcopy(hilbert_space)
         self.window = MainWindow(
             measurementData=dummy_measurement_data(),
-            hilbert_space=_hilbert_space,
+            hilbertspace=_hilbert_space,
             extractedData=None,
         )
 
         self.window.show()
-        self.window.openFile(initialize=True)
+        self.window.ioMenuCtrl.newProject()

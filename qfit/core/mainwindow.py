@@ -56,8 +56,8 @@ from qfit.core.helpers import (
     StopExecution,
 )
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
+from qfit.models.measurement_data import MeasurementDataType
 from qfit.widgets.data_tagging import TagDataView
-from qfit.io_utils.import_data import importFile
 from qfit.io_utils.save_data import saveFile
 from qfit.settings import color_dict
 from qfit.ui_views.resizable_window import ResizableFramelessWindow
@@ -85,13 +85,15 @@ from qfit.controllers.fit import NumericalFitting
 from qfit.models.status_result_data import Result
 
 # registry
-from qfit.io_utils.registry import Registry
+from qfit.models.registry import Registry
+
+# menu controller
+from qfit.controllers.io_menu import IOMenuCtrl
 
 if TYPE_CHECKING:
     from qfit.widgets.calibration import CalibrationLineEdit
     from qfit.models.qfit_data import QfitData
 
-MeasurementDataType = Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]
 
 mpl.rcParams["toolbar"] = "None"
 
@@ -120,8 +122,10 @@ class MainWindow(QMainWindow):
     offset: Union[None, QPoint]
 
     registry: Registry
+    projectFile: Union[str, None] = None
 
-    def __init__(self, measurementData, hilbert_space, extractedData=None):
+
+    def __init__(self, measurementData, hilbertspace, extractedData=None):
         # ResizableFramelessWindow.__init__(self)
         QMainWindow.__init__(self)
         self.openFromIPython = executed_in_ipython()
@@ -144,7 +148,6 @@ class MainWindow(QMainWindow):
         self.ui.verticalSnapButton.setAutoExclusive(False)
 
         self.uiPagesConnects()
-        self.uiMenuConnects()
 
         self.setupUICalibration()
         self.calibrationData = CalibrationData()
@@ -167,30 +170,23 @@ class MainWindow(QMainWindow):
         self.ui.mplFigureCanvas.selectOn()
 
         # prefit: controller, two models and their connection to view (sliders)
-        self.prefitDynamicalElementsBuild(hilbert_space)
+        self.hilbertspace = hilbertspace
+        self.prefitDynamicalElementsBuild(self.hilbertspace)
         self.prefitStaticElementsBuild()
 
         # fit
-        # self.threadpool = QThreadPool()
-        # self.fitParameterSet = QuantumModelParameterSet("fitParameterSet")
-        # self.quantumModel.addParametersToParameterSet(
-        #     self.fitParameterSet,
-        #     parameter_usage="fit",
-        #     excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
-        # )
-        # self.numericalFitting = NumericalFitting()
-        # self.fitResult = Result()
-
-        # self.setupFitConnects()
-        # self.fitTableInserts()
-        # self.fitTableConnects()
-        # self.fittingCallbackConnects()
-        # self.fitPushButtonConnects()
-        # self.setUpFitResultConnects()
         self.fitDynamicalElementsBuild()
         self.fitStaticElementsBuild()
 
         # register all the data
+        self.registry = Registry()
+
+        # controller for menu
+        self.ioMenuCtrl = IOMenuCtrl(
+            menu=self.ui_menu,
+            registry=self.registry,
+            mainWindow=self,
+        )
 
 
     def dataSetupConnects(self):
@@ -516,11 +512,6 @@ class MainWindow(QMainWindow):
             "motion_notify_event", self.canvasMouseMonitoring
         )
 
-    def uiMenuConnects(self):
-        self.ui.toggleMenuButton.clicked.connect(self.ui_menu.toggle)
-        # self.ui_menu.ui.menuQuitButton.clicked.connect(self.closeApp)
-        self.ui_menu.ui.menuOpenButton.clicked.connect(self.openFile)
-
     def setupXYDataBoxes(self):
         self.ui.xComboBox.clear()
         xDataNames = list(self.measurementData.currentXCompatibles.keys())
@@ -781,10 +772,10 @@ class MainWindow(QMainWindow):
     # Pre-fit ##########################################################
     # ##################################################################
 
-    def prefitDynamicalElementsBuild(self, hilbert_space: HilbertSpace):
+    def prefitDynamicalElementsBuild(self, hilbertspace: HilbertSpace):
         self.sliderParameterSet = QuantumModelParameterSet("sliderParameterSet")
         self.sweepParameterSet = QuantumModelParameterSet("sweepParameterSet")
-        self.quantumModel = QuantumModel(hilbert_space)
+        self.quantumModel = QuantumModel(hilbertspace)
         self.quantumModel.addParametersToParameterSet(
             self.sliderParameterSet,
             parameter_usage="slider",
@@ -1197,9 +1188,10 @@ class MainWindow(QMainWindow):
     # ##################################################################
 
     def register(self):
-        self.registry = Registry()
+        # clear the registry
+        self.registry.clear()
 
-        # special registry: 
+        # special registry
         self.registry.register(self.quantumModel.hilbertspace)
         self.registry.register(self.measurementData)
 
@@ -1210,117 +1202,39 @@ class MainWindow(QMainWindow):
 
         # not yet finished
 
-    @Slot()
-    def openFile(self, initialize: bool = False):
-        print("open file")
-        
-        self.measurementData, self.extractedData = importFile(parent=self)
-
-        # also a new hilbert space, many more things... 
-
+    def initializeDynamicalElements(
+        self, 
+        hilbertspace: HilbertSpace,
+        measurementData,
+    ):
+        self.measurementData = measurementData
         self.calibrationData.resetCalibration()
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
         self.dataSetupConnects()
         self.setupUIXYZComboBoxes()
 
-        # test: hilbert space not changed
-        self.prefitDynamicalElementsBuild(self.quantumModel.hilbertspace)
+        self.prefitDynamicalElementsBuild(hilbertspace)
         self.fitDynamicalElementsBuild()
 
         self.updatePlot(initialize=True)
 
-        if not initialize:
-            self.ui_menu.toggle()
+        self.register()
 
         self.raise_()
 
-    @Slot()
-    def closeApp(self):
-        """End the application"""
-        if self.allDatasets.isEmpty():
-            # if run through ipython, no need to perform sys.exit, just close and delete
-            # the window
-            if self.openFromIPython:
-                self.closeAppIPython()
-            else:
-                sys.exit()
-        else:
-            msgBox = QMessageBox()
-            msgBox.setWindowTitle("qfit")
-            msgBox.setIcon(QMessageBox.Question)
-            msgBox.setInformativeText("Do you want to save changes?")
-            msgBox.setText("This document has been modified.")
-            msgBox.setStandardButtons(
-                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
-            )
-            msgBox.setDefaultButton(QMessageBox.Save)
-
-            reply = msgBox.exec_()
-
-            if reply == QMessageBox.Save:
-                self.saveAndCloseApp()
-            elif reply == QMessageBox.Discard:
-                if self.openFromIPython:
-                    self.closeAppIPython()
-                else:
-                    sys.exit()
-            return
-
     def closeEvent(self, event):
-        """End the application"""
-        if self.allDatasets.isEmpty():
-            # if run through ipython, no need to perform sys.exit, just close and delete
-            # the window
-            if self.openFromIPython:
-                self.closeAppIPython()
-            else:
-                sys.exit()
-        else:
-            msgBox = QMessageBox()
-            msgBox.setWindowTitle("qfit")
-            msgBox.setIcon(QMessageBox.Question)
-            msgBox.setInformativeText("Do you want to save changes?")
-            msgBox.setText("This document has been modified.")
-            msgBox.setStandardButtons(
-                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
-            )
-            msgBox.setDefaultButton(QMessageBox.Save)
-
-            reply = msgBox.exec_()
-
-            if reply == QMessageBox.Save:
-                self.saveAndCloseApp()
-                event.accept()
-            elif reply == QMessageBox.Discard:
-                if self.openFromIPython:
-                    self.closeAppIPython()
-                    event.accept()
-                else:
-                    sys.exit()
-            else:
-                event.ignore()
-
-    def closeAppIPython(self):
         """
-        Close the app when running in ipython
+        Override the original class method to add a confirmation dialog before
+        closing the application. Will be triggered when the user clicks the "X"
+        or call the close() method.
         """
-        self.close()
-        self.deleteLater()
-        self.destroy()
-        # raise StopExecution
+        status = self.ioMenuCtrl.closeApp()
 
-    @Slot()
-    def saveAndCloseApp(self):
-        """Save the extracted data and calibration information to file, then exit the
-        application."""
-        success = saveFile(self)
-        if not success:
-            return
-        if self.openFromIPython:
-            self.closeAppIPython()
-        else:
-            sys.exit()
+        if status: 
+            event.accept()
+        else: 
+            event.ignore()
 
     def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)

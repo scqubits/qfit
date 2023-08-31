@@ -21,6 +21,8 @@ from scipy.io import loadmat
 import qfit.io_utils.file_io as io
 import qfit.io_utils.file_io_backends as io_backends
 
+from qfit.models.registry import Registry
+
 from qfit.core.helpers import (
     OrderedDictMod,
     hasIdenticalCols,
@@ -30,7 +32,7 @@ from qfit.core.helpers import (
 from qfit.models.measurement_data import ImageMeasurementData, NumericalMeasurementData
 
 
-def readFileData(fileName):
+def readMeasurementFile(fileName):
     """
     Read experimental data from file.
 
@@ -56,8 +58,8 @@ def readFileData(fileName):
         reader = CSVReader()
     else:
         raise Exception("IOError: The requested file type is not supported.")
-    measurementData = reader.fromFile(fileName)
-    return measurementData
+    data = reader.fromFile(fileName)
+    return data
 
 
 class ImageFileReader:
