@@ -66,6 +66,25 @@ class IOMenuCtrl:
         self.menu.ui.menuSaveButton.clicked.connect(self.saveFile)
         self.menu.ui.menuSaveAsButton.clicked.connect(self.saveFileAs)
 
+    @staticmethod
+    def measurementDataFromFile(
+        fileName: str,
+    ):
+        """
+        A convenient way to call
+        qfit.io_utils.measurement_file_readers.readMeasurementFile
+        """
+        return readMeasurementFile(fileName)
+
+    @staticmethod
+    def registryFromFile(
+        fileName: str,
+    ):
+        """
+        A convenient way to call qfit.models.registry.Registry.fromFile
+        """
+        return Registry.fromFile(fileName)
+
     def _importMeasurementData(
         self,
         home=None,
@@ -82,7 +101,7 @@ class IOMenuCtrl:
                 self.closeApp()
                 raise StopExecution
 
-            measurementData = readMeasurementFile(fileName)
+            measurementData = self.measurementDataFromFile(fileName)
 
             if measurementData is None:
                 msg = QMessageBox()
@@ -115,7 +134,7 @@ class IOMenuCtrl:
                 self.closeApp()
                 raise StopExecution
 
-            registry = Registry.fromFile(fileName)
+            registry = self.registryFromFile(fileName)
 
             if registry is None:
                 msg = QMessageBox()
@@ -191,14 +210,31 @@ class IOMenuCtrl:
         self.registry.exportPkl(fileName)
         self.mainWindow.projectFile = fileName
 
-    @Slot()
-    def newProject(self, from_menu: bool = True):
-        measurementData = self._importMeasurementData()
-
+    def newProjectWithData(self, measurementData: "MeasurementDataType"):
+        """
+        New project with measurement data (keep hilbertspace the same)
+        To load a measurementData from file, use ioMenuCtrl.measurementDataFromFile
+        """
         self.mainWindow.initializeDynamicalElements(
             hilbertspace=self.mainWindow.hilbertspace,
             measurementData=measurementData,
         )
+
+    def newProjectWithRegistry(self, registry: Registry):
+        """
+        New project with a exsisted registry object.
+        To load a registry from file, use ioMenuCtrl.registryFromFile
+        """
+        self.mainWindow.initializeDynamicalElements(
+            hilbertspace=registry["hilbertspace"],
+            measurementData=registry["measurementData"],
+        )
+
+    @Slot()
+    def newProject(self, from_menu: bool = True):
+        measurementData = self._importMeasurementData()
+
+        self.newProjectWithData(measurementData)
 
         if not from_menu:
             self.menu.toggle()
@@ -207,6 +243,7 @@ class IOMenuCtrl:
     def openFile(self, from_menu: bool = True):
         registry = self._importProject()
 
+        self.newProjectWithRegistry(registry)
         # hilbertspace
         hilbertspace = registry["HilbertSpace"]
         # here, the measurement data is regenerated
