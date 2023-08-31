@@ -26,7 +26,7 @@ from matplotlib import colors as colors
 from scipy.ndimage import gaussian_laplace
 
 import qfit.io_utils.file_io_serializers as serializers
-from qfit.io_utils.registry import Registry, Registerable, RegistryEntry
+from qfit.models.registry import Registry, Registerable, RegistryEntry
 
 from qfit.core.helpers import (
     DataItem,
@@ -38,6 +38,7 @@ from qfit.core.helpers import (
 )
 
 from typing import Union
+
 
 class MeasurementData(abc.ABC):
     """Abstract basis class to enforce implementation of a data type specific plot method"""
@@ -411,6 +412,4 @@ def dummy_measurement_data() -> NumericalMeasurementData:
     )
 
 
-MeasurementDataType = Union[
-    NumericalMeasurementData, ImageMeasurementData
-]
+MeasurementDataType = Union[NumericalMeasurementData, ImageMeasurementData]

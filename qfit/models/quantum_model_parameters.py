@@ -5,15 +5,15 @@ from scqubits import HilbertSpace
 from scqubits.core.qubit_base import QuantumSystem
 
 from qfit.models.parameter_settings import ParameterType
-from qfit.io_utils.registry import RegistryEntry, Registerable
+from qfit.models.registry import RegistryEntry, Registerable
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
 
 from typing import Dict, List, Union, overload, Tuple, Callable, Literal, Any
 
 ParentSystem = Union[QuantumSystem, HilbertSpace]
 
-class ParameterBase(Registerable, ABC):
 
+class ParameterBase(Registerable, ABC):
     intergerParameterTypes = ["cutoff", "truncated_dim"]
     attrToRegister: List[str] = ["value"]
 
@@ -54,7 +54,6 @@ class ParameterBase(Registerable, ABC):
         Get the value of the parameter
         """
         pass
-        
 
     @value.setter
     def value(self, value):
@@ -74,22 +73,24 @@ class ParameterBase(Registerable, ABC):
             # self.setParameterForParent()
 
         return RegistryEntry(
-            name = self.name,
-            quantity_type = "r+",
-            getter = lambda: getattr(self, attribute),
-            setter = setter_func,
+            name=self.name,
+            quantity_type="r+",
+            getter=lambda: getattr(self, attribute),
+            setter=setter_func,
         )
-    
-    def registerAll(self,) -> Dict[str, RegistryEntry]:
+
+    def registerAll(
+        self,
+    ) -> Dict[str, RegistryEntry]:
         """
         Register all the attributes of the parameter
         """
-        return {attr: self._toRegistryEntry(attribute=attr) 
-                for attr in self.attrToRegister}
-        
+        return {
+            attr: self._toRegistryEntry(attribute=attr) for attr in self.attrToRegister
+        }
+
 
 class DisplayedParameterBase(ParameterBase):
-
     min: float
 
     def _toIntString(self, value: Union[int, float], precision=4) -> str:
@@ -147,11 +148,11 @@ class QuantumModelParameter(ParameterBase):
         Get the value of the parameter
         """
         return self._value
-    
+
     @value.setter
     def value(self, value: Union[int, float]):
         """
-        Set the value of the parameter. Will update the both the parameter stored and the 
+        Set the value of the parameter. Will update the both the parameter stored and the
         parent object.
         """
         self._value = self._toInt(value)
@@ -205,7 +206,7 @@ class QuantumModelSliderParameter(DisplayedParameterBase):
         param_type: ParameterType,
     ):
         super().__init__(name=name, parent=parent, param_type=param_type)
-        
+
         self.min = min
         self.max = max
         # a placeholder for the callback function that returns the value of the slider
@@ -286,10 +287,12 @@ class QuantumModelSliderParameter(DisplayedParameterBase):
         Special note: Will raise a ValueError if user input is not a number. Should be
         taken care of by the UI/controller.
         """
-        boxValue = float(self.boxValueCallback())   # will raise a ValueError if user input is not a number
+        boxValue = float(
+            self.boxValueCallback()
+        )  # will raise a ValueError if user input is not a number
 
         return self._toInt(boxValue)
-    
+
     @value.setter
     def value(self, value: Union[int, float]):
         """
@@ -306,7 +309,6 @@ class QuantumModelSliderParameter(DisplayedParameterBase):
 
 
 class QuantumModelFittingParameter(DisplayedParameterBase):
-
     initValueCallback: Callable
     initValueSetter: Callable
     valueCallback: Callable
@@ -319,7 +321,7 @@ class QuantumModelFittingParameter(DisplayedParameterBase):
     fixSetter: Callable
 
     attrToRegister = ["initValue", "value", "min", "max", "isFixed"]
-    
+
     def __init__(
         self,
         name: str,
@@ -359,8 +361,10 @@ class QuantumModelFittingParameter(DisplayedParameterBase):
         """
         Get the minimum value of the parameter from the UI
         """
-        return float(self.minCallback())    # will raise a ValueError if user input is not a number
-        
+        return float(
+            self.minCallback()
+        )  # will raise a ValueError if user input is not a number
+
     @min.setter
     def min(self, value: Union[int, float]):
         """
@@ -387,10 +391,12 @@ class QuantumModelFittingParameter(DisplayedParameterBase):
         """
         Get the maximum value of the parameter from the UI
         """
-        return float(self.maxCallback())    # will raise a ValueError if user input is not a number
+        return float(
+            self.maxCallback()
+        )  # will raise a ValueError if user input is not a number
 
     @max.setter
-    def max(self, value: Union[int, float]):    
+    def max(self, value: Union[int, float]):
         """
         Set the maximum value of the parameter in the UI
         """
@@ -420,7 +426,7 @@ class QuantumModelFittingParameter(DisplayedParameterBase):
             raise ValueError("Initial value of fitting parameter is not set yet.")
 
         return self._initValue
-    
+
     @initValue.setter
     def initValue(self, value: Union[int, float]):
         """
@@ -497,7 +503,6 @@ class QuantumModelParameterSet:
     """
 
     def __init__(self, name):
-
         self.name = name
 
         self.parameters: Dict[
@@ -519,7 +524,7 @@ class QuantumModelParameterSet:
 
     def __getitem__(self, key):
         return self.parameters[key]
-    
+
     @staticmethod
     def parentSystemNames(
         parent: ParentSystem,
@@ -536,16 +541,16 @@ class QuantumModelParameterSet:
             raise ValueError(
                 f"Parent of parameter {parent} is not a QuantumSystem or HilbertSpace object."
             )
-    
+
     @staticmethod
     def parentSystemIdstrByName(name: str) -> str:
         return name.split(" ")[0]
-        
+
     def _updateNameMap(self, parent: ParentSystem, with_type: bool = True):
         name = self.parentSystemNames(parent, with_type=with_type)
         self.parentNameByObj[parent] = name
         self.parentObjByName[name] = parent
-    
+
     # @overload
     # def add_parameter(
     #     self,
@@ -695,26 +700,28 @@ class QuantumModelParameterSet:
             try:
                 parent_system = self.parentObjByName[parent_system]
             except KeyError:
-                raise KeyError(f"Cannot find parent system {parent_system} in the parameter set.")
-        
+                raise KeyError(
+                    f"Cannot find parent system {parent_system} in the parameter set."
+                )
+
         try:
             para_dict = self.parameters[parent_system]
         except KeyError:
-            raise KeyError(f"Cannot find parent system {parent_system} in the parameter set.")
+            raise KeyError(
+                f"Cannot find parent system {parent_system} in the parameter set."
+            )
 
-        name_dict = {
-            name: getattr(para, attribute) for name, para in para_dict.items()
-        }
+        name_dict = {name: getattr(para, attribute) for name, para in para_dict.items()}
 
         if name is None:
             return name_dict
         else:
             return name_dict[name]
-        
+
     def setParameter(
-        self, 
-        parent_system: Union[ParentSystem, str], 
-        name: str, 
+        self,
+        parent_system: Union[ParentSystem, str],
+        name: str,
         value: Union[int, float],
         attribute: str = "value",
     ):
@@ -736,22 +743,26 @@ class QuantumModelParameterSet:
             try:
                 parent_system = self.parentObjByName[parent_system]
             except KeyError:
-                raise KeyError(f"Cannot find parent system {parent_system} in the parameter set.")
+                raise KeyError(
+                    f"Cannot find parent system {parent_system} in the parameter set."
+                )
 
         try:
             para_dict = self.parameters[parent_system]
         except KeyError:
-            raise KeyError(f"Cannot find parent system {parent_system} in the parameter set.")
+            raise KeyError(
+                f"Cannot find parent system {parent_system} in the parameter set."
+            )
 
         try:
             setattr(para_dict[name], attribute, value)
         except KeyError:
             raise KeyError(f"Cannot find parameter {name} in the parameter set.")
-        
+
     def toParamDict(self) -> Dict[str, ParameterBase]:
         """
         Provide a way to iterate through the parameter set.
-        
+
         Return a dictionary of all the parameters in the parameter set. Keys are "<parent name>.<parameter name>"
         """
         param_dict = {}
@@ -761,12 +772,11 @@ class QuantumModelParameterSet:
                 param_dict[f"{parent_name}.{name}"] = para
 
         return param_dict
-        
-    def exportAttrDict(self, attribute: str = "value") -> Union[
-        Dict[str, float], 
-        Dict[str, int], 
-    ]:
-        """        
+
+    def exportAttrDict(
+        self, attribute: str = "value"
+    ) -> Union[Dict[str, float], Dict[str, int],]:
+        """
         Convert the parameter set to a dictionary. Keys are "<parent name>.<parameter name>"
         and values are the value of the parameter.
 
@@ -779,13 +789,13 @@ class QuantumModelParameterSet:
             parent_name = self.parentNameByObj[parent_system]
             for name, para in para_dict.items():
                 paramval_dict[f"{parent_name}.{name}"] = getattr(para, attribute)
-                
+
         return paramval_dict
-    
+
     def loadAttrDict(
-        self, 
-        paramval_dict: Union[Dict[str, float], Dict[str, int]], 
-        attribute: str = "value"
+        self,
+        paramval_dict: Union[Dict[str, float], Dict[str, int]],
+        attribute: str = "value",
     ):
         """
         Provide a way to iterate through the parameter set.
@@ -798,7 +808,11 @@ class QuantumModelParameterSet:
             parent_system = self.parentObjByName[parent_name]
             self.setParameter(parent_system, name, value, attribute=attribute)
 
-    def update(self, param_set: "QuantumModelParameterSet", attribute: Union[str, List[str]] = "value"):
+    def update(
+        self,
+        param_set: "QuantumModelParameterSet",
+        attribute: Union[str, List[str]] = "value",
+    ):
         """
         Update the parameter set from another parameter set. Only affect the parameters
         that exist in both parameter sets.
@@ -806,28 +820,30 @@ class QuantumModelParameterSet:
         Parameters
         ----------
         param_set: QuantumModelParameterSet
-            The parameter set to update from    
+            The parameter set to update from
 
         attribute: Union[str, List[str]]
             The attribute(s) to update
         """
         if isinstance(attribute, str):
-            attribute = [attribute]  
+            attribute = [attribute]
 
         for parent_system, para_dict in param_set.items():
             for name, para in para_dict.items():
                 try:
                     for attr in attribute:
                         self.setParameter(
-                            parent_system, 
-                            name, 
+                            parent_system,
+                            name,
                             getattr(para, attr),
                             attribute=attr,
                         )
                 except KeyError:
                     continue
 
-    def registerAll(self,) -> Dict[str, RegistryEntry]:
+    def registerAll(
+        self,
+    ) -> Dict[str, RegistryEntry]:
         """
         Register all the parameters in the parameter set
         """
