@@ -121,32 +121,43 @@ class Registry:
         except FileNotFoundError:
             print(f"Error: File '{filename}' not found. Cannot export data.")
 
-    @classmethod
-    def fromFile(cls, filename: str) -> Union["Registry", None]:
-        """
-        Skip the entries that are
-        - neither in the file nor in the current registry
-        - read-only
-        """
+    def fromFile(self, filename: str) -> Union[Dict[str, Any], None]:
         try:
             with open(filename, "rb") as f:
-                data: Dict[str, Any] = pickle.load(f)
+                return pickle.load(f)
         except FileNotFoundError:
             # print(f"Error: File '{filename}' not found. Cannot load data.")
             return None     # indicate that the file is not found
         
-        new_registry = cls()
+
+    def setFromFile(self, filename: str):
+        """
+        Skip the entries that are
+        - neither in the file nor in the current registry
+        - read-only
+
+        Parameters
+        ----------
+        filename : str
+            Name of the file to be loaded.
+
+        Returns
+        -------
+        Dict[str, Any]
+            A dictionary of the loaded data.
+        """
+        data = self.fromFile(filename)
+        if data is None:
+            return None
 
         for name, value in data.items():
             try:
-                if new_registry._registry[name].quantity_type == "r":
+                if self._registry[name].quantity_type == "r":
                     continue
-                new_registry._registry[name].load(value)
+                self._registry[name].load(value)
             except KeyError:
                 print(f"Key {name} not found in registry. Skipping.")
                 continue
-
-        return new_registry
     
     def clear(self):
         self._registry.clear()
