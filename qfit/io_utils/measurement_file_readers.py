@@ -29,10 +29,13 @@ from qfit.core.helpers import (
     hasIdenticalRows,
     isValid2dArray,
 )
-from qfit.models.measurement_data import ImageMeasurementData, NumericalMeasurementData
+from qfit.models.measurement_data import (
+    ImageMeasurementData, NumericalMeasurementData, MeasurementDataType)
+
+from typing import Union
 
 
-def readMeasurementFile(fileName):
+def readMeasurementFile(fileName) -> Union[MeasurementDataType, None]:
     """
     Read experimental data from file.
 
