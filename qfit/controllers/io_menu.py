@@ -1,4 +1,3 @@
-
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QMessageBox,
@@ -18,9 +17,16 @@ import os
 
 from typing import TYPE_CHECKING, Union
 
+from qfit.models.measurement_data import (
+    ImageMeasurementData,
+    NumericalMeasurementData,
+)
+
 if TYPE_CHECKING:
     from qfit.core.mainwindow import MainWindow
-    from qfit.models.measurement_data import MeasurementDataType
+    from qfit.models.measurement_data import (
+        MeasurementDataType,
+    )
 
 
 class IOMenuCtrl:
@@ -31,15 +37,16 @@ class IOMenuCtrl:
     - save file
     - save file as
     - close app
-    
+
     # TODO:
     - export hs?
     - export extracted data?
 
     """
+
     def __init__(
-        self, 
-        menu: MenuWidget, 
+        self,
+        menu: MenuWidget,
         registry: Registry,
         mainWindow: "MainWindow",
     ):
@@ -80,15 +87,17 @@ class IOMenuCtrl:
         
 
     def _importMeasurementData(
-        self, 
-        home = None,
+        self,
+        home=None,
     ) -> "MeasurementDataType":
         if home is None:
             home = os.path.expanduser("~")
 
         while True:
             fileCategories = "Data files (*.h5 *.mat *.csv *.jpg *.jpeg *.png *.hdf5)"
-            fileName, _ = QFileDialog.getOpenFileName(self.mainWindow, "Open", home, fileCategories)
+            fileName, _ = QFileDialog.getOpenFileName(
+                self.mainWindow, "Open", home, fileCategories
+            )
             if not fileName:
                 self.closeApp()
                 raise StopExecution
@@ -112,14 +121,16 @@ class IOMenuCtrl:
 
     def _importProject(
         self,
-        home = None,
+        home=None,
     ) -> Registry:
         if home is None:
             home = os.path.expanduser("~")
 
         while True:
             fileCategories = "Qfit project (*.qfit)"
-            fileName, _ = QFileDialog.getOpenFileName(self.mainWindow, "Open", home, fileCategories)
+            fileName, _ = QFileDialog.getOpenFileName(
+                self.mainWindow, "Open", home, fileCategories
+            )
             if not fileName:
                 self.closeApp()
                 raise StopExecution
@@ -130,19 +141,17 @@ class IOMenuCtrl:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Warning)
                 msg.setText("Error opening file.")
-                msg.setInformativeText(
-                    "File is not found."
-                )
+                msg.setInformativeText("File is not found.")
                 msg.setWindowTitle("Error")
                 _ = msg.exec_()
             else:
                 break
 
         return registry
-    
+
     def _saveProject(
         self,
-        home = None,
+        home=None,
         save_as: bool = False,
     ):
         # choose a home directory
@@ -156,16 +165,16 @@ class IOMenuCtrl:
         if save_as or self.mainWindow.projectFile is None:
             while True:
                 fileCategories = "Qfit project (*.qfit)"
-                fileName, _ = QFileDialog.getSaveFileName(self.mainWindow, "Save as", home, fileCategories)
-                
-                # check whether the filename is valid 
+                fileName, _ = QFileDialog.getSaveFileName(
+                    self.mainWindow, "Save as", home, fileCategories
+                )
+
+                # check whether the filename is valid
                 if fileName is None:
                     msg = QMessageBox()
                     msg.setIcon(QMessageBox.Warning)
                     msg.setText("Invalid filename.")
-                    msg.setInformativeText(
-                        "Please enter a valid filename."
-                    )
+                    msg.setInformativeText("Please enter a valid filename.")
                     msg.setWindowTitle("Warning")
                     _ = msg.exec_()
                     continue
@@ -192,14 +201,14 @@ class IOMenuCtrl:
                 #     elif reply == QMessageBox.No:
                 #         continue
                 #     else:   # reply == QMessageBox.Cancel
-                #         return 
+                #         return
                 else:
                     break
         else:
             fileName = self.mainWindow.projectFile
 
         # save the project
-        self.registry.exportPkl(fileName) 
+        self.registry.exportPkl(fileName)
         self.mainWindow.projectFile = fileName
 
     def newProjectWithData(self, measurementData: "MeasurementDataType"):
@@ -208,8 +217,8 @@ class IOMenuCtrl:
         To load a measurementData from file, use ioMenuCtrl.measurementDataFromFile
         """
         self.mainWindow.initializeDynamicalElements(
-            hilbertspace = self.mainWindow.hilbertspace,
-            measurementData = measurementData,
+            hilbertspace=self.mainWindow.hilbertspace,
+            measurementData=measurementData,
         )
     
     def newProjectWithRegistry(self, registry: Registry):
@@ -230,12 +239,25 @@ class IOMenuCtrl:
 
         if not from_menu:
             self.menu.toggle()
-        
+
     @Slot()
     def openFile(self, from_menu: bool = True):
         registry = self._importProject()
 
         self.newProjectWithRegistry(registry)
+        # hilbertspace
+        hilbertspace = registry["HilbertSpace"]
+        # here, the measurement data is regenerated
+        data = registry["measurementData"]
+        print(f"open file: {data[0]}")
+        if data[0] == "image":
+            measurementData = ImageMeasurementData(data[1], data[2])
+        elif data[0] == "numerical":
+            measurementData = NumericalMeasurementData(data[1], data[2])
+        self.mainWindow.initializeDynamicalElements(
+            hilbertspace=hilbertspace,
+            measurementData=measurementData,
+        )
 
         if not from_menu:
             self.menu.toggle()
@@ -253,7 +275,7 @@ class IOMenuCtrl:
             # the window
             self._quit()
             return True
-            
+
         else:
             msgBox = QMessageBox()
             msgBox.setWindowTitle("qfit")
@@ -273,7 +295,7 @@ class IOMenuCtrl:
             elif reply == QMessageBox.Discard:
                 self._quit()
                 return True
-            else:   # reply == QMessageBox.Cancel
+            else:  # reply == QMessageBox.Cancel
                 self.menu.toggle()
                 return False
 
@@ -289,14 +311,14 @@ class IOMenuCtrl:
     @Slot()
     def saveFile(self):
         """Save the extracted data and calibration information to file."""
-        self._saveProject(save_as = False)
+        self._saveProject(save_as=False)
 
         self.menu.toggle()
 
     @Slot()
     def saveFileAs(self):
         """Save the extracted data and calibration information to file."""
-        self._saveProject(save_as = True)
+        self._saveProject(save_as=True)
 
         self.menu.toggle()
 
