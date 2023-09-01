@@ -164,8 +164,7 @@ class qfit:
         # check if file exists
         if fileName is not None:
             if not os.path.isfile(fileName):
-                print(f"File '{fileName}' does not exist.")
-                return None
+                raise FileNotFoundError(f"File '{fileName}' does not exist.")
 
         instance = cls._newProject(
             dummy_hilbert_space(), dummy_measurement_data())
@@ -174,7 +173,10 @@ class qfit:
         if fileName is None:
             fileName = instance.window.ioMenuCtrl.openFile()
         else:
-            registry = IOMenuCtrl.registryFromFile(fileName)
-            instance.window.ioMenuCtrl.newProjectWithRegistry(registry)
+            registryDict = IOMenuCtrl.registryDictFromFile(fileName)
+            if registryDict is None:
+                raise FileNotFoundError(f"Can't load file '{fileName}'.")
+            
+            instance.window.ioMenuCtrl.newProjectWithRegistryDict(registryDict)
 
         return instance
