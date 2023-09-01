@@ -15,7 +15,7 @@ from qfit.io_utils.measurement_file_readers import readMeasurementFile
 import sys
 import os
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union, Dict, Any
 
 from qfit.models.measurement_data import (
     ImageMeasurementData,
@@ -77,15 +77,14 @@ class IOMenuCtrl:
         return readMeasurementFile(fileName)
     
     @staticmethod
-    def registryFromFile(
+    def registryDictFromFile(
         fileName: str,
-    ):
+    ) -> Union[Dict[str, Any], None]:
         """
         A convenient way to call qfit.models.registry.Registry.fromFile
         """
         return Registry.fromFile(fileName)
         
-
     def _importMeasurementData(
         self,
         home=None,
@@ -122,7 +121,7 @@ class IOMenuCtrl:
     def _importProject(
         self,
         home=None,
-    ) -> Registry:
+    ) -> Dict[str, Any]:
         if home is None:
             home = os.path.expanduser("~")
 
@@ -135,9 +134,9 @@ class IOMenuCtrl:
                 self.closeApp()
                 raise StopExecution
 
-            registry = self.registryFromFile(fileName)
+            registryDict = self.registryDictFromFile(fileName)
 
-            if registry is None:
+            if registryDict is None:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Warning)
                 msg.setText("Error opening file.")
@@ -147,7 +146,7 @@ class IOMenuCtrl:
             else:
                 break
 
-        return registry
+        return registryDict
 
     def _saveProject(
         self,
@@ -169,47 +168,25 @@ class IOMenuCtrl:
                     self.mainWindow, "Save as", home, fileCategories
                 )
 
-                # check whether the filename is valid
                 if fileName is None:
-                    msg = QMessageBox()
-                    msg.setIcon(QMessageBox.Warning)
-                    msg.setText("Invalid filename.")
-                    msg.setInformativeText("Please enter a valid filename.")
-                    msg.setWindowTitle("Warning")
-                    _ = msg.exec_()
-                    continue
+                    print("Save cancelled.")
+                    return
 
                 # check whether the filename ends with .qfit
                 if not fileName.endswith(".qfit"):
                     fileName = fileName + ".qfit"
 
-                # # check whether the file exists, actually this is not
-                # # needed and will be handled by QFileDialog.getSaveFileName
-                # if os.path.exists(fileName):
-                #     msg = QMessageBox()
-                #     msg.setIcon(QMessageBox.Warning)
-                #     msg.setText("File already exists.")
-                #     msg.setInformativeText(
-                #         "File already exists. Do you want to overwrite it?"
-                #     )
-                #     msg.setWindowTitle("Warning")
-                #     msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
-                #     msg.setDefaultButton(QMessageBox.No)
-                #     reply = msg.exec_()
-                #     if reply == QMessageBox.Yes:
-                #         break
-                #     elif reply == QMessageBox.No:
-                #         continue
-                #     else:   # reply == QMessageBox.Cancel
-                #         return
                 else:
                     break
         else:
             fileName = self.mainWindow.projectFile
 
+        # update the project file name, must be done before saving the project,
+        # as when loaded, the projectFile should be the same as the file name
+        self.mainWindow.projectFile = fileName
+
         # save the project
         self.registry.exportPkl(fileName)
-        self.mainWindow.projectFile = fileName
 
     def newProjectWithData(self, measurementData: "MeasurementDataType"):
         """
@@ -221,23 +198,28 @@ class IOMenuCtrl:
             measurementData=measurementData,
         )
     
-    def newProjectWithRegistry(self, registry: Registry):
+    def newProjectWithRegistryDict(self, registryDict: Dict[str, Any]):
         """
-        New project with a exsisted registry object.
+        New project with a exsisted registry object. Will do the following:
+        - partially update the registry: hilbertspace, measurementData
+        - update the dynamical elements in the main window
+        - update the rest of the registry (by calling setters)
+
         To load a registry from file, use ioMenuCtrl.registryFromFile
         """
-        hilbertspace = registry["HilbertSpace"]
-        # here, the measurement data is regenerated
-        data = registry["measurementData"]
-        print(f"open file: {data[0]}")
-        if data[0] == "image":
-            measurementData = ImageMeasurementData(data[1], data[2])
-        elif data[0] == "numerical":
-            measurementData = NumericalMeasurementData(data[1], data[2])
+        # load the hilbertspace and measurementData
+        hilbertspace = registryDict["HilbertSpace"]
+        dateType = globals()[registryDict["measurementData.type"]]
+        measurementData = dateType(*registryDict["measurementData.args"])
+
+        # update the dynamical elements in the main window
         self.mainWindow.initializeDynamicalElements(
             hilbertspace=hilbertspace,
             measurementData=measurementData,
         )
+
+        # update the rest of the registry
+        self.registry.setByDict(registryDict)
 
     @Slot()
     def newProject(self, from_menu: bool = True):
@@ -250,11 +232,10 @@ class IOMenuCtrl:
 
     @Slot()
     def openFile(self, from_menu: bool = True):
-        registry = self._importProject()
+        registryDict = self._importProject()
 
-        self.newProjectWithRegistry(registry)
+        self.newProjectWithRegistryDict(registryDict)
         # hilbertspace
-        
 
         if not from_menu:
             self.menu.toggle()
