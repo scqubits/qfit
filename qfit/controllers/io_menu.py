@@ -71,11 +71,11 @@ class IOMenuCtrl:
         fileName: str,
     ):
         """
-        A convenient way to call 
+        A convenient way to call
         qfit.io_utils.measurement_file_readers.readMeasurementFile
         """
         return readMeasurementFile(fileName)
-    
+
     @staticmethod
     def registryDictFromFile(
         fileName: str,
@@ -84,7 +84,7 @@ class IOMenuCtrl:
         A convenient way to call qfit.models.registry.Registry.fromFile
         """
         return Registry.fromFile(fileName)
-        
+
     def _importMeasurementData(
         self,
         home=None,
