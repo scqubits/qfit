@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     )
 
 
-class IOMenuCtrl:
+class IOCtrl:
     """
     This controller handles the menu bar and related IO operations, including:
     - new project
@@ -38,10 +38,26 @@ class IOMenuCtrl:
     - save file as
     - close app
 
+    It will run the mainWindow.register() when created.
+
     # TODO:
     - export hs?
     - export extracted data?
 
+    Parameters
+    ----------
+    menu : MenuWidget
+        The menu widget that provides the buttons, including:
+        - toggleMenuButton
+        - menuQuitButton
+        - menuOpenButton
+        - menuNewButton
+        - menuSaveButton
+        - menuSaveAsButton
+    registry : Registry
+        The registry object.
+    mainWindow : MainWindow
+        The main window object.
     """
 
     def __init__(
@@ -58,26 +74,33 @@ class IOMenuCtrl:
         self.mainWindow.register()
 
     def setConnects(self):
+        """
+        Connect the buttons to the corresponding functions, including
+        - toggle
+        - quit
+        - open
+        - new
+        - save
+        - save as    
+        """
         self.mainWindow.ui.toggleMenuButton.clicked.connect(self.menu.toggle)
 
         self.menu.ui.menuQuitButton.clicked.connect(self.mainWindow.close)
         self.menu.ui.menuOpenButton.clicked.connect(self.openFile)
-        self.menu.ui.menuOpenButton.clicked.connect(self.test)
-
         self.menu.ui.menuNewButton.clicked.connect(self.newProject)
         self.menu.ui.menuSaveButton.clicked.connect(self.saveFile)
         self.menu.ui.menuSaveAsButton.clicked.connect(self.saveFileAs)
 
-    def test(self, value=111):
-        print("test", value)
-
+    # load ####################################################################
     @staticmethod
     def measurementDataFromFile(
         fileName: str,
     ):
         """
-        A convenient way to call
-        qfit.io_utils.measurement_file_readers.readMeasurementFile
+        Read the measurement data from the given file.
+
+        Serves as a convenient way to call
+        `qfit.io_utils.measurement_file_readers.readMeasurementFile`.
         """
         return readMeasurementFile(fileName)
 
@@ -86,15 +109,21 @@ class IOMenuCtrl:
         fileName: str,
     ) -> Union[Dict[str, Any], None]:
         """
-        A convenient way to call qfit.models.registry.Registry.fromFile
+        Read the registryDict from the given file.
+
+        Serves as a convenient way to call 
+        `qfit.models.registry.Registry.fromFile`.
         """
         return Registry.fromFile(fileName)
 
-    def _importMeasurementData(
+    def _measurementDataFromDialog(
         self,
-        home=None,
-        window_initialized=False,
-    ) -> "MeasurementDataType":
+        home = None,
+        window_initialized = False,
+    ) -> Union["MeasurementDataType", None]:
+        """
+        Open a dialog to select a file, then read the measurement data from the file.
+        """
         if home is None:
             home = os.path.expanduser("~")
 
@@ -127,11 +156,14 @@ class IOMenuCtrl:
 
         return measurementData
 
-    def _importProject(
+    def _registryDictFromDialog(
         self,
         home=None,
         window_initialized=False,
     ) -> Union[Dict[str, Any], None]:
+        """
+        Open a dialog to select a file, then read the registryDict from the file.
+        """
         if home is None:
             home = os.path.expanduser("~")
 
@@ -160,12 +192,16 @@ class IOMenuCtrl:
                 break
 
         return registryDict
-
+    
+    # save ####################################################################
     def _saveProject(
         self,
         home=None,
         save_as: bool = False,
     ):
+        """
+        Open a dialog to select a file, then save the project to the file.
+        """
         # choose a home directory
         if self.mainWindow.projectFile is not None:
             home = os.path.dirname(self.mainWindow.projectFile)
@@ -180,9 +216,7 @@ class IOMenuCtrl:
                 fileName, _ = QFileDialog.getSaveFileName(
                     self.mainWindow, "Save as", home, fileCategories
                 )
-
-                if fileName is None:
-                    print("Save cancelled.")
+                if not fileName:
                     return
 
                 # check whether the filename ends with .qfit
@@ -201,7 +235,8 @@ class IOMenuCtrl:
         # save the project
         self.registry.exportPkl(fileName)
 
-    def newProjectWithData(self, measurementData: "MeasurementDataType"):
+    # new #####################################################################
+    def newProjectWithMeasurementData(self, measurementData: "MeasurementDataType"):
         """
         New project with measurement data (keep hilbertspace the same)
         To load a measurementData from file, use ioMenuCtrl.measurementDataFromFile
@@ -211,7 +246,8 @@ class IOMenuCtrl:
             measurementData=measurementData,
         )
     
-    def newProjectWithRegistryDict(self, registryDict: Dict[str, Any]):
+    # open ####################################################################
+    def openProjectWithRegistryDict(self, registryDict: Dict[str, Any]):
         """
         New project with a exsisted registry object. Will do the following:
         - partially update the registry: hilbertspace, measurementData
@@ -234,25 +270,7 @@ class IOMenuCtrl:
         # update the rest of the registry
         self.registry.setByDict(registryDict)
 
-    @Slot()
-    def newProject(self, __value = None, from_menu: bool = True):
-        measurementData = self._importMeasurementData(window_initialized=from_menu)
-
-        if measurementData is not None:
-            self.newProjectWithData(measurementData)
-
-        if from_menu:
-            self.menu.toggle()
-    @Slot()
-    def openFile(self, __value = None, from_menu: bool = True):
-        registryDict = self._importProject(window_initialized=from_menu)
-
-        if registryDict is not None:
-            self.newProjectWithRegistryDict(registryDict)
-
-        if from_menu:
-            self.menu.toggle()
-
+    # quit / close ############################################################
     def _quit(self):
         if self.mainWindow.openFromIPython:
             self.closeAppIPython()
@@ -289,7 +307,7 @@ class IOMenuCtrl:
             else:  # reply == QMessageBox.Cancel
                 self.menu.toggle()
                 return False
-
+            
     def closeAppIPython(self):
         """
         Close the app when running in ipython
@@ -298,6 +316,27 @@ class IOMenuCtrl:
         self.mainWindow.deleteLater()
         self.mainWindow.destroy()
         # raise StopExecution
+
+    # slots ###################################################################
+    @Slot()
+    def newProject(self, __value = None, from_menu: bool = True):
+
+        measurementData = self._measurementDataFromDialog(window_initialized=from_menu)
+
+        if measurementData is not None:
+            self.newProjectWithMeasurementData(measurementData)
+
+        if from_menu:
+            self.menu.toggle()
+    @Slot()
+    def openFile(self, __value = None, from_menu: bool = True):
+        registryDict = self._registryDictFromDialog(window_initialized=from_menu)
+
+        if registryDict is not None:
+            self.openProjectWithRegistryDict(registryDict)
+
+        if from_menu:
+            self.menu.toggle()
 
     @Slot()
     def saveFile(self):

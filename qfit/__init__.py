@@ -29,7 +29,7 @@ from qfit.models.measurement_data import (
 from qfit.controllers.numerical_model import dummy_hilbert_space
 from qfit.core.helpers import executed_in_ipython
 from qfit.io_utils.measurement_file_readers import readMeasurementFile
-from qfit.controllers.io_menu import IOMenuCtrl
+from qfit.controllers.io_menu import IOCtrl
 
 from typing import Union
 
@@ -100,10 +100,10 @@ class qfit:
             
         if measurementFileName is not None:
             # load measurement data from the given file
-            measurementData = IOMenuCtrl.measurementDataFromFile(measurementFileName)
+            measurementData = IOCtrl.measurementDataFromFile(measurementFileName)
             if measurementData is None:
                 raise FileNotFoundError(f"Can't load file '{measurementFileName}'.")
-            self.window.ioMenuCtrl.newProjectWithData(measurementData)
+            self.window.ioMenuCtrl.newProjectWithMeasurementData(measurementData)
         else:
             # open a window to ask for a file
             self.window.ioMenuCtrl.newProject()
@@ -112,6 +112,7 @@ class qfit:
     def hilbertSpace(self) -> HilbertSpace:
         return self._hilbertSpace
 
+    # methods to create a new project #########################################
     @classmethod
     def new(
         cls,
@@ -145,10 +146,10 @@ class qfit:
         
         # load measurement data
         if measurementFileName is not None:
-            measurementData = IOMenuCtrl.measurementDataFromFile(measurementFileName)
+            measurementData = IOCtrl.measurementDataFromFile(measurementFileName)
             if measurementData is None:
                 raise FileNotFoundError(f"Can't load file '{measurementFileName}'.")
-            instance.window.ioMenuCtrl.newProjectWithData(measurementData)
+            instance.window.ioMenuCtrl.newProjectWithMeasurementData(measurementData)
         else:
             instance.window.ioMenuCtrl.newProject(from_menu=False)
 
@@ -184,10 +185,10 @@ class qfit:
         if fileName is None:
             fileName = instance.window.ioMenuCtrl.openFile(from_menu=False)
         else:
-            registryDict = IOMenuCtrl.registryDictFromFile(fileName)
+            registryDict = IOCtrl.registryDictFromFile(fileName)
             if registryDict is None:
                 raise FileNotFoundError(f"Can't load file '{fileName}'.")
             
-            instance.window.ioMenuCtrl.newProjectWithRegistryDict(registryDict)
+            instance.window.ioMenuCtrl.openProjectWithRegistryDict(registryDict)
 
         return instance

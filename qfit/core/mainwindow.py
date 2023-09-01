@@ -89,7 +89,7 @@ from qfit.models.status_result_data import Result
 from qfit.models.registry import Registry, RegistryEntry, Registrable
 
 # menu controller
-from qfit.controllers.io_menu import IOMenuCtrl
+from qfit.controllers.io_menu import IOCtrl
 
 if TYPE_CHECKING:
     from qfit.widgets.calibration import CalibrationLineEdit
@@ -188,7 +188,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.registry = Registry()
 
         # controller for menu
-        self.ioMenuCtrl = IOMenuCtrl(
+        self.ioMenuCtrl = IOCtrl(
             menu=self.ui_menu,
             registry=self.registry,
             mainWindow=self,
