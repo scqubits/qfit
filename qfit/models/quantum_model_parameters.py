@@ -5,7 +5,7 @@ from scqubits import HilbertSpace
 from scqubits.core.qubit_base import QuantumSystem
 
 from qfit.models.parameter_settings import ParameterType
-from qfit.models.registry import RegistryEntry, Registerable
+from qfit.models.registry import RegistryEntry, Registrable
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
 
 from typing import Dict, List, Union, overload, Tuple, Callable, Literal, Any
@@ -13,7 +13,7 @@ from typing import Dict, List, Union, overload, Tuple, Callable, Literal, Any
 ParentSystem = Union[QuantumSystem, HilbertSpace]
 
 
-class ParameterBase(Registerable, ABC):
+class ParameterBase(Registrable, ABC):
     intergerParameterTypes = ["cutoff", "truncated_dim"]
     attrToRegister: List[str] = ["value"]
 
@@ -61,23 +61,6 @@ class ParameterBase(Registerable, ABC):
         Set the value of the parameter
         """
         pass
-
-    def _toRegistryEntry(self, attribute: str = "value") -> RegistryEntry:
-        """
-        Convert the parameter to a RegistryEntry object. The name of the
-        RegistryEntry object is not complete, and should be updated later.
-        """
-
-        def setter_func(value):
-            setattr(self, attribute, value)
-            # self.setParameterForParent()
-
-        return RegistryEntry(
-            name=self.name,
-            quantity_type="r+",
-            getter=lambda: getattr(self, attribute),
-            setter=setter_func,
-        )
 
     def registerAll(
         self,
