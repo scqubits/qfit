@@ -91,9 +91,22 @@ class qfit:
     def __init__(
         self, 
         hilbertSpace: HilbertSpace, 
-        measurementData: Union[str, None] = None
+        measurementFileName: Union[str, None] = None
     ):
-        self.window.ioMenuCtrl.newProject()
+        # check if file exists
+        if measurementFileName is not None:
+            if not os.path.isfile(measurementFileName):   
+                raise FileNotFoundError(f"File '{measurementFileName}' does not exist.")
+            
+        if measurementFileName is not None:
+            # load measurement data from the given file
+            measurementData = IOMenuCtrl.measurementDataFromFile(measurementFileName)
+            if measurementData is None:
+                raise FileNotFoundError(f"Can't load file '{measurementFileName}'.")
+            self.window.ioMenuCtrl.newProjectWithData(measurementData)
+        else:
+            # open a window to ask for a file
+            self.window.ioMenuCtrl.newProject()
 
     @property
     def hilbertSpace(self) -> HilbertSpace:
@@ -104,7 +117,7 @@ class qfit:
         cls,
         hilbertSpace: HilbertSpace,
         measurementFileName: Union[str, None] = None,
-    ) -> Union["qfit", None]:
+    ) -> "qfit":
         """
         Create a qfit project with a `HilbertSpace object` from `scqubits` and
         a measurement file.
@@ -125,21 +138,19 @@ class qfit:
         # check if file exists
         if measurementFileName is not None:
             if not os.path.isfile(measurementFileName):   
-                print(f"File '{measurementFileName}' does not exist.")
-                return None
+                raise FileNotFoundError(f"File '{measurementFileName}' does not exist.")
             
         instance = cls._newProject(
             hilbertSpace, dummy_measurement_data())
         
         # load measurement data
         if measurementFileName is not None:
-            if not os.path.isfile(measurementFileName):
-                print(f"File '{measurementFileName}' does not exist.")
-                return None
             measurementData = IOMenuCtrl.measurementDataFromFile(measurementFileName)
+            if measurementData is None:
+                raise FileNotFoundError(f"Can't load file '{measurementFileName}'.")
             instance.window.ioMenuCtrl.newProjectWithData(measurementData)
         else:
-            instance.window.ioMenuCtrl.newProject()
+            instance.window.ioMenuCtrl.newProject(from_menu=False)
 
         return instance
 
@@ -147,7 +158,7 @@ class qfit:
     def open(
         cls, 
         fileName: Union[str, None] | None = None,
-    ) -> Union["qfit", None]:
+    ) -> "qfit":
         """
         Open a qfit project from a file.
 
@@ -171,7 +182,7 @@ class qfit:
         
         # load registry
         if fileName is None:
-            fileName = instance.window.ioMenuCtrl.openFile()
+            fileName = instance.window.ioMenuCtrl.openFile(from_menu=False)
         else:
             registryDict = IOMenuCtrl.registryDictFromFile(fileName)
             if registryDict is None:

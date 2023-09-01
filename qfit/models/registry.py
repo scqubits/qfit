@@ -21,7 +21,6 @@ class Registrable(ABC):
 
         def setter_func(value):
             setattr(self, attribute, value)
-            # self.setParameterForParent()
 
         return RegistryEntry(
             name=attribute,

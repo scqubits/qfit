@@ -62,9 +62,14 @@ class IOMenuCtrl:
 
         self.menu.ui.menuQuitButton.clicked.connect(self.mainWindow.close)
         self.menu.ui.menuOpenButton.clicked.connect(self.openFile)
+        self.menu.ui.menuOpenButton.clicked.connect(self.test)
+
         self.menu.ui.menuNewButton.clicked.connect(self.newProject)
         self.menu.ui.menuSaveButton.clicked.connect(self.saveFile)
         self.menu.ui.menuSaveAsButton.clicked.connect(self.saveFileAs)
+
+    def test(self, value=111):
+        print("test", value)
 
     @staticmethod
     def measurementDataFromFile(
@@ -88,6 +93,7 @@ class IOMenuCtrl:
     def _importMeasurementData(
         self,
         home=None,
+        window_initialized=False,
     ) -> "MeasurementDataType":
         if home is None:
             home = os.path.expanduser("~")
@@ -98,8 +104,11 @@ class IOMenuCtrl:
                 self.mainWindow, "Open", home, fileCategories
             )
             if not fileName:
-                self.closeApp()
-                raise StopExecution
+                if not window_initialized:
+                    self.closeApp()
+                    raise StopExecution
+                else:
+                    return None
 
             measurementData = self.measurementDataFromFile(fileName)
 
@@ -121,7 +130,8 @@ class IOMenuCtrl:
     def _importProject(
         self,
         home=None,
-    ) -> Dict[str, Any]:
+        window_initialized=False,
+    ) -> Union[Dict[str, Any], None]:
         if home is None:
             home = os.path.expanduser("~")
 
@@ -131,8 +141,11 @@ class IOMenuCtrl:
                 self.mainWindow, "Open", home, fileCategories
             )
             if not fileName:
-                self.closeApp()
-                raise StopExecution
+                if not window_initialized:
+                    self.closeApp()
+                    raise StopExecution
+                else:
+                    return None
 
             registryDict = self.registryDictFromFile(fileName)
 
@@ -222,22 +235,22 @@ class IOMenuCtrl:
         self.registry.setByDict(registryDict)
 
     @Slot()
-    def newProject(self, from_menu: bool = True):
-        measurementData = self._importMeasurementData()
+    def newProject(self, __value = None, from_menu: bool = True):
+        measurementData = self._importMeasurementData(window_initialized=from_menu)
 
-        self.newProjectWithData(measurementData)
+        if measurementData is not None:
+            self.newProjectWithData(measurementData)
 
-        if not from_menu:
+        if from_menu:
             self.menu.toggle()
-
     @Slot()
-    def openFile(self, from_menu: bool = True):
-        registryDict = self._importProject()
+    def openFile(self, __value = None, from_menu: bool = True):
+        registryDict = self._importProject(window_initialized=from_menu)
 
-        self.newProjectWithRegistryDict(registryDict)
-        # hilbertspace
+        if registryDict is not None:
+            self.newProjectWithRegistryDict(registryDict)
 
-        if not from_menu:
+        if from_menu:
             self.menu.toggle()
 
     def _quit(self):
