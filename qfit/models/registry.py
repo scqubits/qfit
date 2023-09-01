@@ -10,8 +10,25 @@ def READONLY_SETTER(*args, **kwargs):
     raise ValueError("Cannot set value to read-only entry.")
 
 
-class Registerable(ABC):
+class Registrable(ABC):
     """Mix-in class that makes descendant classes registerable."""
+
+    def _toRegistryEntry(self, attribute: str = "value") -> "RegistryEntry":
+        """
+        Convert an attribute to a RegistryEntry object. The name of the
+        RegistryEntry object is not complete, and should be updated later.
+        """
+
+        def setter_func(value):
+            setattr(self, attribute, value)
+            # self.setParameterForParent()
+
+        return RegistryEntry(
+            name=attribute,
+            quantity_type="r+",
+            getter=lambda: getattr(self, attribute),
+            setter=setter_func,
+        )
 
     def registerAll(self) -> Dict[str, "RegistryEntry"]:
         """Register all the quantities in the class. This should be
@@ -121,16 +138,16 @@ class Registry:
         except FileNotFoundError:
             print(f"Error: File '{filename}' not found. Cannot export data.")
 
-    def fromFile(self, filename: str) -> Union[Dict[str, Any], None]:
+    @staticmethod
+    def fromFile(filename: str) -> Union[Dict[str, Any], None]:
         try:
             with open(filename, "rb") as f:
                 return pickle.load(f)
         except FileNotFoundError:
             # print(f"Error: File '{filename}' not found. Cannot load data.")
             return None     # indicate that the file is not found
-        
 
-    def setFromFile(self, filename: str):
+    def setByDict(self, registryDict: Dict[str, Any]):
         """
         Skip the entries that are
         - neither in the file nor in the current registry
@@ -146,11 +163,7 @@ class Registry:
         Dict[str, Any]
             A dictionary of the loaded data.
         """
-        data = self.fromFile(filename)
-        if data is None:
-            return None
-
-        for name, value in data.items():
+        for name, value in registryDict.items():
             try:
                 if self._registry[name].quantity_type == "r":
                     continue
