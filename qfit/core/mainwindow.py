@@ -12,8 +12,9 @@
 
 import copy
 import sys
+import os
 from functools import partial
-from typing import TYPE_CHECKING, Dict, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Tuple, Union, List, Any
 
 import matplotlib as mpl
 import matplotlib.cm as cm
@@ -85,7 +86,7 @@ from qfit.controllers.fit import NumericalFitting
 from qfit.models.status_result_data import Result
 
 # registry
-from qfit.models.registry import Registry
+from qfit.models.registry import Registry, RegistryEntry, Registrable
 
 # menu controller
 from qfit.controllers.io_menu import IOMenuCtrl
@@ -98,7 +99,12 @@ if TYPE_CHECKING:
 mpl.rcParams["toolbar"] = "None"
 
 
-class MainWindow(QMainWindow):
+# metaclass: solve the incompatibility and make the mainWindow registrable
+class CombinedMeta(type(QMainWindow), type(Registrable)):
+    pass
+
+
+class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     """Class for the main window of the app."""
 
     ui: Ui_MainWindow
@@ -122,7 +128,7 @@ class MainWindow(QMainWindow):
     offset: Union[None, QPoint]
 
     registry: Registry
-    projectFile: Union[str, None] = None
+    _projectFile: Union[str, None] = None
 
 
     def __init__(self, measurementData: MeasurementDataType, hilbertspace: HilbertSpace):
@@ -1184,10 +1190,41 @@ class MainWindow(QMainWindow):
             mse_change_ui_setter=mse_change_ui_setter,
         )
 
+    # Save Location & Window Title #####################################
+    # ##################################################################
+    @property
+    def projectFile(self):
+        return self._projectFile
+
+    @projectFile.setter
+    def projectFile(self, value):
+        self._projectFile = value
+
+        windowTitle = "qfit" if value is None else f"qfit - {os.path.basename(value)}"
+        self.setWindowTitle(windowTitle)
+
     # IO ###############################################################
     # ##################################################################
 
+    attrToRegister: List[str] = [
+        "projectFile", 
+    ]
+
+    def registerAll(self):
+        """
+        After registering the models,
+        Register the rest attribute of the mainWindow.
+        """
+        registryDict = {
+            attr: self._toRegistryEntry(attr) for attr in self.attrToRegister
+        }
+
+        return registryDict
+
     def register(self):
+        """
+        register the entire app
+        """
         # clear the registry
         self.registry.clear()
 
@@ -1200,7 +1237,8 @@ class MainWindow(QMainWindow):
         self.registry.register(self.fitParameterSet)
         self.registry.register(self.sweepParameterSet)
 
-        # not yet finished
+        # main window
+        self.registry.register(self)
 
     def initializeDynamicalElements(
         self, 
