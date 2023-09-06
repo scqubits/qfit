@@ -78,6 +78,11 @@ from qfit.widgets.grouped_sliders import (
     GroupedWidgetSet,
 )
 from qfit.widgets.fitting_table import FittingParameterTableSet
+from qfit.widgets.foldable_table import (
+    FoldableTable,
+    MinMaxItems,
+    FittingParameterItems,
+)
 
 # fit
 from qfit.controllers.fit import NumericalFitting

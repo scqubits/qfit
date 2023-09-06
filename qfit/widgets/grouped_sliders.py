@@ -282,6 +282,46 @@ class GroupedWidget(QWidget):
             widget.setEnabled(value)
 
 
+class FoldPushButton(QPushButton):
+    """
+    Push button that has an icon.
+    """
+    def __init__(self, title="Foldable", parent=None):
+        super().__init__()
+        
+        # icon
+        icon = QIcon()
+        icon.addFile(
+            ":/icons/svg/cil-caret-right.png",
+            QSize(),
+            QIcon.Normal,
+            QIcon.Off,
+        )
+        icon.addFile(
+            ":/icons/svg/cil-caret-bottom.png",
+            QSize(),
+            QIcon.Normal,
+            QIcon.On,
+        )
+        # set the style sheet (which controls the font, color, text align, border, etc.)
+        self.setStyleSheet(
+            "QPushButton {\n"
+            '	font: 57 10pt "Roboto Medium";\n'
+            "	color: rgb(170, 170, 170);\n"
+            "	text-align: left;\n"
+            "	border: none;\n"
+            "}"
+        )
+        self.setIcon(icon)
+        # set title
+        self.setText(
+            QCoreApplication.translate("MainWindow", title, None)
+        )
+        # set checkable
+        self.setCheckable(True)
+        self.setChecked(True)
+
+
 class FoldableWidget(QGroupBox):
     """
     A widget that contains a title and a content widget. The content widget will be
@@ -293,37 +333,8 @@ class FoldableWidget(QGroupBox):
         # set fold push button
         self.foldPushButton = QPushButton(self)
         self.setObjectName("foldPushButton")
-        # icon
-        icon = QIcon()
-        icon.addFile(
-            ":/icons/16x16/cil-caret-right.png",
-            QSize(),
-            QIcon.Normal,
-            QIcon.Off,
-        )
-        icon.addFile(
-            ":/icons/16x16/cil-caret-bottom.png",
-            QSize(),
-            QIcon.Normal,
-            QIcon.On,
-        )
-        # set the style sheet (which controls the font, color, text align, border, etc.)
-        self.foldPushButton.setStyleSheet(
-            "QPushButton {\n"
-            '	font: 57 10pt "Roboto Medium";\n'
-            "	color: rgb(170, 170, 170);\n"
-            "	text-align: left;\n"
-            "	border: none;\n"
-            "}"
-        )
-        self.foldPushButton.setIcon(icon)
-        # set title
-        self.foldPushButton.setText(
-            QCoreApplication.translate("MainWindow", title, None)
-        )
-        # set checkable
-        self.foldPushButton.setCheckable(True)
-        self.foldPushButton.setChecked(True)
+
+        self.foldPushButton = FoldPushButton(title, self)
 
         # set the box layout
         self.boxLayout = QVBoxLayout(self)
