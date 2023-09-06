@@ -1032,15 +1032,21 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.fitScrollArea.setStyleSheet(f"background-color: rgb(33, 33, 33);")
         fitScrollWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        self.fitTableSet = FittingParameterTableSet(self.ui.prefitScrollAreaWidget)
+        # create an empty table with just group names
+        self.fitTableSet = FoldableTable(
+            FittingParameterItems,
+            paramNumPerRow = 1,
+            groupNames = list(self.fitParameterSet.parentNameByObj.values()),
+        )
 
+        # insert parameters
         for key, para_dict in self.fitParameterSet.items():
             group_name = self.fitParameterSet.parentNameByObj[key]
 
-            self.fitTableSet.addGroupedWidgets(
-                group_name,
-                list(para_dict.keys()),
-            )
+            for para_name in para_dict.keys():
+                self.fitTableSet.insertParams(
+                    group_name, para_name
+                )
 
         fitScrollLayout.addWidget(self.fitTableSet)
 
@@ -1148,7 +1154,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
             for para_name, para in para_dict.items():
                 para: QuantumModelFittingParameter
-                single_row = self.fitTableSet[group_name][para_name]
+                single_row: FittingParameterItems = self.fitTableSet.params[group_name][para_name]
 
                 # connect the UI and the model
                 para.setupUICallbacks(

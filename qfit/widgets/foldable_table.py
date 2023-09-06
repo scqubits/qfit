@@ -13,6 +13,7 @@ from PySide6.QtCore import (
 )
 
 from qfit.widgets.grouped_sliders import FoldPushButton
+from qfit.core.helpers import modifyStyleSheet
 
 from typing import List, Dict, Tuple, Union, Type
 
@@ -115,29 +116,29 @@ class FoldableTable(QTableWidget):
     ):
         super().__init__()
 
-        self.paramType = paramType
-        self.paramNumPerRow = paramNumPerRow
+        self._paramType = paramType
+        self._paramNumPerRow = paramNumPerRow
         
         # record the position of the groups
-        self.groupNames: List[str] = groupNames
-        self.groupRows: Dict[str, int] = dict(zip(
-            self.groupNames, range(len(groupNames))
+        self._groupNames: List[str] = groupNames
+        self._groupRows: Dict[str, int] = dict(zip(
+            self._groupNames, range(len(groupNames))
         ))
 
         # store the items in the table
-        self.groupButtons: Dict[str, FoldPushButton] = {}
+        self._groupButtons: Dict[str, FoldPushButton] = {}
         self.params: Dict[str, Dict[str, WidgetCollection]] = {}
 
         # initialize the table with just the groups
-        self.setColumnCount(paramNumPerRow * self.paramType.columnCount)
+        self.setColumnCount(paramNumPerRow * self._paramType.columnCount)
         self.setRowCount(0)
         self._initGroupRows()
 
         # configure the appearance of the table
-        self.configure()
+        self._configure()
 
         # connect the buttons to the fold/unfold function
-        for group in self.groupNames:
+        for group in self._groupNames:
             # this might be an ugly way to do this
             # but `checked` and `group` are all required keywords 
             # arguments with default values. 
@@ -147,7 +148,7 @@ class FoldableTable(QTableWidget):
 
             # when the slot function with two arguments is called,
             # there will be no arguement to be passed...
-            self.groupButtons[group].clicked.connect(
+            self._groupButtons[group].clicked.connect(
                 lambda checked=False, group=group: self._onButtonClicked(group)
             )
 
@@ -156,21 +157,21 @@ class FoldableTable(QTableWidget):
         self.setChecked(True)
 
     @property
-    def columns(self) -> List[str]:
-        return self.paramType.columns * self.paramNumPerRow
+    def _columns(self) -> List[str]:
+        return self._paramType.columns * self._paramNumPerRow
 
     def _initGroupRows(self):
         """
         Initialize the groups.
         """
-        for name in self.groupNames:
+        for name in self._groupNames:
             self.insertRow(self.rowCount())
             self.setSpan(self.rowCount() - 1, 0, 1, self.columnCount())
 
-            self.groupButtons[name] = FoldPushButton(name)
+            self._groupButtons[name] = FoldPushButton(name)
             self.params[name] = {}
 
-            self.setCellWidget(self.rowCount() - 1, 0, self.groupButtons[name])
+            self.setCellWidget(self.rowCount() - 1, 0, self._groupButtons[name])
 
     def _insertParamRow(self, row_position):
         """
@@ -179,18 +180,19 @@ class FoldableTable(QTableWidget):
         self.insertRow(row_position)
 
         # shift the group rows
-        for name, value in self.groupRows.items():
+        for name, value in self._groupRows.items():
             if value >= row_position:
-                self.groupRows[name] += 1
+                self._groupRows[name] += 1
+                self._resizeTable()
 
-    def configure(self):
+    def _configure(self):
         """
         After initialization, configure the appearance of the table.
         """
         # Set the column widths.
-        for idx, entry_type in enumerate(self.columns):
+        for idx, entry_type in enumerate(self._columns):
             width = 40 if entry_type in ["Name", "Fix"] else 60
-            self.setHorizontalHeaderLabels(self.columns)
+            self.setHorizontalHeaderLabels(self._columns)
             self.setColumnWidth(idx, width)
 
         # disable the vertical header, grid, and frame
@@ -200,59 +202,64 @@ class FoldableTable(QTableWidget):
 
         # separate the group rows and the parameter rows by increasing 
         # the row height
-        for row in self.groupRows.values():
+        for row in self._groupRows.values():
             self.setRowHeight(row, 35)
 
-        # set header style
-        self.horizontalHeader().setStyleSheet("color: white")
+        # set header and group names' style
+        modifyStyleSheet(self.horizontalHeader(), "color", "white")
+        for name in self._groupNames:
+            modifyStyleSheet(self._groupButtons[name], "color", "white")
 
+    def _resizeTable(self):
         # fix the height of the table
-        self.setFixedHeight(
+        self.setFixedHeight((
             self.horizontalHeader().height() 
-            + np.sum([self.verticalHeader().sectionSize(i) for i in range(self.rowCount())])
+            + np.sum([self.rowHeight(i) for i in range(self.rowCount())])
             + 2 * self.frameWidth()
             + self.horizontalScrollBar().height()
-            + 10
-        )
+        ) * 1.2 + 10)   # need some offsets that I don't know why
+
+        # self.resizeColumnsToContents()
+        # self.resizeRowsToContents()
 
     def setCheckable(self, value):
         """
         Set the checkable property of the group buttons.
         """
-        for button in self.groupButtons.values():
+        for button in self._groupButtons.values():
             button.setCheckable(value)
 
     def setChecked(self, value):
         """
         Set the checked property of the group buttons.
         """
-        for button in self.groupButtons.values():
+        for button in self._groupButtons.values():
             button.setChecked(value)
 
     def insertParams(self, group, name):
         """
         Insert a parameter row to the end of the table.
         """
-        self.params[group][name] = self.paramType(name)
+        self.params[group][name] = self._paramType(name)
 
         # find the current section of the table
-        group_row_idx = self.groupRows[group]
+        group_row_idx = self._groupRows[group]
 
         # Since one parameter may occupy multiple columns, we need to
         # calculate the position of the parameter row / columns in the table.
         param_idx = len(self.params[group]) - 1      # which param
-        param_row_idx = param_idx // self.paramNumPerRow
-        param_column_idx = param_idx % self.paramNumPerRow
+        param_row_idx = param_idx // self._paramNumPerRow
+        param_column_idx = param_idx % self._paramNumPerRow
 
         current_row = param_row_idx + group_row_idx + 1  # +1 for the group row
-        current_column = param_column_idx * self.paramType.columnCount
+        current_column = param_column_idx * self._paramType.columnCount
 
         # insert a row if it is the first parameter of a new row
         if param_column_idx == 0:
             self._insertParamRow(current_row)
 
         # insert the widgets
-        for idx, entry_type in enumerate(self.paramType.columns):
+        for idx, entry_type in enumerate(self._paramType.columns):
             self.setCellWidget(
                 current_row,
                 current_column + idx,
@@ -263,10 +270,10 @@ class FoldableTable(QTableWidget):
         """
         Return the rows below a group.
         """
-        group_upper_row = self.groupRows[group] + 1
+        group_upper_row = self._groupRows[group] + 1
         try: 
             # it's the row of the next group
-            group_lower_row = self.groupRows[self.groupNames[self.groupNames.index(group) + 1]]
+            group_lower_row = self._groupRows[self._groupNames[self._groupNames.index(group) + 1]]
         except IndexError:
             group_lower_row = self.rowCount()
 
@@ -276,7 +283,6 @@ class FoldableTable(QTableWidget):
         """
         Fold the content below a group by setting the rows to invisible.
         """
-
         for row in self._rowsBelow(group):
             self.setRowHidden(row, True)
     
@@ -292,7 +298,7 @@ class FoldableTable(QTableWidget):
         """
         Fold or unfold the content below a group.
         """
-        if self.groupButtons[group].isChecked():
+        if self._groupButtons[group].isChecked():
             self._unfold(group)
         else:
             self._fold(group)

@@ -292,13 +292,13 @@ class FoldPushButton(QPushButton):
         # icon
         icon = QIcon()
         icon.addFile(
-            ":/icons/svg/cil-caret-right.png",
+            ":/icons/svg/cil-caret-right.svg",
             QSize(),
             QIcon.Normal,
             QIcon.Off,
         )
         icon.addFile(
-            ":/icons/svg/cil-caret-bottom.png",
+            ":/icons/svg/cil-caret-bottom.svg",
             QSize(),
             QIcon.Normal,
             QIcon.On,
@@ -306,7 +306,7 @@ class FoldPushButton(QPushButton):
         # set the style sheet (which controls the font, color, text align, border, etc.)
         self.setStyleSheet(
             "QPushButton {\n"
-            '	font: 57 10pt "Roboto Medium";\n'
+            '	font: 57 11pt "Roboto Medium";\n'
             "	color: rgb(170, 170, 170);\n"
             "	text-align: left;\n"
             "	border: none;\n"
@@ -331,7 +331,6 @@ class FoldableWidget(QGroupBox):
     def __init__(self, title="Foldable", content_widget=None, parent=None):
         super().__init__(parent)
         # set fold push button
-        self.foldPushButton = QPushButton(self)
         self.setObjectName("foldPushButton")
 
         self.foldPushButton = FoldPushButton(title, self)

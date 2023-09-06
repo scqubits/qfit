@@ -10,6 +10,7 @@
 ############################################################################
 
 import os, time
+import re
 from collections import OrderedDict
 
 import numpy as np
@@ -156,6 +157,24 @@ def clearChildren(widget: QWidget):
         if widget:  # Check if the item is a widget
             widget.setParent(None)
             widget.deleteLater()
+
+def modifyStyleSheet(widget, property_name, new_value):
+    # Get the current stylesheet
+    current_style = widget.styleSheet()
+
+    # Use regex to find and replace the property value
+    pattern = re.compile(f"{property_name}:\\s*[^;]+;")
+    replacement = f"{property_name}: {new_value};"
+
+    # check if the property exists
+    if pattern.search(current_style) is None:
+        # add the property
+        modified_style = current_style + replacement
+    else:
+        modified_style = re.sub(pattern, replacement, current_style)
+
+    # Set the modified stylesheet back to the widget
+    widget.setStyleSheet(modified_style)
 
 
 # Plot #########################################################################
