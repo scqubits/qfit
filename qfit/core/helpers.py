@@ -13,7 +13,10 @@ import os, time
 from collections import OrderedDict
 
 import numpy as np
+
 # import pandas as pd
+
+from scipy.optimize import curve_fit
 
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
@@ -24,7 +27,6 @@ from PySide6.QtGui import QDoubleValidator
 from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate, QWidget
 
 from typing import Dict, List, Literal, Optional, Tuple, Union
-
 
 
 class EditDelegate(QStyledItemDelegate):
@@ -166,15 +168,11 @@ def filter(c, filter_name):
     elif filter_name in ["emphsize", "emph"]:
         r, g, b, a = c
         factor = 3
-        return [r ** factor, g ** factor, b ** factor, a]
+        return [r**factor, g**factor, b**factor, a]
 
-class Cmap():
-    def __init__(
-        self, 
-        upper: float, 
-        lower: float = 0, 
-        cmap_name="rainbow"
-    ):
+
+class Cmap:
+    def __init__(self, upper: float, lower: float = 0, cmap_name="rainbow"):
         self.upper = upper
         self.lower = lower
         self.cmap_name = cmap_name
@@ -182,20 +180,21 @@ class Cmap():
         self.cmap = colormaps[self.cmap_name]
         self.norm = plt.Normalize(self.lower, self.upper)
         self.mappable = plt.cm.ScalarMappable(norm=self.norm, cmap=self.cmap)
-    
+
     def __call__(self, val):
         # return self.mappable.cmap(val)
         return self.cmap(self.norm(val))
-    
+
 
 # Save csv ######################################################################
+
 
 def datetime_dir(
     save_dir="./",
     dir_suffix=None,
 ):
     """
-    Initialize a directory with the current datetime. 
+    Initialize a directory with the current datetime.
 
     Parameters & Examples
     ---------------------
@@ -213,11 +212,10 @@ def datetime_dir(
     current_date_dir : str
     """
     save_dir = os.path.normpath(save_dir)
-    
+
     current_time = time.localtime()
     current_month_dir = save_dir + time.strftime("/%h/", current_time)
-    current_date_dir = current_month_dir + \
-        time.strftime("%d_%H-%M", current_time)
+    current_date_dir = current_month_dir + time.strftime("%d_%H-%M", current_time)
 
     if dir_suffix != "" and dir_suffix is not None:
         current_date_dir = current_date_dir + "_" + dir_suffix + "/"
@@ -231,8 +229,9 @@ def datetime_dir(
     if not os.path.exists(current_date_dir):
         os.mkdir(current_date_dir)
 
-    print(f"Current datetime directory: {current_date_dir}")
+    # print(f"Current datetime directory: {current_date_dir}")
     return current_date_dir
+
 
 # Function checking whether code is run from a jupyter notebook or inside ipython
 def executed_in_ipython():
@@ -244,9 +243,117 @@ def executed_in_ipython():
     except NameError:
         return False  # Probably standard Python interpreter
 
+
 class StopExecution(Exception):
     def _render_traceback_(self):
         pass
+
+
+# peak finding #################################################################
+def _find_lorentzian_peak(data: np.ndarray, gamma_guess=5) -> int:
+    """
+    fit the data with a Lorentzian function. The data is supposed to be taken from
+    the two-tone spectroscopy, which is a 1D array of S21 values at selected freq
+    range and a fixed voltage parameter.
+    """
+    freq_list_length = len(data)
+    idx_list = np.arange(freq_list_length)
+
+    # fit the data with a 1D Lorentzian function
+    lorentzian = (
+        lambda idx, mid_idx, gamma, amp, bias: amp
+        * (gamma / 2)
+        / ((idx - mid_idx) ** 2 + (gamma / 2) ** 2)
+        + bias
+    )
+
+    # guess
+    gamma_guess = gamma_guess
+    bias_guess = np.mean(data)
+    mid_idx_guess = np.argmax(np.abs(data - bias_guess))
+    amp_guess = data[mid_idx_guess] - bias_guess
+
+    # print(
+    #     f"mid_idx_guess: {mid_idx_guess}, gamma_guess: {gamma_guess}, amp_guess: {amp_guess}, bias guess: {bias_guess}"
+    # )
+    # print(data)
+
+    popt, pcov = curve_fit(
+        lorentzian,
+        idx_list,
+        data,
+        p0=[mid_idx_guess, gamma_guess, amp_guess, bias_guess],
+        maxfev=2000,
+    )
+
+    # print(popt)
+
+    return np.round(popt[0]).astype(int)
+
+
+def _extract_data_for_peak_finding(
+    x_list, y_list, z_data, user_selected_xy, half_index_range: int = 5
+):
+    """
+    extract data for peak finding
+    """
+    frequency_point_count = len(y_list)
+    x_val = user_selected_xy[0]
+    y_val = user_selected_xy[1]
+    # find the index of the selected point
+    x_idx = np.argmin(np.abs(x_list - x_val))
+    y_idx = np.argmin(np.abs(y_list - y_val))
+    # translate to the min and max index of the y range
+    y_min_idx = np.max([y_idx - half_index_range, 0])
+    y_max_idx = np.min([y_idx + half_index_range, frequency_point_count - 1])
+
+    # extract data for fitting
+    data_for_fitting = z_data[y_min_idx : y_max_idx + 1, x_idx]
+    # print(
+    #     f"user_selected_xy: {user_selected_xy}, actual y: {y_list[y_idx]} mid of selected data for fitting: {data_for_fitting[half_index_range]}"
+    # )
+    # print(
+    #     f"x_idx: {x_idx}, y_idx: {y_idx}, y_min_idx: {y_min_idx}, y_max_idx: {y_max_idx}"
+    # )
+
+    return y_min_idx, y_max_idx, data_for_fitting
+
+
+def y_snap(
+    x_list, y_list, z_data, user_selected_xy, half_index_range=5, mode="lorentzian"
+) -> Tuple[int, int]:
+    """
+    perform the y-snap for a selected point, such that the nearest peak in
+    the vicinity will be selected instead.
+
+    Parameters
+    ----------
+    y_list : List
+        the y_list of the data
+    data : List
+        the data
+    peak_tuple : Tuple
+        the peak (x, y) indexes that will be polished
+    index_range : int
+        a new peak will be found within the range of the index
+
+    Returns
+    -------
+        (x, y), new peak
+    """
+    # translate range to left and right index
+    y_min_idx, y_max_idx, data_for_peak_finding = _extract_data_for_peak_finding(
+        x_list, y_list, z_data, user_selected_xy, half_index_range
+    )
+
+    # find the peaks
+    if mode == "lorentzian":
+        peak_idx = _find_lorentzian_peak(data_for_peak_finding)
+    elif mode == "extremum":
+        peak_idx = np.argmax(np.abs(data_for_peak_finding))
+
+    return y_list[peak_idx + y_min_idx]
+
 
 # def save_variable_dict(file_name, variable_dict: Dict[str, float]):
 #     """
@@ -260,11 +367,11 @@ class StopExecution(Exception):
 
 # def load_variable_dict(file_name) -> Dict[str, float]:
 #     """
-#     Load a dictionary contains name-value pairs from a csv file. The file should be 
+#     Load a dictionary contains name-value pairs from a csv file. The file should be
 #     saved by save_variable_dict.
 #     """
 #     list_dict = pd.read_csv(
-#         file_name, 
+#         file_name,
 #         index_col=0,
 #         header=0
 #     ).to_dict(orient='list')
@@ -272,8 +379,8 @@ class StopExecution(Exception):
 #     return new_dict
 
 # def save_variable_list_dict(
-#     file_name, 
-#     variable_list_dict: Dict[str, np.ndarray], 
+#     file_name,
+#     variable_list_dict: Dict[str, np.ndarray],
 #     orient: Literal['columns', 'index'] = 'columns',
 # ) -> None:
 #     """
@@ -287,8 +394,8 @@ class StopExecution(Exception):
 #     ).to_csv(file_name)
 
 # def load_variable_list_dict(
-#     file_name, 
-#     throw_nan = True, 
+#     file_name,
+#     throw_nan = True,
 #     orient: Literal['columns', 'index'] = 'columns'
 # ) -> Dict[str, np.ndarray]:
 #     """
@@ -317,4 +424,3 @@ class StopExecution(Exception):
 #         new_val = new_val[~np.isnan(val)]
 #         variable_list_dict[key] = new_val
 #     return variable_list_dict
-

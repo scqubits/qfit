@@ -53,8 +53,9 @@ from qfit.core.app_state import State
 from qfit.core.helpers import (
     transposeEach,
     clearChildren,
-    executed_in_ipython, 
+    executed_in_ipython,
     StopExecution,
+    y_snap,
 )
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.models.measurement_data import MeasurementDataType
@@ -130,8 +131,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     registry: Registry
     _projectFile: Union[str, None] = None
 
-
-    def __init__(self, measurementData: MeasurementDataType, hilbertspace: HilbertSpace):
+    def __init__(
+        self, measurementData: MeasurementDataType, hilbertspace: HilbertSpace
+    ):
         # ResizableFramelessWindow.__init__(self)
         QMainWindow.__init__(self)
         self.openFromIPython = executed_in_ipython()
@@ -193,7 +195,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             registry=self.registry,
             mainWindow=self,
         )
-
 
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -407,7 +408,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # A new selection of a data set item in ListView is accompanied by an update
         # of the canvas to show the appropriate plot of selected points
-        self.ui.datasetListView.clicked.connect(lambda: self.updatePlot(initialize=False))
+        self.ui.datasetListView.clicked.connect(
+            lambda: self.updatePlot(initialize=False)
+        )
 
         # Whenever tag type or tag data is changed, update the AllExtractedData data
         self.tagDataView.changedTagType.connect(
@@ -591,7 +594,22 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                     self.activeDataset.removeColumn(index)
                     self.updatePlot()
                     return
-            self.activeDataset.append(*x1y1)
+            if self.ui.verticalSnapButton.isChecked():
+                x_list = self.measurementData.currentX.data
+                y_list = self.measurementData.currentY.data
+                z_data = self.measurementData.currentZ.data
+                snapped_y1 = y_snap(
+                    x_list=x_list,
+                    y_list=y_list,
+                    z_data=z_data,
+                    user_selected_xy=x1y1,
+                    half_index_range=20,
+                    mode="lorentzian",
+                )
+                x1y1_snapped = np.asarray([x1y1[0], snapped_y1])
+                self.activeDataset.append(*x1y1_snapped)
+            else:
+                self.activeDataset.append(*x1y1)
             self.updatePlot()
 
         # TODO implement peak-finding algorithm and x-snapping rule here
@@ -774,7 +792,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         if distance < 0.025:
             return True
         return False
-    
+
     # Pre-fit ##########################################################
     # ##################################################################
 
@@ -1168,10 +1186,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
                 para.initialize()
 
-    
     def setUpFitResultConnects(self):
         """
-        connect the prefit result to the relevant UI textboxes; 
+        connect the prefit result to the relevant UI textboxes;
         whenever there is a change in the UI, reflect in the UI text change
         """
         status_type_ui_setter = lambda: self.ui.label_49.setText(
@@ -1207,7 +1224,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     # ##################################################################
 
     attrToRegister: List[str] = [
-        "projectFile", 
+        "projectFile",
     ]
 
     def registerAll(self):
@@ -1241,11 +1258,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.registry.register(self)
 
     def initializeDynamicalElements(
-        self, 
+        self,
         hilbertspace: HilbertSpace,
         measurementData: MeasurementDataType,
     ):
-        # here, the measurementData is a instance of MeasurementData, which is 
+        # here, the measurementData is a instance of MeasurementData, which is
         # regenerated from the data file
         self.measurementData = measurementData
         self.calibrationData.resetCalibration()
@@ -1271,9 +1288,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         status = self.ioMenuCtrl.closeApp()
 
-        if status: 
+        if status:
             event.accept()
-        else: 
+        else:
             event.ignore()
 
     def resizeAndCenter(self, maxSize: QSize):

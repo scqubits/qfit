@@ -144,7 +144,7 @@ class Registry:
                 return pickle.load(f)
         except FileNotFoundError:
             # print(f"Error: File '{filename}' not found. Cannot load data.")
-            return None     # indicate that the file is not found
+            return None  # indicate that the file is not found
 
     def setByDict(self, registryDict: Dict[str, Any]):
         """
@@ -170,6 +170,6 @@ class Registry:
             except KeyError:
                 print(f"Key {name} not found in registry. Skipping.")
                 continue
-    
+
     def clear(self):
         self._registry.clear()

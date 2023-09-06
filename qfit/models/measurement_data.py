@@ -23,6 +23,8 @@ import skimage.morphology
 import skimage.restoration
 
 from matplotlib import colors as colors
+import matplotlib.pyplot as plt
+
 from scipy.ndimage import gaussian_laplace
 
 import qfit.io_utils.file_io_serializers as serializers
@@ -143,7 +145,7 @@ class NumericalMeasurementData(MeasurementData, Registrable, serializers.Seriali
                 name="measurementData.args",
                 quantity_type="r",
                 getter=lambda: (self.rawData, self.zCandidates),
-            )
+            ),
         }
 
     @property
@@ -277,7 +279,7 @@ class NumericalMeasurementData(MeasurementData, Registrable, serializers.Seriali
             * array
         )
 
-    def canvasPlot(self, axes, **kwargs):
+    def canvasPlot(self, axes: plt.Axes, **kwargs):
         zData = self.currentZ.data
         rawZMin = zData.min()
         rawZMax = zData.max()
@@ -316,21 +318,10 @@ class NumericalMeasurementData(MeasurementData, Registrable, serializers.Seriali
                 **kwargs
             )
         else:
-            _ = axes.imshow(
-                zData,
-                extent=[
-                    min(self.currentX.data),
-                    max(self.currentX.data),
-                    min(self.currentY.data),
-                    max(self.currentY.data),
-                ],
-                origin="lower",
-                vmin=zMin,
-                vmax=zMax,
-                norm=norm,
-                aspect="auto",
-                interpolation="none",
-                **kwargs
+            # generate a meshgrid for the x and y data
+            xData, yData = np.meshgrid(self.currentX.data, self.currentY.data)
+            _ = axes.pcolormesh(
+                xData, yData, zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs
             )
 
 
@@ -362,7 +353,7 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
                 name="measurementData.args",
                 quantity_type="r",
                 getter=getter,
-            )
+            ),
         }
 
     def canvasPlot(self, axes, **kwargs):
@@ -396,7 +387,15 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
         else:
             norm = None
 
-        _ = axes.imshow(zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs)
+        _ = axes.imshow(
+            zData,
+            # vmin=zMin,
+            # vmax=zMax,
+            vmin=-max([abs(zMin), abs(zMax)]),
+            vmax=max([abs(zMin), abs(zMax)]),
+            norm=norm,
+            **kwargs
+        )
 
     def swapXY(self):
         pass
