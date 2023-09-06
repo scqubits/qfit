@@ -73,11 +73,11 @@ from qfit.models.quantum_model_parameters import (
 )
 from qfit.models.numerical_spectrum_data import CalculatedSpecData
 from qfit.controllers.numerical_model import QuantumModel
+from qfit.widgets.foldable_widget import FoldableWidget
 from qfit.widgets.grouped_sliders import (
     LabeledSlider,
     GroupedWidgetSet,
 )
-from qfit.widgets.fitting_table import FittingParameterTableSet
 from qfit.widgets.foldable_table import (
     FoldableTable,
     MinMaxItems,
@@ -891,6 +891,30 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
                 para.initialize()
                 para.setParameterForParent()
+
+    def prefitMinMaxInserts(self):
+        self.minMaxTable = FoldableTable(
+            MinMaxItems, 
+            paramNumPerRow = 2,
+            groupNames = list(self.sliderParameterSet.parentNameByObj.values()),
+        )
+        self.minMaxTable.setCheckable(False)
+
+        # insert parameters
+        for key, para_dict in self.fitParameterSet.items():
+            group_name = self.fitParameterSet.parentNameByObj[key]
+
+            for para_name in para_dict.keys():
+                self.fitTableSet.insertParams(
+                    group_name, para_name
+                )
+
+        # add the minmax table to the scroll area
+        foldable_widget = FoldableWidget("Min & Max", self.minMaxTable)
+        prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
+        prefitScrollLayout.addWidget(foldable_widget)
+
+
 
     def prefitSubsystemComboBoxLoads(self):
         """
