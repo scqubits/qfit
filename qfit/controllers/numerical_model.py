@@ -225,12 +225,15 @@ class QuantumModel:
                 ):
                     continue
                 for parameter_name in parameter_names:
+                    range_dict = DEFAULT_PARAM_MINMAX[parameter_type]
+                    value = range_dict["min"] * 4/5 + range_dict["max"] * 1/5
                     if parameter_usage == "slider":
                         parameter_set.addParameter(
                             name=parameter_name,
                             parent_system=subsystem,
                             param_type=parameter_type,
-                            **DEFAULT_PARAM_MINMAX[parameter_type],
+                            value=value,  # TODO: change this value later
+                            **range_dict,
                             param_usage="slider",
                         )
                     elif parameter_usage == "sweep":
@@ -238,7 +241,8 @@ class QuantumModel:
                             name=parameter_name,
                             parent_system=subsystem,
                             param_type=parameter_type,
-                            value=0,  # TODO: change this value later
+                            value=value,  # TODO: change this value later
+                            **range_dict,
                             param_usage="static",
                         )
                     elif parameter_usage == "fit":
@@ -246,8 +250,8 @@ class QuantumModel:
                             name=parameter_name,
                             parent_system=subsystem,
                             param_type=parameter_type,
-                            value=0,  # TODO: change this value later
-                            **DEFAULT_PARAM_MINMAX[parameter_type],
+                            value=value,  # TODO: change this value later
+                            **range_dict,
                             param_usage="fitting",
                         )
         # then add interaction strengths to the parameter set
@@ -267,6 +271,7 @@ class QuantumModel:
                         name=f"g{interaction_term_index+1}",
                         parent_system=self.hilbertspace,
                         param_type="interaction_strength",
+                        value=0,  # TODO: change this value later
                         **DEFAULT_PARAM_MINMAX["interaction_strength"],
                         param_usage="slider",
                     )

@@ -74,11 +74,16 @@ from qfit.models.quantum_model_parameters import (
 )
 from qfit.models.numerical_spectrum_data import CalculatedSpecData
 from qfit.controllers.numerical_model import QuantumModel
+from qfit.widgets.foldable_widget import FoldableWidget
 from qfit.widgets.grouped_sliders import (
     LabeledSlider,
     GroupedWidgetSet,
 )
-from qfit.widgets.fitting_table import FittingParameterTableSet
+from qfit.widgets.foldable_table import (
+    FoldableTable,
+    MinMaxItems,
+    FittingParameterItems,
+)
 
 # fit
 from qfit.controllers.fit import NumericalFitting
@@ -811,6 +816,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             included_parameter_type=["ng", "flux"],
         )
         self.prefitSlidersInserts()
+        self.prefitMinMaxInserts()
         self.prefitSlidersConnects()
         self.prefitSubsystemComboBoxLoads()
         self.setUpPrefitOptionsConnects()
@@ -871,6 +877,32 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         prefitScrollLayout.addWidget(self.sliderSet)
 
+    def prefitMinMaxInserts(self):
+        self.minMaxTable = FoldableTable(
+            MinMaxItems, 
+            paramNumPerRow = 2,
+            groupNames = list(self.sliderParameterSet.parentNameByObj.values()),
+        )
+        self.minMaxTable.setCheckable(False)
+        self.minMaxTable.setChecked(False)
+
+        # insert parameters
+        for key, para_dict in self.sliderParameterSet.items():
+            group_name = self.sliderParameterSet.parentNameByObj[key]
+
+            for para_name in para_dict.keys():
+                self.minMaxTable.insertParams(
+                    group_name, para_name
+                )
+
+        # add the minmax table to the scroll area
+        foldable_widget = FoldableWidget("Adjusting Sliders' Range", self.minMaxTable)
+        prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
+        prefitScrollLayout.addWidget(foldable_widget)
+
+        # default to fold the table
+        foldable_widget.toggle()
+
     def prefitSlidersConnects(self):
         """
         Connect the sliders to the controller - update hilbertspace and spectrum
@@ -881,12 +913,17 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             for para_name, para in para_dict.items():
                 para: QuantumModelSliderParameter
                 labeled_slider: LabeledSlider = self.sliderSet[group_name][para_name]
+                minMax: MinMaxItems = self.minMaxTable.params[group_name][para_name]
 
                 para.setupUICallbacks(
                     labeled_slider.slider.value,
                     labeled_slider.slider.setValue,
                     labeled_slider.value.text,
                     labeled_slider.setValue,
+                    minMax.minValue.text,
+                    minMax.minValue.setText,
+                    minMax.maxValue.text,
+                    minMax.maxValue.setText,
                 )
 
                 # synchronize slider and box
@@ -895,6 +932,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
                 # format the user's input
                 labeled_slider.value.editingFinished.connect(para.onBoxEditingFinished)
+                minMax.minValue.editingFinished.connect(para.onMinEditingFinished)
+                minMax.maxValue.editingFinished.connect(para.onMaxEditingFinished)
 
                 # connect to the controller to update the spectrum
                 labeled_slider.editingFinishedConnect(
@@ -902,7 +941,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 )
                 labeled_slider.editingFinishedConnect(self.updatePlot)
 
-                para.initialize()
                 para.setParameterForParent()
 
     def prefitSubsystemComboBoxLoads(self):
@@ -1045,15 +1083,21 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.fitScrollArea.setStyleSheet(f"background-color: rgb(33, 33, 33);")
         fitScrollWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        self.fitTableSet = FittingParameterTableSet(self.ui.prefitScrollAreaWidget)
+        # create an empty table with just group names
+        self.fitTableSet = FoldableTable(
+            FittingParameterItems,
+            paramNumPerRow = 1,
+            groupNames = list(self.fitParameterSet.parentNameByObj.values()),
+        )
 
+        # insert parameters
         for key, para_dict in self.fitParameterSet.items():
             group_name = self.fitParameterSet.parentNameByObj[key]
 
-            self.fitTableSet.addGroupedWidgets(
-                group_name,
-                list(para_dict.keys()),
-            )
+            for para_name in para_dict.keys():
+                self.fitTableSet.insertParams(
+                    group_name, para_name
+                )
 
         fitScrollLayout.addWidget(self.fitTableSet)
 
@@ -1161,7 +1205,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
             for para_name, para in para_dict.items():
                 para: QuantumModelFittingParameter
-                single_row = self.fitTableSet[group_name][para_name]
+                single_row: FittingParameterItems = self.fitTableSet.params[group_name][para_name]
 
                 # connect the UI and the model
                 para.setupUICallbacks(

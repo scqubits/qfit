@@ -40,6 +40,7 @@ scq.settings.PROGRESSBAR_DISABLED = True
 
 
 class qfit:
+    app: Union[QApplication, None] = None
     window: MainWindow
     _hilbertSpace: HilbertSpace
 
@@ -61,6 +62,7 @@ class qfit:
             # font = QFontDatabase.font("Roboto", "", 10)
             # font.setWeight(QFont.Normal)
             # instance.app.setFont(font)
+            instance.app = app
         else:
             # TODO
             pass
@@ -106,7 +108,10 @@ class qfit:
             self.window.ioMenuCtrl.newProjectWithMeasurementData(measurementData)
         else:
             # open a window to ask for a file
-            self.window.ioMenuCtrl.newProject()
+            self.window.ioMenuCtrl.newProject(from_menu=False)
+
+        if not executed_in_ipython():
+            self.app.exec_()
 
     @property
     def hilbertSpace(self) -> HilbertSpace:
@@ -153,6 +158,9 @@ class qfit:
         else:
             instance.window.ioMenuCtrl.newProject(from_menu=False)
 
+        if not executed_in_ipython():
+            instance.app.exec_()
+
         return instance
 
     @classmethod
@@ -190,5 +198,8 @@ class qfit:
                 raise FileNotFoundError(f"Can't load file '{fileName}'.")
             
             instance.window.ioMenuCtrl.openProjectWithRegistryDict(registryDict)
+
+        if not executed_in_ipython():
+            instance.app.exec_()
 
         return instance
