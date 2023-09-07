@@ -9,7 +9,7 @@ from qtpy.QtWidgets import (
 from qtpy.QtGui import (
     QIcon,
 )
-from PySide6.QtCore import Qt, QSize, QCoreApplication
+from PySide6.QtCore import Qt, QSize, QCoreApplication, Slot
 
 SPACING = 10
 MARGIN = 10
@@ -79,18 +79,23 @@ class FoldableWidget(QGroupBox):
 
         # connect the push button to the setVisible method
         self.foldPushButton.clicked.connect(
-            lambda: self.toggleContent(self.foldPushButton.isChecked())
+            self._toggleContent
         )
         # initialize the content
-        self.toggleContent(self.foldPushButton.isChecked())
+        self._toggleContent(self.foldPushButton.isChecked())
 
         # set the size policy for the foldable widget: expand along horizontal, fixed along vertical
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.boxLayout.setContentsMargins(0, MARGIN, 0, MARGIN)  # Remove the margins
         self.boxLayout.setSpacing(SPACING)
 
-    def toggleContent(self, checked):
+    @Slot(bool)
+    def _toggleContent(self, checked):
         self.content_widget.setVisible(checked)
+
+    def toggle(self):
+        self.foldPushButton.toggle()
+        self._toggleContent(self.foldPushButton.isChecked())
 
     def setConentWidget(self, content_widget):
         # remove
