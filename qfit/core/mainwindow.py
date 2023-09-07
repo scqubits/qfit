@@ -798,6 +798,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             included_parameter_type=["ng", "flux"],
         )
         self.prefitSlidersInserts()
+        self.prefitMinMaxInserts()
         self.prefitSlidersConnects()
         self.prefitSubsystemComboBoxLoads()
         self.setUpPrefitOptionsConnects()
@@ -858,6 +859,32 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         prefitScrollLayout.addWidget(self.sliderSet)
 
+    def prefitMinMaxInserts(self):
+        self.minMaxTable = FoldableTable(
+            MinMaxItems, 
+            paramNumPerRow = 2,
+            groupNames = list(self.sliderParameterSet.parentNameByObj.values()),
+        )
+        self.minMaxTable.setCheckable(False)
+        self.minMaxTable.setChecked(False)
+
+        # insert parameters
+        for key, para_dict in self.sliderParameterSet.items():
+            group_name = self.sliderParameterSet.parentNameByObj[key]
+
+            for para_name in para_dict.keys():
+                self.minMaxTable.insertParams(
+                    group_name, para_name
+                )
+
+        # add the minmax table to the scroll area
+        foldable_widget = FoldableWidget("Adjusting Sliders' Range", self.minMaxTable)
+        prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
+        prefitScrollLayout.addWidget(foldable_widget)
+
+        # default to fold the table
+        foldable_widget.toggle()
+
     def prefitSlidersConnects(self):
         """
         Connect the sliders to the controller - update hilbertspace and spectrum
@@ -868,12 +895,17 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             for para_name, para in para_dict.items():
                 para: QuantumModelSliderParameter
                 labeled_slider: LabeledSlider = self.sliderSet[group_name][para_name]
+                minMax: MinMaxItems = self.minMaxTable.params[group_name][para_name]
 
                 para.setupUICallbacks(
                     labeled_slider.slider.value,
                     labeled_slider.slider.setValue,
                     labeled_slider.value.text,
                     labeled_slider.setValue,
+                    minMax.minValue.text,
+                    minMax.minValue.setText,
+                    minMax.maxValue.text,
+                    minMax.maxValue.setText,
                 )
 
                 # synchronize slider and box
@@ -882,6 +914,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
                 # format the user's input
                 labeled_slider.value.editingFinished.connect(para.onBoxEditingFinished)
+                minMax.minValue.editingFinished.connect(para.onMinEditingFinished)
+                minMax.maxValue.editingFinished.connect(para.onMaxEditingFinished)
 
                 # connect to the controller to update the spectrum
                 labeled_slider.editingFinishedConnect(
@@ -889,32 +923,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 )
                 labeled_slider.editingFinishedConnect(self.updatePlot)
 
-                para.initialize()
                 para.setParameterForParent()
-
-    def prefitMinMaxInserts(self):
-        self.minMaxTable = FoldableTable(
-            MinMaxItems, 
-            paramNumPerRow = 2,
-            groupNames = list(self.sliderParameterSet.parentNameByObj.values()),
-        )
-        self.minMaxTable.setCheckable(False)
-
-        # insert parameters
-        for key, para_dict in self.fitParameterSet.items():
-            group_name = self.fitParameterSet.parentNameByObj[key]
-
-            for para_name in para_dict.keys():
-                self.fitTableSet.insertParams(
-                    group_name, para_name
-                )
-
-        # add the minmax table to the scroll area
-        foldable_widget = FoldableWidget("Min & Max", self.minMaxTable)
-        prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
-        prefitScrollLayout.addWidget(foldable_widget)
-
-
 
     def prefitSubsystemComboBoxLoads(self):
         """

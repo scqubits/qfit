@@ -227,7 +227,9 @@ class FoldableTable(QTableWidget):
         Set the checkable property of the group buttons.
         """
         for button in self._groupButtons.values():
+            # stop the button from emitting the signal
             button.setCheckable(value)
+            button.blockSignals(not value)
 
     def setChecked(self, value):
         """
