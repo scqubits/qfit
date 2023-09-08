@@ -830,12 +830,19 @@ class QuantumModelParameterSet:
         """
         Register all the parameters in the parameter set
         """
+        # start from an empty registry
         registry = {}
         for parent_system, para_dict in self.parameters.items():
             for para_name, para in para_dict.items():
+                # loop over all parameters in parameter sets and create a registry entry
+                # notice that internally, the method _toRegistryEntry is called. However,
+                # the entry name is a string just like "EC", "EJ", "EL" etc. and very likely
+                # repeated in different parameter sets. Therefore, we must update names for
+                # each parameter.
                 entry_dict = para.registerAll()
 
-                # update the name of the parameter
+                # update the name of the parameter entry and the registry key to make it unique.
+                # notice that the entry_dict is not returned directly.
                 for attr_name, entry in entry_dict.items():
                     new_name = (
                         f"{self.name}"

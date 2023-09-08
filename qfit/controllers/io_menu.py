@@ -41,8 +41,8 @@ class IOCtrl:
     It will run the mainWindow.register() when created.
 
     # TODO:
-    - export hs?
-    - export extracted data?
+    - rename io_menu.py to a better name!!!
+
 
     Parameters
     ----------
@@ -81,7 +81,7 @@ class IOCtrl:
         - open
         - new
         - save
-        - save as    
+        - save as
         """
         self.mainWindow.ui.toggleMenuButton.clicked.connect(self.menu.toggle)
 
@@ -111,15 +111,15 @@ class IOCtrl:
         """
         Read the registryDict from the given file.
 
-        Serves as a convenient way to call 
+        Serves as a convenient way to call
         `qfit.models.registry.Registry.fromFile`.
         """
         return Registry.fromFile(fileName)
 
     def _measurementDataFromDialog(
         self,
-        home = None,
-        window_initialized = False,
+        home=None,
+        window_initialized=False,
     ) -> Union["MeasurementDataType", None]:
         """
         Open a dialog to select a file, then read the measurement data from the file.
@@ -192,7 +192,7 @@ class IOCtrl:
                 break
 
         return registryDict
-    
+
     # save ####################################################################
     def _saveProject(
         self,
@@ -245,7 +245,7 @@ class IOCtrl:
             hilbertspace=self.mainWindow.hilbertspace,
             measurementData=measurementData,
         )
-    
+
     # open ####################################################################
     def openProjectWithRegistryDict(self, registryDict: Dict[str, Any]):
         """
@@ -261,13 +261,14 @@ class IOCtrl:
         dateType = globals()[registryDict["measurementData.type"]]
         measurementData = dateType(*registryDict["measurementData.args"])
 
-        # update the dynamical elements in the main window
+        # update the dynamical elements in the main window (i.e. load from the registry
+        # the r entries)
         self.mainWindow.initializeDynamicalElements(
             hilbertspace=hilbertspace,
             measurementData=measurementData,
         )
 
-        # update the rest of the registry
+        # update the rest of the registry (i.e. those entries with r+)
         self.registry.setByDict(registryDict)
 
     # quit / close ############################################################
@@ -307,7 +308,7 @@ class IOCtrl:
             else:  # reply == QMessageBox.Cancel
                 self.menu.toggle()
                 return False
-            
+
     def closeAppIPython(self):
         """
         Close the app when running in ipython
@@ -319,8 +320,7 @@ class IOCtrl:
 
     # slots ###################################################################
     @Slot()
-    def newProject(self, __value = None, from_menu: bool = True):
-
+    def newProject(self, __value=None, from_menu: bool = True):
         measurementData = self._measurementDataFromDialog(window_initialized=from_menu)
 
         if measurementData is not None:
@@ -328,8 +328,12 @@ class IOCtrl:
 
         if from_menu:
             self.menu.toggle()
+
     @Slot()
-    def openFile(self, __value = None, from_menu: bool = True):
+    def openFile(self, __value=None, from_menu: bool = True):
+        """
+        The main code to open file
+        """
         registryDict = self._registryDictFromDialog(window_initialized=from_menu)
 
         if registryDict is not None:

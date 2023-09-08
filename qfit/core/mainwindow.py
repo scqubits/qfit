@@ -612,8 +612,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 self.activeDataset.append(*x1y1)
             self.updatePlot()
 
-        # TODO implement peak-finding algorithm and x-snapping rule here
-
     @Slot()
     def canvasMouseMonitoring(self, event):
         self.axes.figure.canvas.flush_events()
@@ -1248,6 +1246,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # special registry
         self.registry.register(self.quantumModel.hilbertspace)
         self.registry.register(self.measurementData)
+        self.registry.register(self.allDatasets)
 
         # parameters
         self.registry.register(self.sliderParameterSet)
