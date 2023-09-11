@@ -176,28 +176,33 @@ class QuantumModelSliderParameter(DisplayedParameterBase):
     sliderValueSetter: Callable
     boxValueCallback: Callable
     boxValueSetter: Callable
+    minCallback: Callable
+    minSetter: Callable
+    maxCallback: Callable
+    maxSetter: Callable
     overallValueSetter: Callable
 
-    attrToRegister = ["value"]
+    attrToRegister = ["value", "min", "max"]
 
     def __init__(
         self,
         name: str,
         parent: ParentSystem,
+        param_type: ParameterType,
+        value: Union[int, float],
         min: Union[int, float],
         max: Union[int, float],
-        param_type: ParameterType,
     ):
         super().__init__(name=name, parent=parent, param_type=param_type)
 
-        self.min = min
-        self.max = max
-        # a placeholder for the callback function that returns the value of the slider
-        # this callback function is set by the UI
-
-    # TODO: in future, we may wish to let user specify the min and max of parameters in the slider,
-    # do we want to store minmax by then? If so, we may need:
-    # self.minmaxCallback = lambda x: minmax # not yet implemented
+        # a very bad temporary solution, when the model and the controller 
+        # are more separated, this should be changed to:
+        # parameter object only stores the value, min, max, and the type 
+        # of the parameter. The controller should be responsible for
+        # synchronizing the value of the parameter and the UI.
+        self._init_value = value
+        self._init_min = min
+        self._init_max = max
 
     def setupUICallbacks(
         self,
@@ -205,11 +210,26 @@ class QuantumModelSliderParameter(DisplayedParameterBase):
         sliderValueSetter,
         boxValueCallback,
         boxValueSetter,
+        minCallback,
+        minSetter,
+        maxCallback,
+        maxSetter,
     ):
         self.sliderValueCallback = sliderValueCallback
         self.sliderValueSetter = sliderValueSetter
         self.boxValueCallback = boxValueCallback
         self.boxValueSetter = boxValueSetter
+        self.minCallback = minCallback
+        self.minSetter = minSetter
+        self.maxCallback = maxCallback
+        self.maxSetter = maxSetter
+
+        # a very bad temporary solution, when the model and the controller
+        # are more separated, this should be in the controller.
+        # after connect everything, we should update the value of the UI
+        self.min = self._init_min
+        self.max = self._init_max
+        self.value = self._init_value
 
     def _normalizeValue(self, value: Union[int, float]) -> int:
         """
@@ -254,7 +274,6 @@ class QuantumModelSliderParameter(DisplayedParameterBase):
         """
         When the user is done editing the box, update the value of the box and make the
         value consistent with the parameter type.
-
         """
         try:
             boxValue = float(self.boxValueCallback())
@@ -286,9 +305,75 @@ class QuantumModelSliderParameter(DisplayedParameterBase):
         self.boxValueSetter(self._toIntString(value))
         self.sliderValueSetter(self._normalizeValue(value))
 
-    def initialize(self):
-        # for test only
-        self.value = (self.max + self.min) / 5 + self.min
+    @property
+    def min(self) -> Union[int, float]:
+        """
+        Get the minimum value of the parameter from the UI
+        """
+        boxValue = float(
+            self.minCallback()
+        )
+
+        return self._toInt(boxValue)
+    
+    @min.setter
+    def min(self, value: Union[int, float]):
+        """
+        Set the minimum value of the parameter in the UI
+        """
+        self.minSetter(self._toIntString(value))
+
+    def onMinEditingFinished(self, *args, **kwargs):
+        """
+        When the user is done editing the min box, update the value of the box and make the
+        value consistent with the parameter type. 
+        Besides, adjust the slider position.
+        """
+        try:
+            boxValue = float(self.minCallback())
+        except ValueError:
+            # cannot convert the box value to float, do nothing
+            return
+
+        self.minSetter(self._toIntString(boxValue))
+        self.boxValueToSlider()
+
+    @property
+    def max(self) -> Union[int, float]:
+        """
+        Get the maximum value of the parameter from the UI
+        """
+        boxValue = float(
+            self.maxCallback()
+        )
+
+        return self._toInt(boxValue)
+    
+    @max.setter
+    def max(self, value: Union[int, float]):
+        """
+        Set the maximum value of the parameter in the UI
+        """
+        self.maxSetter(self._toIntString(value))
+
+    def onMaxEditingFinished(self, *args, **kwargs):
+        """
+        When the user is done editing the max box, update the value of the box and make the
+        value consistent with the parameter type. 
+        Besides, adjust the slider position.
+        """
+        try:
+            boxValue = float(self.maxCallback())
+        except ValueError:
+            # cannot convert the box value to float, do nothing
+            return
+
+        self.maxSetter(self._toIntString(boxValue))
+        self.boxValueToSlider()
+
+    # def initialize(self):
+    #     # for test only
+    #     self.value = (self.max + self.min) / 5 + self.min
 
 
 class QuantumModelFittingParameter(DisplayedParameterBase):
@@ -615,16 +700,19 @@ class QuantumModelParameterSet:
         # if the parameter is a slider parameter, add it to the parameter set
         elif param_usage == "slider":
             # check if minmax is provided
-            if min is None or max is None:
+            if min is None or max is None or value is None:
                 raise ValueError(
-                    f"Min or max of parameter {name} is not provided for a slider parameter."
+                    f"Min, max or value of parameter {name} is not provided for a slider parameter."
                 )
             self.parameters[parent_system][name] = QuantumModelSliderParameter(
                 name=name,
                 parent=parent_system,
+                param_type=param_type,
+                value=value,
                 min=min,
                 max=max,
-                param_type=param_type,
+                # TODO: should add min, max, value when initialized, when the model
+                # and the controller are more separated
             )
         elif param_usage == "fitting":
             # check if minmax and value are provided
@@ -636,6 +724,8 @@ class QuantumModelParameterSet:
                 name=name,
                 parent=parent_system,
                 param_type=param_type,
+                # TODO: should add min, max, value when initialized, when the model
+                # and the controller are more separated
             )
         else:
             raise ValueError(f"Unknown parameter usage {param_usage}.")
