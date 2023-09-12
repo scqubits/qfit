@@ -170,7 +170,7 @@ class Fit:
     @classmethod
     def open(
         cls, 
-        fileName: Union[str, None] | None = None,
+        fileName: Union[str, None] = None,
     ) -> "Fit":
         """
         Open a qfit project from a file.
