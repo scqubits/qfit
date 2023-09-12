@@ -38,8 +38,12 @@ from scqubits.core.hilbert_space import HilbertSpace
 
 scq.settings.PROGRESSBAR_DISABLED = True
 
+if executed_in_ipython():
+    # inside ipython, the function get_ipython is always in globals()
+    ipython = get_ipython()
+    ipython.run_line_magic('gui', 'qt6')
 
-class qfit:
+class Fit:
     app: Union[QApplication, None] = None
     window: MainWindow
     _hilbertSpace: HilbertSpace
@@ -49,7 +53,7 @@ class qfit:
         cls, 
         hilbertSpace: HilbertSpace, 
         measurementData: Union[MeasurementDataType, None] = None
-    ) -> "qfit":
+    ) -> "Fit":
         # Create a new instance
         instance = object.__new__(cls)
 
@@ -84,7 +88,7 @@ class qfit:
         cls,
         hilbertSpace: HilbertSpace, 
         measurementData: Union[str, None] = None
-    ) -> "qfit":
+    ) -> "Fit":
         instance = cls._newProject(
             hilbertSpace, None) 
 
@@ -123,7 +127,7 @@ class qfit:
         cls,
         hilbertSpace: HilbertSpace,
         measurementFileName: Union[str, None] = None,
-    ) -> "qfit":
+    ) -> "Fit":
         """
         Create a qfit project with a `HilbertSpace object` from `scqubits` and
         a measurement file.
@@ -167,7 +171,7 @@ class qfit:
     def open(
         cls, 
         fileName: Union[str, None] | None = None,
-    ) -> "qfit":
+    ) -> "Fit":
         """
         Open a qfit project from a file.
 
