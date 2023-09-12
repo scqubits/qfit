@@ -1,4 +1,4 @@
-from qtpy.QtWidgets import (
+from PySide6.QtWidgets import (
     QGroupBox, 
     QVBoxLayout, 
     QLabel, 
@@ -6,7 +6,7 @@ from qtpy.QtWidgets import (
     QPushButton,
 )
 
-from qtpy.QtGui import (
+from PySide6.QtGui import (
     QIcon,
 )
 from PySide6.QtCore import Qt, QSize, QCoreApplication, Slot
