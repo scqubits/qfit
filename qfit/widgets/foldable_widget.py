@@ -11,8 +11,8 @@ from PySide6.QtGui import (
 )
 from PySide6.QtCore import Qt, QSize, QCoreApplication, Slot
 
-SPACING = 10
-MARGIN = 10
+SPACING = 12
+MARGIN = -1
 
 class FoldPushButton(QPushButton):
     """
@@ -22,14 +22,14 @@ class FoldPushButton(QPushButton):
         super().__init__()
         
         # icon
-        icon = QIcon()
-        icon.addFile(
+        self.icon = QIcon()
+        self.icon.addFile(
             ":/icons/svg/cil-caret-right.svg",
             QSize(),
             QIcon.Normal,
             QIcon.Off,
         )
-        icon.addFile(
+        self.icon.addFile(
             ":/icons/svg/cil-caret-bottom.svg",
             QSize(),
             QIcon.Normal,
@@ -44,7 +44,7 @@ class FoldPushButton(QPushButton):
             "	border: none;\n"
             "}"
         )
-        self.setIcon(icon)
+        self.setIcon(self.icon)
         # set title
         self.setText(
             QCoreApplication.translate("MainWindow", title, None)
@@ -52,6 +52,15 @@ class FoldPushButton(QPushButton):
         # set checkable
         self.setCheckable(True)
         self.setChecked(True)
+
+    def setCheckable(self, value):
+        super().setCheckable(value)
+
+        # remove the icon if false
+        if not value:
+            self.setIcon(QIcon())
+        else:
+            self.setIcon(self.icon)
 
 
 class FoldableWidget(QGroupBox):

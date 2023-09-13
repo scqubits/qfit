@@ -5,26 +5,19 @@ from PySide6.QtWidgets import (
     QWidget,
     QGridLayout,
     QVBoxLayout,
-    QHBoxLayout,
-    QGroupBox,
-    QCheckBox,
-    QTableWidget,
-    QPushButton,
     QSizePolicy,
 )
-from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt, QSize, QCoreApplication
+from PySide6.QtCore import Qt
 
 from qfit.widgets.foldable_widget import (
     FoldableWidget,
     SPACING,
-    MARGIN,
 )
 
 from typing import Dict, List, Tuple, Union, Optional, Any
 
 SLIDER_RANGE = 100
-SPACING_BETWEEN_SLIDERS = 10
+SPACING_BETWEEN_GROUPS = 15
 
 class LabeledSlider(QWidget):
     """
@@ -253,7 +246,9 @@ class GroupedWidget(QWidget):
 
         # set the layout that no vertical space between the widgets (labelled sliders here)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout.setVerticalSpacing(SPACING_BETWEEN_SLIDERS)
+
+        # self.gridLayout.setVerticalSpacing(SPACING_BETWEEN_SLIDERS) 
+
 
     def keys(self):
         return self.widgets.keys()
@@ -302,7 +297,7 @@ class GroupedWidgetSet(QWidget):
         self.columns = columns
         self.widgetSetLayout = QVBoxLayout(self)
         self.widgetSetLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
-        self.widgetSetLayout.setSpacing(SPACING)
+        self.widgetSetLayout.setSpacing(SPACING_BETWEEN_GROUPS)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.widgetGroups: Dict[str, GroupedWidget] = {}
 

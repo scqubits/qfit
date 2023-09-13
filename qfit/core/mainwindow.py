@@ -78,6 +78,7 @@ from qfit.widgets.foldable_widget import FoldableWidget
 from qfit.widgets.grouped_sliders import (
     LabeledSlider,
     GroupedWidgetSet,
+    SPACING_BETWEEN_GROUPS
 )
 from qfit.widgets.foldable_table import (
     FoldableTable,
@@ -874,6 +875,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             )
 
         prefitScrollLayout.addWidget(self.sliderSet)
+
+        # add a spacing between the sliders and the min max table
+        prefitScrollLayout.addSpacing(SPACING_BETWEEN_GROUPS)
 
     def prefitMinMaxInserts(self):
         self.minMaxTable = FoldableTable(
