@@ -12,7 +12,7 @@
 if __name__ == "__main__":
 
     import scqubits as scq
-    from qfit import qfit
+    from qfit import Fit
 
     # just a test for now
     resonator = scq.Oscillator(
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         id_str = "res-qubit"
     )
 
-    qfit_app = qfit(hilbertspace)
-    # qfit_app = qfit.new(hilbertspace)
-    # qfit.open("./../example_data/test.qfit")
+    qfit_app = Fit(hilbertspace)
+    # qfit_app = Fit.new(hilbertspace)
+    # Fit.open("./../example_data/test.qfit")
 
