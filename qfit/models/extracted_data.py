@@ -21,13 +21,21 @@ from PySide6.QtCore import (
     QModelIndex,
     Qt,
     Slot,
+    Signal,
+    QObject,
 )
 
 import qfit.io_utils.file_io_serializers as serializers
 
 from qfit.widgets.data_tagging import NO_TAG, Tag
 
-from qfit.models.registry import Registrable
+from qfit.models.registry import Registrable, RegistryEntry
+
+from copy import deepcopy
+
+
+class LoadFromRegistrySignal(QObject):
+    signal = Signal(dict)
 
 
 class ActiveExtractedData(QAbstractTableModel):
@@ -216,6 +224,8 @@ class AllExtractedData(
         self.assocTagList = [Tag()]
         self._calibrationFunc = None
         self._currentRow = 0
+        # this signal is used for updating the plot
+        self.loadFromRegistrySignal = LoadFromRegistrySignal()
 
     def rowCount(self, *args) -> int:
         return len(self.dataNames)
@@ -381,9 +391,9 @@ class AllExtractedData(
         """
         processedData = self.allDataSorted(applyCalibration=False)
         initdata = {
-            "datanames": self.dataNames,
-            "datalist": processedData,
-            "taglist": self.assocTagList,
+            "dataNames": self.dataNames,
+            "assocDataList": processedData,
+            "assocTagList": self.assocTagList,
         }
         iodata = serializers.dict_serialize(initdata)
         iodata.typename = "QfitData"
@@ -397,13 +407,33 @@ class AllExtractedData(
 
     def registerAll(self):
         """
-        After registering the models,
-        Register the rest attribute of the mainWindow.
+        Register necessary data for extracted data; these data are used to reconstruct the
+        extracted data when loading a project file.
         """
-        registry = {}
-        entry_dict = {attr: self._toRegistryEntry(attr) for attr in self.attrToRegister}
-        for attr_name, entry in entry_dict.items():
-            new_name = f"allExtractedData.{attr_name}"
-            entry.name = new_name
-            registry[new_name] = entry
+
+        # info to be registered:
+        # - dataNames
+        # - assocDataList
+        # - assocTagList
+        def getter():
+            # extracted_data = self.serialize()
+            processedData = self.allDataSorted(applyCalibration=False)
+            initdata = {
+                "datanames": self.dataNames,
+                "datalist": processedData,
+                "taglist": self.assocTagList,
+            }
+            return deepcopy(initdata)
+
+        def setter(initdata):
+            # emit the signal to the controller to register the data through controller
+            self.loadFromRegistrySignal.signal.emit(initdata)
+
+        registry_entry = RegistryEntry(
+            name="allExtractedData",
+            quantity_type="r+",
+            getter=getter,
+            setter=setter,
+        )
+        registry = {"allExtractedData": registry_entry}
         return registry

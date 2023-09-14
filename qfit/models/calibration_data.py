@@ -9,17 +9,22 @@
 #    LICENSE file in the root directory of this source tree.
 ############################################################################
 
-from typing import List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 from typing_extensions import Literal
 
 import numpy as np
 
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, Signal
 
 import qfit.io_utils.file_io_serializers as serializers
+from qfit.models.registry import Registrable, RegistryEntry
 
 
-class CalibrationData(serializers.Serializable):
+class UpdateCalibrationViewSignal(QObject):
+    signal = Signal()
+
+
+class CalibrationData(serializers.Serializable, Registrable):
     def __init__(
         self,
         rawVec1: Optional[np.ndarray] = None,
@@ -49,6 +54,8 @@ class CalibrationData(serializers.Serializable):
         else:
             self.resetCalibration()
         self.applyCalibration = False
+
+        self.updateCalibrationViewSignal = UpdateCalibrationViewSignal()
 
     def resetCalibration(self):
         self.setCalibration((1.0, 0.0), (0.0, 1.0), (1.0, 0.0), (0.0, 1.0))
@@ -95,7 +102,7 @@ class CalibrationData(serializers.Serializable):
             self.calibrateDataPoint,
             axis=0,
             arr=array,
-            **{"calibration_axis": calibration_axis}
+            **{"calibration_axis": calibration_axis},
         )
 
     def inverseCalibrateDataset(
@@ -107,7 +114,7 @@ class CalibrationData(serializers.Serializable):
             self.inverseCalibrateDataPoint,
             axis=0,
             arr=array,
-            **{"inverse_calibration_axis": inverse_calibration_axis}
+            **{"inverse_calibration_axis": inverse_calibration_axis},
         )
 
     def calibrateDataPoint(
@@ -173,3 +180,27 @@ class CalibrationData(serializers.Serializable):
         if not self.applyCalibration:
             return lambda vec: vec
         return self.calibrateDataPoint
+
+    def registerAll(self) -> Dict[str, RegistryEntry]:
+        def setter(initdata):
+            # set calibration data
+            print("setCalibration is run")
+            print(f"{initdata}")
+            self.setCalibration(
+                initdata[0],
+                initdata[1],
+                initdata[2],
+                initdata[3],
+            )
+
+        def getter():
+            return self.allCalibrationVecs()
+
+        registry_entry = RegistryEntry(
+            name="CalibrationData",
+            quantity_type="r+",
+            getter=getter,
+            setter=setter,
+        )
+        registry = {"CalibrationData": registry_entry}
+        return registry

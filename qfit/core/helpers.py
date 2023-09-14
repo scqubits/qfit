@@ -292,11 +292,6 @@ def _find_lorentzian_peak(data: np.ndarray, gamma_guess=5) -> int:
     mid_idx_guess = np.argmax(np.abs(data - bias_guess))
     amp_guess = data[mid_idx_guess] - bias_guess
 
-    # print(
-    #     f"mid_idx_guess: {mid_idx_guess}, gamma_guess: {gamma_guess}, amp_guess: {amp_guess}, bias guess: {bias_guess}"
-    # )
-    # print(data)
-
     popt, pcov = curve_fit(
         lorentzian,
         idx_list,
@@ -304,8 +299,6 @@ def _find_lorentzian_peak(data: np.ndarray, gamma_guess=5) -> int:
         p0=[mid_idx_guess, gamma_guess, amp_guess, bias_guess],
         maxfev=2000,
     )
-
-    # print(popt)
 
     return np.round(popt[0]).astype(int)
 
@@ -328,12 +321,6 @@ def _extract_data_for_peak_finding(
 
     # extract data for fitting
     data_for_fitting = z_data[y_min_idx : y_max_idx + 1, x_idx]
-    # print(
-    #     f"user_selected_xy: {user_selected_xy}, actual y: {y_list[y_idx]} mid of selected data for fitting: {data_for_fitting[half_index_range]}"
-    # )
-    # print(
-    #     f"x_idx: {x_idx}, y_idx: {y_idx}, y_min_idx: {y_min_idx}, y_max_idx: {y_max_idx}"
-    # )
 
     return y_min_idx, y_max_idx, data_for_fitting
 
