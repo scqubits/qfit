@@ -78,7 +78,7 @@ from qfit.widgets.foldable_widget import FoldableWidget
 from qfit.widgets.grouped_sliders import (
     LabeledSlider,
     GroupedWidgetSet,
-    SPACING_BETWEEN_GROUPS
+    SPACING_BETWEEN_GROUPS,
 )
 from qfit.widgets.foldable_table import (
     FoldableTable,
@@ -813,12 +813,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def _sweepAxis(self, sweepParameterSet) -> int:
         """
         Temporary function to get the sweep axis
-        
+
 
 
         """
-        
-        
 
     def prefitDynamicalElementsBuild(self, hilbertspace: HilbertSpace):
         self.sliderParameterSet = QuantumModelParameterSet("sliderParameterSet")
@@ -837,7 +835,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         if len(self.sweepParameterSet) == 0:
             print(
                 "No sweep parameter (ng / flux) is found in the HilbertSpace "
-                "object. Please check your quantum model."    
+                "object. Please check your quantum model."
             )
             self.close()
         elif len(self.sweepParameterSet) == 1:
@@ -847,8 +845,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 self.sliderParameterSet,
                 parameter_usage="slider",
                 excluded_parameter_type=(
-                    ["cutoff", "truncated_dim", "l_osc"] 
-                    + list(param_types)[0]      # exclude the sweep parameter
+                    ["cutoff", "truncated_dim", "l_osc"]
+                    + [list(param_types)[0]]  # exclude the sweep parameter
                 ),
             )
         elif len(self.sweepParameterSet) == 2 and param_types == set(["flux", "ng"]):
@@ -857,9 +855,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.quantumModel.addParametersToParameterSet(
                 self.sliderParameterSet,
                 parameter_usage="slider",
-                excluded_parameter_type=(
-                    ["flux", "cutoff", "truncated_dim", "l_osc"] 
-                ),
+                excluded_parameter_type=(["flux", "cutoff", "truncated_dim", "l_osc"]),
             )
         else:
             print(
