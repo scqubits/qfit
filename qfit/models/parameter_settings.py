@@ -60,7 +60,7 @@ QSYS_PARAM_NAMES = {
         "EJ": ["EJ"],
         "EC": ["EC"],
         "ng": ["ng"],
-        "cutoffs": ["ncut"],
+        "cutoff": ["ncut"],
         "truncated_dim": ["truncated_dim"],
     },
     TunableTransmon: {

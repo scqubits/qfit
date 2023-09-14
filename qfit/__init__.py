@@ -152,7 +152,7 @@ class Fit:
             
         instance = cls._newProject(
             hilbertSpace, dummy_measurement_data())
-        
+
         # load measurement data
         if measurementFileName is not None:
             measurementData = IOCtrl.measurementDataFromFile(measurementFileName)

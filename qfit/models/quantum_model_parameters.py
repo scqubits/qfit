@@ -593,6 +593,9 @@ class QuantumModelParameterSet:
     def __getitem__(self, key):
         return self.parameters[key]
 
+    def __len__(self):
+        return sum([len(para_dict) for para_dict in self.parameters.values()])
+
     @staticmethod
     def parentSystemNames(
         parent: ParentSystem,

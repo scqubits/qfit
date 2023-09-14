@@ -804,16 +804,35 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.sliderParameterSet = QuantumModelParameterSet("sliderParameterSet")
         self.sweepParameterSet = QuantumModelParameterSet("sweepParameterSet")
         self.quantumModel = QuantumModel(hilbertspace)
-        self.quantumModel.addParametersToParameterSet(
-            self.sliderParameterSet,
-            parameter_usage="slider",
-            excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
-        )
+
         self.quantumModel.addParametersToParameterSet(
             self.sweepParameterSet,
             parameter_usage="sweep",
             included_parameter_type=["ng", "flux"],
         )
+
+        # check how many sweep parameters are found and create sliders
+        # for the remaining parameters
+        if len(self.sweepParameterSet) == 0:
+            print(
+                "No sweep parameter (ng / flux) is found in the HilbertSpace "
+                "object. Please check your quantum model."    
+            )
+            self.close()
+        elif len(self.sweepParameterSet) == 1:
+            self.quantumModel.addParametersToParameterSet(
+                self.sliderParameterSet,
+                parameter_usage="slider",
+                excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
+            )
+        elif len(self.sweepParameterSet) > 1:
+            print(
+                "Unfortunately, the current version of qfit does not support "
+                "multiple sweep parameters (flux / ng). Will be available in "
+                "the next release."
+            )
+            self.close()
+
         self.prefitSlidersInserts()
         self.prefitMinMaxInserts()
         self.prefitSlidersConnects()
@@ -1333,12 +1352,16 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         closing the application. Will be triggered when the user clicks the "X"
         or call the close() method.
         """
-        status = self.ioMenuCtrl.closeApp()
+        try:
+            status = self.ioMenuCtrl.closeApp()
 
-        if status:
+            if status:
+                event.accept()
+            else:
+                event.ignore()
+        except AttributeError:
+            # the GUI is partially initialized and don't have the ioMenuCtrl
             event.accept()
-        else:
-            event.ignore()
 
     def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)
