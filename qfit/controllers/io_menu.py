@@ -14,6 +14,8 @@ from qfit.io_utils.measurement_file_readers import readMeasurementFile
 
 import sys
 import os
+import numpy as np
+import copy
 
 from typing import TYPE_CHECKING, Union, Dict, Any
 
@@ -277,6 +279,8 @@ class IOCtrl:
         # update the rest of the registry (i.e. those entries with r+)
         self.registry.setByDict(registryDict)
 
+        self.mainWindow.unsavedChanges = False
+
     # quit / close ############################################################
     def _quit(self):
         if self.mainWindow.openFromIPython:
@@ -286,7 +290,56 @@ class IOCtrl:
 
     def closeApp(self) -> bool:
         """End the application"""
-        if self.mainWindow.allDatasets.isEmpty():
+        # first, if the project is open from a file, check the registry dict of the old file
+        # with that obtained from the current session, if something changed, ask the user
+        # whether to save the changes
+        if self.mainWindow.projectFile is not None:
+            registryDict = copy.deepcopy(self.registry.exportDict())
+            registryDictFromFile = copy.deepcopy(
+                self.registryDictFromFile(self.mainWindow.projectFile)
+            )
+            # remove HilbertSpace from these dicts
+            registryDict.pop("HilbertSpace")
+            registryDictFromFile.pop("HilbertSpace")
+            # note that we should compare the taglist in future, but for now let's
+            # ignore it...
+            # TODO compare taglist
+            currentTagList = registryDict["allExtractedData"]["taglist"]
+            fileTagList = registryDictFromFile["allExtractedData"]["taglist"]
+            if len(currentTagList) != len(fileTagList):
+                self.mainWindow.unsavedChanges = True
+            else:
+                for currentTag, fileTag in zip(currentTagList, fileTagList):
+                    # compare each tag attribute-by-attribute
+                    if currentTag.__dict__ != fileTag.__dict__:
+                        self.mainWindow.unsavedChanges = True
+                        break
+            registryDict["allExtractedData"].pop("taglist")
+            registryDictFromFile["allExtractedData"].pop("taglist")
+            # use numpy.testing.assert_equal to check equality for the rest of the dict
+            try:
+                np.testing.assert_equal(
+                    registryDict, registryDictFromFile, verbose=True
+                )
+            except AssertionError:
+                self.mainWindow.unsavedChanges = True
+
+            # for key, value in registryDictFromFile.items():
+            #     if key in {"HilbertSpace", "measurementData.args"}:
+            #         continue
+            #     if key not in registryDict:
+            #         self.mainWindow.unsavedChanges = True
+            #         break
+            #     if type(value) is np.ndarray:
+            #         if (value != registryDict[key]).any():
+            #             self.mainWindow.unsavedChanges = True
+            #             break
+            #     else:
+            #         print(value)
+            #         if value != registryDict[key]:
+            #             self.mainWindow.unsavedChanges = True
+            #             break
+        if self.mainWindow.allDatasets.isEmpty() or not self.mainWindow.unsavedChanges:
             # if run through ipython, no need to perform sys.exit, just close and delete
             # the window
             self._quit()

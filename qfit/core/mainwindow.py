@@ -30,6 +30,7 @@ from PySide6.QtCore import (
     Slot,
     QCoreApplication,
     QThreadPool,
+    QEvent,
 )
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
@@ -210,6 +211,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # status bar
         # self.statusBar().showMessage("Ready")
 
+    # calibration, data, plot setup ####################################
+    ####################################################################
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
             self.dataCheckBoxCallbacks, self.plotRangeCallback
@@ -616,16 +619,22 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 x_list = self.measurementData.currentX.data
                 y_list = self.measurementData.currentY.data
                 z_data = self.measurementData.currentZ.data
-                snapped_y1 = y_snap(
-                    x_list=x_list,
-                    y_list=y_list,
-                    z_data=z_data,
-                    user_selected_xy=x1y1,
-                    half_index_range=20,
-                    mode="lorentzian",
-                )
-                x1y1_snapped = np.asarray([x1y1[0], snapped_y1])
-                self.activeDataset.append(*x1y1_snapped)
+                # calculate half index range as 5x linewidth
+                linewidth = 0.02  # GHz
+                half_y_range = linewidth * 5
+                try:
+                    snapped_y1 = y_snap(
+                        x_list=x_list,
+                        y_list=y_list,
+                        z_data=z_data,
+                        user_selected_xy=x1y1,
+                        half_y_range=half_y_range,
+                        mode="lorentzian",
+                    )
+                    x1y1_snapped = np.asarray([x1y1[0], snapped_y1])
+                    self.activeDataset.append(*x1y1_snapped)
+                except RuntimeError:
+                    self.activeDataset.append(*x1y1)
             else:
                 self.activeDataset.append(*x1y1)
             self.updatePlot()
@@ -808,6 +817,17 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         if distance < 0.025:
             return True
         return False
+
+    def closest_line(self, xdat):
+        all_x_list = self.distinctXValues()
+        allxdiff = {np.abs(xdat - i): i for i in all_x_list}
+        return allxdiff[min(allxdiff.keys())]
+
+    def distinctXValues(self):
+        all_x_list = np.array([])
+        for dataset in self.allDatasets.assocDataList:
+            all_x_list = np.concatenate((all_x_list, dataset[0]))
+        return np.unique(all_x_list)
 
     # Pre-fit ##########################################################
     # ##################################################################
@@ -1435,13 +1455,16 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             QStyle.alignedRect(Qt.LeftToRight, Qt.AlignCenter, newSize, maxRect)
         )
 
-    def closest_line(self, xdat):
-        all_x_list = self.distinctXValues()
-        allxdiff = {np.abs(xdat - i): i for i in all_x_list}
-        return allxdiff[min(allxdiff.keys())]
+    # event filter and save state ######################################
+    # ##################################################################
+    # def install_event_filters(self):
+    #     self.installEventFilter(self)
+    #     for widget in self.findChildren(QWidget):
+    #         widget.installEventFilter(self)
 
-    def distinctXValues(self):
-        all_x_list = np.array([])
-        for dataset in self.allDatasets.assocDataList:
-            all_x_list = np.concatenate((all_x_list, dataset[0]))
-        return np.unique(all_x_list)
+    # def eventFilter(self, source, event):
+    #     if (
+    #         event.type() == QEvent.Type.KeyPress
+    #     ):  # Or other event types you're interested in
+    #         self.unsavedChanges = True
+    #     return super().eventFilter(source, event)

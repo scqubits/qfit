@@ -123,7 +123,7 @@ class Registry:
             )
             self._registry[name] = entry
 
-    def export(self) -> Dict[str, Any]:
+    def exportDict(self) -> Dict[str, Any]:
         full_dict: Dict[str, Any] = {}
         for entry in self._registry.values():
             full_dict.update(entry.export())
@@ -133,7 +133,7 @@ class Registry:
     def exportPkl(self, filename: str) -> None:
         try:
             with open(filename, "wb") as f:
-                pickle.dump(self.export(), f)
+                pickle.dump(self.exportDict(), f)
         except FileNotFoundError:
             print(f"Error: File '{filename}' not found. Cannot export data.")
 
