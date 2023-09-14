@@ -205,6 +205,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             mainWindow=self,
         )
 
+        # status bar
+        # self.statusBar().showMessage("Ready")
+
     def dataSetupConnects(self):
         self.measurementData.setupUICallbacks(
             self.dataCheckBoxCallbacks, self.plotRangeCallback
