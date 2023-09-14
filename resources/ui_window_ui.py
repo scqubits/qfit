@@ -198,7 +198,7 @@ class Ui_MainWindow(object):
 "QCheckBox::indicator:checked {\n"
 "	border: 3px solid rgb(196, 150, 250);\n"
 "   background: rgb(52, 59, 72);\n"
-"	background-image: url(:/icons/svg/cil-check-alt.svg);\n"
+"	image: url(:/icons/svg/cil-check-alt.svg);\n"
 "}\n"
 "\n"
 "/* RADIO BUTTON */\n"
@@ -219,16 +219,17 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QRadioButton::indicator:checked {\n"
-"	border: 3px solid rgb(196, 150, 250);\n"
+"   border: 3px solid rgb(196, 150, 250);\n"
 "   background: rgb(52, 59, 72);\n"
+"   image: url(:/icons/svg/cil-check-alt.svg);\n"
 "}\n"
 "\n"
 "\n"
 "\n"
 "/* SLIDERS */\n"
-"QSlider::groove:horizontal {\n"
-"    bor"
-                        "der-radius: 9px;\n"
+""
+                        "QSlider::groove:horizontal {\n"
+"    border-radius: 9px;\n"
 "    height: 18px;\n"
 "	margin: 0px;\n"
 "	background-color: rgb(52, 59, 72);\n"
@@ -271,11 +272,11 @@ class Ui_MainWindow(object):
 "	border: none;\n"
 "    height: 18px;\n"
 "    width: 18px;\n"
-"    margin: 0px;\n"
+"    margin: "
+                        "0px;\n"
 "	border-radius: 9px;\n"
 "}\n"
-""
-                        "\n"
+"\n"
 "QSlider::handle:vertical:hover {\n"
 "    background-color: rgb(105, 180, 255);\n"
 "}\n"
@@ -313,11 +314,11 @@ class Ui_MainWindow(object):
 "    width: 16px;\n"
 "    border-width: 1px;\n"
 "	background-color: rgb(93,93,93);\n"
-"}\n"
+""
+                        "}\n"
 "\n"
 "QSpinBox::up-arrow {\n"
-" "
-                        "   width: 16px;\n"
+"    width: 16px;\n"
 "    height: 16px;\n"
 "    image: url(:/icons/svg/cil-plus.svg) 1;\n"
 "}\n"
@@ -359,11 +360,11 @@ class Ui_MainWindow(object):
 "	border-left-color: rgba(39, 44, 54, 150);\n"
 "	border-left-style: solid;\n"
 "	border-top-right-radius: 3px;\n"
-"	border-bottom-right-radius: 3px;	\n"
+"	border-bottom-r"
+                        "ight-radius: 3px;	\n"
 " }\n"
 " \n"
-"Q"
-                        "ComboBox QAbstractItemView {\n"
+"QComboBox QAbstractItemView {\n"
 "	color: rgb(85, 170, 255);	\n"
 "	background-color: rgb(27, 29, 35);\n"
 "	padding: 10px;\n"
@@ -400,9 +401,9 @@ class Ui_MainWindow(object):
 "    border-bottom: 1px solid rgb(44, 49, 60);\n"
 "    border-right: 1px solid rgb(44, 49, 60);\n"
 "}\n"
-"QTableWidget::horizontalHeader {	\n"
-"	b"
-                        "ackground-color: rgb(81, 255, 0);\n"
+"QTa"
+                        "bleWidget::horizontalHeader {	\n"
+"	background-color: rgb(81, 255, 0);\n"
 "}\n"
 "QHeaderView::section:horizontal\n"
 "{\n"
@@ -1208,6 +1209,7 @@ class Ui_MainWindow(object):
         self.bgndSubtractYCheckBox.setToolTip(u"Background subtraction along Y")
 #endif // QT_CONFIG(tooltip)
         self.bgndSubtractYCheckBox.setText(u"ALONG Y AXIS")
+        self.bgndSubtractYCheckBox.setTristate(False)
 
         self.gridLayout_8.addWidget(self.bgndSubtractYCheckBox, 3, 1, 1, 1)
 
@@ -1674,6 +1676,7 @@ class Ui_MainWindow(object):
         self.tagChoicesFrame.setFrameShape(QFrame.NoFrame)
         self.tagChoicesFrame.setFrameShadow(QFrame.Raised)
         self.verticalLayout_4 = QVBoxLayout(self.tagChoicesFrame)
+        self.verticalLayout_4.setSpacing(12)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.noTagRadioButton = QRadioButton(self.tagChoicesFrame)
         self.noTagRadioButton.setObjectName(u"noTagRadioButton")
@@ -1974,7 +1977,7 @@ class Ui_MainWindow(object):
         self.prefitScrollArea.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.prefitScrollAreaWidget = QWidget()
         self.prefitScrollAreaWidget.setObjectName(u"prefitScrollAreaWidget")
-        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 362, 710))
+        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 42, 24))
         self.verticalLayout_11 = QVBoxLayout(self.prefitScrollAreaWidget)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.prefitScrollArea.setWidget(self.prefitScrollAreaWidget)
@@ -2018,7 +2021,7 @@ class Ui_MainWindow(object):
         self.fitScrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 98, 28))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 37, 16))
         self.fitScrollArea.setWidget(self.scrollAreaWidgetContents_2)
 
         self.verticalLayout_8.addWidget(self.fitScrollArea)
@@ -2177,6 +2180,24 @@ class Ui_MainWindow(object):
         self.swapXYButton.setCheckable(True)
         self.swapXYButton.setChecked(True)
         self.swapXYButton.setAutoExclusive(True)
+        self.line = QFrame(self.mplFigureCanvas)
+        self.line.setObjectName(u"line")
+        self.line.setGeometry(QRect(379, 10, 3, 41))
+        self.line.setFrameShadow(QFrame.Plain)
+        self.line.setLineWidth(0)
+        self.line.setFrameShape(QFrame.VLine)
+        self.line_2 = QFrame(self.mplFigureCanvas)
+        self.line_2.setObjectName(u"line_2")
+        self.line_2.setGeometry(QRect(259, 10, 3, 41))
+        self.line_2.setFrameShadow(QFrame.Plain)
+        self.line_2.setLineWidth(0)
+        self.line_2.setFrameShape(QFrame.VLine)
+        self.line_3 = QFrame(self.mplFigureCanvas)
+        self.line_3.setObjectName(u"line_3")
+        self.line_3.setGeometry(QRect(79, 10, 3, 41))
+        self.line_3.setFrameShadow(QFrame.Plain)
+        self.line_3.setLineWidth(0)
+        self.line_3.setFrameShape(QFrame.VLine)
 
         self.gridLayout.addWidget(self.mplFigureCanvas, 0, 2, 1, 2)
 
@@ -2224,8 +2245,8 @@ class Ui_MainWindow(object):
         self.calibrateGroupPushButton.toggled.connect(self.calibrationQFrame.setVisible)
         self.filtersPushButton.toggled.connect(self.filterQFrame.setVisible)
 
-        self.bottomStackedWidget.setCurrentIndex(1)
-        self.pagesStackedWidget.setCurrentIndex(0)
+        self.bottomStackedWidget.setCurrentIndex(2)
+        self.pagesStackedWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
