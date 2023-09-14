@@ -800,6 +800,16 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     # Pre-fit ##########################################################
     # ##################################################################
 
+    def _sweepAxis(self, sweepParameterSet) -> int:
+        """
+        Temporary function to get the sweep axis
+        
+
+
+        """
+        
+        
+
     def prefitDynamicalElementsBuild(self, hilbertspace: HilbertSpace):
         self.sliderParameterSet = QuantumModelParameterSet("sliderParameterSet")
         self.sweepParameterSet = QuantumModelParameterSet("sweepParameterSet")
@@ -813,6 +823,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # check how many sweep parameters are found and create sliders
         # for the remaining parameters
+        param_types = set(self.sweepParameterSet.exportAttrDict("param_type").values())
         if len(self.sweepParameterSet) == 0:
             print(
                 "No sweep parameter (ng / flux) is found in the HilbertSpace "
@@ -820,16 +831,31 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             )
             self.close()
         elif len(self.sweepParameterSet) == 1:
+            # only one sweep parameter is found, so we can create sliders
+            # for the remaining parameters
             self.quantumModel.addParametersToParameterSet(
                 self.sliderParameterSet,
                 parameter_usage="slider",
-                excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
+                excluded_parameter_type=(
+                    ["cutoff", "truncated_dim", "l_osc"] 
+                    + list(param_types)[0]      # exclude the sweep parameter
+                ),
             )
-        elif len(self.sweepParameterSet) > 1:
+        elif len(self.sweepParameterSet) == 2 and param_types == set(["flux", "ng"]):
+            # a flux and ng are detected in the HilbertSpace object
+            # right now, we assume that the flux is always swept in this case
+            self.quantumModel.addParametersToParameterSet(
+                self.sliderParameterSet,
+                parameter_usage="slider",
+                excluded_parameter_type=(
+                    ["flux", "cutoff", "truncated_dim", "l_osc"] 
+                ),
+            )
+        else:
             print(
                 "Unfortunately, the current version of qfit does not support "
-                "multiple sweep parameters (flux / ng). Will be available in "
-                "the next release."
+                "multiple sweep parameters (flux / ng). This feature will be "
+                "available in the next release."
             )
             self.close()
 

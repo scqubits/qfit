@@ -615,7 +615,7 @@ class QuantumModelParameterSet:
 
     @staticmethod
     def parentSystemIdstrByName(name: str) -> str:
-        return name.split(" ")[0]
+        return ''.join(name.split(" ")[:-1])
 
     def _updateNameMap(self, parent: ParentSystem, with_type: bool = True):
         name = self.parentSystemNames(parent, with_type=with_type)
