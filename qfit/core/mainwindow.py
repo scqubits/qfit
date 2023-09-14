@@ -101,6 +101,8 @@ if TYPE_CHECKING:
     from qfit.widgets.calibration import CalibrationLineEdit
     from qfit.models.qfit_data import QfitData
 
+from qfit.models.qfit_data import QfitData
+
 
 mpl.rcParams["toolbar"] = "None"
 
@@ -174,6 +176,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.measurementData = measurementData
         self.extractedData = None
         self.dataSetupConnects()
+        self.uiDataLoadConnects()
 
         # setup mpl canvas
         self.uiColorScaleConnects()
@@ -213,6 +216,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.uiDataControlConnects()
         self.uiXYZComboBoxesConnects()
 
+    def recoverFromExtractedData(self):
         if self.extractedData is not None:
             self.allDatasets.dataNames = self.extractedData.datanames
             self.allDatasets.assocDataList = transposeEach(self.extractedData.datalist)
@@ -490,6 +494,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.clearAllButton.clicked.connect(
             lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
         )
+
+    def uiDataLoadConnects(self):
+        self.allDatasets.loadFromRegistrySignal.signal.connect(self.extractedDataSetup)
 
     def uiXYZComboBoxesConnects(self):
         self.ui.zComboBox.activated.connect(self.zDataUpdate)
@@ -877,9 +884,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     def prefitMinMaxInserts(self):
         self.minMaxTable = FoldableTable(
-            MinMaxItems, 
-            paramNumPerRow = 2,
-            groupNames = list(self.sliderParameterSet.parentNameByObj.values()),
+            MinMaxItems,
+            paramNumPerRow=2,
+            groupNames=list(self.sliderParameterSet.parentNameByObj.values()),
         )
         self.minMaxTable.setCheckable(False)
         self.minMaxTable.setChecked(False)
@@ -889,9 +896,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             group_name = self.sliderParameterSet.parentNameByObj[key]
 
             for para_name in para_dict.keys():
-                self.minMaxTable.insertParams(
-                    group_name, para_name
-                )
+                self.minMaxTable.insertParams(group_name, para_name)
 
         # add the minmax table to the scroll area
         foldable_widget = FoldableWidget("Adjusting Sliders' Range", self.minMaxTable)
@@ -1084,8 +1089,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # create an empty table with just group names
         self.fitTableSet = FoldableTable(
             FittingParameterItems,
-            paramNumPerRow = 1,
-            groupNames = list(self.fitParameterSet.parentNameByObj.values()),
+            paramNumPerRow=1,
+            groupNames=list(self.fitParameterSet.parentNameByObj.values()),
         )
 
         # insert parameters
@@ -1093,9 +1098,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             group_name = self.fitParameterSet.parentNameByObj[key]
 
             for para_name in para_dict.keys():
-                self.fitTableSet.insertParams(
-                    group_name, para_name
-                )
+                self.fitTableSet.insertParams(group_name, para_name)
 
         fitScrollLayout.addWidget(self.fitTableSet)
 
@@ -1203,7 +1206,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
             for para_name, para in para_dict.items():
                 para: QuantumModelFittingParameter
-                single_row: FittingParameterItems = self.fitTableSet.params[group_name][para_name]
+                single_row: FittingParameterItems = self.fitTableSet.params[group_name][
+                    para_name
+                ]
 
                 # connect the UI and the model
                 para.setupUICallbacks(
@@ -1290,6 +1295,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # special registry
         self.registry.register(self.quantumModel.hilbertspace)
         self.registry.register(self.measurementData)
+        self.registry.register(self.calibrationData)
         self.registry.register(self.allDatasets)
 
         # parameters
@@ -1312,6 +1318,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
         self.dataSetupConnects()
+        self.uiDataLoadConnects()
         self.setupUIXYZComboBoxes()
 
         self.prefitDynamicalElementsBuild(hilbertspace)
@@ -1335,6 +1342,23 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             event.accept()
         else:
             event.ignore()
+
+    @Slot()
+    def extractedDataSetup(self, initdata):
+        """
+        setting up recovery of extracted data
+        """
+        self.extractedData = QfitData(
+            datanames=initdata["datanames"],
+            datalist=initdata["datalist"],
+            tag_data=initdata["taglist"],
+            calibration_data=self.calibrationData,
+            # this is somehow redundant - the calibration data is already recovered
+            # here I set this only because the calibration_data is required to update
+            # the calibration view
+        )
+        # recover the allDatasets model and emit changes to the view
+        self.recoverFromExtractedData()
 
     def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)
