@@ -1681,7 +1681,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                     <property name="geometry">
                      <rect>
                       <x>0</x>
-                      <y>0</y>
+                      <y>-270</y>
                       <width>378</width>
                       <height>892</height>
                      </rect>
@@ -2302,7 +2302,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                               </size>
                              </property>
                              <property name="toolTip">
-                              <string notr="true">Calibrate x1, allows selection of coordinate inside plot</string>
+                              <string notr="true">Calibrate x2, allows selection of coordinate inside plot</string>
                              </property>
                              <property name="text">
                               <string/>
@@ -2809,6 +2809,12 @@ font: 57 11pt &quot;Roboto Medium&quot;;
              <layout class="QVBoxLayout" name="verticalLayout_10">
               <item>
                <widget class="QFrame" name="frame_9">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="styleSheet">
                  <string notr="true"/>
                 </property>
@@ -3450,8 +3456,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>42</width>
-                      <height>24</height>
+                      <width>362</width>
+                      <height>715</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_11"/>
@@ -3535,8 +3541,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>37</width>
-                      <height>16</height>
+                      <width>357</width>
+                      <height>634</height>
                      </rect>
                     </property>
                    </widget>
