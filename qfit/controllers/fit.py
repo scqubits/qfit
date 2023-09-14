@@ -13,6 +13,7 @@ from qfit.models.quantum_model_parameters import (
 from qfit.models.status_result_data import Result
 
 class WorkerSignals(QObject):
+    optInitFail = Signal()
     optFinished = Signal()
 
 class NumericalFitting(QRunnable):
@@ -29,9 +30,11 @@ class NumericalFitting(QRunnable):
     def setupUICallbacks(
         self,
         optimizerCallback: Callable,
+        tolCallback: Callable,
     ):
         # set up callbacks for the UI
         self.optimizer = optimizerCallback
+        self.tol = tolCallback
         return
 
     def _targetFunctionWrapper(
@@ -64,7 +67,13 @@ class NumericalFitting(QRunnable):
         sweepParameterSet: QuantumModelParameterSet,
         calibrationData: CalibrationData,
         result: Result,
-    ):
+    ) -> bool:
+        """
+        Set up the optimization. 
+
+        Will return True if the optimization is successfully set up, False otherwise.
+        
+        """
         # store the things needed temporarily because the run() doesn't take any arguments
         self.parameterSet = parameterSet
         self.result = result
@@ -75,11 +84,33 @@ class NumericalFitting(QRunnable):
         param_dict = parameterSet.toParamDict()
         for key, params in param_dict.items():
             params: QuantumModelFittingParameter
+
             if params.isFixed:
                 fixed_params[key] = params.initValue
             else:
                 free_param_ranges[key] = [params.min, params.max]
 
+                # check whether the values are valid
+                if params.min >= params.max:
+                    self.result.status_type = "ERROR"
+                    self.result.status_text = ("The minimum value of the "
+                    "parameter is larger than the maximum value.")
+                    self.signals.optInitFail.emit()
+                    return False
+                if params.initValue < params.min or params.initValue > params.max:
+                    self.result.status_type = "ERROR"
+                    self.result.status_text = ("The initial value of the "
+                    "parameter is not within the range defined by min and max.")
+                    self.signals.optInitFail.emit()
+                    return False
+
+        try: 
+            tol = float(self.tol())
+        except ValueError:
+            self.result.status_type = "ERROR"
+            self.result.status_text = "The tolerance should be a float."
+            self.signals.optInitFail.emit()
+            return False
 
         # set up the optimization
         try:
@@ -96,13 +127,17 @@ class NumericalFitting(QRunnable):
                 },
                 optimizer=self.optimizer(),
                 opt_options={
-                    "disp": True,
+                    "disp": False,
+                    "tol": tol,
                 }
             )
         except:
             self.result.status_type = "ERROR"
             self.result.status_text = "Fail to setup the optimization."
-            self.signals.optFinished.emit()
+            self.signals.optInitFail.emit()
+            return False
+        
+        return True
 
     def _optCallback(
         self,

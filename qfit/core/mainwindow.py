@@ -136,6 +136,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     cidCanvas: int
     offset: Union[None, QPoint]
 
+    optInitialized: bool = False
+
     registry: Registry
     _projectFile: Union[str, None] = None
 
@@ -1112,7 +1114,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     def setupFitConnects(self):
         self.numericalFitting.setupUICallbacks(
-            lambda: "L-BFGS-B",
+            self.ui.optimizerComboBox.currentText,
+            self.ui.tolLineEdit.text,
         )
 
     def fitTableInserts(self):
@@ -1169,10 +1172,28 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.fitParameterSet.loadAttrDict(min_value_dict, "min")
 
     @Slot()
+    def _setupOptimization(self):
+        """
+        Run optimization step 1: setup the optimization using various parameters
+        """
+
+        self.optInitialized = self.numericalFitting.setupOptimization(
+            self.fitParameterSet,
+            self.quantumModel.MSEByParametersForFit,
+            self.allDatasets,
+            self.sweepParameterSet,
+            self.calibrationData,
+            self.fitResult,
+        )
+
+    @Slot()
     def _backgroundOptimization(self):
         """
-        The optimization + things to do before it
+        Run optimization step 2: run the optimization in the background
         """
+        if not self.optInitialized:
+            return
+        
         self.ui.fitButton.setEnabled(False)
         self.sliderSet.setEnabled(False)
 
@@ -1181,10 +1202,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     @Slot()
     def _onOptFinished(self):
+        print("Optimization finished")
+
         self.ui.fitButton.setEnabled(True)
         self.sliderSet.setEnabled(True)
-        self.onParameterChange(self.fitParameterSet)
-        self.updatePlot()
 
         # the numericalFitting object will be deleted after background running
         # so we need to create a new one and connect the signals again
@@ -1192,23 +1213,18 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.setupFitConnects()
         self.fittingCallbackConnects()
 
+        # should be used after re-create the numericalFitting object
+        # (for the optimization failing case)
+        self.onParameterChange(self.fitParameterSet)
+        self.updatePlot()
+        
+
     def fittingCallbackConnects(self):
         """
         when the optimization is finished, send a signal that triggers
         the `_onOptFinished` function
         """
         self.numericalFitting.signals.optFinished.connect(self._onOptFinished)
-
-    @Slot()
-    def _setupOptimization(self):
-        self.numericalFitting.setupOptimization(
-            self.fitParameterSet,
-            self.quantumModel.MSEByParametersForFit,
-            self.allDatasets,
-            self.sweepParameterSet,
-            self.calibrationData,
-            self.fitResult,
-        )
 
     def fitPushButtonConnects(self):
         """

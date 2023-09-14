@@ -1359,6 +1359,9 @@ TableView
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
+                    <property name="toolTip">
+                     <string>Load the pre-fitted parameters to the initial value of the fit section</string>
+                    </property>
                     <property name="text">
                      <string>RESULTS → FIT</string>
                     </property>
@@ -1418,7 +1421,7 @@ TableView
                   <rect>
                    <x>100</x>
                    <y>20</y>
-                   <width>921</width>
+                   <width>931</width>
                    <height>151</height>
                   </rect>
                  </property>
@@ -1435,7 +1438,14 @@ TableView
                   <enum>QFrame::Plain</enum>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_6">
-                  <item row="0" column="3">
+                  <item row="1" column="8">
+                   <widget class="QLabel" name="label_49">
+                    <property name="text">
+                     <string>STATUS:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="8">
                    <widget class="QLabel" name="mseLabel_2">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
@@ -1456,14 +1466,52 @@ TableView
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="3">
-                   <widget class="QLabel" name="label_49">
+                  <item row="2" column="8" rowspan="2" colspan="3">
+                   <widget class="QLabel" name="statusTextLabel_2">
                     <property name="text">
-                     <string>STATUS:</string>
+                     <string>Status Text</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                    </property>
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                    <property name="margin">
+                     <number>5</number>
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="1">
+                  <item row="1" column="4">
+                   <widget class="QLineEdit" name="tolLineEdit">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>1e-6</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="5">
+                   <spacer name="horizontalSpacer_7">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeType">
+                     <enum>QSizePolicy::Fixed</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>10</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item row="0" column="6">
                    <widget class="QPushButton" name="fitButton">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1476,35 +1524,7 @@ TableView
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="0" rowspan="6">
-                   <widget class="QFrame" name="fitSettingsFrame">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>300</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>400</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="frameShape">
-                     <enum>QFrame::StyledPanel</enum>
-                    </property>
-                    <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="2">
+                  <item row="0" column="7">
                    <spacer name="horizontalSpacer_6">
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
@@ -1520,7 +1540,42 @@ TableView
                     </property>
                    </spacer>
                   </item>
-                  <item row="0" column="5">
+                  <item row="0" column="4">
+                   <widget class="QComboBox" name="optimizerComboBox">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>L-BFGS-B</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Nelder-Mead</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Powell</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>shgo</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>differential evolution</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="0" column="10">
                    <widget class="QPushButton" name="exportToPrefitButton">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1528,24 +1583,37 @@ TableView
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
+                    <property name="toolTip">
+                     <string>Load the fitted parameters to the pre-fit section</string>
+                    </property>
                     <property name="text">
                      <string>RESULTS → PRE-FIT</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="3" rowspan="4" colspan="3">
-                   <widget class="QLabel" name="statusTextLabel_2">
+                  <item row="1" column="1">
+                   <widget class="QLabel" name="label_8">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
                     <property name="text">
-                     <string>Status Text</string>
+                     <string>TOLERANCE</string>
                     </property>
-                    <property name="alignment">
-                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_47">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
                     </property>
-                    <property name="wordWrap">
-                     <bool>true</bool>
-                    </property>
-                    <property name="margin">
-                     <number>5</number>
+                    <property name="text">
+                     <string>OPTIMIZER</string>
                     </property>
                    </widget>
                   </item>
@@ -1681,7 +1749,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                     <property name="geometry">
                      <rect>
                       <x>0</x>
-                      <y>-270</y>
+                      <y>0</y>
                       <width>378</width>
                       <height>892</height>
                      </rect>
@@ -3542,7 +3610,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                       <x>0</x>
                       <y>0</y>
                       <width>357</width>
-                      <height>634</height>
+                      <height>636</height>
                      </rect>
                     </property>
                    </widget>
@@ -3554,7 +3622,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
               <item>
                <widget class="QFrame" name="frame_6">
                 <property name="frameShape">
-                 <enum>QFrame::StyledPanel</enum>
+                 <enum>QFrame::NoFrame</enum>
                 </property>
                 <property name="frameShadow">
                  <enum>QFrame::Raised</enum>
@@ -3567,6 +3635,9 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
+                   </property>
+                   <property name="toolTip">
+                    <string>Load the current value to the initial value</string>
                    </property>
                    <property name="text">
                     <string>RESULTS → INITIAL</string>
@@ -3682,7 +3753,7 @@ QPushButton:checked {
                <cursorShape>ArrowCursor</cursorShape>
               </property>
               <property name="toolTip">
-               <string notr="true">Pan mode</string>
+               <string notr="true">Pan mode: Drag to move the canvas</string>
               </property>
               <property name="text">
                <string/>
@@ -3711,7 +3782,7 @@ QPushButton:checked {
                <cursorShape>ArrowCursor</cursorShape>
               </property>
               <property name="toolTip">
-               <string notr="true">Zoom mode</string>
+               <string notr="true">Zoom mode: Drag to magnify a region</string>
               </property>
               <property name="text">
                <string/>
@@ -3737,7 +3808,7 @@ QPushButton:checked {
                </rect>
               </property>
               <property name="toolTip">
-               <string notr="true">Dataset snapping</string>
+               <string notr="true">Dataset snapping: align the x-coordinates for datasets</string>
               </property>
               <property name="text">
                <string/>
@@ -3770,7 +3841,7 @@ QPushButton:checked {
                <cursorShape>CrossCursor</cursorShape>
               </property>
               <property name="toolTip">
-               <string notr="true">Extract mode</string>
+               <string notr="true">Extract mode: Click to extract peaks</string>
               </property>
               <property name="text">
                <string/>
@@ -3799,7 +3870,7 @@ QPushButton:checked {
                </rect>
               </property>
               <property name="toolTip">
-               <string notr="true">Auto peak finding</string>
+               <string notr="true">Peak snapping: Locate the nearby peak along y axis</string>
               </property>
               <property name="text">
                <string/>
@@ -3815,7 +3886,7 @@ QPushButton:checked {
                <bool>true</bool>
               </property>
               <property name="autoExclusive">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
              <widget class="QPushButton" name="swapXYButton">

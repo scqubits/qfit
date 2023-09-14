@@ -980,7 +980,6 @@ class Optimization():
         )
 
         opt_kwargs = {
-            "func": self._opt_func,
             "bounds": [[0.0, 1.0]] * len(self.free_name_list),
             "callback": opt_call_back,
         }
@@ -989,6 +988,7 @@ class Optimization():
         # run the scipy optimizer
         if self.optimizer in ("L-BFGS-B", "Nelder-Mead", "Powell", "TNC", "SLSQP"):
             scipy_res = minimize(
+                self._opt_func,
                 **opt_kwargs,
                 x0=init_x_arr,
                 method=self.optimizer,
@@ -998,6 +998,7 @@ class Optimization():
             opt_options = self.opt_options.copy()
             opt_options.update({"ftol": tol})
             scipy_res = shgo(
+                self._opt_func,
                 **opt_kwargs,
                 **opt_options,
             )
@@ -1005,6 +1006,7 @@ class Optimization():
             opt_options = self.opt_options.copy()
             opt_options.update({"tol": tol})
             scipy_res = differential_evolution(
+                self._opt_func,
                 **opt_kwargs,
                 **opt_options,
             )
