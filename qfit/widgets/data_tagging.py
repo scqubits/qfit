@@ -128,16 +128,16 @@ class TagDataView(QObject):
         self.changedTagType.emit()
 
     def setDispersiveBareMode(self):
-        self.ui.tagBareGroupBox.setVisible(True)
         self.ui.tagDressedGroupBox.setVisible(False)
+        self.ui.tagBareGroupBox.setVisible(True)
         self.changedTagType.emit()
         self.ui.subsysNamesLineEdit.editingFinished.emit()
         self.ui.initialStateLineEdit.editingFinished.emit()
         self.ui.finalStateLineEdit.editingFinished.emit()
 
     def setDispersiveDressedMode(self):
-        self.ui.tagDressedGroupBox.setVisible(True)
         self.ui.tagBareGroupBox.setVisible(False)
+        self.ui.tagDressedGroupBox.setVisible(True)
         self.changedTagType.emit()
 
     def setCrossingMode(self):

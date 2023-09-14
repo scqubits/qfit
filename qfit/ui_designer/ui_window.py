@@ -2023,7 +2023,7 @@ class Ui_MainWindow(object):
         self.fitScrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 37, 16))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 357, 634))
         self.fitScrollArea.setWidget(self.scrollAreaWidgetContents_2)
 
         self.verticalLayout_8.addWidget(self.fitScrollArea)
@@ -2248,7 +2248,7 @@ class Ui_MainWindow(object):
         self.filtersPushButton.toggled.connect(self.filterQFrame.setVisible)
 
         self.bottomStackedWidget.setCurrentIndex(0)
-        self.pagesStackedWidget.setCurrentIndex(2)
+        self.pagesStackedWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
