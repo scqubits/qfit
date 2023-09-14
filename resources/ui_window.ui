@@ -854,7 +854,7 @@ QPushButton:pressed {
              </sizepolicy>
             </property>
             <property name="currentIndex">
-             <number>2</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="datapointsPage">
              <layout class="QHBoxLayout" name="horizontalLayout">
@@ -1572,7 +1572,7 @@ TableView
              </size>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <widget class="DataExtractingWidget" name="extractPointsWidget">
              <layout class="QVBoxLayout" name="verticalLayout_9">
@@ -3676,7 +3676,7 @@ QPushButton:checked {
                <cursorShape>ArrowCursor</cursorShape>
               </property>
               <property name="toolTip">
-               <string notr="true">Pan mode: move plot region by dragging</string>
+               <string notr="true">Pan mode</string>
               </property>
               <property name="text">
                <string/>
@@ -3705,7 +3705,7 @@ QPushButton:checked {
                <cursorShape>ArrowCursor</cursorShape>
               </property>
               <property name="toolTip">
-               <string notr="true">Zoom mode: select a plot region to enlarge</string>
+               <string notr="true">Zoom mode</string>
               </property>
               <property name="text">
                <string/>
@@ -3731,7 +3731,7 @@ QPushButton:checked {
                </rect>
               </property>
               <property name="toolTip">
-               <string notr="true">Toggle x-value snapping</string>
+               <string notr="true">Dataset snapping</string>
               </property>
               <property name="text">
                <string/>
@@ -3764,7 +3764,7 @@ QPushButton:checked {
                <cursorShape>CrossCursor</cursorShape>
               </property>
               <property name="toolTip">
-               <string notr="true"/>
+               <string notr="true">Extract mode</string>
               </property>
               <property name="text">
                <string/>
@@ -3793,7 +3793,7 @@ QPushButton:checked {
                </rect>
               </property>
               <property name="toolTip">
-               <string notr="true"/>
+               <string notr="true">Auto peak finding</string>
               </property>
               <property name="text">
                <string/>
@@ -3825,7 +3825,7 @@ QPushButton:checked {
                <cursorShape>CrossCursor</cursorShape>
               </property>
               <property name="toolTip">
-               <string notr="true"/>
+               <string notr="true">Transpose data</string>
               </property>
               <property name="styleSheet">
                <string notr="true">QPushButton {

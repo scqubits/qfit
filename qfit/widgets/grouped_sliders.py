@@ -18,6 +18,7 @@ from typing import Dict, List, Tuple, Union, Optional, Any
 
 SLIDER_RANGE = 100
 SPACING_BETWEEN_GROUPS = 15
+MARGIN = 12
 
 class LabeledSlider(QWidget):
     """
@@ -245,7 +246,7 @@ class GroupedWidget(QWidget):
         self.createWidgets(widget_names)
 
         # set the layout that no vertical space between the widgets (labelled sliders here)
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setContentsMargins(MARGIN, 0, MARGIN, 0)
 
         # self.gridLayout.setVerticalSpacing(SPACING_BETWEEN_SLIDERS) 
 

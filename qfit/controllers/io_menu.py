@@ -154,6 +154,9 @@ class IOCtrl:
             else:
                 break
 
+        # set the focus to the main window after opening a file
+        self.mainWindow.activateWindow()
+
         return measurementData
 
     def _registryDictFromDialog(
@@ -190,6 +193,9 @@ class IOCtrl:
                 _ = msg.exec_()
             else:
                 break
+
+        # set the focus to the main window after opening a file
+        self.mainWindow.activateWindow()
 
         return registryDict
 
@@ -321,6 +327,9 @@ class IOCtrl:
     # slots ###################################################################
     @Slot()
     def newProject(self, __value=None, from_menu: bool = True):
+        """
+        Open a dialog to select a measurement file, then create a new project
+        """
         measurementData = self._measurementDataFromDialog(window_initialized=from_menu)
 
         if measurementData is not None:
@@ -332,7 +341,7 @@ class IOCtrl:
     @Slot()
     def openFile(self, __value=None, from_menu: bool = True):
         """
-        The main code to open file
+        Open a dialog to select a project file, then open the project
         """
         registryDict = self._registryDictFromDialog(window_initialized=from_menu)
 
