@@ -2184,7 +2184,7 @@ class Ui_MainWindow(object):
         self.verticalSnapButton.setIcon(icon20)
         self.verticalSnapButton.setCheckable(True)
         self.verticalSnapButton.setChecked(True)
-        self.verticalSnapButton.setAutoExclusive(True)
+        self.verticalSnapButton.setAutoExclusive(False)
         self.swapXYButton = QPushButton(self.mplFigureButtons)
         self.swapXYButton.setObjectName(u"swapXYButton")
         self.swapXYButton.setGeometry(QRect(390, 10, 71, 41))
