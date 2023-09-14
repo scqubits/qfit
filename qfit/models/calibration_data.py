@@ -184,8 +184,6 @@ class CalibrationData(serializers.Serializable, Registrable):
     def registerAll(self) -> Dict[str, RegistryEntry]:
         def setter(initdata):
             # set calibration data
-            print("setCalibration is run")
-            print(f"{initdata}")
             self.setCalibration(
                 initdata[0],
                 initdata[1],

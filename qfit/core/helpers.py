@@ -160,6 +160,7 @@ def clearChildren(widget: QWidget):
             widget.setParent(None)
             widget.deleteLater()
 
+
 def modifyStyleSheet(widget, property_name, new_value):
     # Get the current stylesheet
     current_style = widget.styleSheet()
@@ -304,20 +305,19 @@ def _find_lorentzian_peak(data: np.ndarray, gamma_guess=5) -> int:
 
 
 def _extract_data_for_peak_finding(
-    x_list, y_list, z_data, user_selected_xy, half_index_range: int = 5
+    x_list, y_list, z_data, user_selected_xy, half_y_range: float = 0.1
 ):
     """
     extract data for peak finding
     """
-    frequency_point_count = len(y_list)
     x_val = user_selected_xy[0]
     y_val = user_selected_xy[1]
     # find the index of the selected point
     x_idx = np.argmin(np.abs(x_list - x_val))
     y_idx = np.argmin(np.abs(y_list - y_val))
     # translate to the min and max index of the y range
-    y_min_idx = np.max([y_idx - half_index_range, 0])
-    y_max_idx = np.min([y_idx + half_index_range, frequency_point_count - 1])
+    y_min_idx = np.argmin(np.abs(y_list - (y_val - half_y_range)))
+    y_max_idx = np.argmin(np.abs(y_list - (y_val + half_y_range)))
 
     # extract data for fitting
     data_for_fitting = z_data[y_min_idx : y_max_idx + 1, x_idx]
@@ -326,7 +326,7 @@ def _extract_data_for_peak_finding(
 
 
 def y_snap(
-    x_list, y_list, z_data, user_selected_xy, half_index_range=5, mode="lorentzian"
+    x_list, y_list, z_data, user_selected_xy, half_y_range=0.1, mode="lorentzian"
 ) -> Tuple[int, int]:
     """
     perform the y-snap for a selected point, such that the nearest peak in
@@ -349,7 +349,7 @@ def y_snap(
     """
     # translate range to left and right index
     y_min_idx, y_max_idx, data_for_peak_finding = _extract_data_for_peak_finding(
-        x_list, y_list, z_data, user_selected_xy, half_index_range
+        x_list, y_list, z_data, user_selected_xy, half_y_range
     )
 
     # find the peaks
