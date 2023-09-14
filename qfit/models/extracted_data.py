@@ -27,6 +27,8 @@ import qfit.io_utils.file_io_serializers as serializers
 
 from qfit.widgets.data_tagging import NO_TAG, Tag
 
+from qfit.models.registry import Registrable
+
 
 class ActiveExtractedData(QAbstractTableModel):
     """This class holds one data set, as extracted by markers on the canvas. In
@@ -205,7 +207,7 @@ class ListModelMeta(type(QAbstractListModel), type(serializers.Serializable)):
 
 
 class AllExtractedData(
-    QAbstractListModel, serializers.Serializable, metaclass=ListModelMeta
+    QAbstractListModel, serializers.Serializable, Registrable, metaclass=ListModelMeta
 ):
     def __init__(self):
         super().__init__()
@@ -386,3 +388,22 @@ class AllExtractedData(
         iodata = serializers.dict_serialize(initdata)
         iodata.typename = "QfitData"
         return iodata
+
+    attrToRegister = [
+        "dataNames",
+        "assocDataList",
+        "assocTagList",
+    ]
+
+    def registerAll(self):
+        """
+        After registering the models,
+        Register the rest attribute of the mainWindow.
+        """
+        registry = {}
+        entry_dict = {attr: self._toRegistryEntry(attr) for attr in self.attrToRegister}
+        for attr_name, entry in entry_dict.items():
+            new_name = f"allExtractedData.{attr_name}"
+            entry.name = new_name
+            registry[new_name] = entry
+        return registry

@@ -199,21 +199,20 @@ class QuantumModel:
         excluded_parameter_type: List[ParameterType]
             A list of parameter types that are excluded in the returned parameter set.
         """
-        # only one of the included_parameter_type or excluded_parameter_type can be specified
+
         if included_parameter_type is not None and excluded_parameter_type is not None:
             raise ValueError(
                 "Only one of included_parameter_type or excluded_parameter_type can be specified."
             )
-        # first, obtain all the parameters in the subsystems of the HilbertSpace object
+        
+        # obtain all the parameters in the subsystems of the HilbertSpace object
         subsystems = self.hilbertspace.subsystem_list
         for subsystem in subsystems:
-            # obtain the parameter names in the subsystem
-            # first identify the type of the subsystem
+            # obtain the available parameters in the subsystem
             subsystem_type = subsystem.__class__
-            # then get the parameters in the subsystem
             parameters = QSYS_PARAM_NAMES[subsystem_type]
-            # add the parameter names to the parameter set
-            # parameters is a dictionary with parameter types as keys and lists of parameter names as values
+
+            # loop over different types of the parameters
             for parameter_type, parameter_names in parameters.items():
                 # check if the parameter type is included or excluded
                 if (
@@ -224,6 +223,8 @@ class QuantumModel:
                     and (parameter_type in excluded_parameter_type)
                 ):
                     continue
+
+                # for each parameter type, loop over the parameters
                 for parameter_name in parameter_names:
                     range_dict = DEFAULT_PARAM_MINMAX[parameter_type]
                     value = range_dict["min"] * 4/5 + range_dict["max"] * 1/5
@@ -254,7 +255,8 @@ class QuantumModel:
                             **range_dict,
                             param_usage="fitting",
                         )
-        # then add interaction strengths to the parameter set
+
+        #  add interaction strengths to the parameter set
         if (
             (included_parameter_type is not None)
             and ("interaction_strength" not in included_parameter_type)

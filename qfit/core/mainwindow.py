@@ -78,6 +78,7 @@ from qfit.widgets.foldable_widget import FoldableWidget
 from qfit.widgets.grouped_sliders import (
     LabeledSlider,
     GroupedWidgetSet,
+    SPACING_BETWEEN_GROUPS
 )
 from qfit.widgets.foldable_table import (
     FoldableTable,
@@ -617,8 +618,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 self.activeDataset.append(*x1y1)
             self.updatePlot()
 
-        # TODO implement peak-finding algorithm and x-snapping rule here
-
     @Slot()
     def canvasMouseMonitoring(self, event):
         self.axes.figure.canvas.flush_events()
@@ -801,20 +800,65 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     # Pre-fit ##########################################################
     # ##################################################################
 
+    def _sweepAxis(self, sweepParameterSet) -> int:
+        """
+        Temporary function to get the sweep axis
+        
+
+
+        """
+        
+        
+
     def prefitDynamicalElementsBuild(self, hilbertspace: HilbertSpace):
         self.sliderParameterSet = QuantumModelParameterSet("sliderParameterSet")
         self.sweepParameterSet = QuantumModelParameterSet("sweepParameterSet")
         self.quantumModel = QuantumModel(hilbertspace)
-        self.quantumModel.addParametersToParameterSet(
-            self.sliderParameterSet,
-            parameter_usage="slider",
-            excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
-        )
+
         self.quantumModel.addParametersToParameterSet(
             self.sweepParameterSet,
             parameter_usage="sweep",
             included_parameter_type=["ng", "flux"],
         )
+
+        # check how many sweep parameters are found and create sliders
+        # for the remaining parameters
+        param_types = set(self.sweepParameterSet.exportAttrDict("param_type").values())
+        if len(self.sweepParameterSet) == 0:
+            print(
+                "No sweep parameter (ng / flux) is found in the HilbertSpace "
+                "object. Please check your quantum model."    
+            )
+            self.close()
+        elif len(self.sweepParameterSet) == 1:
+            # only one sweep parameter is found, so we can create sliders
+            # for the remaining parameters
+            self.quantumModel.addParametersToParameterSet(
+                self.sliderParameterSet,
+                parameter_usage="slider",
+                excluded_parameter_type=(
+                    ["cutoff", "truncated_dim", "l_osc"] 
+                    + list(param_types)[0]      # exclude the sweep parameter
+                ),
+            )
+        elif len(self.sweepParameterSet) == 2 and param_types == set(["flux", "ng"]):
+            # a flux and ng are detected in the HilbertSpace object
+            # right now, we assume that the flux is always swept in this case
+            self.quantumModel.addParametersToParameterSet(
+                self.sliderParameterSet,
+                parameter_usage="slider",
+                excluded_parameter_type=(
+                    ["flux", "cutoff", "truncated_dim", "l_osc"] 
+                ),
+            )
+        else:
+            print(
+                "Unfortunately, the current version of qfit does not support "
+                "multiple sweep parameters (flux / ng). This feature will be "
+                "available in the next release."
+            )
+            self.close()
+
         self.prefitSlidersInserts()
         self.prefitMinMaxInserts()
         self.prefitSlidersConnects()
@@ -876,6 +920,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             )
 
         prefitScrollLayout.addWidget(self.sliderSet)
+
+        # add a spacing between the sliders and the min max table
+        prefitScrollLayout.addSpacing(SPACING_BETWEEN_GROUPS)
 
     def prefitMinMaxInserts(self):
         self.minMaxTable = FoldableTable(
@@ -1292,6 +1339,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # special registry
         self.registry.register(self.quantumModel.hilbertspace)
         self.registry.register(self.measurementData)
+        self.registry.register(self.allDatasets)
 
         # parameters
         self.registry.register(self.sliderParameterSet)
@@ -1330,12 +1378,16 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         closing the application. Will be triggered when the user clicks the "X"
         or call the close() method.
         """
-        status = self.ioMenuCtrl.closeApp()
+        try:
+            status = self.ioMenuCtrl.closeApp()
 
-        if status:
+            if status:
+                event.accept()
+            else:
+                event.ignore()
+        except AttributeError:
+            # the GUI is partially initialized and don't have the ioMenuCtrl
             event.accept()
-        else:
-            event.ignore()
 
     def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)

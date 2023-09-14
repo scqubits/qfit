@@ -593,6 +593,9 @@ class QuantumModelParameterSet:
     def __getitem__(self, key):
         return self.parameters[key]
 
+    def __len__(self):
+        return sum([len(para_dict) for para_dict in self.parameters.values()])
+
     @staticmethod
     def parentSystemNames(
         parent: ParentSystem,
@@ -612,7 +615,7 @@ class QuantumModelParameterSet:
 
     @staticmethod
     def parentSystemIdstrByName(name: str) -> str:
-        return name.split(" ")[0]
+        return ''.join(name.split(" ")[:-1])
 
     def _updateNameMap(self, parent: ParentSystem, with_type: bool = True):
         name = self.parentSystemNames(parent, with_type=with_type)
@@ -920,12 +923,19 @@ class QuantumModelParameterSet:
         """
         Register all the parameters in the parameter set
         """
+        # start from an empty registry
         registry = {}
         for parent_system, para_dict in self.parameters.items():
             for para_name, para in para_dict.items():
+                # loop over all parameters in parameter sets and create a registry entry
+                # notice that internally, the method _toRegistryEntry is called. However,
+                # the entry name is a string just like "EC", "EJ", "EL" etc. and very likely
+                # repeated in different parameter sets. Therefore, we must update names for
+                # each parameter.
                 entry_dict = para.registerAll()
 
-                # update the name of the parameter
+                # update the name of the parameter entry and the registry key to make it unique.
+                # notice that the entry_dict is not returned directly.
                 for attr_name, entry in entry_dict.items():
                     new_name = (
                         f"{self.name}"
