@@ -381,6 +381,12 @@ class AllExtractedData(
         ]
         return allData
 
+    def distinctSortedXValues(self):
+        all_x_list = np.array([])
+        for dataset in self.assocDataList:
+            all_x_list = np.concatenate((all_x_list, dataset[0]))
+        return np.sort(np.unique(all_x_list))
+
     def serialize(self):
         """
         Convert the content of the current class instance into IOData format.

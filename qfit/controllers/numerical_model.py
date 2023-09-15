@@ -323,7 +323,7 @@ class QuantumModel:
         # obtain the x-axis coordinate of the extracted data; since the x-coordinates of the
         # sample points are fixed by the first set of the data, we extract the x-coordinates
         # from the first set of the data
-        x_coordinates = extracted_data.allDataSorted(applyCalibration=False)[0][:, 0]
+        x_coordinates = extracted_data.distinctSortedXValues()
         return x_coordinates
 
     def _generateXcoordinateListForPrefit(
@@ -338,9 +338,7 @@ class QuantumModel:
         # obtain the x-axis coordinate of the extracted data; since the x-coordinates of the
         # sample points are fixed by the first set of the data, we extract the x-coordinates
         # from the first set of the data
-        x_coordinates_from_data = extracted_data.allDataSorted(applyCalibration=False)[
-            0
-        ][:, 0]
+        x_coordinates_from_data = extracted_data.distinctSortedXValues()
         # generate a list of x coordinates for the prefit
         try:
             points_add = np.round(float(self.pointsAddCallback())).astype(int)

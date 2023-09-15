@@ -180,18 +180,12 @@ class SpecialCursor(Cursor):
         self._update()
 
     def closest_line(self, xdat):
-        all_x_list = self.distinctXValues()
+        all_x_list = self.callback.distinctSortedXValues()
         allxdiff = {np.abs(xdat - i): i for i in all_x_list}
         if allxdiff:
             return allxdiff[min(allxdiff.keys())]
         else:
             return xdat
-
-    def distinctXValues(self):
-        all_x_list = np.array([])
-        for dataset in self.callback.assocDataList:
-            all_x_list = np.concatenate((all_x_list, dataset[0]))
-        return np.unique(all_x_list)
 
     def _update(self):
         if self.useblit:
