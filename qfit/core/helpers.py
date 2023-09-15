@@ -315,9 +315,15 @@ def _extract_data_for_peak_finding(
     # find the index of the selected point
     x_idx = np.argmin(np.abs(x_list - x_val))
     y_idx = np.argmin(np.abs(y_list - y_val))
-    # translate to the min and max index of the y range
-    y_min_idx = np.argmin(np.abs(y_list - (y_val - half_y_range)))
-    y_max_idx = np.argmin(np.abs(y_list - (y_val + half_y_range)))
+    # translate to the min and max index of the y range; minimal number of points is
+    # 2 for each direction
+    y_min_idx = max(
+        min(np.argmin(np.abs(y_list - (y_val - half_y_range))), y_idx - 2), 0
+    )
+    y_max_idx = min(
+        max(np.argmin(np.abs(y_list - (y_val + half_y_range))), y_idx + 2),
+        len(y_list) - 1,
+    )
 
     # extract data for fitting
     data_for_fitting = z_data[y_min_idx : y_max_idx + 1, x_idx]
