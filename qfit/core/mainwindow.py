@@ -687,18 +687,17 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 c=scatter_color,
                 marker=r"$\odot$",
                 s=130,
-                alpha=0.5,
+                alpha=0.3,
             )
 
         plotted_data = []
         # line_data = self.allDatasets.assocDataList[0]
         x_list = self.distinctXValues()
         for x_value in x_list:
-            self.axes.axline(
-                (x_value, 1),
-                (x_value, 2),
+            self.axes.axvline(
+                x_value,
                 c=line_color,
-                alpha=0.7,
+                alpha=0.3,
             )
         # for count, i in enumerate(line_data[0]):
         #     if i not in plotted_data:
@@ -718,12 +717,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.axes.figure.canvas.draw()
         self.ui.mplFigureCanvas.matching_mode = self.matching_mode
         self.ui.mplFigureCanvas.set_callback(self.allDatasets)
-
-    # def toggleMenu(self):
-    #     if self.menuWidget.menuFrame.isHidden():
-    #         self.menuWidget.menuFrame.show()
-    #     else:
-    #         self.menuWidget.menuFrame.hide()
 
     @Slot()
     def calibrate(self, calibrationLabel: str):
