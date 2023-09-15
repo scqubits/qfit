@@ -692,7 +692,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         plotted_data = []
         # line_data = self.allDatasets.assocDataList[0]
-        x_list = self.distinctXValues()
+        x_list = self.allDatasets.distinctSortedXValues()
         for x_value in x_list:
             self.axes.axvline(
                 x_value,
@@ -812,15 +812,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         return False
 
     def closest_line(self, xdat):
-        all_x_list = self.distinctXValues()
+        all_x_list = self.allDatasets.distinctSortedXValues()
         allxdiff = {np.abs(xdat - i): i for i in all_x_list}
         return allxdiff[min(allxdiff.keys())]
-
-    def distinctXValues(self):
-        all_x_list = np.array([])
-        for dataset in self.allDatasets.assocDataList:
-            all_x_list = np.concatenate((all_x_list, dataset[0]))
-        return np.unique(all_x_list)
 
     # Pre-fit ##########################################################
     # ##################################################################
@@ -1206,7 +1200,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         if not self.optInitialized:
             return
-        
+
         self.ui.fitButton.setEnabled(False)
         self.sliderSet.setEnabled(False)
 
@@ -1230,7 +1224,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # (for the optimization failing case)
         self.onParameterChange(self.fitParameterSet)
         self.updatePlot()
-        
 
     def fittingCallbackConnects(self):
         """
