@@ -848,15 +848,21 @@ QPushButton:pressed {
           <item row="1" column="1" colspan="3">
            <widget class="QStackedWidget" name="bottomStackedWidget">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="datapointsPage">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <layout class="QHBoxLayout" name="horizontalLayout">
               <item>
                <widget class="QFrame" name="frame">
@@ -1128,6 +1134,12 @@ TableView
              </layout>
             </widget>
             <widget class="QWidget" name="prefitPage">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <layout class="QHBoxLayout" name="horizontalLayout_9">
               <item>
                <widget class="QFrame" name="frame_2">
@@ -1390,6 +1402,12 @@ TableView
              </layout>
             </widget>
             <widget class="QWidget" name="fitPage">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <layout class="QHBoxLayout" name="horizontalLayout_10">
               <item>
                <widget class="QFrame" name="frame_3">
@@ -1628,7 +1646,7 @@ TableView
           <item row="0" column="1">
            <widget class="QStackedWidget" name="pagesStackedWidget">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -2860,10 +2878,13 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                    <property name="orientation">
                     <enum>Qt::Vertical</enum>
                    </property>
+                   <property name="sizeType">
+                    <enum>QSizePolicy::Fixed</enum>
+                   </property>
                    <property name="sizeHint" stdset="0">
                     <size>
                      <width>20</width>
-                     <height>40</height>
+                     <height>15</height>
                     </size>
                    </property>
                   </spacer>
@@ -3610,7 +3631,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                       <x>0</x>
                       <y>0</y>
                       <width>357</width>
-                      <height>636</height>
+                      <height>648</height>
                      </rect>
                     </property>
                    </widget>
