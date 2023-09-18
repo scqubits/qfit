@@ -191,6 +191,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # prefit: controller, two models and their connection to view (sliders)
         self.hilbertspace = hilbertspace
+        # temporary fix for dispersive bare label
+        # TODO refactor this
+        self.fixDispersiveBareLabel()
         self.prefitDynamicalElementsBuild(self.hilbertspace)
         self.prefitStaticElementsBuild()
 
@@ -224,6 +227,20 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.uiDataOptionsConnects()
         self.uiDataControlConnects()
         self.uiXYZComboBoxesConnects()
+
+    def fixDispersiveBareLabel(self):
+        # temporary hack for fixing the subsystem list of tag data
+        # TODO: refactor this
+        subsys_name_list = list(self.hilbertspace._subsys_by_id_str.keys())
+        # subsys_name_list = [
+        #     QuantumModelParameterSet.parentSystemNames(subsys)
+        #     for subsys in self.quantumModel.hilbertspace.subsystem_list[::-1]
+        # ]
+        self.ui.subsysNamesLineEdit.setFromSubsysNameList(subsys_name_list)
+        self.ui.subsysNamesLineEdit.setReadOnly(True)
+        self.ui.subsysNamesLineEdit.setStyleSheet(
+            "background: transparent; border: none;"
+        )
 
     def recoverFromExtractedData(self):
         if self.extractedData is not None:
@@ -1390,6 +1407,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.dataSetupConnects()
         self.uiDataLoadConnects()
         self.setupUIXYZComboBoxes()
+        self.fixDispersiveBareLabel()
 
         self.prefitDynamicalElementsBuild(hilbertspace)
         self.fitDynamicalElementsBuild()
