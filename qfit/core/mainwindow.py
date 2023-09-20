@@ -385,19 +385,19 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             lambda: self.ui.pagesStackedWidget.setCurrentIndex(1)
         )
         self.ui.modeTagButton.clicked.connect(
-            lambda: self.ui.bottomStackedWidget.setCurrentIndex(0)
+            lambda: self.ui.bottomStackedWidget.setCurrentIndex(1)
         )
         self.ui.modePrefitButton.clicked.connect(
             lambda: self.ui.pagesStackedWidget.setCurrentIndex(2)
         )
         self.ui.modePrefitButton.clicked.connect(
-            lambda: self.ui.bottomStackedWidget.setCurrentIndex(1)
+            lambda: self.ui.bottomStackedWidget.setCurrentIndex(2)
         )
         self.ui.modeFitButton.clicked.connect(
             lambda: self.ui.pagesStackedWidget.setCurrentIndex(3)
         )
         self.ui.modeFitButton.clicked.connect(
-            lambda: self.ui.bottomStackedWidget.setCurrentIndex(2)
+            lambda: self.ui.bottomStackedWidget.setCurrentIndex(3)
         )
 
     def uiDataConnects(self):
