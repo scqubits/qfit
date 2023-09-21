@@ -157,7 +157,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # fix visibility of collapsible panels
         self.ui.xyzDataGridFrame.setVisible(False)
-        self.ui.calibrationQFrame.setVisible(False)
         self.ui.filterQFrame.setVisible(False)
 
         self.ui_menu = MenuWidget(parent=self)
