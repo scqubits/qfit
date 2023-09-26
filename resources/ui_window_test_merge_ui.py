@@ -609,7 +609,30 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.modePrefitButton, 4, 0, 1, 2)
 
-        self.frame = QFrame(self.menu_frame)
+
+        self.gridLayout.addWidget(self.menu_frame, 0, 0, 3, 1)
+
+        self.bottomStackedWidget = QStackedWidget(self.windowBodyFrame)
+        self.bottomStackedWidget.setObjectName(u"bottomStackedWidget")
+        sizePolicy4 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.bottomStackedWidget.sizePolicy().hasHeightForWidth())
+        self.bottomStackedWidget.setSizePolicy(sizePolicy4)
+        self.bottomStackedWidget.setMinimumSize(QSize(0, 200))
+        self.bottomStackedWidget.setStyleSheet(u"")
+        self.bottomStackedWidget.setFrameShape(QFrame.NoFrame)
+        self.bottomStackedWidget.setFrameShadow(QFrame.Raised)
+        self.calibrationPage = QWidget()
+        self.calibrationPage.setObjectName(u"calibrationPage")
+        sizePolicy5 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.calibrationPage.sizePolicy().hasHeightForWidth())
+        self.calibrationPage.setSizePolicy(sizePolicy5)
+        self.horizontalLayout_4 = QHBoxLayout(self.calibrationPage)
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.frame = QFrame(self.calibrationPage)
         self.frame.setObjectName(u"frame")
         self.frame.setFrameShape(QFrame.StyledPanel)
         self.frame.setFrameShadow(QFrame.Raised)
@@ -621,11 +644,11 @@ class Ui_MainWindow(object):
 
         self.calibrateYGridFrame = QFrame(self.frame)
         self.calibrateYGridFrame.setObjectName(u"calibrateYGridFrame")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.calibrateYGridFrame.sizePolicy().hasHeightForWidth())
-        self.calibrateYGridFrame.setSizePolicy(sizePolicy4)
+        sizePolicy6 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.calibrateYGridFrame.sizePolicy().hasHeightForWidth())
+        self.calibrateYGridFrame.setSizePolicy(sizePolicy6)
         self.calibrateYGridFrame.setMinimumSize(QSize(330, 120))
         self.calibrateYGridFrame.setMaximumSize(QSize(320, 16777215))
 #if QT_CONFIG(tooltip)
@@ -643,9 +666,6 @@ class Ui_MainWindow(object):
         self.gridLayout_11.setContentsMargins(-1, 15, -1, -1)
         self.mapY2LineEdit = CalibrationLineEdit(self.calibrateYGridFrame)
         self.mapY2LineEdit.setObjectName(u"mapY2LineEdit")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        sizePolicy5.setHorizontalStretch(0)
-        sizePolicy5.setVerticalStretch(0)
         sizePolicy5.setHeightForWidth(self.mapY2LineEdit.sizePolicy().hasHeightForWidth())
         self.mapY2LineEdit.setSizePolicy(sizePolicy5)
         self.mapY2LineEdit.setMinimumSize(QSize(80, 30))
@@ -660,11 +680,11 @@ class Ui_MainWindow(object):
 
         self.label_19 = QLabel(self.calibrateYGridFrame)
         self.label_19.setObjectName(u"label_19")
-        sizePolicy6 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
-        sizePolicy6.setHorizontalStretch(0)
-        sizePolicy6.setVerticalStretch(0)
-        sizePolicy6.setHeightForWidth(self.label_19.sizePolicy().hasHeightForWidth())
-        self.label_19.setSizePolicy(sizePolicy6)
+        sizePolicy7 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        sizePolicy7.setHorizontalStretch(0)
+        sizePolicy7.setVerticalStretch(0)
+        sizePolicy7.setHeightForWidth(self.label_19.sizePolicy().hasHeightForWidth())
+        self.label_19.setSizePolicy(sizePolicy7)
         self.label_19.setText(u"<html><head/><body><p align=\"right\">Y<span style=\" vertical-align:sub;\">1</span></p></body></html>")
 
         self.gridLayout_11.addWidget(self.label_19, 0, 1, 1, 1)
@@ -725,16 +745,16 @@ class Ui_MainWindow(object):
 
         self.label_22 = QLabel(self.calibrateYGridFrame)
         self.label_22.setObjectName(u"label_22")
-        sizePolicy6.setHeightForWidth(self.label_22.sizePolicy().hasHeightForWidth())
-        self.label_22.setSizePolicy(sizePolicy6)
+        sizePolicy7.setHeightForWidth(self.label_22.sizePolicy().hasHeightForWidth())
+        self.label_22.setSizePolicy(sizePolicy7)
         self.label_22.setText(u"<html><head/><body><p align=\"right\">\u2192 Y<span style=\" vertical-align:sub;\">2</span>'</p></body></html>")
 
         self.gridLayout_11.addWidget(self.label_22, 1, 3, 1, 1)
 
         self.label_20 = QLabel(self.calibrateYGridFrame)
         self.label_20.setObjectName(u"label_20")
-        sizePolicy6.setHeightForWidth(self.label_20.sizePolicy().hasHeightForWidth())
-        self.label_20.setSizePolicy(sizePolicy6)
+        sizePolicy7.setHeightForWidth(self.label_20.sizePolicy().hasHeightForWidth())
+        self.label_20.setSizePolicy(sizePolicy7)
         self.label_20.setText(u"<html><head/><body><p align=\"right\">Y<span style=\" vertical-align:sub;\">2</span></p></body></html>")
 
         self.gridLayout_11.addWidget(self.label_20, 1, 1, 1, 1)
@@ -751,8 +771,8 @@ class Ui_MainWindow(object):
 
         self.label_21 = QLabel(self.calibrateYGridFrame)
         self.label_21.setObjectName(u"label_21")
-        sizePolicy6.setHeightForWidth(self.label_21.sizePolicy().hasHeightForWidth())
-        self.label_21.setSizePolicy(sizePolicy6)
+        sizePolicy7.setHeightForWidth(self.label_21.sizePolicy().hasHeightForWidth())
+        self.label_21.setSizePolicy(sizePolicy7)
         self.label_21.setText(u"<html><head/><body><p align=\"right\">\u2192 Y<span style=\" vertical-align:sub;\">1</span>'</p></body></html>")
 
         self.gridLayout_11.addWidget(self.label_21, 0, 3, 1, 1)
@@ -772,8 +792,8 @@ class Ui_MainWindow(object):
 
         self.calibrateXGridFrame = QFrame(self.frame)
         self.calibrateXGridFrame.setObjectName(u"calibrateXGridFrame")
-        sizePolicy4.setHeightForWidth(self.calibrateXGridFrame.sizePolicy().hasHeightForWidth())
-        self.calibrateXGridFrame.setSizePolicy(sizePolicy4)
+        sizePolicy6.setHeightForWidth(self.calibrateXGridFrame.sizePolicy().hasHeightForWidth())
+        self.calibrateXGridFrame.setSizePolicy(sizePolicy6)
         self.calibrateXGridFrame.setMinimumSize(QSize(330, 90))
         self.calibrateXGridFrame.setMaximumSize(QSize(320, 16777215))
         self.calibrateXGridFrame.setStyleSheet(u"QPushButton {\n"
@@ -788,8 +808,8 @@ class Ui_MainWindow(object):
         self.gridLayout_10.setContentsMargins(-1, 9, -1, -1)
         self.label_17 = QLabel(self.calibrateXGridFrame)
         self.label_17.setObjectName(u"label_17")
-        sizePolicy6.setHeightForWidth(self.label_17.sizePolicy().hasHeightForWidth())
-        self.label_17.setSizePolicy(sizePolicy6)
+        sizePolicy7.setHeightForWidth(self.label_17.sizePolicy().hasHeightForWidth())
+        self.label_17.setSizePolicy(sizePolicy7)
         self.label_17.setText(u"<html><head/><body><p align=\"right\">\u2192 X<span style=\" vertical-align:sub;\">1</span>'</p></body></html>")
 
         self.gridLayout_10.addWidget(self.label_17, 1, 3, 1, 1)
@@ -810,8 +830,8 @@ class Ui_MainWindow(object):
 
         self.label_18 = QLabel(self.calibrateXGridFrame)
         self.label_18.setObjectName(u"label_18")
-        sizePolicy6.setHeightForWidth(self.label_18.sizePolicy().hasHeightForWidth())
-        self.label_18.setSizePolicy(sizePolicy6)
+        sizePolicy7.setHeightForWidth(self.label_18.sizePolicy().hasHeightForWidth())
+        self.label_18.setSizePolicy(sizePolicy7)
         self.label_18.setText(u"<html><head/><body><p align=\"right\">\u2192 X<span style=\" vertical-align:sub;\">2</span>'</p></body></html>")
 
         self.gridLayout_10.addWidget(self.label_18, 2, 3, 1, 1)
@@ -866,8 +886,8 @@ class Ui_MainWindow(object):
 
         self.label_15 = QLabel(self.calibrateXGridFrame)
         self.label_15.setObjectName(u"label_15")
-        sizePolicy6.setHeightForWidth(self.label_15.sizePolicy().hasHeightForWidth())
-        self.label_15.setSizePolicy(sizePolicy6)
+        sizePolicy7.setHeightForWidth(self.label_15.sizePolicy().hasHeightForWidth())
+        self.label_15.setSizePolicy(sizePolicy7)
         self.label_15.setText(u"<html><head/><body><p align=\"right\">X<span style=\" vertical-align:sub;\">1</span></p></body></html>")
 
         self.gridLayout_10.addWidget(self.label_15, 1, 1, 1, 1)
@@ -888,8 +908,8 @@ class Ui_MainWindow(object):
 
         self.label_16 = QLabel(self.calibrateXGridFrame)
         self.label_16.setObjectName(u"label_16")
-        sizePolicy6.setHeightForWidth(self.label_16.sizePolicy().hasHeightForWidth())
-        self.label_16.setSizePolicy(sizePolicy6)
+        sizePolicy7.setHeightForWidth(self.label_16.sizePolicy().hasHeightForWidth())
+        self.label_16.setSizePolicy(sizePolicy7)
         self.label_16.setText(u"<html><head/><body><p align=\"right\">X<span style=\" vertical-align:sub;\">2</span></p></body></html>")
 
         self.gridLayout_10.addWidget(self.label_16, 2, 1, 1, 1)
@@ -913,28 +933,8 @@ class Ui_MainWindow(object):
         self.gridLayout_14.addWidget(self.label_27, 0, 0, 1, 1)
 
 
-        self.gridLayout_2.addWidget(self.frame, 5, 1, 1, 1)
+        self.horizontalLayout_4.addWidget(self.frame)
 
-
-        self.gridLayout.addWidget(self.menu_frame, 0, 0, 3, 1)
-
-        self.bottomStackedWidget = QStackedWidget(self.windowBodyFrame)
-        self.bottomStackedWidget.setObjectName(u"bottomStackedWidget")
-        sizePolicy7 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
-        sizePolicy7.setHorizontalStretch(0)
-        sizePolicy7.setVerticalStretch(0)
-        sizePolicy7.setHeightForWidth(self.bottomStackedWidget.sizePolicy().hasHeightForWidth())
-        self.bottomStackedWidget.setSizePolicy(sizePolicy7)
-        self.bottomStackedWidget.setMinimumSize(QSize(0, 200))
-        self.bottomStackedWidget.setStyleSheet(u"")
-        self.bottomStackedWidget.setFrameShape(QFrame.NoFrame)
-        self.bottomStackedWidget.setFrameShadow(QFrame.Raised)
-        self.calibrationPage = QWidget()
-        self.calibrationPage.setObjectName(u"calibrationPage")
-        sizePolicy5.setHeightForWidth(self.calibrationPage.sizePolicy().hasHeightForWidth())
-        self.calibrationPage.setSizePolicy(sizePolicy5)
-        self.horizontalLayout_4 = QHBoxLayout(self.calibrationPage)
-        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
         self.bottomStackedWidget.addWidget(self.calibrationPage)
         self.datapointsPage = QWidget()
         self.datapointsPage.setObjectName(u"datapointsPage")
@@ -950,8 +950,8 @@ class Ui_MainWindow(object):
         self.gridLayout_7.setObjectName(u"gridLayout_7")
         self.allDatasetsButtonsFrame = QFrame(self.frame_10)
         self.allDatasetsButtonsFrame.setObjectName(u"allDatasetsButtonsFrame")
-        sizePolicy4.setHeightForWidth(self.allDatasetsButtonsFrame.sizePolicy().hasHeightForWidth())
-        self.allDatasetsButtonsFrame.setSizePolicy(sizePolicy4)
+        sizePolicy6.setHeightForWidth(self.allDatasetsButtonsFrame.sizePolicy().hasHeightForWidth())
+        self.allDatasetsButtonsFrame.setSizePolicy(sizePolicy6)
         self.allDatasetsButtonsFrame.setStyleSheet(u"QPushButton {\n"
 "	border: 0px solid rgb(52, 59, 72);\n"
 "	border-radius: 15px;	\n"
@@ -1213,8 +1213,8 @@ class Ui_MainWindow(object):
 
         self.plotButton = QPushButton(self.frame_4)
         self.plotButton.setObjectName(u"plotButton")
-        sizePolicy4.setHeightForWidth(self.plotButton.sizePolicy().hasHeightForWidth())
-        self.plotButton.setSizePolicy(sizePolicy4)
+        sizePolicy6.setHeightForWidth(self.plotButton.sizePolicy().hasHeightForWidth())
+        self.plotButton.setSizePolicy(sizePolicy6)
         self.plotButton.setMinimumSize(QSize(100, 30))
 #if QT_CONFIG(tooltip)
         self.plotButton.setToolTip(u"")
@@ -1357,15 +1357,15 @@ class Ui_MainWindow(object):
 
         self.fitButton = QPushButton(self.frame_5)
         self.fitButton.setObjectName(u"fitButton")
-        sizePolicy4.setHeightForWidth(self.fitButton.sizePolicy().hasHeightForWidth())
-        self.fitButton.setSizePolicy(sizePolicy4)
+        sizePolicy6.setHeightForWidth(self.fitButton.sizePolicy().hasHeightForWidth())
+        self.fitButton.setSizePolicy(sizePolicy6)
 
         self.gridLayout_6.addWidget(self.fitButton, 1, 6, 1, 1)
 
         self.exportToPrefitButton = QPushButton(self.frame_5)
         self.exportToPrefitButton.setObjectName(u"exportToPrefitButton")
-        sizePolicy4.setHeightForWidth(self.exportToPrefitButton.sizePolicy().hasHeightForWidth())
-        self.exportToPrefitButton.setSizePolicy(sizePolicy4)
+        sizePolicy6.setHeightForWidth(self.exportToPrefitButton.sizePolicy().hasHeightForWidth())
+        self.exportToPrefitButton.setSizePolicy(sizePolicy6)
 
         self.gridLayout_6.addWidget(self.exportToPrefitButton, 1, 10, 1, 1)
 
@@ -1559,8 +1559,8 @@ class Ui_MainWindow(object):
 
         self.bgndSubtractQFrame = QFrame(self.scrollAreaWidgetContents_4)
         self.bgndSubtractQFrame.setObjectName(u"bgndSubtractQFrame")
-        sizePolicy4.setHeightForWidth(self.bgndSubtractQFrame.sizePolicy().hasHeightForWidth())
-        self.bgndSubtractQFrame.setSizePolicy(sizePolicy4)
+        sizePolicy6.setHeightForWidth(self.bgndSubtractQFrame.sizePolicy().hasHeightForWidth())
+        self.bgndSubtractQFrame.setSizePolicy(sizePolicy6)
         self.bgndSubtractQFrame.setMinimumSize(QSize(330, 0))
         self.bgndSubtractQFrame.setLayoutDirection(Qt.LeftToRight)
         self.gridLayout_8 = QGridLayout(self.bgndSubtractQFrame)
@@ -1570,8 +1570,8 @@ class Ui_MainWindow(object):
         self.gridLayout_8.setContentsMargins(-1, 4, -1, -1)
         self.bgndSubtractYCheckBox = QCheckBox(self.bgndSubtractQFrame)
         self.bgndSubtractYCheckBox.setObjectName(u"bgndSubtractYCheckBox")
-        sizePolicy4.setHeightForWidth(self.bgndSubtractYCheckBox.sizePolicy().hasHeightForWidth())
-        self.bgndSubtractYCheckBox.setSizePolicy(sizePolicy4)
+        sizePolicy6.setHeightForWidth(self.bgndSubtractYCheckBox.sizePolicy().hasHeightForWidth())
+        self.bgndSubtractYCheckBox.setSizePolicy(sizePolicy6)
 #if QT_CONFIG(tooltip)
         self.bgndSubtractYCheckBox.setToolTip(u"Background subtraction along Y")
 #endif // QT_CONFIG(tooltip)
@@ -1582,8 +1582,8 @@ class Ui_MainWindow(object):
 
         self.bgndSubtractXCheckBox = QCheckBox(self.bgndSubtractQFrame)
         self.bgndSubtractXCheckBox.setObjectName(u"bgndSubtractXCheckBox")
-        sizePolicy4.setHeightForWidth(self.bgndSubtractXCheckBox.sizePolicy().hasHeightForWidth())
-        self.bgndSubtractXCheckBox.setSizePolicy(sizePolicy4)
+        sizePolicy6.setHeightForWidth(self.bgndSubtractXCheckBox.sizePolicy().hasHeightForWidth())
+        self.bgndSubtractXCheckBox.setSizePolicy(sizePolicy6)
         self.bgndSubtractXCheckBox.setFont(font1)
 #if QT_CONFIG(tooltip)
         self.bgndSubtractXCheckBox.setToolTip(u"Background subtraction along X")
@@ -1658,8 +1658,8 @@ class Ui_MainWindow(object):
         self.xyzDataGridFrame = QFrame(self.scrollAreaWidgetContents_4)
         self.xyzDataGridFrame.setObjectName(u"xyzDataGridFrame")
         self.xyzDataGridFrame.setEnabled(True)
-        sizePolicy4.setHeightForWidth(self.xyzDataGridFrame.sizePolicy().hasHeightForWidth())
-        self.xyzDataGridFrame.setSizePolicy(sizePolicy4)
+        sizePolicy6.setHeightForWidth(self.xyzDataGridFrame.sizePolicy().hasHeightForWidth())
+        self.xyzDataGridFrame.setSizePolicy(sizePolicy6)
         self.xyzDataGridFrame.setMinimumSize(QSize(330, 0))
         self.gridLayout_4 = QGridLayout(self.xyzDataGridFrame)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
@@ -2149,8 +2149,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
         self.pushButton_2 = QPushButton(self.frame_6)
         self.pushButton_2.setObjectName(u"pushButton_2")
-        sizePolicy4.setHeightForWidth(self.pushButton_2.sizePolicy().hasHeightForWidth())
-        self.pushButton_2.setSizePolicy(sizePolicy4)
+        sizePolicy6.setHeightForWidth(self.pushButton_2.sizePolicy().hasHeightForWidth())
+        self.pushButton_2.setSizePolicy(sizePolicy6)
 
         self.horizontalLayout_8.addWidget(self.pushButton_2)
 
