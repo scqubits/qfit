@@ -1446,7 +1446,7 @@ class Ui_MainWindow(object):
         self.scrollArea.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.scrollAreaWidgetContents_4 = QWidget()
         self.scrollAreaWidgetContents_4.setObjectName(u"scrollAreaWidgetContents_4")
-        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 364, 621))
+        self.scrollAreaWidgetContents_4.setGeometry(QRect(0, 0, 364, 619))
         sizePolicy8.setHeightForWidth(self.scrollAreaWidgetContents_4.sizePolicy().hasHeightForWidth())
         self.scrollAreaWidgetContents_4.setSizePolicy(sizePolicy8)
         self.verticalLayout_5 = QVBoxLayout(self.scrollAreaWidgetContents_4)
@@ -1542,12 +1542,12 @@ class Ui_MainWindow(object):
 
         self.gridLayout_9.addWidget(self.label_2, 2, 1, 1, 1)
 
-        self.verticalSpacer_2 = QSpacerItem(20, 15, QSizePolicy.Minimum, QSizePolicy.Fixed)
-
-        self.gridLayout_9.addItem(self.verticalSpacer_2, 5, 0, 1, 1)
-
 
         self.verticalLayout_5.addWidget(self.colorGridGroupBox)
+
+        self.verticalSpacer_2 = QSpacerItem(20, 15, QSizePolicy.Minimum, QSizePolicy.Fixed)
+
+        self.verticalLayout_5.addItem(self.verticalSpacer_2)
 
         self.bgndSubtractPushButton = QPushButton(self.scrollAreaWidgetContents_4)
         self.bgndSubtractPushButton.setObjectName(u"bgndSubtractPushButton")
