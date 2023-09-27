@@ -219,7 +219,7 @@ class AllExtractedData(
 ):
     def __init__(self):
         super().__init__()
-        self.dataNames = ["dataset1"]
+        self.dataNames = ["Transition 1"]
         self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
         self.assocTagList = [Tag()]
         self._calibrationFunc = None
@@ -252,6 +252,9 @@ class AllExtractedData(
             return icon1
 
     def setData(self, index: QModelIndex, value, role=None):
+        """
+        Set the data at index `index` to `value`.
+        """
         if not (index.isValid() and role == Qt.EditRole):
             return False
         try:
@@ -273,7 +276,15 @@ class AllExtractedData(
         self.dataNames.insert(row, "")
         self.assocDataList.insert(row, np.empty(shape=(2, 0), dtype=np.float_))
         self.assocTagList.insert(row, Tag())
+
+        # update the current row before emitting the rowsRemoved signal 
+        # (which will be emitted by endRemoveRows)
+        self._currentRow = row
+
         self.endInsertRows()
+
+        self.layoutChanged.emit()
+
         return True
 
     def removeRow(self, row, parent=QModelIndex(), *args, **kwargs):
@@ -287,9 +298,16 @@ class AllExtractedData(
         self.dataNames.pop(row)
         self.assocDataList.pop(row)
         self.assocTagList.pop(row)
+
+        # update the current row before emitting the rowsRemoved signal 
+        # (which will be emitted by endRemoveRows)
+        if row == self.rowCount():  # now row count is 1 less than before
+            self._currentRow = row - 1
+        else:
+            self._currentRow = row
+
         self.endRemoveRows()
-        if self.currentRow == self.rowCount():
-            self._currentRow -= 1
+
         self.layoutChanged.emit()
         return True
 
@@ -305,13 +323,13 @@ class AllExtractedData(
     @Slot()
     def newRow(self, str_value=None):
         rowCount = self.rowCount()
-        str_value = str_value or "dataset" + str(rowCount + 1)
+        str_value = str_value or "Transition " + str(rowCount + 1)
         counter = 1
         while str_value in self.dataNames:
-            str_value = "dataset" + str(rowCount + 1 + counter)
+            str_value = "Transition " + str(rowCount + 1 + counter)
+            counter += 1
         self.insertRow(rowCount)
         self.setData(self.index(rowCount, 0), str_value, role=Qt.EditRole)
-        self.layoutChanged.emit()
 
     @Slot()
     def removeCurrentRow(self):
@@ -320,10 +338,16 @@ class AllExtractedData(
     @Slot()
     def removeAll(self):
         self.beginRemoveRows(QModelIndex(), 0, self.rowCount() - 1)
-        self.dataNames = ["dataset1"]
+        self.dataNames = ["Transition 1"]
         self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
         self.assocTagList = [Tag()]
+
+        # update the current row before emitting the rowsRemoved signal
+        # (which will be emitted by endRemoveRows)
+        self._currentRow = 0
+
         self.endRemoveRows()
+
         self.layoutChanged.emit()
         return True
 

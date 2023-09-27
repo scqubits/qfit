@@ -1183,7 +1183,7 @@ class Ui_MainWindow(object):
 "")
         self.label_27.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
 
-        self.gridLayout_14.addWidget(self.label_27, 2, 0, 1, 1)
+        self.gridLayout_14.addWidget(self.label_27, 3, 0, 1, 1)
 
         self.calibrateYGridFrame = QFrame(self.frame)
         self.calibrateYGridFrame.setObjectName(u"calibrateYGridFrame")
@@ -1318,7 +1318,7 @@ class Ui_MainWindow(object):
         self.gridLayout_11.addWidget(self.label_21, 0, 3, 1, 1)
 
 
-        self.gridLayout_14.addWidget(self.calibrateYGridFrame, 4, 0, 1, 1)
+        self.gridLayout_14.addWidget(self.calibrateYGridFrame, 5, 0, 1, 1)
 
         self.xyzDataGridFrame = QFrame(self.frame)
         self.xyzDataGridFrame.setObjectName(u"xyzDataGridFrame")
@@ -1373,11 +1373,11 @@ class Ui_MainWindow(object):
         self.gridLayout_4.addWidget(self.label_12, 4, 0, 1, 1)
 
 
-        self.gridLayout_14.addWidget(self.xyzDataGridFrame, 1, 0, 1, 1)
+        self.gridLayout_14.addWidget(self.xyzDataGridFrame, 2, 0, 1, 1)
 
         self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
-        self.gridLayout_14.addItem(self.horizontalSpacer_10, 3, 2, 1, 1)
+        self.gridLayout_14.addItem(self.horizontalSpacer_10, 4, 2, 1, 1)
 
         self.calibratedCheckBox = QCheckBox(self.frame)
         self.calibratedCheckBox.setObjectName(u"calibratedCheckBox")
@@ -1387,7 +1387,7 @@ class Ui_MainWindow(object):
         self.calibratedCheckBox.setLayoutDirection(Qt.RightToLeft)
         self.calibratedCheckBox.setText(u"TOGGLE CALIBRATION")
 
-        self.gridLayout_14.addWidget(self.calibratedCheckBox, 5, 1, 1, 1)
+        self.gridLayout_14.addWidget(self.calibratedCheckBox, 6, 1, 1, 1)
 
         self.calibrateXGridFrame = QFrame(self.frame)
         self.calibrateXGridFrame.setObjectName(u"calibrateXGridFrame")
@@ -1514,14 +1514,14 @@ class Ui_MainWindow(object):
         self.gridLayout_10.addWidget(self.label_16, 2, 1, 1, 1)
 
 
-        self.gridLayout_14.addWidget(self.calibrateXGridFrame, 3, 0, 1, 1)
+        self.gridLayout_14.addWidget(self.calibrateXGridFrame, 4, 0, 1, 1)
 
         self.dataGroupPushButton = QPushButton(self.frame)
         self.dataGroupPushButton.setObjectName(u"dataGroupPushButton")
         self.dataGroupPushButton.setIcon(icon1)
         self.dataGroupPushButton.setCheckable(True)
 
-        self.gridLayout_14.addWidget(self.dataGroupPushButton, 0, 0, 1, 1)
+        self.gridLayout_14.addWidget(self.dataGroupPushButton, 1, 0, 1, 1)
 
 
         self.verticalLayout_9.addWidget(self.frame)

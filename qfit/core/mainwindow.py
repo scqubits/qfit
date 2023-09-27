@@ -401,6 +401,13 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     def uiDataConnects(self):
         """Make connections for changes in data."""
+
+        # whenever a row is inserted or removed, select the current row
+        # this connection should be put before the connection of layoutChanged
+        # as the latter will be triggered by the former
+        self.allDatasets.rowsInserted.connect(lambda: self.ui.datasetListView.selectItem(self.allDatasets.currentRow))
+        self.allDatasets.rowsRemoved.connect(lambda: self.ui.datasetListView.selectItem(self.allDatasets.currentRow))
+
         # Whenever the data layout in the ActiveExtractedData changes, update
         # the corresponding AllExtractedData data; this includes the important
         # event of adding extraction points to the ActiveExtractedData
@@ -506,10 +513,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     def uiDataControlConnects(self):
         """Connect buttons for inserting and deleting a data set, or clearing all data sets"""
+        # update the backend model
         self.ui.newRowButton.clicked.connect(self.allDatasets.newRow)
         self.ui.deleteRowButton.clicked.connect(self.allDatasets.removeCurrentRow)
         self.ui.clearAllButton.clicked.connect(self.allDatasets.removeAll)
 
+        # switch the tag so that it matches the current data set
         self.ui.newRowButton.clicked.connect(
             lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
         )
