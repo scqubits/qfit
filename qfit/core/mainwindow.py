@@ -360,7 +360,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.activeDataset.setAdaptiveCalibrationFunc(
             self.calibrationData.adaptiveConversionFunc
         )
-        self.ui.dataTableView.setModel(self.activeDataset)
+        # self.ui.dataTableView.setModel(self.activeDataset)
 
         self.allDatasets = AllExtractedData()
         self.allDatasets.setCalibrationFunc(self.calibrationData.calibrateDataset)

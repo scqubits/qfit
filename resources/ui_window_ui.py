@@ -16,14 +16,14 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
-    QGridLayout, QGroupBox, QHBoxLayout, QHeaderView,
-    QLabel, QLayout, QLineEdit, QMainWindow,
-    QPushButton, QRadioButton, QScrollArea, QSizePolicy,
-    QSlider, QSpacerItem, QSpinBox, QStackedWidget,
-    QVBoxLayout, QWidget)
+    QGridLayout, QGroupBox, QHBoxLayout, QLabel,
+    QLayout, QLineEdit, QMainWindow, QPushButton,
+    QRadioButton, QScrollArea, QSizePolicy, QSlider,
+    QSpacerItem, QSpinBox, QStackedWidget, QVBoxLayout,
+    QWidget)
 
 from qfit.widgets.calibration import CalibrationLineEdit
-from qfit.widgets.data_extracting import (DataExtractingWidget, DatasetWidget, ListView, TableView)
+from qfit.widgets.data_extracting import (DataExtractingWidget, ListView)
 from qfit.widgets.data_tagging import (DataTaggingWidget, IntTupleLineEdit, StrTupleLineEdit)
 from qfit.widgets.mpl_canvas import (MplFigureCanvas, MplNavButtons)
 import resources_rc
@@ -34,7 +34,7 @@ class Ui_MainWindow(object):
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.setWindowModality(Qt.NonModal)
         MainWindow.setEnabled(True)
-        MainWindow.resize(1130, 792)
+        MainWindow.resize(1130, 857)
         sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -1550,6 +1550,16 @@ class Ui_MainWindow(object):
         self.frame_10.setFrameShadow(QFrame.Raised)
         self.gridLayout_7 = QGridLayout(self.frame_10)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
+        self.label_32 = QLabel(self.frame_10)
+        self.label_32.setObjectName(u"label_32")
+        sizePolicy4.setHeightForWidth(self.label_32.sizePolicy().hasHeightForWidth())
+        self.label_32.setSizePolicy(sizePolicy4)
+        self.label_32.setStyleSheet(u"font: 57 11pt \"Roboto Medium\";\n"
+"")
+        self.label_32.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
+
+        self.gridLayout_7.addWidget(self.label_32, 0, 0, 1, 1)
+
         self.allDatasetsButtonsFrame = QFrame(self.frame_10)
         self.allDatasetsButtonsFrame.setObjectName(u"allDatasetsButtonsFrame")
         sizePolicy5.setHeightForWidth(self.allDatasetsButtonsFrame.sizePolicy().hasHeightForWidth())
@@ -1615,15 +1625,7 @@ class Ui_MainWindow(object):
 
         self.gridLayout_7.addWidget(self.allDatasetsButtonsFrame, 1, 0, 1, 1)
 
-        self.dataTableFrame = DatasetWidget(self.frame_10)
-        self.dataTableFrame.setObjectName(u"dataTableFrame")
-        sizePolicy12.setHeightForWidth(self.dataTableFrame.sizePolicy().hasHeightForWidth())
-        self.dataTableFrame.setSizePolicy(sizePolicy12)
-        self.dataTableFrame.setMaximumSize(QSize(16777215, 140))
-        self.dataTableFrame.setStyleSheet(u"")
-        self.horizontalLayout_5 = QHBoxLayout(self.dataTableFrame)
-        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-        self.datasetListView = ListView(self.dataTableFrame)
+        self.datasetListView = ListView(self.frame_10)
         self.datasetListView.setObjectName(u"datasetListView")
         sizePolicy13 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
         sizePolicy13.setHorizontalStretch(0)
@@ -1637,90 +1639,7 @@ class Ui_MainWindow(object):
         self.datasetListView.setFrameShape(QFrame.NoFrame)
         self.datasetListView.setFrameShadow(QFrame.Plain)
 
-        self.horizontalLayout_5.addWidget(self.datasetListView)
-
-        self.dataTableView = TableView(self.dataTableFrame)
-        self.dataTableView.setObjectName(u"dataTableView")
-        sizePolicy4.setHeightForWidth(self.dataTableView.sizePolicy().hasHeightForWidth())
-        self.dataTableView.setSizePolicy(sizePolicy4)
-        self.dataTableView.setMinimumSize(QSize(0, 105))
-        self.dataTableView.setMaximumSize(QSize(16777215, 105))
-        self.dataTableView.setStyleSheet(u"QTableWidget {	\n"
-"	background-color: rgb(63, 63, 63);\n"
-"	padding: 10px;\n"
-"	border-radius: 5px;\n"
-"	gridline-color: rgb(44, 49, 60);\n"
-"	border-bottom: 1px solid rgb(44, 49, 60);\n"
-"}\n"
-"QTableWidget::item{\n"
-"	border-color: rgb(44, 49, 60);\n"
-"	padding-left: 5px;\n"
-"	padding-right: 5px;\n"
-"	gridline-color: rgb(44, 49, 60);\n"
-"}\n"
-"QTableWidget::item:selected{\n"
-"	background-color: rgb(85, 170, 255);\n"
-"}\n"
-"QScrollBar:horizontal {\n"
-"    border: none;\n"
-"    background: rgb(52, 59, 72);\n"
-"    height: 14px;\n"
-"    margin: 0px 21px 0 21px;\n"
-"	border-radius: 0px;\n"
-"}\n"
-" QScrollBar:vertical {\n"
-"	border: none;\n"
-"    background: rgb(52, 59, 72);\n"
-"    width: 14px;\n"
-"    margin: 21px 0 21px 0;\n"
-"	border-radius: 0px;\n"
-" }\n"
-"QHeaderView::section{\n"
-"	background-color: rgb(93, 93, 93);\n"
-"	max-width: 30px;\n"
-"	border: 1px solid rgb(44, 49, 60);\n"
-"	border-style: none;\n"
-"    border-bottom: 1px solid rgb(44, 49, 60);\n"
-"    border-right: 1px solid rgb(44, 49, 60);\n"
-"}\n"
-""
-                        "QTableWidget::horizontalHeader {	\n"
-"	background-color: rgb(93, 93, 93);\n"
-"}\n"
-"QHeaderView::section:horizontal\n"
-"{\n"
-"    border: 1px solid rgb(32, 34, 42);\n"
-"	background-color: rgb(93,93, 93);\n"
-"	padding: 3px;\n"
-"	border-top-left-radius: 7px;\n"
-"    border-top-right-radius: 7px;\n"
-"}\n"
-"QHeaderView::section:vertical\n"
-"{\n"
-"    border: 1px solid rgb(44, 49, 60);\n"
-"}\n"
-"\n"
-"TableView\n"
-"{\n"
-"	background-color: rgb(63, 63, 63);\n"
-"	color: rgb(200,200,200);\n"
-"}")
-        self.dataTableView.setFrameShape(QFrame.NoFrame)
-
-        self.horizontalLayout_5.addWidget(self.dataTableView)
-
-
-        self.gridLayout_7.addWidget(self.dataTableFrame, 1, 1, 1, 1)
-
-        self.label_32 = QLabel(self.frame_10)
-        self.label_32.setObjectName(u"label_32")
-        sizePolicy4.setHeightForWidth(self.label_32.sizePolicy().hasHeightForWidth())
-        self.label_32.setSizePolicy(sizePolicy4)
-        self.label_32.setStyleSheet(u"font: 57 11pt \"Roboto Medium\";\n"
-"")
-        self.label_32.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
-
-        self.gridLayout_7.addWidget(self.label_32, 0, 0, 1, 1)
+        self.gridLayout_7.addWidget(self.datasetListView, 1, 1, 1, 1)
 
 
         self.verticalLayout_13.addWidget(self.frame_10)
@@ -2358,7 +2277,7 @@ class Ui_MainWindow(object):
         self.filtersPushButton.toggled.connect(self.filterQFrame.setVisible)
 
         self.bottomStackedWidget.setCurrentIndex(0)
-        self.pagesStackedWidget.setCurrentIndex(0)
+        self.pagesStackedWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)

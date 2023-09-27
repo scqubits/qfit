@@ -14,7 +14,7 @@
     <x>0</x>
     <y>0</y>
     <width>1130</width>
-    <height>792</height>
+    <height>857</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -1920,7 +1920,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
              </size>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="DataExtractingWidget" name="extractPointsWidget">
              <property name="sizePolicy">
@@ -2671,6 +2671,26 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                     <enum>QFrame::Raised</enum>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_7">
+                    <item row="0" column="0">
+                     <widget class="QLabel" name="label_32">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">font: 57 11pt &quot;Roboto Medium&quot;;
+</string>
+                      </property>
+                      <property name="text">
+                       <string>EXTRACTED DATASET</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                      </property>
+                     </widget>
+                    </item>
                     <item row="1" column="0">
                      <widget class="QFrame" name="allDatasetsButtonsFrame">
                       <property name="sizePolicy">
@@ -2774,166 +2794,39 @@ QPushButton:pressed {
                      </widget>
                     </item>
                     <item row="1" column="1">
-                     <widget class="DatasetWidget" name="dataTableFrame">
+                     <widget class="ListView" name="datasetListView">
                       <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>100</height>
+                       </size>
                       </property>
                       <property name="maximumSize">
                        <size>
-                        <width>16777215</width>
-                        <height>140</height>
+                        <width>230</width>
+                        <height>100</height>
                        </size>
                       </property>
-                      <property name="styleSheet">
-                       <string notr="true"/>
-                      </property>
-                      <layout class="QHBoxLayout" name="horizontalLayout_5">
-                       <item>
-                        <widget class="ListView" name="datasetListView">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="minimumSize">
-                          <size>
-                           <width>0</width>
-                           <height>100</height>
-                          </size>
-                         </property>
-                         <property name="maximumSize">
-                          <size>
-                           <width>230</width>
-                           <height>100</height>
-                          </size>
-                         </property>
-                         <property name="font">
-                          <font>
-                           <family>Roboto Medium</family>
-                           <pointsize>9</pointsize>
-                          </font>
-                         </property>
-                         <property name="styleSheet">
-                          <string notr="true">background-color: rgb(47, 47, 47)</string>
-                         </property>
-                         <property name="frameShape">
-                          <enum>QFrame::NoFrame</enum>
-                         </property>
-                         <property name="frameShadow">
-                          <enum>QFrame::Plain</enum>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="TableView" name="dataTableView">
-                         <property name="sizePolicy">
-                          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                           <horstretch>0</horstretch>
-                           <verstretch>0</verstretch>
-                          </sizepolicy>
-                         </property>
-                         <property name="minimumSize">
-                          <size>
-                           <width>0</width>
-                           <height>105</height>
-                          </size>
-                         </property>
-                         <property name="maximumSize">
-                          <size>
-                           <width>16777215</width>
-                           <height>105</height>
-                          </size>
-                         </property>
-                         <property name="styleSheet">
-                          <string notr="true">QTableWidget {	
-	background-color: rgb(63, 63, 63);
-	padding: 10px;
-	border-radius: 5px;
-	gridline-color: rgb(44, 49, 60);
-	border-bottom: 1px solid rgb(44, 49, 60);
-}
-QTableWidget::item{
-	border-color: rgb(44, 49, 60);
-	padding-left: 5px;
-	padding-right: 5px;
-	gridline-color: rgb(44, 49, 60);
-}
-QTableWidget::item:selected{
-	background-color: rgb(85, 170, 255);
-}
-QScrollBar:horizontal {
-    border: none;
-    background: rgb(52, 59, 72);
-    height: 14px;
-    margin: 0px 21px 0 21px;
-	border-radius: 0px;
-}
- QScrollBar:vertical {
-	border: none;
-    background: rgb(52, 59, 72);
-    width: 14px;
-    margin: 21px 0 21px 0;
-	border-radius: 0px;
- }
-QHeaderView::section{
-	background-color: rgb(93, 93, 93);
-	max-width: 30px;
-	border: 1px solid rgb(44, 49, 60);
-	border-style: none;
-    border-bottom: 1px solid rgb(44, 49, 60);
-    border-right: 1px solid rgb(44, 49, 60);
-}
-QTableWidget::horizontalHeader {	
-	background-color: rgb(93, 93, 93);
-}
-QHeaderView::section:horizontal
-{
-    border: 1px solid rgb(32, 34, 42);
-	background-color: rgb(93,93, 93);
-	padding: 3px;
-	border-top-left-radius: 7px;
-    border-top-right-radius: 7px;
-}
-QHeaderView::section:vertical
-{
-    border: 1px solid rgb(44, 49, 60);
-}
-
-TableView
-{
-	background-color: rgb(63, 63, 63);
-	color: rgb(200,200,200);
-}</string>
-                         </property>
-                         <property name="frameShape">
-                          <enum>QFrame::NoFrame</enum>
-                         </property>
-                        </widget>
-                       </item>
-                      </layout>
-                     </widget>
-                    </item>
-                    <item row="0" column="0">
-                     <widget class="QLabel" name="label_32">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
+                      <property name="font">
+                       <font>
+                        <family>Roboto Medium</family>
+                        <pointsize>9</pointsize>
+                       </font>
                       </property>
                       <property name="styleSheet">
-                       <string notr="true">font: 57 11pt &quot;Roboto Medium&quot;;
-</string>
+                       <string notr="true">background-color: rgb(47, 47, 47)</string>
                       </property>
-                      <property name="text">
-                       <string>EXTRACTED DATASET</string>
+                      <property name="frameShape">
+                       <enum>QFrame::NoFrame</enum>
                       </property>
-                      <property name="alignment">
-                       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                      <property name="frameShadow">
+                       <enum>QFrame::Plain</enum>
                       </property>
                      </widget>
                     </item>
@@ -4194,11 +4087,6 @@ QPushButton:pressed {
    <header>qfit/widgets/calibration.h</header>
   </customwidget>
   <customwidget>
-   <class>TableView</class>
-   <extends>QTableView</extends>
-   <header>qfit/widgets/data_extracting.h</header>
-  </customwidget>
-  <customwidget>
    <class>IntTupleLineEdit</class>
    <extends>QLineEdit</extends>
    <header>qfit/widgets/data_tagging.h</header>
@@ -4207,12 +4095,6 @@ QPushButton:pressed {
    <class>StrTupleLineEdit</class>
    <extends>QLineEdit</extends>
    <header>qfit/widgets/data_tagging.h</header>
-  </customwidget>
-  <customwidget>
-   <class>DatasetWidget</class>
-   <extends>QFrame</extends>
-   <header>qfit/widgets/data_extracting.h</header>
-   <container>1</container>
   </customwidget>
   <customwidget>
    <class>DataExtractingWidget</class>
