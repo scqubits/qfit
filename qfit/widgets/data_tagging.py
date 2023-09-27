@@ -24,8 +24,6 @@ from qfit.io_utils import file_io_serializers as serializers
 NO_TAG = "NO_TAG"
 DISPERSIVE_DRESSED = "DISPERSIVE_DRESSED"
 DISPERSIVE_BARE = "DISPERSIVE_BARE"
-CROSSING = "CROSSING"
-CROSSING_DRESSED = "CROSSING_DRESSED"
 
 
 class DataTaggingWidget(QFrame):
@@ -36,23 +34,24 @@ class Tag(serializers.Serializable):
     """
     Store a single dataset tag. The tag can be of different types:
     - NO_TAG: user did not tag data
-    - DISPERSIVE_DRESSED: transition between two states in the dispersive regime, tagged by dressed-states indices
-    - DISPERSIVE_BARE: : transition between two states in the dispersive regime, tagged by bare-states indices
-    - CROSSING: avoided crossing, left untagged (fitting should use closest-energy states)
-    - CROSSING_DRESSED: avoided crossing, tagged by dressed-states indices
+    - DISPERSIVE_DRESSED: transition between two states tagged by 
+    dressed-states indices
+    - DISPERSIVE_BARE: : transition between two states tagged by 
+    bare-states indices
 
     Parameters
     ----------
     tagType: str
         one of the tag types listed above
     initial, final: int, or tuple of int, or None
-        - For NO_TAG and CROSSING, no initial and final state are specified.
-        - For DISPERSIVE_DRESSED and CROSSING_DRESSED, initial and final state are specified by an int dressed index.
-        - FOR DISPERSIVE_BARE, initial and final state are specified by a tuple of ints (exc. levels of each subsys)
+        - For NO_TAG, no initial and final state are specified.
+        - For DISPERSIVE_DRESSED, initial and final state are specified 
+        by an int dressed index.
+        - FOR DISPERSIVE_BARE, initial and final state are specified by 
+        a tuple of ints (exc. levels of each subsys)
     photons: int or None
         - For NO_TAG, no photon number is specified.
         - For all other tag types, this int specifies the photon number rank of the transition.
-
     """
 
     def __init__(
@@ -93,16 +92,16 @@ class TagDataView(QObject):
             self.setDispersiveDressedMode
         )
         self.ui.noTagRadioButton.toggled.connect(self.setNoTagMode)
-        self.ui.tagCrossingRadioButton.toggled.connect(self.setCrossingMode)
-        self.ui.tagCrossingDressedRadioButton.toggled.connect(
-            self.setCrossingDressedMode
-        )
+        # self.ui.tagCrossingRadioButton.toggled.connect(self.setCrossingMode)
+        # self.ui.tagCrossingDressedRadioButton.toggled.connect(
+        #     self.setCrossingDressedMode
+        # )
 
         self.ui.tagDispersiveBareRadioButton.toggled.connect(self.setLineEditColor)
         self.ui.tagDispersiveDressedRadioButton.toggled.connect(self.setLineEditColor)
         self.ui.noTagRadioButton.toggled.connect(self.setLineEditColor)
-        self.ui.tagCrossingRadioButton.toggled.connect(self.setLineEditColor)
-        self.ui.tagCrossingDressedRadioButton.toggled.connect(self.setLineEditColor)
+        # self.ui.tagCrossingRadioButton.toggled.connect(self.setLineEditColor)
+        # self.ui.tagCrossingDressedRadioButton.toggled.connect(self.setLineEditColor)
 
         self.ui.subsysNamesLineEdit.textChanged.connect(
             lambda x: self.setLineEditColor()
@@ -194,13 +193,13 @@ class TagDataView(QObject):
             tag.initial = self.ui.initialStateSpinBox.value()
             tag.final = self.ui.finalStateSpinBox.value()
             tag.photons = self.ui.phNumberDressedSpinBox.value()
-        elif self.ui.tagCrossingRadioButton.isChecked():
-            tag.tagType = CROSSING
-        elif self.ui.tagCrossingDressedRadioButton.isChecked():
-            tag.tagType = CROSSING_DRESSED
-            tag.initial = self.ui.initialStateSpinBox.value()
-            tag.final = self.ui.finalStateSpinBox.value()
-            tag.photons = self.ui.phNumberDressedSpinBox.value()
+        # elif self.ui.tagCrossingRadioButton.isChecked():
+        #     tag.tagType = CROSSING
+        # elif self.ui.tagCrossingDressedRadioButton.isChecked():
+        #     tag.tagType = CROSSING_DRESSED
+        #     tag.initial = self.ui.initialStateSpinBox.value()
+        #     tag.final = self.ui.finalStateSpinBox.value()
+        #     tag.photons = self.ui.phNumberDressedSpinBox.value()
         return tag
 
     def setTag(self, tag):
@@ -221,15 +220,15 @@ class TagDataView(QObject):
             self.ui.initialStateSpinBox.setValue(tag.initial)
             self.ui.finalStateSpinBox.setValue(tag.final)
             self.ui.phNumberDressedSpinBox.setValue(tag.photons)
-        elif tag.tagType == CROSSING:
-            self.ui.tagCrossingRadioButton.toggle()
-            self.setCrossingMode()
-        elif tag.tagType == CROSSING_DRESSED:
-            self.ui.tagCrossingDressedRadioButton.toggle()
-            self.setCrossingDressedMode()
-            self.ui.initialStateSpinBox.setValue(tag.initial)
-            self.ui.finalStateSpinBox.setValue(tag.final)
-            self.ui.phNumberDressedSpinBox.setValue(tag.photons)
+        # elif tag.tagType == CROSSING:
+        #     self.ui.tagCrossingRadioButton.toggle()
+        #     self.setCrossingMode()
+        # elif tag.tagType == CROSSING_DRESSED:
+        #     self.ui.tagCrossingDressedRadioButton.toggle()
+        #     self.setCrossingDressedMode()
+        #     self.ui.initialStateSpinBox.setValue(tag.initial)
+        #     self.ui.finalStateSpinBox.setValue(tag.final)
+        #     self.ui.phNumberDressedSpinBox.setValue(tag.photons)
         self.blockSignals(False)
 
     def setLineEditColor(self, *args, **kwargs):

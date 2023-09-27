@@ -28,8 +28,8 @@ from qfit.widgets.data_tagging import (
     NO_TAG,
     DISPERSIVE_DRESSED,
     DISPERSIVE_BARE,
-    CROSSING,
-    CROSSING_DRESSED,
+    # CROSSING,
+    # CROSSING_DRESSED,
     Tag,
 )
 
@@ -813,7 +813,10 @@ class QuantumModel:
         simulation_freq = None
         status = None
         # if provided dressed label
-        if tag.tagType is DISPERSIVE_DRESSED or tag.tagType is CROSSING_DRESSED:
+        if (
+            tag.tagType is DISPERSIVE_DRESSED 
+            # or tag.tagType is CROSSING_DRESSED
+        ):
             # if the state is above evals_count, terminate the computation and return error status
             if sweep.dressed_evals_count() < max(tag.initial, tag.final):
                 status = "ERROR"
