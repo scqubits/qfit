@@ -77,14 +77,16 @@ class TagDataView(QObject):
     changedTagType = Signal()
     changedTagData = Signal()
 
-    def __init__(self, ui_TagData, *args, **kwargs):
+    def __init__(self, ui_TagData, subsysCount, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.ui = ui_TagData
 
+        self.subsysCount = subsysCount
+
         self.ui.tagDressedGroupBox.setVisible(False)
         self.ui.tagBareGroupBox.setVisible(False)
-        self.defaultStyleLineEdit = self.ui.subsysNamesLineEdit.styleSheet()
+        self.defaultStyleLineEdit = self.ui.initialStateLineEdit.styleSheet()
 
         # establish connects
         self.ui.tagDispersiveBareRadioButton.toggled.connect(self.setDispersiveBareMode)
@@ -103,9 +105,9 @@ class TagDataView(QObject):
         # self.ui.tagCrossingRadioButton.toggled.connect(self.setLineEditColor)
         # self.ui.tagCrossingDressedRadioButton.toggled.connect(self.setLineEditColor)
 
-        self.ui.subsysNamesLineEdit.textChanged.connect(
-            lambda x: self.setLineEditColor()
-        )
+        # self.ui.subsysNamesLineEdit.textChanged.connect(
+        #     lambda x: self.setLineEditColor()
+        # )
         self.ui.initialStateLineEdit.textChanged.connect(
             lambda x: self.setLineEditColor()
         )
@@ -113,7 +115,7 @@ class TagDataView(QObject):
             lambda x: self.setLineEditColor()
         )
 
-        self.ui.subsysNamesLineEdit.editingFinished.connect(self.changedTagData.emit)
+        # self.ui.subsysNamesLineEdit.editingFinished.connect(self.changedTagData.emit)
         self.ui.initialStateLineEdit.editingFinished.connect(self.changedTagData.emit)
         self.ui.finalStateLineEdit.editingFinished.connect(self.changedTagData.emit)
         self.ui.phNumberBareSpinBox.valueChanged.connect(lambda: self.changedTagData.emit())
@@ -130,7 +132,7 @@ class TagDataView(QObject):
         self.ui.tagDressedGroupBox.setVisible(False)
         self.ui.tagBareGroupBox.setVisible(True)
         self.changedTagType.emit()
-        self.ui.subsysNamesLineEdit.editingFinished.emit()
+        # self.ui.subsysNamesLineEdit.editingFinished.emit()
         self.ui.initialStateLineEdit.editingFinished.emit()
         self.ui.finalStateLineEdit.editingFinished.emit()
 
@@ -152,26 +154,20 @@ class TagDataView(QObject):
     def isValidInitialBare(self):
         if not self.ui.tagBareGroupBox.isVisible():
             return True  # only bare-states tags require validation
-        if not self.ui.subsysNamesLineEdit.isValid():
-            return False
-        subsysCount = self.ui.subsysNamesLineEdit.subsysCount()
 
         if not self.ui.initialStateLineEdit.isValid():
             return False
-        if len(self.ui.initialStateLineEdit.getTuple()) != subsysCount:
+        if len(self.ui.initialStateLineEdit.getTuple()) != self.subsysCount:
             return False
         return True
 
     def isValidFinalBare(self):
         if not self.ui.tagBareGroupBox.isVisible():
             return True  # only bare-states tags require validation
-        if not self.ui.subsysNamesLineEdit.isValid():
-            return False
-        subsysCount = self.ui.subsysNamesLineEdit.subsysCount()
 
         if not self.ui.finalStateLineEdit.isValid():
             return False
-        if len(self.ui.finalStateLineEdit.getTuple()) != subsysCount:
+        if len(self.ui.finalStateLineEdit.getTuple()) != self.subsysCount:
             return False
         return True
 
@@ -187,7 +183,7 @@ class TagDataView(QObject):
             tag.initial = self.ui.initialStateLineEdit.getTuple()
             tag.final = self.ui.finalStateLineEdit.getTuple()
             tag.photons = self.ui.phNumberBareSpinBox.value()
-            tag.subsysList = self.ui.subsysNamesLineEdit.getSubsysNameList()
+            # tag.subsysList = self.ui.subsysNamesLineEdit.getSubsysNameList()
         elif self.ui.tagDispersiveDressedRadioButton.isChecked():
             tag.tagType = DISPERSIVE_DRESSED
             tag.initial = self.ui.initialStateSpinBox.value()
@@ -210,7 +206,7 @@ class TagDataView(QObject):
         elif tag.tagType == DISPERSIVE_BARE:
             self.ui.tagDispersiveBareRadioButton.toggle()
             self.setDispersiveBareMode()
-            self.ui.subsysNamesLineEdit.setFromSubsysNameList(tag.subsysList)
+            # self.ui.subsysNamesLineEdit.setFromSubsysNameList(tag.subsysList)
             self.ui.initialStateLineEdit.setFromTuple(tag.initial)
             self.ui.finalStateLineEdit.setFromTuple(tag.final)
             self.ui.phNumberBareSpinBox.setValue(tag.photons)
@@ -232,13 +228,13 @@ class TagDataView(QObject):
         self.blockSignals(False)
 
     def setLineEditColor(self, *args, **kwargs):
-        if (
-            not self.ui.tagBareGroupBox.isVisible()
-            or self.ui.subsysNamesLineEdit.isValid()
-        ):
-            self.ui.subsysNamesLineEdit.setStyleSheet(self.defaultStyleLineEdit)
-        else:
-            self.ui.subsysNamesLineEdit.setStyleSheet("border: 3px solid red;")
+        # if (
+        #     not self.ui.tagBareGroupBox.isVisible()
+        #     or self.ui.subsysNamesLineEdit.isValid()
+        # ):
+        #     self.ui.subsysNamesLineEdit.setStyleSheet(self.defaultStyleLineEdit)
+        # else:
+        #     self.ui.subsysNamesLineEdit.setStyleSheet("border: 3px solid red;")
 
         if not self.ui.tagBareGroupBox.isVisible() or self.isValidInitialBare():
             self.ui.initialStateLineEdit.setStyleSheet(self.defaultStyleLineEdit)

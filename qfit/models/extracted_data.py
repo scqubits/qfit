@@ -367,6 +367,9 @@ class AllExtractedData(
 
     def currentTagItem(self):
         return self.assocTagList[self.currentRow]
+    
+    def currentDataName(self):
+        return self.dataNames[self.currentRow]
 
     @Slot()
     def updateAssocData(self, newData):

@@ -70,7 +70,6 @@ class ListView(QListView):
     
     @Slot()
     def selectItem(self, idx):
-        print(idx)
         self.setCurrentIndex(self.model().index(idx, 0))
         self.selectionModel().select(
             self.model().index(idx, 0), QItemSelectionModel.ClearAndSelect

@@ -145,6 +145,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def __init__(
         self, measurementData: MeasurementDataType, hilbertspace: HilbertSpace
     ):
+        self.hilbertspace = hilbertspace
+        
         # ResizableFramelessWindow.__init__(self)
         QMainWindow.__init__(self)
         self.openFromIPython = executed_in_ipython()
@@ -156,8 +158,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.setupUi(self)
 
         # fix visibility of collapsible panels
-        self.ui.xyzDataGridFrame.setVisible(False)
-        self.ui.filterQFrame.setVisible(False)
+        # self.ui.xyzDataGridFrame.setVisible(False)
+        # self.ui.filterQFrame.setVisible(False)
 
         self.ui_menu = MenuWidget(parent=self)
 
@@ -189,10 +191,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.mplFigureCanvas.selectOn()
 
         # prefit: controller, two models and their connection to view (sliders)
-        self.hilbertspace = hilbertspace
-        # temporary fix for dispersive bare label
-        # TODO refactor this
-        self.fixDispersiveBareLabel()
         self.prefitDynamicalElementsBuild(self.hilbertspace)
         self.prefitStaticElementsBuild()
 
@@ -221,25 +219,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
         self.setupUIData()
         self.setupUIXYZComboBoxes()
-        self.tagDataView = TagDataView(self.ui)
+        self.tagDataView = TagDataView(self.ui, self.hilbertspace.subsystem_count)
+        self.ui.bareLabelOrder.setText(
+            "   Labels ordered by: "   # Three space to align with the label title
+            + ", ".join([subsys.id_str for subsys in self.hilbertspace.subsystem_list])
+        )
         self.uiDataConnects()
         self.uiDataOptionsConnects()
         self.uiDataControlConnects()
         self.uiXYZComboBoxesConnects()
-
-    def fixDispersiveBareLabel(self):
-        # temporary hack for fixing the subsystem list of tag data
-        # TODO: refactor this
-        subsys_name_list = list(self.hilbertspace._subsys_by_id_str.keys())
-        # subsys_name_list = [
-        #     QuantumModelParameterSet.parentSystemNames(subsys)
-        #     for subsys in self.quantumModel.hilbertspace.subsystem_list[::-1]
-        # ]
-        self.ui.subsysNamesLineEdit.setFromSubsysNameList(subsys_name_list)
-        self.ui.subsysNamesLineEdit.setReadOnly(True)
-        self.ui.subsysNamesLineEdit.setStyleSheet(
-            "background: transparent; border: none;"
-        )
 
     def recoverFromExtractedData(self):
         if self.extractedData is not None:
@@ -374,30 +362,43 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.setupXYDataBoxes()
 
     def uiPagesConnects(self):
+        """Connect the UI elements for switching between the different pages."""
+
+        # page 0: Calibrate (previously Extract)
         self.ui.modeSelectButton.clicked.connect(
-            lambda: self.ui.pagesStackedWidget.setCurrentIndex(0)
+            lambda: self._switchToPage(0)
         )
-        self.ui.modeSelectButton.clicked.connect(
-            lambda: self.ui.bottomStackedWidget.setCurrentIndex(0)
-        )
+        # page 1: Extract & Tag (previously Tag)
         self.ui.modeTagButton.clicked.connect(
-            lambda: self.ui.pagesStackedWidget.setCurrentIndex(1)
+            lambda: self._switchToPage(1)
         )
-        self.ui.modeTagButton.clicked.connect(
-            lambda: self.ui.bottomStackedWidget.setCurrentIndex(1)
-        )
+        # page 2: Prefit
         self.ui.modePrefitButton.clicked.connect(
-            lambda: self.ui.pagesStackedWidget.setCurrentIndex(2)
+            lambda: self._switchToPage(2)
         )
-        self.ui.modePrefitButton.clicked.connect(
-            lambda: self.ui.bottomStackedWidget.setCurrentIndex(2)
-        )
+        # page 3: Fit
         self.ui.modeFitButton.clicked.connect(
-            lambda: self.ui.pagesStackedWidget.setCurrentIndex(3)
+            lambda: self._switchToPage(3)
         )
-        self.ui.modeFitButton.clicked.connect(
-            lambda: self.ui.bottomStackedWidget.setCurrentIndex(3)
+
+        # when clicked parameter export button, switch to the desired page
+        self.ui.exportToFitButton.clicked.connect(
+            lambda: self._switchToPage(3)
         )
+        self.ui.exportToPrefitButton.clicked.connect(
+            lambda: self._switchToPage(2)
+        )
+
+    @Slot()
+    def _switchToPage(self, page: int):
+        # update MSE when switching between fit / pre-fit page
+        if self.ui.pagesStackedWidget.currentIndex() == 2 and page == 3:
+            self.ui.mseLabel_2.setText(self.ui.mseLabel.text())
+        elif self.ui.pagesStackedWidget.currentIndex() == 3 and page == 2:
+            self.ui.mseLabel.setText(self.ui.mseLabel_2.text())
+
+        self.ui.pagesStackedWidget.setCurrentIndex(page)
+        self.ui.bottomStackedWidget.setCurrentIndex(page)
 
     def uiDataConnects(self):
         """Make connections for changes in data."""
@@ -463,11 +464,21 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # Whenever a new dataset is activated in the AllExtractedData, update the TagDataView
         self.ui.datasetListView.clicked.connect(
-            lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
+            self.syncTagWithDataset
+        )
+
+        # Whenever a dataset is renamed, update the title for tags
+        self.allDatasets.dataChanged.connect(
+            self.syncTagWithDataset
         )
 
         # Whenever a new selection of data set is made, update the matching mode and the cursor
         self.ui.datasetListView.clicked.connect(self.updateMatchingModeAndCursor)
+
+    @Slot()
+    def syncTagWithDataset(self):
+        self.ui.transitionLabel.setText(f"LABEL for {self.allDatasets.currentDataName()}")
+        self.tagDataView.setTag(self.allDatasets.currentTagItem())
 
     def uiDataOptionsConnects(self):
         """Connect the UI elements related to display of data"""
@@ -520,13 +531,13 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # switch the tag so that it matches the current data set
         self.ui.newRowButton.clicked.connect(
-            lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
+            self.syncTagWithDataset
         )
         self.ui.deleteRowButton.clicked.connect(
-            lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
+            self.syncTagWithDataset
         )
         self.ui.clearAllButton.clicked.connect(
-            lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
+            self.syncTagWithDataset
         )
 
     def uiDataLoadConnects(self):
@@ -938,7 +949,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # create a QWidget for the scrollArea and set a layout for it
         prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
-        prefitScrollLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
 
         # set the alignment of the entire prefit scroll layout
         prefitScrollLayout.setAlignment(Qt.AlignTop)
@@ -1155,7 +1165,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         Insert a set of tables for the fitting parameters
         """
 
-        fitScrollWidget = self.ui.fitScrollArea.widget()
+        fitScrollWidget = self.ui.fitScrollAreaWidget
 
         # remove the existing widgets, if we somehow want to rebuild the sliders
         clearChildren(fitScrollWidget)
@@ -1165,7 +1175,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             fitScrollLayout = fitScrollWidget.layout()
 
         # configure this layout
-        fitScrollLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
         self.ui.fitScrollArea.setStyleSheet(f"background-color: rgb(33, 33, 33);")
         fitScrollWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
@@ -1415,7 +1424,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.dataSetupConnects()
         self.uiDataLoadConnects()
         self.setupUIXYZComboBoxes()
-        self.fixDispersiveBareLabel()
 
         self.prefitDynamicalElementsBuild(hilbertspace)
         self.fitDynamicalElementsBuild()
