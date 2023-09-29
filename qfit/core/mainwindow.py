@@ -146,7 +146,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self, measurementData: MeasurementDataType, hilbertspace: HilbertSpace
     ):
         self.hilbertspace = hilbertspace
-        
+
         # ResizableFramelessWindow.__init__(self)
         QMainWindow.__init__(self)
         self.openFromIPython = executed_in_ipython()
@@ -173,7 +173,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.calibrationData = CalibrationData()
         self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
 
-        self.matching_mode = False
+        self.x_snap_mode = False
         self.mousedat = None
 
         self.setupUIPlotOptions()
@@ -221,7 +221,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.setupUIXYZComboBoxes()
         self.tagDataView = TagDataView(self.ui, self.hilbertspace.subsystem_count)
         self.ui.bareLabelOrder.setText(
-            "   Labels ordered by: "   # Three space to align with the label title
+            "   Labels ordered by: "  # Three space to align with the label title
             + ", ".join([subsys.id_str for subsys in self.hilbertspace.subsystem_list])
         )
         self.uiDataConnects()
@@ -365,29 +365,17 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """Connect the UI elements for switching between the different pages."""
 
         # page 0: Calibrate (previously Extract)
-        self.ui.modeSelectButton.clicked.connect(
-            lambda: self._switchToPage(0)
-        )
+        self.ui.modeSelectButton.clicked.connect(lambda: self._switchToPage(0))
         # page 1: Extract & Tag (previously Tag)
-        self.ui.modeTagButton.clicked.connect(
-            lambda: self._switchToPage(1)
-        )
+        self.ui.modeTagButton.clicked.connect(lambda: self._switchToPage(1))
         # page 2: Prefit
-        self.ui.modePrefitButton.clicked.connect(
-            lambda: self._switchToPage(2)
-        )
+        self.ui.modePrefitButton.clicked.connect(lambda: self._switchToPage(2))
         # page 3: Fit
-        self.ui.modeFitButton.clicked.connect(
-            lambda: self._switchToPage(3)
-        )
+        self.ui.modeFitButton.clicked.connect(lambda: self._switchToPage(3))
 
         # when clicked parameter export button, switch to the desired page
-        self.ui.exportToFitButton.clicked.connect(
-            lambda: self._switchToPage(3)
-        )
-        self.ui.exportToPrefitButton.clicked.connect(
-            lambda: self._switchToPage(2)
-        )
+        self.ui.exportToFitButton.clicked.connect(lambda: self._switchToPage(3))
+        self.ui.exportToPrefitButton.clicked.connect(lambda: self._switchToPage(2))
 
     @Slot()
     def _switchToPage(self, page: int):
@@ -406,8 +394,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # whenever a row is inserted or removed, select the current row
         # this connection should be put before the connection of layoutChanged
         # as the latter will be triggered by the former
-        self.allDatasets.rowsInserted.connect(lambda: self.ui.datasetListView.selectItem(self.allDatasets.currentRow))
-        self.allDatasets.rowsRemoved.connect(lambda: self.ui.datasetListView.selectItem(self.allDatasets.currentRow))
+        self.allDatasets.rowsInserted.connect(
+            lambda: self.ui.datasetListView.selectItem(self.allDatasets.currentRow)
+        )
+        self.allDatasets.rowsRemoved.connect(
+            lambda: self.ui.datasetListView.selectItem(self.allDatasets.currentRow)
+        )
 
         # Whenever the data layout in the ActiveExtractedData changes, update
         # the corresponding AllExtractedData data; this includes the important
@@ -463,21 +455,19 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
 
         # Whenever a new dataset is activated in the AllExtractedData, update the TagDataView
-        self.ui.datasetListView.clicked.connect(
-            self.syncTagWithDataset
-        )
+        self.ui.datasetListView.clicked.connect(self.syncTagWithDataset)
 
         # Whenever a dataset is renamed, update the title for tags
-        self.allDatasets.dataChanged.connect(
-            self.syncTagWithDataset
-        )
+        self.allDatasets.dataChanged.connect(self.syncTagWithDataset)
 
         # Whenever a new selection of data set is made, update the matching mode and the cursor
         self.ui.datasetListView.clicked.connect(self.updateMatchingModeAndCursor)
 
     @Slot()
     def syncTagWithDataset(self):
-        self.ui.transitionLabel.setText(f"LABEL for {self.allDatasets.currentDataName()}")
+        self.ui.transitionLabel.setText(
+            f"LABEL for {self.allDatasets.currentDataName()}"
+        )
         self.tagDataView.setTag(self.allDatasets.currentTagItem())
 
     def uiDataOptionsConnects(self):
@@ -530,15 +520,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.clearAllButton.clicked.connect(self.allDatasets.removeAll)
 
         # switch the tag so that it matches the current data set
-        self.ui.newRowButton.clicked.connect(
-            self.syncTagWithDataset
-        )
-        self.ui.deleteRowButton.clicked.connect(
-            self.syncTagWithDataset
-        )
-        self.ui.clearAllButton.clicked.connect(
-            self.syncTagWithDataset
-        )
+        self.ui.newRowButton.clicked.connect(self.syncTagWithDataset)
+        self.ui.deleteRowButton.clicked.connect(self.syncTagWithDataset)
+        self.ui.clearAllButton.clicked.connect(self.syncTagWithDataset)
 
     def uiDataLoadConnects(self):
         self.allDatasets.loadFromRegistrySignal.signal.connect(self.extractedDataSetup)
@@ -552,17 +536,27 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         Callback for updating the matching mode and the cursor
         """
-        self.matching_mode = False
-        self.ui.mplFigureCanvas.matching_mode = False
+        self.x_snap_mode = False
+        self.ui.mplFigureCanvas.x_snap_mode = False
         if (
             self.allDatasets
             and self.allDatasets.currentRow != 0
             and len(self.allDatasets.assocDataList[0][0]) > 0
             and self.ui.horizontalSnapButton.isChecked()
+            and (not self.calibrationButtonIsChecked())
         ):
-            self.matching_mode = True
-            self.ui.mplFigureCanvas.matching_mode = True
+            self.x_snap_mode = True
+            self.ui.mplFigureCanvas.x_snap_mode = True
         self.ui.mplFigureCanvas.select_crosshair()
+
+    def calibrationButtonIsChecked(self):
+        """
+        Check if any of the calibration buttons is checked
+        """
+        for label in self.calibrationButtons:
+            if self.calibrationButtons[label].isChecked():
+                return True
+        return False
 
     def uiMplCanvasConnects(self):
         """Set up the matplotlib canvas and start monitoring for mouse click events in the canvas area."""
@@ -572,8 +566,13 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "button_press_event", self.canvasClickMonitoring
         )
         self.ui.horizontalSnapButton.toggled.connect(self.updateMatchingModeAndCursor)
-        self.ui.mplFigureCanvas.matching_mode = self.matching_mode
-        self.ui.mplFigureCanvas.set_callback(self.allDatasets)
+        # connects the updateMatchingModeAndCursor with calibration buttons
+        for label in self.calibrationButtons:
+            self.calibrationButtons[label].toggled.connect(
+                self.updateMatchingModeAndCursor
+            )
+        self.ui.mplFigureCanvas.x_snap_mode = self.x_snap_mode
+        self.ui.mplFigureCanvas.set_callback_for_extracted_data(self.allDatasets)
         self.cidMove = self.axes.figure.canvas.mpl_connect(
             "motion_notify_event", self.canvasMouseMonitoring
         )
@@ -640,7 +639,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # select mode
         if appstate.state == State.SELECT:
             current_data = self.activeDataset.all()
-            if self.matching_mode:
+            if self.x_snap_mode:
                 x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
             else:
                 x1y1 = np.asarray([event.xdata, event.ydata])
@@ -678,7 +677,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     @Slot()
     def canvasMouseMonitoring(self, event):
         self.axes.figure.canvas.flush_events()
-        if not self.matching_mode:
+        if not self.x_snap_mode:
             return
 
         if event.xdata is None or event.ydata is None:
@@ -751,8 +750,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.axes.set_ylim(ylim)
 
         self.axes.figure.canvas.draw()
-        self.ui.mplFigureCanvas.matching_mode = self.matching_mode
-        self.ui.mplFigureCanvas.set_callback(self.allDatasets)
+        self.ui.mplFigureCanvas.x_snap_mode = self.x_snap_mode
+        self.ui.mplFigureCanvas.set_callback_for_extracted_data(self.allDatasets)
 
     @Slot()
     def calibrate(self, calibrationLabel: str):

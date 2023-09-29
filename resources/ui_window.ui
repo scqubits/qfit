@@ -14,7 +14,7 @@
     <x>0</x>
     <y>0</y>
     <width>1094</width>
-    <height>781</height>
+    <height>926</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -22,6 +22,12 @@
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>330</width>
+    <height>0</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string notr="true">qfit</string>
@@ -655,7 +661,7 @@ QPushButton:checked {
                 </size>
                </property>
                <property name="text">
-                <string>   EXTRACT</string>
+                <string>  EXTRACT</string>
                </property>
                <property name="icon">
                 <iconset resource="resources.qrc">
@@ -701,7 +707,7 @@ QPushButton:checked {
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>16777215</width>
+                 <width>120</width>
                  <height>70</height>
                 </size>
                </property>
@@ -709,13 +715,12 @@ QPushButton:checked {
                 <font>
                  <family>Roboto Medium</family>
                  <pointsize>11</pointsize>
-                 <weight>7</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
                </property>
                <property name="text">
-                <string>   VISUALIZE</string>
+                <string>  CALIBRATE</string>
                </property>
                <property name="icon">
                 <iconset resource="resources.qrc">
@@ -798,7 +803,7 @@ QPushButton:pressed {
               <widget class="QPushButton" name="modePrefitButton">
                <property name="minimumSize">
                 <size>
-                 <width>170</width>
+                 <width>120</width>
                  <height>70</height>
                 </size>
                </property>
@@ -809,7 +814,7 @@ QPushButton:pressed {
                 </size>
                </property>
                <property name="text">
-                <string>   PRE-FIT</string>
+                <string>  PRE-FIT</string>
                </property>
                <property name="icon">
                 <iconset resource="resources.qrc">
@@ -866,7 +871,7 @@ QPushButton:pressed {
              </size>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <widget class="DataExtractingWidget" name="extractPointsWidget">
              <property name="sizePolicy">
@@ -897,7 +902,74 @@ QPushButton:pressed {
                  <property name="rightMargin">
                   <number>9</number>
                  </property>
-                 <item row="3" column="0">
+                 <item row="10" column="3">
+                  <spacer name="verticalSpacer_2">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>1</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="2" column="3">
+                  <widget class="QPushButton" name="swapXYButton">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>40</width>
+                     <height>30</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>X↔Y</string>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>16</width>
+                     <height>16</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_5">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>15</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">color: rgb(190, 130, 250);
+font: 57 11pt &quot;Roboto Medium&quot;;</string>
+                   </property>
+                   <property name="text">
+                    <string>DATA</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="5" column="0">
                   <widget class="QLabel" name="label_27">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -912,8 +984,8 @@ QPushButton:pressed {
                     </size>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">font: 57 11pt &quot;Roboto Medium&quot;;
-</string>
+                    <string notr="true">color: rgb(190, 130, 250);
+font: 57 11pt &quot;Roboto Medium&quot;;</string>
                    </property>
                    <property name="text">
                     <string>CALIBRATION</string>
@@ -923,7 +995,192 @@ QPushButton:pressed {
                    </property>
                   </widget>
                  </item>
-                 <item row="5" column="0">
+                 <item row="1" column="0" colspan="2">
+                  <widget class="QFrame" name="DataXYFrame">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>330</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Raised</enum>
+                   </property>
+                   <layout class="QGridLayout" name="gridLayout_4">
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="verticalSpacing">
+                     <number>12</number>
+                    </property>
+                    <item row="1" column="0">
+                     <widget class="QLabel" name="label_12">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string notr="true">AXIS X</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="3" column="0">
+                     <widget class="QLabel" name="label_14">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string notr="true">AXIS Y</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="0">
+                     <widget class="QLabel" name="label_13">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string notr="true">Z</string>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="3" column="1">
+                     <widget class="QComboBox" name="yComboBox">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>250</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">background-color: rgb(47,47,47);</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="1">
+                     <widget class="QComboBox" name="xComboBox">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>250</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">background-color: rgb(47,47,47);</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="1">
+                     <widget class="QComboBox" name="zComboBox">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>250</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="autoFillBackground">
+                       <bool>false</bool>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">background-color: rgb(47,47,47);</string>
+                      </property>
+                      <property name="currentText">
+                       <string/>
+                      </property>
+                      <property name="frame">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item row="9" column="2">
+                  <widget class="QCheckBox" name="calibratedCheckBox">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>140</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                   <property name="layoutDirection">
+                    <enum>Qt::RightToLeft</enum>
+                   </property>
+                   <property name="text">
+                    <string notr="true">TOGGLE CALIBRATION</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="2">
+                  <spacer name="horizontalSpacer_14">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>60</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="8" column="0">
                   <widget class="QFrame" name="calibrateYGridFrame">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -934,7 +1191,7 @@ QPushButton:pressed {
                    <property name="minimumSize">
                     <size>
                      <width>330</width>
-                     <height>120</height>
+                     <height>100</height>
                     </size>
                    </property>
                    <property name="maximumSize">
@@ -955,13 +1212,22 @@ QPushButton:pressed {
 }</string>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_11">
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
                     <property name="topMargin">
-                     <number>15</number>
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
                     </property>
                     <property name="verticalSpacing">
                      <number>8</number>
                     </property>
-                    <item row="1" column="4">
+                    <item row="2" column="4">
                      <widget class="CalibrationLineEdit" name="mapY2LineEdit">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -992,51 +1258,7 @@ QPushButton:pressed {
                       </property>
                      </widget>
                     </item>
-                    <item row="0" column="1">
-                     <widget class="QLabel" name="label_19">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="text">
-                       <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="2">
-                     <widget class="CalibrationLineEdit" name="rawY2LineEdit">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>80</width>
-                        <height>30</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>200</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                      <property name="toolTip">
-                       <string notr="true"/>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">background-color: rgb(47,47,47);</string>
-                      </property>
-                      <property name="text">
-                       <string notr="true">1.0</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="0">
+                    <item row="2" column="0">
                      <widget class="QPushButton" name="calibrateY2Button">
                       <property name="minimumSize">
                        <size>
@@ -1052,11 +1274,17 @@ QPushButton:pressed {
                       </property>
                       <property name="icon">
                        <iconset resource="resources.qrc">
-                        <normaloff>:/icons/svg/cil-at.svg</normaloff>:/icons/svg/cil-at.svg</iconset>
+                        <normaloff>:/icons/svg/cil-location-pin.svg</normaloff>:/icons/svg/cil-location-pin.svg</iconset>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="checked">
+                       <bool>false</bool>
                       </property>
                      </widget>
                     </item>
-                    <item row="0" column="2">
+                    <item row="1" column="2">
                      <widget class="CalibrationLineEdit" name="rawY1LineEdit">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -1087,7 +1315,72 @@ QPushButton:pressed {
                       </property>
                      </widget>
                     </item>
-                    <item row="0" column="4">
+                    <item row="2" column="3">
+                     <widget class="QLabel" name="label_22">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="2" column="1">
+                     <widget class="QLabel" name="label_20">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="1">
+                     <widget class="QLabel" name="label_19">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="0">
+                     <widget class="QPushButton" name="calibrateY1Button">
+                      <property name="minimumSize">
+                       <size>
+                        <width>30</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="toolTip">
+                       <string notr="true">Calibrate y1, allows selection of coordinate inside plot</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="resources.qrc">
+                        <normaloff>:/icons/svg/cil-location-pin.svg</normaloff>:/icons/svg/cil-location-pin.svg</iconset>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="checked">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="4">
                      <widget class="CalibrationLineEdit" name="mapY1LineEdit">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -1118,53 +1411,38 @@ QPushButton:pressed {
                       </property>
                      </widget>
                     </item>
-                    <item row="1" column="3">
-                     <widget class="QLabel" name="label_22">
+                    <item row="2" column="2">
+                     <widget class="CalibrationLineEdit" name="rawY2LineEdit">
                       <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
                       </property>
-                      <property name="text">
-                       <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="1">
-                     <widget class="QLabel" name="label_20">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="text">
-                       <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="0">
-                     <widget class="QPushButton" name="calibrateY1Button">
                       <property name="minimumSize">
                        <size>
-                        <width>30</width>
+                        <width>80</width>
                         <height>30</height>
                        </size>
                       </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>200</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
                       <property name="toolTip">
-                       <string notr="true">Calibrate y1, allows selection of coordinate inside plot</string>
+                       <string notr="true"/>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">background-color: rgb(47,47,47);</string>
                       </property>
                       <property name="text">
-                       <string/>
-                      </property>
-                      <property name="icon">
-                       <iconset resource="resources.qrc">
-                        <normaloff>:/icons/svg/cil-at.svg</normaloff>:/icons/svg/cil-at.svg</iconset>
+                       <string notr="true">1.0</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="0" column="3">
+                    <item row="1" column="3">
                      <widget class="QLabel" name="label_21">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -1177,144 +1455,36 @@ QPushButton:pressed {
                       </property>
                      </widget>
                     </item>
-                   </layout>
-                  </widget>
-                 </item>
-                 <item row="2" column="0">
-                  <widget class="QFrame" name="xyzDataGridFrame">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>330</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <layout class="QGridLayout" name="gridLayout_4">
-                    <item row="2" column="1">
-                     <widget class="QComboBox" name="zComboBox">
-                      <property name="minimumSize">
-                       <size>
-                        <width>250</width>
-                        <height>30</height>
-                       </size>
+                    <item row="0" column="2">
+                     <widget class="QLabel" name="label_23">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
                       </property>
-                      <property name="autoFillBackground">
-                       <bool>false</bool>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">background-color: rgb(47,47,47);</string>
-                      </property>
-                      <property name="currentText">
-                       <string/>
-                      </property>
-                      <property name="frame">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="5" column="0">
-                     <widget class="QLabel" name="label_14">
                       <property name="text">
-                       <string notr="true">AXIS 2</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                       <string>RAW Y</string>
                       </property>
                      </widget>
                     </item>
-                    <item row="2" column="0">
-                     <widget class="QLabel" name="label_13">
+                    <item row="0" column="4">
+                     <widget class="QLabel" name="label_24">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
                       <property name="text">
-                       <string notr="true">Z</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="4" column="1">
-                     <widget class="QComboBox" name="xComboBox">
-                      <property name="minimumSize">
-                       <size>
-                        <width>250</width>
-                        <height>30</height>
-                       </size>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">background-color: rgb(47,47,47);</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="5" column="1">
-                     <widget class="QComboBox" name="yComboBox">
-                      <property name="minimumSize">
-                       <size>
-                        <width>250</width>
-                        <height>30</height>
-                       </size>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">background-color: rgb(47,47,47);</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="4" column="0">
-                     <widget class="QLabel" name="label_12">
-                      <property name="text">
-                       <string notr="true">AXIS 1</string>
-                      </property>
-                      <property name="alignment">
-                       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                       <string>CALIBRATED Y [GHz]</string>
                       </property>
                      </widget>
                     </item>
                    </layout>
                   </widget>
                  </item>
-                 <item row="4" column="2">
-                  <spacer name="horizontalSpacer_10">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item row="6" column="1">
-                  <widget class="QCheckBox" name="calibratedCheckBox">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                   <property name="layoutDirection">
-                    <enum>Qt::RightToLeft</enum>
-                   </property>
-                   <property name="text">
-                    <string notr="true">TOGGLE CALIBRATION</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="4" column="0">
+                 <item row="7" column="0">
                   <widget class="QFrame" name="calibrateXGridFrame">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1325,7 +1495,7 @@ QPushButton:pressed {
                    <property name="minimumSize">
                     <size>
                      <width>330</width>
-                     <height>90</height>
+                     <height>100</height>
                     </size>
                    </property>
                    <property name="maximumSize">
@@ -1343,14 +1513,111 @@ QPushButton:pressed {
 }</string>
                    </property>
                    <layout class="QGridLayout" name="gridLayout_10">
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
                     <property name="topMargin">
-                     <number>9</number>
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
                     </property>
                     <property name="verticalSpacing">
                      <number>8</number>
                     </property>
-                    <item row="1" column="3">
-                     <widget class="QLabel" name="label_17">
+                    <item row="1" column="2">
+                     <widget class="CalibrationLineEdit" name="rawX1LineEdit">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>80</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>200</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="toolTip">
+                       <string notr="true"/>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">background-color: rgb(47,47,47);</string>
+                      </property>
+                      <property name="text">
+                       <string notr="true">0.0</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="2" column="2">
+                     <widget class="CalibrationLineEdit" name="rawX2LineEdit">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>80</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>200</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="toolTip">
+                       <string notr="true"/>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">background-color: rgb(47,47,47);</string>
+                      </property>
+                      <property name="text">
+                       <string notr="true">1.0</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="2" column="0">
+                     <widget class="QPushButton" name="calibrateX2Button">
+                      <property name="minimumSize">
+                       <size>
+                        <width>30</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="toolTip">
+                       <string notr="true">Calibrate x2, allows selection of coordinate inside plot</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="resources.qrc">
+                        <normaloff>:/icons/svg/cil-location-pin.svg</normaloff>:/icons/svg/cil-location-pin.svg</iconset>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="checked">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="2" column="3">
+                     <widget class="QLabel" name="label_18">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                         <horstretch>0</horstretch>
@@ -1358,7 +1625,7 @@ QPushButton:pressed {
                        </sizepolicy>
                       </property>
                       <property name="text">
-                       <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ X&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                       <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ X&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                       </property>
                      </widget>
                     </item>
@@ -1396,121 +1663,6 @@ QPushButton:pressed {
                       </property>
                      </widget>
                     </item>
-                    <item row="2" column="3">
-                     <widget class="QLabel" name="label_18">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="text">
-                       <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ X&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="0">
-                     <widget class="QPushButton" name="calibrateX1Button">
-                      <property name="minimumSize">
-                       <size>
-                        <width>30</width>
-                        <height>30</height>
-                       </size>
-                      </property>
-                      <property name="toolTip">
-                       <string notr="true">Calibrate x2, allows selection of coordinate inside plot</string>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                      <property name="icon">
-                       <iconset resource="resources.qrc">
-                        <normaloff>:/icons/svg/cil-at.svg</normaloff>:/icons/svg/cil-at.svg</iconset>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="2">
-                     <widget class="CalibrationLineEdit" name="rawX1LineEdit">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>80</width>
-                        <height>30</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>200</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                      <property name="toolTip">
-                       <string notr="true"/>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">background-color: rgb(47,47,47);</string>
-                      </property>
-                      <property name="text">
-                       <string notr="true">0.0</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="2" column="0">
-                     <widget class="QPushButton" name="calibrateX2Button">
-                      <property name="minimumSize">
-                       <size>
-                        <width>30</width>
-                        <height>30</height>
-                       </size>
-                      </property>
-                      <property name="toolTip">
-                       <string notr="true">Calibrate x2, allows selection of coordinate inside plot</string>
-                      </property>
-                      <property name="text">
-                       <string/>
-                      </property>
-                      <property name="icon">
-                       <iconset resource="resources.qrc">
-                        <normaloff>:/icons/svg/cil-at.svg</normaloff>:/icons/svg/cil-at.svg</iconset>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="2" column="4">
-                     <widget class="CalibrationLineEdit" name="mapX2LineEdit">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="minimumSize">
-                       <size>
-                        <width>80</width>
-                        <height>30</height>
-                       </size>
-                      </property>
-                      <property name="maximumSize">
-                       <size>
-                        <width>200</width>
-                        <height>16777215</height>
-                       </size>
-                      </property>
-                      <property name="toolTip">
-                       <string notr="true"/>
-                      </property>
-                      <property name="styleSheet">
-                       <string notr="true">background-color: rgb(47,47,47);</string>
-                      </property>
-                      <property name="text">
-                       <string notr="true">1.0</string>
-                      </property>
-                     </widget>
-                    </item>
                     <item row="1" column="1">
                      <widget class="QLabel" name="label_15">
                       <property name="sizePolicy">
@@ -1524,8 +1676,21 @@ QPushButton:pressed {
                       </property>
                      </widget>
                     </item>
-                    <item row="2" column="2">
-                     <widget class="CalibrationLineEdit" name="rawX2LineEdit">
+                    <item row="1" column="3">
+                     <widget class="QLabel" name="label_17">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ X&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="2" column="4">
+                     <widget class="CalibrationLineEdit" name="mapX2LineEdit">
                       <property name="sizePolicy">
                        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                         <horstretch>0</horstretch>
@@ -1568,26 +1733,80 @@ QPushButton:pressed {
                       </property>
                      </widget>
                     </item>
+                    <item row="1" column="0">
+                     <widget class="QPushButton" name="calibrateX1Button">
+                      <property name="minimumSize">
+                       <size>
+                        <width>30</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="toolTip">
+                       <string notr="true">Calibrate x2, allows selection of coordinate inside plot</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="resources.qrc">
+                        <normaloff>:/icons/svg/cil-location-pin.svg</normaloff>:/icons/svg/cil-location-pin.svg</iconset>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="checked">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="2">
+                     <widget class="QLabel" name="label_10">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>RAW X</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="4">
+                     <widget class="QLabel" name="label_11">
+                      <property name="text">
+                       <string>CALIBRATED X</string>
+                      </property>
+                     </widget>
+                    </item>
                    </layout>
                   </widget>
                  </item>
-                 <item row="1" column="0">
-                  <widget class="QPushButton" name="dataGroupPushButton">
+                 <item row="6" column="1">
+                  <widget class="QPushButton" name="calibrationWizardPushButton">
+                   <property name="minimumSize">
+                    <size>
+                     <width>130</width>
+                     <height>30</height>
+                    </size>
+                   </property>
                    <property name="text">
-                    <string>DATA</string>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/icons/svg/cil-caret-right.svg</normaloff>
-                     <normalon>:/icons/svg/cil-caret-bottom.svg</normalon>:/icons/svg/cil-caret-right.svg</iconset>
-                   </property>
-                   <property name="checkable">
-                    <bool>true</bool>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
+                    <string>CALIBRATION WIZARD</string>
                    </property>
                   </widget>
+                 </item>
+                 <item row="7" column="4">
+                  <spacer name="horizontalSpacer_10">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
                  </item>
                 </layout>
                </widget>
@@ -1840,7 +2059,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                       <x>0</x>
                       <y>0</y>
                       <width>352</width>
-                      <height>363</height>
+                      <height>442</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -2267,7 +2486,6 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                     <font>
                      <family>Roboto Medium</family>
                      <pointsize>11</pointsize>
-                     <weight>7</weight>
                      <italic>false</italic>
                      <bold>false</bold>
                     </font>
@@ -2332,8 +2550,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>352</width>
-                      <height>414</height>
+                      <width>32</width>
+                      <height>16</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -2421,7 +2639,6 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                     <font>
                      <family>Roboto Medium</family>
                      <pointsize>11</pointsize>
-                     <weight>7</weight>
                      <italic>false</italic>
                      <bold>false</bold>
                     </font>
@@ -2480,8 +2697,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>100</width>
-                      <height>30</height>
+                      <width>32</width>
+                      <height>16</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -2805,71 +3022,6 @@ color: rgb(30, 30, 30);</string>
                <bool>false</bool>
               </property>
              </widget>
-             <widget class="QPushButton" name="swapXYButton">
-              <property name="geometry">
-               <rect>
-                <x>390</x>
-                <y>10</y>
-                <width>71</width>
-                <height>41</height>
-               </rect>
-              </property>
-              <property name="cursor">
-               <cursorShape>CrossCursor</cursorShape>
-              </property>
-              <property name="toolTip">
-               <string notr="true">Transpose data</string>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QPushButton {
-	border: 0px solid rgb(52, 59, 72);
-	border-radius: 15px;	
-	background-color: rgb(93, 93, 93);
-color: rgb(225, 225, 225);
-}
-QPushButton:hover {
-	background-color: rgb(196, 150, 250);
-	border: 0px solid rgb(61, 70, 86);
-}
-QPushButton:pressed {	
-	background-color: rgb(196, 150, 250);
-	border: 0px solid rgb(43, 50, 61);
-}
-
-</string>
-              </property>
-              <property name="text">
-               <string>X↔Y</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-              <property name="autoExclusive">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </widget>
-            <widget class="Line" name="line">
-             <property name="geometry">
-              <rect>
-               <x>379</x>
-               <y>10</y>
-               <width>3</width>
-               <height>41</height>
-              </rect>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Plain</enum>
-             </property>
-             <property name="lineWidth">
-              <number>0</number>
-             </property>
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
             </widget>
             <widget class="Line" name="line_2">
              <property name="geometry">
@@ -2935,7 +3087,7 @@ QPushButton:pressed {
              <enum>QFrame::Raised</enum>
             </property>
             <property name="currentIndex">
-             <number>2</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="calibrationPage">
              <property name="sizePolicy">
@@ -3015,7 +3167,6 @@ QPushButton:pressed {
                     <font>
                      <family>Roboto Medium</family>
                      <pointsize>11</pointsize>
-                     <weight>7</weight>
                      <italic>false</italic>
                      <bold>false</bold>
                     </font>
@@ -3646,7 +3797,6 @@ QPushButton:pressed {
                     <font>
                      <family>Roboto Medium</family>
                      <pointsize>9</pointsize>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -3667,7 +3817,6 @@ QPushButton:pressed {
                     <font>
                      <family>Roboto Medium</family>
                      <pointsize>11</pointsize>
-                     <weight>7</weight>
                      <italic>false</italic>
                      <bold>false</bold>
                     </font>
@@ -3922,7 +4071,6 @@ QPushButton:pressed {
                     <font>
                      <family>Roboto Medium</family>
                      <pointsize>9</pointsize>
-                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -4196,9 +4344,6 @@ QPushButton:pressed {
   <tabstop>bgndSubtractYCheckBox</tabstop>
   <tabstop>colorComboBox</tabstop>
   <tabstop>logScaleCheckBox</tabstop>
-  <tabstop>yComboBox</tabstop>
-  <tabstop>zComboBox</tabstop>
-  <tabstop>xComboBox</tabstop>
   <tabstop>rawX1LineEdit</tabstop>
   <tabstop>calibrateX2Button</tabstop>
   <tabstop>mapX2LineEdit</tabstop>
@@ -4216,22 +4361,6 @@ QPushButton:pressed {
   <include location="resources.qrc"/>
  </resources>
  <connections>
-  <connection>
-   <sender>dataGroupPushButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>xyzDataGridFrame</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>283</x>
-     <y>445</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>266</x>
-     <y>521</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>bgndSubtractPushButton</sender>
    <signal>toggled(bool)</signal>
