@@ -41,7 +41,8 @@ scq.settings.PROGRESSBAR_DISABLED = True
 if executed_in_ipython():
     # inside ipython, the function get_ipython is always in globals()
     ipython = get_ipython()
-    ipython.run_line_magic('gui', 'qt6')
+    ipython.run_line_magic("gui", "qt6")
+
 
 class Fit:
     app: Union[QApplication, None] = None
@@ -50,9 +51,9 @@ class Fit:
 
     @classmethod
     def _newProject(
-        cls, 
-        hilbertSpace: HilbertSpace, 
-        measurementData: Union[MeasurementDataType, None] = None
+        cls,
+        hilbertSpace: HilbertSpace,
+        measurementData: Union[MeasurementDataType, None] = None,
     ) -> "Fit":
         # Create a new instance
         instance = object.__new__(cls)
@@ -76,34 +77,29 @@ class Fit:
             measurementData = dummy_measurement_data()
 
         instance.window = MainWindow(
-            measurementData = measurementData,
-            hilbertspace = instance._hilbertSpace,
+            measurementData=measurementData,
+            hilbertspace=instance._hilbertSpace,
         )
 
         instance.window.show()
 
         return instance
-    
-    def __new__(
-        cls,
-        hilbertSpace: HilbertSpace, 
-        measurementData: Union[str, None] = None
-    ) -> "Fit":
-        instance = cls._newProject(
-            hilbertSpace, None) 
 
-        return instance           
+    def __new__(
+        cls, hilbertSpace: HilbertSpace, measurementData: Union[str, None] = None
+    ) -> "Fit":
+        instance = cls._newProject(hilbertSpace, None)
+
+        return instance
 
     def __init__(
-        self, 
-        hilbertSpace: HilbertSpace, 
-        measurementFileName: Union[str, None] = None
+        self, hilbertSpace: HilbertSpace, measurementFileName: Union[str, None] = None
     ):
         # check if file exists
         if measurementFileName is not None:
-            if not os.path.isfile(measurementFileName):   
+            if not os.path.isfile(measurementFileName):
                 raise FileNotFoundError(f"File '{measurementFileName}' does not exist.")
-            
+
         if measurementFileName is not None:
             # load measurement data from the given file
             measurementData = IOCtrl.measurementDataFromFile(measurementFileName)
@@ -147,11 +143,10 @@ class Fit:
 
         # check if file exists
         if measurementFileName is not None:
-            if not os.path.isfile(measurementFileName):   
+            if not os.path.isfile(measurementFileName):
                 raise FileNotFoundError(f"File '{measurementFileName}' does not exist.")
-            
-        instance = cls._newProject(
-            hilbertSpace, dummy_measurement_data())
+
+        instance = cls._newProject(hilbertSpace, dummy_measurement_data())
 
         # load measurement data
         if measurementFileName is not None:
@@ -169,7 +164,7 @@ class Fit:
 
     @classmethod
     def open(
-        cls, 
+        cls,
         fileName: Union[str, None] = None,
     ) -> "Fit":
         """
@@ -190,9 +185,8 @@ class Fit:
             if not os.path.isfile(fileName):
                 raise FileNotFoundError(f"File '{fileName}' does not exist.")
 
-        instance = cls._newProject(
-            dummy_hilbert_space(), dummy_measurement_data())
-        
+        instance = cls._newProject(dummy_hilbert_space(), dummy_measurement_data())
+
         # load registry
         if fileName is None:
             fileName = instance.window.ioMenuCtrl.openFile(from_menu=False)
@@ -200,8 +194,10 @@ class Fit:
             registryDict = IOCtrl.registryDictFromFile(fileName)
             if registryDict is None:
                 raise FileNotFoundError(f"Can't load file '{fileName}'.")
-            
+
             instance.window.ioMenuCtrl.openProjectWithRegistryDict(registryDict)
+            # update the project file name
+            instance.window.projectFile = fileName
 
         if not executed_in_ipython():
             instance.app.exec_()

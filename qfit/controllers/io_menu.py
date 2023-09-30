@@ -298,12 +298,11 @@ class IOCtrl:
             registryDictFromFile = copy.deepcopy(
                 self.registryDictFromFile(self.mainWindow.projectFile)
             )
-            # remove HilbertSpace from these dicts
+            # remove HilbertSpace and file name from these dicts
             registryDict.pop("HilbertSpace")
             registryDictFromFile.pop("HilbertSpace")
-            # note that we should compare the taglist in future, but for now let's
-            # ignore it...
-            # TODO compare taglist
+            registryDict.pop("projectFile")
+            registryDictFromFile.pop("projectFile")
             currentTagList = registryDict["allExtractedData"]["taglist"]
             fileTagList = registryDictFromFile["allExtractedData"]["taglist"]
             if len(currentTagList) != len(fileTagList):
@@ -339,13 +338,11 @@ class IOCtrl:
             #         if value != registryDict[key]:
             #             self.mainWindow.unsavedChanges = True
             #             break
-        if self.mainWindow.allDatasets.isEmpty() or not self.mainWindow.unsavedChanges:
-            # if run through ipython, no need to perform sys.exit, just close and delete
-            # the window
-            self._quit()
-            return True
-
         else:
+            self.mainWindow.unsavedChanges = True
+            if self.mainWindow.allDatasets.isEmpty():
+                self.mainWindow.unsavedChanges = False
+        if self.mainWindow.unsavedChanges:
             msgBox = QMessageBox()
             msgBox.setWindowTitle("qfit")
             msgBox.setIcon(QMessageBox.Question)
@@ -367,6 +364,10 @@ class IOCtrl:
             else:  # reply == QMessageBox.Cancel
                 self.menu.toggle()
                 return False
+
+        else:
+            self._quit()
+            return True
 
     def closeAppIPython(self):
         """
