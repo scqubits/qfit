@@ -66,6 +66,7 @@ from qfit.settings import color_dict
 from qfit.ui_views.resizable_window import ResizableFramelessWindow
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
+from qfit.widgets.gif_tooltip import DialogWindowWithGif
 
 # pre-fit
 from qfit.models.quantum_model_parameters import (
@@ -172,6 +173,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.setupUICalibration()
         self.calibrationData = CalibrationData()
         self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
+        self.calibrationWizardMode = False
 
         self.x_snap_mode = False
         self.mousedat = None
@@ -294,8 +296,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def setupUICalibration(self):
         """For the interface that enables calibration of data with respect to x and y axis, group QLineEdit elements
         and the corresponding buttons in dicts. Set up a dictionary mapping calibration labels to the corresponding
-        State choices. Finally, set up an instance of CalibrationData and
-        CalibrationView"""
+        State choices. Finally, set up an instance of CalibrationData and CalibrationView.
+        """
         self.rawLineEdits = {
             "X1": self.ui.rawX1LineEdit,
             "X2": self.ui.rawX2LineEdit,
@@ -493,6 +495,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def uiCalibrationConnects(self):
         """Connect UI elements for data calibration."""
         self.ui.calibratedCheckBox.toggled.connect(self.toggleCalibration)
+
+        self.ui.calibrationWizardPushButton.clicked.connect(self.calibrationTutorial)
 
         for label in self.calibrationButtons:
             self.calibrationButtons[label].clicked.connect(
@@ -777,6 +781,14 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         selected points."""
         self.calibrationData.toggleCalibration()
         self.activeDataset.toggleCalibratedView()
+
+    @Slot()
+    def calibrationTutorial(self):
+        tutorial_dialog = DialogWindowWithGif(
+            "test",
+            "/Users/pacosynthesis/Desktop/ScienceTech/Research/Superconducting_qubit_NU/Codes/qfit/resources/nyanyanya.gif",
+        )
+        tutorial_dialog.exec()
 
     @Slot(int)
     def zDataUpdate(self, itemIndex: int):
