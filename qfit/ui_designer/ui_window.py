@@ -19,8 +19,8 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
     QGridLayout, QGroupBox, QHBoxLayout, QLabel,
     QLayout, QLineEdit, QMainWindow, QPushButton,
     QRadioButton, QScrollArea, QSizePolicy, QSlider,
-    QSpacerItem, QSpinBox, QStackedWidget, QVBoxLayout,
-    QWidget)
+    QSpacerItem, QSpinBox, QStackedWidget, QStatusBar,
+    QVBoxLayout, QWidget)
 
 from qfit.widgets.calibration import CalibrationLineEdit
 from qfit.widgets.data_extracting import (DataExtractingWidget, ListView)
@@ -34,13 +34,13 @@ class Ui_MainWindow(object):
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.setWindowModality(Qt.NonModal)
         MainWindow.setEnabled(True)
-        MainWindow.resize(1094, 926)
+        MainWindow.resize(1070, 806)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
         MainWindow.setSizePolicy(sizePolicy)
-        MainWindow.setMinimumSize(QSize(330, 0))
+        MainWindow.setMinimumSize(QSize(0, 0))
         MainWindow.setWindowTitle(u"qfit")
         icon = QIcon()
         icon.addFile(u":/icons/svg/qfit-icon.svg", QSize(), QIcon.Normal, QIcon.Off)
@@ -440,33 +440,10 @@ class Ui_MainWindow(object):
         self.centralWidget.setObjectName(u"centralWidget")
         sizePolicy.setHeightForWidth(self.centralWidget.sizePolicy().hasHeightForWidth())
         self.centralWidget.setSizePolicy(sizePolicy)
-        self.horizontalLayout_2 = QHBoxLayout(self.centralWidget)
-        self.horizontalLayout_2.setSpacing(0)
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.fullWindowFrame = QFrame(self.centralWidget)
-        self.fullWindowFrame.setObjectName(u"fullWindowFrame")
-        self.fullWindowFrame.setMaximumSize(QSize(16777215, 16777215))
-        self.fullWindowFrame.setFrameShape(QFrame.NoFrame)
-        self.fullWindowFrame.setFrameShadow(QFrame.Raised)
-        self.fullWindowFrame.setLineWidth(1)
-        self.verticalLayout = QVBoxLayout(self.fullWindowFrame)
-        self.verticalLayout.setSpacing(0)
+        self.verticalLayout = QVBoxLayout(self.centralWidget)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.windowTitleFrame = QFrame(self.fullWindowFrame)
-        self.windowTitleFrame.setObjectName(u"windowTitleFrame")
-        self.windowTitleFrame.setMaximumSize(QSize(16777215, 40))
-        self.windowTitleFrame.setFrameShape(QFrame.NoFrame)
-        self.windowTitleFrame.setFrameShadow(QFrame.Raised)
-        self.horizontalLayout_3 = QHBoxLayout(self.windowTitleFrame)
-        self.horizontalLayout_3.setSpacing(0)
-        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
-
-        self.verticalLayout.addWidget(self.windowTitleFrame)
-
-        self.windowBodyFrame = QFrame(self.fullWindowFrame)
+        self.windowBodyFrame = QFrame(self.centralWidget)
         self.windowBodyFrame.setObjectName(u"windowBodyFrame")
         sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         sizePolicy1.setHorizontalStretch(0)
@@ -483,7 +460,7 @@ class Ui_MainWindow(object):
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.menu_frame = QFrame(self.windowBodyFrame)
         self.menu_frame.setObjectName(u"menu_frame")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.menu_frame.sizePolicy().hasHeightForWidth())
@@ -638,7 +615,7 @@ class Ui_MainWindow(object):
         self.gridLayout_14.setContentsMargins(25, 20, 9, -1)
         self.verticalSpacer_2 = QSpacerItem(20, 1, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.gridLayout_14.addItem(self.verticalSpacer_2, 10, 3, 1, 1)
+        self.gridLayout_14.addItem(self.verticalSpacer_2, 12, 3, 1, 1)
 
         self.swapXYButton = QPushButton(self.frame)
         self.swapXYButton.setObjectName(u"swapXYButton")
@@ -759,7 +736,7 @@ class Ui_MainWindow(object):
         self.calibratedCheckBox.setLayoutDirection(Qt.RightToLeft)
         self.calibratedCheckBox.setText(u"TOGGLE CALIBRATION")
 
-        self.gridLayout_14.addWidget(self.calibratedCheckBox, 9, 2, 1, 1)
+        self.gridLayout_14.addWidget(self.calibratedCheckBox, 11, 2, 1, 1)
 
         self.horizontalSpacer_14 = QSpacerItem(60, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
@@ -914,7 +891,7 @@ class Ui_MainWindow(object):
         self.gridLayout_11.addWidget(self.label_24, 0, 4, 1, 1)
 
 
-        self.gridLayout_14.addWidget(self.calibrateYGridFrame, 8, 0, 1, 1)
+        self.gridLayout_14.addWidget(self.calibrateYGridFrame, 10, 0, 1, 1)
 
         self.calibrateXGridFrame = QFrame(self.frame)
         self.calibrateXGridFrame.setObjectName(u"calibrateXGridFrame")
@@ -980,6 +957,11 @@ class Ui_MainWindow(object):
 
         self.gridLayout_10.addWidget(self.label_18, 2, 3, 1, 1)
 
+        self.label_11 = QLabel(self.calibrateXGridFrame)
+        self.label_11.setObjectName(u"label_11")
+
+        self.gridLayout_10.addWidget(self.label_11, 0, 4, 1, 1)
+
         self.mapX1LineEdit = CalibrationLineEdit(self.calibrateXGridFrame)
         self.mapX1LineEdit.setObjectName(u"mapX1LineEdit")
         sizePolicy3.setHeightForWidth(self.mapX1LineEdit.sizePolicy().hasHeightForWidth())
@@ -1032,6 +1014,13 @@ class Ui_MainWindow(object):
 
         self.gridLayout_10.addWidget(self.label_16, 2, 1, 1, 1)
 
+        self.label_10 = QLabel(self.calibrateXGridFrame)
+        self.label_10.setObjectName(u"label_10")
+        sizePolicy5.setHeightForWidth(self.label_10.sizePolicy().hasHeightForWidth())
+        self.label_10.setSizePolicy(sizePolicy5)
+
+        self.gridLayout_10.addWidget(self.label_10, 0, 2, 1, 1)
+
         self.calibrateX1Button = QPushButton(self.calibrateXGridFrame)
         self.calibrateX1Button.setObjectName(u"calibrateX1Button")
         self.calibrateX1Button.setMinimumSize(QSize(30, 30))
@@ -1044,30 +1033,19 @@ class Ui_MainWindow(object):
 
         self.gridLayout_10.addWidget(self.calibrateX1Button, 1, 0, 1, 1)
 
-        self.label_10 = QLabel(self.calibrateXGridFrame)
-        self.label_10.setObjectName(u"label_10")
-        sizePolicy5.setHeightForWidth(self.label_10.sizePolicy().hasHeightForWidth())
-        self.label_10.setSizePolicy(sizePolicy5)
 
-        self.gridLayout_10.addWidget(self.label_10, 0, 2, 1, 1)
-
-        self.label_11 = QLabel(self.calibrateXGridFrame)
-        self.label_11.setObjectName(u"label_11")
-
-        self.gridLayout_10.addWidget(self.label_11, 0, 4, 1, 1)
-
-
-        self.gridLayout_14.addWidget(self.calibrateXGridFrame, 7, 0, 1, 1)
-
-        self.calibrationWizardPushButton = QPushButton(self.frame)
-        self.calibrationWizardPushButton.setObjectName(u"calibrationWizardPushButton")
-        self.calibrationWizardPushButton.setMinimumSize(QSize(130, 30))
-
-        self.gridLayout_14.addWidget(self.calibrationWizardPushButton, 6, 1, 1, 1)
+        self.gridLayout_14.addWidget(self.calibrateXGridFrame, 9, 0, 1, 1)
 
         self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
-        self.gridLayout_14.addItem(self.horizontalSpacer_10, 7, 4, 1, 1)
+        self.gridLayout_14.addItem(self.horizontalSpacer_10, 9, 4, 1, 1)
+
+        self.calibrationWizardPushButton = QPushButton(self.frame)
+        self.calibrationWizardPushButton.setObjectName(u"calibrationWizardPushButton")
+        self.calibrationWizardPushButton.setMinimumSize(QSize(150, 30))
+        self.calibrationWizardPushButton.setCheckable(True)
+
+        self.gridLayout_14.addWidget(self.calibrationWizardPushButton, 6, 1, 1, 1)
 
 
         self.verticalLayout_9.addWidget(self.frame)
@@ -1213,7 +1191,7 @@ class Ui_MainWindow(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 352, 442))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 179, 363))
         self.verticalLayout_16 = QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_16.setSpacing(12)
         self.verticalLayout_16.setObjectName(u"verticalLayout_16")
@@ -1466,7 +1444,7 @@ class Ui_MainWindow(object):
         self.prefitScrollArea.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.prefitScrollAreaWidget = QWidget()
         self.prefitScrollAreaWidget.setObjectName(u"prefitScrollAreaWidget")
-        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 32, 16))
+        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 100, 30))
         self.verticalLayout_11 = QVBoxLayout(self.prefitScrollAreaWidget)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -1524,7 +1502,7 @@ class Ui_MainWindow(object):
         self.fitScrollArea.setWidgetResizable(True)
         self.fitScrollAreaWidget = QWidget()
         self.fitScrollAreaWidget.setObjectName(u"fitScrollAreaWidget")
-        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 32, 16))
+        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 100, 30))
         self.verticalLayout_4 = QVBoxLayout(self.fitScrollAreaWidget)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -2261,30 +2239,17 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addWidget(self.windowBodyFrame)
 
-
-        self.horizontalLayout_2.addWidget(self.fullWindowFrame)
-
         MainWindow.setCentralWidget(self.centralWidget)
-        QWidget.setTabOrder(self.bgndSubtractXCheckBox, self.bgndSubtractYCheckBox)
-        QWidget.setTabOrder(self.bgndSubtractYCheckBox, self.colorComboBox)
-        QWidget.setTabOrder(self.colorComboBox, self.logScaleCheckBox)
-        QWidget.setTabOrder(self.logScaleCheckBox, self.rawX1LineEdit)
-        QWidget.setTabOrder(self.rawX1LineEdit, self.calibrateX2Button)
-        QWidget.setTabOrder(self.calibrateX2Button, self.mapX2LineEdit)
-        QWidget.setTabOrder(self.mapX2LineEdit, self.rawX2LineEdit)
-        QWidget.setTabOrder(self.rawX2LineEdit, self.mapX1LineEdit)
-        QWidget.setTabOrder(self.mapX1LineEdit, self.calibrateX1Button)
-        QWidget.setTabOrder(self.calibrateX1Button, self.rawY2LineEdit)
-        QWidget.setTabOrder(self.rawY2LineEdit, self.calibrateY2Button)
-        QWidget.setTabOrder(self.calibrateY2Button, self.mapY1LineEdit)
-        QWidget.setTabOrder(self.mapY1LineEdit, self.calibrateY1Button)
-        QWidget.setTabOrder(self.calibrateY1Button, self.mapY2LineEdit)
-        QWidget.setTabOrder(self.mapY2LineEdit, self.rawY1LineEdit)
+        self.statusBar = QStatusBar(MainWindow)
+        self.statusBar.setObjectName(u"statusBar")
+        self.statusBar.setEnabled(True)
+        sizePolicy3.setHeightForWidth(self.statusBar.sizePolicy().hasHeightForWidth())
+        self.statusBar.setSizePolicy(sizePolicy3)
+        self.statusBar.setMinimumSize(QSize(0, 27))
+        self.statusBar.setStyleSheet(u"")
+        MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.bgndSubtractPushButton.toggled.connect(self.bgndSubtractQFrame.setVisible)
-        self.coloringPushButton.toggled.connect(self.colorGridGroupBox.setVisible)
-        self.filtersPushButton.toggled.connect(self.filterQFrame.setVisible)
 
         self.pagesStackedWidget.setCurrentIndex(0)
         self.bottomStackedWidget.setCurrentIndex(0)
@@ -2308,11 +2273,11 @@ class Ui_MainWindow(object):
         self.label_23.setText(QCoreApplication.translate("MainWindow", u"RAW Y", None))
         self.label_24.setText(QCoreApplication.translate("MainWindow", u"CALIBRATED Y [GHz]", None))
         self.calibrateX2Button.setText("")
-        self.mapX1LineEdit.setInputMask("")
-        self.calibrateX1Button.setText("")
-        self.label_10.setText(QCoreApplication.translate("MainWindow", u"RAW X", None))
         self.label_11.setText(QCoreApplication.translate("MainWindow", u"CALIBRATED X", None))
-        self.calibrationWizardPushButton.setText(QCoreApplication.translate("MainWindow", u"CALIBRATION WIZARD", None))
+        self.mapX1LineEdit.setInputMask("")
+        self.label_10.setText(QCoreApplication.translate("MainWindow", u"RAW X", None))
+        self.calibrateX1Button.setText("")
+        self.calibrationWizardPushButton.setText(QCoreApplication.translate("MainWindow", u"QUIT CALIBRATION WIZARD", None))
         self.label_32.setText(QCoreApplication.translate("MainWindow", u"TRANSITIONS", None))
         self.transitionLabel.setText(QCoreApplication.translate("MainWindow", u"LABEL for Transition 1", None))
 #if QT_CONFIG(statustip)
