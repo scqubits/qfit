@@ -13,8 +13,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1094</width>
-    <height>926</height>
+    <width>1067</width>
+    <height>806</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -715,6 +715,7 @@ QPushButton:checked {
                 <font>
                  <family>Roboto Medium</family>
                  <pointsize>11</pointsize>
+                 <weight>7</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -2061,8 +2062,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>352</width>
-                      <height>442</height>
+                      <width>179</width>
+                      <height>363</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -2489,6 +2490,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                     <font>
                      <family>Roboto Medium</family>
                      <pointsize>11</pointsize>
+                     <weight>7</weight>
                      <italic>false</italic>
                      <bold>false</bold>
                     </font>
@@ -2553,8 +2555,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>32</width>
-                      <height>16</height>
+                      <width>100</width>
+                      <height>30</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -2642,6 +2644,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                     <font>
                      <family>Roboto Medium</family>
                      <pointsize>11</pointsize>
+                     <weight>7</weight>
                      <italic>false</italic>
                      <bold>false</bold>
                     </font>
@@ -2700,8 +2703,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>32</width>
-                      <height>16</height>
+                      <width>352</width>
+                      <height>352</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -3170,6 +3173,7 @@ color: rgb(30, 30, 30);</string>
                     <font>
                      <family>Roboto Medium</family>
                      <pointsize>11</pointsize>
+                     <weight>7</weight>
                      <italic>false</italic>
                      <bold>false</bold>
                     </font>
@@ -3800,6 +3804,7 @@ color: rgb(30, 30, 30);</string>
                     <font>
                      <family>Roboto Medium</family>
                      <pointsize>9</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -3820,6 +3825,7 @@ color: rgb(30, 30, 30);</string>
                     <font>
                      <family>Roboto Medium</family>
                      <pointsize>11</pointsize>
+                     <weight>7</weight>
                      <italic>false</italic>
                      <bold>false</bold>
                     </font>
@@ -4074,6 +4080,7 @@ color: rgb(30, 30, 30);</string>
                     <font>
                      <family>Roboto Medium</family>
                      <pointsize>9</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -4300,6 +4307,11 @@ color: rgb(30, 30, 30);</string>
      </widget>
     </item>
    </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusBar">
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
   </widget>
  </widget>
  <customwidgets>
