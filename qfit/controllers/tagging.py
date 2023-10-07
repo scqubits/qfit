@@ -1,36 +1,19 @@
-# data_tagging.py
-#
-# This file is part of qfit.
-#
-#    Copyright (c) 2020, Jens Koch
-#    All rights reserved.
-#
-#    This source code is licensed under the BSD-style license found in the
-#    LICENSE file in the root directory of this source tree.
-############################################################################
+from PySide6.QtCore import (
+    QObject,
+    Signal,
+)
 
+from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QObject
-from PySide6.QtCore import QRegularExpression as QRegExp
-from PySide6.QtCore import Signal
-from PySide6.QtGui import QRegularExpressionValidator as QRegExpValidator
-from PySide6.QtGui import QValidator
-from PySide6.QtWidgets import QFrame, QLineEdit
-
-
-from qfit.io_utils import file_io_serializers as serializers
+if TYPE_CHECKING:
+    from qfit.ui_designer.ui_window import Ui_MainWindow
 
 # tagging types (to facilitate file io: do not use Enum)
 NO_TAG = "NO_TAG"
 DISPERSIVE_DRESSED = "DISPERSIVE_DRESSED"
 DISPERSIVE_BARE = "DISPERSIVE_BARE"
 
-
-class DataTaggingWidget(QFrame):
-    pass
-
-
-class Tag(serializers.Serializable):
+class Tag(QObject):
     """
     Store a single dataset tag. The tag can be of different types:
     - NO_TAG: user did not tag data
@@ -73,11 +56,16 @@ class Tag(serializers.Serializable):
         )
 
 
-class TagDataView(QObject):
+class TagCtrl(QObject):
     changedTagType = Signal()
     changedTagData = Signal()
 
-    def __init__(self, ui_TagData, subsysCount, *args, **kwargs):
+    def __init__(
+        self, 
+        ui_TagData: "Ui_MainWindow",
+        subsysCount: int, 
+        *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
 
         self.ui = ui_TagData
@@ -88,7 +76,12 @@ class TagDataView(QObject):
         self.ui.tagBareGroupBox.setVisible(False)
         self.defaultStyleLineEdit = self.ui.initialStateLineEdit.styleSheet()
 
-        # establish connects
+        self.ui.initialStateLineEdit.setTupleLength(self.subsysCount)
+        self.ui.finalStateLineEdit.setTupleLength(self.subsysCount)
+
+        self.establishConnections()
+
+    def establishConnections(self):
         self.ui.tagDispersiveBareRadioButton.toggled.connect(self.setDispersiveBareMode)
         self.ui.tagDispersiveDressedRadioButton.toggled.connect(
             self.setDispersiveDressedMode
@@ -99,21 +92,21 @@ class TagDataView(QObject):
         #     self.setCrossingDressedMode
         # )
 
-        self.ui.tagDispersiveBareRadioButton.toggled.connect(self.setLineEditColor)
-        self.ui.tagDispersiveDressedRadioButton.toggled.connect(self.setLineEditColor)
-        self.ui.noTagRadioButton.toggled.connect(self.setLineEditColor)
+        # self.ui.tagDispersiveBareRadioButton.toggled.connect(self.setLineEditColor)
+        # self.ui.tagDispersiveDressedRadioButton.toggled.connect(self.setLineEditColor)
+        # self.ui.noTagRadioButton.toggled.connect(self.setLineEditColor)
         # self.ui.tagCrossingRadioButton.toggled.connect(self.setLineEditColor)
         # self.ui.tagCrossingDressedRadioButton.toggled.connect(self.setLineEditColor)
 
         # self.ui.subsysNamesLineEdit.textChanged.connect(
         #     lambda x: self.setLineEditColor()
         # )
-        self.ui.initialStateLineEdit.textChanged.connect(
-            lambda x: self.setLineEditColor()
-        )
-        self.ui.finalStateLineEdit.textChanged.connect(
-            lambda x: self.setLineEditColor()
-        )
+        # self.ui.initialStateLineEdit.textChanged.connect(
+        #     lambda x: self.setLineEditColor()
+        # )
+        # self.ui.finalStateLineEdit.textChanged.connect(
+        #     lambda x: self.setLineEditColor()
+        # )
 
         # self.ui.subsysNamesLineEdit.editingFinished.connect(self.changedTagData.emit)
         self.ui.initialStateLineEdit.editingFinished.connect(self.changedTagData.emit)
@@ -141,33 +134,38 @@ class TagDataView(QObject):
         self.ui.tagDressedGroupBox.setVisible(True)
         self.changedTagType.emit()
 
-    def setCrossingMode(self):
-        self.ui.tagBareGroupBox.setVisible(False)
-        self.ui.tagDressedGroupBox.setVisible(False)
-        self.changedTagType.emit()
+    # def setCrossingMode(self):
+    #     self.ui.tagBareGroupBox.setVisible(False)
+    #     self.ui.tagDressedGroupBox.setVisible(False)
+    #     self.changedTagType.emit()
 
-    def setCrossingDressedMode(self):
-        self.ui.tagBareGroupBox.setVisible(False)
-        self.ui.tagDressedGroupBox.setVisible(True)
-        self.changedTagType.emit()
+    # def setCrossingDressedMode(self):
+    #     self.ui.tagBareGroupBox.setVisible(False)
+    #     self.ui.tagDressedGroupBox.setVisible(True)
+    #     self.changedTagType.emit()
+
+    def clear(self):
+        """
+        Clear all previous tag inputs in the UI.
+        """
+        self.ui.initialStateLineEdit.clear()
+        self.ui.finalStateLineEdit.clear()
+        self.ui.phNumberBareSpinBox.setValue(1)
+        self.ui.initialStateSpinBox.setValue(0)
+        self.ui.finalStateSpinBox.setValue(1)
+        self.ui.phNumberDressedSpinBox.setValue(1)
 
     def isValidInitialBare(self):
         if not self.ui.tagBareGroupBox.isVisible():
             return True  # only bare-states tags require validation
-
         if not self.ui.initialStateLineEdit.isValid():
-            return False
-        if len(self.ui.initialStateLineEdit.getTuple()) != self.subsysCount:
             return False
         return True
 
     def isValidFinalBare(self):
         if not self.ui.tagBareGroupBox.isVisible():
             return True  # only bare-states tags require validation
-
         if not self.ui.finalStateLineEdit.isValid():
-            return False
-        if len(self.ui.finalStateLineEdit.getTuple()) != self.subsysCount:
             return False
         return True
 
@@ -203,6 +201,7 @@ class TagDataView(QObject):
         if tag.tagType == NO_TAG:
             self.ui.noTagRadioButton.toggle()
             self.setNoTagMode()
+            self.clear()
         elif tag.tagType == DISPERSIVE_BARE:
             self.ui.tagDispersiveBareRadioButton.toggle()
             self.setDispersiveBareMode()
@@ -211,7 +210,7 @@ class TagDataView(QObject):
             self.ui.finalStateLineEdit.setFromTuple(tag.final)
             self.ui.phNumberBareSpinBox.setValue(tag.photons)
         elif tag.tagType == DISPERSIVE_DRESSED:
-            self.setCrossingDressedMode()
+            self.setDispersiveDressedMode()
             self.ui.tagDispersiveDressedRadioButton.toggle()
             self.ui.initialStateSpinBox.setValue(tag.initial)
             self.ui.finalStateSpinBox.setValue(tag.final)
@@ -227,97 +226,21 @@ class TagDataView(QObject):
         #     self.ui.phNumberDressedSpinBox.setValue(tag.photons)
         self.blockSignals(False)
 
-    def setLineEditColor(self, *args, **kwargs):
-        # if (
-        #     not self.ui.tagBareGroupBox.isVisible()
-        #     or self.ui.subsysNamesLineEdit.isValid()
-        # ):
-        #     self.ui.subsysNamesLineEdit.setStyleSheet(self.defaultStyleLineEdit)
-        # else:
-        #     self.ui.subsysNamesLineEdit.setStyleSheet("border: 3px solid red;")
+    # def setLineEditColor(self, *args, **kwargs):
+    #     # if (
+    #     #     not self.ui.tagBareGroupBox.isVisible()
+    #     #     or self.ui.subsysNamesLineEdit.isValid()
+    #     # ):
+    #     #     self.ui.subsysNamesLineEdit.setStyleSheet(self.defaultStyleLineEdit)
+    #     # else:
+    #     #     self.ui.subsysNamesLineEdit.setStyleSheet("border: 3px solid red;")
 
-        if not self.ui.tagBareGroupBox.isVisible() or self.isValidInitialBare():
-            self.ui.initialStateLineEdit.setStyleSheet(self.defaultStyleLineEdit)
-        else:
-            self.ui.initialStateLineEdit.setStyleSheet("border: 3px solid red;")
+    #     if not self.ui.tagBareGroupBox.isVisible() or self.isValidInitialBare():
+    #         self.ui.initialStateLineEdit.setStyleSheet(self.defaultStyleLineEdit)
+    #     else:
+    #         self.ui.initialStateLineEdit.setStyleSheet("border: 3px solid red;")
 
-        if not self.ui.tagBareGroupBox.isVisible() or self.isValidFinalBare():
-            self.ui.finalStateLineEdit.setStyleSheet(self.defaultStyleLineEdit)
-        else:
-            self.ui.finalStateLineEdit.setStyleSheet("border: 3px solid red;")
-
-
-class StrTupleLineEdit(QLineEdit):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        regEx = QRegExp("(^[a-zA-Z][a-zA-Z0-9]*)+(, ?([a-zA-Z][a-zA-Z0-9]*)+)*$")
-        validator = QRegExpValidator(regEx)
-        self.setValidator(validator)
-
-        self.editingFinished.connect(self.processUpdate)
-        self.previousStr = ""
-
-    def setText(self, nameListStr):
-        if self.validator().validate(nameListStr, 0)[0] is QValidator.State.Acceptable:
-            self.previousStr = nameListStr
-        super().setText(nameListStr)
-
-    def value(self):
-        return self.text()
-
-    def getSubsysNameList(self):
-        if self.isValid():
-            return [name.strip() for name in self.value().split(",")]
-        return []
-
-    def setFromSubsysNameList(self, subsysNameList):
-        subsysStr = ", ".join(subsysNameList)
-        self.setText(subsysStr)
-
-    def subsysCount(self):
-        return len(self.getSubsysNameList())
-
-    def processUpdate(self):
-        if self.hasAcceptableInput():
-            self.previousStr = self.text()
-        else:
-            self.setText(self.previousStr)
-
-    def isValid(self):
-        return self.hasAcceptableInput()
-
-
-class IntTupleLineEdit(QLineEdit):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        regEx = QRegExp("^([1-9]\d*|0)(, ?([1-9]\d*|0))*$")
-        validator = QRegExpValidator(regEx)
-        self.setValidator(validator)
-        self.editingFinished.connect(self.processUpdate)
-        self.previousStr = ""
-
-    def setText(self, tupleStr):
-        if self.validator().validate(tupleStr, 0)[0] is QValidator.State.Acceptable:
-            self.previousStr = tupleStr
-        super().setText(tupleStr)
-
-    def value(self):
-        return self.text()
-
-    def getTuple(self):
-        if self.isValid():
-            return eval(self.value() + ",")
-        return None
-
-    def setFromTuple(self, newTuple):
-        self.setText(str(newTuple)[1:-1])
-
-    def processUpdate(self):
-        if self.hasAcceptableInput():
-            self.previousStr = self.text()
-        else:
-            self.setText(self.previousStr)
-
-    def isValid(self):
-        return self.hasAcceptableInput()
+    #     if not self.ui.tagBareGroupBox.isVisible() or self.isValidFinalBare():
+    #         self.ui.finalStateLineEdit.setStyleSheet(self.defaultStyleLineEdit)
+    #     else:
+    #         self.ui.finalStateLineEdit.setStyleSheet("border: 3px solid red;")

@@ -803,7 +803,7 @@ QPushButton:pressed {
           </size>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="DataExtractingWidget" name="extractPointsWidget">
           <property name="sizePolicy">
@@ -1748,7 +1748,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
            </item>
           </layout>
          </widget>
-         <widget class="DataTaggingWidget" name="taggingWidget">
+         <widget class="QWidget" name="taggingWidget">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -1993,7 +1993,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>179</width>
+                   <width>352</width>
                    <height>363</height>
                   </rect>
                  </property>
@@ -3024,7 +3024,7 @@ color: rgb(30, 30, 30);</string>
           <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="calibrationPage">
           <property name="sizePolicy">
@@ -4282,18 +4282,12 @@ color: rgb(30, 30, 30);</string>
   <customwidget>
    <class>IntTupleLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>qfit/widgets/data_tagging.h</header>
+   <header>qfit/widgets/validated_line_edits.h</header>
   </customwidget>
   <customwidget>
    <class>DataExtractingWidget</class>
    <extends>QWidget</extends>
    <header>qfit/widgets/data_extracting.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>DataTaggingWidget</class>
-   <extends>QWidget</extends>
-   <header>qfit/widgets/data_tagging.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -24,8 +24,8 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
 
 from qfit.widgets.calibration import CalibrationLineEdit
 from qfit.widgets.data_extracting import (DataExtractingWidget, ListView)
-from qfit.widgets.data_tagging import (DataTaggingWidget, IntTupleLineEdit)
 from qfit.widgets.mpl_canvas import (MplFigureCanvas, MplNavButtons)
+from qfit.widgets.validated_line_edits import IntTupleLineEdit
 import resources_rc
 
 class Ui_MainWindow(object):
@@ -1051,7 +1051,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_9.addWidget(self.frame)
 
         self.pagesStackedWidget.addWidget(self.extractPointsWidget)
-        self.taggingWidget = DataTaggingWidget()
+        self.taggingWidget = QWidget()
         self.taggingWidget.setObjectName(u"taggingWidget")
         sizePolicy4.setHeightForWidth(self.taggingWidget.sizePolicy().hasHeightForWidth())
         self.taggingWidget.setSizePolicy(sizePolicy4)
@@ -1191,7 +1191,7 @@ class Ui_MainWindow(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 179, 363))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 352, 363))
         self.verticalLayout_16 = QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_16.setSpacing(12)
         self.verticalLayout_16.setObjectName(u"verticalLayout_16")
@@ -2251,8 +2251,8 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.pagesStackedWidget.setCurrentIndex(0)
-        self.bottomStackedWidget.setCurrentIndex(0)
+        self.pagesStackedWidget.setCurrentIndex(1)
+        self.bottomStackedWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)

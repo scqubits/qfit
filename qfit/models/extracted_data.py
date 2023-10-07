@@ -27,7 +27,7 @@ from PySide6.QtCore import (
 
 import qfit.io_utils.file_io_serializers as serializers
 
-from qfit.widgets.data_tagging import NO_TAG, Tag
+from qfit.controllers.tagging import NO_TAG, Tag
 
 from qfit.models.registry import Registrable, RegistryEntry
 

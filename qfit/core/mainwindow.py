@@ -60,7 +60,7 @@ from qfit.core.helpers import (
 )
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.models.measurement_data import MeasurementDataType
-from qfit.widgets.data_tagging import TagDataView
+from qfit.controllers.tagging import TagCtrl
 from qfit.io_utils.save_data import saveFile
 from qfit.settings import color_dict
 from qfit.ui_views.resizable_window import ResizableFramelessWindow
@@ -125,7 +125,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     extractedData: "QfitData"
     activeDataset: ActiveExtractedData
     allDatasets: AllExtractedData
-    tagDataView: TagDataView
+    tagDataView: TagCtrl
 
     calibrationData: CalibrationData
     calibrationView: CalibrationView
@@ -140,6 +140,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     optInitialized: bool = False
 
+    unsavedChanges: bool
     registry: Registry
     _projectFile: Union[str, None] = None
 
@@ -221,7 +222,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
         self.setupUIData()
         self.setupUIXYZComboBoxes()
-        self.tagDataView = TagDataView(self.ui, self.hilbertspace.subsystem_count)
+        self.tagDataView = TagCtrl(self.ui, self.hilbertspace.subsystem_count)
         self.ui.bareLabelOrder.setText(
             "   Labels ordered by: "  # Three space to align with the label title
             + ", ".join([subsys.id_str for subsys in self.hilbertspace.subsystem_list])
