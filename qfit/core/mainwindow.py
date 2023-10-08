@@ -183,10 +183,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.setupUIPlotOptions()
 
         self.measurementData = measurementData
-        self.extractedData = None
         self.initializeExtractedData()
         self.staticExtractedDataConnects()
-        self.taggingCtrl = TaggingCtrl(self.hilbertspace.subsystem_count, self.ui, self)
 
         self.dynamicalMeasurementDataSetupConnects()
         self.uiDataLoadConnects()
@@ -224,6 +222,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def staticExtractedDataConnects(self):
         self.uiExtractedDataConnects()
         self.uiExtractedDataControlConnects()
+        
+        self.taggingCtrl = TaggingCtrl(self.hilbertspace.subsystem_count, self.ui, self)
 
     def dynamicalMeasurementDataSetupConnects(self):
 
@@ -356,6 +356,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """Set up the main class instances holding the data extracted from placing
         markers on the canvas. The AllExtractedData instance holds all data, whereas the
         ActiveExtractedData instance holds data of the currently selected data set."""
+        self.extractedData = None
         self.activeDataset = ActiveExtractedData()
         self.activeDataset.setAdaptiveCalibrationFunc(
             self.calibrationData.adaptiveConversionFunc

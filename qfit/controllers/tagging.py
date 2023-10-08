@@ -130,12 +130,6 @@ class TaggingCtrl(QObject):
 
         # switch the tag so that it matches the current data set
         self.mainWindow.activeDataset.dataSwitchSignal.signal.connect(self._syncTagWithDataset)
-        # self.ui.deleteRowButton.clicked.connect(lambda: print("delete"))
-        # self.ui.deleteRowButton.clicked.connect(self._syncTagWithDataset)
-        # self.ui.clearAllButton.clicked.connect(lambda: print("clear"))
-        # self.ui.clearAllButton.clicked.connect(self._syncTagWithDataset)
-        # self.ui.newRowButton.clicked.connect(lambda: print("add"))
-        # self.ui.newRowButton.clicked.connect(self._syncTagWithDataset)
 
     @Slot()
     def _syncTagTitle(self):
