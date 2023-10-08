@@ -64,11 +64,11 @@ class IOCtrl:
 
     def __init__(
         self,
-        menu: MenuWidget,
+        ui_Menu: MenuWidget,
         registry: Registry,
         mainWindow: "MainWindow",
     ):
-        self.menu = menu
+        self.menu = ui_Menu
         self.registry = registry
         self.mainWindow = mainWindow
 

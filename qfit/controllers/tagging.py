@@ -1,19 +1,21 @@
 from PySide6.QtCore import (
     QObject,
     Signal,
+    Slot,
 )
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from qfit.ui_designer.ui_window import Ui_MainWindow
+    from qfit.core.mainwindow import MainWindow
 
 # tagging types (to facilitate file io: do not use Enum)
 NO_TAG = "NO_TAG"
 DISPERSIVE_DRESSED = "DISPERSIVE_DRESSED"
 DISPERSIVE_BARE = "DISPERSIVE_BARE"
 
-class Tag(QObject):
+class Tag:
     """
     Store a single dataset tag. The tag can be of different types:
     - NO_TAG: user did not tag data
@@ -56,59 +58,50 @@ class Tag(QObject):
         )
 
 
-class TagCtrl(QObject):
+class TaggingCtrl(QObject):
     changedTagType = Signal()
     changedTagData = Signal()
 
     def __init__(
         self, 
-        ui_TagData: "Ui_MainWindow",
         subsysCount: int, 
+        ui_TagData: "Ui_MainWindow",
+        mainWindow: "MainWindow",
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
 
         self.ui = ui_TagData
+        self.mainWindow = mainWindow
 
         self.subsysCount = subsysCount
 
+        self._initializeUI()
+
+        self._taggingConnects()
+        self._datasetConnects()
+
+    def _initializeUI(self):
+        """
+        Set up the UI for the tagging panel:
+        - In NO_TAG mode, switch off the bare and dressed tagging panels
+        - Set the number of subsystems
+        """
         self.ui.tagDressedGroupBox.setVisible(False)
         self.ui.tagBareGroupBox.setVisible(False)
-        self.defaultStyleLineEdit = self.ui.initialStateLineEdit.styleSheet()
 
         self.ui.initialStateLineEdit.setTupleLength(self.subsysCount)
         self.ui.finalStateLineEdit.setTupleLength(self.subsysCount)
 
-        self.establishConnections()
-
-    def establishConnections(self):
-        self.ui.tagDispersiveBareRadioButton.toggled.connect(self.setDispersiveBareMode)
+    def _taggingConnects(self):
+        # connect the radio buttons to the corresponding tagging panels
+        self.ui.tagDispersiveBareRadioButton.toggled.connect(self._setBareMode)
         self.ui.tagDispersiveDressedRadioButton.toggled.connect(
-            self.setDispersiveDressedMode
+            self._setDressedMode
         )
-        self.ui.noTagRadioButton.toggled.connect(self.setNoTagMode)
-        # self.ui.tagCrossingRadioButton.toggled.connect(self.setCrossingMode)
-        # self.ui.tagCrossingDressedRadioButton.toggled.connect(
-        #     self.setCrossingDressedMode
-        # )
+        self.ui.noTagRadioButton.toggled.connect(self._setNoTagMode)
 
-        # self.ui.tagDispersiveBareRadioButton.toggled.connect(self.setLineEditColor)
-        # self.ui.tagDispersiveDressedRadioButton.toggled.connect(self.setLineEditColor)
-        # self.ui.noTagRadioButton.toggled.connect(self.setLineEditColor)
-        # self.ui.tagCrossingRadioButton.toggled.connect(self.setLineEditColor)
-        # self.ui.tagCrossingDressedRadioButton.toggled.connect(self.setLineEditColor)
-
-        # self.ui.subsysNamesLineEdit.textChanged.connect(
-        #     lambda x: self.setLineEditColor()
-        # )
-        # self.ui.initialStateLineEdit.textChanged.connect(
-        #     lambda x: self.setLineEditColor()
-        # )
-        # self.ui.finalStateLineEdit.textChanged.connect(
-        #     lambda x: self.setLineEditColor()
-        # )
-
-        # self.ui.subsysNamesLineEdit.editingFinished.connect(self.changedTagData.emit)
+        # Once the user has finished editing the tag, emit the changedTagData signal
         self.ui.initialStateLineEdit.editingFinished.connect(self.changedTagData.emit)
         self.ui.finalStateLineEdit.editingFinished.connect(self.changedTagData.emit)
         self.ui.phNumberBareSpinBox.valueChanged.connect(lambda: self.changedTagData.emit())
@@ -116,35 +109,63 @@ class TagCtrl(QObject):
         self.ui.finalStateSpinBox.valueChanged.connect(lambda: self.changedTagData.emit())
         self.ui.phNumberDressedSpinBox.valueChanged.connect(lambda: self.changedTagData.emit())
 
-    def setNoTagMode(self):
+    def _datasetConnects(self):
+        """
+        Once the dataset selection is changed, change the tag panel 
+        correspondingly
+        """
+        # Whenever tag type or tag data is changed, update the AllExtractedData data
+        self.changedTagType.connect(
+            lambda: self.mainWindow.allDatasets.updateCurrentTag(self.getTagFromUI())
+        )
+        self.changedTagData.connect(
+            lambda: self.mainWindow.allDatasets.updateCurrentTag(self.getTagFromUI())
+        )
+
+        # Whenever a new dataset is activated in the AllExtractedData, update the TagDataView
+        self.ui.datasetListView.clicked.connect(self._syncTagWithDataset)
+
+        # Whenever a dataset is renamed, update the title for tags
+        self.mainWindow.allDatasets.dataChanged.connect(self._syncTagTitle)
+
+        # switch the tag so that it matches the current data set
+        
+        self.ui.deleteRowButton.clicked.connect(self._syncTagWithDataset)
+        self.ui.clearAllButton.clicked.connect(self._syncTagWithDataset)
+        self.ui.newRowButton.clicked.connect(self._syncTagWithDataset)
+
+    @Slot()
+    def _syncTagTitle(self):
+        self.ui.transitionLabel.setText(
+            f"LABEL for {self.mainWindow.allDatasets.currentDataName()}"
+        )
+
+    @Slot()
+    def _syncTagWithDataset(self):
+        self._syncTagTitle()
+        self.setTag(self.mainWindow.allDatasets.currentTagItem())
+
+    @Slot()
+    def _setNoTagMode(self):
         self.ui.tagBareGroupBox.setVisible(False)
         self.ui.tagDressedGroupBox.setVisible(False)
         self.changedTagType.emit()
 
-    def setDispersiveBareMode(self):
+    @Slot()
+    def _setBareMode(self):
         self.ui.tagDressedGroupBox.setVisible(False)
         self.ui.tagBareGroupBox.setVisible(True)
         self.changedTagType.emit()
-        # self.ui.subsysNamesLineEdit.editingFinished.emit()
         self.ui.initialStateLineEdit.editingFinished.emit()
         self.ui.finalStateLineEdit.editingFinished.emit()
 
-    def setDispersiveDressedMode(self):
+    @Slot()
+    def _setDressedMode(self):
         self.ui.tagBareGroupBox.setVisible(False)
         self.ui.tagDressedGroupBox.setVisible(True)
         self.changedTagType.emit()
 
-    # def setCrossingMode(self):
-    #     self.ui.tagBareGroupBox.setVisible(False)
-    #     self.ui.tagDressedGroupBox.setVisible(False)
-    #     self.changedTagType.emit()
-
-    # def setCrossingDressedMode(self):
-    #     self.ui.tagBareGroupBox.setVisible(False)
-    #     self.ui.tagDressedGroupBox.setVisible(True)
-    #     self.changedTagType.emit()
-
-    def clear(self):
+    def _clear(self):
         """
         Clear all previous tag inputs in the UI.
         """
@@ -155,26 +176,26 @@ class TagCtrl(QObject):
         self.ui.finalStateSpinBox.setValue(1)
         self.ui.phNumberDressedSpinBox.setValue(1)
 
-    def isValidInitialBare(self):
+    def _isValidInitialBare(self):
         if not self.ui.tagBareGroupBox.isVisible():
             return True  # only bare-states tags require validation
         if not self.ui.initialStateLineEdit.isValid():
             return False
         return True
 
-    def isValidFinalBare(self):
+    def _isValidFinalBare(self):
         if not self.ui.tagBareGroupBox.isVisible():
             return True  # only bare-states tags require validation
         if not self.ui.finalStateLineEdit.isValid():
             return False
         return True
 
-    def isValid(self):
-        return self.isValidInitialBare() and self.isValidFinalBare()
+    def _isValid(self):
+        return self._isValidInitialBare() and self._isValidFinalBare()
 
     def getTagFromUI(self):
         tag = Tag()
-        if self.ui.noTagRadioButton.isChecked() or not self.isValid():
+        if self.ui.noTagRadioButton.isChecked() or not self._isValid():
             tag.tagType = NO_TAG
         elif self.ui.tagDispersiveBareRadioButton.isChecked():
             tag.tagType = DISPERSIVE_BARE
@@ -187,60 +208,25 @@ class TagCtrl(QObject):
             tag.initial = self.ui.initialStateSpinBox.value()
             tag.final = self.ui.finalStateSpinBox.value()
             tag.photons = self.ui.phNumberDressedSpinBox.value()
-        # elif self.ui.tagCrossingRadioButton.isChecked():
-        #     tag.tagType = CROSSING
-        # elif self.ui.tagCrossingDressedRadioButton.isChecked():
-        #     tag.tagType = CROSSING_DRESSED
-        #     tag.initial = self.ui.initialStateSpinBox.value()
-        #     tag.final = self.ui.finalStateSpinBox.value()
-        #     tag.photons = self.ui.phNumberDressedSpinBox.value()
         return tag
 
     def setTag(self, tag):
         self.blockSignals(True)
+        self._clear()
         if tag.tagType == NO_TAG:
             self.ui.noTagRadioButton.toggle()
-            self.setNoTagMode()
-            self.clear()
+            self._setNoTagMode()
         elif tag.tagType == DISPERSIVE_BARE:
             self.ui.tagDispersiveBareRadioButton.toggle()
-            self.setDispersiveBareMode()
+            self._setBareMode()
             # self.ui.subsysNamesLineEdit.setFromSubsysNameList(tag.subsysList)
             self.ui.initialStateLineEdit.setFromTuple(tag.initial)
             self.ui.finalStateLineEdit.setFromTuple(tag.final)
             self.ui.phNumberBareSpinBox.setValue(tag.photons)
         elif tag.tagType == DISPERSIVE_DRESSED:
-            self.setDispersiveDressedMode()
+            self._setDressedMode()
             self.ui.tagDispersiveDressedRadioButton.toggle()
             self.ui.initialStateSpinBox.setValue(tag.initial)
             self.ui.finalStateSpinBox.setValue(tag.final)
             self.ui.phNumberDressedSpinBox.setValue(tag.photons)
-        # elif tag.tagType == CROSSING:
-        #     self.ui.tagCrossingRadioButton.toggle()
-        #     self.setCrossingMode()
-        # elif tag.tagType == CROSSING_DRESSED:
-        #     self.ui.tagCrossingDressedRadioButton.toggle()
-        #     self.setCrossingDressedMode()
-        #     self.ui.initialStateSpinBox.setValue(tag.initial)
-        #     self.ui.finalStateSpinBox.setValue(tag.final)
-        #     self.ui.phNumberDressedSpinBox.setValue(tag.photons)
         self.blockSignals(False)
-
-    # def setLineEditColor(self, *args, **kwargs):
-    #     # if (
-    #     #     not self.ui.tagBareGroupBox.isVisible()
-    #     #     or self.ui.subsysNamesLineEdit.isValid()
-    #     # ):
-    #     #     self.ui.subsysNamesLineEdit.setStyleSheet(self.defaultStyleLineEdit)
-    #     # else:
-    #     #     self.ui.subsysNamesLineEdit.setStyleSheet("border: 3px solid red;")
-
-    #     if not self.ui.tagBareGroupBox.isVisible() or self.isValidInitialBare():
-    #         self.ui.initialStateLineEdit.setStyleSheet(self.defaultStyleLineEdit)
-    #     else:
-    #         self.ui.initialStateLineEdit.setStyleSheet("border: 3px solid red;")
-
-    #     if not self.ui.tagBareGroupBox.isVisible() or self.isValidFinalBare():
-    #         self.ui.finalStateLineEdit.setStyleSheet(self.defaultStyleLineEdit)
-    #     else:
-    #         self.ui.finalStateLineEdit.setStyleSheet("border: 3px solid red;")

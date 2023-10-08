@@ -66,9 +66,6 @@ class ValidatedLineEdit(QLineEdit, ABC, metaclass=CombinedMeta):
 
     # Controller method
     def _validate(self):
-
-        print("validate called")
-
         text = self.text()
 
         # when first called, record the current style as the default style

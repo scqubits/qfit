@@ -60,7 +60,7 @@ from qfit.core.helpers import (
 )
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.models.measurement_data import MeasurementDataType
-from qfit.controllers.tagging import TagCtrl
+from qfit.controllers.tagging import TaggingCtrl
 from qfit.io_utils.save_data import saveFile
 from qfit.settings import color_dict
 from qfit.ui_views.resizable_window import ResizableFramelessWindow
@@ -125,7 +125,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     extractedData: "QfitData"
     activeDataset: ActiveExtractedData
     allDatasets: AllExtractedData
-    tagDataView: TagCtrl
+    taggingCtrl: TaggingCtrl
 
     calibrationData: CalibrationData
     calibrationView: CalibrationView
@@ -185,6 +185,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.extractedData = None
         self.dataSetupConnects()
         self.uiDataLoadConnects()
+        self.taggingCtrl = TaggingCtrl(self.hilbertspace.subsystem_count, self.ui, self)
 
         # setup mpl canvas
         self.uiColorScaleConnects()
@@ -206,7 +207,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # controller for menu
         self.ioMenuCtrl = IOCtrl(
-            menu=self.ui_menu,
+            ui_Menu=self.ui_menu,
             registry=self.registry,
             mainWindow=self,
         )
@@ -222,7 +223,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
         self.setupUIData()
         self.setupUIXYZComboBoxes()
-        self.tagDataView = TagCtrl(self.ui, self.hilbertspace.subsystem_count)
         self.ui.bareLabelOrder.setText(
             "   Labels ordered by: "  # Three space to align with the label title
             + ", ".join([subsys.id_str for subsys in self.hilbertspace.subsystem_list])
@@ -243,7 +243,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
             self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
             self.activeDataset._data = self.allDatasets.currentAssocItem()
-            self.tagDataView.setTag(self.allDatasets.currentTagItem())
+            self.taggingCtrl.setTag(self.allDatasets.currentTagItem())
             self.allDatasets.layoutChanged.emit()
             self.activeDataset.layoutChanged.emit()
 
@@ -449,29 +449,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             lambda: self.updatePlot(initialize=False)
         )
 
-        # Whenever tag type or tag data is changed, update the AllExtractedData data
-        self.tagDataView.changedTagType.connect(
-            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTagFromUI())
-        )
-        self.tagDataView.changedTagData.connect(
-            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTagFromUI())
-        )
-
-        # Whenever a new dataset is activated in the AllExtractedData, update the TagDataView
-        self.ui.datasetListView.clicked.connect(self.syncTagWithDataset)
-
-        # Whenever a dataset is renamed, update the title for tags
-        self.allDatasets.dataChanged.connect(self.syncTagWithDataset)
-
         # Whenever a new selection of data set is made, update the matching mode and the cursor
         self.ui.datasetListView.clicked.connect(self.updateMatchingModeAndCursor)
-
-    @Slot()
-    def syncTagWithDataset(self):
-        self.ui.transitionLabel.setText(
-            f"LABEL for {self.allDatasets.currentDataName()}"
-        )
-        self.tagDataView.setTag(self.allDatasets.currentTagItem())
 
     def uiDataOptionsConnects(self):
         """Connect the UI elements related to display of data"""
@@ -523,11 +502,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.newRowButton.clicked.connect(self.allDatasets.newRow)
         self.ui.deleteRowButton.clicked.connect(self.allDatasets.removeCurrentRow)
         self.ui.clearAllButton.clicked.connect(self.allDatasets.removeAll)
-
-        # switch the tag so that it matches the current data set
-        self.ui.newRowButton.clicked.connect(self.syncTagWithDataset)
-        self.ui.deleteRowButton.clicked.connect(self.syncTagWithDataset)
-        self.ui.clearAllButton.clicked.connect(self.syncTagWithDataset)
 
     def uiDataLoadConnects(self):
         self.allDatasets.loadFromRegistrySignal.signal.connect(self.extractedDataSetup)
