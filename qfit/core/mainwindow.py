@@ -31,6 +31,7 @@ from PySide6.QtCore import (
     QCoreApplication,
     QThreadPool,
     QEvent,
+    Signal,
 )
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
@@ -183,9 +184,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.measurementData = measurementData
         self.extractedData = None
-        self.dataSetupConnects()
-        self.uiDataLoadConnects()
+        self.initializeExtractedData()
+        self.staticExtractedDataConnects()
         self.taggingCtrl = TaggingCtrl(self.hilbertspace.subsystem_count, self.ui, self)
+
+        self.dynamicalMeasurementDataSetupConnects()
+        self.uiDataLoadConnects()
 
         # setup mpl canvas
         self.uiColorScaleConnects()
@@ -217,19 +221,24 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # calibration, data, plot setup ####################################
     ####################################################################
-    def dataSetupConnects(self):
+    def staticExtractedDataConnects(self):
+        self.uiExtractedDataConnects()
+        self.uiExtractedDataControlConnects()
+
+    def dynamicalMeasurementDataSetupConnects(self):
+
         self.measurementData.setupUICallbacks(
             self.dataCheckBoxCallbacks, self.plotRangeCallback
         )
-        self.setupUIData()
         self.setupUIXYZComboBoxes()
+
+        # inform the use of the bare transition label
         self.ui.bareLabelOrder.setText(
             "   Labels ordered by: "  # Three space to align with the label title
             + ", ".join([subsys.id_str for subsys in self.hilbertspace.subsystem_list])
         )
-        self.uiDataConnects()
-        self.uiDataOptionsConnects()
-        self.uiDataControlConnects()
+
+        self.uiMeasurementDataOptionsConnects()
         self.uiXYZComboBoxesConnects()
 
     def recoverFromExtractedData(self):
@@ -343,7 +352,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         max_val = max(val1, val2)
         return [min_val, max_val]
 
-    def setupUIData(self):
+    def initializeExtractedData(self):
         """Set up the main class instances holding the data extracted from placing
         markers on the canvas. The AllExtractedData instance holds all data, whereas the
         ActiveExtractedData instance holds data of the currently selected data set."""
@@ -391,7 +400,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.pagesStackedWidget.setCurrentIndex(page)
         self.ui.bottomStackedWidget.setCurrentIndex(page)
 
-    def uiDataConnects(self):
+    def uiExtractedDataConnects(self):
         """Make connections for changes in data."""
 
         # whenever a row is inserted or removed, select the current row
@@ -452,7 +461,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # Whenever a new selection of data set is made, update the matching mode and the cursor
         self.ui.datasetListView.clicked.connect(self.updateMatchingModeAndCursor)
 
-    def uiDataOptionsConnects(self):
+    def uiMeasurementDataOptionsConnects(self):
         """Connect the UI elements related to display of data"""
         self.ui.topHatCheckBox.toggled.connect(lambda x: self.updatePlot())
         self.ui.waveletCheckBox.toggled.connect(lambda x: self.updatePlot())
@@ -496,7 +505,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.selectViewButton.clicked.connect(self.toggleSelect)
         self.ui.swapXYButton.clicked.connect(self.swapXY)
 
-    def uiDataControlConnects(self):
+
+    def uiExtractedDataControlConnects(self):
         """Connect buttons for inserting and deleting a data set, or clearing all data sets"""
         # update the backend model
         self.ui.newRowButton.clicked.connect(self.allDatasets.newRow)
@@ -1407,7 +1417,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.calibrationData.resetCalibration()
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
-        self.dataSetupConnects()
+        self.dynamicalMeasurementDataSetupConnects()
         self.uiDataLoadConnects()
         self.setupUIXYZComboBoxes()
 
