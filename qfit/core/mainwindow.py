@@ -226,11 +226,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.taggingCtrl = TaggingCtrl(self.hilbertspace.subsystem_count, self.ui, self)
 
     def dynamicalMeasurementDataSetupConnects(self):
-
         self.measurementData.setupUICallbacks(
             self.dataCheckBoxCallbacks, self.plotRangeCallback
         )
-        self.setupUIXYZComboBoxes()
 
         # inform the use of the bare transition label
         self.ui.bareLabelOrder.setText(
@@ -239,6 +237,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
 
         self.uiMeasurementDataOptionsConnects()
+        
+        self.setupUIXYZComboBoxes()
         self.uiXYZComboBoxesConnects()
 
     def recoverFromExtractedData(self):
