@@ -14,7 +14,7 @@
     <x>0</x>
     <y>0</y>
     <width>1070</width>
-    <height>806</height>
+    <height>835</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -646,7 +646,6 @@ QPushButton:checked {
              <font>
               <family>Roboto Medium</family>
               <pointsize>11</pointsize>
-              <weight>7</weight>
               <italic>false</italic>
               <bold>false</bold>
              </font>
@@ -901,32 +900,6 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                 </property>
                </widget>
               </item>
-              <item row="5" column="0">
-               <widget class="QLabel" name="label_27">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>15</height>
-                 </size>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">color: rgb(190, 130, 250);
-font: 57 11pt &quot;Roboto Medium&quot;;</string>
-                </property>
-                <property name="text">
-                 <string>CALIBRATION</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-                </property>
-               </widget>
-              </item>
               <item row="1" column="0" colspan="2">
                <widget class="QFrame" name="DataXYFrame">
                 <property name="sizePolicy">
@@ -1077,28 +1050,6 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                 </layout>
                </widget>
               </item>
-              <item row="11" column="2">
-               <widget class="QCheckBox" name="calibratedCheckBox">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>140</width>
-                  <height>20</height>
-                 </size>
-                </property>
-                <property name="layoutDirection">
-                 <enum>Qt::RightToLeft</enum>
-                </property>
-                <property name="text">
-                 <string notr="true">TOGGLE CALIBRATION</string>
-                </property>
-               </widget>
-              </item>
               <item row="2" column="2">
                <spacer name="horizontalSpacer_14">
                 <property name="orientation">
@@ -1159,39 +1110,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  <property name="verticalSpacing">
                   <number>8</number>
                  </property>
-                 <item row="2" column="4">
-                  <widget class="CalibrationLineEdit" name="mapY2LineEdit">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>80</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>200</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="toolTip">
-                    <string notr="true"/>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">background-color: rgb(47,47,47);</string>
-                   </property>
-                   <property name="text">
-                    <string notr="true">1.0</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="0">
-                  <widget class="QPushButton" name="calibrateY2Button">
+                 <item row="1" column="0">
+                  <widget class="QPushButton" name="calibrateY1Button">
                    <property name="minimumSize">
                     <size>
                      <width>30</width>
@@ -1199,7 +1119,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                     </size>
                    </property>
                    <property name="toolTip">
-                    <string notr="true">Calibrate y2, allows selection of coordinate inside plot</string>
+                    <string notr="true">Calibrate y1, allows selection of coordinate inside plot</string>
                    </property>
                    <property name="text">
                     <string/>
@@ -1216,34 +1136,29 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="1" column="2">
-                  <widget class="CalibrationLineEdit" name="rawY1LineEdit">
+                 <item row="0" column="2">
+                  <widget class="QLabel" name="label_23">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>80</width>
-                     <height>30</height>
-                    </size>
+                   <property name="text">
+                    <string>RAW Y</string>
                    </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>200</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="toolTip">
-                    <string notr="true"/>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">background-color: rgb(47,47,47);</string>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QLabel" name="label_19">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
                    </property>
                    <property name="text">
-                    <string notr="true">0.0</string>
+                    <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                   </widget>
                  </item>
@@ -1273,21 +1188,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="1" column="1">
-                  <widget class="QLabel" name="label_19">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text">
-                    <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QPushButton" name="calibrateY1Button">
+                 <item row="2" column="0">
+                  <widget class="QPushButton" name="calibrateY2Button">
                    <property name="minimumSize">
                     <size>
                      <width>30</width>
@@ -1295,7 +1197,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                     </size>
                    </property>
                    <property name="toolTip">
-                    <string notr="true">Calibrate y1, allows selection of coordinate inside plot</string>
+                    <string notr="true">Calibrate y2, allows selection of coordinate inside plot</string>
                    </property>
                    <property name="text">
                     <string/>
@@ -1309,6 +1211,19 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                    </property>
                    <property name="checked">
                     <bool>false</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="3">
+                  <widget class="QLabel" name="label_21">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="text">
+                    <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                   </widget>
                  </item>
@@ -1343,6 +1258,19 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                    </property>
                   </widget>
                  </item>
+                 <item row="0" column="4">
+                  <widget class="QLabel" name="label_24">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="text">
+                    <string>CALIBRATED Y [GHz]</string>
+                   </property>
+                  </widget>
+                 </item>
                  <item row="2" column="2">
                   <widget class="CalibrationLineEdit" name="rawY2LineEdit">
                    <property name="sizePolicy">
@@ -1374,42 +1302,65 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="1" column="3">
-                  <widget class="QLabel" name="label_21">
+                 <item row="1" column="2">
+                  <widget class="CalibrationLineEdit" name="rawY1LineEdit">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>80</width>
+                     <height>30</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>200</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="toolTip">
+                    <string notr="true"/>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(47,47,47);</string>
+                   </property>
                    <property name="text">
-                    <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;→ Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;'&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string notr="true">0.0</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="2">
-                  <widget class="QLabel" name="label_23">
+                 <item row="2" column="4">
+                  <widget class="CalibrationLineEdit" name="mapY2LineEdit">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
-                   <property name="text">
-                    <string>RAW Y</string>
+                   <property name="minimumSize">
+                    <size>
+                     <width>80</width>
+                     <height>30</height>
+                    </size>
                    </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="4">
-                  <widget class="QLabel" name="label_24">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
+                   <property name="maximumSize">
+                    <size>
+                     <width>200</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <property name="toolTip">
+                    <string notr="true"/>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">background-color: rgb(47,47,47);</string>
                    </property>
                    <property name="text">
-                    <string>CALIBRATED Y [GHz]</string>
+                    <string notr="true">1.0</string>
                    </property>
                   </widget>
                  </item>
@@ -1727,19 +1678,92 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                 </property>
                </spacer>
               </item>
-              <item row="6" column="1">
-               <widget class="QPushButton" name="calibrationWizardPushButton">
+              <item row="3" column="0">
+               <widget class="QWidget" name="calibrationTitleWidget" native="true">
+                <layout class="QHBoxLayout" name="horizontalLayout_2">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>40</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="label_27">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>100</width>
+                     <height>15</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">color: rgb(190, 130, 250);
+font: 57 11pt &quot;Roboto Medium&quot;;</string>
+                   </property>
+                   <property name="text">
+                    <string>CALIBRATION</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="calibrationHelpPushButton">
+                   <property name="styleSheet">
+                    <string notr="true">QPushButton {
+    border: none;
+    background: none;
+}</string>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="resources.qrc">
+                     <normaloff>:/icons/svg/question-circle.svg</normaloff>:/icons/svg/question-circle.svg</iconset>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>23</width>
+                     <height>23</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item row="11" column="1">
+               <widget class="QCheckBox" name="calibratedCheckBox">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="minimumSize">
                  <size>
-                  <width>150</width>
-                  <height>30</height>
+                  <width>140</width>
+                  <height>20</height>
                  </size>
                 </property>
-                <property name="text">
-                 <string>QUIT CALIBRATION WIZARD</string>
+                <property name="layoutDirection">
+                 <enum>Qt::RightToLeft</enum>
                 </property>
-                <property name="checkable">
-                 <bool>true</bool>
+                <property name="text">
+                 <string notr="true">TOGGLE CALIBRATION</string>
                 </property>
                </widget>
               </item>
@@ -1993,8 +2017,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>352</width>
-                   <height>363</height>
+                   <width>178</width>
+                   <height>361</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -2421,7 +2445,6 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>11</pointsize>
-                  <weight>7</weight>
                   <italic>false</italic>
                   <bold>false</bold>
                  </font>
@@ -2486,8 +2509,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>32</width>
+                   <height>16</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -2575,7 +2598,6 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>11</pointsize>
-                  <weight>7</weight>
                   <italic>false</italic>
                   <bold>false</bold>
                  </font>
@@ -2634,8 +2656,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>32</width>
+                   <height>16</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -3104,7 +3126,6 @@ color: rgb(30, 30, 30);</string>
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>11</pointsize>
-                  <weight>7</weight>
                   <italic>false</italic>
                   <bold>false</bold>
                  </font>
@@ -3735,7 +3756,6 @@ color: rgb(30, 30, 30);</string>
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>9</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -3756,7 +3776,6 @@ color: rgb(30, 30, 30);</string>
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>11</pointsize>
-                  <weight>7</weight>
                   <italic>false</italic>
                   <bold>false</bold>
                  </font>
@@ -4011,7 +4030,6 @@ color: rgb(30, 30, 30);</string>
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>9</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>

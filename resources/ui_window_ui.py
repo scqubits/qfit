@@ -26,7 +26,7 @@ from qfit.widgets.calibration import CalibrationLineEdit
 from qfit.widgets.data_extracting import (DataExtractingWidget, ListView)
 from qfit.widgets.mpl_canvas import (MplFigureCanvas, MplNavButtons)
 from qfit.widgets.validated_line_edits import IntTupleLineEdit
-import resources_rc
+from . import resources_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):

@@ -485,7 +485,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """Connect UI elements for data calibration."""
         self.ui.calibratedCheckBox.toggled.connect(self.toggleCalibration)
 
-        self.ui.calibrationWizardPushButton.clicked.connect(self.calibrationTutorial)
+        self.ui.calibrationHelpPushButton.clicked.connect(self.calibrationTutorial)
 
         for label in self.calibrationButtons:
             self.calibrationButtons[label].clicked.connect(

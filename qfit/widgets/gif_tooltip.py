@@ -127,27 +127,22 @@ class DialogWindowWithGif(QDialog):
         #     QColor.fromRgbF(0.000000, 0.000000, 0.000000, 0.247059),
         # )
         self.setStyleSheet(
-            ""
-            # "QDialog {\n"
-            # "	background-color: rgb(18, 18, 18);\n"
-            # "}\n"
-            # "\n"
-            # "QFrame {\n"
-            # "	background-color: rgb(18, 18, 18);\n"
-            # "}\n"
-            # "\n"
-            # "QWidget {\n"
-            # '	font-family: "Roboto Medium";\n'
-            # "	font-size: 9pt;\n"
-            # "}\n"
-            # "\n"
-            # "QLabel {\n"
-            # "	color: rgb(170, 170, 170);\n"
-            # "}\n"
-            # "\n"
-            # "QPushButton {\n"
-            # "	background-color: rgb(236, 236, 236);\n"
-            # "}\n"
+            "QDialog {\n"
+            "	background-color: rgb(18, 18, 18);\n"
+            "}\n"
+            "\n"
+            "QFrame {\n"
+            "	background-color: rgb(18, 18, 18);\n"
+            "}\n"
+            "\n"
+            "QWidget {\n"
+            '	font-family: "Roboto Medium";\n'
+            "	font-size: 11pt;\n"
+            "}\n"
+            "\n"
+            "QLabel {\n"
+            "	color: rgb(170, 170, 170);\n"
+            "}\n"
         )
 
         # Setup layout

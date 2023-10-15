@@ -32,6 +32,7 @@
         <file>fonts/Roboto-Regular.ttf</file>
         <file>fonts/Roboto-Thin.ttf</file>
         <file>icons/svg/qfit-icon.svg</file>
+        <file>icons/svg/question-circle.svg</file>
         <file>icons/svg/cil-lock-locked.svg</file>
         <file>icons/svg/cil-lock-unlocked.svg</file>
         <file>icons/svg/cil-link.svg</file>
