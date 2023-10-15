@@ -173,7 +173,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.setupUICalibration()
         self.calibrationData = CalibrationData()
         self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
-        self.calibrationWizardMode = False
 
         self.x_snap_mode = False
         self.mousedat = None

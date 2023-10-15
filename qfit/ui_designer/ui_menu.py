@@ -63,9 +63,6 @@ class Ui_MenuWidget(object):
             "\n"
             "QPushButton {	\n"
             '	font: 57 11pt "Roboto Medium";\n'
-            "	color: rgb(249, 249, 249);\n"
-            "	background-color: rgb(18, 18, 18);\n"
-            "	border: none;\n"
             "}\n"
             "\n"
             "QPushButton:hover {\n"
