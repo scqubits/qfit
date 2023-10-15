@@ -31,6 +31,7 @@ from PySide6.QtCore import (
     QCoreApplication,
     QThreadPool,
     QEvent,
+    Signal,
 )
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
@@ -60,7 +61,7 @@ from qfit.core.helpers import (
 )
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.models.measurement_data import MeasurementDataType
-from qfit.widgets.data_tagging import TagDataView
+from qfit.controllers.tagging import TaggingCtrl
 from qfit.io_utils.save_data import saveFile
 from qfit.settings import color_dict
 from qfit.ui_views.resizable_window import ResizableFramelessWindow
@@ -125,7 +126,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     extractedData: "QfitData"
     activeDataset: ActiveExtractedData
     allDatasets: AllExtractedData
-    tagDataView: TagDataView
+    taggingCtrl: TaggingCtrl
 
     calibrationData: CalibrationData
     calibrationView: CalibrationView
@@ -140,6 +141,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     optInitialized: bool = False
 
+    unsavedChanges: bool
     registry: Registry
     _projectFile: Union[str, None] = None
 
@@ -180,8 +182,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.setupUIPlotOptions()
 
         self.measurementData = measurementData
-        self.extractedData = None
-        self.dataSetupConnects()
+        self.initializeExtractedData()
+        self.staticExtractedDataConnects()
+
+        self.dynamicalMeasurementDataSetupConnects()
         self.uiDataLoadConnects()
 
         # setup mpl canvas
@@ -204,7 +208,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # controller for menu
         self.ioMenuCtrl = IOCtrl(
-            menu=self.ui_menu,
+            ui_Menu=self.ui_menu,
             registry=self.registry,
             mainWindow=self,
         )
@@ -214,20 +218,26 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # calibration, data, plot setup ####################################
     ####################################################################
-    def dataSetupConnects(self):
+    def staticExtractedDataConnects(self):
+        self.uiExtractedDataConnects()
+        self.uiExtractedDataControlConnects()
+        
+        self.taggingCtrl = TaggingCtrl(self.hilbertspace.subsystem_count, self.ui, self)
+
+    def dynamicalMeasurementDataSetupConnects(self):
         self.measurementData.setupUICallbacks(
             self.dataCheckBoxCallbacks, self.plotRangeCallback
         )
-        self.setupUIData()
-        self.setupUIXYZComboBoxes()
-        self.tagDataView = TagDataView(self.ui, self.hilbertspace.subsystem_count)
+
+        # inform the use of the bare transition label
         self.ui.bareLabelOrder.setText(
             "   Labels ordered by: "  # Three space to align with the label title
             + ", ".join([subsys.id_str for subsys in self.hilbertspace.subsystem_list])
         )
-        self.uiDataConnects()
-        self.uiDataOptionsConnects()
-        self.uiDataControlConnects()
+
+        self.uiMeasurementDataOptionsConnects()
+        
+        self.setupUIXYZComboBoxes()
         self.uiXYZComboBoxesConnects()
 
     def recoverFromExtractedData(self):
@@ -241,7 +251,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
             self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
             self.activeDataset._data = self.allDatasets.currentAssocItem()
-            self.tagDataView.setTag(self.allDatasets.currentTagItem())
+            self.taggingCtrl.setTag(self.allDatasets.currentTagItem())
             self.allDatasets.layoutChanged.emit()
             self.activeDataset.layoutChanged.emit()
 
@@ -341,10 +351,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         max_val = max(val1, val2)
         return [min_val, max_val]
 
-    def setupUIData(self):
+    def initializeExtractedData(self):
         """Set up the main class instances holding the data extracted from placing
         markers on the canvas. The AllExtractedData instance holds all data, whereas the
         ActiveExtractedData instance holds data of the currently selected data set."""
+        self.extractedData = None
         self.activeDataset = ActiveExtractedData()
         self.activeDataset.setAdaptiveCalibrationFunc(
             self.calibrationData.adaptiveConversionFunc
@@ -389,7 +400,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.pagesStackedWidget.setCurrentIndex(page)
         self.ui.bottomStackedWidget.setCurrentIndex(page)
 
-    def uiDataConnects(self):
+    def uiExtractedDataConnects(self):
         """Make connections for changes in data."""
 
         # whenever a row is inserted or removed, select the current row
@@ -447,31 +458,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             lambda: self.updatePlot(initialize=False)
         )
 
-        # Whenever tag type or tag data is changed, update the AllExtractedData data
-        self.tagDataView.changedTagType.connect(
-            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTagFromUI())
-        )
-        self.tagDataView.changedTagData.connect(
-            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTagFromUI())
-        )
-
-        # Whenever a new dataset is activated in the AllExtractedData, update the TagDataView
-        self.ui.datasetListView.clicked.connect(self.syncTagWithDataset)
-
-        # Whenever a dataset is renamed, update the title for tags
-        self.allDatasets.dataChanged.connect(self.syncTagWithDataset)
-
         # Whenever a new selection of data set is made, update the matching mode and the cursor
         self.ui.datasetListView.clicked.connect(self.updateMatchingModeAndCursor)
 
-    @Slot()
-    def syncTagWithDataset(self):
-        self.ui.transitionLabel.setText(
-            f"LABEL for {self.allDatasets.currentDataName()}"
-        )
-        self.tagDataView.setTag(self.allDatasets.currentTagItem())
-
-    def uiDataOptionsConnects(self):
+    def uiMeasurementDataOptionsConnects(self):
         """Connect the UI elements related to display of data"""
         self.ui.topHatCheckBox.toggled.connect(lambda x: self.updatePlot())
         self.ui.waveletCheckBox.toggled.connect(lambda x: self.updatePlot())
@@ -515,17 +505,13 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.selectViewButton.clicked.connect(self.toggleSelect)
         self.ui.swapXYButton.clicked.connect(self.swapXY)
 
-    def uiDataControlConnects(self):
+
+    def uiExtractedDataControlConnects(self):
         """Connect buttons for inserting and deleting a data set, or clearing all data sets"""
         # update the backend model
         self.ui.newRowButton.clicked.connect(self.allDatasets.newRow)
         self.ui.deleteRowButton.clicked.connect(self.allDatasets.removeCurrentRow)
         self.ui.clearAllButton.clicked.connect(self.allDatasets.removeAll)
-
-        # switch the tag so that it matches the current data set
-        self.ui.newRowButton.clicked.connect(self.syncTagWithDataset)
-        self.ui.deleteRowButton.clicked.connect(self.syncTagWithDataset)
-        self.ui.clearAllButton.clicked.connect(self.syncTagWithDataset)
 
     def uiDataLoadConnects(self):
         self.allDatasets.loadFromRegistrySignal.signal.connect(self.extractedDataSetup)
@@ -1431,7 +1417,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.calibrationData.resetCalibration()
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
-        self.dataSetupConnects()
+        self.dynamicalMeasurementDataSetupConnects()
         self.uiDataLoadConnects()
         self.setupUIXYZComboBoxes()
 

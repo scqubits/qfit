@@ -24,12 +24,10 @@ from qfit.models.status_result_data import Result
 from qfit.models.numerical_spectrum_data import CalculatedSpecData
 from qfit.models.calibration_data import CalibrationData
 from qfit.models.extracted_data import AllExtractedData
-from qfit.widgets.data_tagging import (
+from qfit.controllers.tagging import (
     NO_TAG,
     DISPERSIVE_DRESSED,
     DISPERSIVE_BARE,
-    # CROSSING,
-    # CROSSING_DRESSED,
     Tag,
 )
 

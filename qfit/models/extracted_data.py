@@ -27,7 +27,7 @@ from PySide6.QtCore import (
 
 import qfit.io_utils.file_io_serializers as serializers
 
-from qfit.widgets.data_tagging import NO_TAG, Tag
+from qfit.controllers.tagging import NO_TAG, Tag
 
 from qfit.models.registry import Registrable, RegistryEntry
 
@@ -37,6 +37,9 @@ from copy import deepcopy
 class LoadFromRegistrySignal(QObject):
     signal = Signal(dict)
 
+
+class DataSwitchSignal(QObject):
+    signal = Signal()
 
 class ActiveExtractedData(QAbstractTableModel):
     """This class holds one data set, as extracted by markers on the canvas. In
@@ -53,6 +56,7 @@ class ActiveExtractedData(QAbstractTableModel):
         super().__init__()
         self._data = data or np.empty(shape=(2, 0), dtype=np.float_)
         self._adaptiveCalibrationFunc = None
+        self.dataSwitchSignal = DataSwitchSignal()
 
     @Slot()
     def all(self) -> np.ndarray:
@@ -170,6 +174,7 @@ class ActiveExtractedData(QAbstractTableModel):
         """
         self._data = newData
         self.layoutChanged.emit()
+        self.dataSwitchSignal.signal.emit()
 
     def flags(self, index: QModelIndex):
         flags = super(self.__class__, self).flags(index)
@@ -217,6 +222,7 @@ class ListModelMeta(type(QAbstractListModel), type(serializers.Serializable)):
 class AllExtractedData(
     QAbstractListModel, serializers.Serializable, Registrable, metaclass=ListModelMeta
 ):
+
     def __init__(self):
         super().__init__()
         self.dataNames = ["Transition 1"]
