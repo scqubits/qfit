@@ -221,7 +221,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def staticExtractedDataConnects(self):
         self.uiExtractedDataConnects()
         self.uiExtractedDataControlConnects()
-        
+
         self.taggingCtrl = TaggingCtrl(self.hilbertspace.subsystem_count, self.ui, self)
 
     def dynamicalMeasurementDataSetupConnects(self):
@@ -236,7 +236,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
 
         self.uiMeasurementDataOptionsConnects()
-        
+
         self.setupUIXYZComboBoxes()
         self.uiXYZComboBoxesConnects()
 
@@ -485,7 +485,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """Connect UI elements for data calibration."""
         self.ui.calibratedCheckBox.toggled.connect(self.toggleCalibration)
 
-        self.ui.calibrationHelpPushButton.clicked.connect(self.calibrationTutorial)
+        self.ui.calibrationHelpPushButton.clicked.connect(self.calibrationHelp)
 
         for label in self.calibrationButtons:
             self.calibrationButtons[label].clicked.connect(
@@ -504,7 +504,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.panViewButton.clicked.connect(self.togglePan)
         self.ui.selectViewButton.clicked.connect(self.toggleSelect)
         self.ui.swapXYButton.clicked.connect(self.swapXY)
-
 
     def uiExtractedDataControlConnects(self):
         """Connect buttons for inserting and deleting a data set, or clearing all data sets"""
@@ -532,7 +531,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             and self.allDatasets.currentRow != 0
             and len(self.allDatasets.assocDataList[0][0]) > 0
             and self.ui.horizontalSnapButton.isChecked()
-            and (not self.calibrationButtonIsChecked())
+            and (appstate.state not in list(self.calibrationStates.values()))
         ):
             self.x_snap_mode = True
             self.ui.mplFigureCanvas.x_snap_mode = True
@@ -617,9 +616,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             data = event.xdata if (calibrationLabel[0] == "X") else event.ydata
 
             if appstate.state == self.calibrationStates[calibrationLabel]:
+                # update the raw line edits by the value of the clicked point
                 self.rawLineEdits[calibrationLabel].setText(str(data))
                 self.rawLineEdits[calibrationLabel].home(False)
+                # highlight the map line edit
                 self.mapLineEdits[calibrationLabel].selectAll()
+                self.mapLineEdits[calibrationLabel].setFocus()
                 self.ui.selectViewButton.setChecked(True)
                 self.ui.mplFigureCanvas.selectOn()
                 self.rawLineEdits[calibrationLabel].editingFinished.emit()
@@ -749,6 +751,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         click setting calibration point x or y component."""
         appstate.state = self.calibrationStates[calibrationLabel]
         self.ui.mplFigureCanvas.calibrateOn(calibrationLabel[0])
+        self.updateMatchingModeAndCursor()
 
     @Slot()
     def updateCalibration(self):
@@ -768,7 +771,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.activeDataset.toggleCalibratedView()
 
     @Slot()
-    def calibrationTutorial(self):
+    def calibrationHelp(self):
         tutorial_dialog = DialogWindowWithGif(
             "test",
             "/Users/pacosynthesis/Desktop/ScienceTech/Research/Superconducting_qubit_NU/Codes/qfit/resources/nyanyanya.gif",

@@ -863,6 +863,9 @@ QPushButton:pressed {
                   <height>30</height>
                  </size>
                 </property>
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
                 <property name="text">
                  <string>X↔Y</string>
                 </property>
@@ -1118,8 +1121,14 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                      <height>30</height>
                     </size>
                    </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
                    <property name="toolTip">
                     <string notr="true">Calibrate y1, allows selection of coordinate inside plot</string>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true"/>
                    </property>
                    <property name="text">
                     <string/>
@@ -1196,8 +1205,14 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                      <height>30</height>
                     </size>
                    </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
                    <property name="toolTip">
                     <string notr="true">Calibrate y2, allows selection of coordinate inside plot</string>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true"/>
                    </property>
                    <property name="text">
                     <string/>
@@ -1393,6 +1408,9 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
 	border: 0px solid rgb(52, 59, 72);
 	border-radius: 5px;	
 	text-align: center;
+}
+QPushButton:pressed {
+    background-color: rgb(60, 60, 60);
 }</string>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_10">
@@ -1481,8 +1499,14 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                      <height>30</height>
                     </size>
                    </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
                    <property name="toolTip">
                     <string notr="true">Calibrate x2, allows selection of coordinate inside plot</string>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true"/>
                    </property>
                    <property name="text">
                     <string/>
@@ -1644,8 +1668,14 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                      <height>30</height>
                     </size>
                    </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
                    <property name="toolTip">
                     <string notr="true">Calibrate x2, allows selection of coordinate inside plot</string>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true"/>
                    </property>
                    <property name="text">
                     <string/>
@@ -1721,6 +1751,9 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  </item>
                  <item>
                   <widget class="QPushButton" name="calibrationHelpPushButton">
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
                    <property name="styleSheet">
                     <string notr="true">QPushButton {
     border: none;
@@ -2930,7 +2963,7 @@ color: rgb(30, 30, 30);</string>
             </rect>
            </property>
            <property name="cursor">
-            <cursorShape>CrossCursor</cursorShape>
+            <cursorShape>ArrowCursor</cursorShape>
            </property>
            <property name="toolTip">
             <string notr="true">Extract mode: Click to extract peaks</string>

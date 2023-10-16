@@ -626,6 +626,7 @@ class Ui_MainWindow(object):
         sizePolicy5.setHeightForWidth(self.swapXYButton.sizePolicy().hasHeightForWidth())
         self.swapXYButton.setSizePolicy(sizePolicy5)
         self.swapXYButton.setMinimumSize(QSize(40, 30))
+        self.swapXYButton.setCursor(QCursor(Qt.PointingHandCursor))
         self.swapXYButton.setIconSize(QSize(16, 16))
 
         self.gridLayout_14.addWidget(self.swapXYButton, 2, 3, 1, 1)
@@ -740,9 +741,11 @@ class Ui_MainWindow(object):
         self.calibrateY1Button = QPushButton(self.calibrateYGridFrame)
         self.calibrateY1Button.setObjectName(u"calibrateY1Button")
         self.calibrateY1Button.setMinimumSize(QSize(30, 30))
+        self.calibrateY1Button.setCursor(QCursor(Qt.PointingHandCursor))
 #if QT_CONFIG(tooltip)
         self.calibrateY1Button.setToolTip(u"Calibrate y1, allows selection of coordinate inside plot")
 #endif // QT_CONFIG(tooltip)
+        self.calibrateY1Button.setStyleSheet(u"")
         self.calibrateY1Button.setIcon(icon2)
         self.calibrateY1Button.setCheckable(True)
         self.calibrateY1Button.setChecked(False)
@@ -786,9 +789,11 @@ class Ui_MainWindow(object):
         self.calibrateY2Button = QPushButton(self.calibrateYGridFrame)
         self.calibrateY2Button.setObjectName(u"calibrateY2Button")
         self.calibrateY2Button.setMinimumSize(QSize(30, 30))
+        self.calibrateY2Button.setCursor(QCursor(Qt.PointingHandCursor))
 #if QT_CONFIG(tooltip)
         self.calibrateY2Button.setToolTip(u"Calibrate y2, allows selection of coordinate inside plot")
 #endif // QT_CONFIG(tooltip)
+        self.calibrateY2Button.setStyleSheet(u"")
         self.calibrateY2Button.setIcon(icon2)
         self.calibrateY2Button.setCheckable(True)
         self.calibrateY2Button.setChecked(False)
@@ -880,6 +885,9 @@ class Ui_MainWindow(object):
 "	border: 0px solid rgb(52, 59, 72);\n"
 "	border-radius: 5px;	\n"
 "	text-align: center;\n"
+"}\n"
+"QPushButton:pressed {\n"
+"    background-color: rgb(60, 60, 60);\n"
 "}")
         self.gridLayout_10 = QGridLayout(self.calibrateXGridFrame)
         self.gridLayout_10.setObjectName(u"gridLayout_10")
@@ -916,9 +924,11 @@ class Ui_MainWindow(object):
         self.calibrateX2Button = QPushButton(self.calibrateXGridFrame)
         self.calibrateX2Button.setObjectName(u"calibrateX2Button")
         self.calibrateX2Button.setMinimumSize(QSize(30, 30))
+        self.calibrateX2Button.setCursor(QCursor(Qt.PointingHandCursor))
 #if QT_CONFIG(tooltip)
         self.calibrateX2Button.setToolTip(u"Calibrate x2, allows selection of coordinate inside plot")
 #endif // QT_CONFIG(tooltip)
+        self.calibrateX2Button.setStyleSheet(u"")
         self.calibrateX2Button.setIcon(icon2)
         self.calibrateX2Button.setCheckable(True)
         self.calibrateX2Button.setChecked(False)
@@ -1000,9 +1010,11 @@ class Ui_MainWindow(object):
         self.calibrateX1Button = QPushButton(self.calibrateXGridFrame)
         self.calibrateX1Button.setObjectName(u"calibrateX1Button")
         self.calibrateX1Button.setMinimumSize(QSize(30, 30))
+        self.calibrateX1Button.setCursor(QCursor(Qt.PointingHandCursor))
 #if QT_CONFIG(tooltip)
         self.calibrateX1Button.setToolTip(u"Calibrate x2, allows selection of coordinate inside plot")
 #endif // QT_CONFIG(tooltip)
+        self.calibrateX1Button.setStyleSheet(u"")
         self.calibrateX1Button.setIcon(icon2)
         self.calibrateX1Button.setCheckable(True)
         self.calibrateX1Button.setChecked(False)
@@ -1034,6 +1046,7 @@ class Ui_MainWindow(object):
 
         self.calibrationHelpPushButton = QPushButton(self.calibrationTitleWidget)
         self.calibrationHelpPushButton.setObjectName(u"calibrationHelpPushButton")
+        self.calibrationHelpPushButton.setCursor(QCursor(Qt.PointingHandCursor))
         self.calibrationHelpPushButton.setStyleSheet(u"QPushButton {\n"
 "    border: none;\n"
 "    background: none;\n"
@@ -1651,7 +1664,7 @@ class Ui_MainWindow(object):
         self.selectViewButton = QPushButton(self.mplFigureButtons)
         self.selectViewButton.setObjectName(u"selectViewButton")
         self.selectViewButton.setGeometry(QRect(210, 10, 41, 41))
-        self.selectViewButton.setCursor(QCursor(Qt.CrossCursor))
+        self.selectViewButton.setCursor(QCursor(Qt.ArrowCursor))
 #if QT_CONFIG(tooltip)
         self.selectViewButton.setToolTip(u"Extract mode: Click to extract peaks")
 #endif // QT_CONFIG(tooltip)
