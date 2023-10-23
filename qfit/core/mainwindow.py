@@ -62,7 +62,6 @@ from qfit.core.helpers import (
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.models.measurement_data import MeasurementDataType
 from qfit.controllers.tagging import TaggingCtrl
-from qfit.io_utils.save_data import saveFile
 from qfit.settings import color_dict
 from qfit.ui_views.resizable_window import ResizableFramelessWindow
 from qfit.ui_designer.ui_window import Ui_MainWindow
@@ -76,7 +75,7 @@ from qfit.models.quantum_model_parameters import (
     QuantumModelFittingParameter,
 )
 from qfit.models.numerical_spectrum_data import CalculatedSpecData
-from qfit.controllers.numerical_model import QuantumModel
+from qfit.models.numerical_model import QuantumModel
 from qfit.widgets.foldable_widget import FoldableWidget
 from qfit.widgets.grouped_sliders import (
     LabeledSlider,
@@ -90,7 +89,7 @@ from qfit.widgets.foldable_table import (
 )
 
 # fit
-from qfit.controllers.fit import NumericalFitting
+from qfit.models.fit import NumericalFitting
 
 # message
 from qfit.models.status_result_data import Result
@@ -103,10 +102,6 @@ from qfit.controllers.io_menu import IOCtrl
 
 if TYPE_CHECKING:
     from qfit.widgets.calibration import CalibrationLineEdit
-    from qfit.models.qfit_data import QfitData
-
-from qfit.models.qfit_data import QfitData
-
 
 mpl.rcParams["toolbar"] = "None"
 
@@ -1084,9 +1079,14 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         3. evals count line edit
         4. points add line edit
         """
+        # default values
         self.ui.evalsCountLineEdit.setText("20")
         self.ui.pointsAddLineEdit.setText("10")
 
+        # set line edit property:
+        self.ui.initStateLineEdit.setTupleLength(self.hilbertspace.subsystem_count)
+
+        # connect the prefit options to the controller
         self.quantumModel.setupPlotUICallbacks(
             subsystemNameCallback=self.ui.subsysComboBox.currentText,
             initialStateCallback=self.ui.initStateLineEdit.text,

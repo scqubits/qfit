@@ -17,15 +17,15 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
     QGridLayout, QGroupBox, QHBoxLayout, QLabel,
-    QLayout, QLineEdit, QMainWindow, QPushButton,
-    QRadioButton, QScrollArea, QSizePolicy, QSlider,
-    QSpacerItem, QSpinBox, QStackedWidget, QStatusBar,
-    QVBoxLayout, QWidget)
+    QLayout, QMainWindow, QPushButton, QRadioButton,
+    QScrollArea, QSizePolicy, QSlider, QSpacerItem,
+    QSpinBox, QStackedWidget, QStatusBar, QVBoxLayout,
+    QWidget)
 
 from qfit.widgets.calibration import CalibrationLineEdit
 from qfit.widgets.data_extracting import (DataExtractingWidget, ListView)
 from qfit.widgets.mpl_canvas import (MplFigureCanvas, MplNavButtons)
-from qfit.widgets.validated_line_edits import IntTupleLineEdit
+from qfit.widgets.validated_line_edits import (IntLineEdit, IntTupleLineEdit, PositiveFloatLineEdit, StateLineEdit)
 from . import resources_rc
 
 class Ui_MainWindow(object):
@@ -650,7 +650,7 @@ class Ui_MainWindow(object):
         sizePolicy6.setHeightForWidth(self.DataXYFrame.sizePolicy().hasHeightForWidth())
         self.DataXYFrame.setSizePolicy(sizePolicy6)
         self.DataXYFrame.setMinimumSize(QSize(330, 0))
-        self.DataXYFrame.setFrameShape(QFrame.StyledPanel)
+        self.DataXYFrame.setFrameShape(QFrame.NoFrame)
         self.DataXYFrame.setFrameShadow(QFrame.Raised)
         self.gridLayout_4 = QGridLayout(self.DataXYFrame)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
@@ -1218,7 +1218,7 @@ class Ui_MainWindow(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 178, 361))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, -43, 352, 363))
         self.verticalLayout_16 = QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_16.setSpacing(12)
         self.verticalLayout_16.setObjectName(u"verticalLayout_16")
@@ -1471,7 +1471,7 @@ class Ui_MainWindow(object):
         self.prefitScrollArea.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.prefitScrollAreaWidget = QWidget()
         self.prefitScrollAreaWidget.setObjectName(u"prefitScrollAreaWidget")
-        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 32, 16))
+        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 352, 441))
         self.verticalLayout_11 = QVBoxLayout(self.prefitScrollAreaWidget)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -1529,7 +1529,7 @@ class Ui_MainWindow(object):
         self.fitScrollArea.setWidgetResizable(True)
         self.fitScrollAreaWidget = QWidget()
         self.fitScrollAreaWidget.setObjectName(u"fitScrollAreaWidget")
-        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 32, 16))
+        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 352, 381))
         self.verticalLayout_4 = QVBoxLayout(self.fitScrollAreaWidget)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -2007,7 +2007,7 @@ class Ui_MainWindow(object):
 
         self.gridLayout_3.addItem(self.horizontalSpacer_8, 1, 7, 1, 1)
 
-        self.evalsCountLineEdit = QLineEdit(self.frame_4)
+        self.evalsCountLineEdit = IntLineEdit(self.frame_4)
         self.evalsCountLineEdit.setObjectName(u"evalsCountLineEdit")
         sizePolicy3.setHeightForWidth(self.evalsCountLineEdit.sizePolicy().hasHeightForWidth())
         self.evalsCountLineEdit.setSizePolicy(sizePolicy3)
@@ -2067,7 +2067,7 @@ class Ui_MainWindow(object):
 
         self.gridLayout_3.addItem(self.horizontalSpacer_4, 1, 3, 1, 1)
 
-        self.pointsAddLineEdit = QLineEdit(self.frame_4)
+        self.pointsAddLineEdit = IntLineEdit(self.frame_4)
         self.pointsAddLineEdit.setObjectName(u"pointsAddLineEdit")
         sizePolicy3.setHeightForWidth(self.pointsAddLineEdit.sizePolicy().hasHeightForWidth())
         self.pointsAddLineEdit.setSizePolicy(sizePolicy3)
@@ -2086,10 +2086,11 @@ class Ui_MainWindow(object):
 
         self.gridLayout_3.addWidget(self.subsysComboBox, 1, 2, 1, 1)
 
-        self.initStateLineEdit = QLineEdit(self.frame_4)
+        self.initStateLineEdit = StateLineEdit(self.frame_4)
         self.initStateLineEdit.setObjectName(u"initStateLineEdit")
         sizePolicy3.setHeightForWidth(self.initStateLineEdit.sizePolicy().hasHeightForWidth())
         self.initStateLineEdit.setSizePolicy(sizePolicy3)
+        self.initStateLineEdit.setMinimumSize(QSize(150, 0))
 
         self.gridLayout_3.addWidget(self.initStateLineEdit, 2, 2, 1, 1)
 
@@ -2193,7 +2194,7 @@ class Ui_MainWindow(object):
 
         self.gridLayout_6.addWidget(self.label_8, 2, 1, 1, 1)
 
-        self.tolLineEdit = QLineEdit(self.frame_5)
+        self.tolLineEdit = PositiveFloatLineEdit(self.frame_5)
         self.tolLineEdit.setObjectName(u"tolLineEdit")
         sizePolicy3.setHeightForWidth(self.tolLineEdit.sizePolicy().hasHeightForWidth())
         self.tolLineEdit.setSizePolicy(sizePolicy3)
@@ -2279,7 +2280,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
 
         self.pagesStackedWidget.setCurrentIndex(0)
-        self.bottomStackedWidget.setCurrentIndex(0)
+        self.bottomStackedWidget.setCurrentIndex(3)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -2338,7 +2339,9 @@ class Ui_MainWindow(object):
         self.mseLabel.setText(QCoreApplication.translate("MainWindow", u"MSE:  0.647 GHz^2   (+0.86%)", None))
         self.label_9.setText(QCoreApplication.translate("MainWindow", u"SETTINGS: NUMERICAL SPECTRUM", None))
         self.label_44.setText(QCoreApplication.translate("MainWindow", u"TRANSITIONS", None))
+        self.pointsAddLineEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"# of x value for spectrum sweep", None))
         self.autoRunCheckBox.setText(QCoreApplication.translate("MainWindow", u"AUTO-UPDATE", None))
+        self.initStateLineEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"dressed or bare label", None))
 #if QT_CONFIG(tooltip)
         self.exportToFitButton.setToolTip(QCoreApplication.translate("MainWindow", u"Load the pre-fitted parameters to the initial value of the fit section", None))
 #endif // QT_CONFIG(tooltip)

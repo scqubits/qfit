@@ -3,7 +3,7 @@ import numpy as np
 from typing import List, Dict, Tuple, Callable, Union
 from PySide6.QtCore import QRunnable, QThreadPool, Signal, QObject
 
-from qfit.controllers.wrapped_optimizer import Optimization, OptTraj
+from qfit.models.wrapped_optimizer import Optimization, OptTraj
 from qfit.models.extracted_data import AllExtractedData
 from qfit.models.calibration_data import CalibrationData
 from qfit.models.quantum_model_parameters import (

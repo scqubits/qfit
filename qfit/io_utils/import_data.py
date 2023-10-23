@@ -13,7 +13,6 @@ import os
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
-import qfit.models.qfit_data as fit
 from qfit.core.helpers import StopExecution
 
 from qfit.io_utils.measurement_file_readers import (
