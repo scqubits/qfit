@@ -13,7 +13,7 @@ import os
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
-from qfit.core.helpers import StopExecution
+from qfit.utils.helpers import StopExecution
 
 from qfit.io_utils.measurement_file_readers import (
     ImageMeasurementData,

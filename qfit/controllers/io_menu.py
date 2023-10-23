@@ -8,7 +8,7 @@ from qfit.models.registry import Registry
 
 from qfit.widgets.menu import MenuWidget
 
-from qfit.core.helpers import StopExecution
+from qfit.utils.helpers import StopExecution
 
 from qfit.io_utils.measurement_file_readers import readMeasurementFile
 

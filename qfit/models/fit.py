@@ -3,7 +3,7 @@ import numpy as np
 from typing import List, Dict, Tuple, Callable, Union
 from PySide6.QtCore import QRunnable, QThreadPool, Signal, QObject
 
-from qfit.models.wrapped_optimizer import Optimization, OptTraj
+from qfit.utils.wrapped_optimizer import Optimization, OptTraj
 from qfit.models.extracted_data import AllExtractedData
 from qfit.models.calibration_data import CalibrationData
 from qfit.models.quantum_model_parameters import (
@@ -152,10 +152,12 @@ class NumericalFitting(QRunnable):
         result.current_mse = targetValue**2
 
     @staticmethod
-    def _paramHitBound(parameterSet) -> bool:
+    def _paramHitBound(parameterSet: QuantumModelParameterSet) -> bool:
         for param_dict in parameterSet.parameters.values():
             for param in param_dict.values():
                 param: QuantumModelFittingParameter
+                if param.isFixed:
+                    continue
                 if (np.abs(param.value - param.min) < 1e-10 
                     or np.abs(param.value - param.max) < 1e-10):
                     return True

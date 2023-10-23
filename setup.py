@@ -59,11 +59,10 @@ PACKAGES = [
     "qfit/models",
     "qfit/controllers",
     "qfit/widgets",
+    "qfit/utils",
     "qfit/io_utils",
-    "qfit/models",
     "qfit/ui_designer",
     "qfit/ui_views",
-    "qfit/widgets",
 ]
 
 PYTHON_VERSION = ">=3.6"

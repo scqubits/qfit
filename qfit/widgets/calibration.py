@@ -12,7 +12,7 @@
 
 from PySide6.QtWidgets import QLineEdit, QMessageBox
 
-from qfit.core.helpers import DoubleValidator
+from qfit.utils.helpers import DoubleValidator
 
 
 class CalibrationView:

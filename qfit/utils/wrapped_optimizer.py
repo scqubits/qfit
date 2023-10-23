@@ -11,7 +11,7 @@ from scipy.optimize import (
     shgo,
 )
 
-from qfit.core.helpers import (
+from qfit.utils.helpers import (
     Cmap,
     filter,
     # save_variable_list_dict, 

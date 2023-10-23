@@ -52,7 +52,7 @@ import qfit.core.app_state as appstate
 from qfit.models.calibration_data import CalibrationData
 from qfit.widgets.calibration import CalibrationView
 from qfit.core.app_state import State
-from qfit.core.helpers import (
+from qfit.utils.helpers import (
     transposeEach,
     clearChildren,
     executed_in_ipython,

@@ -13,7 +13,7 @@ from PySide6.QtCore import (
 )
 
 from qfit.widgets.foldable_widget import FoldPushButton
-from qfit.core.helpers import modifyStyleSheet
+from qfit.utils.helpers import modifyStyleSheet
 
 from typing import List, Dict, Tuple, Union, Type
 
