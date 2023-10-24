@@ -10,9 +10,9 @@
 ############################################################################
 
 
-from PySide6.QtWidgets import QLineEdit, QMessageBox
+from PySide6.QtWidgets import QMessageBox
 
-from qfit.utils.helpers import DoubleValidator
+from qfit.widgets.validated_line_edits import FloatLineEdit
 
 
 class CalibrationView:
@@ -53,11 +53,10 @@ class CalibrationView:
         self.mapLineEdits["Y2"].setText(str(mapVec2[1]))
 
 
-class CalibrationLineEdit(QLineEdit):
+class CalibrationLineEdit(FloatLineEdit):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setValidator(DoubleValidator())
-        self.editingFinished.connect(self.processUpdate)
+        # self.editingFinished.connect(self.processUpdate)
         self.previousStr = None
         self.siblingLineEdit = None
 
@@ -71,7 +70,7 @@ class CalibrationLineEdit(QLineEdit):
 
     def focusOutEvent(self, arg):
         result = super().focusOutEvent(arg)
-        self.processUpdate()
+        # self.processUpdate()
         return result
 
     def setText(self, arg):
@@ -88,8 +87,8 @@ class CalibrationLineEdit(QLineEdit):
     def value(self):
         return float(self.text())
 
-    def processUpdate(self):
-        if self.hasAcceptableInput() and self.siblingValueDifferent():
-            self.previousStr = self.text()
-        else:
-            self.setText(self.previousStr)
+    # def processUpdate(self):
+    #     if self.hasAcceptableInput() and self.siblingValueDifferent():
+    #         self.previousStr = self.text()
+    #     else:
+    #         self.setText(self.previousStr)
