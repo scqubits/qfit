@@ -611,6 +611,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             data = event.xdata if (calibrationLabel[0] == "X") else event.ydata
 
             if appstate.state == self.calibrationStates[calibrationLabel]:
+                # turn off the highlighting of the button
+                self._highlightCaliButton(self.calibrationButtons[calibrationLabel], reset=True)
                 # update the raw line edits by the value of the clicked point
                 self.rawLineEdits[calibrationLabel].setText(str(data))
                 self.rawLineEdits[calibrationLabel].home(False)
@@ -739,12 +741,31 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.mplFigureCanvas.x_snap_mode = self.x_snap_mode
         self.ui.mplFigureCanvas.set_callback_for_extracted_data(self.allDatasets)
 
+    def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
+        """Highlight the button by changing its color."""
+        if reset:
+            button.setStyleSheet("")
+        else:
+            button.setStyleSheet("background-color: #6c278c")
+
+    def _resetHighlightButtons(self):
+        """Reset the highlighting of all calibration buttons."""
+        for label in self.calibrationButtons:
+            self._highlightCaliButton(self.calibrationButtons[label], reset=True)
+
     @Slot()
     def calibrate(self, calibrationLabel: str):
-        """Mouse click on one of the calibration buttons prompts switching to
+        """
+        Mouse click on one of the calibration buttons prompts switching to
         calibration mode. Mouse cursor crosshair is adjusted and canvas waits for
-        click setting calibration point x or y component."""
+        click setting calibration point x or y component.
+        Besides, the button is highlighted.
+        """
         appstate.state = self.calibrationStates[calibrationLabel]
+        # button highlighting
+        self._resetHighlightButtons()
+        self._highlightCaliButton(self.calibrationButtons[calibrationLabel])
+        # mpl canvas mode & cursor
         self.ui.mplFigureCanvas.calibrateOn(calibrationLabel[0])
         self.updateMatchingModeAndCursor()
 
