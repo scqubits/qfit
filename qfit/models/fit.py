@@ -85,13 +85,18 @@ class NumericalFitting(QRunnable):
         for key, params in param_dict.items():
             params: QuantumModelFittingParameter
 
-            if params.isFixed:
+            if params.isFixed or params.min == params.max:
+                # min == max is actually not that rare, usually seen when
+                # user wants to fix the parameter but don't know how to 
+                # fix it in the UI. 
+                # It's also possible that some parameter
+                # with initial value 0 automatically gets min == max == 0.
                 fixed_params[key] = params.initValue
             else:
                 free_param_ranges[key] = [params.min, params.max]
 
                 # check whether the values are valid
-                if params.min >= params.max:
+                if params.min > params.max:
                     self.result.status_type = "ERROR"
                     self.result.status_text = ("The minimum value of the "
                     "parameter is larger than the maximum value.")

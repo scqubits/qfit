@@ -1219,7 +1219,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.optInitialized = self.numericalFitting.setupOptimization(
             self.fitParameterSet,
-            self.quantumModel.MSEByParametersForFit,
+            self.quantumModel.MSEByParameters,
             self.allDatasets,
             self.sweepParameterSet,
             self.calibrationData,

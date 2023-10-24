@@ -8,7 +8,7 @@ import copy
 import scqubits as scq
 from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.param_sweep import ParameterSweep
-from scqubits.core.qubit_base import QuantumSystem
+from scqubits.core.storage import SpectrumData
 
 from typing import Dict, List, Tuple, Union, Callable
 from typing_extensions import Literal
@@ -556,6 +556,7 @@ class QuantumModel:
         It is connected to the signal emitted by the UI when the user clicks the plot button
         for the prefit stage. It runs the parameter sweep and then generate the plots.
         """
+        # run sweep
         try:
             result.status_type = "COMPUTING"
             self.sweep.run()
@@ -576,7 +577,9 @@ class QuantumModel:
             result.status_text = "Subsystems to plot is invalid."
             return
 
-        # generate specdata for highlighting
+        # generate specdata
+
+        # for highlighting
         specdata_for_highlighting = self.sweep.transitions(
             subsystems=subsys,
             initial=self.initial_state(),
@@ -585,35 +588,28 @@ class QuantumModel:
             make_positive=False,
             as_specdata=True,
         )
-
-        # substract the ground state energy
+        
+        # overall data
         overall_specdata = copy.deepcopy(self.sweep[(slice(None),)].dressed_specdata)
         overall_specdata.energy_table -= specdata_for_highlighting.subtract
 
+        # # parametric transition data
+        # parametric_specdata: List[SpectrumData] = []
+        # for tag in extracted_data.assocTagList:
+        #     if tag.photons is None:
+        #         continue
+        #     if tag.photons > 1:
+        #         if tag.initial
+        #             TODO: generate parametric transition data with photon !=0
+        #             The generated transition data should match the current 
+        #             plotting options (e.g. subsystems, initial state, etc.)
+        #             which is hard, as the tag and plotting have different
+        #             ways of storing the information.
+
+
         # scale the spectrum data accordingly, based on the calibration
-        # this step is carried out based on the inverse calibration function in the calibration data
-        for param_idx in range(len(overall_specdata.energy_table)):
-            for energy_idx in range(len(overall_specdata.energy_table[param_idx])):
-                overall_specdata.energy_table[param_idx][
-                    energy_idx
-                ] = calibration_data.inverseCalibrateDataPoint(
-                    [0, overall_specdata.energy_table[param_idx][energy_idx]],
-                    inverse_calibration_axis="y",
-                )[
-                    1
-                ]
-        for param_idx in range(len(specdata_for_highlighting.energy_table)):
-            for energy_idx in range(
-                len(specdata_for_highlighting.energy_table[param_idx])
-            ):
-                specdata_for_highlighting.energy_table[param_idx][
-                    energy_idx
-                ] = calibration_data.inverseCalibrateDataPoint(
-                    [0, specdata_for_highlighting.energy_table[param_idx][energy_idx]],
-                    inverse_calibration_axis="y",
-                )[
-                    1
-                ]
+        self._scaleYByInverseCalibration(calibration_data, overall_specdata)
+        self._scaleYByInverseCalibration(calibration_data, specdata_for_highlighting)
 
         # update spectrum_data
         # do not need call spectrum_data.canvasPlot(). It is done in the mainwindow with
@@ -642,6 +638,27 @@ class QuantumModel:
         result.current_mse = mse
         result.status_type = status_type
         result.status_text = status_text
+
+    def _scaleYByInverseCalibration(
+        self, 
+        calibration_data: CalibrationData,
+        specdata: SpectrumData,
+    ):
+        """
+        scale the spectrum data accordingly, based on the calibration
+        this step is carried out based on the inverse calibration function 
+        in the calibration data
+        """
+        for param_idx in range(len(specdata.energy_table)):
+            for energy_idx in range(len(specdata.energy_table[param_idx])):
+                specdata.energy_table[param_idx][
+                    energy_idx
+                ] = calibration_data.inverseCalibrateDataPoint(
+                    [0, specdata.energy_table[param_idx][energy_idx]],
+                    inverse_calibration_axis="y",
+                )[
+                    1
+                ]
 
     def _update_hilbertspace_for_ParameterSweep(
         self,
@@ -796,7 +813,8 @@ class QuantumModel:
     ]:
         """
         Obtain the cooresponding transition frequency provided by the tag from a ParameterSweep
-        instance.
+        instance. If the tag is not provided or can not identify states, 
+        the closest transition frequency is returned.
 
         Parameters
         ----------
@@ -810,6 +828,7 @@ class QuantumModel:
         # specify CROSSING
         simulation_freq = None
         status = None
+
         # if provided dressed label
         if (
             tag.tagType is DISPERSIVE_DRESSED 
@@ -825,6 +844,7 @@ class QuantumModel:
                 simulation_freq = final_energy - initial_energy
                 status = "SUCCESS"
                 return simulation_freq, status
+            
         # if provided bare label
         elif tag.tagType is DISPERSIVE_BARE:
             initial_energy = sweep["x-coordinate":x_coord].energy_by_bare_index(
@@ -879,6 +899,7 @@ class QuantumModel:
             # case to the CROSSING or NO_TAG case
             else:
                 status = "NO_MATCHED_BARE_INITIAL_AND_FINAL"
+
         # if provided no label, or the label is not recognized, or the label is CROSSING
         # calculate all the possible (positive) transitions and find the closest one
         eigenenergies = sweep["evals"]["x-coordinate":x_coord]
@@ -892,13 +913,17 @@ class QuantumModel:
         simulation_freq = possible_transitions[closest_traansition_index]
         return simulation_freq, status
 
-    def MSEByParametersForFit(
+    def MSEByParameters(
         self,
         parameterSet: QuantumModelParameterSet,
         sweep_parameter_set: QuantumModelParameterSet,
         calibration_data: CalibrationData,
         extracted_data: AllExtractedData,
     ):
+        """
+        For parameter fitting purpose, calculate the MSE with just the 
+        parameters
+        """
         # set calibration functions for the parameters in the sweep parameter set
         for parameters in sweep_parameter_set.values():
             for parameter in parameters.values():
