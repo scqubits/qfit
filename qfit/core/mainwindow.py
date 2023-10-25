@@ -869,15 +869,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # Pre-fit ##########################################################
     # ##################################################################
-
-    def _sweepAxis(self, sweepParameterSet) -> int:
-        """
-        Temporary function to get the sweep axis
-
-
-
-        """
-
     def prefitDynamicalElementsBuild(self, hilbertspace: HilbertSpace):
         self.sliderParameterSet = QuantumModelParameterSet("sliderParameterSet")
         self.sweepParameterSet = QuantumModelParameterSet("sweepParameterSet")
@@ -889,6 +880,21 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             included_parameter_type=["ng", "flux"],
         )
 
+        self.prefitIdentifySweepParameters()
+        self.prefitSlidersInserts()
+        self.prefitMinMaxInserts()
+        self.prefitSlidersConnects()
+        self.prefitSubsystemComboBoxLoads()
+        self.prefitQuantumModelOptionsConnects()
+        self.setUpPrefitRunConnects()
+
+    def prefitStaticElementsBuild(self):
+        self.prefitResult = Result()
+        self.spectrumData = CalculatedSpecData()
+        self.setUpPrefitResultConnects()
+        self.prefitGeneralOptionsConnects()
+
+    def prefitIdentifySweepParameters(self):
         # check how many sweep parameters are found and create sliders
         # for the remaining parameters
         param_types = set(self.sweepParameterSet.exportAttrDict("param_type").values())
@@ -925,20 +931,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             )
             self.close()
 
-        self.prefitSlidersInserts()
-        self.prefitMinMaxInserts()
-        self.prefitSlidersConnects()
-        self.prefitSubsystemComboBoxLoads()
-        self.setUpPrefitOptionsConnects()
-        self.setUpPrefitRunConnects()
-
-    def prefitStaticElementsBuild(self):
-        self.prefitResult = Result()
-        self.spectrumData = CalculatedSpecData()
-        self.setUpPrefitResultConnects()
-
     def onParameterChange(self, slider_or_fit_parameter_set: QuantumModelParameterSet):
-        return self.quantumModel.onSliderOrFitParameterChange(
+        self.quantumModel.updateCalculation(
             slider_or_fit_parameter_set=slider_or_fit_parameter_set,
             sweep_parameter_set=self.sweepParameterSet,
             spectrum_data=self.spectrumData,
@@ -946,14 +940,16 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             extracted_data=self.allDatasets,
             prefit_result=self.prefitResult,
         )
+        self.updatePlot()
 
     def onPrefitPlotClicked(self):
-        return self.quantumModel.onButtonPrefitPlotClicked(
+        self.quantumModel.sweep2SpecNMSE(
             spectrum_data=self.spectrumData,
             extracted_data=self.allDatasets,
             calibration_data=self.calibrationData,
             result=self.prefitResult,
         )
+        self.updatePlot()
 
     def prefitSlidersInserts(self):
         """
@@ -1092,42 +1088,45 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             mse_change_ui_setter=mse_change_ui_setter,
         )
 
-    def setUpPrefitOptionsConnects(self):
-        """
-        Set up the connects for the prefit options for UI:
-        1. subsystem combo box
-        2. initial state line edit
-        3. evals count line edit
-        4. points add line edit
-        """
-        # default values
-        self.ui.evalsCountLineEdit.setText("20")
-        self.ui.pointsAddLineEdit.setText("10")
-
-        # set line edit property:
-        self.ui.initStateLineEdit.setTupleLength(self.hilbertspace.subsystem_count)
-
+    def prefitQuantumModelOptionsConnects(self):
         # connect the prefit options to the controller
         self.quantumModel.setupPlotUICallbacks(
             subsystemNameCallback=self.ui.subsysComboBox.currentText,
             initialStateCallback=self.ui.initStateLineEdit.text,
+            photonsCallback=self.ui.prefitPhotonSpinBox.value,
             evalsCountCallback=self.ui.evalsCountLineEdit.text,
             pointsAddCallback=self.ui.pointsAddLineEdit.text,
         )
 
+    def prefitGeneralOptionsConnects(self):
+        """
+        Set up the connects for the prefit options for UI:
+        1. subsystem combo box
+        2. initial state line edit
+        3. photons spin box
+        4. evals count line edit
+        5. points add line edit
+        """
+
+        # set line edit property:
+        self.ui.initStateLineEdit.setTupleLength(self.hilbertspace.subsystem_count)
+
+        # when change those numbers, update the spectrum data using the 
+        # existing sweep
         self.ui.subsysComboBox.currentIndexChanged.connect(self.onPrefitPlotClicked)
         self.ui.initStateLineEdit.editingFinished.connect(self.onPrefitPlotClicked)
+        self.ui.prefitPhotonSpinBox.valueChanged.connect(
+            lambda: print("current photons: ", self.ui.prefitPhotonSpinBox.value())
+        )
+        self.ui.prefitPhotonSpinBox.valueChanged.connect(self.onPrefitPlotClicked)
+
+        # when change those numbers, update the sweep and then update the spectrum
         self.ui.evalsCountLineEdit.editingFinished.connect(
             lambda: self.onParameterChange(self.sliderParameterSet)
         )
         self.ui.pointsAddLineEdit.editingFinished.connect(
             lambda: self.onParameterChange(self.sliderParameterSet)
         )
-
-        self.ui.subsysComboBox.currentIndexChanged.connect(self.updatePlot)
-        self.ui.initStateLineEdit.editingFinished.connect(self.updatePlot)
-        self.ui.evalsCountLineEdit.editingFinished.connect(self.updatePlot)
-        self.ui.pointsAddLineEdit.editingFinished.connect(self.updatePlot)
 
     def setUpPrefitRunConnects(self):
         """

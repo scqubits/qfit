@@ -80,6 +80,7 @@ class QuantumModel:
         self,
         subsystemNameCallback: Callable,
         initialStateCallback: Callable,
+        photonsCallback: Callable,
         evalsCountCallback: Callable,
         pointsAddCallback: Callable,
     ):
@@ -95,6 +96,7 @@ class QuantumModel:
             QuantumModelParameterSet.parentSystemIdstrByName(subsystemNameCallback())
         )
         self.initialStateCallback = initialStateCallback
+        self.photonsCallback = photonsCallback
         self.evalCountCallback = evalsCountCallback
         self.pointsAddCallback = pointsAddCallback
         # ------------------------------------------------------------------------------
@@ -159,6 +161,9 @@ class QuantumModel:
 
     def initial_state(self):
         return self._state_str_2_label(self.initialStateCallback())
+    
+    def photons(self):
+        return self.photonsCallback()
 
     # @overload
     # def generateParameterSets(
@@ -447,7 +452,7 @@ class QuantumModel:
             for parameter in parameters.values():
                 self._updateQuantumModelParameter(parameter)
 
-    def onSliderOrFitParameterChange(
+    def updateCalculation(
         self,
         slider_or_fit_parameter_set: QuantumModelParameterSet,
         sweep_parameter_set: QuantumModelParameterSet,
@@ -459,7 +464,8 @@ class QuantumModel:
         """
         It is connected to the signal emitted by the UI when the user changes the slider
         of a parameter. It receives a QuantumModelParameterSet object and updates the
-        the HilbertSpace object. If auto run is on, it will also compute the spectrum.
+        the HilbertSpace object. If auto run is on, it will also compute the spectrum
+        and MSE.
 
         Parameters
         ----------
@@ -484,15 +490,14 @@ class QuantumModel:
 
         # update the HilbertSpace object and generate parameter sweep
         try:
-            self.regenerateSweepOnParameterChange(
-                update_parameter_set=slider_or_fit_parameter_set,
-                sweep_parameter_set=sweep_parameter_set,
+            self._updateQuantumModelFromParameterSet(slider_or_fit_parameter_set)
+            self.sweep = self._generateParameterSweep(
                 x_coordinate_list=self._generateXcoordinateListForPrefit(
                     extracted_data
-                ),
+                ), 
+                sweep_parameter_set=sweep_parameter_set
             )
         except Exception as e:
-            # will not be triggered by the users I think
             prefit_result.status_type = "ERROR"
             if str(e).startswith("min()"):
                 prefit_result.status_text = (
@@ -510,42 +515,14 @@ class QuantumModel:
 
         # if autorun, perform the rest of the steps (compute spectrum, plot, calculate MSE)
         if self.autorun_callback():
-            self.onButtonPrefitPlotClicked(
+            self.sweep2SpecNMSE(
                 spectrum_data=spectrum_data,
                 extracted_data=extracted_data,
                 calibration_data=calibration_data,
                 result=prefit_result,
             )
 
-    def regenerateSweepOnParameterChange(
-        self,
-        update_parameter_set: QuantumModelParameterSet,
-        sweep_parameter_set: QuantumModelParameterSet,
-        x_coordinate_list: ndarray,
-    ) -> None:
-        """
-        Perform parameter change from a parameter set and generate `self.sweep` attribute.
-
-        Parameters
-        ----------
-        update_parameter_set: QuantumModelParameterSet
-            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
-            which are updated (but not swept).
-        sweep_parameter_set: QuantumModelParameterSet
-            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
-            which are subject to changes in the parameter sweep. Parameters in this set must have
-            the updated calibration_func attribute.
-        x_coordinate_list: ndarray
-            The x coordinates of the sweep.
-        """
-        # update the HilbertSpace object with the slider parameter
-        self._updateQuantumModelFromParameterSet(update_parameter_set)
-        # generate parameter sweep
-        self.sweep = self._generateParameterSweep(
-            x_coordinate_list=x_coordinate_list, sweep_parameter_set=sweep_parameter_set
-        )
-
-    def onButtonPrefitPlotClicked(
+    def sweep2SpecNMSE(
         self,
         spectrum_data: CalculatedSpecData,
         extracted_data: AllExtractedData,
@@ -554,7 +531,10 @@ class QuantumModel:
     ):
         """
         It is connected to the signal emitted by the UI when the user clicks the plot button
-        for the prefit stage. It runs the parameter sweep and then generate the plots.
+        for the prefit stage. It make use of the existing sweep object to 
+        get a spectrum data and MSE.
+
+        It's not allowed to use when the sweep is not generated.
         """
         # run sweep
         try:
@@ -565,26 +545,15 @@ class QuantumModel:
             result.status_text = (
                 "The parameter sweep is not generated. Please play with sliders first."
             )
-            raise AttributeError(
-                "The parameter sweep is not generated. Please play with sliders first."
-            )
         # TODO: generate a sweep when there is no sweep available
 
-        try:
-            subsys = self.subsystems_to_plot()
-        except ValueError:
-            result.status_type = "ERROR"
-            result.status_text = "Subsystems to plot is invalid."
-            return
-
-        # generate specdata
-
+        # generate specdata --------------------------------------------
         # for highlighting
         specdata_for_highlighting = self.sweep.transitions(
-            subsystems=subsys,
+            subsystems=self.subsystems_to_plot(),
             initial=self.initial_state(),
             # sidebands=sidebands,
-            # photon_number=photon_number,
+            photon_number=self.photons(),
             make_positive=False,
             as_specdata=True,
         )
@@ -592,20 +561,6 @@ class QuantumModel:
         # overall data
         overall_specdata = copy.deepcopy(self.sweep[(slice(None),)].dressed_specdata)
         overall_specdata.energy_table -= specdata_for_highlighting.subtract
-
-        # # parametric transition data
-        # parametric_specdata: List[SpectrumData] = []
-        # for tag in extracted_data.assocTagList:
-        #     if tag.photons is None:
-        #         continue
-        #     if tag.photons > 1:
-        #         if tag.initial
-        #             TODO: generate parametric transition data with photon !=0
-        #             The generated transition data should match the current 
-        #             plotting options (e.g. subsystems, initial state, etc.)
-        #             which is hard, as the tag and plotting have different
-        #             ways of storing the information.
-
 
         # scale the spectrum data accordingly, based on the calibration
         self._scaleYByInverseCalibration(calibration_data, overall_specdata)
@@ -618,20 +573,10 @@ class QuantumModel:
             overall_specdata,
             specdata_for_highlighting,
         )
-        # ------------------------------------------------------------------------------
+        # --------------------------------------------------------------
 
         # mse calculation
-        # try:
         mse, status_type, status_text = self.calculateMSE(extracted_data=extracted_data)
-        # except Exception as e:
-        #     result.status_type = "ERROR"
-        #     if str(e).startswith("unsupported operand"):
-        #         result.status_text = (
-        #             "Fail to calculate MSE. Please tag your points before using pre-fit."
-        #         )
-        #     else:
-        #         result.status_text = (f"Fail to calculate MSE with {type(e).__name__}: {e}")
-        #     return
 
         # pass MSE and status messages to the model
         result.previous_mse = result.current_mse
@@ -930,12 +875,13 @@ class QuantumModel:
                 self._setCalibrationFunction(parameter, calibration_data)
         # update the HilbertSpace object and generate parameter sweep
         # this step is after the setup of calibration functions because the update_hilbertspace in ParameterSweep need the calibration information
-        self.regenerateSweepOnParameterChange(
-            update_parameter_set=parameterSet,
-            sweep_parameter_set=sweep_parameter_set,
+        self._updateQuantumModelFromParameterSet(parameterSet)
+        # generate parameter sweep
+        self.sweep = self._generateParameterSweep(
             x_coordinate_list=self._generateXcoordinateListForMarkedPoints(
                 extracted_data
-            ),
+            ), 
+            sweep_parameter_set=sweep_parameter_set
         )
         # run sweep
         self.sweep.run()
