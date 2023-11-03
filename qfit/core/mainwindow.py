@@ -67,7 +67,7 @@ from qfit.settings import color_dict
 from qfit.ui_views.resizable_window import ResizableFramelessWindow
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
-from qfit.widgets.gif_tooltip import DialogWindowWithGif
+from qfit.widgets.gif_tooltip import DialogWindowWithMedia
 
 # pre-fit
 from qfit.models.quantum_model_parameters import (
@@ -772,9 +772,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     @Slot()
     def calibrationHelp(self):
-        tutorial_dialog = DialogWindowWithGif(
+        tutorial_dialog = DialogWindowWithMedia(
             "test",
-            "/Users/pacosynthesis/Desktop/ScienceTech/Research/Superconducting_qubit_NU/Codes/qfit/resources/nyanyanya.gif",
+            [
+                (":/gifs/calibration_gif.gif", 600),
+                (":/images/calibration_x1x2y1y2.png", 400),
+            ],
         )
         tutorial_dialog.exec()
 
