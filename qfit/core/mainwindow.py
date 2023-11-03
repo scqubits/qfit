@@ -392,8 +392,23 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         elif self.ui.pagesStackedWidget.currentIndex() == 3 and page == 2:
             self.ui.mseLabel.setText(self.ui.mseLabel_2.text())
 
+        # switch to the desired page
         self.ui.pagesStackedWidget.setCurrentIndex(page)
         self.ui.bottomStackedWidget.setCurrentIndex(page)
+
+        # set the corresponding button to checked
+        self.ui.modeSelectButton.setChecked(False)
+        self.ui.modeTagButton.setChecked(False)
+        self.ui.modePrefitButton.setChecked(False)
+        self.ui.modeFitButton.setChecked(False)
+        if page == 0:
+            self.ui.modeSelectButton.setChecked(True)
+        elif page == 1:
+            self.ui.modeTagButton.setChecked(True)
+        elif page == 2:
+            self.ui.modePrefitButton.setChecked(True)
+        elif page == 3:
+            self.ui.modeFitButton.setChecked(True)
 
     def uiExtractedDataConnects(self):
         """Make connections for changes in data."""
