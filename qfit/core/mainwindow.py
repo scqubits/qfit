@@ -52,7 +52,7 @@ import qfit.core.app_state as appstate
 from qfit.models.calibration_data import CalibrationData
 from qfit.widgets.calibration import CalibrationView
 from qfit.core.app_state import State
-from qfit.core.helpers import (
+from qfit.utils.helpers import (
     transposeEach,
     clearChildren,
     executed_in_ipython,
@@ -62,7 +62,6 @@ from qfit.core.helpers import (
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.models.measurement_data import MeasurementDataType
 from qfit.controllers.tagging import TaggingCtrl
-from qfit.io_utils.save_data import saveFile
 from qfit.settings import color_dict
 from qfit.ui_views.resizable_window import ResizableFramelessWindow
 from qfit.ui_designer.ui_window import Ui_MainWindow
@@ -76,7 +75,7 @@ from qfit.models.quantum_model_parameters import (
     QuantumModelFittingParameter,
 )
 from qfit.models.numerical_spectrum_data import CalculatedSpecData
-from qfit.controllers.numerical_model import QuantumModel
+from qfit.models.numerical_model import QuantumModel
 from qfit.widgets.foldable_widget import FoldableWidget
 from qfit.widgets.grouped_sliders import (
     LabeledSlider,
@@ -90,7 +89,7 @@ from qfit.widgets.foldable_table import (
 )
 
 # fit
-from qfit.controllers.fit import NumericalFitting
+from qfit.models.fit import NumericalFitting
 
 # message
 from qfit.models.status_result_data import Result
@@ -103,10 +102,6 @@ from qfit.controllers.io_menu import IOCtrl
 
 if TYPE_CHECKING:
     from qfit.widgets.calibration import CalibrationLineEdit
-    from qfit.models.qfit_data import QfitData
-
-from qfit.models.qfit_data import QfitData
-
 
 mpl.rcParams["toolbar"] = "None"
 
@@ -397,8 +392,23 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         elif self.ui.pagesStackedWidget.currentIndex() == 3 and page == 2:
             self.ui.mseLabel.setText(self.ui.mseLabel_2.text())
 
+        # switch to the desired page
         self.ui.pagesStackedWidget.setCurrentIndex(page)
         self.ui.bottomStackedWidget.setCurrentIndex(page)
+
+        # set the corresponding button to checked
+        self.ui.modeSelectButton.setChecked(False)
+        self.ui.modeTagButton.setChecked(False)
+        self.ui.modePrefitButton.setChecked(False)
+        self.ui.modeFitButton.setChecked(False)
+        if page == 0:
+            self.ui.modeSelectButton.setChecked(True)
+        elif page == 1:
+            self.ui.modeTagButton.setChecked(True)
+        elif page == 2:
+            self.ui.modePrefitButton.setChecked(True)
+        elif page == 3:
+            self.ui.modeFitButton.setChecked(True)
 
     def uiExtractedDataConnects(self):
         """Make connections for changes in data."""
@@ -616,6 +626,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             data = event.xdata if (calibrationLabel[0] == "X") else event.ydata
 
             if appstate.state == self.calibrationStates[calibrationLabel]:
+                # turn off the highlighting of the button
+                self._highlightCaliButton(self.calibrationButtons[calibrationLabel], reset=True)
                 # update the raw line edits by the value of the clicked point
                 self.rawLineEdits[calibrationLabel].setText(str(data))
                 self.rawLineEdits[calibrationLabel].home(False)
@@ -744,12 +756,31 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.mplFigureCanvas.x_snap_mode = self.x_snap_mode
         self.ui.mplFigureCanvas.set_callback_for_extracted_data(self.allDatasets)
 
+    def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
+        """Highlight the button by changing its color."""
+        if reset:
+            button.setStyleSheet("")
+        else:
+            button.setStyleSheet("background-color: #6c278c")
+
+    def _resetHighlightButtons(self):
+        """Reset the highlighting of all calibration buttons."""
+        for label in self.calibrationButtons:
+            self._highlightCaliButton(self.calibrationButtons[label], reset=True)
+
     @Slot()
     def calibrate(self, calibrationLabel: str):
-        """Mouse click on one of the calibration buttons prompts switching to
+        """
+        Mouse click on one of the calibration buttons prompts switching to
         calibration mode. Mouse cursor crosshair is adjusted and canvas waits for
-        click setting calibration point x or y component."""
+        click setting calibration point x or y component.
+        Besides, the button is highlighted.
+        """
         appstate.state = self.calibrationStates[calibrationLabel]
+        # button highlighting
+        self._resetHighlightButtons()
+        self._highlightCaliButton(self.calibrationButtons[calibrationLabel])
+        # mpl canvas mode & cursor
         self.ui.mplFigureCanvas.calibrateOn(calibrationLabel[0])
         self.updateMatchingModeAndCursor()
 
@@ -856,15 +887,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # Pre-fit ##########################################################
     # ##################################################################
-
-    def _sweepAxis(self, sweepParameterSet) -> int:
-        """
-        Temporary function to get the sweep axis
-
-
-
-        """
-
     def prefitDynamicalElementsBuild(self, hilbertspace: HilbertSpace):
         self.sliderParameterSet = QuantumModelParameterSet("sliderParameterSet")
         self.sweepParameterSet = QuantumModelParameterSet("sweepParameterSet")
@@ -876,6 +898,21 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             included_parameter_type=["ng", "flux"],
         )
 
+        self.prefitIdentifySweepParameters()
+        self.prefitSlidersInserts()
+        self.prefitMinMaxInserts()
+        self.prefitSlidersConnects()
+        self.prefitSubsystemComboBoxLoads()
+        self.prefitQuantumModelOptionsConnects()
+        self.setUpPrefitRunConnects()
+
+    def prefitStaticElementsBuild(self):
+        self.prefitResult = Result()
+        self.spectrumData = CalculatedSpecData()
+        self.setUpPrefitResultConnects()
+        self.prefitGeneralOptionsConnects()
+
+    def prefitIdentifySweepParameters(self):
         # check how many sweep parameters are found and create sliders
         # for the remaining parameters
         param_types = set(self.sweepParameterSet.exportAttrDict("param_type").values())
@@ -912,20 +949,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             )
             self.close()
 
-        self.prefitSlidersInserts()
-        self.prefitMinMaxInserts()
-        self.prefitSlidersConnects()
-        self.prefitSubsystemComboBoxLoads()
-        self.setUpPrefitOptionsConnects()
-        self.setUpPrefitRunConnects()
-
-    def prefitStaticElementsBuild(self):
-        self.prefitResult = Result()
-        self.spectrumData = CalculatedSpecData()
-        self.setUpPrefitResultConnects()
-
     def onParameterChange(self, slider_or_fit_parameter_set: QuantumModelParameterSet):
-        return self.quantumModel.onSliderOrFitParameterChange(
+        self.quantumModel.updateCalculation(
             slider_or_fit_parameter_set=slider_or_fit_parameter_set,
             sweep_parameter_set=self.sweepParameterSet,
             spectrum_data=self.spectrumData,
@@ -933,14 +958,16 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             extracted_data=self.allDatasets,
             prefit_result=self.prefitResult,
         )
+        self.updatePlot()
 
     def onPrefitPlotClicked(self):
-        return self.quantumModel.onButtonPrefitPlotClicked(
+        self.quantumModel.sweep2SpecNMSE(
             spectrum_data=self.spectrumData,
             extracted_data=self.allDatasets,
             calibration_data=self.calibrationData,
             result=self.prefitResult,
         )
+        self.updatePlot()
 
     def prefitSlidersInserts(self):
         """
@@ -1079,37 +1106,45 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             mse_change_ui_setter=mse_change_ui_setter,
         )
 
-    def setUpPrefitOptionsConnects(self):
-        """
-        Set up the connects for the prefit options for UI:
-        1. subsystem combo box
-        2. initial state line edit
-        3. evals count line edit
-        4. points add line edit
-        """
-        self.ui.evalsCountLineEdit.setText("20")
-        self.ui.pointsAddLineEdit.setText("10")
-
+    def prefitQuantumModelOptionsConnects(self):
+        # connect the prefit options to the controller
         self.quantumModel.setupPlotUICallbacks(
             subsystemNameCallback=self.ui.subsysComboBox.currentText,
             initialStateCallback=self.ui.initStateLineEdit.text,
+            photonsCallback=self.ui.prefitPhotonSpinBox.value,
             evalsCountCallback=self.ui.evalsCountLineEdit.text,
             pointsAddCallback=self.ui.pointsAddLineEdit.text,
         )
 
+    def prefitGeneralOptionsConnects(self):
+        """
+        Set up the connects for the prefit options for UI:
+        1. subsystem combo box
+        2. initial state line edit
+        3. photons spin box
+        4. evals count line edit
+        5. points add line edit
+        """
+
+        # set line edit property:
+        self.ui.initStateLineEdit.setTupleLength(self.hilbertspace.subsystem_count)
+
+        # when change those numbers, update the spectrum data using the 
+        # existing sweep
         self.ui.subsysComboBox.currentIndexChanged.connect(self.onPrefitPlotClicked)
         self.ui.initStateLineEdit.editingFinished.connect(self.onPrefitPlotClicked)
+        self.ui.prefitPhotonSpinBox.valueChanged.connect(
+            lambda: print("current photons: ", self.ui.prefitPhotonSpinBox.value())
+        )
+        self.ui.prefitPhotonSpinBox.valueChanged.connect(self.onPrefitPlotClicked)
+
+        # when change those numbers, update the sweep and then update the spectrum
         self.ui.evalsCountLineEdit.editingFinished.connect(
             lambda: self.onParameterChange(self.sliderParameterSet)
         )
         self.ui.pointsAddLineEdit.editingFinished.connect(
             lambda: self.onParameterChange(self.sliderParameterSet)
         )
-
-        self.ui.subsysComboBox.currentIndexChanged.connect(self.updatePlot)
-        self.ui.initStateLineEdit.editingFinished.connect(self.updatePlot)
-        self.ui.evalsCountLineEdit.editingFinished.connect(self.updatePlot)
-        self.ui.pointsAddLineEdit.editingFinished.connect(self.updatePlot)
 
     def setUpPrefitRunConnects(self):
         """
@@ -1222,7 +1257,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.optInitialized = self.numericalFitting.setupOptimization(
             self.fitParameterSet,
-            self.quantumModel.MSEByParametersForFit,
+            self.quantumModel.MSEByParameters,
             self.allDatasets,
             self.sweepParameterSet,
             self.calibrationData,

@@ -14,7 +14,7 @@ from PySide6.QtCore import Slot, QItemSelectionModel
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QFrame, QListView, QTableView
 
-from qfit.core.helpers import EditDelegate
+from qfit.utils.helpers import EditDelegate
 
 
 class DataExtractingWidget(QFrame):

@@ -13,6 +13,7 @@ from qfit.widgets.foldable_widget import (
     FoldableWidget,
     SPACING,
 )
+from qfit.widgets.validated_line_edits import FloatLineEdit
 
 from typing import Dict, List, Tuple, Union, Optional, Any
 
@@ -64,7 +65,7 @@ class LabeledSlider(QWidget):
         self.slider.setMinimum(1)
         self.slider.setMaximum(SLIDER_RANGE)
         self.slider.setSingleStep(1)
-        self.value = QLineEdit("0", self)
+        self.value = FloatLineEdit("0", self)
         self.value.setMaximumWidth(50)
 
         # initialize the layout

@@ -3,7 +3,7 @@ import numpy as np
 from typing import List, Dict, Tuple, Callable, Union
 from PySide6.QtCore import QRunnable, QThreadPool, Signal, QObject
 
-from qfit.controllers.wrapped_optimizer import Optimization, OptTraj
+from qfit.utils.wrapped_optimizer import Optimization, OptTraj
 from qfit.models.extracted_data import AllExtractedData
 from qfit.models.calibration_data import CalibrationData
 from qfit.models.quantum_model_parameters import (
@@ -85,13 +85,18 @@ class NumericalFitting(QRunnable):
         for key, params in param_dict.items():
             params: QuantumModelFittingParameter
 
-            if params.isFixed:
+            if params.isFixed or params.min == params.max:
+                # min == max is actually not that rare, usually seen when
+                # user wants to fix the parameter but don't know how to 
+                # fix it in the UI. 
+                # It's also possible that some parameter
+                # with initial value 0 automatically gets min == max == 0.
                 fixed_params[key] = params.initValue
             else:
                 free_param_ranges[key] = [params.min, params.max]
 
                 # check whether the values are valid
-                if params.min >= params.max:
+                if params.min > params.max:
                     self.result.status_type = "ERROR"
                     self.result.status_text = ("The minimum value of the "
                     "parameter is larger than the maximum value.")
@@ -152,10 +157,12 @@ class NumericalFitting(QRunnable):
         result.current_mse = targetValue**2
 
     @staticmethod
-    def _paramHitBound(parameterSet) -> bool:
+    def _paramHitBound(parameterSet: QuantumModelParameterSet) -> bool:
         for param_dict in parameterSet.parameters.values():
             for param in param_dict.values():
                 param: QuantumModelFittingParameter
+                if param.isFixed:
+                    continue
                 if (np.abs(param.value - param.min) < 1e-10 
                     or np.abs(param.value - param.max) < 1e-10):
                     return True

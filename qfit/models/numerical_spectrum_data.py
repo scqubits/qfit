@@ -17,9 +17,8 @@ from matplotlib.axes import Axes
 from scqubits.core.param_sweep import ParameterSweep
 from scqubits.core.storage import SpectrumData
 
-import qfit.io_utils.file_io_serializers as serializers
 
-class CalculatedSpecData(serializers.Serializable):
+class CalculatedSpecData():
     """
     Class for storing and manipulating the spectrum data calculated from the scqbits
     backends. 

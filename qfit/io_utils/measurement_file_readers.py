@@ -23,7 +23,7 @@ import qfit.io_utils.file_io_backends as io_backends
 
 from qfit.models.registry import Registry
 
-from qfit.core.helpers import (
+from qfit.utils.helpers import (
     OrderedDictMod,
     hasIdenticalCols,
     hasIdenticalRows,

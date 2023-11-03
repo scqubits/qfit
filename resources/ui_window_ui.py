@@ -17,16 +17,16 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
     QGridLayout, QGroupBox, QHBoxLayout, QLabel,
-    QLayout, QLineEdit, QMainWindow, QPushButton,
-    QRadioButton, QScrollArea, QSizePolicy, QSlider,
-    QSpacerItem, QSpinBox, QStackedWidget, QStatusBar,
-    QVBoxLayout, QWidget)
+    QLayout, QMainWindow, QPushButton, QRadioButton,
+    QScrollArea, QSizePolicy, QSlider, QSpacerItem,
+    QSpinBox, QStackedWidget, QStatusBar, QVBoxLayout,
+    QWidget)
 
 from qfit.widgets.calibration import CalibrationLineEdit
 from qfit.widgets.data_extracting import (DataExtractingWidget, ListView)
 from qfit.widgets.mpl_canvas import (MplFigureCanvas, MplNavButtons)
-from qfit.widgets.validated_line_edits import IntTupleLineEdit
-from . import resources_rc
+from qfit.widgets.validated_line_edits import (IntLineEdit, IntTupleLineEdit, PositiveFloatLineEdit, StateLineEdit)
+import resources_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -34,7 +34,7 @@ class Ui_MainWindow(object):
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.setWindowModality(Qt.NonModal)
         MainWindow.setEnabled(True)
-        MainWindow.resize(1070, 806)
+        MainWindow.resize(1170, 835)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -587,6 +587,141 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addWidget(self.menu_frame, 0, 0, 3, 1)
 
+        self.mplFigureCanvas = MplFigureCanvas(self.windowBodyFrame)
+        self.mplFigureCanvas.setObjectName(u"mplFigureCanvas")
+        sizePolicy.setHeightForWidth(self.mplFigureCanvas.sizePolicy().hasHeightForWidth())
+        self.mplFigureCanvas.setSizePolicy(sizePolicy)
+        self.mplFigureCanvas.setMinimumSize(QSize(550, 300))
+        self.mplFigureCanvas.setMaximumSize(QSize(16777215, 16777215))
+        self.mplFigureCanvas.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
+"\n"
+"QToolTip {\n"
+"	color: #1e1e1e;\n"
+"	background-color: rgba(255, 255, 255, 160);\n"
+"	border: 1px solid rgb(200, 200, 200);\n"
+"	border-radius: 2px;\n"
+"}\n"
+"")
+        self.mplFigureCanvas.setLineWidth(0)
+        self.mplFigureButtons = MplNavButtons(self.mplFigureCanvas)
+        self.mplFigureButtons.setObjectName(u"mplFigureButtons")
+        self.mplFigureButtons.setGeometry(QRect(0, 0, 621, 60))
+        self.mplFigureButtons.setAutoFillBackground(False)
+        self.mplFigureButtons.setStyleSheet(u"QFrame {\n"
+"	background-color: rgb(255, 255, 255);\n"
+"}\n"
+"\n"
+"QToolTip {\n"
+"	color: #1e1e1e;\n"
+"	background-color: rgba(255, 255, 255, 160);\n"
+"	border: 1px solid rgb(200, 200, 200);\n"
+"	border-radius: 2px;\n"
+"}\n"
+"\n"
+"QPushButton {\n"
+"	border: 0px solid rgb(52, 59, 72);\n"
+"	border-radius: 18px;	\n"
+"	background-color: rgb(93, 93, 93);\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"	background-color: rgb(196, 150, 250);\n"
+"	border: 0px solid rgb(61, 70, 86);\n"
+"}\n"
+"QPushButton:pressed {	\n"
+"	background-color: rgb(196, 150, 250);\n"
+"	border: 0px solid rgb(43, 50, 61);\n"
+"}\n"
+"QPushButton:checked {	\n"
+"	background-color: rgb(196, 150, 250);\n"
+"	border: 0px solid rgb(43, 50, 61);\n"
+"}\n"
+"color: rgb(30, 30, 30);")
+        self.resetViewButton = QPushButton(self.mplFigureButtons)
+        self.resetViewButton.setObjectName(u"resetViewButton")
+        self.resetViewButton.setGeometry(QRect(30, 10, 40, 40))
+#if QT_CONFIG(tooltip)
+        self.resetViewButton.setToolTip(u"Reset plot area")
+#endif // QT_CONFIG(tooltip)
+        icon6 = QIcon()
+        icon6.addFile(u":/icons/svg/cil-reload.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.resetViewButton.setIcon(icon6)
+        self.resetViewButton.setIconSize(QSize(18, 18))
+        self.panViewButton = QPushButton(self.mplFigureButtons)
+        self.panViewButton.setObjectName(u"panViewButton")
+        self.panViewButton.setGeometry(QRect(90, 10, 40, 40))
+        self.panViewButton.setCursor(QCursor(Qt.ArrowCursor))
+#if QT_CONFIG(tooltip)
+        self.panViewButton.setToolTip(u"Pan mode: Drag to move the canvas")
+#endif // QT_CONFIG(tooltip)
+        icon7 = QIcon()
+        icon7.addFile(u":/icons/svg/cil-move.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.panViewButton.setIcon(icon7)
+        self.panViewButton.setCheckable(True)
+        self.panViewButton.setAutoExclusive(True)
+        self.zoomViewButton = QPushButton(self.mplFigureButtons)
+        self.zoomViewButton.setObjectName(u"zoomViewButton")
+        self.zoomViewButton.setGeometry(QRect(150, 10, 40, 40))
+        self.zoomViewButton.setCursor(QCursor(Qt.ArrowCursor))
+#if QT_CONFIG(tooltip)
+        self.zoomViewButton.setToolTip(u"Zoom mode: Drag to magnify a region")
+#endif // QT_CONFIG(tooltip)
+        icon8 = QIcon()
+        icon8.addFile(u":/icons/svg/cil-zoom.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.zoomViewButton.setIcon(icon8)
+        self.zoomViewButton.setCheckable(True)
+        self.zoomViewButton.setAutoExclusive(True)
+        self.horizontalSnapButton = QPushButton(self.mplFigureButtons)
+        self.horizontalSnapButton.setObjectName(u"horizontalSnapButton")
+        self.horizontalSnapButton.setGeometry(QRect(270, 10, 40, 40))
+#if QT_CONFIG(tooltip)
+        self.horizontalSnapButton.setToolTip(u"Dataset snapping: align the x-coordinates for datasets")
+#endif // QT_CONFIG(tooltip)
+        icon9 = QIcon()
+        icon9.addFile(u":/icons/svg/cil-lock-unlocked.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon9.addFile(u":/icons/svg/cil-lock-locked.svg", QSize(), QIcon.Normal, QIcon.On)
+        self.horizontalSnapButton.setIcon(icon9)
+        self.horizontalSnapButton.setCheckable(True)
+        self.horizontalSnapButton.setChecked(True)
+        self.horizontalSnapButton.setAutoExclusive(False)
+        self.selectViewButton = QPushButton(self.mplFigureButtons)
+        self.selectViewButton.setObjectName(u"selectViewButton")
+        self.selectViewButton.setGeometry(QRect(210, 10, 41, 41))
+        self.selectViewButton.setCursor(QCursor(Qt.ArrowCursor))
+#if QT_CONFIG(tooltip)
+        self.selectViewButton.setToolTip(u"Extract mode: Click to extract peaks")
+#endif // QT_CONFIG(tooltip)
+        self.selectViewButton.setIcon(icon2)
+        self.selectViewButton.setCheckable(True)
+        self.selectViewButton.setChecked(True)
+        self.selectViewButton.setAutoExclusive(True)
+        self.verticalSnapButton = QPushButton(self.mplFigureButtons)
+        self.verticalSnapButton.setObjectName(u"verticalSnapButton")
+        self.verticalSnapButton.setGeometry(QRect(330, 10, 41, 41))
+#if QT_CONFIG(tooltip)
+        self.verticalSnapButton.setToolTip(u"Peak snapping: Locate the nearby peak along y axis")
+#endif // QT_CONFIG(tooltip)
+        icon10 = QIcon()
+        icon10.addFile(u":/icons/svg/cil-vertical-align-center.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.verticalSnapButton.setIcon(icon10)
+        self.verticalSnapButton.setCheckable(True)
+        self.verticalSnapButton.setChecked(True)
+        self.verticalSnapButton.setAutoExclusive(False)
+        self.line_2 = QFrame(self.mplFigureCanvas)
+        self.line_2.setObjectName(u"line_2")
+        self.line_2.setGeometry(QRect(259, 10, 3, 41))
+        self.line_2.setFrameShadow(QFrame.Plain)
+        self.line_2.setLineWidth(0)
+        self.line_2.setFrameShape(QFrame.VLine)
+        self.line_3 = QFrame(self.mplFigureCanvas)
+        self.line_3.setObjectName(u"line_3")
+        self.line_3.setGeometry(QRect(79, 10, 3, 41))
+        self.line_3.setFrameShadow(QFrame.Plain)
+        self.line_3.setLineWidth(0)
+        self.line_3.setFrameShape(QFrame.VLine)
+
+        self.gridLayout.addWidget(self.mplFigureCanvas, 0, 2, 1, 2)
+
         self.pagesStackedWidget = QStackedWidget(self.windowBodyFrame)
         self.pagesStackedWidget.setObjectName(u"pagesStackedWidget")
         sizePolicy3 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
@@ -626,6 +761,7 @@ class Ui_MainWindow(object):
         sizePolicy5.setHeightForWidth(self.swapXYButton.sizePolicy().hasHeightForWidth())
         self.swapXYButton.setSizePolicy(sizePolicy5)
         self.swapXYButton.setMinimumSize(QSize(40, 30))
+        self.swapXYButton.setCursor(QCursor(Qt.PointingHandCursor))
         self.swapXYButton.setIconSize(QSize(16, 16))
 
         self.gridLayout_14.addWidget(self.swapXYButton, 2, 3, 1, 1)
@@ -641,17 +777,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout_14.addWidget(self.label_5, 0, 0, 1, 1)
 
-        self.label_27 = QLabel(self.frame)
-        self.label_27.setObjectName(u"label_27")
-        sizePolicy3.setHeightForWidth(self.label_27.sizePolicy().hasHeightForWidth())
-        self.label_27.setSizePolicy(sizePolicy3)
-        self.label_27.setMinimumSize(QSize(0, 15))
-        self.label_27.setStyleSheet(u"color: rgb(190, 130, 250);\n"
-"font: 57 11pt \"Roboto Medium\";")
-        self.label_27.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
-
-        self.gridLayout_14.addWidget(self.label_27, 5, 0, 1, 1)
-
         self.DataXYFrame = QFrame(self.frame)
         self.DataXYFrame.setObjectName(u"DataXYFrame")
         sizePolicy6 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
@@ -660,7 +785,7 @@ class Ui_MainWindow(object):
         sizePolicy6.setHeightForWidth(self.DataXYFrame.sizePolicy().hasHeightForWidth())
         self.DataXYFrame.setSizePolicy(sizePolicy6)
         self.DataXYFrame.setMinimumSize(QSize(330, 0))
-        self.DataXYFrame.setFrameShape(QFrame.StyledPanel)
+        self.DataXYFrame.setFrameShape(QFrame.NoFrame)
         self.DataXYFrame.setFrameShadow(QFrame.Raised)
         self.gridLayout_4 = QGridLayout(self.DataXYFrame)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
@@ -725,19 +850,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout_14.addWidget(self.DataXYFrame, 1, 0, 1, 2)
 
-        self.calibratedCheckBox = QCheckBox(self.frame)
-        self.calibratedCheckBox.setObjectName(u"calibratedCheckBox")
-        sizePolicy7 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-        sizePolicy7.setHorizontalStretch(0)
-        sizePolicy7.setVerticalStretch(0)
-        sizePolicy7.setHeightForWidth(self.calibratedCheckBox.sizePolicy().hasHeightForWidth())
-        self.calibratedCheckBox.setSizePolicy(sizePolicy7)
-        self.calibratedCheckBox.setMinimumSize(QSize(140, 20))
-        self.calibratedCheckBox.setLayoutDirection(Qt.RightToLeft)
-        self.calibratedCheckBox.setText(u"TOGGLE CALIBRATION")
-
-        self.gridLayout_14.addWidget(self.calibratedCheckBox, 11, 2, 1, 1)
-
         self.horizontalSpacer_14 = QSpacerItem(60, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.gridLayout_14.addItem(self.horizontalSpacer_14, 2, 2, 1, 1)
@@ -761,84 +873,75 @@ class Ui_MainWindow(object):
         self.gridLayout_11.setObjectName(u"gridLayout_11")
         self.gridLayout_11.setVerticalSpacing(8)
         self.gridLayout_11.setContentsMargins(0, 0, 0, 0)
-        self.mapY2LineEdit = CalibrationLineEdit(self.calibrateYGridFrame)
-        self.mapY2LineEdit.setObjectName(u"mapY2LineEdit")
-        sizePolicy3.setHeightForWidth(self.mapY2LineEdit.sizePolicy().hasHeightForWidth())
-        self.mapY2LineEdit.setSizePolicy(sizePolicy3)
-        self.mapY2LineEdit.setMinimumSize(QSize(80, 30))
-        self.mapY2LineEdit.setMaximumSize(QSize(200, 16777215))
+        self.calibrateY1Button = QPushButton(self.calibrateYGridFrame)
+        self.calibrateY1Button.setObjectName(u"calibrateY1Button")
+        self.calibrateY1Button.setMinimumSize(QSize(30, 30))
+        self.calibrateY1Button.setCursor(QCursor(Qt.PointingHandCursor))
 #if QT_CONFIG(tooltip)
-        self.mapY2LineEdit.setToolTip(u"")
+        self.calibrateY1Button.setToolTip(u"Calibrate y1, allows selection of coordinate inside plot")
 #endif // QT_CONFIG(tooltip)
-        self.mapY2LineEdit.setStyleSheet(u"background-color: rgb(47,47,47);")
-        self.mapY2LineEdit.setText(u"1.0")
+        self.calibrateY1Button.setStyleSheet(u"")
+        self.calibrateY1Button.setIcon(icon2)
+        self.calibrateY1Button.setCheckable(True)
+        self.calibrateY1Button.setChecked(False)
 
-        self.gridLayout_11.addWidget(self.mapY2LineEdit, 2, 4, 1, 1)
+        self.gridLayout_11.addWidget(self.calibrateY1Button, 1, 0, 1, 1)
 
-        self.calibrateY2Button = QPushButton(self.calibrateYGridFrame)
-        self.calibrateY2Button.setObjectName(u"calibrateY2Button")
-        self.calibrateY2Button.setMinimumSize(QSize(30, 30))
-#if QT_CONFIG(tooltip)
-        self.calibrateY2Button.setToolTip(u"Calibrate y2, allows selection of coordinate inside plot")
-#endif // QT_CONFIG(tooltip)
-        self.calibrateY2Button.setIcon(icon2)
-        self.calibrateY2Button.setCheckable(True)
-        self.calibrateY2Button.setChecked(False)
+        self.label_23 = QLabel(self.calibrateYGridFrame)
+        self.label_23.setObjectName(u"label_23")
+        sizePolicy5.setHeightForWidth(self.label_23.sizePolicy().hasHeightForWidth())
+        self.label_23.setSizePolicy(sizePolicy5)
 
-        self.gridLayout_11.addWidget(self.calibrateY2Button, 2, 0, 1, 1)
+        self.gridLayout_11.addWidget(self.label_23, 0, 2, 1, 1)
 
-        self.rawY1LineEdit = CalibrationLineEdit(self.calibrateYGridFrame)
-        self.rawY1LineEdit.setObjectName(u"rawY1LineEdit")
-        sizePolicy3.setHeightForWidth(self.rawY1LineEdit.sizePolicy().hasHeightForWidth())
-        self.rawY1LineEdit.setSizePolicy(sizePolicy3)
-        self.rawY1LineEdit.setMinimumSize(QSize(80, 30))
-        self.rawY1LineEdit.setMaximumSize(QSize(200, 16777215))
-#if QT_CONFIG(tooltip)
-        self.rawY1LineEdit.setToolTip(u"")
-#endif // QT_CONFIG(tooltip)
-        self.rawY1LineEdit.setStyleSheet(u"background-color: rgb(47,47,47);")
-        self.rawY1LineEdit.setText(u"0.0")
+        self.label_19 = QLabel(self.calibrateYGridFrame)
+        self.label_19.setObjectName(u"label_19")
+        sizePolicy7 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        sizePolicy7.setHorizontalStretch(0)
+        sizePolicy7.setVerticalStretch(0)
+        sizePolicy7.setHeightForWidth(self.label_19.sizePolicy().hasHeightForWidth())
+        self.label_19.setSizePolicy(sizePolicy7)
+        self.label_19.setText(u"<html><head/><body><p align=\"right\">Y<span style=\" vertical-align:sub;\">1</span></p></body></html>")
 
-        self.gridLayout_11.addWidget(self.rawY1LineEdit, 1, 2, 1, 1)
+        self.gridLayout_11.addWidget(self.label_19, 1, 1, 1, 1)
 
         self.label_22 = QLabel(self.calibrateYGridFrame)
         self.label_22.setObjectName(u"label_22")
-        sizePolicy8 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
-        sizePolicy8.setHorizontalStretch(0)
-        sizePolicy8.setVerticalStretch(0)
-        sizePolicy8.setHeightForWidth(self.label_22.sizePolicy().hasHeightForWidth())
-        self.label_22.setSizePolicy(sizePolicy8)
+        sizePolicy7.setHeightForWidth(self.label_22.sizePolicy().hasHeightForWidth())
+        self.label_22.setSizePolicy(sizePolicy7)
         self.label_22.setText(u"<html><head/><body><p align=\"right\">\u2192 Y<span style=\" vertical-align:sub;\">2</span>'</p></body></html>")
 
         self.gridLayout_11.addWidget(self.label_22, 2, 3, 1, 1)
 
         self.label_20 = QLabel(self.calibrateYGridFrame)
         self.label_20.setObjectName(u"label_20")
-        sizePolicy8.setHeightForWidth(self.label_20.sizePolicy().hasHeightForWidth())
-        self.label_20.setSizePolicy(sizePolicy8)
+        sizePolicy7.setHeightForWidth(self.label_20.sizePolicy().hasHeightForWidth())
+        self.label_20.setSizePolicy(sizePolicy7)
         self.label_20.setText(u"<html><head/><body><p align=\"right\">Y<span style=\" vertical-align:sub;\">2</span></p></body></html>")
 
         self.gridLayout_11.addWidget(self.label_20, 2, 1, 1, 1)
 
-        self.label_19 = QLabel(self.calibrateYGridFrame)
-        self.label_19.setObjectName(u"label_19")
-        sizePolicy8.setHeightForWidth(self.label_19.sizePolicy().hasHeightForWidth())
-        self.label_19.setSizePolicy(sizePolicy8)
-        self.label_19.setText(u"<html><head/><body><p align=\"right\">Y<span style=\" vertical-align:sub;\">1</span></p></body></html>")
-
-        self.gridLayout_11.addWidget(self.label_19, 1, 1, 1, 1)
-
-        self.calibrateY1Button = QPushButton(self.calibrateYGridFrame)
-        self.calibrateY1Button.setObjectName(u"calibrateY1Button")
-        self.calibrateY1Button.setMinimumSize(QSize(30, 30))
+        self.calibrateY2Button = QPushButton(self.calibrateYGridFrame)
+        self.calibrateY2Button.setObjectName(u"calibrateY2Button")
+        self.calibrateY2Button.setMinimumSize(QSize(30, 30))
+        self.calibrateY2Button.setCursor(QCursor(Qt.PointingHandCursor))
 #if QT_CONFIG(tooltip)
-        self.calibrateY1Button.setToolTip(u"Calibrate y1, allows selection of coordinate inside plot")
+        self.calibrateY2Button.setToolTip(u"Calibrate y2, allows selection of coordinate inside plot")
 #endif // QT_CONFIG(tooltip)
-        self.calibrateY1Button.setIcon(icon2)
-        self.calibrateY1Button.setCheckable(True)
-        self.calibrateY1Button.setChecked(False)
+        self.calibrateY2Button.setStyleSheet(u"")
+        self.calibrateY2Button.setIcon(icon2)
+        self.calibrateY2Button.setCheckable(True)
+        self.calibrateY2Button.setChecked(False)
 
-        self.gridLayout_11.addWidget(self.calibrateY1Button, 1, 0, 1, 1)
+        self.gridLayout_11.addWidget(self.calibrateY2Button, 2, 0, 1, 1)
+
+        self.label_21 = QLabel(self.calibrateYGridFrame)
+        self.label_21.setObjectName(u"label_21")
+        sizePolicy7.setHeightForWidth(self.label_21.sizePolicy().hasHeightForWidth())
+        self.label_21.setSizePolicy(sizePolicy7)
+        self.label_21.setText(u"<html><head/><body><p align=\"right\">\u2192 Y<span style=\" vertical-align:sub;\">1</span>'</p></body></html>")
+
+        self.gridLayout_11.addWidget(self.label_21, 1, 3, 1, 1)
 
         self.mapY1LineEdit = CalibrationLineEdit(self.calibrateYGridFrame)
         self.mapY1LineEdit.setObjectName(u"mapY1LineEdit")
@@ -854,6 +957,13 @@ class Ui_MainWindow(object):
 
         self.gridLayout_11.addWidget(self.mapY1LineEdit, 1, 4, 1, 1)
 
+        self.label_24 = QLabel(self.calibrateYGridFrame)
+        self.label_24.setObjectName(u"label_24")
+        sizePolicy5.setHeightForWidth(self.label_24.sizePolicy().hasHeightForWidth())
+        self.label_24.setSizePolicy(sizePolicy5)
+
+        self.gridLayout_11.addWidget(self.label_24, 0, 4, 1, 1)
+
         self.rawY2LineEdit = CalibrationLineEdit(self.calibrateYGridFrame)
         self.rawY2LineEdit.setObjectName(u"rawY2LineEdit")
         sizePolicy3.setHeightForWidth(self.rawY2LineEdit.sizePolicy().hasHeightForWidth())
@@ -868,27 +978,33 @@ class Ui_MainWindow(object):
 
         self.gridLayout_11.addWidget(self.rawY2LineEdit, 2, 2, 1, 1)
 
-        self.label_21 = QLabel(self.calibrateYGridFrame)
-        self.label_21.setObjectName(u"label_21")
-        sizePolicy8.setHeightForWidth(self.label_21.sizePolicy().hasHeightForWidth())
-        self.label_21.setSizePolicy(sizePolicy8)
-        self.label_21.setText(u"<html><head/><body><p align=\"right\">\u2192 Y<span style=\" vertical-align:sub;\">1</span>'</p></body></html>")
+        self.rawY1LineEdit = CalibrationLineEdit(self.calibrateYGridFrame)
+        self.rawY1LineEdit.setObjectName(u"rawY1LineEdit")
+        sizePolicy3.setHeightForWidth(self.rawY1LineEdit.sizePolicy().hasHeightForWidth())
+        self.rawY1LineEdit.setSizePolicy(sizePolicy3)
+        self.rawY1LineEdit.setMinimumSize(QSize(80, 30))
+        self.rawY1LineEdit.setMaximumSize(QSize(200, 16777215))
+#if QT_CONFIG(tooltip)
+        self.rawY1LineEdit.setToolTip(u"")
+#endif // QT_CONFIG(tooltip)
+        self.rawY1LineEdit.setStyleSheet(u"background-color: rgb(47,47,47);")
+        self.rawY1LineEdit.setText(u"0.0")
 
-        self.gridLayout_11.addWidget(self.label_21, 1, 3, 1, 1)
+        self.gridLayout_11.addWidget(self.rawY1LineEdit, 1, 2, 1, 1)
 
-        self.label_23 = QLabel(self.calibrateYGridFrame)
-        self.label_23.setObjectName(u"label_23")
-        sizePolicy5.setHeightForWidth(self.label_23.sizePolicy().hasHeightForWidth())
-        self.label_23.setSizePolicy(sizePolicy5)
+        self.mapY2LineEdit = CalibrationLineEdit(self.calibrateYGridFrame)
+        self.mapY2LineEdit.setObjectName(u"mapY2LineEdit")
+        sizePolicy3.setHeightForWidth(self.mapY2LineEdit.sizePolicy().hasHeightForWidth())
+        self.mapY2LineEdit.setSizePolicy(sizePolicy3)
+        self.mapY2LineEdit.setMinimumSize(QSize(80, 30))
+        self.mapY2LineEdit.setMaximumSize(QSize(200, 16777215))
+#if QT_CONFIG(tooltip)
+        self.mapY2LineEdit.setToolTip(u"")
+#endif // QT_CONFIG(tooltip)
+        self.mapY2LineEdit.setStyleSheet(u"background-color: rgb(47,47,47);")
+        self.mapY2LineEdit.setText(u"1.0")
 
-        self.gridLayout_11.addWidget(self.label_23, 0, 2, 1, 1)
-
-        self.label_24 = QLabel(self.calibrateYGridFrame)
-        self.label_24.setObjectName(u"label_24")
-        sizePolicy5.setHeightForWidth(self.label_24.sizePolicy().hasHeightForWidth())
-        self.label_24.setSizePolicy(sizePolicy5)
-
-        self.gridLayout_11.addWidget(self.label_24, 0, 4, 1, 1)
+        self.gridLayout_11.addWidget(self.mapY2LineEdit, 2, 4, 1, 1)
 
 
         self.gridLayout_14.addWidget(self.calibrateYGridFrame, 10, 0, 1, 1)
@@ -904,6 +1020,9 @@ class Ui_MainWindow(object):
 "	border: 0px solid rgb(52, 59, 72);\n"
 "	border-radius: 5px;	\n"
 "	text-align: center;\n"
+"}\n"
+"QPushButton:pressed {\n"
+"    background-color: rgb(60, 60, 60);\n"
 "}")
         self.gridLayout_10 = QGridLayout(self.calibrateXGridFrame)
         self.gridLayout_10.setObjectName(u"gridLayout_10")
@@ -940,9 +1059,11 @@ class Ui_MainWindow(object):
         self.calibrateX2Button = QPushButton(self.calibrateXGridFrame)
         self.calibrateX2Button.setObjectName(u"calibrateX2Button")
         self.calibrateX2Button.setMinimumSize(QSize(30, 30))
+        self.calibrateX2Button.setCursor(QCursor(Qt.PointingHandCursor))
 #if QT_CONFIG(tooltip)
         self.calibrateX2Button.setToolTip(u"Calibrate x2, allows selection of coordinate inside plot")
 #endif // QT_CONFIG(tooltip)
+        self.calibrateX2Button.setStyleSheet(u"")
         self.calibrateX2Button.setIcon(icon2)
         self.calibrateX2Button.setCheckable(True)
         self.calibrateX2Button.setChecked(False)
@@ -951,8 +1072,8 @@ class Ui_MainWindow(object):
 
         self.label_18 = QLabel(self.calibrateXGridFrame)
         self.label_18.setObjectName(u"label_18")
-        sizePolicy8.setHeightForWidth(self.label_18.sizePolicy().hasHeightForWidth())
-        self.label_18.setSizePolicy(sizePolicy8)
+        sizePolicy7.setHeightForWidth(self.label_18.sizePolicy().hasHeightForWidth())
+        self.label_18.setSizePolicy(sizePolicy7)
         self.label_18.setText(u"<html><head/><body><p align=\"right\">\u2192 X<span style=\" vertical-align:sub;\">2</span>'</p></body></html>")
 
         self.gridLayout_10.addWidget(self.label_18, 2, 3, 1, 1)
@@ -978,16 +1099,16 @@ class Ui_MainWindow(object):
 
         self.label_15 = QLabel(self.calibrateXGridFrame)
         self.label_15.setObjectName(u"label_15")
-        sizePolicy8.setHeightForWidth(self.label_15.sizePolicy().hasHeightForWidth())
-        self.label_15.setSizePolicy(sizePolicy8)
+        sizePolicy7.setHeightForWidth(self.label_15.sizePolicy().hasHeightForWidth())
+        self.label_15.setSizePolicy(sizePolicy7)
         self.label_15.setText(u"<html><head/><body><p align=\"right\">X<span style=\" vertical-align:sub;\">1</span></p></body></html>")
 
         self.gridLayout_10.addWidget(self.label_15, 1, 1, 1, 1)
 
         self.label_17 = QLabel(self.calibrateXGridFrame)
         self.label_17.setObjectName(u"label_17")
-        sizePolicy8.setHeightForWidth(self.label_17.sizePolicy().hasHeightForWidth())
-        self.label_17.setSizePolicy(sizePolicy8)
+        sizePolicy7.setHeightForWidth(self.label_17.sizePolicy().hasHeightForWidth())
+        self.label_17.setSizePolicy(sizePolicy7)
         self.label_17.setText(u"<html><head/><body><p align=\"right\">\u2192 X<span style=\" vertical-align:sub;\">1</span>'</p></body></html>")
 
         self.gridLayout_10.addWidget(self.label_17, 1, 3, 1, 1)
@@ -1008,8 +1129,8 @@ class Ui_MainWindow(object):
 
         self.label_16 = QLabel(self.calibrateXGridFrame)
         self.label_16.setObjectName(u"label_16")
-        sizePolicy8.setHeightForWidth(self.label_16.sizePolicy().hasHeightForWidth())
-        self.label_16.setSizePolicy(sizePolicy8)
+        sizePolicy7.setHeightForWidth(self.label_16.sizePolicy().hasHeightForWidth())
+        self.label_16.setSizePolicy(sizePolicy7)
         self.label_16.setText(u"<html><head/><body><p align=\"right\">X<span style=\" vertical-align:sub;\">2</span></p></body></html>")
 
         self.gridLayout_10.addWidget(self.label_16, 2, 1, 1, 1)
@@ -1024,9 +1145,11 @@ class Ui_MainWindow(object):
         self.calibrateX1Button = QPushButton(self.calibrateXGridFrame)
         self.calibrateX1Button.setObjectName(u"calibrateX1Button")
         self.calibrateX1Button.setMinimumSize(QSize(30, 30))
+        self.calibrateX1Button.setCursor(QCursor(Qt.PointingHandCursor))
 #if QT_CONFIG(tooltip)
         self.calibrateX1Button.setToolTip(u"Calibrate x2, allows selection of coordinate inside plot")
 #endif // QT_CONFIG(tooltip)
+        self.calibrateX1Button.setStyleSheet(u"")
         self.calibrateX1Button.setIcon(icon2)
         self.calibrateX1Button.setCheckable(True)
         self.calibrateX1Button.setChecked(False)
@@ -1040,12 +1163,51 @@ class Ui_MainWindow(object):
 
         self.gridLayout_14.addItem(self.horizontalSpacer_10, 9, 4, 1, 1)
 
-        self.calibrationWizardPushButton = QPushButton(self.frame)
-        self.calibrationWizardPushButton.setObjectName(u"calibrationWizardPushButton")
-        self.calibrationWizardPushButton.setMinimumSize(QSize(150, 30))
-        self.calibrationWizardPushButton.setCheckable(True)
+        self.calibrationTitleWidget = QWidget(self.frame)
+        self.calibrationTitleWidget.setObjectName(u"calibrationTitleWidget")
+        self.horizontalLayout_2 = QHBoxLayout(self.calibrationTitleWidget)
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setContentsMargins(0, 0, 40, 0)
+        self.label_27 = QLabel(self.calibrationTitleWidget)
+        self.label_27.setObjectName(u"label_27")
+        sizePolicy3.setHeightForWidth(self.label_27.sizePolicy().hasHeightForWidth())
+        self.label_27.setSizePolicy(sizePolicy3)
+        self.label_27.setMinimumSize(QSize(100, 15))
+        self.label_27.setStyleSheet(u"color: rgb(190, 130, 250);\n"
+"font: 57 11pt \"Roboto Medium\";")
+        self.label_27.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
 
-        self.gridLayout_14.addWidget(self.calibrationWizardPushButton, 6, 1, 1, 1)
+        self.horizontalLayout_2.addWidget(self.label_27)
+
+        self.calibrationHelpPushButton = QPushButton(self.calibrationTitleWidget)
+        self.calibrationHelpPushButton.setObjectName(u"calibrationHelpPushButton")
+        self.calibrationHelpPushButton.setCursor(QCursor(Qt.PointingHandCursor))
+        self.calibrationHelpPushButton.setStyleSheet(u"QPushButton {\n"
+"    border: none;\n"
+"    background: none;\n"
+"}")
+        icon11 = QIcon()
+        icon11.addFile(u":/icons/svg/question-circle.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.calibrationHelpPushButton.setIcon(icon11)
+        self.calibrationHelpPushButton.setIconSize(QSize(23, 23))
+
+        self.horizontalLayout_2.addWidget(self.calibrationHelpPushButton)
+
+
+        self.gridLayout_14.addWidget(self.calibrationTitleWidget, 3, 0, 1, 1)
+
+        self.calibratedCheckBox = QCheckBox(self.frame)
+        self.calibratedCheckBox.setObjectName(u"calibratedCheckBox")
+        sizePolicy8 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        sizePolicy8.setHorizontalStretch(0)
+        sizePolicy8.setVerticalStretch(0)
+        sizePolicy8.setHeightForWidth(self.calibratedCheckBox.sizePolicy().hasHeightForWidth())
+        self.calibratedCheckBox.setSizePolicy(sizePolicy8)
+        self.calibratedCheckBox.setMinimumSize(QSize(140, 20))
+        self.calibratedCheckBox.setLayoutDirection(Qt.RightToLeft)
+        self.calibratedCheckBox.setText(u"TOGGLE CALIBRATION")
+
+        self.gridLayout_14.addWidget(self.calibratedCheckBox, 11, 1, 1, 1)
 
 
         self.verticalLayout_9.addWidget(self.frame)
@@ -1107,9 +1269,9 @@ class Ui_MainWindow(object):
         self.newRowButton.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
         self.newRowButton.setText(u"NEW   ")
-        icon6 = QIcon()
-        icon6.addFile(u":/icons/svg/cil-plus.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.newRowButton.setIcon(icon6)
+        icon12 = QIcon()
+        icon12.addFile(u":/icons/svg/cil-plus.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.newRowButton.setIcon(icon12)
 
         self.verticalLayout_14.addWidget(self.newRowButton)
 
@@ -1122,9 +1284,9 @@ class Ui_MainWindow(object):
         self.deleteRowButton.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
         self.deleteRowButton.setText(u"DELETE  ")
-        icon7 = QIcon()
-        icon7.addFile(u":/icons/svg/cil-minus.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.deleteRowButton.setIcon(icon7)
+        icon13 = QIcon()
+        icon13.addFile(u":/icons/svg/cil-minus.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.deleteRowButton.setIcon(icon13)
 
         self.verticalLayout_14.addWidget(self.deleteRowButton)
 
@@ -1403,6 +1565,7 @@ class Ui_MainWindow(object):
         self.prefitWidget.setSizePolicy(sizePolicy4)
         self.verticalLayout_3 = QVBoxLayout(self.prefitWidget)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.verticalLayout_3.setContentsMargins(12, -1, -1, -1)
         self.frame_prefit = QFrame(self.prefitWidget)
         self.frame_prefit.setObjectName(u"frame_prefit")
         sizePolicy4.setHeightForWidth(self.frame_prefit.sizePolicy().hasHeightForWidth())
@@ -1444,7 +1607,7 @@ class Ui_MainWindow(object):
         self.prefitScrollArea.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.prefitScrollAreaWidget = QWidget()
         self.prefitScrollAreaWidget.setObjectName(u"prefitScrollAreaWidget")
-        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 100, 30))
+        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 352, 420))
         self.verticalLayout_11 = QVBoxLayout(self.prefitScrollAreaWidget)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -1452,12 +1615,39 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_6.addWidget(self.prefitScrollArea)
 
-        self.verticalSpacer_17 = QSpacerItem(20, 15, QSizePolicy.Minimum, QSizePolicy.Fixed)
-
-        self.verticalLayout_6.addItem(self.verticalSpacer_17)
-
 
         self.verticalLayout_3.addWidget(self.frame_prefit)
+
+        self.frame_3 = QFrame(self.prefitWidget)
+        self.frame_3.setObjectName(u"frame_3")
+        self.frame_3.setStyleSheet(u"")
+        self.frame_3.setFrameShape(QFrame.NoFrame)
+        self.frame_3.setFrameShadow(QFrame.Raised)
+        self.horizontalLayout_3 = QHBoxLayout(self.frame_3)
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.horizontalLayout_3.setContentsMargins(12, 0, -1, 0)
+        self.plotButton = QPushButton(self.frame_3)
+        self.plotButton.setObjectName(u"plotButton")
+        sizePolicy5.setHeightForWidth(self.plotButton.sizePolicy().hasHeightForWidth())
+        self.plotButton.setSizePolicy(sizePolicy5)
+        self.plotButton.setMinimumSize(QSize(100, 30))
+#if QT_CONFIG(tooltip)
+        self.plotButton.setToolTip(u"")
+#endif // QT_CONFIG(tooltip)
+        self.plotButton.setText(u"PLOT SPECTRUM")
+
+        self.horizontalLayout_3.addWidget(self.plotButton)
+
+        self.autoRunCheckBox = QCheckBox(self.frame_3)
+        self.autoRunCheckBox.setObjectName(u"autoRunCheckBox")
+        sizePolicy5.setHeightForWidth(self.autoRunCheckBox.sizePolicy().hasHeightForWidth())
+        self.autoRunCheckBox.setSizePolicy(sizePolicy5)
+        self.autoRunCheckBox.setMinimumSize(QSize(120, 0))
+
+        self.horizontalLayout_3.addWidget(self.autoRunCheckBox)
+
+
+        self.verticalLayout_3.addWidget(self.frame_3)
 
         self.pagesStackedWidget.addWidget(self.prefitWidget)
         self.fitWidget = QWidget()
@@ -1502,17 +1692,13 @@ class Ui_MainWindow(object):
         self.fitScrollArea.setWidgetResizable(True)
         self.fitScrollAreaWidget = QWidget()
         self.fitScrollAreaWidget.setObjectName(u"fitScrollAreaWidget")
-        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 100, 30))
+        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 352, 418))
         self.verticalLayout_4 = QVBoxLayout(self.fitScrollAreaWidget)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.fitScrollArea.setWidget(self.fitScrollAreaWidget)
 
         self.verticalLayout_8.addWidget(self.fitScrollArea)
-
-        self.verticalSpacer_19 = QSpacerItem(20, 15, QSizePolicy.Minimum, QSizePolicy.Fixed)
-
-        self.verticalLayout_8.addItem(self.verticalSpacer_19)
 
 
         self.verticalLayout_15.addWidget(self.frame_fit)
@@ -1523,10 +1709,20 @@ class Ui_MainWindow(object):
         self.frame_6.setFrameShadow(QFrame.Raised)
         self.horizontalLayout_8 = QHBoxLayout(self.frame_6)
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
+        self.horizontalLayout_8.setContentsMargins(-1, 0, -1, 0)
+        self.fitButton = QPushButton(self.frame_6)
+        self.fitButton.setObjectName(u"fitButton")
+        sizePolicy5.setHeightForWidth(self.fitButton.sizePolicy().hasHeightForWidth())
+        self.fitButton.setSizePolicy(sizePolicy5)
+        self.fitButton.setMinimumSize(QSize(120, 0))
+
+        self.horizontalLayout_8.addWidget(self.fitButton)
+
         self.pushButton_2 = QPushButton(self.frame_6)
         self.pushButton_2.setObjectName(u"pushButton_2")
         sizePolicy5.setHeightForWidth(self.pushButton_2.sizePolicy().hasHeightForWidth())
         self.pushButton_2.setSizePolicy(sizePolicy5)
+        self.pushButton_2.setMinimumSize(QSize(120, 0))
 
         self.horizontalLayout_8.addWidget(self.pushButton_2)
 
@@ -1536,141 +1732,6 @@ class Ui_MainWindow(object):
         self.pagesStackedWidget.addWidget(self.fitWidget)
 
         self.gridLayout.addWidget(self.pagesStackedWidget, 0, 1, 1, 1)
-
-        self.mplFigureCanvas = MplFigureCanvas(self.windowBodyFrame)
-        self.mplFigureCanvas.setObjectName(u"mplFigureCanvas")
-        sizePolicy.setHeightForWidth(self.mplFigureCanvas.sizePolicy().hasHeightForWidth())
-        self.mplFigureCanvas.setSizePolicy(sizePolicy)
-        self.mplFigureCanvas.setMinimumSize(QSize(450, 300))
-        self.mplFigureCanvas.setMaximumSize(QSize(16777215, 16777215))
-        self.mplFigureCanvas.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
-"\n"
-"QToolTip {\n"
-"	color: #1e1e1e;\n"
-"	background-color: rgba(255, 255, 255, 160);\n"
-"	border: 1px solid rgb(200, 200, 200);\n"
-"	border-radius: 2px;\n"
-"}\n"
-"")
-        self.mplFigureCanvas.setLineWidth(0)
-        self.mplFigureButtons = MplNavButtons(self.mplFigureCanvas)
-        self.mplFigureButtons.setObjectName(u"mplFigureButtons")
-        self.mplFigureButtons.setGeometry(QRect(0, 0, 621, 60))
-        self.mplFigureButtons.setAutoFillBackground(False)
-        self.mplFigureButtons.setStyleSheet(u"QFrame {\n"
-"	background-color: rgb(255, 255, 255);\n"
-"}\n"
-"\n"
-"QToolTip {\n"
-"	color: #1e1e1e;\n"
-"	background-color: rgba(255, 255, 255, 160);\n"
-"	border: 1px solid rgb(200, 200, 200);\n"
-"	border-radius: 2px;\n"
-"}\n"
-"\n"
-"QPushButton {\n"
-"	border: 0px solid rgb(52, 59, 72);\n"
-"	border-radius: 18px;	\n"
-"	background-color: rgb(93, 93, 93);\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"	background-color: rgb(196, 150, 250);\n"
-"	border: 0px solid rgb(61, 70, 86);\n"
-"}\n"
-"QPushButton:pressed {	\n"
-"	background-color: rgb(196, 150, 250);\n"
-"	border: 0px solid rgb(43, 50, 61);\n"
-"}\n"
-"QPushButton:checked {	\n"
-"	background-color: rgb(196, 150, 250);\n"
-"	border: 0px solid rgb(43, 50, 61);\n"
-"}\n"
-"color: rgb(30, 30, 30);")
-        self.resetViewButton = QPushButton(self.mplFigureButtons)
-        self.resetViewButton.setObjectName(u"resetViewButton")
-        self.resetViewButton.setGeometry(QRect(30, 10, 40, 40))
-#if QT_CONFIG(tooltip)
-        self.resetViewButton.setToolTip(u"Reset plot area")
-#endif // QT_CONFIG(tooltip)
-        icon8 = QIcon()
-        icon8.addFile(u":/icons/svg/cil-reload.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.resetViewButton.setIcon(icon8)
-        self.resetViewButton.setIconSize(QSize(18, 18))
-        self.panViewButton = QPushButton(self.mplFigureButtons)
-        self.panViewButton.setObjectName(u"panViewButton")
-        self.panViewButton.setGeometry(QRect(90, 10, 40, 40))
-        self.panViewButton.setCursor(QCursor(Qt.ArrowCursor))
-#if QT_CONFIG(tooltip)
-        self.panViewButton.setToolTip(u"Pan mode: Drag to move the canvas")
-#endif // QT_CONFIG(tooltip)
-        icon9 = QIcon()
-        icon9.addFile(u":/icons/svg/cil-move.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.panViewButton.setIcon(icon9)
-        self.panViewButton.setCheckable(True)
-        self.panViewButton.setAutoExclusive(True)
-        self.zoomViewButton = QPushButton(self.mplFigureButtons)
-        self.zoomViewButton.setObjectName(u"zoomViewButton")
-        self.zoomViewButton.setGeometry(QRect(150, 10, 40, 40))
-        self.zoomViewButton.setCursor(QCursor(Qt.ArrowCursor))
-#if QT_CONFIG(tooltip)
-        self.zoomViewButton.setToolTip(u"Zoom mode: Drag to magnify a region")
-#endif // QT_CONFIG(tooltip)
-        icon10 = QIcon()
-        icon10.addFile(u":/icons/svg/cil-zoom.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.zoomViewButton.setIcon(icon10)
-        self.zoomViewButton.setCheckable(True)
-        self.zoomViewButton.setAutoExclusive(True)
-        self.horizontalSnapButton = QPushButton(self.mplFigureButtons)
-        self.horizontalSnapButton.setObjectName(u"horizontalSnapButton")
-        self.horizontalSnapButton.setGeometry(QRect(270, 10, 40, 40))
-#if QT_CONFIG(tooltip)
-        self.horizontalSnapButton.setToolTip(u"Dataset snapping: align the x-coordinates for datasets")
-#endif // QT_CONFIG(tooltip)
-        icon11 = QIcon()
-        icon11.addFile(u":/icons/svg/cil-lock-unlocked.svg", QSize(), QIcon.Normal, QIcon.Off)
-        icon11.addFile(u":/icons/svg/cil-lock-locked.svg", QSize(), QIcon.Normal, QIcon.On)
-        self.horizontalSnapButton.setIcon(icon11)
-        self.horizontalSnapButton.setCheckable(True)
-        self.horizontalSnapButton.setChecked(True)
-        self.horizontalSnapButton.setAutoExclusive(False)
-        self.selectViewButton = QPushButton(self.mplFigureButtons)
-        self.selectViewButton.setObjectName(u"selectViewButton")
-        self.selectViewButton.setGeometry(QRect(210, 10, 41, 41))
-        self.selectViewButton.setCursor(QCursor(Qt.CrossCursor))
-#if QT_CONFIG(tooltip)
-        self.selectViewButton.setToolTip(u"Extract mode: Click to extract peaks")
-#endif // QT_CONFIG(tooltip)
-        self.selectViewButton.setIcon(icon2)
-        self.selectViewButton.setCheckable(True)
-        self.selectViewButton.setChecked(True)
-        self.selectViewButton.setAutoExclusive(True)
-        self.verticalSnapButton = QPushButton(self.mplFigureButtons)
-        self.verticalSnapButton.setObjectName(u"verticalSnapButton")
-        self.verticalSnapButton.setGeometry(QRect(330, 10, 41, 41))
-#if QT_CONFIG(tooltip)
-        self.verticalSnapButton.setToolTip(u"Peak snapping: Locate the nearby peak along y axis")
-#endif // QT_CONFIG(tooltip)
-        icon12 = QIcon()
-        icon12.addFile(u":/icons/svg/cil-vertical-align-center.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.verticalSnapButton.setIcon(icon12)
-        self.verticalSnapButton.setCheckable(True)
-        self.verticalSnapButton.setChecked(True)
-        self.verticalSnapButton.setAutoExclusive(False)
-        self.line_2 = QFrame(self.mplFigureCanvas)
-        self.line_2.setObjectName(u"line_2")
-        self.line_2.setGeometry(QRect(259, 10, 3, 41))
-        self.line_2.setFrameShadow(QFrame.Plain)
-        self.line_2.setLineWidth(0)
-        self.line_2.setFrameShape(QFrame.VLine)
-        self.line_3 = QFrame(self.mplFigureCanvas)
-        self.line_3.setObjectName(u"line_3")
-        self.line_3.setGeometry(QRect(79, 10, 3, 41))
-        self.line_3.setFrameShadow(QFrame.Plain)
-        self.line_3.setLineWidth(0)
-        self.line_3.setFrameShape(QFrame.VLine)
-
-        self.gridLayout.addWidget(self.mplFigureCanvas, 0, 2, 1, 2)
 
         self.bottomStackedWidget = QStackedWidget(self.windowBodyFrame)
         self.bottomStackedWidget.setObjectName(u"bottomStackedWidget")
@@ -1725,8 +1786,8 @@ class Ui_MainWindow(object):
         sizePolicy3.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
         self.label_4.setSizePolicy(sizePolicy3)
         self.label_4.setFont(font)
-        self.label_4.setStyleSheet(u"font: 57 11pt \"Roboto Medium\";\n"
-"")
+        self.label_4.setStyleSheet(u"color: rgb(190, 130, 250);\n"
+"font: 57 11pt \"Roboto Medium\";")
         self.label_4.setFrameShape(QFrame.NoFrame)
         self.label_4.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.label_4.setMargin(3)
@@ -1735,8 +1796,8 @@ class Ui_MainWindow(object):
 
         self.widget = QWidget(self.frame_8)
         self.widget.setObjectName(u"widget")
-        sizePolicy8.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
-        self.widget.setSizePolicy(sizePolicy8)
+        sizePolicy7.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
+        self.widget.setSizePolicy(sizePolicy7)
         self.widget.setMinimumSize(QSize(300, 0))
         self.widget.setMaximumSize(QSize(500, 16777215))
         self.verticalLayout_2 = QVBoxLayout(self.widget)
@@ -1744,10 +1805,10 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.coloringPushButton = QPushButton(self.widget)
         self.coloringPushButton.setObjectName(u"coloringPushButton")
-        icon13 = QIcon()
-        icon13.addFile(u":/icons/svg/cil-caret-right.svg", QSize(), QIcon.Normal, QIcon.Off)
-        icon13.addFile(u":/icons/svg/cil-caret-bottom.svg", QSize(), QIcon.Normal, QIcon.On)
-        self.coloringPushButton.setIcon(icon13)
+        icon14 = QIcon()
+        icon14.addFile(u":/icons/svg/cil-caret-right.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon14.addFile(u":/icons/svg/cil-caret-bottom.svg", QSize(), QIcon.Normal, QIcon.On)
+        self.coloringPushButton.setIcon(icon14)
         self.coloringPushButton.setCheckable(True)
         self.coloringPushButton.setChecked(True)
 
@@ -1802,24 +1863,24 @@ class Ui_MainWindow(object):
         self.gridLayout_9.addWidget(self.logScaleCheckBox, 1, 1, 1, 1)
 
         self.colorComboBox = QComboBox(self.colorGridGroupBox)
-        icon14 = QIcon()
-        icon14.addFile(u":/icons/PuOr.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.colorComboBox.addItem(icon14, u"PuOr")
         icon15 = QIcon()
-        icon15.addFile(u":/icons/RdYlBu.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.colorComboBox.addItem(icon15, u"RdYlBu")
+        icon15.addFile(u":/icons/PuOr.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.colorComboBox.addItem(icon15, u"PuOr")
         icon16 = QIcon()
-        icon16.addFile(u":/icons/bwr.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.colorComboBox.addItem(icon16, u"bwr")
+        icon16.addFile(u":/icons/RdYlBu.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.colorComboBox.addItem(icon16, u"RdYlBu")
         icon17 = QIcon()
-        icon17.addFile(u":/icons/viridis.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.colorComboBox.addItem(icon17, u"viridis")
+        icon17.addFile(u":/icons/bwr.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.colorComboBox.addItem(icon17, u"bwr")
         icon18 = QIcon()
-        icon18.addFile(u":/icons/cividis.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.colorComboBox.addItem(icon18, u"cividis")
+        icon18.addFile(u":/icons/viridis.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.colorComboBox.addItem(icon18, u"viridis")
         icon19 = QIcon()
-        icon19.addFile(u":/icons/gray.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.colorComboBox.addItem(icon19, u"gray")
+        icon19.addFile(u":/icons/cividis.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.colorComboBox.addItem(icon19, u"cividis")
+        icon20 = QIcon()
+        icon20.addFile(u":/icons/gray.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.colorComboBox.addItem(icon20, u"gray")
         self.colorComboBox.setObjectName(u"colorComboBox")
         sizePolicy3.setHeightForWidth(self.colorComboBox.sizePolicy().hasHeightForWidth())
         self.colorComboBox.setSizePolicy(sizePolicy3)
@@ -1852,8 +1913,8 @@ class Ui_MainWindow(object):
 
         self.widget_2 = QWidget(self.frame_8)
         self.widget_2.setObjectName(u"widget_2")
-        sizePolicy8.setHeightForWidth(self.widget_2.sizePolicy().hasHeightForWidth())
-        self.widget_2.setSizePolicy(sizePolicy8)
+        sizePolicy7.setHeightForWidth(self.widget_2.sizePolicy().hasHeightForWidth())
+        self.widget_2.setSizePolicy(sizePolicy7)
         self.widget_2.setMinimumSize(QSize(300, 0))
         self.widget_2.setMaximumSize(QSize(500, 16777215))
         self.verticalLayout_5 = QVBoxLayout(self.widget_2)
@@ -1861,7 +1922,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
         self.bgndSubtractPushButton = QPushButton(self.widget_2)
         self.bgndSubtractPushButton.setObjectName(u"bgndSubtractPushButton")
-        self.bgndSubtractPushButton.setIcon(icon13)
+        self.bgndSubtractPushButton.setIcon(icon14)
         self.bgndSubtractPushButton.setCheckable(True)
         self.bgndSubtractPushButton.setChecked(True)
 
@@ -1909,7 +1970,7 @@ class Ui_MainWindow(object):
 
         self.filtersPushButton = QPushButton(self.widget_2)
         self.filtersPushButton.setObjectName(u"filtersPushButton")
-        self.filtersPushButton.setIcon(icon13)
+        self.filtersPushButton.setIcon(icon14)
         self.filtersPushButton.setCheckable(True)
         self.filtersPushButton.setChecked(True)
 
@@ -1976,35 +2037,43 @@ class Ui_MainWindow(object):
         self.frame_4.setFrameShadow(QFrame.Raised)
         self.gridLayout_3 = QGridLayout(self.frame_4)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.horizontalSpacer_8 = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(5, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
 
-        self.gridLayout_3.addItem(self.horizontalSpacer_8, 1, 7, 1, 1)
+        self.gridLayout_3.addItem(self.horizontalSpacer, 1, 0, 1, 1)
 
-        self.evalsCountLineEdit = QLineEdit(self.frame_4)
-        self.evalsCountLineEdit.setObjectName(u"evalsCountLineEdit")
-        sizePolicy3.setHeightForWidth(self.evalsCountLineEdit.sizePolicy().hasHeightForWidth())
-        self.evalsCountLineEdit.setSizePolicy(sizePolicy3)
+        self.initStateLineEdit = StateLineEdit(self.frame_4)
+        self.initStateLineEdit.setObjectName(u"initStateLineEdit")
+        sizePolicy3.setHeightForWidth(self.initStateLineEdit.sizePolicy().hasHeightForWidth())
+        self.initStateLineEdit.setSizePolicy(sizePolicy3)
+        self.initStateLineEdit.setMinimumSize(QSize(150, 30))
 
-        self.gridLayout_3.addWidget(self.evalsCountLineEdit, 3, 2, 1, 1)
-
-        self.plotButton = QPushButton(self.frame_4)
-        self.plotButton.setObjectName(u"plotButton")
-        sizePolicy5.setHeightForWidth(self.plotButton.sizePolicy().hasHeightForWidth())
-        self.plotButton.setSizePolicy(sizePolicy5)
-        self.plotButton.setMinimumSize(QSize(100, 30))
-#if QT_CONFIG(tooltip)
-        self.plotButton.setToolTip(u"")
-#endif // QT_CONFIG(tooltip)
-        self.plotButton.setText(u"PLOT SPECTRUM")
-
-        self.gridLayout_3.addWidget(self.plotButton, 1, 4, 1, 1)
+        self.gridLayout_3.addWidget(self.initStateLineEdit, 3, 2, 1, 1)
 
         self.label_42 = QLabel(self.frame_4)
         self.label_42.setObjectName(u"label_42")
         sizePolicy6.setHeightForWidth(self.label_42.sizePolicy().hasHeightForWidth())
         self.label_42.setSizePolicy(sizePolicy6)
 
-        self.gridLayout_3.addWidget(self.label_42, 3, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.label_42, 1, 3, 1, 1)
+
+        self.subsysComboBox = QComboBox(self.frame_4)
+        self.subsysComboBox.setObjectName(u"subsysComboBox")
+        sizePolicy3.setHeightForWidth(self.subsysComboBox.sizePolicy().hasHeightForWidth())
+        self.subsysComboBox.setSizePolicy(sizePolicy3)
+        self.subsysComboBox.setMinimumSize(QSize(0, 30))
+
+        self.gridLayout_3.addWidget(self.subsysComboBox, 1, 2, 1, 1)
+
+        self.horizontalSpacer_8 = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.gridLayout_3.addItem(self.horizontalSpacer_8, 1, 9, 1, 1)
+
+        self.label_44 = QLabel(self.frame_4)
+        self.label_44.setObjectName(u"label_44")
+        sizePolicy6.setHeightForWidth(self.label_44.sizePolicy().hasHeightForWidth())
+        self.label_44.setSizePolicy(sizePolicy6)
+
+        self.gridLayout_3.addWidget(self.label_44, 1, 1, 1, 1)
 
         self.mseLabel = QLabel(self.frame_4)
         self.mseLabel.setObjectName(u"mseLabel")
@@ -2016,73 +2085,37 @@ class Ui_MainWindow(object):
         font2.setBold(True)
         self.mseLabel.setFont(font2)
 
-        self.gridLayout_3.addWidget(self.mseLabel, 1, 6, 1, 1)
-
-        self.label_9 = QLabel(self.frame_4)
-        self.label_9.setObjectName(u"label_9")
-        sizePolicy3.setHeightForWidth(self.label_9.sizePolicy().hasHeightForWidth())
-        self.label_9.setSizePolicy(sizePolicy3)
-        self.label_9.setFont(font)
-        self.label_9.setStyleSheet(u"font: 57 11pt \"Roboto Medium\";\n"
-"")
-        self.label_9.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
-
-        self.gridLayout_3.addWidget(self.label_9, 0, 0, 1, 3)
-
-        self.label_44 = QLabel(self.frame_4)
-        self.label_44.setObjectName(u"label_44")
-        sizePolicy6.setHeightForWidth(self.label_44.sizePolicy().hasHeightForWidth())
-        self.label_44.setSizePolicy(sizePolicy6)
-
-        self.gridLayout_3.addWidget(self.label_44, 1, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.mseLabel, 1, 8, 1, 1)
 
         self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
 
-        self.gridLayout_3.addItem(self.horizontalSpacer_4, 1, 3, 1, 1)
+        self.gridLayout_3.addItem(self.horizontalSpacer_4, 1, 6, 1, 1)
 
-        self.pointsAddLineEdit = QLineEdit(self.frame_4)
-        self.pointsAddLineEdit.setObjectName(u"pointsAddLineEdit")
-        sizePolicy3.setHeightForWidth(self.pointsAddLineEdit.sizePolicy().hasHeightForWidth())
-        self.pointsAddLineEdit.setSizePolicy(sizePolicy3)
+        self.evalsCountLineEdit = IntLineEdit(self.frame_4)
+        self.evalsCountLineEdit.setObjectName(u"evalsCountLineEdit")
+        sizePolicy3.setHeightForWidth(self.evalsCountLineEdit.sizePolicy().hasHeightForWidth())
+        self.evalsCountLineEdit.setSizePolicy(sizePolicy3)
+        self.evalsCountLineEdit.setMinimumSize(QSize(0, 30))
 
-        self.gridLayout_3.addWidget(self.pointsAddLineEdit, 4, 2, 1, 1)
+        self.gridLayout_3.addWidget(self.evalsCountLineEdit, 1, 5, 1, 1)
 
-        self.autoRunCheckBox = QCheckBox(self.frame_4)
-        self.autoRunCheckBox.setObjectName(u"autoRunCheckBox")
+        self.label_43 = QLabel(self.frame_4)
+        self.label_43.setObjectName(u"label_43")
+        sizePolicy6.setHeightForWidth(self.label_43.sizePolicy().hasHeightForWidth())
+        self.label_43.setSizePolicy(sizePolicy6)
 
-        self.gridLayout_3.addWidget(self.autoRunCheckBox, 2, 4, 1, 1)
-
-        self.subsysComboBox = QComboBox(self.frame_4)
-        self.subsysComboBox.setObjectName(u"subsysComboBox")
-        sizePolicy3.setHeightForWidth(self.subsysComboBox.sizePolicy().hasHeightForWidth())
-        self.subsysComboBox.setSizePolicy(sizePolicy3)
-
-        self.gridLayout_3.addWidget(self.subsysComboBox, 1, 2, 1, 1)
-
-        self.initStateLineEdit = QLineEdit(self.frame_4)
-        self.initStateLineEdit.setObjectName(u"initStateLineEdit")
-        sizePolicy3.setHeightForWidth(self.initStateLineEdit.sizePolicy().hasHeightForWidth())
-        self.initStateLineEdit.setSizePolicy(sizePolicy3)
-
-        self.gridLayout_3.addWidget(self.initStateLineEdit, 2, 2, 1, 1)
-
-        self.exportToFitButton = QPushButton(self.frame_4)
-        self.exportToFitButton.setObjectName(u"exportToFitButton")
-        sizePolicy3.setHeightForWidth(self.exportToFitButton.sizePolicy().hasHeightForWidth())
-        self.exportToFitButton.setSizePolicy(sizePolicy3)
-
-        self.gridLayout_3.addWidget(self.exportToFitButton, 1, 8, 1, 1)
+        self.gridLayout_3.addWidget(self.label_43, 3, 3, 1, 1)
 
         self.label = QLabel(self.frame_4)
         self.label.setObjectName(u"label")
         sizePolicy6.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
         self.label.setSizePolicy(sizePolicy6)
 
-        self.gridLayout_3.addWidget(self.label, 2, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.label, 3, 1, 1, 1)
 
-        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
+        self.verticalSpacer_5 = QSpacerItem(20, 5, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.gridLayout_3.addItem(self.horizontalSpacer_5, 1, 5, 1, 1)
+        self.gridLayout_3.addItem(self.verticalSpacer_5, 6, 1, 1, 1)
 
         self.statusTextLabel = QLabel(self.frame_4)
         self.statusTextLabel.setObjectName(u"statusTextLabel")
@@ -2090,27 +2123,53 @@ class Ui_MainWindow(object):
         self.statusTextLabel.setWordWrap(True)
         self.statusTextLabel.setMargin(5)
 
-        self.gridLayout_3.addWidget(self.statusTextLabel, 3, 6, 2, 4)
-
-        self.label_43 = QLabel(self.frame_4)
-        self.label_43.setObjectName(u"label_43")
-        sizePolicy6.setHeightForWidth(self.label_43.sizePolicy().hasHeightForWidth())
-        self.label_43.setSizePolicy(sizePolicy6)
-
-        self.gridLayout_3.addWidget(self.label_43, 4, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.statusTextLabel, 4, 8, 2, 5)
 
         self.label_46 = QLabel(self.frame_4)
         self.label_46.setObjectName(u"label_46")
 
-        self.gridLayout_3.addWidget(self.label_46, 2, 6, 1, 1)
+        self.gridLayout_3.addWidget(self.label_46, 3, 8, 1, 1)
 
-        self.verticalSpacer_5 = QSpacerItem(20, 5, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.label_9 = QLabel(self.frame_4)
+        self.label_9.setObjectName(u"label_9")
+        sizePolicy3.setHeightForWidth(self.label_9.sizePolicy().hasHeightForWidth())
+        self.label_9.setSizePolicy(sizePolicy3)
+        self.label_9.setFont(font)
+        self.label_9.setStyleSheet(u"color: rgb(190, 130, 250);\n"
+"font: 57 11pt \"Roboto Medium\";")
+        self.label_9.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
 
-        self.gridLayout_3.addItem(self.verticalSpacer_5, 5, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.label_9, 0, 0, 1, 3)
 
-        self.horizontalSpacer = QSpacerItem(5, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
+        self.pointsAddLineEdit = IntLineEdit(self.frame_4)
+        self.pointsAddLineEdit.setObjectName(u"pointsAddLineEdit")
+        sizePolicy3.setHeightForWidth(self.pointsAddLineEdit.sizePolicy().hasHeightForWidth())
+        self.pointsAddLineEdit.setSizePolicy(sizePolicy3)
+        self.pointsAddLineEdit.setMinimumSize(QSize(150, 30))
 
-        self.gridLayout_3.addItem(self.horizontalSpacer, 1, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.pointsAddLineEdit, 3, 5, 1, 1)
+
+        self.exportToFitButton = QPushButton(self.frame_4)
+        self.exportToFitButton.setObjectName(u"exportToFitButton")
+        sizePolicy5.setHeightForWidth(self.exportToFitButton.sizePolicy().hasHeightForWidth())
+        self.exportToFitButton.setSizePolicy(sizePolicy5)
+        self.exportToFitButton.setMinimumSize(QSize(0, 0))
+
+        self.gridLayout_3.addWidget(self.exportToFitButton, 1, 10, 1, 1)
+
+        self.label_33 = QLabel(self.frame_4)
+        self.label_33.setObjectName(u"label_33")
+
+        self.gridLayout_3.addWidget(self.label_33, 4, 1, 1, 1)
+
+        self.prefitPhotonSpinBox = QSpinBox(self.frame_4)
+        self.prefitPhotonSpinBox.setObjectName(u"prefitPhotonSpinBox")
+        sizePolicy5.setHeightForWidth(self.prefitPhotonSpinBox.sizePolicy().hasHeightForWidth())
+        self.prefitPhotonSpinBox.setSizePolicy(sizePolicy5)
+        self.prefitPhotonSpinBox.setMinimumSize(QSize(65, 20))
+        self.prefitPhotonSpinBox.setMinimum(1)
+
+        self.gridLayout_3.addWidget(self.prefitPhotonSpinBox, 4, 2, 1, 1)
 
 
         self.horizontalLayout_9.addWidget(self.frame_4)
@@ -2138,26 +2197,18 @@ class Ui_MainWindow(object):
         self.statusTextLabel_2.setWordWrap(True)
         self.statusTextLabel_2.setMargin(5)
 
-        self.gridLayout_6.addWidget(self.statusTextLabel_2, 3, 8, 1, 3)
+        self.gridLayout_6.addWidget(self.statusTextLabel_2, 3, 7, 1, 3)
 
-        self.mseLabel_2 = QLabel(self.frame_5)
-        self.mseLabel_2.setObjectName(u"mseLabel_2")
-        sizePolicy6.setHeightForWidth(self.mseLabel_2.sizePolicy().hasHeightForWidth())
-        self.mseLabel_2.setSizePolicy(sizePolicy6)
-        self.mseLabel_2.setFont(font2)
+        self.tolLineEdit = PositiveFloatLineEdit(self.frame_5)
+        self.tolLineEdit.setObjectName(u"tolLineEdit")
+        sizePolicy3.setHeightForWidth(self.tolLineEdit.sizePolicy().hasHeightForWidth())
+        self.tolLineEdit.setSizePolicy(sizePolicy3)
 
-        self.gridLayout_6.addWidget(self.mseLabel_2, 1, 8, 1, 1)
-
-        self.exportToPrefitButton = QPushButton(self.frame_5)
-        self.exportToPrefitButton.setObjectName(u"exportToPrefitButton")
-        sizePolicy5.setHeightForWidth(self.exportToPrefitButton.sizePolicy().hasHeightForWidth())
-        self.exportToPrefitButton.setSizePolicy(sizePolicy5)
-
-        self.gridLayout_6.addWidget(self.exportToPrefitButton, 1, 10, 1, 1)
+        self.gridLayout_6.addWidget(self.tolLineEdit, 2, 4, 1, 1)
 
         self.horizontalSpacer_9 = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
-        self.gridLayout_6.addItem(self.horizontalSpacer_9, 1, 9, 1, 1)
+        self.gridLayout_6.addItem(self.horizontalSpacer_9, 1, 8, 1, 1)
 
         self.label_8 = QLabel(self.frame_5)
         self.label_8.setObjectName(u"label_8")
@@ -2166,27 +2217,32 @@ class Ui_MainWindow(object):
 
         self.gridLayout_6.addWidget(self.label_8, 2, 1, 1, 1)
 
-        self.tolLineEdit = QLineEdit(self.frame_5)
-        self.tolLineEdit.setObjectName(u"tolLineEdit")
-        sizePolicy3.setHeightForWidth(self.tolLineEdit.sizePolicy().hasHeightForWidth())
-        self.tolLineEdit.setSizePolicy(sizePolicy3)
+        self.horizontalSpacer_7 = QSpacerItem(40, 10, QSizePolicy.Fixed, QSizePolicy.Minimum)
 
-        self.gridLayout_6.addWidget(self.tolLineEdit, 2, 4, 1, 1)
+        self.gridLayout_6.addItem(self.horizontalSpacer_7, 1, 5, 1, 1)
 
         self.horizontalSpacer_2 = QSpacerItem(5, 5, QSizePolicy.Fixed, QSizePolicy.Minimum)
 
         self.gridLayout_6.addItem(self.horizontalSpacer_2, 1, 0, 1, 1)
 
-        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
+        self.verticalSpacer = QSpacerItem(20, 5, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.gridLayout_6.addItem(self.horizontalSpacer_6, 1, 7, 1, 1)
+        self.gridLayout_6.addItem(self.verticalSpacer, 4, 7, 1, 1)
 
-        self.fitButton = QPushButton(self.frame_5)
-        self.fitButton.setObjectName(u"fitButton")
-        sizePolicy5.setHeightForWidth(self.fitButton.sizePolicy().hasHeightForWidth())
-        self.fitButton.setSizePolicy(sizePolicy5)
+        self.mseLabel_2 = QLabel(self.frame_5)
+        self.mseLabel_2.setObjectName(u"mseLabel_2")
+        sizePolicy6.setHeightForWidth(self.mseLabel_2.sizePolicy().hasHeightForWidth())
+        self.mseLabel_2.setSizePolicy(sizePolicy6)
+        self.mseLabel_2.setFont(font2)
 
-        self.gridLayout_6.addWidget(self.fitButton, 1, 6, 1, 1)
+        self.gridLayout_6.addWidget(self.mseLabel_2, 1, 7, 1, 1)
+
+        self.exportToPrefitButton = QPushButton(self.frame_5)
+        self.exportToPrefitButton.setObjectName(u"exportToPrefitButton")
+        sizePolicy5.setHeightForWidth(self.exportToPrefitButton.sizePolicy().hasHeightForWidth())
+        self.exportToPrefitButton.setSizePolicy(sizePolicy5)
+
+        self.gridLayout_6.addWidget(self.exportToPrefitButton, 1, 9, 1, 1)
 
         self.label_47 = QLabel(self.frame_5)
         self.label_47.setObjectName(u"label_47")
@@ -2199,8 +2255,8 @@ class Ui_MainWindow(object):
         self.label_45.setObjectName(u"label_45")
         sizePolicy3.setHeightForWidth(self.label_45.sizePolicy().hasHeightForWidth())
         self.label_45.setSizePolicy(sizePolicy3)
-        self.label_45.setStyleSheet(u"font: 57 11pt \"Roboto Medium\";\n"
-"")
+        self.label_45.setStyleSheet(u"color: rgb(190, 130, 250);\n"
+"font: 57 11pt \"Roboto Medium\";")
 
         self.gridLayout_6.addWidget(self.label_45, 0, 0, 1, 2)
 
@@ -2219,15 +2275,7 @@ class Ui_MainWindow(object):
         self.label_49 = QLabel(self.frame_5)
         self.label_49.setObjectName(u"label_49")
 
-        self.gridLayout_6.addWidget(self.label_49, 2, 8, 1, 1)
-
-        self.horizontalSpacer_7 = QSpacerItem(40, 10, QSizePolicy.Fixed, QSizePolicy.Minimum)
-
-        self.gridLayout_6.addItem(self.horizontalSpacer_7, 1, 5, 1, 1)
-
-        self.verticalSpacer = QSpacerItem(20, 5, QSizePolicy.Minimum, QSizePolicy.Expanding)
-
-        self.gridLayout_6.addItem(self.verticalSpacer, 4, 8, 1, 1)
+        self.gridLayout_6.addWidget(self.label_49, 2, 7, 1, 1)
 
 
         self.horizontalLayout_10.addWidget(self.frame_5)
@@ -2264,20 +2312,26 @@ class Ui_MainWindow(object):
         self.modeSelectButton.setText(QCoreApplication.translate("MainWindow", u"  CALIBRATE", None))
         self.toggleMenuButton.setText("")
         self.modePrefitButton.setText(QCoreApplication.translate("MainWindow", u"  PRE-FIT", None))
+        self.resetViewButton.setText("")
+        self.panViewButton.setText("")
+        self.zoomViewButton.setText("")
+        self.horizontalSnapButton.setText("")
+        self.selectViewButton.setText("")
+        self.verticalSnapButton.setText("")
         self.swapXYButton.setText(QCoreApplication.translate("MainWindow", u"X\u2194Y", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"DATA", None))
-        self.label_27.setText(QCoreApplication.translate("MainWindow", u"CALIBRATION", None))
         self.zComboBox.setCurrentText("")
-        self.calibrateY2Button.setText("")
         self.calibrateY1Button.setText("")
         self.label_23.setText(QCoreApplication.translate("MainWindow", u"RAW Y", None))
+        self.calibrateY2Button.setText("")
         self.label_24.setText(QCoreApplication.translate("MainWindow", u"CALIBRATED Y [GHz]", None))
         self.calibrateX2Button.setText("")
         self.label_11.setText(QCoreApplication.translate("MainWindow", u"CALIBRATED X", None))
         self.mapX1LineEdit.setInputMask("")
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"RAW X", None))
         self.calibrateX1Button.setText("")
-        self.calibrationWizardPushButton.setText(QCoreApplication.translate("MainWindow", u"QUIT CALIBRATION WIZARD", None))
+        self.label_27.setText(QCoreApplication.translate("MainWindow", u"CALIBRATION", None))
+        self.calibrationHelpPushButton.setText("")
         self.label_32.setText(QCoreApplication.translate("MainWindow", u"TRANSITIONS", None))
         self.transitionLabel.setText(QCoreApplication.translate("MainWindow", u"LABEL for Transition 1", None))
 #if QT_CONFIG(statustip)
@@ -2288,17 +2342,13 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(statustip)
         self.bareLabelOrder.setText(QCoreApplication.translate("MainWindow", u"    Ordered by: ", None))
         self.label_6.setText(QCoreApplication.translate("MainWindow", u"PRE-FIT", None))
+        self.autoRunCheckBox.setText(QCoreApplication.translate("MainWindow", u"AUTO-UPDATE", None))
         self.label_7.setText(QCoreApplication.translate("MainWindow", u"FIT", None))
+        self.fitButton.setText(QCoreApplication.translate("MainWindow", u"RUN FIT", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_2.setToolTip(QCoreApplication.translate("MainWindow", u"Load the current value to the initial value", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"RESULTS \u2192 INITIAL", None))
-        self.resetViewButton.setText("")
-        self.panViewButton.setText("")
-        self.zoomViewButton.setText("")
-        self.horizontalSnapButton.setText("")
-        self.selectViewButton.setText("")
-        self.verticalSnapButton.setText("")
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"SETTINGS: VISUALS", None))
         self.coloringPushButton.setText(QCoreApplication.translate("MainWindow", u"COLORING", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"MIN", None))
@@ -2307,28 +2357,31 @@ class Ui_MainWindow(object):
         self.colorComboBox.setCurrentText(QCoreApplication.translate("MainWindow", u"PuOr", None))
         self.bgndSubtractPushButton.setText(QCoreApplication.translate("MainWindow", u"BACKGROUND SUBTRACT", None))
         self.filtersPushButton.setText(QCoreApplication.translate("MainWindow", u"FILTERS", None))
+        self.initStateLineEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"dressed or bare label", None))
         self.label_42.setText(QCoreApplication.translate("MainWindow", u"EVALS COUNT", None))
-        self.mseLabel.setText(QCoreApplication.translate("MainWindow", u"MSE:  0.647 GHz^2   (+0.86%)", None))
-        self.label_9.setText(QCoreApplication.translate("MainWindow", u"SETTINGS: NUMERICAL SPECTRUM", None))
         self.label_44.setText(QCoreApplication.translate("MainWindow", u"TRANSITIONS", None))
-        self.autoRunCheckBox.setText(QCoreApplication.translate("MainWindow", u"AUTO-UPDATE", None))
+        self.mseLabel.setText(QCoreApplication.translate("MainWindow", u"MSE:  0.647 GHz^2   (+0.86%)", None))
+        self.evalsCountLineEdit.setText(QCoreApplication.translate("MainWindow", u"20", None))
+        self.label_43.setText(QCoreApplication.translate("MainWindow", u"POINTS ADDED", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"INITIAL STATE", None))
+        self.statusTextLabel.setText(QCoreApplication.translate("MainWindow", u"Status Text", None))
+        self.label_46.setText(QCoreApplication.translate("MainWindow", u"STATUS:", None))
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"SETTINGS: NUMERICAL SPECTRUM", None))
+        self.pointsAddLineEdit.setText(QCoreApplication.translate("MainWindow", u"10", None))
+        self.pointsAddLineEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"# of x value for spectrum sweep", None))
 #if QT_CONFIG(tooltip)
         self.exportToFitButton.setToolTip(QCoreApplication.translate("MainWindow", u"Load the pre-fitted parameters to the initial value of the fit section", None))
 #endif // QT_CONFIG(tooltip)
         self.exportToFitButton.setText(QCoreApplication.translate("MainWindow", u"RESULTS \u2192 FIT", None))
-        self.label.setText(QCoreApplication.translate("MainWindow", u"INITIAL STATE", None))
-        self.statusTextLabel.setText(QCoreApplication.translate("MainWindow", u"Status Text", None))
-        self.label_43.setText(QCoreApplication.translate("MainWindow", u"POINTS ADDED", None))
-        self.label_46.setText(QCoreApplication.translate("MainWindow", u"STATUS:", None))
+        self.label_33.setText(QCoreApplication.translate("MainWindow", u"PHOTONS", None))
         self.statusTextLabel_2.setText(QCoreApplication.translate("MainWindow", u"Status Text", None))
+        self.tolLineEdit.setText(QCoreApplication.translate("MainWindow", u"1e-6", None))
+        self.label_8.setText(QCoreApplication.translate("MainWindow", u"TOLERANCE", None))
         self.mseLabel_2.setText(QCoreApplication.translate("MainWindow", u"MSE:  0.647 GHz^2   (+0.86%)", None))
 #if QT_CONFIG(tooltip)
         self.exportToPrefitButton.setToolTip(QCoreApplication.translate("MainWindow", u"Load the fitted parameters to the pre-fit section", None))
 #endif // QT_CONFIG(tooltip)
         self.exportToPrefitButton.setText(QCoreApplication.translate("MainWindow", u"RESULTS \u2192 PRE-FIT", None))
-        self.label_8.setText(QCoreApplication.translate("MainWindow", u"TOLERANCE", None))
-        self.tolLineEdit.setText(QCoreApplication.translate("MainWindow", u"1e-6", None))
-        self.fitButton.setText(QCoreApplication.translate("MainWindow", u"RUN FIT", None))
         self.label_47.setText(QCoreApplication.translate("MainWindow", u"OPTIMIZER", None))
         self.label_45.setText(QCoreApplication.translate("MainWindow", u"SETTINGS: FIT", None))
         self.optimizerComboBox.setItemText(0, QCoreApplication.translate("MainWindow", u"L-BFGS-B", None))

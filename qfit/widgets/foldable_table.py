@@ -6,14 +6,14 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QCheckBox,
-    QLineEdit,
 )
 from PySide6.QtCore import (
     Qt,
 )
 
 from qfit.widgets.foldable_widget import FoldPushButton
-from qfit.core.helpers import modifyStyleSheet
+from qfit.utils.helpers import modifyStyleSheet
+from qfit.widgets.validated_line_edits import FloatLineEdit
 
 from typing import List, Dict, Tuple, Union, Type
 
@@ -64,10 +64,10 @@ class FittingParameterItems(WidgetCollection):
 
         self.nameLabel = QLabel(name)
         self.fixCheckbox = QCheckBox()
-        self.initialValue = QLineEdit("")
+        self.initialValue = FloatLineEdit("")
         self.currentValue = QLabel("")
-        self.minValue = QLineEdit("")
-        self.maxValue = QLineEdit("")
+        self.minValue = FloatLineEdit("")
+        self.maxValue = FloatLineEdit("")
 
         self.addWidget("Name", self.nameLabel)
         self.addWidget("Fix", self.fixCheckbox)
@@ -94,8 +94,8 @@ class MinMaxItems(WidgetCollection):
         self.name = name
 
         self.nameLabel = QLabel(name)
-        self.minValue = QLineEdit("")
-        self.maxValue = QLineEdit("")
+        self.minValue = FloatLineEdit("")
+        self.maxValue = FloatLineEdit("")
 
         self.addWidget("Name", self.nameLabel)
         self.addWidget("Min", self.minValue)

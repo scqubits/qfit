@@ -19,7 +19,7 @@ from numbers import Number
 
 import numpy as np
 
-import qfit.core.helpers as helpers
+import qfit.utils.helpers as helpers
 
 SERIALIZABLE_REGISTRY = {}
 

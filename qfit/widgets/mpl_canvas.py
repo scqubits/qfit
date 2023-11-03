@@ -29,7 +29,7 @@ import qfit.core.app_state as appstate
 
 from qfit.core.app_state import State
 
-from qfit.core.helpers import y_snap
+from qfit.utils.helpers import y_snap
 from qfit.models.extracted_data import AllExtractedData
 
 

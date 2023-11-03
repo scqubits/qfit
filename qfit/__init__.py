@@ -26,8 +26,8 @@ from qfit.models.measurement_data import (
     dummy_measurement_data,
     MeasurementDataType,
 )
-from qfit.controllers.numerical_model import dummy_hilbert_space
-from qfit.core.helpers import executed_in_ipython
+from qfit.models.numerical_model import dummy_hilbert_space
+from qfit.utils.helpers import executed_in_ipython
 from qfit.io_utils.measurement_file_readers import readMeasurementFile
 from qfit.controllers.io_menu import IOCtrl
 
