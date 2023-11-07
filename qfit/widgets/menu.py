@@ -24,11 +24,13 @@ class MenuWidget(QWidget):
 
         self.move(0, 32)
         self.hide()
-        self.set_connects()
 
-    def set_connects(self):
-        self.ui.menuQuitButton.clicked.connect(self.mainwindow.closeApp)
-        self.ui.menuOpenButton.clicked.connect(self.mainwindow.openFile)
+        # should be connected in mainwindow instead of directly in a widget
+        # self.set_connects()
+
+    # def set_connects(self):
+    #     self.ui.menuQuitButton.clicked.connect(self.mainwindow.closeApp)
+    #     self.ui.menuOpenButton.clicked.connect(self.mainwindow.openFile)
 
     def toggle(self):
         if self.isHidden():

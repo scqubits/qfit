@@ -16,14 +16,15 @@ import numpy as np
 from matplotlib.axes import Axes
 from scqubits.core.param_sweep import ParameterSweep
 from scqubits.core.storage import SpectrumData
+import warnings
 
-import qfit.io_utils.file_io_serializers as serializers
 
-class SpectrumData(serializers.Serializable):
+class CalculatedSpecData:
     """
     Class for storing and manipulating the spectrum data calculated from the scqbits
-    backends. 
+    backends.
     """
+
     subsystem_names: List[str]
     initial_state_str: str
     final_state_str: str
@@ -43,8 +44,8 @@ class SpectrumData(serializers.Serializable):
         pass
 
     def update(
-        self, 
-        overall_specdata: SpectrumData, 
+        self,
+        overall_specdata: SpectrumData,
         highlighted_specdata: SpectrumData,
     ):
         """
@@ -54,26 +55,24 @@ class SpectrumData(serializers.Serializable):
         self.highlighted_specdata = highlighted_specdata
 
     def canvasPlot(self, axes: Axes, **kwargs):
-
         if self.overall_specdata is None or self.highlighted_specdata is None:
             # no data to plot
             return
-        
+
         fig = axes.get_figure()
 
         self.overall_specdata.plot_evals_vs_paramvals(
-            color = "black", 
-            linewidth = 2,
-            linestyle = "--",
-            alpha = 0.3,
-            fig_ax = (fig, axes),
-
+            color="black",
+            linewidth=2,
+            linestyle="--",
+            alpha=0.3,
+            fig_ax=(fig, axes),
         )
 
-        self.highlighted_specdata.plot_evals_vs_paramvals(
-            # label_list = self.highlighted_specdata.labels,
-            linewidth = 2,
-            fig_ax = (fig, axes),
-        )     
-
-
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.highlighted_specdata.plot_evals_vs_paramvals(
+                label_list=self.highlighted_specdata.labels,
+                linewidth=2,
+                fig_ax=(fig, axes),
+            )

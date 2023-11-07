@@ -29,6 +29,9 @@ import qfit.core.app_state as appstate
 
 from qfit.core.app_state import State
 
+from qfit.utils.helpers import y_snap
+from qfit.models.extracted_data import AllExtractedData
+
 
 class MplNavButtons(QFrame):
     pass
@@ -117,13 +120,20 @@ class NavigationHidden(NavigationToolbar2QT):
 
 class SpecialCursor(Cursor):
     def __init__(
-        self, ax, callback=None, horizOn=True, vertOn=True, useblit=False, **lineprops
+        self,
+        ax,
+        allExtractedData: AllExtractedData = None,
+        x_snap_mode=None,
+        horizOn=True,
+        vertOn=True,
+        useblit=False,
+        **lineprops
     ):
         super().__init__(
             ax, horizOn=horizOn, vertOn=vertOn, useblit=useblit, **lineprops
         )
-        self.callback = callback
-        self.matching_mode = False
+        self.allExtractedData = allExtractedData
+        self.x_snap_mode = x_snap_mode
 
     def onmove(self, event):
         """Internal event handler to draw the cursor when the mouse moves."""
@@ -145,32 +155,19 @@ class SpecialCursor(Cursor):
         self.linev.set_xdata((event.xdata, event.xdata))
 
         self.lineh.set_ydata((event.ydata, event.ydata))
-        if (
-            self.callback
-            and self.callback.currentRow != 0
-            and len(self.callback.assocDataList[0][0]) > 0
-        ):
-            self.matching_mode = True
-        if self.matching_mode == True:
-            self.cross = self.ax.scatter(
-                self.closest_line(event.xdata),
-                event.ydata,
-                c="red",
-                marker=r"$\odot$",
-                s=130,
-                alpha=0.5,
-                animated=True,
-            )
+        if self.x_snap_mode == True:
+            point_x_coordinate = self.closest_line(event.xdata)
         else:
-            self.cross = self.ax.scatter(
-                event.xdata,
-                event.ydata,
-                c="red",
-                marker=r"$\odot$",
-                s=130,
-                alpha=0.5,
-                animated=True,
-            )
+            point_x_coordinate = event.xdata
+        self.cross = self.ax.scatter(
+            point_x_coordinate,
+            event.ydata,
+            c="red",
+            marker=r"$\odot$",
+            s=130,
+            alpha=0.5,
+            animated=True,
+        )
 
         self.cross.set_visible(self.visible)
         self.linev.set_visible(self.visible and self.vertOn)
@@ -179,8 +176,8 @@ class SpecialCursor(Cursor):
         self._update()
 
     def closest_line(self, xdat):
-        current_data = self.callback.assocDataList[0]
-        allxdiff = {np.abs(xdat - i): i for i in current_data[0]}
+        all_x_list = self.allExtractedData.distinctSortedXValues()
+        allxdiff = {np.abs(xdat - i): i for i in all_x_list}
         if allxdiff:
             return allxdiff[min(allxdiff.keys())]
         else:
@@ -209,7 +206,7 @@ class MplFigureCanvas(QFrame):
     def __init__(self, parent=None):
         QFrame.__init__(self, parent)
 
-        self.callback = None
+        self.allExtractedData = None
         self.canvas = FigureCanvasQTAgg(Figure())
         self.toolbar = NavigationHidden(self.canvas, self)
 
@@ -219,17 +216,21 @@ class MplFigureCanvas(QFrame):
 
         self._crosshair = None
 
-    def set_callback(self, new_callback):
-        self.callback = new_callback
+    def set_callback_for_extracted_data(self, new_extracted_data):
+        self.allExtractedData = new_extracted_data
         self.select_crosshair()
 
     def axes(self):
         return self.canvas.figure.axes[0]
 
     def select_crosshair(self, horizOn=True, vertOn=True):
+        """
+        set up the crosshair cursor
+        """
         self._crosshair = SpecialCursor(
             self.axes(),
-            callback=self.callback,
+            allExtractedData=self.allExtractedData,
+            x_snap_mode=self.x_snap_mode,
             useblit=True,
             horizOn=horizOn,
             vertOn=vertOn,

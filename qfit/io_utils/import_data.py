@@ -13,41 +13,32 @@ import os
 
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
-import qfit.models.qfit_data as fit
+from qfit.utils.helpers import StopExecution
 
-from qfit.io_utils.io_readers import (
+from qfit.io_utils.measurement_file_readers import (
     ImageMeasurementData,
     NumericalMeasurementData,
-    readFileData,
+    readMeasurementFile,
 )
+from qfit.models.registry import Registry
 
+from typing import Union
 
-def importFile(parent=None):
-    """
-    Opens a standard file dialog box for the user to select a file to be opened. Supported files types are
-    - .h5 / .hdf5  (generic h5, Labber, qfit)
-    - .mat (Matlab file)
-    - .csv
-    - .jpg, .png
+def importMeasurementData(
+    parent,
+    home = None,
+) -> Union[ImageMeasurementData, NumericalMeasurementData]:
+    if home is None:
+        home = os.path.expanduser("~")
 
-    Data is inspected and categorized as data specifying the two axes (xData, yData) and spectroscopy measurement data
-    (zData). In the case of a qfit .h5 file, additional data containing the extracted fit data points as well as
-    calibration data is obtained and returned alongside.
-
-    Returns
-    -------
-    MeasurementData, QfitData
-    """
-    home = os.path.expanduser("~")
-
-    success = False
-    while not success:
+    while True:
         fileCategories = "Data files (*.h5 *.mat *.csv *.jpg *.jpeg *.png *.hdf5)"
         fileName, _ = QFileDialog.getOpenFileName(parent, "Open", home, fileCategories)
         if not fileName:
-            exit()
+            parent.closeApp()
+            raise StopExecution
 
-        fileData = readFileData(fileName)
+        fileData = readMeasurementFile(fileName)
 
         if fileData is None:
             msg = QMessageBox()
@@ -60,24 +51,79 @@ def importFile(parent=None):
             msg.setWindowTitle("Error")
             _ = msg.exec_()
         else:
-            success = True
+            break
 
-    if isinstance(fileData, fit.QfitData):
-        extractedData = fileData
-        if fileData.image_data is not None:
-            measurementData = ImageMeasurementData("image_data", fileData.image_data)
+    measurementData = fileData
 
-        else:
-            measurementData = NumericalMeasurementData(
-                {
-                    "xData": fileData.x_data,
-                    "yData": fileData.y_data,
-                    "zData": fileData.z_data,
-                },
-                {"zData": fileData.z_data},
+    return measurementData
+
+def importProject(
+    parent,
+    home = None,
+) -> Registry:
+    if home is None:
+        home = os.path.expanduser("~")
+
+    while True:
+        fileCategories = "Qfit project (*.qfit)"
+        fileName, _ = QFileDialog.getOpenFileName(parent, "Open", home, fileCategories)
+        if not fileName:
+            parent.closeApp()
+            raise StopExecution
+
+        registry = Registry.fromFile(fileName)
+
+        if registry is None:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Warning)
+            msg.setText("Error opening file.")
+            msg.setInformativeText(
+                "File is not found."
             )
-    else:
-        measurementData = fileData
-        extractedData = None
+            msg.setWindowTitle("Error")
+            _ = msg.exec_()
+        else:
+            break
 
-    return measurementData, extractedData
+    return registry
+
+
+# maybe broken, and not needed anymore
+
+# def importFile(parent=None):
+#     """
+#     Opens a standard file dialog box for the user to select a file to be opened. Supported files types are
+#     - .h5 / .hdf5  (generic h5, Labber, qfit)
+#     - .mat (Matlab file)
+#     - .csv
+#     - .jpg, .png
+
+#     Data is inspected and categorized as data specifying the two axes (xData, yData) and spectroscopy measurement data
+#     (zData). In the case of a qfit .h5 file, additional data containing the extracted fit data points as well as
+#     calibration data is obtained and returned alongside.
+
+#     Returns
+#     -------
+#     MeasurementData, QfitData
+#     """
+#     fileData = importMeasurementData(parent=parent, home=None)
+
+#     if isinstance(fileData, fit.QfitData):
+#         extractedData = fileData
+#         if fileData.image_data is not None:
+#             measurementData = ImageMeasurementData("image_data", fileData.image_data)
+
+#         else:
+#             measurementData = NumericalMeasurementData(
+#                 {
+#                     "xData": fileData.x_data,
+#                     "yData": fileData.y_data,
+#                     "zData": fileData.z_data,
+#                 },
+#                 {"zData": fileData.z_data},
+#             )
+#     else:
+#         measurementData = fileData
+#         extractedData = None
+
+#     return measurementData, extractedData

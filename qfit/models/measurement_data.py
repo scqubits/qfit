@@ -23,11 +23,14 @@ import skimage.morphology
 import skimage.restoration
 
 from matplotlib import colors as colors
+import matplotlib.pyplot as plt
+
 from scipy.ndimage import gaussian_laplace
 
 import qfit.io_utils.file_io_serializers as serializers
+from qfit.models.registry import Registry, Registrable, RegistryEntry
 
-from qfit.core.helpers import (
+from qfit.utils.helpers import (
     DataItem,
     OrderedDictMod,
     hasIdenticalCols,
@@ -35,6 +38,8 @@ from qfit.core.helpers import (
     isValid1dArray,
     isValid2dArray,
 )
+
+from typing import Union
 
 
 class MeasurementData(abc.ABC):
@@ -95,7 +100,7 @@ class MeasurementData(abc.ABC):
         pass
 
 
-class NumericalMeasurementData(MeasurementData, serializers.Serializable):
+class NumericalMeasurementData(MeasurementData, Registrable, serializers.Serializable):
     """
     Class for storing and manipulating measurement data. The primary measurement data (zData) is expected to be a
     2d float ndarray representing, for example, a two-tone spectroscopy amplitude as a function of probe frequency
@@ -122,6 +127,26 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
         self.zCandidates = OrderedDictMod(zCandidates)
         self._currentZ = self.zCandidates.itemByIndex(0)
         self.inferXYData()
+
+    def registerAll(
+        self,
+    ) -> Dict[str, RegistryEntry]:
+        """
+        Register all the attributes of the parameter
+        """
+
+        return {
+            "measurementData.type": RegistryEntry(
+                name="measurementData.type",
+                quantity_type="r",
+                getter=lambda: "NumericalMeasurementData",
+            ),
+            "measurementData.args": RegistryEntry(
+                name="measurementData.args",
+                quantity_type="r",
+                getter=lambda: (self.rawData, self.zCandidates),
+            ),
+        }
 
     @property
     def currentZ(self):
@@ -254,7 +279,7 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
             * array
         )
 
-    def canvasPlot(self, axes, **kwargs):
+    def canvasPlot(self, axes: plt.Axes, **kwargs):
         zData = self.currentZ.data
         rawZMin = zData.min()
         rawZMax = zData.max()
@@ -293,21 +318,10 @@ class NumericalMeasurementData(MeasurementData, serializers.Serializable):
                 **kwargs
             )
         else:
-            _ = axes.imshow(
-                zData,
-                extent=[
-                    min(self.currentX.data),
-                    max(self.currentX.data),
-                    min(self.currentY.data),
-                    max(self.currentY.data),
-                ],
-                origin="lower",
-                vmin=zMin,
-                vmax=zMax,
-                norm=norm,
-                aspect="auto",
-                interpolation="none",
-                **kwargs
+            # generate a meshgrid for the x and y data
+            xData, yData = np.meshgrid(self.currentX.data, self.currentY.data)
+            _ = axes.pcolormesh(
+                xData, yData, zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs
             )
 
 
@@ -316,6 +330,31 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
         super().__init__(None)
         self._currentZ = DataItem(fileName, image)
         self.zCandidates = {fileName: image}
+
+    def registerAll(
+        self,
+    ) -> Dict[str, RegistryEntry]:
+        """
+        Register all the attributes of the parameter
+        """
+
+        def getter():
+            fileName = list(self.zCandidates.keys())[0]
+            image = list(self.zCandidates.values())[0]
+            return (fileName, image)
+
+        return {
+            "measurementData.type": RegistryEntry(
+                name="measurementData.type",
+                quantity_type="r",
+                getter=lambda: "ImageMeasurementData",
+            ),
+            "measurementData.args": RegistryEntry(
+                name="measurementData.args",
+                quantity_type="r",
+                getter=getter,
+            ),
+        }
 
     def canvasPlot(self, axes, **kwargs):
         zData = (
@@ -348,7 +387,15 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
         else:
             norm = None
 
-        _ = axes.imshow(zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs)
+        _ = axes.imshow(
+            zData,
+            # vmin=zMin,
+            # vmax=zMax,
+            vmin=-max([abs(zMin), abs(zMax)]),
+            vmax=max([abs(zMin), abs(zMax)]),
+            norm=norm,
+            **kwargs
+        )
 
     def swapXY(self):
         pass
@@ -361,3 +408,6 @@ def dummy_measurement_data() -> NumericalMeasurementData:
     return NumericalMeasurementData(
         {"param": xData, "frequency": yData, "S21": zData}, {"S21": zData}
     )
+
+
+MeasurementDataType = Union[NumericalMeasurementData, ImageMeasurementData]

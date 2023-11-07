@@ -12,8 +12,9 @@
 
 import copy
 import sys
+import os
 from functools import partial
-from typing import TYPE_CHECKING, Dict, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Tuple, Union, List, Any
 
 import matplotlib as mpl
 import matplotlib.cm as cm
@@ -22,13 +23,15 @@ import numpy as np
 from scqubits.core.hilbert_space import HilbertSpace
 
 from PySide6.QtCore import (
-    QPoint, 
-    QRect, 
-    QSize, 
-    Qt, 
-    Slot, 
+    QPoint,
+    QRect,
+    QSize,
+    Qt,
+    Slot,
     QCoreApplication,
     QThreadPool,
+    QEvent,
+    Signal,
 )
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
@@ -37,6 +40,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QGraphicsDropShadowEffect,
+    QMainWindow,
     QMessageBox,
     QPushButton,
     QStyle,
@@ -48,15 +52,21 @@ import qfit.core.app_state as appstate
 from qfit.models.calibration_data import CalibrationData
 from qfit.widgets.calibration import CalibrationView
 from qfit.core.app_state import State
-from qfit.core.helpers import transposeEach
+from qfit.utils.helpers import (
+    transposeEach,
+    clearChildren,
+    executed_in_ipython,
+    StopExecution,
+    y_snap,
+)
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
-from qfit.widgets.data_tagging import TagDataView
-from qfit.io_utils.import_data import importFile
-from qfit.io_utils.save_data import saveFile
+from qfit.models.measurement_data import MeasurementDataType
+from qfit.controllers.tagging import TaggingCtrl
 from qfit.settings import color_dict
 from qfit.ui_views.resizable_window import ResizableFramelessWindow
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
+from qfit.widgets.gif_tooltip import DialogWindowWithMedia
 
 # pre-fit
 from qfit.models.quantum_model_parameters import (
@@ -64,30 +74,44 @@ from qfit.models.quantum_model_parameters import (
     QuantumModelParameterSet,
     QuantumModelFittingParameter,
 )
-from qfit.models.numerical_spectrum_data import SpectrumData
-from qfit.controllers.numerical_model import QuantumModel
+from qfit.models.numerical_spectrum_data import CalculatedSpecData
+from qfit.models.numerical_model import QuantumModel
+from qfit.widgets.foldable_widget import FoldableWidget
 from qfit.widgets.grouped_sliders import (
     LabeledSlider,
     GroupedWidgetSet,
+    SPACING_BETWEEN_GROUPS,
 )
-from qfit.widgets.fitting_table import FittingParameterTableSet
+from qfit.widgets.foldable_table import (
+    FoldableTable,
+    MinMaxItems,
+    FittingParameterItems,
+)
 
 # fit
-from qfit.controllers.fit import NumericalFitting
+from qfit.models.fit import NumericalFitting
 
 # message
 from qfit.models.status_result_data import Result
 
+# registry
+from qfit.models.registry import Registry, RegistryEntry, Registrable
+
+# menu controller
+from qfit.controllers.io_menu import IOCtrl
+
 if TYPE_CHECKING:
     from qfit.widgets.calibration import CalibrationLineEdit
-    from qfit.models.qfit_data import QfitData
-
-MeasurementDataType = Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]
 
 mpl.rcParams["toolbar"] = "None"
 
 
-class MainWindow(ResizableFramelessWindow):
+# metaclass: solve the incompatibility and make the mainWindow registrable
+class CombinedMeta(type(QMainWindow), type(Registrable)):
+    pass
+
+
+class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     """Class for the main window of the app."""
 
     ui: Ui_MainWindow
@@ -97,7 +121,7 @@ class MainWindow(ResizableFramelessWindow):
     extractedData: "QfitData"
     activeDataset: ActiveExtractedData
     allDatasets: AllExtractedData
-    tagDataView: TagDataView
+    taggingCtrl: TaggingCtrl
 
     calibrationData: CalibrationData
     calibrationView: CalibrationView
@@ -110,56 +134,54 @@ class MainWindow(ResizableFramelessWindow):
     cidCanvas: int
     offset: Union[None, QPoint]
 
-    def __init__(self, measurementData, hilbert_space, extractedData=None):
-        ResizableFramelessWindow.__init__(self)
+    optInitialized: bool = False
+
+    unsavedChanges: bool
+    registry: Registry
+    _projectFile: Union[str, None] = None
+
+    def __init__(
+        self, measurementData: MeasurementDataType, hilbertspace: HilbertSpace
+    ):
+        self.hilbertspace = hilbertspace
+
+        # ResizableFramelessWindow.__init__(self)
+        QMainWindow.__init__(self)
+        self.openFromIPython = executed_in_ipython()
         self.disconnectCanvas = False  # used to temporarily switch off canvas updates
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.offset = None
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
         # fix visibility of collapsible panels
-        self.ui.xyzDataGridFrame.setVisible(False)
-        self.ui.calibrationQFrame.setVisible(False)
-        self.ui.filterQFrame.setVisible(False)
+        # self.ui.xyzDataGridFrame.setVisible(False)
+        # self.ui.filterQFrame.setVisible(False)
 
         self.ui_menu = MenuWidget(parent=self)
 
         self.setShadows()
+        # TODO let Jens disable setAutoExclusive for vertical snap button
+        self.ui.verticalSnapButton.setAutoExclusive(False)
 
         self.uiPagesConnects()
-        self.uiMenuConnects()
 
         self.setupUICalibration()
         self.calibrationData = CalibrationData()
         self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
 
-        self.matching_mode = False
+        self.x_snap_mode = False
         self.mousedat = None
 
         self.setupUIPlotOptions()
 
         self.measurementData = measurementData
-        self.extractedData = extractedData
-        self.dataSetupConnects()
+        self.initializeExtractedData()
+        self.staticExtractedDataConnects()
 
-        # prefit: controller, two models and their connection to view (sliders)
-        self.sliderParameterSet = QuantumModelParameterSet()
-        self.sweepParameterSet = QuantumModelParameterSet()
-        self.spectrumData = SpectrumData()
-        self.prefitResult = Result()
-        self.quantumModel = QuantumModel(hilbert_space)
-        self.quantumModel.addParametersToParameterSet(
-            self.sliderParameterSet,
-            parameter_usage="slider",
-            excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
-        )
-        self.quantumModel.addParametersToParameterSet(
-            self.sweepParameterSet,
-            parameter_usage="sweep",
-            included_parameter_type=["ng", "flux"],
-        )
-
-        self.prefitSlidersInserts()
+        self.dynamicalMeasurementDataSetupConnects()
+        self.uiDataLoadConnects()
 
         # setup mpl canvas
         self.uiColorScaleConnects()
@@ -168,51 +190,52 @@ class MainWindow(ResizableFramelessWindow):
         self.uiMplCanvasConnects()
         self.ui.mplFigureCanvas.selectOn()
 
-        # prefit: connect the data model to the sliders, canvas, boxes etc. Should be done after
-        # the canvas is set up.
-        self.prefitSlidersConnects()
-        self.setUpSpectrumPlotConnects()
-        self.prefitSubsystemComboBoxLoads()
-        self.setUpPrefitOptionsConnects()
-        self.setUpPrefitRunConnects()
-
-        self.setFocusPolicy(Qt.StrongFocus)
-        self.offset = None
-
-        # refit result panel connect
-        self.setUpPrefitResultConnects()
+        # prefit: controller, two models and their connection to view (sliders)
+        self.prefitDynamicalElementsBuild(self.hilbertspace)
+        self.prefitStaticElementsBuild()
 
         # fit
-        self.threadpool = QThreadPool()
-        self.fitParameterSet = QuantumModelParameterSet()
-        self.quantumModel.addParametersToParameterSet(
-            self.fitParameterSet,
-            parameter_usage="fit",
-            excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
+        self.fitDynamicalElementsBuild()
+        self.fitStaticElementsBuild()
+
+        # register all the data
+        self.registry = Registry()
+
+        # controller for menu
+        self.ioMenuCtrl = IOCtrl(
+            ui_Menu=self.ui_menu,
+            registry=self.registry,
+            mainWindow=self,
         )
-        self.numericalFitting = NumericalFitting()
-        self.fitResult = Result()
 
-        self.fitTableInserts()
-        self.fitTableConnects()
-        self.fittingCallbackConnects()
-        self.fitPushButtonConnects()
+        # status bar
+        # self.statusBar().showMessage("Ready")
 
-        # fit result panel connect
-        self.setUpFitResultConnects()
+    # calibration, data, plot setup ####################################
+    ####################################################################
+    def staticExtractedDataConnects(self):
+        self.uiExtractedDataConnects()
+        self.uiExtractedDataControlConnects()
 
-    def dataSetupConnects(self):
+        self.taggingCtrl = TaggingCtrl(self.hilbertspace.subsystem_count, self.ui, self)
+
+    def dynamicalMeasurementDataSetupConnects(self):
         self.measurementData.setupUICallbacks(
             self.dataCheckBoxCallbacks, self.plotRangeCallback
         )
-        self.setupUIData()
+
+        # inform the use of the bare transition label
+        self.ui.bareLabelOrder.setText(
+            "   Labels ordered by: "  # Three space to align with the label title
+            + ", ".join([subsys.id_str for subsys in self.hilbertspace.subsystem_list])
+        )
+
+        self.uiMeasurementDataOptionsConnects()
+
         self.setupUIXYZComboBoxes()
-        self.tagDataView = TagDataView(self.ui)
-        self.uiDataConnects()
-        self.uiDataOptionsConnects()
-        self.uiDataControlConnects()
         self.uiXYZComboBoxesConnects()
 
+    def recoverFromExtractedData(self):
         if self.extractedData is not None:
             self.allDatasets.dataNames = self.extractedData.datanames
             self.allDatasets.assocDataList = transposeEach(self.extractedData.datalist)
@@ -223,7 +246,7 @@ class MainWindow(ResizableFramelessWindow):
 
             self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
             self.activeDataset._data = self.allDatasets.currentAssocItem()
-            self.tagDataView.setTag(self.allDatasets.currentTagItem())
+            self.taggingCtrl.setTag(self.allDatasets.currentTagItem())
             self.allDatasets.layoutChanged.emit()
             self.activeDataset.layoutChanged.emit()
 
@@ -248,6 +271,8 @@ class MainWindow(ResizableFramelessWindow):
             self.ui.newRowButton,
             self.ui.deleteRowButton,
             self.ui.clearAllButton,
+            self.ui.horizontalSnapButton,
+            self.ui.verticalSnapButton,
             self.ui.calibrateX1Button,
             self.ui.calibrateX2Button,
             self.ui.calibrateY1Button,
@@ -275,8 +300,8 @@ class MainWindow(ResizableFramelessWindow):
     def setupUICalibration(self):
         """For the interface that enables calibration of data with respect to x and y axis, group QLineEdit elements
         and the corresponding buttons in dicts. Set up a dictionary mapping calibration labels to the corresponding
-        State choices. Finally, set up an instance of CalibrationData and
-        CalibrationView"""
+        State choices. Finally, set up an instance of CalibrationData and CalibrationView.
+        """
         self.rawLineEdits = {
             "X1": self.ui.rawX1LineEdit,
             "X2": self.ui.rawX2LineEdit,
@@ -321,15 +346,16 @@ class MainWindow(ResizableFramelessWindow):
         max_val = max(val1, val2)
         return [min_val, max_val]
 
-    def setupUIData(self):
+    def initializeExtractedData(self):
         """Set up the main class instances holding the data extracted from placing
         markers on the canvas. The AllExtractedData instance holds all data, whereas the
         ActiveExtractedData instance holds data of the currently selected data set."""
+        self.extractedData = None
         self.activeDataset = ActiveExtractedData()
         self.activeDataset.setAdaptiveCalibrationFunc(
             self.calibrationData.adaptiveConversionFunc
         )
-        self.ui.dataTableView.setModel(self.activeDataset)
+        # self.ui.dataTableView.setModel(self.activeDataset)
 
         self.allDatasets = AllExtractedData()
         self.allDatasets.setCalibrationFunc(self.calibrationData.calibrateDataset)
@@ -343,33 +369,60 @@ class MainWindow(ResizableFramelessWindow):
         self.setupXYDataBoxes()
 
     def uiPagesConnects(self):
-        self.ui.modeSelectButton.clicked.connect(
-            lambda: self.ui.pagesStackedWidget.setCurrentIndex(0)
+        """Connect the UI elements for switching between the different pages."""
+
+        # page 0: Calibrate (previously Extract)
+        self.ui.modeSelectButton.clicked.connect(lambda: self._switchToPage(0))
+        # page 1: Extract & Tag (previously Tag)
+        self.ui.modeTagButton.clicked.connect(lambda: self._switchToPage(1))
+        # page 2: Prefit
+        self.ui.modePrefitButton.clicked.connect(lambda: self._switchToPage(2))
+        # page 3: Fit
+        self.ui.modeFitButton.clicked.connect(lambda: self._switchToPage(3))
+
+        # when clicked parameter export button, switch to the desired page
+        self.ui.exportToFitButton.clicked.connect(lambda: self._switchToPage(3))
+        self.ui.exportToPrefitButton.clicked.connect(lambda: self._switchToPage(2))
+
+    @Slot()
+    def _switchToPage(self, page: int):
+        # update MSE when switching between fit / pre-fit page
+        if self.ui.pagesStackedWidget.currentIndex() == 2 and page == 3:
+            self.ui.mseLabel_2.setText(self.ui.mseLabel.text())
+        elif self.ui.pagesStackedWidget.currentIndex() == 3 and page == 2:
+            self.ui.mseLabel.setText(self.ui.mseLabel_2.text())
+
+        # switch to the desired page
+        self.ui.pagesStackedWidget.setCurrentIndex(page)
+        self.ui.bottomStackedWidget.setCurrentIndex(page)
+
+        # set the corresponding button to checked
+        self.ui.modeSelectButton.setChecked(False)
+        self.ui.modeTagButton.setChecked(False)
+        self.ui.modePrefitButton.setChecked(False)
+        self.ui.modeFitButton.setChecked(False)
+        if page == 0:
+            self.ui.modeSelectButton.setChecked(True)
+        elif page == 1:
+            self.ui.modeTagButton.setChecked(True)
+        elif page == 2:
+            self.ui.modePrefitButton.setChecked(True)
+        elif page == 3:
+            self.ui.modeFitButton.setChecked(True)
+
+    def uiExtractedDataConnects(self):
+        """Make connections for changes in data."""
+
+        # whenever a row is inserted or removed, select the current row
+        # this connection should be put before the connection of layoutChanged
+        # as the latter will be triggered by the former
+        self.allDatasets.rowsInserted.connect(
+            lambda: self.ui.datasetListView.selectItem(self.allDatasets.currentRow)
         )
-        self.ui.modeSelectButton.clicked.connect(
-            lambda: self.ui.bottomStackedWidget.setCurrentIndex(0)
-        )
-        self.ui.modeTagButton.clicked.connect(
-            lambda: self.ui.pagesStackedWidget.setCurrentIndex(1)
-        )
-        self.ui.modeTagButton.clicked.connect(
-            lambda: self.ui.bottomStackedWidget.setCurrentIndex(0)
-        )
-        self.ui.modePrefitButton.clicked.connect(
-            lambda: self.ui.pagesStackedWidget.setCurrentIndex(2)
-        )
-        self.ui.modePrefitButton.clicked.connect(
-            lambda: self.ui.bottomStackedWidget.setCurrentIndex(1)
-        )
-        self.ui.modeFitButton.clicked.connect(
-            lambda: self.ui.pagesStackedWidget.setCurrentIndex(3)
-        )
-        self.ui.modeFitButton.clicked.connect(
-            lambda: self.ui.bottomStackedWidget.setCurrentIndex(2)
+        self.allDatasets.rowsRemoved.connect(
+            lambda: self.ui.datasetListView.selectItem(self.allDatasets.currentRow)
         )
 
-    def uiDataConnects(self):
-        """Make connections for changes in data."""
         # Whenever the data layout in the ActiveExtractedData changes, update
         # the corresponding AllExtractedData data; this includes the important
         # event of adding extraction points to the ActiveExtractedData
@@ -411,22 +464,14 @@ class MainWindow(ResizableFramelessWindow):
 
         # A new selection of a data set item in ListView is accompanied by an update
         # of the canvas to show the appropriate plot of selected points
-        self.ui.datasetListView.clicked.connect(lambda: self.updatePlot(init=False))
-
-        # Whenever tag type or tag data is changed, update the AllExtractedData data
-        self.tagDataView.changedTagType.connect(
-            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTagFromUI())
-        )
-        self.tagDataView.changedTagData.connect(
-            lambda: self.allDatasets.updateCurrentTag(self.tagDataView.getTagFromUI())
-        )
-
-        # Whenever a new dataset is activated in the AllExtractedData, update the TagDataView
         self.ui.datasetListView.clicked.connect(
-            lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
+            lambda: self.updatePlot(initialize=False)
         )
 
-    def uiDataOptionsConnects(self):
+        # Whenever a new selection of data set is made, update the matching mode and the cursor
+        self.ui.datasetListView.clicked.connect(self.updateMatchingModeAndCursor)
+
+    def uiMeasurementDataOptionsConnects(self):
         """Connect the UI elements related to display of data"""
         self.ui.topHatCheckBox.toggled.connect(lambda x: self.updatePlot())
         self.ui.waveletCheckBox.toggled.connect(lambda x: self.updatePlot())
@@ -450,6 +495,8 @@ class MainWindow(ResizableFramelessWindow):
         """Connect UI elements for data calibration."""
         self.ui.calibratedCheckBox.toggled.connect(self.toggleCalibration)
 
+        self.ui.calibrationHelpPushButton.clicked.connect(self.calibrationHelp)
+
         for label in self.calibrationButtons:
             self.calibrationButtons[label].clicked.connect(
                 partial(self.calibrate, label)
@@ -468,26 +515,46 @@ class MainWindow(ResizableFramelessWindow):
         self.ui.selectViewButton.clicked.connect(self.toggleSelect)
         self.ui.swapXYButton.clicked.connect(self.swapXY)
 
-    def uiDataControlConnects(self):
+    def uiExtractedDataControlConnects(self):
         """Connect buttons for inserting and deleting a data set, or clearing all data sets"""
+        # update the backend model
         self.ui.newRowButton.clicked.connect(self.allDatasets.newRow)
         self.ui.deleteRowButton.clicked.connect(self.allDatasets.removeCurrentRow)
         self.ui.clearAllButton.clicked.connect(self.allDatasets.removeAll)
 
-        self.ui.newRowButton.clicked.connect(
-            lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
-        )
-        self.ui.deleteRowButton.clicked.connect(
-            lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
-        )
-        self.ui.clearAllButton.clicked.connect(
-            lambda: self.tagDataView.setTag(self.allDatasets.currentTagItem())
-        )
+    def uiDataLoadConnects(self):
+        self.allDatasets.loadFromRegistrySignal.signal.connect(self.extractedDataSetup)
 
     def uiXYZComboBoxesConnects(self):
         self.ui.zComboBox.activated.connect(self.zDataUpdate)
         self.ui.xComboBox.activated.connect(self.xAxisUpdate)
         self.ui.yComboBox.activated.connect(self.yAxisUpdate)
+
+    def updateMatchingModeAndCursor(self):
+        """
+        Callback for updating the matching mode and the cursor
+        """
+        self.x_snap_mode = False
+        self.ui.mplFigureCanvas.x_snap_mode = False
+        if (
+            self.allDatasets
+            and self.allDatasets.currentRow != 0
+            and len(self.allDatasets.assocDataList[0][0]) > 0
+            and self.ui.horizontalSnapButton.isChecked()
+            and (appstate.state not in list(self.calibrationStates.values()))
+        ):
+            self.x_snap_mode = True
+            self.ui.mplFigureCanvas.x_snap_mode = True
+        self.ui.mplFigureCanvas.select_crosshair()
+
+    def calibrationButtonIsChecked(self):
+        """
+        Check if any of the calibration buttons is checked
+        """
+        for label in self.calibrationButtons:
+            if self.calibrationButtons[label].isChecked():
+                return True
+        return False
 
     def uiMplCanvasConnects(self):
         """Set up the matplotlib canvas and start monitoring for mouse click events in the canvas area."""
@@ -496,15 +563,17 @@ class MainWindow(ResizableFramelessWindow):
         self.cidCanvas = self.axes.figure.canvas.mpl_connect(
             "button_press_event", self.canvasClickMonitoring
         )
-        self.ui.mplFigureCanvas.set_callback(self.allDatasets)
+        self.ui.horizontalSnapButton.toggled.connect(self.updateMatchingModeAndCursor)
+        # connects the updateMatchingModeAndCursor with calibration buttons
+        for label in self.calibrationButtons:
+            self.calibrationButtons[label].toggled.connect(
+                self.updateMatchingModeAndCursor
+            )
+        self.ui.mplFigureCanvas.x_snap_mode = self.x_snap_mode
+        self.ui.mplFigureCanvas.set_callback_for_extracted_data(self.allDatasets)
         self.cidMove = self.axes.figure.canvas.mpl_connect(
             "motion_notify_event", self.canvasMouseMonitoring
         )
-
-    def uiMenuConnects(self):
-        self.ui.toggleMenuButton.clicked.connect(self.ui_menu.toggle)
-        # self.ui_menu.menuQuitButton.clicked.connect(self.closeApp)
-        # self.ui_menu.menuOpenButton.clicked.connect(self.openFile)
 
     def setupXYDataBoxes(self):
         self.ui.xComboBox.clear()
@@ -552,42 +621,66 @@ class MainWindow(ResizableFramelessWindow):
         if event.xdata is None or event.ydata is None:
             return
 
+        # calibration mode
         for calibrationLabel in ["X1", "X2", "Y1", "Y2"]:
             data = event.xdata if (calibrationLabel[0] == "X") else event.ydata
 
             if appstate.state == self.calibrationStates[calibrationLabel]:
+                # turn off the highlighting of the button
+                self._highlightCaliButton(self.calibrationButtons[calibrationLabel], reset=True)
+                # update the raw line edits by the value of the clicked point
                 self.rawLineEdits[calibrationLabel].setText(str(data))
                 self.rawLineEdits[calibrationLabel].home(False)
+                # highlight the map line edit
                 self.mapLineEdits[calibrationLabel].selectAll()
+                self.mapLineEdits[calibrationLabel].setFocus()
                 self.ui.selectViewButton.setChecked(True)
                 self.ui.mplFigureCanvas.selectOn()
                 self.rawLineEdits[calibrationLabel].editingFinished.emit()
                 return
 
+        # select mode
         if appstate.state == State.SELECT:
             current_data = self.activeDataset.all()
-            if self.matching_mode:
+            if self.x_snap_mode:
                 x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
             else:
                 x1y1 = np.asarray([event.xdata, event.ydata])
+                # turn on the horizontal snap automatically, if the user turned it off
+                self.ui.horizontalSnapButton.setChecked(True)
             for index, x2y2 in enumerate(current_data.transpose()):
                 if self.isRelativelyClose(x1y1, x2y2):
                     self.activeDataset.removeColumn(index)
                     self.updatePlot()
                     return
-            self.activeDataset.append(*x1y1)
+            if self.ui.verticalSnapButton.isChecked():
+                x_list = self.measurementData.currentX.data
+                y_list = self.measurementData.currentY.data
+                z_data = self.measurementData.currentZ.data
+                # calculate half index range as 5x linewidth
+                linewidth = 0.02  # GHz
+                half_y_range = linewidth * 5
+                try:
+                    snapped_y1 = y_snap(
+                        x_list=x_list,
+                        y_list=y_list,
+                        z_data=z_data,
+                        user_selected_xy=x1y1,
+                        half_y_range=half_y_range,
+                        mode="lorentzian",
+                    )
+                    x1y1_snapped = np.asarray([x1y1[0], snapped_y1])
+                    self.activeDataset.append(*x1y1_snapped)
+                except RuntimeError:
+                    self.activeDataset.append(*x1y1)
+            else:
+                self.activeDataset.append(*x1y1)
             self.updatePlot()
 
     @Slot()
     def canvasMouseMonitoring(self, event):
         self.axes.figure.canvas.flush_events()
-        self.matching_mode = False
-        if (
-            self.allDatasets.currentRow != 0
-            and len(self.allDatasets.assocDataList[0][0]) > 0
-        ):
-            self.matching_mode = True
-        if not self.matching_mode:
+        if not self.x_snap_mode:
             return
 
         if event.xdata is None or event.ydata is None:
@@ -619,7 +712,8 @@ class MainWindow(ResizableFramelessWindow):
         self.measurementData.canvasPlot(self.axes, cmap=cmap)
 
         # plot the numerically calculated spectrum
-        self.spectrumData.canvasPlot(self.axes)
+        if not initialize:
+            self.spectrumData.canvasPlot(self.axes)
 
         # If there are any extracted data points in the currently active data set, show
         # those via a scatter plot.
@@ -631,20 +725,27 @@ class MainWindow(ResizableFramelessWindow):
                 c=scatter_color,
                 marker=r"$\odot$",
                 s=130,
-                alpha=0.5,
+                alpha=0.3,
             )
 
         plotted_data = []
-        line_data = self.allDatasets.assocDataList[0]
-        for count, i in enumerate(line_data[0]):
-            if i not in plotted_data:
-                self.axes.axline(
-                    (i, line_data[1][count]),
-                    (i, line_data[1][count] - (line_data[1][count]) * 0.1),
-                    c=line_color,
-                    alpha=0.7,
-                )
-            plotted_data.append(i)
+        # line_data = self.allDatasets.assocDataList[0]
+        x_list = self.allDatasets.distinctSortedXValues()
+        for x_value in x_list:
+            self.axes.axvline(
+                x_value,
+                c=line_color,
+                alpha=0.3,
+            )
+        # for count, i in enumerate(line_data[0]):
+        #     if i not in plotted_data:
+        #         self.axes.axline(
+        #             (i, line_data[1][count]),
+        #             (i, line_data[1][count] - (line_data[1][count]) * 0.1),
+        #             c=line_color,
+        #             alpha=0.7,
+        #         )
+        #     plotted_data.append(i)
 
         # Make sure that new axes limits match the old ones.
         if not initialize:
@@ -652,21 +753,36 @@ class MainWindow(ResizableFramelessWindow):
             self.axes.set_ylim(ylim)
 
         self.axes.figure.canvas.draw()
-        self.ui.mplFigureCanvas.set_callback(self.allDatasets)
+        self.ui.mplFigureCanvas.x_snap_mode = self.x_snap_mode
+        self.ui.mplFigureCanvas.set_callback_for_extracted_data(self.allDatasets)
 
-    # def toggleMenu(self):
-    #     if self.menuWidget.menuFrame.isHidden():
-    #         self.menuWidget.menuFrame.show()
-    #     else:
-    #         self.menuWidget.menuFrame.hide()
+    def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
+        """Highlight the button by changing its color."""
+        if reset:
+            button.setStyleSheet("")
+        else:
+            button.setStyleSheet("background-color: #6c278c")
+
+    def _resetHighlightButtons(self):
+        """Reset the highlighting of all calibration buttons."""
+        for label in self.calibrationButtons:
+            self._highlightCaliButton(self.calibrationButtons[label], reset=True)
 
     @Slot()
     def calibrate(self, calibrationLabel: str):
-        """Mouse click on one of the calibration buttons prompts switching to
+        """
+        Mouse click on one of the calibration buttons prompts switching to
         calibration mode. Mouse cursor crosshair is adjusted and canvas waits for
-        click setting calibration point x or y component."""
+        click setting calibration point x or y component.
+        Besides, the button is highlighted.
+        """
         appstate.state = self.calibrationStates[calibrationLabel]
+        # button highlighting
+        self._resetHighlightButtons()
+        self._highlightCaliButton(self.calibrationButtons[calibrationLabel])
+        # mpl canvas mode & cursor
         self.ui.mplFigureCanvas.calibrateOn(calibrationLabel[0])
+        self.updateMatchingModeAndCursor()
 
     @Slot()
     def updateCalibration(self):
@@ -684,6 +800,17 @@ class MainWindow(ResizableFramelessWindow):
         selected points."""
         self.calibrationData.toggleCalibration()
         self.activeDataset.toggleCalibratedView()
+
+    @Slot()
+    def calibrationHelp(self):
+        tutorial_dialog = DialogWindowWithMedia(
+            "test",
+            [
+                (":/gifs/calibration_gif.gif", 600),
+                (":/images/calibration_x1x2y1y2.png", 400),
+            ],
+        )
+        tutorial_dialog.exec()
 
     @Slot(int)
     def zDataUpdate(self, itemIndex: int):
@@ -753,31 +880,104 @@ class MainWindow(ResizableFramelessWindow):
             return True
         return False
 
-    def onSliderParameterChange(self):
-        return self.quantumModel.onSliderParameterChange(
-            slider_parameter_set=self.sliderParameterSet,
+    def closest_line(self, xdat):
+        all_x_list = self.allDatasets.distinctSortedXValues()
+        allxdiff = {np.abs(xdat - i): i for i in all_x_list}
+        return allxdiff[min(allxdiff.keys())]
+
+    # Pre-fit ##########################################################
+    # ##################################################################
+    def prefitDynamicalElementsBuild(self, hilbertspace: HilbertSpace):
+        self.sliderParameterSet = QuantumModelParameterSet("sliderParameterSet")
+        self.sweepParameterSet = QuantumModelParameterSet("sweepParameterSet")
+        self.quantumModel = QuantumModel(hilbertspace)
+
+        self.quantumModel.addParametersToParameterSet(
+            self.sweepParameterSet,
+            parameter_usage="sweep",
+            included_parameter_type=["ng", "flux"],
+        )
+
+        self.prefitIdentifySweepParameters()
+        self.prefitSlidersInserts()
+        self.prefitMinMaxInserts()
+        self.prefitSlidersConnects()
+        self.prefitSubsystemComboBoxLoads()
+        self.prefitQuantumModelOptionsConnects()
+        self.setUpPrefitRunConnects()
+
+    def prefitStaticElementsBuild(self):
+        self.prefitResult = Result()
+        self.spectrumData = CalculatedSpecData()
+        self.setUpPrefitResultConnects()
+        self.prefitGeneralOptionsConnects()
+
+    def prefitIdentifySweepParameters(self):
+        # check how many sweep parameters are found and create sliders
+        # for the remaining parameters
+        param_types = set(self.sweepParameterSet.exportAttrDict("param_type").values())
+        if len(self.sweepParameterSet) == 0:
+            print(
+                "No sweep parameter (ng / flux) is found in the HilbertSpace "
+                "object. Please check your quantum model."
+            )
+            self.close()
+        elif len(self.sweepParameterSet) == 1:
+            # only one sweep parameter is found, so we can create sliders
+            # for the remaining parameters
+            self.quantumModel.addParametersToParameterSet(
+                self.sliderParameterSet,
+                parameter_usage="slider",
+                excluded_parameter_type=(
+                    ["cutoff", "truncated_dim", "l_osc"]
+                    + [list(param_types)[0]]  # exclude the sweep parameter
+                ),
+            )
+        elif len(self.sweepParameterSet) == 2 and param_types == set(["flux", "ng"]):
+            # a flux and ng are detected in the HilbertSpace object
+            # right now, we assume that the flux is always swept in this case
+            self.quantumModel.addParametersToParameterSet(
+                self.sliderParameterSet,
+                parameter_usage="slider",
+                excluded_parameter_type=(["flux", "cutoff", "truncated_dim", "l_osc"]),
+            )
+        else:
+            print(
+                "Unfortunately, the current version of qfit does not support "
+                "multiple sweep parameters (flux / ng). This feature will be "
+                "available in the next release."
+            )
+            self.close()
+
+    def onParameterChange(self, slider_or_fit_parameter_set: QuantumModelParameterSet):
+        self.quantumModel.updateCalculation(
+            slider_or_fit_parameter_set=slider_or_fit_parameter_set,
             sweep_parameter_set=self.sweepParameterSet,
             spectrum_data=self.spectrumData,
             calibration_data=self.calibrationData,
             extracted_data=self.allDatasets,
-            prefit_result=self.prefitResult
+            prefit_result=self.prefitResult,
         )
+        self.updatePlot()
 
-    def onPrefitRunClicked(self):
-        return self.quantumModel.onButtonRunClicked(
+    def onPrefitPlotClicked(self):
+        self.quantumModel.sweep2SpecNMSE(
             spectrum_data=self.spectrumData,
             extracted_data=self.allDatasets,
+            calibration_data=self.calibrationData,
             result=self.prefitResult,
         )
+        self.updatePlot()
 
     def prefitSlidersInserts(self):
         """
         Insert a set of sliders for the prefit parameters according to the parameter set
         """
+        # remove the existing widgets, if we somehow want to rebuild the sliders
+        clearChildren(self.ui.prefitScrollAreaWidget)
 
         # create a QWidget for the scrollArea and set a layout for it
         prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
-        prefitScrollLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
 
         # set the alignment of the entire prefit scroll layout
         prefitScrollLayout.setAlignment(Qt.AlignTop)
@@ -800,6 +1000,33 @@ class MainWindow(ResizableFramelessWindow):
 
         prefitScrollLayout.addWidget(self.sliderSet)
 
+        # add a spacing between the sliders and the min max table
+        prefitScrollLayout.addSpacing(SPACING_BETWEEN_GROUPS)
+
+    def prefitMinMaxInserts(self):
+        self.minMaxTable = FoldableTable(
+            MinMaxItems,
+            paramNumPerRow=2,
+            groupNames=list(self.sliderParameterSet.parentNameByObj.values()),
+        )
+        self.minMaxTable.setCheckable(False)
+        self.minMaxTable.setChecked(False)
+
+        # insert parameters
+        for key, para_dict in self.sliderParameterSet.items():
+            group_name = self.sliderParameterSet.parentNameByObj[key]
+
+            for para_name in para_dict.keys():
+                self.minMaxTable.insertParams(group_name, para_name)
+
+        # add the minmax table to the scroll area
+        foldable_widget = FoldableWidget("Adjusting Sliders' Range", self.minMaxTable)
+        prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
+        prefitScrollLayout.addWidget(foldable_widget)
+
+        # default to fold the table
+        foldable_widget.toggle()
+
     def prefitSlidersConnects(self):
         """
         Connect the sliders to the controller - update hilbertspace and spectrum
@@ -810,12 +1037,17 @@ class MainWindow(ResizableFramelessWindow):
             for para_name, para in para_dict.items():
                 para: QuantumModelSliderParameter
                 labeled_slider: LabeledSlider = self.sliderSet[group_name][para_name]
+                minMax: MinMaxItems = self.minMaxTable.params[group_name][para_name]
 
                 para.setupUICallbacks(
                     labeled_slider.slider.value,
                     labeled_slider.slider.setValue,
                     labeled_slider.value.text,
                     labeled_slider.setValue,
+                    minMax.minValue.text,
+                    minMax.minValue.setText,
+                    minMax.maxValue.text,
+                    minMax.maxValue.setText,
                 )
 
                 # synchronize slider and box
@@ -824,27 +1056,34 @@ class MainWindow(ResizableFramelessWindow):
 
                 # format the user's input
                 labeled_slider.value.editingFinished.connect(para.onBoxEditingFinished)
+                minMax.minValue.editingFinished.connect(para.onMinEditingFinished)
+                minMax.maxValue.editingFinished.connect(para.onMaxEditingFinished)
 
                 # connect to the controller to update the spectrum
-                labeled_slider.editingFinishedConnect(self.onSliderParameterChange)
+                labeled_slider.editingFinishedConnect(
+                    lambda: self.onParameterChange(self.sliderParameterSet)
+                )
                 labeled_slider.editingFinishedConnect(self.updatePlot)
 
-                para.initialize()
                 para.setParameterForParent()
-
-    def setUpSpectrumPlotConnects(self):
-        self.spectrumData.setupUICallbacks()
 
     def prefitSubsystemComboBoxLoads(self):
         """
         loading the subsystem names to the combo box (drop down menu)
         """
+        # clear the existing items and temporarily disable the signal
+        self.ui.subsysComboBox.blockSignals(True)
+        self.ui.subsysComboBox.clear()
+
         subsys_name_list = [
             QuantumModelParameterSet.parentSystemNames(subsys)
             for subsys in self.quantumModel.hilbertspace.subsystem_list[::-1]
         ]
         for subsys_name in subsys_name_list:
             self.ui.subsysComboBox.insertItem(0, subsys_name)
+
+        # enable the signal
+        self.ui.subsysComboBox.blockSignals(False)
 
     def setUpPrefitResultConnects(self):
         """
@@ -867,52 +1106,52 @@ class MainWindow(ResizableFramelessWindow):
             mse_change_ui_setter=mse_change_ui_setter,
         )
 
-    def setUpFitResultConnects(self):
-        """
-        connect the prefit result to the relevant UI textboxes; whenever there is
-        a change in the UI, reflect in the UI text change
-        """
-        status_type_ui_setter = lambda: self.ui.label_49.setText(
-            self.fitResult.displayed_status_type
-        )
-        status_text_ui_setter = lambda: self.ui.statusTextLabel_2.setText(
-            self.fitResult.status_text
-        )
-        mse_change_ui_setter = lambda: self.ui.mseLabel_2.setText(
-            self.fitResult.displayed_MSE
-        )
-
-        self.fitResult.setupUISetters(
-            status_type_ui_setter=status_type_ui_setter,
-            status_text_ui_setter=status_text_ui_setter,
-            mse_change_ui_setter=mse_change_ui_setter,
-        )
-
-    def setUpPrefitOptionsConnects(self):
-        """
-        Set up the connects for the prefit options for UI
-        """
-        self.ui.evalsCountLineEdit.setText("20")
-        self.ui.pointsAddLineEdit.setText("10")
-
+    def prefitQuantumModelOptionsConnects(self):
+        # connect the prefit options to the controller
         self.quantumModel.setupPlotUICallbacks(
             subsystemNameCallback=self.ui.subsysComboBox.currentText,
             initialStateCallback=self.ui.initStateLineEdit.text,
+            photonsCallback=self.ui.prefitPhotonSpinBox.value,
             evalsCountCallback=self.ui.evalsCountLineEdit.text,
             pointsAddCallback=self.ui.pointsAddLineEdit.text,
-        )  # TODO: placeholder by now, need to connect to the UI
+        )
 
-        self.ui.subsysComboBox.currentIndexChanged.connect(self.onPrefitRunClicked)
-        self.ui.initStateLineEdit.editingFinished.connect(self.onPrefitRunClicked)
-        self.ui.evalsCountLineEdit.editingFinished.connect(self.onSliderParameterChange)
-        self.ui.pointsAddLineEdit.editingFinished.connect(self.onSliderParameterChange)
+    def prefitGeneralOptionsConnects(self):
+        """
+        Set up the connects for the prefit options for UI:
+        1. subsystem combo box
+        2. initial state line edit
+        3. photons spin box
+        4. evals count line edit
+        5. points add line edit
+        """
 
-        self.ui.subsysComboBox.currentIndexChanged.connect(self.updatePlot)
-        self.ui.initStateLineEdit.editingFinished.connect(self.updatePlot)
-        self.ui.evalsCountLineEdit.editingFinished.connect(self.updatePlot)
-        self.ui.pointsAddLineEdit.editingFinished.connect(self.updatePlot)
+        # set line edit property:
+        self.ui.initStateLineEdit.setTupleLength(self.hilbertspace.subsystem_count)
+
+        # when change those numbers, update the spectrum data using the 
+        # existing sweep
+        self.ui.subsysComboBox.currentIndexChanged.connect(self.onPrefitPlotClicked)
+        self.ui.initStateLineEdit.editingFinished.connect(self.onPrefitPlotClicked)
+        self.ui.prefitPhotonSpinBox.valueChanged.connect(
+            lambda: print("current photons: ", self.ui.prefitPhotonSpinBox.value())
+        )
+        self.ui.prefitPhotonSpinBox.valueChanged.connect(self.onPrefitPlotClicked)
+
+        # when change those numbers, update the sweep and then update the spectrum
+        self.ui.evalsCountLineEdit.editingFinished.connect(
+            lambda: self.onParameterChange(self.sliderParameterSet)
+        )
+        self.ui.pointsAddLineEdit.editingFinished.connect(
+            lambda: self.onParameterChange(self.sliderParameterSet)
+        )
 
     def setUpPrefitRunConnects(self):
+        """
+        Set up the connects for the prefit run for UI:
+        1. autorun checkbox
+        2. run (or "plot") button
+        """
         # connect the autorun checkbox callback
         self.quantumModel.setupAutorunCallbacks(
             autorun_callback=self.ui.autoRunCheckBox.isChecked,
@@ -920,96 +1159,163 @@ class MainWindow(ResizableFramelessWindow):
         self.ui.autoRunCheckBox.setChecked(True)
         # connect the run button callback to the generation and run of parameter sweep
         # notice that parameter update is done in the slider connects
-        self.ui.plotButton.clicked.connect(self.onPrefitRunClicked)
+        # TODO: here is a bug, since the parameter update is done in the slider connects,
+        # if parameters are updated due to the fitting step, and the fitting result parameters
+        # are not imported to the prefit parameters, then the HilbertSpace is still using the
+        # fit parameters; if user want to plot with prefit parameters, clicking the plot button
+        # in the prefit will not update the parameters based on the sliders.
+        self.ui.plotButton.clicked.connect(self.onPrefitPlotClicked)
         # update plot after the fit button is clicked
         self.ui.plotButton.clicked.connect(self.updatePlot)
+
+    # Fit ##############################################################
+    # ##################################################################
+
+    def fitDynamicalElementsBuild(self):
+        self.fitParameterSet = QuantumModelParameterSet("fitParameterSet")
+        self.quantumModel.addParametersToParameterSet(
+            self.fitParameterSet,
+            parameter_usage="fit",
+            excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
+        )
+        self.fitTableInserts()
+        self.fitTableConnects()
+
+    def fitStaticElementsBuild(self):
+        self.threadpool = QThreadPool()
+        self.numericalFitting = NumericalFitting()
+        self.setupFitConnects()
+        self.fittingCallbackConnects()
+        self.fitPushButtonConnects()
+
+        self.fitResult = Result()
+        self.setUpFitResultConnects()
+
+    def setupFitConnects(self):
+        self.numericalFitting.setupUICallbacks(
+            self.ui.optimizerComboBox.currentText,
+            self.ui.tolLineEdit.text,
+        )
 
     def fitTableInserts(self):
         """
         Insert a set of tables for the fitting parameters
         """
 
-        # temporary solution: put the fitting widget in the prefit scroll area
-        fitScrollWidget = self.ui.fitScrollArea.widget()
-        fitScrollLayout = QVBoxLayout(fitScrollWidget)
+        fitScrollWidget = self.ui.fitScrollAreaWidget
+
+        # remove the existing widgets, if we somehow want to rebuild the sliders
+        clearChildren(fitScrollWidget)
+        if fitScrollWidget.layout() is None:
+            fitScrollLayout = QVBoxLayout(fitScrollWidget)
+        else:
+            fitScrollLayout = fitScrollWidget.layout()
 
         # configure this layout
-        fitScrollLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
         self.ui.fitScrollArea.setStyleSheet(f"background-color: rgb(33, 33, 33);")
         fitScrollWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        self.fitTableSet = FittingParameterTableSet(self.ui.prefitScrollAreaWidget)
+        # create an empty table with just group names
+        self.fitTableSet = FoldableTable(
+            FittingParameterItems,
+            paramNumPerRow=1,
+            groupNames=list(self.fitParameterSet.parentNameByObj.values()),
+        )
 
+        # insert parameters
         for key, para_dict in self.fitParameterSet.items():
             group_name = self.fitParameterSet.parentNameByObj[key]
 
-            self.fitTableSet.addGroupedWidgets(
-                group_name,
-                list(para_dict.keys()),
-            )
+            for para_name in para_dict.keys():
+                self.fitTableSet.insertParams(group_name, para_name)
 
         fitScrollLayout.addWidget(self.fitTableSet)
 
     def fittingParameterLoad(self, source: QuantumModelParameterSet):
+        """
+        Load the initial value, min, and max from the source parameter set
+        """
         init_value_dict = source.exportAttrDict("value")
-        self.fitParameterSet.loadAttrDict(
-            init_value_dict, "initValue"
-        )
-        self.fitParameterSet.loadAttrDict(
-            init_value_dict, "value"
-        )
-        max_value_dict = {key: (value * 1.1 if value > 0 else value * 0.9) 
-            for key, value in init_value_dict.items()}
-        self.fitParameterSet.loadAttrDict(
-            max_value_dict, "max"
-        )
-        min_value_dict = {key: (value * 0.9 if value > 0 else value * 1.1)
-            for key, value in init_value_dict.items()}
-        self.fitParameterSet.loadAttrDict(
-            min_value_dict, "min"
+        self.fitParameterSet.loadAttrDict(init_value_dict, "initValue")
+        self.fitParameterSet.loadAttrDict(init_value_dict, "value")
+        max_value_dict = {
+            key: (value * 1.2 if value > 0 else value * 0.8)
+            for key, value in init_value_dict.items()
+        }
+        self.fitParameterSet.loadAttrDict(max_value_dict, "max")
+        min_value_dict = {
+            key: (value * 0.8 if value > 0 else value * 1.2)
+            for key, value in init_value_dict.items()
+        }
+        self.fitParameterSet.loadAttrDict(min_value_dict, "min")
+
+    @Slot()
+    def _setupOptimization(self):
+        """
+        Run optimization step 1: setup the optimization using various parameters
+        """
+
+        self.optInitialized = self.numericalFitting.setupOptimization(
+            self.fitParameterSet,
+            self.quantumModel.MSEByParameters,
+            self.allDatasets,
+            self.sweepParameterSet,
+            self.calibrationData,
+            self.fitResult,
         )
 
+    @Slot()
     def _backgroundOptimization(self):
         """
-        The optimization + things to do before it
+        Run optimization step 2: run the optimization in the background
         """
+        if not self.optInitialized:
+            return
+
         self.ui.fitButton.setEnabled(False)
         self.sliderSet.setEnabled(False)
 
         # start the optimization
         self.threadpool.start(self.numericalFitting)
 
+    @Slot()
     def _onOptFinished(self):
+        print("Optimization finished")
+
         self.ui.fitButton.setEnabled(True)
         self.sliderSet.setEnabled(True)
-        self.onSliderParameterChange()
-        self.updatePlot()
 
         # the numericalFitting object will be deleted after background running
-        # TODO: these lines don't fix the issue, and causing memory leakage...
+        # so we need to create a new one and connect the signals again
         self.numericalFitting = NumericalFitting()
+        self.setupFitConnects()
         self.fittingCallbackConnects()
 
+        # should be used after re-create the numericalFitting object
+        # (for the optimization failing case)
+        self.onParameterChange(self.fitParameterSet)
+        self.updatePlot()
+
     def fittingCallbackConnects(self):
-        self.numericalFitting.signals.optFinished.connect(
-            self._onOptFinished
-        )
+        """
+        when the optimization is finished, send a signal that triggers
+        the `_onOptFinished` function
+        """
+        self.numericalFitting.signals.optFinished.connect(self._onOptFinished)
 
     def fitPushButtonConnects(self):
+        """
+        Connect the buttons for
+        1. run fit
+        2. parameters transfer: prefit to fit
+        3. parameters transfer: fit to prefit
+        4. parameters transfer: fit result to fit
+        """
         # setup the optimization
-        self.ui.fitButton.clicked.connect(
-            lambda: self.numericalFitting.setupOptimization(
-                self.fitParameterSet,
-                self.quantumModel.MSEByParametersForFit,
-                self.allDatasets,
-                self.sweepParameterSet,
-                self.calibrationData,
-                self.fitResult,
-        ))
+        self.ui.fitButton.clicked.connect(self._setupOptimization)
 
         # connect the fit button to the fitting function
-        self.ui.fitButton.clicked.connect(
-            self._backgroundOptimization)
+        self.ui.fitButton.clicked.connect(self._backgroundOptimization)
 
         # the prefit parameter export
         self.ui.exportToFitButton.clicked.connect(
@@ -1022,13 +1328,18 @@ class MainWindow(ResizableFramelessWindow):
         )
 
         # the prefit parameter import
+        # first update the slider parameter set, then perform the necessary changes
+        # as slider parameter changes
         self.ui.exportToPrefitButton.clicked.connect(
             lambda: self.sliderParameterSet.update(self.fitParameterSet)
+        )
+        self.ui.exportToPrefitButton.clicked.connect(
+            lambda: self.onParameterChange(self.sliderParameterSet)
         )
 
     def fitTableConnects(self):
         """
-        Connect the tables to the model - two parameter sets
+        Connect the tables (ui) to the model - two parameter sets
         """
 
         for key, para_dict in self.fitParameterSet.items():
@@ -1036,7 +1347,9 @@ class MainWindow(ResizableFramelessWindow):
 
             for para_name, para in para_dict.items():
                 para: QuantumModelFittingParameter
-                single_row = self.fitTableSet[group_name][para_name]
+                single_row: FittingParameterItems = self.fitTableSet.params[group_name][
+                    para_name
+                ]
 
                 # connect the UI and the model
                 para.setupUICallbacks(
@@ -1061,52 +1374,136 @@ class MainWindow(ResizableFramelessWindow):
 
                 para.initialize()
 
-    @Slot()
-    def openFile(self, initialize: bool = False):
-        if not initialize:
-            self.ui_menu.toggle()
-        self.measurementData, self.extractedData = importFile(parent=self)
+    def setUpFitResultConnects(self):
+        """
+        connect the prefit result to the relevant UI textboxes;
+        whenever there is a change in the UI, reflect in the UI text change
+        """
+        status_type_ui_setter = lambda: self.ui.label_49.setText(
+            self.fitResult.displayed_status_type
+        )
+        status_text_ui_setter = lambda: self.ui.statusTextLabel_2.setText(
+            self.fitResult.status_text
+        )
+        mse_change_ui_setter = lambda: self.ui.mseLabel_2.setText(
+            self.fitResult.displayed_MSE
+        )
 
+        self.fitResult.setupUISetters(
+            status_type_ui_setter=status_type_ui_setter,
+            status_text_ui_setter=status_text_ui_setter,
+            mse_change_ui_setter=mse_change_ui_setter,
+        )
+
+    # Save Location & Window Title #####################################
+    # ##################################################################
+    @property
+    def projectFile(self):
+        return self._projectFile
+
+    @projectFile.setter
+    def projectFile(self, value):
+        self._projectFile = value
+
+        windowTitle = "qfit" if value is None else f"qfit - {os.path.basename(value)}"
+        self.setWindowTitle(windowTitle)
+
+    # IO ###############################################################
+    # ##################################################################
+
+    attrToRegister: List[str] = [
+        "projectFile",
+    ]
+
+    def registerAll(self):
+        """
+        After registering the models,
+        Register the rest attribute of the mainWindow.
+        """
+        registryDict = {
+            attr: self._toRegistryEntry(attr) for attr in self.attrToRegister
+        }
+
+        return registryDict
+
+    def register(self):
+        """
+        register the entire app
+        """
+        # clear the registry
+        self.registry.clear()
+
+        # special registry
+        self.registry.register(self.quantumModel.hilbertspace)
+        self.registry.register(self.measurementData)
+        self.registry.register(self.calibrationData)
+        self.registry.register(self.allDatasets)
+
+        # parameters
+        self.registry.register(self.sliderParameterSet)
+        self.registry.register(self.fitParameterSet)
+        self.registry.register(self.sweepParameterSet)
+
+        # main window
+        self.registry.register(self)
+
+    def initializeDynamicalElements(
+        self,
+        hilbertspace: HilbertSpace,
+        measurementData: MeasurementDataType,
+    ):
+        # here, the measurementData is a instance of MeasurementData, which is
+        # regenerated from the data file
+        self.measurementData = measurementData
         self.calibrationData.resetCalibration()
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
-        self.dataSetupConnects()
+        self.dynamicalMeasurementDataSetupConnects()
+        self.uiDataLoadConnects()
         self.setupUIXYZComboBoxes()
+
+        self.prefitDynamicalElementsBuild(hilbertspace)
+        self.fitDynamicalElementsBuild()
+
         self.updatePlot(initialize=True)
+
+        self.register()
+
         self.raise_()
 
-    @Slot()
-    def closeApp(self):
-        """End the application"""
-        if self.allDatasets.isEmpty():
-            sys.exit()
-        else:
-            msgBox = QMessageBox()
-            msgBox.setWindowTitle("qfit")
-            msgBox.setIcon(QMessageBox.Question)
-            msgBox.setInformativeText("Do you want to save changes?")
-            msgBox.setText("This document has been modified.")
-            msgBox.setStandardButtons(
-                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
-            )
-            msgBox.setDefaultButton(QMessageBox.Save)
+    def closeEvent(self, event):
+        """
+        Override the original class method to add a confirmation dialog before
+        closing the application. Will be triggered when the user clicks the "X"
+        or call the close() method.
+        """
+        try:
+            status = self.ioMenuCtrl.closeApp()
 
-            reply = msgBox.exec_()
-
-            if reply == QMessageBox.Save:
-                self.saveAndCloseApp()
-            elif reply == QMessageBox.Discard:
-                sys.exit()
-            return
+            if status:
+                event.accept()
+            else:
+                event.ignore()
+        except AttributeError:
+            # the GUI is partially initialized and don't have the ioMenuCtrl
+            event.accept()
 
     @Slot()
-    def saveAndCloseApp(self):
-        """Save the extracted data and calibration information to file, then exit the
-        application."""
-        success = saveFile(self)
-        if not success:
-            return
-        sys.exit()
+    def extractedDataSetup(self, initdata):
+        """
+        setting up recovery of extracted data
+        """
+        self.extractedData = QfitData(
+            datanames=initdata["datanames"],
+            datalist=initdata["datalist"],
+            tag_data=initdata["taglist"],
+            calibration_data=self.calibrationData,
+            # this is somehow redundant - the calibration data is already recovered
+            # here I set this only because the calibration_data is required to update
+            # the calibration view
+        )
+        # recover the allDatasets model and emit changes to the view
+        self.recoverFromExtractedData()
 
     def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)
@@ -1115,7 +1512,16 @@ class MainWindow(ResizableFramelessWindow):
             QStyle.alignedRect(Qt.LeftToRight, Qt.AlignCenter, newSize, maxRect)
         )
 
-    def closest_line(self, xdat):
-        current_data = self.allDatasets.assocDataList[0]
-        allxdiff = {np.abs(xdat - i): i for i in current_data[0]}
-        return allxdiff[min(allxdiff.keys())]
+    # event filter and save state ######################################
+    # ##################################################################
+    # def install_event_filters(self):
+    #     self.installEventFilter(self)
+    #     for widget in self.findChildren(QWidget):
+    #         widget.installEventFilter(self)
+
+    # def eventFilter(self, source, event):
+    #     if (
+    #         event.type() == QEvent.Type.KeyPress
+    #     ):  # Or other event types you're interested in
+    #         self.unsavedChanges = True
+    #     return super().eventFilter(source, event)

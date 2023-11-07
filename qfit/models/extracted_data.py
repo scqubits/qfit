@@ -21,12 +21,25 @@ from PySide6.QtCore import (
     QModelIndex,
     Qt,
     Slot,
+    Signal,
+    QObject,
 )
 
 import qfit.io_utils.file_io_serializers as serializers
 
-from qfit.widgets.data_tagging import NO_TAG, Tag
+from qfit.controllers.tagging import NO_TAG, Tag
 
+from qfit.models.registry import Registrable, RegistryEntry
+
+from copy import deepcopy
+
+
+class LoadFromRegistrySignal(QObject):
+    signal = Signal(dict)
+
+
+class DataSwitchSignal(QObject):
+    signal = Signal()
 
 class ActiveExtractedData(QAbstractTableModel):
     """This class holds one data set, as extracted by markers on the canvas. In
@@ -43,6 +56,7 @@ class ActiveExtractedData(QAbstractTableModel):
         super().__init__()
         self._data = data or np.empty(shape=(2, 0), dtype=np.float_)
         self._adaptiveCalibrationFunc = None
+        self.dataSwitchSignal = DataSwitchSignal()
 
     @Slot()
     def all(self) -> np.ndarray:
@@ -160,6 +174,7 @@ class ActiveExtractedData(QAbstractTableModel):
         """
         self._data = newData
         self.layoutChanged.emit()
+        self.dataSwitchSignal.signal.emit()
 
     def flags(self, index: QModelIndex):
         flags = super(self.__class__, self).flags(index)
@@ -205,15 +220,18 @@ class ListModelMeta(type(QAbstractListModel), type(serializers.Serializable)):
 
 
 class AllExtractedData(
-    QAbstractListModel, serializers.Serializable, metaclass=ListModelMeta
+    QAbstractListModel, serializers.Serializable, Registrable, metaclass=ListModelMeta
 ):
+
     def __init__(self):
         super().__init__()
-        self.dataNames = ["dataset1"]
+        self.dataNames = ["Transition 1"]
         self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
         self.assocTagList = [Tag()]
         self._calibrationFunc = None
         self._currentRow = 0
+        # this signal is used for updating the plot
+        self.loadFromRegistrySignal = LoadFromRegistrySignal()
 
     def rowCount(self, *args) -> int:
         return len(self.dataNames)
@@ -227,19 +245,22 @@ class AllExtractedData(
             icon1 = QtGui.QIcon()
             if self.assocTagList[index.row()].tagType != NO_TAG:
                 icon1.addPixmap(
-                    QtGui.QPixmap(":/icons/24x24/cil-list.png"),
+                    QtGui.QPixmap(":/icons/svg/cil-list.svg"),
                     QtGui.QIcon.Normal,
                     QtGui.QIcon.Off,
                 )
             else:
                 icon1.addPixmap(
-                    QtGui.QPixmap(":/icons/24x24/cil-link-broken.png"),
+                    QtGui.QPixmap(":/icons/svg/cil-link-broken.svg"),
                     QtGui.QIcon.Normal,
                     QtGui.QIcon.Off,
                 )
             return icon1
 
     def setData(self, index: QModelIndex, value, role=None):
+        """
+        Set the data at index `index` to `value`.
+        """
         if not (index.isValid() and role == Qt.EditRole):
             return False
         try:
@@ -261,7 +282,15 @@ class AllExtractedData(
         self.dataNames.insert(row, "")
         self.assocDataList.insert(row, np.empty(shape=(2, 0), dtype=np.float_))
         self.assocTagList.insert(row, Tag())
+
+        # update the current row before emitting the rowsRemoved signal 
+        # (which will be emitted by endRemoveRows)
+        self._currentRow = row
+
         self.endInsertRows()
+
+        self.layoutChanged.emit()
+
         return True
 
     def removeRow(self, row, parent=QModelIndex(), *args, **kwargs):
@@ -275,9 +304,16 @@ class AllExtractedData(
         self.dataNames.pop(row)
         self.assocDataList.pop(row)
         self.assocTagList.pop(row)
+
+        # update the current row before emitting the rowsRemoved signal 
+        # (which will be emitted by endRemoveRows)
+        if row == self.rowCount():  # now row count is 1 less than before
+            self._currentRow = row - 1
+        else:
+            self._currentRow = row
+
         self.endRemoveRows()
-        if self.currentRow == self.rowCount():
-            self._currentRow -= 1
+
         self.layoutChanged.emit()
         return True
 
@@ -293,13 +329,13 @@ class AllExtractedData(
     @Slot()
     def newRow(self, str_value=None):
         rowCount = self.rowCount()
-        str_value = str_value or "dataset" + str(rowCount + 1)
+        str_value = str_value or "Transition " + str(rowCount + 1)
         counter = 1
         while str_value in self.dataNames:
-            str_value = "dataset" + str(rowCount + 1 + counter)
+            str_value = "Transition " + str(rowCount + 1 + counter)
+            counter += 1
         self.insertRow(rowCount)
         self.setData(self.index(rowCount, 0), str_value, role=Qt.EditRole)
-        self.layoutChanged.emit()
 
     @Slot()
     def removeCurrentRow(self):
@@ -308,10 +344,16 @@ class AllExtractedData(
     @Slot()
     def removeAll(self):
         self.beginRemoveRows(QModelIndex(), 0, self.rowCount() - 1)
-        self.dataNames = ["dataset1"]
+        self.dataNames = ["Transition 1"]
         self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
         self.assocTagList = [Tag()]
+
+        # update the current row before emitting the rowsRemoved signal
+        # (which will be emitted by endRemoveRows)
+        self._currentRow = 0
+
         self.endRemoveRows()
+
         self.layoutChanged.emit()
         return True
 
@@ -331,6 +373,9 @@ class AllExtractedData(
 
     def currentTagItem(self):
         return self.assocTagList[self.currentRow]
+    
+    def currentDataName(self):
+        return self.dataNames[self.currentRow]
 
     @Slot()
     def updateAssocData(self, newData):
@@ -369,6 +414,12 @@ class AllExtractedData(
         ]
         return allData
 
+    def distinctSortedXValues(self):
+        all_x_list = np.array([])
+        for dataset in self.assocDataList:
+            all_x_list = np.concatenate((all_x_list, dataset[0]))
+        return np.sort(np.unique(all_x_list))
+
     def serialize(self):
         """
         Convert the content of the current class instance into IOData format.
@@ -379,10 +430,49 @@ class AllExtractedData(
         """
         processedData = self.allDataSorted(applyCalibration=False)
         initdata = {
-            "datanames": self.dataNames,
-            "datalist": processedData,
-            "taglist": self.assocTagList,
+            "dataNames": self.dataNames,
+            "assocDataList": processedData,
+            "assocTagList": self.assocTagList,
         }
         iodata = serializers.dict_serialize(initdata)
         iodata.typename = "QfitData"
         return iodata
+
+    attrToRegister = [
+        "dataNames",
+        "assocDataList",
+        "assocTagList",
+    ]
+
+    def registerAll(self):
+        """
+        Register necessary data for extracted data; these data are used to reconstruct the
+        extracted data when loading a project file.
+        """
+
+        # info to be registered:
+        # - dataNames
+        # - assocDataList
+        # - assocTagList
+        def getter():
+            # extracted_data = self.serialize()
+            processedData = self.allDataSorted(applyCalibration=False)
+            initdata = {
+                "datanames": self.dataNames,
+                "datalist": processedData,
+                "taglist": self.assocTagList,
+            }
+            return deepcopy(initdata)
+
+        def setter(initdata):
+            # emit the signal to the controller to register the data through controller
+            self.loadFromRegistrySignal.signal.emit(initdata)
+
+        registry_entry = RegistryEntry(
+            name="allExtractedData",
+            quantity_type="r+",
+            getter=getter,
+            setter=setter,
+        )
+        registry = {"allExtractedData": registry_entry}
+        return registry

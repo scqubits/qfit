@@ -5,22 +5,21 @@ from PySide6.QtWidgets import (
     QWidget,
     QGridLayout,
     QVBoxLayout,
-    QHBoxLayout,
-    QGroupBox,
-    QCheckBox,
-    QTableWidget,
-    QPushButton,
     QSizePolicy,
 )
-from PySide6.QtGui import QIcon
-from PySide6.QtCore import Qt, QSize, QCoreApplication
+from PySide6.QtCore import Qt
+
+from qfit.widgets.foldable_widget import (
+    FoldableWidget,
+    SPACING,
+)
+from qfit.widgets.validated_line_edits import FloatLineEdit
 
 from typing import Dict, List, Tuple, Union, Optional, Any
 
 SLIDER_RANGE = 100
-SPACING = 10
-MARGIN = 10
-SPACING_BETWEEN_SLIDERS = 10
+SPACING_BETWEEN_GROUPS = 15
+MARGIN = 12
 
 class LabeledSlider(QWidget):
     """
@@ -66,7 +65,7 @@ class LabeledSlider(QWidget):
         self.slider.setMinimum(1)
         self.slider.setMaximum(SLIDER_RANGE)
         self.slider.setSingleStep(1)
-        self.value = QLineEdit("0", self)
+        self.value = FloatLineEdit("0", self)
         self.value.setMaximumWidth(50)
 
         # initialize the layout
@@ -248,8 +247,10 @@ class GroupedWidget(QWidget):
         self.createWidgets(widget_names)
 
         # set the layout that no vertical space between the widgets (labelled sliders here)
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
-        self.gridLayout.setVerticalSpacing(SPACING_BETWEEN_SLIDERS)
+        self.gridLayout.setContentsMargins(MARGIN, 0, MARGIN, 0)
+
+        # self.gridLayout.setVerticalSpacing(SPACING_BETWEEN_SLIDERS) 
+
 
     def keys(self):
         return self.widgets.keys()
@@ -282,83 +283,6 @@ class GroupedWidget(QWidget):
             widget.setEnabled(value)
 
 
-class FoldableWidget(QGroupBox):
-    """
-    A widget that contains a title and a content widget. The content widget will be
-    hidden when the widget is not checked.
-    """
-
-    def __init__(self, title="Foldable", content_widget=None, parent=None):
-        super().__init__(parent)
-        # set fold push button
-        self.foldPushButton = QPushButton(self)
-        self.setObjectName("foldPushButton")
-        # icon
-        icon = QIcon()
-        icon.addFile(
-            ":/icons/16x16/cil-caret-right.png",
-            QSize(),
-            QIcon.Normal,
-            QIcon.Off,
-        )
-        icon.addFile(
-            ":/icons/16x16/cil-caret-bottom.png",
-            QSize(),
-            QIcon.Normal,
-            QIcon.On,
-        )
-        # set the style sheet (which controls the font, color, text align, border, etc.)
-        self.foldPushButton.setStyleSheet(
-            "QPushButton {\n"
-            '	font: 57 10pt "Roboto Medium";\n'
-            "	color: rgb(170, 170, 170);\n"
-            "	text-align: left;\n"
-            "	border: none;\n"
-            "}"
-        )
-        self.foldPushButton.setIcon(icon)
-        # set title
-        self.foldPushButton.setText(
-            QCoreApplication.translate("MainWindow", title, None)
-        )
-        # set checkable
-        self.foldPushButton.setCheckable(True)
-        self.foldPushButton.setChecked(True)
-
-        # set the box layout
-        self.boxLayout = QVBoxLayout(self)
-        # add push button to the layout
-        self.boxLayout.addWidget(self.foldPushButton)
-        # add content widget
-        self.content_widget = (
-            content_widget if content_widget else QLabel("No Content", self)
-        )
-        self.boxLayout.addWidget(self.content_widget)
-
-        # connect the push button to the setVisible method
-        self.foldPushButton.clicked.connect(
-            lambda: self.toggleContent(self.foldPushButton.isChecked())
-        )
-        # initialize the content
-        self.toggleContent(self.foldPushButton.isChecked())
-
-        # set the size policy for the foldable widget: expand along horizontal, fixed along vertical
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.boxLayout.setContentsMargins(0, MARGIN, 0, MARGIN)  # Remove the margins
-        self.boxLayout.setSpacing(SPACING)
-
-    def toggleContent(self, checked):
-        self.content_widget.setVisible(checked)
-
-    def setConentWidget(self, content_widget):
-        # remove
-        self.boxLayout.removeWidget(self.content_widget)
-
-        # add
-        self.content_widget = content_widget
-        self.boxLayout.addWidget(self.content_widget)
-
-
 class GroupedWidgetSet(QWidget):
     """
     Represent a set of grouped sliders. Each group will be displayed in a FoldableWidget.
@@ -375,7 +299,7 @@ class GroupedWidgetSet(QWidget):
         self.columns = columns
         self.widgetSetLayout = QVBoxLayout(self)
         self.widgetSetLayout.setContentsMargins(0, 0, 0, 0)  # Remove the margins
-        self.widgetSetLayout.setSpacing(SPACING)
+        self.widgetSetLayout.setSpacing(SPACING_BETWEEN_GROUPS)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.widgetGroups: Dict[str, GroupedWidget] = {}
 

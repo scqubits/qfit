@@ -9,40 +9,40 @@
 #    LICENSE file in the root directory of this source tree.
 ############################################################################
 
-import sys
-
-import PySide6.QtCore
-
-from PySide6.QtCore import QSize
-from PySide6.QtGui import QFont, QScreen
-from PySide6.QtWidgets import QApplication
-
-import matplotlib
-
-matplotlib.use("qtagg")
-
-from qfit.core.mainwindow import MainWindow
-from qfit.models.measurement_data import dummy_measurement_data
-from qfit.controllers.numerical_model import test_hilbert_space
-
-
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    font = QFont()
-    font.setFamily("Roboto Medium")
-    font.setPointSize(9)
-    app.setFont(font)
 
-    # fileData = readFileData('C:/Users/drjen/PycharmProjects/DataSelector/scratch/00000_twotoneVsPowerTransmission.h5')
-    # fileData = readFileData('C:/Users/drjen/Desktop/Spectroscopy.JPEG')
-    # fileData = readFileData(r"C:\Users\drjen\PycharmProjects\qfit\qfit\scratch\aug_summary_4_1.hdf5")
-    window = MainWindow(
-        measurementData=dummy_measurement_data(), 
-        hilbert_space=test_hilbert_space(),
-        extractedData=None
+    import scqubits as scq
+    from qfit import Fit
+
+    # just a test for now
+    resonator = scq.Oscillator(
+        E_osc = 3,
+        l_osc = 1.0,
+        truncated_dim = 4,
+        id_str = "resonator"
     )
-    # window.resizeAndCenter(maxSize)
+        
+    fluxonium = scq.Fluxonium(
+        EJ = 7.0,
+        EC = 1,
+        EL = 0.2,
+        flux = 0.0,
+        cutoff = 100,
+        truncated_dim = 5,
+        id_str = "fluxonium"
+    )
 
-    window.show()
-    window.openFile(initialize=True)
-    sys.exit(app.exec())
+    hilbertspace = scq.HilbertSpace([resonator, fluxonium])
+
+    hilbertspace.add_interaction(
+        g = 1,
+        op1 = resonator.n_operator,
+        op2 = fluxonium.n_operator,
+        add_hc = False,
+        id_str = "res-qubit"
+    )
+
+    qfit_app = Fit(hilbertspace)
+    # qfit_app = Fit.new(hilbertspace)
+    # Fit.open("./../example_data/test.qfit")
+
