@@ -56,6 +56,11 @@ class NavigationHidden(NavigationToolbar2QT):
         pass
 
     def setPanMode(self, on=True):
+        """
+        Activate pan/zoom mode. on is a boolean. It first disconnects any
+        prior callback set by setPanMode or setZoomMode. Then it will turn
+        on the appropriate callback, and set the mode message accordingly.
+        """
         if on:
             self._active = "PAN"
         else:
@@ -86,6 +91,11 @@ class NavigationHidden(NavigationToolbar2QT):
         self.set_message(self.mode)
 
     def setZoomMode(self, on=True):
+        """
+        Activate zoom mode. on is a boolean. It first disconnects any
+        prior callback set by setPanMode or setZoomMode. Then it will turn
+        on the appropriate callback, and set the mode message accordingly.
+        """
         if on:
             self._active = "ZOOM"
         else:
@@ -203,6 +213,10 @@ class SpecialCursor(Cursor):
 
 
 class MplFigureCanvas(QFrame):
+    x_snap_mode: bool = False
+    cross_hair_horizOn: bool = False
+    cross_hair_vertOn: bool = False
+
     def __init__(self, parent=None):
         QFrame.__init__(self, parent)
 
@@ -218,22 +232,35 @@ class MplFigureCanvas(QFrame):
 
     def set_callback_for_extracted_data(self, new_extracted_data):
         self.allExtractedData = new_extracted_data
-        self.select_crosshair()
+        # self.select_crosshair()
 
     def axes(self):
         return self.canvas.figure.axes[0]
 
-    def select_crosshair(self, horizOn=True, vertOn=True):
+    def select_crosshair(
+        self, 
+        x_snap_mode: bool | None = None,
+        horizOn: bool | None = None,
+        vertOn: bool | None = None,
+    ):
         """
-        set up the crosshair cursor
+        set up the crosshair cursor. This class memorizes the state of the crosshair
+        cursor when no arguments are passed. 
         """
+        if x_snap_mode is not None:
+            self.x_snap_mode = x_snap_mode
+        if horizOn is not None:
+            self.cross_hair_horizOn = horizOn
+        if vertOn is not None:
+            self.cross_hair_vertOn = vertOn
+
         self._crosshair = SpecialCursor(
             self.axes(),
             allExtractedData=self.allExtractedData,
             x_snap_mode=self.x_snap_mode,
             useblit=True,
-            horizOn=horizOn,
-            vertOn=vertOn,
+            horizOn=self.cross_hair_horizOn,
+            vertOn=self.cross_hair_vertOn,
             color="black",
             alpha=0.5,
         )
@@ -246,7 +273,7 @@ class MplFigureCanvas(QFrame):
         )  # toggle zoom at the level of the NavigationToolbar2QT, enabling actual
         # zoom functionality
         appstate.state = State.ZOOM
-        self.select_crosshair()
+        self.select_crosshair(horizOn=False, vertOn=False)
 
     def panOn(self):
         self.toolbar.setPanMode(
@@ -254,13 +281,13 @@ class MplFigureCanvas(QFrame):
         )  # toggle pan at the level of the NavigationToolbar2QT, enabling actual
         # pan functionality
         appstate.state = State.PAN
-        self.select_crosshair()
+        self.select_crosshair(horizOn=False, vertOn=False)
 
     def selectOn(self):
         self.toolbar.setZoomMode(on=False)
         self.toolbar.setPanMode(on=False)
         appstate.state = State.SELECT
-        self.select_crosshair()
+        self.select_crosshair(horizOn=True, vertOn=True)
 
     def calibrateOn(self, strXY):
         self.toolbar.setZoomMode(on=False)
