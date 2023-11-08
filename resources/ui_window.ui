@@ -14,7 +14,7 @@
     <x>0</x>
     <y>0</y>
     <width>1170</width>
-    <height>835</height>
+    <height>774</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -646,7 +646,6 @@ QPushButton:checked {
              <font>
               <family>Roboto Medium</family>
               <pointsize>11</pointsize>
-              <weight>7</weight>
               <italic>false</italic>
               <bold>false</bold>
              </font>
@@ -1414,6 +1413,12 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                     <size>
                      <width>30</width>
                      <height>30</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>16777192</height>
                     </size>
                    </property>
                    <property name="cursor">
@@ -2345,8 +2350,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>352</width>
-                   <height>363</height>
+                   <width>342</width>
+                   <height>361</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -2776,7 +2781,6 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>11</pointsize>
-                  <weight>7</weight>
                   <italic>false</italic>
                   <bold>false</bold>
                  </font>
@@ -2841,8 +2845,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>352</width>
-                   <height>420</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -2979,7 +2983,6 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>11</pointsize>
-                  <weight>7</weight>
                   <italic>false</italic>
                   <bold>false</bold>
                  </font>
@@ -3038,8 +3041,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>352</width>
-                   <height>418</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -3229,7 +3232,6 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>11</pointsize>
-                  <weight>7</weight>
                   <italic>false</italic>
                   <bold>false</bold>
                  </font>
@@ -3892,7 +3894,6 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>9</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -4010,7 +4011,6 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>11</pointsize>
-                  <weight>7</weight>
                   <italic>false</italic>
                   <bold>false</bold>
                  </font>
@@ -4246,7 +4246,6 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>9</pointsize>
-                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>

@@ -61,6 +61,11 @@ class CalculatedSpecData:
 
         fig = axes.get_figure()
 
+        # # since scqubits plot_evals-vs_paramvals update axes labels, we need to save the
+        # # labels before plotting and then restore them
+        # xlabel = axes.get_xlabel()
+        # ylabel = axes.get_ylabel()
+
         self.overall_specdata.plot_evals_vs_paramvals(
             color="black",
             linewidth=2,
@@ -76,3 +81,7 @@ class CalculatedSpecData:
                 linewidth=2,
                 fig_ax=(fig, axes),
             )
+
+        # # restore labels
+        # axes.set_xlabel(xlabel)
+        # axes.set_ylabel(ylabel)
