@@ -411,7 +411,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.ui.modeFitButton.setChecked(True)
 
     def uiExtractedDataConnects(self):
-        """Make connections for changes in data."""
+        """Make connections for changes in extracted data."""
 
         # whenever a row is inserted or removed, select the current row
         # this connection should be put before the connection of layoutChanged
@@ -469,6 +469,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
 
         # Whenever a new selection of data set is made, update the matching mode and the cursor
+        self.allDatasets.layoutChanged.connect(self.updateMatchingModeAndCursor)
         self.ui.datasetListView.clicked.connect(self.updateMatchingModeAndCursor)
 
     def uiMeasurementDataOptionsConnects(self):
@@ -535,7 +536,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         Callback for updating the matching mode and the cursor
         """
         self.x_snap_mode = False
-        self.ui.mplFigureCanvas.x_snap_mode = False
         if (
             self.allDatasets
             and self.allDatasets.currentRow != 0
@@ -544,8 +544,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             and (appstate.state not in list(self.calibrationStates.values()))
         ):
             self.x_snap_mode = True
-            self.ui.mplFigureCanvas.x_snap_mode = True
-        self.ui.mplFigureCanvas.select_crosshair()
+        self.ui.mplFigureCanvas.select_crosshair(x_snap_mode=self.x_snap_mode)
 
     def calibrationButtonIsChecked(self):
         """
@@ -622,25 +621,26 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             return
 
         # calibration mode
-        for calibrationLabel in ["X1", "X2", "Y1", "Y2"]:
-            data = event.xdata if (calibrationLabel[0] == "X") else event.ydata
+        if self.ui.modeSelectButton.isChecked():
+            for calibrationLabel in ["X1", "X2", "Y1", "Y2"]:
+                data = event.xdata if (calibrationLabel[0] == "X") else event.ydata
 
-            if appstate.state == self.calibrationStates[calibrationLabel]:
-                # turn off the highlighting of the button
-                self._highlightCaliButton(self.calibrationButtons[calibrationLabel], reset=True)
-                # update the raw line edits by the value of the clicked point
-                self.rawLineEdits[calibrationLabel].setText(str(data))
-                self.rawLineEdits[calibrationLabel].home(False)
-                # highlight the map line edit
-                self.mapLineEdits[calibrationLabel].selectAll()
-                self.mapLineEdits[calibrationLabel].setFocus()
-                self.ui.selectViewButton.setChecked(True)
-                self.ui.mplFigureCanvas.selectOn()
-                self.rawLineEdits[calibrationLabel].editingFinished.emit()
-                return
+                if appstate.state == self.calibrationStates[calibrationLabel]:
+                    # turn off the highlighting of the button
+                    self._highlightCaliButton(self.calibrationButtons[calibrationLabel], reset=True)
+                    # update the raw line edits by the value of the clicked point
+                    self.rawLineEdits[calibrationLabel].setText(str(data))
+                    self.rawLineEdits[calibrationLabel].home(False)
+                    # highlight the map line edit
+                    self.mapLineEdits[calibrationLabel].selectAll()
+                    self.mapLineEdits[calibrationLabel].setFocus()
+                    self.ui.selectViewButton.setChecked(True)
+                    self.ui.mplFigureCanvas.selectOn()
+                    self.rawLineEdits[calibrationLabel].editingFinished.emit()
+                    return
 
         # select mode
-        if appstate.state == State.SELECT:
+        if self.ui.modeTagButton.isChecked() and appstate.state == State.SELECT:
             current_data = self.activeDataset.all()
             if self.x_snap_mode:
                 x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
