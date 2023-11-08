@@ -1518,6 +1518,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.allDatasets.dataNames = datanames
         self.allDatasets.assocDataList = transposeEach(datalist)
         self.allDatasets.assocTagList = tag_data
+        # set calibration
+        # this might worth a separate signal/slot, because the initialDynamicalElements only
+        # initialize the calibration data, and it does not recover the progress on the previous
+        # calibration.
+        self.calibrationData.setCalibration(*self.calibrationData.allCalibrationVecs())
+        self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
         # set active dataset
         self.activeDataset._data = self.allDatasets.currentAssocItem()
         self.allDatasets.layoutChanged.emit()
