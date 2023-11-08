@@ -249,7 +249,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
             self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
             self.activeDataset._data = self.allDatasets.currentAssocItem()
-            self.taggingCtrl.setTag(self.allDatasets.currentTagItem())
+            self.taggingCtrl.setTagInView(self.allDatasets.currentTagItem())
             self.allDatasets.layoutChanged.emit()
             self.activeDataset.layoutChanged.emit()
 
