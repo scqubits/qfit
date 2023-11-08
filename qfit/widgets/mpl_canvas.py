@@ -244,7 +244,8 @@ class MplFigureCanvas(QFrame):
         vertOn: bool | None = None,
     ):
         """
-        set up the crosshair cursor. 
+        set up the crosshair cursor. This class memorizes the state of the crosshair
+        cursor when no arguments are passed. 
         """
         if x_snap_mode is not None:
             self.x_snap_mode = x_snap_mode

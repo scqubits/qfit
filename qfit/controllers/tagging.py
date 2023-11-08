@@ -65,14 +65,13 @@ class TaggingCtrl(QObject):
     def __init__(
         self, 
         subsysCount: int, 
-        ui_TagData: "Ui_MainWindow",
         mainWindow: "MainWindow",
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
 
-        self.ui = ui_TagData
         self.mainWindow = mainWindow
+        self.ui = self.mainWindow.ui
 
         self.subsysCount = subsysCount
 

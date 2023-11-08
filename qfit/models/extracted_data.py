@@ -46,7 +46,7 @@ class ActiveExtractedData(QAbstractTableModel):
     addition, it references calibration data to expose either the raw selected data,
     or their calibrated counterparts."""
 
-    def __init__(self, data: np.ndarray = None):
+    def __init__(self, data: np.ndarray | None = None):
         """
         Parameters
         ----------
@@ -54,7 +54,7 @@ class ActiveExtractedData(QAbstractTableModel):
             numpy array of floats, shape=(2, N)
         """
         super().__init__()
-        self._data = data or np.empty(shape=(2, 0), dtype=np.float_)
+        self._data: np.ndarray = data or np.empty(shape=(2, 0), dtype=np.float_)
         self._adaptiveCalibrationFunc = None
         self.dataSwitchSignal = DataSwitchSignal()
 
@@ -213,6 +213,9 @@ class ActiveExtractedData(QAbstractTableModel):
         adaptiveCalibrationCallback: function
         """
         self._adaptiveCalibrationFunc = adaptiveCalibrationCallback
+
+    def isEmpty(self) -> bool:
+        return self._data.size == 0
 
 
 class ListModelMeta(type(QAbstractListModel), type(serializers.Serializable)):
@@ -390,8 +393,34 @@ class AllExtractedData(
         self._calibrationFunc = calibrationDataCallback
 
     def allDataSorted(
-        self, applyCalibration, calibration_axis: Literal["xy", "x", "y"] = "xy"
-    ):
+        self, 
+        applyCalibration: bool = True, 
+        calibration_axis: Literal["xy", "x", "y"] = "xy",
+        concat_data: bool = False,
+    ) -> list[np.ndarray] | np.ndarray:
+        """
+        Return all data points sorted by x value.
+
+        Parameters
+        ----------
+        applyCalibration: bool, by default, True
+            If True, apply the calibration function to the data points.
+        calibration_axis: str, by default, "xy"
+            If "xy", apply the calibration function to both x and y values.
+            If "x", apply the calibration function to x values only.
+            If "y", apply the calibration function to y values only.
+        concat_data: bool, by default, False
+            If True, concatenate all data points from different transitions 
+            into a single array.
+
+        Returns
+        -------
+        list of ndarray
+            list of numpy arrays of length M, where M is the number
+            of transitions. Each array may have shape (N, 2), where N is the 
+            number of data points for each transition. If `concat_data` is True,
+            then the output is a single numpy array of shape (~M*N, 2).
+        """
         if applyCalibration:
             data = [
                 self._calibrationFunc(dataSet, calibration_axis=calibration_axis)
@@ -412,13 +441,23 @@ class AllExtractedData(
             np.asarray([xSet, ySet]).transpose()
             for xSet, ySet in zip(sortedXData, sortedYData)
         ]
-        return allData
+
+        if concat_data:
+            return np.concatenate(allData, axis=0)
+        else:
+            return allData
 
     def distinctSortedXValues(self):
         all_x_list = np.array([])
         for dataset in self.assocDataList:
             all_x_list = np.concatenate((all_x_list, dataset[0]))
         return np.sort(np.unique(all_x_list))
+    
+    def isEmpty(self) -> bool:
+        for data in self.assocDataList:
+            if data.size > 0:
+                return False
+        return True
 
     def serialize(self):
         """

@@ -217,7 +217,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.uiExtractedDataConnects()
         self.uiExtractedDataControlConnects()
 
-        self.taggingCtrl = TaggingCtrl(self.hilbertspace.subsystem_count, self.ui, self)
+        self.taggingCtrl = TaggingCtrl(self.hilbertspace.subsystem_count, self)
 
     def dynamicalMeasurementDataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -409,6 +409,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.ui.modePrefitButton.setChecked(True)
         elif page == 3:
             self.ui.modeFitButton.setChecked(True)
+
+        self.updatePlot()
 
     def uiExtractedDataConnects(self):
         """Make connections for changes in extracted data."""
@@ -717,16 +719,32 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # If there are any extracted data points in the currently active data set, show
         # those via a scatter plot.
-        if self.activeDataset.columnCount() > 0:
-            dataXY = self.activeDataset.all()
-            self.axes.scatter(
-                dataXY[0],
-                dataXY[1],
-                c=scatter_color,
-                marker=r"$\odot$",
-                s=130,
-                alpha=0.3,
-            )
+        if self.ui.modeTagButton.isChecked():
+            if not self.activeDataset.isEmpty():
+                dataXY = self.activeDataset.all()
+                self.axes.scatter(
+                    dataXY[0],
+                    dataXY[1],
+                    c=scatter_color,
+                    marker=r"$\odot$",
+                    s=130,
+                    alpha=0.3,
+                )
+        elif not self.ui.modeSelectButton.isChecked():
+            if not self.allDatasets.isEmpty():
+                dataXY = self.allDatasets.allDataSorted(
+                    applyCalibration=False,
+                    concat_data=True,
+                )
+
+                self.axes.scatter(
+                    dataXY[:, 0],
+                    dataXY[:, 1],
+                    c=scatter_color,
+                    marker=r"$\odot$",
+                    s=130,
+                    alpha=0.3,
+                )
 
         plotted_data = []
         # line_data = self.allDatasets.assocDataList[0]
