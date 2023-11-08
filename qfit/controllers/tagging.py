@@ -4,11 +4,12 @@ from PySide6.QtCore import (
     Slot,
 )
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple
 
 if TYPE_CHECKING:
     from qfit.ui_designer.ui_window import Ui_MainWindow
     from qfit.core.mainwindow import MainWindow
+    from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
 
 # tagging types (to facilitate file io: do not use Enum)
 NO_TAG = "NO_TAG"
@@ -65,13 +66,14 @@ class TaggingCtrl(QObject):
     def __init__(
         self, 
         subsysCount: int, 
-        mainWindow: "MainWindow",
+        dataSets: Tuple["AllExtractedData", "ActiveExtractedData"],
+        ui: "Ui_MainWindow",
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
 
-        self.mainWindow = mainWindow
-        self.ui = self.mainWindow.ui
+        self.ui = ui
+        self.allDatasets, self.activeDataset = dataSets
 
         self.subsysCount = subsysCount
 
@@ -100,58 +102,54 @@ class TaggingCtrl(QObject):
         )
         self.ui.noTagRadioButton.toggled.connect(self._setNoTagMode)
 
-        # Once the user has finished editing the tag, emit the changedTagData signal
-        self.ui.initialStateLineEdit.editingFinished.connect(self.changedTagData.emit)
-        self.ui.finalStateLineEdit.editingFinished.connect(self.changedTagData.emit)
-        self.ui.phNumberBareSpinBox.valueChanged.connect(lambda: self.changedTagData.emit())
-        self.ui.initialStateSpinBox.valueChanged.connect(lambda: self.changedTagData.emit())
-        self.ui.finalStateSpinBox.valueChanged.connect(lambda: self.changedTagData.emit())
-        self.ui.phNumberDressedSpinBox.valueChanged.connect(lambda: self.changedTagData.emit())
+        # Once the user has finished editing the tag, update the AllExtractedData data
+        self.ui.initialStateLineEdit.editingFinished.connect(self._updateDatasetTag)
+        self.ui.finalStateLineEdit.editingFinished.connect(self._updateDatasetTag)
+        self.ui.phNumberBareSpinBox.valueChanged.connect(lambda: self._updateDatasetTag())
+        self.ui.initialStateSpinBox.valueChanged.connect(lambda: self._updateDatasetTag())
+        self.ui.finalStateSpinBox.valueChanged.connect(lambda: self._updateDatasetTag())
+        self.ui.phNumberDressedSpinBox.valueChanged.connect(lambda: self._updateDatasetTag())
+
+    def _updateDatasetTag(self):
+        # Whenever tag type or tag data is changed, update the AllExtractedData data
+        self.allDatasets.updateCurrentTag(self.getTagFromUI())
 
     def _datasetConnects(self):
         """
         Once the dataset selection is changed, change the tag panel 
         correspondingly
         """
-        # Whenever tag type or tag data is changed, update the AllExtractedData data
-        self.changedTagType.connect(
-            lambda: self.mainWindow.allDatasets.updateCurrentTag(self.getTagFromUI())
-        )
-        self.changedTagData.connect(
-            lambda: self.mainWindow.allDatasets.updateCurrentTag(self.getTagFromUI())
-        )
-
         # Whenever a new dataset is activated in the AllExtractedData, update the TagDataView
         self.ui.datasetListView.clicked.connect(self._syncTagWithDataset)
 
         # Whenever a dataset is renamed, update the title for tags
-        self.mainWindow.allDatasets.dataChanged.connect(self._syncTagTitle)
+        self.allDatasets.dataChanged.connect(self._syncTagTitle)
 
         # switch the tag so that it matches the current data set
-        self.mainWindow.activeDataset.dataSwitchSignal.signal.connect(self._syncTagWithDataset)
+        self.activeDataset.dataSwitchSignal.signal.connect(self._syncTagWithDataset)
 
     @Slot()
     def _syncTagTitle(self):
         self.ui.transitionLabel.setText(
-            f"LABEL for {self.mainWindow.allDatasets.currentDataName()}"
+            f"LABEL for {self.allDatasets.currentDataName()}"
         )
 
     @Slot()
     def _syncTagWithDataset(self):
         self._syncTagTitle()
-        self.setTag(self.mainWindow.allDatasets.currentTagItem())
+        self.setTag(self.allDatasets.currentTagItem())
 
     @Slot()
     def _setNoTagMode(self):
         self.ui.tagBareGroupBox.setVisible(False)
         self.ui.tagDressedGroupBox.setVisible(False)
-        self.changedTagType.emit()
+        self._updateDatasetTag()
 
     @Slot()
     def _setBareMode(self):
         self.ui.tagDressedGroupBox.setVisible(False)
         self.ui.tagBareGroupBox.setVisible(True)
-        self.changedTagType.emit()
+        self._updateDatasetTag()
         self.ui.initialStateLineEdit.editingFinished.emit()
         self.ui.finalStateLineEdit.editingFinished.emit()
 
@@ -159,7 +157,7 @@ class TaggingCtrl(QObject):
     def _setDressedMode(self):
         self.ui.tagBareGroupBox.setVisible(False)
         self.ui.tagDressedGroupBox.setVisible(True)
-        self.changedTagType.emit()
+        self._updateDatasetTag()
 
     def _clear(self):
         """

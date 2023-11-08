@@ -283,11 +283,22 @@ class MplFigureCanvas(QFrame):
         appstate.state = State.PAN
         self.select_crosshair(horizOn=False, vertOn=False)
 
-    def selectOn(self):
+    def selectOn(self, showCrosshair=True):
+        """
+        On the view level, turning on the selection mode means showing
+        the crosshair cursor. 
+        
+        However, there is a situation where on a wrong 
+        page, clicking the selection button will not turn on the selection mode,
+        so the crosshair cursor should be turned off.
+        """
         self.toolbar.setZoomMode(on=False)
         self.toolbar.setPanMode(on=False)
         appstate.state = State.SELECT
-        self.select_crosshair(horizOn=True, vertOn=True)
+        if showCrosshair:
+            self.select_crosshair(horizOn=True, vertOn=True)
+        else:
+            self.select_crosshair(horizOn=False, vertOn=False)
 
     def calibrateOn(self, strXY):
         self.toolbar.setZoomMode(on=False)
