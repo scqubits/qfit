@@ -8,6 +8,7 @@ from qfit.widgets.mpl_canvas import MplFigureCanvas
 
 
 
+
 import sys
 import os
 import numpy as np
@@ -16,6 +17,7 @@ import copy
 from typing import TYPE_CHECKING, Union, Dict, Any
 
 if TYPE_CHECKING:
+    from qfit.ui_designer.ui_window import Ui_MainWindow
     from qfit.core.mainwindow import MainWindow
     from qfit.models.measurement_data import (
         MeasurementDataType,
@@ -28,15 +30,12 @@ class CursorCtrl:
     other user interfaces.
     """
 
-
-    
     def __init__(
         self,
-        mplCanvas: "MplFigureCanvas"
-        mainWindow: "MainWindow",
+        mplCanvas: "MplFigureCanvas",
+        ui: "Ui_MainWindow",
     ):
-        self.mainWindow = mainWindow
-
+        pass
     
 
     

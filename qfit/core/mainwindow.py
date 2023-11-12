@@ -161,7 +161,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui_menu = MenuWidget(parent=self)
 
         self.setShadows()
-        # TODO let Jens disable setAutoExclusive for vertical snap button
         self.ui.verticalSnapButton.setAutoExclusive(False)
 
         self.uiPagesConnects()
@@ -187,7 +186,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.uiCalibrationConnects()
         self.uiCanvasControlConnects()
         self.uiMplCanvasConnects()
-        self.ui.mplFigureCanvas.selectOn()
+        # self.ui.mplFigureCanvas.selectOn()
 
         # prefit: controller, two models and their connection to view (sliders)
         self.prefitDynamicalElementsBuild(self.hilbertspace)
@@ -216,7 +215,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.uiExtractedDataConnects()
         self.uiExtractedDataControlConnects()
 
-        self.taggingCtrl = TaggingCtrl(self.hilbertspace.subsystem_count, self)
+        self.taggingCtrl = TaggingCtrl(
+            self.hilbertspace.subsystem_count, 
+            (self.allDatasets, self.activeDataset),
+            self.ui,
+        )
 
     def dynamicalMeasurementDataSetupConnects(self):
         self.measurementData.setupUICallbacks(
@@ -233,6 +236,21 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.setupUIXYZComboBoxes()
         self.uiXYZComboBoxesConnects()
+
+    def recoverFromExtractedData(self):
+        if self.extractedData is not None:
+            self.allDatasets.dataNames = self.extractedData.datanames
+            self.allDatasets.assocDataList = transposeEach(self.extractedData.datalist)
+            self.allDatasets.assocTagList = self.extractedData.tag_data
+            self.calibrationData.setCalibration(
+                *self.extractedData.calibration_data.allCalibrationVecs()
+            )
+
+            self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
+            self.activeDataset._data = self.allDatasets.currentAssocItem()
+            self.taggingCtrl.setTagInView(self.allDatasets.currentTagItem())
+            self.allDatasets.layoutChanged.emit()
+            self.activeDataset.layoutChanged.emit()
 
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.LeftButton:
@@ -393,6 +411,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         elif page == 3:
             self.ui.modeFitButton.setChecked(True)
 
+        self.updateMatchingModeAndCursor()
         self.updatePlot()
 
     def uiExtractedDataConnects(self):
@@ -520,7 +539,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         Callback for updating the matching mode and the cursor
         """
-        self.x_snap_mode = False
+        # matching mode
         if (
             self.allDatasets
             and self.allDatasets.currentRow != 0
@@ -529,7 +548,22 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             and (appstate.state not in list(self.calibrationStates.values()))
         ):
             self.x_snap_mode = True
-        self.ui.mplFigureCanvas.select_crosshair(x_snap_mode=self.x_snap_mode)
+        else:
+            self.x_snap_mode = False
+
+        # cursor
+        if (
+            self.ui.modeTagButton.isChecked()
+            and self.ui.selectViewButton.isChecked()
+        ):
+            horizOn, vertOn = True, True
+        else:
+            horizOn, vertOn = False, False
+
+        self.ui.mplFigureCanvas.select_crosshair(
+            x_snap_mode=self.x_snap_mode,
+            horizOn=horizOn, vertOn=vertOn,
+        )
 
     def calibrationButtonIsChecked(self):
         """
@@ -553,7 +587,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.calibrationButtons[label].toggled.connect(
                 self.updateMatchingModeAndCursor
             )
-        self.ui.mplFigureCanvas.x_snap_mode = self.x_snap_mode
+        self.updateMatchingModeAndCursor()
         self.ui.mplFigureCanvas.set_callback_for_extracted_data(self.allDatasets)
         self.cidMove = self.axes.figure.canvas.mpl_connect(
             "motion_notify_event", self.canvasMouseMonitoring
@@ -574,7 +608,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def toggleSelect(self):
         if appstate.state != State.SELECT:
             appstate.state = State.SELECT
-            self.ui.mplFigureCanvas.selectOn()
+            self.ui.mplFigureCanvas.selectOn(showCrosshair=self.ui.modeTagButton.isChecked())
 
     @Slot()
     def toggleZoom(self):

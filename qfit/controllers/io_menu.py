@@ -66,7 +66,11 @@ class IOCtrl:
         self,
         ui_Menu: MenuWidget,
         registry: Registry,
-        mainWindow: "MainWindow",
+        mainWindow: "MainWindow",   # it's not a good idea to use the entire
+                                    # main window here, but this IO controller
+                                    # really needs great power - initialize
+                                    # the dynamical elements, save the project,
+                                    # close the app, etc.
     ):
         self.menu = ui_Menu
         self.registry = registry
