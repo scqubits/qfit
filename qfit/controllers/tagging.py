@@ -16,13 +16,14 @@ NO_TAG = "NO_TAG"
 DISPERSIVE_DRESSED = "DISPERSIVE_DRESSED"
 DISPERSIVE_BARE = "DISPERSIVE_BARE"
 
+
 class Tag:
     """
     Store a single dataset tag. The tag can be of different types:
     - NO_TAG: user did not tag data
-    - DISPERSIVE_DRESSED: transition between two states tagged by 
+    - DISPERSIVE_DRESSED: transition between two states tagged by
     dressed-states indices
-    - DISPERSIVE_BARE: : transition between two states tagged by 
+    - DISPERSIVE_BARE: : transition between two states tagged by
     bare-states indices
 
     Parameters
@@ -31,9 +32,9 @@ class Tag:
         one of the tag types listed above
     initial, final: int, or tuple of int, or None
         - For NO_TAG, no initial and final state are specified.
-        - For DISPERSIVE_DRESSED, initial and final state are specified 
+        - For DISPERSIVE_DRESSED, initial and final state are specified
         by an int dressed index.
-        - FOR DISPERSIVE_BARE, initial and final state are specified by 
+        - FOR DISPERSIVE_BARE, initial and final state are specified by
         a tuple of ints (exc. levels of each subsys)
     photons: int or None
         - For NO_TAG, no photon number is specified.
@@ -60,14 +61,37 @@ class Tag:
 
 
 class TaggingCtrl(QObject):
-
     def __init__(
-        self, 
-        subsysCount: int, 
+        self,
+        subsysCount: int,
         dataSets: Tuple["AllExtractedData", "ActiveExtractedData"],
         ui: "Ui_MainWindow",
-        *args, **kwargs
+        *args,
+        **kwargs,
     ):
+        """
+        Controller for the tagging panel (not for the tag data itself). This controller serves as a
+        transmittor between the tag data (model) and the tag panel (view). User interact with the
+        tag panel and the model will be updated accordingly, meanwhile, changes in the model (e.g.
+        a different dataset is selected) will be reflected in the tag panel.
+
+        Relevant UI elements:
+        - tagging section (title, radio buttons for the three modes and options for each mode)
+
+        Relevant model:
+        - extracted data (all and active)
+
+        ARGUMENTS
+        ---------
+        subsysCount: int
+            number of subsystems in the system
+        dataSets: Tuple[AllExtractedData, ActiveExtractedData]
+            all extracted datasets and the currently active dataset
+            we need the active dataset to update the tag panel when the dataset is changed
+        ui: Ui_MainWindow
+            the main window UI
+        additional arguments are passed to QObject.__init__()
+        """
         super().__init__(*args, **kwargs)
 
         self.ui = ui
@@ -84,28 +108,45 @@ class TaggingCtrl(QObject):
     def _initializeUI(self):
         """
         Set up the UI for the tagging panel:
-        - In NO_TAG mode, switch off the bare and dressed tagging panels
+        - In NO_TAG mode, switch off (hide) the bare and dressed tagging panels
         - Set the number of subsystems
         """
         self.ui.tagDressedGroupBox.setVisible(False)
         self.ui.tagBareGroupBox.setVisible(False)
 
+        # the number of subsystems are used by the initial and final state line edits
+        # to check the validity of the input
         self.ui.initialStateLineEdit.setTupleLength(self.subsysCount)
         self.ui.finalStateLineEdit.setTupleLength(self.subsysCount)
 
     # Connections ======================================================
     def _viewUpdatedConnects(self):
+        """
+        Connect the signals for user changes through UI in the tagging section to the corresponding
+        slots that update the model accordingly.
+        """
         # connect the radio buttons to the corresponding tagging panels
-        self.ui.tagDispersiveBareRadioButton.toggled.connect(lambda: self._onBareRadioButtonToggled())
-        self.ui.tagDispersiveBareRadioButton.toggled.connect(lambda: print("Mode clicked: bare"))
+        # one for each mode
+        self.ui.tagDispersiveBareRadioButton.toggled.connect(
+            lambda: self._onBareRadioButtonToggled()
+        )
+        self.ui.tagDispersiveBareRadioButton.toggled.connect(
+            lambda: print("Mode clicked: bare")
+        )
         self.ui.tagDispersiveDressedRadioButton.toggled.connect(
             lambda: self._onDressedRadioButtonToggled()
         )
-        self.ui.tagDispersiveDressedRadioButton.toggled.connect(lambda: print("Mode clicked: dressed"))
-        self.ui.noTagRadioButton.toggled.connect(lambda: self._onNoTagRadioButtonToggled())
+        self.ui.tagDispersiveDressedRadioButton.toggled.connect(
+            lambda: print("Mode clicked: dressed")
+        )
+        self.ui.noTagRadioButton.toggled.connect(
+            lambda: self._onNoTagRadioButtonToggled()
+        )
         self.ui.noTagRadioButton.toggled.connect(lambda: print("Mode clicked: no tag"))
 
         # Once the user has finished editing the tag, update the AllExtractedData data
+        # each view (LineEdit and SpinBox) has its own signal and a common slot _tagViewToModel to
+        # update the model
         self.ui.initialStateLineEdit.editingFinished.connect(self._tagViewToModel)
         self.ui.initialStateLineEdit.editingFinished.connect(lambda: print("initial"))
         self.ui.finalStateLineEdit.editingFinished.connect(self._tagViewToModel)
@@ -116,12 +157,16 @@ class TaggingCtrl(QObject):
         self.ui.initialStateSpinBox.valueChanged.connect(lambda: print("init spin"))
         self.ui.finalStateSpinBox.valueChanged.connect(lambda: self._tagViewToModel())
         self.ui.finalStateSpinBox.valueChanged.connect(lambda: print("final spin"))
-        self.ui.phNumberDressedSpinBox.valueChanged.connect(lambda: self._tagViewToModel())
-        self.ui.phNumberDressedSpinBox.valueChanged.connect(lambda: print("ph spin bare"))
+        self.ui.phNumberDressedSpinBox.valueChanged.connect(
+            lambda: self._tagViewToModel()
+        )
+        self.ui.phNumberDressedSpinBox.valueChanged.connect(
+            lambda: print("ph spin bare")
+        )
 
     def _modelUpdatedConnects(self):
         """
-        Once the dataset selection is changed, change the tag panel 
+        Once the dataset selection and title selection is changed, change the tag panel
         correspondingly
         """
         # # Whenever a new dataset is activated in the AllExtractedData, update the TagDataView
@@ -132,7 +177,8 @@ class TaggingCtrl(QObject):
         self.allDatasets.dataChanged.connect(self._setTagTitle)
         # self.allDatasets.dataChanged.connect(lambda: print("data changed"))
 
-        # switch the tag so that it matches the current data set
+        # Whenever the activae dataset is switched, reflect the change on the tag so that it
+        # matches the current data set
         self.activeDataset.dataSwitchSignal.signal.connect(self._tagModelToView)
         self.activeDataset.dataSwitchSignal.signal.connect(lambda: print("data switch"))
 
@@ -149,6 +195,9 @@ class TaggingCtrl(QObject):
         self.ui.phNumberDressedSpinBox.setValue(1)
 
     def _isValidInitialBare(self):
+        """ 
+        Check if the input initial state is valid for bare-states tagging.
+        """
         if not self.ui.tagBareGroupBox.isVisible():
             return True  # only bare-states tags require validation
         if not self.ui.initialStateLineEdit.isValid():
@@ -156,6 +205,9 @@ class TaggingCtrl(QObject):
         return True
 
     def _isValidFinalBare(self):
+        """ 
+        Check if the input final state is valid for bare-states tagging.
+        """
         if not self.ui.tagBareGroupBox.isVisible():
             return True  # only bare-states tags require validation
         if not self.ui.finalStateLineEdit.isValid():
@@ -163,8 +215,11 @@ class TaggingCtrl(QObject):
         return True
 
     def _isValid(self):
+        """ 
+        Check if the input tag is valid.
+        """
         return self._isValidInitialBare() and self._isValidFinalBare()
-    
+
     def _toNoTagPage(self):
         """
         Switch the UI to the no tag page
@@ -174,10 +229,10 @@ class TaggingCtrl(QObject):
 
     def _setNoTagInView(self, tag: Tag):
         """
-        Set the UI to display no tag (do nothing, but should be in the no-tag page first)). 
+        Set the UI to display no tag (do nothing, but should be in the no-tag page first)).
         """
-        return # do nothing
-    
+        return  # do nothing
+
     def _toBareTagPage(self):
         """
         Switch the UI to the bare-states tag page.
@@ -187,7 +242,7 @@ class TaggingCtrl(QObject):
 
     def _setBareTagInView(self, tag: Tag):
         """
-        Set the UI to display a bare-states tag (should be in the page first). 
+        Set the UI to display a bare-states tag (should be in the bare tag page first).
         """
         self.ui.initialStateLineEdit.setFromTuple(tag.initial)
         self.ui.finalStateLineEdit.setFromTuple(tag.final)
@@ -202,8 +257,7 @@ class TaggingCtrl(QObject):
 
     def _setDressedTagInView(self, tag: Tag):
         """
-        Set the UI to display a dressed-states tag. If tag is None, do nothing
-        but switch pages
+        Set the UI to display a dressed-states tag (should be in the dressed tag page first).
         """
         self.ui.initialStateSpinBox.setValue(tag.initial)
         self.ui.finalStateSpinBox.setValue(tag.final)
@@ -233,9 +287,17 @@ class TaggingCtrl(QObject):
 
     def getTagFromView(self) -> Tag:
         """
-        Provide an external interface to get the tag from the view.
+        Provide an external interface (outside of this class) to generate the tag from the view.
+        It returns a tag based on the current view
+
+        RETURNS
+        -------
+        tag: Tag
+            tag data from the view
         """
         tag = Tag()
+        # if no tag radio button selected, or the input for other tag types are invalid,
+        # set the tag type to NO_TAG
         if self.ui.noTagRadioButton.isChecked() or not self._isValid():
             tag.tagType = NO_TAG
         elif self.ui.tagDispersiveBareRadioButton.isChecked():
@@ -253,7 +315,13 @@ class TaggingCtrl(QObject):
 
     def setTagInView(self, tag):
         """
-        Provide an external interface to set the tag in the view.
+        Provide an external interface (outside of this class) to set the tag in the view.
+        It sets the tag view based on the tag data.
+
+        ARGUMENTS
+        ---------
+        tag: Tag
+            tag data to be set in the view
         """
         # we have to block all signals to avoid multiple calls
         self.blockAllSignals(True)
@@ -278,21 +346,19 @@ class TaggingCtrl(QObject):
     @Slot()
     def _onBareRadioButtonToggled(self):
         """
-        Switch the UI to the no tag page. If it's triggered by a button,
-        it is possible that the user is switching FROM no tag mode
-        and trigger the slot only switch to the mode if the button is checked
+        Slot for bare button being toggled. If the bare button is checked, switch the 
+        UI to the bare tag page. Else, do nothing.
         """
         if not self.ui.tagDispersiveBareRadioButton.isChecked():
             return
-        self._toBareTagPage()   # switch to bare tag page
+        self._toBareTagPage()  # switch to bare tag page
         self._tagViewToModel()  # update the model's tag as user indended to switch to bare tag
 
     @Slot()
     def _onDressedRadioButtonToggled(self):
         """
-        Switch the UI to the no tag page. If it's triggered by a button,
-        it is possible that the user is switching FROM no tag mode
-        and trigger the slot only switch to the mode if the button is checked
+        Slot for dressed button being toggled. If the dressed button is checked, switch the 
+        UI to the dressed tag page. Else, do nothing.
         """
         if not self.ui.tagDispersiveDressedRadioButton.isChecked():
             return
@@ -302,9 +368,8 @@ class TaggingCtrl(QObject):
     @Slot()
     def _onNoTagRadioButtonToggled(self):
         """
-        Switch the UI to the no tag page. If it's triggered by a button,
-        it is possible that the user is switching FROM no tag mode
-        and trigger the slot only switch to the mode if the button is checked
+        Slot for no tag button being toggled. If the no tag button is checked, switch the 
+        UI to the no tag page. Else, do nothing.
         """
         if not self.ui.noTagRadioButton.isChecked():
             return
@@ -313,12 +378,18 @@ class TaggingCtrl(QObject):
 
     @Slot()
     def _setTagTitle(self):
+        """
+        Set the title for the tag panel based on the current dataset.
+        """
         self.ui.transitionLabel.setText(
             f"LABEL for {self.allDatasets.currentDataName()}"
         )
 
     @Slot()
     def _tagModelToView(self):
+        """
+        Whenever the active dataset is switched, update the tag panel to match the current dataset.
+        """
         self._setTagTitle()
 
         tag = self.allDatasets.currentTagItem()
@@ -327,8 +398,10 @@ class TaggingCtrl(QObject):
 
     @Slot()
     def _tagViewToModel(self):
-        # Whenever tag type or tag data is changed, update the AllExtractedData data
+        """
+        Whenever the user finishes editing the tag, update the tag data in the model.
+        """
+        # obtain the tag from the view
         tag = self.getTagFromView()
         print("V2M:", tag.tagType)
-        # Block signals to avoid infinite loops
         self.allDatasets.updateCurrentTag(tag)
