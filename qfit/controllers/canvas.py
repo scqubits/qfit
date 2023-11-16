@@ -37,5 +37,8 @@ class CursorCtrl:
     ):
         pass
     
+    # SpecialCursor's all_x_list update by allExtractedData change
 
-    
+    # Cursor's crosshair update by page switch & cursor mode button
+
+    # Other MplFigureCanvas's controller related usage

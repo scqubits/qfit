@@ -868,6 +868,9 @@ class Ui_MainWindow(object):
 "	border: 0px solid rgb(52, 59, 72);\n"
 "	border-radius: 5px;	\n"
 "	text-align: center;\n"
+"}\n"
+"QPushButton:pressed {\n"
+"    background-color: rgb(71, 30, 79);\n"
 "}")
         self.gridLayout_11 = QGridLayout(self.calibrateYGridFrame)
         self.gridLayout_11.setObjectName(u"gridLayout_11")
@@ -1022,7 +1025,7 @@ class Ui_MainWindow(object):
 "	text-align: center;\n"
 "}\n"
 "QPushButton:pressed {\n"
-"    background-color: rgb(60, 60, 60);\n"
+"    background-color: rgb(71, 30, 79);\n"
 "}")
         self.gridLayout_10 = QGridLayout(self.calibrateXGridFrame)
         self.gridLayout_10.setObjectName(u"gridLayout_10")
@@ -1607,7 +1610,7 @@ class Ui_MainWindow(object):
         self.prefitScrollArea.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.prefitScrollAreaWidget = QWidget()
         self.prefitScrollAreaWidget.setObjectName(u"prefitScrollAreaWidget")
-        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 352, 420))
+        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 100, 30))
         self.verticalLayout_11 = QVBoxLayout(self.prefitScrollAreaWidget)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -2318,6 +2321,15 @@ class Ui_MainWindow(object):
         self.horizontalSnapButton.setText("")
         self.selectViewButton.setText("")
         self.verticalSnapButton.setText("")
+        self.pagesStackedWidget.setStyleSheet(QCoreApplication.translate("MainWindow", u"QPushButton {\n"
+"	background-color: rgb(93, 93, 93);\n"
+"	border: 0px solid rgb(52, 59, 72);\n"
+"	border-radius: 5px;	\n"
+"	text-align: center;\n"
+"}\n"
+"QPushButton:pressed {\n"
+"    background-color: rgb(103, 39, 125);\n"
+"}", None))
         self.swapXYButton.setText(QCoreApplication.translate("MainWindow", u"X\u2194Y", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"DATA", None))
         self.zComboBox.setCurrentText("")
