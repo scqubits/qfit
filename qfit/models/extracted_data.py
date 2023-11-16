@@ -505,6 +505,10 @@ class AllExtractedData(
 
         def setter(initdata):
             # emit the signal to the controller to register the data through controller
+            # the reason for such special setter is that merely recovering the attributes
+            # does not update the view correctly; additional steps are needed to update
+            # the viewe accordingly through mainwindow (specifically allDataSet.layoutChanged
+            # methods),
             self.loadFromRegistrySignal.signal.emit(initdata)
 
         registry_entry = RegistryEntry(

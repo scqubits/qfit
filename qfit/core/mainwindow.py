@@ -118,7 +118,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     # ui_menu: Ui_MenuWidget
 
     measurementData: MeasurementDataType
-    extractedData: "QfitData"
     activeDataset: ActiveExtractedData
     allDatasets: AllExtractedData
     taggingCtrl: TaggingCtrl
@@ -353,7 +352,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """Set up the main class instances holding the data extracted from placing
         markers on the canvas. The AllExtractedData instance holds all data, whereas the
         ActiveExtractedData instance holds data of the currently selected data set."""
-        self.extractedData = None
         self.activeDataset = ActiveExtractedData()
         self.activeDataset.setAdaptiveCalibrationFunc(
             self.calibrationData.adaptiveConversionFunc
@@ -648,7 +646,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
                 if appstate.state == self.calibrationStates[calibrationLabel]:
                     # turn off the highlighting of the button
-                    self._highlightCaliButton(self.calibrationButtons[calibrationLabel], reset=True)
+                    self._highlightCaliButton(
+                        self.calibrationButtons[calibrationLabel], reset=True
+                    )
                     # update the raw line edits by the value of the clicked point
                     self.rawLineEdits[calibrationLabel].setText(str(data))
                     self.rawLineEdits[calibrationLabel].home(False)
@@ -792,6 +792,21 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.axes.figure.canvas.draw()
         self.ui.mplFigureCanvas.x_snap_mode = self.x_snap_mode
         self.ui.mplFigureCanvas.set_callback_for_extracted_data(self.allDatasets)
+        if self.ui.calibratedCheckBox.isChecked():
+            xlabel = (
+                list(list(self.sweepParameterSet.values())[0].keys())[0]
+                + " "
+                + "("
+                + list(list(self.sweepParameterSet.values())[0].values())[
+                    0
+                ].parent.id_str
+                + ")"
+            )
+            self.axes.set_xlabel(xlabel)
+            self.axes.set_ylabel("energy [GHz]")
+        else:
+            self.axes.set_xlabel(self.measurementData.currentX.name)
+            self.axes.set_ylabel(self.measurementData.currentY.name)
 
     def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
         """Highlight the button by changing its color."""
@@ -1166,7 +1181,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # set line edit property:
         self.ui.initStateLineEdit.setTupleLength(self.hilbertspace.subsystem_count)
 
-        # when change those numbers, update the spectrum data using the 
+        # when change those numbers, update the spectrum data using the
         # existing sweep
         self.ui.subsysComboBox.currentIndexChanged.connect(self.onPrefitPlotClicked)
         self.ui.initStateLineEdit.editingFinished.connect(self.onPrefitPlotClicked)
@@ -1528,19 +1543,25 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     @Slot()
     def extractedDataSetup(self, initdata):
         """
-        setting up recovery of extracted data
+        Recover extracted data from initdata, and emit changes to the view
         """
-        self.extractedData = QfitData(
-            datanames=initdata["datanames"],
-            datalist=initdata["datalist"],
-            tag_data=initdata["taglist"],
-            calibration_data=self.calibrationData,
-            # this is somehow redundant - the calibration data is already recovered
-            # here I set this only because the calibration_data is required to update
-            # the calibration view
-        )
-        # recover the allDatasets model and emit changes to the view
-        self.recoverFromExtractedData()
+        # recover the allDatasets model
+        datanames = initdata["datanames"]
+        datalist = initdata["datalist"]
+        tag_data = initdata["taglist"]
+        self.allDatasets.dataNames = datanames
+        self.allDatasets.assocDataList = transposeEach(datalist)
+        self.allDatasets.assocTagList = tag_data
+        # set calibration
+        # this might worth a separate signal/slot, because the initialDynamicalElements only
+        # initialize the calibration data, and it does not recover the progress on the previous
+        # calibration.
+        self.calibrationData.setCalibration(*self.calibrationData.allCalibrationVecs())
+        self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
+        # set active dataset
+        self.activeDataset._data = self.allDatasets.currentAssocItem()
+        self.allDatasets.layoutChanged.emit()
+        self.activeDataset.layoutChanged.emit()
 
     def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)
