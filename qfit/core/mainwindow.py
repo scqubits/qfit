@@ -774,24 +774,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 c=line_color,
                 alpha=0.3,
             )
-        # for count, i in enumerate(line_data[0]):
-        #     if i not in plotted_data:
-        #         self.axes.axline(
-        #             (i, line_data[1][count]),
-        #             (i, line_data[1][count] - (line_data[1][count]) * 0.1),
-        #             c=line_color,
-        #             alpha=0.7,
-        #         )
-        #     plotted_data.append(i)
-
-        # Make sure that new axes limits match the old ones.
-        if not initialize:
-            self.axes.set_xlim(xlim)
-            self.axes.set_ylim(ylim)
 
         # if toggle calibration is checked, change the xlabel to the scqubits parameter
         # name and ylabel to energy in GHz; also apply changes to the ticks.
         if self.ui.calibratedCheckBox.isChecked():
+            # xlabel = <swept_parameter> (<sysstem id string>)
             xlabel = (
                 list(list(self.sweepParameterSet.values())[0].keys())[0]
                 + " "
@@ -803,23 +790,48 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             )
             self.axes.set_xlabel(xlabel)
             self.axes.set_ylabel("energy [GHz]")
-            # xlocs, xticklabels = self.axes.get_xticks(), self.axes.get_xticklabels()
-            # ylocs, yticklabels = self.axes.get_yticks(), self.axes.get_yticklabels()
-            # xticklabels = self.calibrationData.calibrateDataset(
-            #     array=[[xticklabel, 0] for xticklabel in xticklabels],
-            #     calibration_axis="x",
-            # )[:, 0]
-            # yticklabels = self.calibrationData.calibrateDataset(
-            #     array=[[0, yticklabel] for yticklabel in yticklabels],
-            #     calibration_axis="y",
-            # )[:, 1]
-            # self.axes.set_xticks(xlocs)
-            # self.axes.set_xticklabels(xticklabels)
-            # self.axes.set_yticks(ylocs)
-            # self.axes.set_yticklabels(yticklabels)
+            # update ticks to reflect the calibration
+            # get the current labels and locations
+            xlocs, xticklabels = self.axes.get_xticks(), self.axes.get_xticklabels()
+            ylocs, yticklabels = self.axes.get_yticks(), self.axes.get_yticklabels()
+            # update the labels using the calibration function
+            # notice that the label positions are obtained from x(y)ticklabels which
+            # are text objects.
+            # results are rounded to 2 decimals
+            xticklabels = np.round(
+                self.calibrationData.calibrateDataset(
+                    array=np.array(
+                        [
+                            [float(xticklabel.get_position()[0]), 0]
+                            for xticklabel in xticklabels
+                        ]
+                    ).T,
+                    calibration_axis="x",
+                )[0, :],
+                decimals=2,
+            )
+            yticklabels = np.round(
+                self.calibrationData.calibrateDataset(
+                    array=np.array(
+                        [
+                            [0, float(yticklabel.get_position()[1])]
+                            for yticklabel in yticklabels
+                        ]
+                    ).T,
+                    calibration_axis="y",
+                )[1, :],
+                decimals=2,
+            )
+            self.axes.set_xticks(xlocs, xticklabels)
+            self.axes.set_yticks(ylocs, yticklabels)
         else:
             self.axes.set_xlabel(self.measurementData.currentX.name)
             self.axes.set_ylabel(self.measurementData.currentY.name)
+
+        # Make sure that new axes limits match the old ones.
+        if not initialize:
+            self.axes.set_xlim(xlim)
+            self.axes.set_ylim(ylim)
 
         self.axes.figure.canvas.draw()
         self.ui.mplFigureCanvas.x_snap_mode = self.x_snap_mode
