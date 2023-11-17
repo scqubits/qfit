@@ -23,7 +23,7 @@ class Tag:
     - NO_TAG: user did not tag data
     - DISPERSIVE_DRESSED: transition between two states tagged by
     dressed-states indices
-    - DISPERSIVE_BARE: : transition between two states tagged by
+    - DISPERSIVE_BARE: transition between two states tagged by 
     bare-states indices
 
     Parameters

@@ -1095,6 +1095,17 @@ color: rgb(30, 30, 30);</string>
            <height>10000</height>
           </size>
          </property>
+         <property name="styleSheet">
+          <string>QPushButton {
+	background-color: rgb(93, 93, 93);
+	border: 0px solid rgb(52, 59, 72);
+	border-radius: 5px;	
+	text-align: center;
+}
+QPushButton:pressed {
+    background-color: rgb(103, 39, 125);
+}</string>
+         </property>
          <property name="currentIndex">
           <number>0</number>
          </property>
@@ -1389,6 +1400,9 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
 	border: 0px solid rgb(52, 59, 72);
 	border-radius: 5px;	
 	text-align: center;
+}
+QPushButton:pressed {
+    background-color: rgb(71, 30, 79);
 }</string>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_11">
@@ -1710,7 +1724,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
 	text-align: center;
 }
 QPushButton:pressed {
-    background-color: rgb(60, 60, 60);
+    background-color: rgb(71, 30, 79);
 }</string>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_10">

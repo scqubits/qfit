@@ -842,7 +842,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         if reset:
             button.setStyleSheet("")
         else:
-            button.setStyleSheet("background-color: #6c278c")
+            button.setStyleSheet("QPushButton {background-color: #6c278c}")
 
     def _resetHighlightButtons(self):
         """Reset the highlighting of all calibration buttons."""
