@@ -14,7 +14,7 @@
     <x>0</x>
     <y>0</y>
     <width>1170</width>
-    <height>774</height>
+    <height>784</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -646,6 +646,7 @@ QPushButton:checked {
              <font>
               <family>Roboto Medium</family>
               <pointsize>11</pointsize>
+              <weight>7</weight>
               <italic>false</italic>
               <bold>false</bold>
              </font>
@@ -2364,8 +2365,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>342</width>
-                   <height>361</height>
+                   <width>352</width>
+                   <height>363</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_16">
@@ -2795,6 +2796,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>11</pointsize>
+                  <weight>7</weight>
                   <italic>false</italic>
                   <bold>false</bold>
                  </font>
@@ -2859,8 +2861,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>352</width>
+                   <height>372</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -2914,8 +2916,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>100</width>
-                  <height>30</height>
+                  <width>120</width>
+                  <height>20</height>
                  </size>
                 </property>
                 <property name="toolTip">
@@ -2997,6 +2999,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>11</pointsize>
+                  <weight>7</weight>
                   <italic>false</italic>
                   <bold>false</bold>
                  </font>
@@ -3055,8 +3058,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>352</width>
+                   <height>379</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -3105,7 +3108,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                 <property name="minimumSize">
                  <size>
                   <width>120</width>
-                  <height>0</height>
+                  <height>20</height>
                  </size>
                 </property>
                 <property name="text">
@@ -3124,7 +3127,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                 <property name="minimumSize">
                  <size>
                   <width>120</width>
-                  <height>0</height>
+                  <height>20</height>
                  </size>
                 </property>
                 <property name="toolTip">
@@ -3246,6 +3249,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>11</pointsize>
+                  <weight>7</weight>
                   <italic>false</italic>
                   <bold>false</bold>
                  </font>
@@ -3908,6 +3912,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>9</pointsize>
+                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -4025,6 +4030,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>11</pointsize>
+                  <weight>7</weight>
                   <italic>false</italic>
                   <bold>false</bold>
                  </font>
@@ -4073,8 +4079,8 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>0</width>
-                  <height>0</height>
+                  <width>120</width>
+                  <height>20</height>
                  </size>
                 </property>
                 <property name="toolTip">
@@ -4260,6 +4266,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  <font>
                   <family>Roboto Medium</family>
                   <pointsize>9</pointsize>
+                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -4275,6 +4282,12 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>120</width>
+                  <height>20</height>
+                 </size>
                 </property>
                 <property name="toolTip">
                  <string>Load the fitted parameters to the pre-fit section</string>

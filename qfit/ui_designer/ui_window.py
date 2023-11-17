@@ -34,7 +34,7 @@ class Ui_MainWindow(object):
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.setWindowModality(Qt.NonModal)
         MainWindow.setEnabled(True)
-        MainWindow.resize(1170, 774)
+        MainWindow.resize(1170, 784)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -1357,7 +1357,7 @@ class Ui_MainWindow(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 342, 361))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 352, 363))
         self.verticalLayout_16 = QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_16.setSpacing(12)
         self.verticalLayout_16.setObjectName(u"verticalLayout_16")
@@ -1611,7 +1611,7 @@ class Ui_MainWindow(object):
         self.prefitScrollArea.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.prefitScrollAreaWidget = QWidget()
         self.prefitScrollAreaWidget.setObjectName(u"prefitScrollAreaWidget")
-        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 100, 30))
+        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 352, 372))
         self.verticalLayout_11 = QVBoxLayout(self.prefitScrollAreaWidget)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -1634,7 +1634,7 @@ class Ui_MainWindow(object):
         self.plotButton.setObjectName(u"plotButton")
         sizePolicy5.setHeightForWidth(self.plotButton.sizePolicy().hasHeightForWidth())
         self.plotButton.setSizePolicy(sizePolicy5)
-        self.plotButton.setMinimumSize(QSize(100, 30))
+        self.plotButton.setMinimumSize(QSize(120, 20))
 #if QT_CONFIG(tooltip)
         self.plotButton.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
@@ -1696,7 +1696,7 @@ class Ui_MainWindow(object):
         self.fitScrollArea.setWidgetResizable(True)
         self.fitScrollAreaWidget = QWidget()
         self.fitScrollAreaWidget.setObjectName(u"fitScrollAreaWidget")
-        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 100, 30))
+        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 352, 379))
         self.verticalLayout_4 = QVBoxLayout(self.fitScrollAreaWidget)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -1718,7 +1718,7 @@ class Ui_MainWindow(object):
         self.fitButton.setObjectName(u"fitButton")
         sizePolicy5.setHeightForWidth(self.fitButton.sizePolicy().hasHeightForWidth())
         self.fitButton.setSizePolicy(sizePolicy5)
-        self.fitButton.setMinimumSize(QSize(120, 0))
+        self.fitButton.setMinimumSize(QSize(120, 20))
 
         self.horizontalLayout_8.addWidget(self.fitButton)
 
@@ -1726,7 +1726,7 @@ class Ui_MainWindow(object):
         self.pushButton_2.setObjectName(u"pushButton_2")
         sizePolicy5.setHeightForWidth(self.pushButton_2.sizePolicy().hasHeightForWidth())
         self.pushButton_2.setSizePolicy(sizePolicy5)
-        self.pushButton_2.setMinimumSize(QSize(120, 0))
+        self.pushButton_2.setMinimumSize(QSize(120, 20))
 
         self.horizontalLayout_8.addWidget(self.pushButton_2)
 
@@ -2157,7 +2157,7 @@ class Ui_MainWindow(object):
         self.exportToFitButton.setObjectName(u"exportToFitButton")
         sizePolicy5.setHeightForWidth(self.exportToFitButton.sizePolicy().hasHeightForWidth())
         self.exportToFitButton.setSizePolicy(sizePolicy5)
-        self.exportToFitButton.setMinimumSize(QSize(0, 0))
+        self.exportToFitButton.setMinimumSize(QSize(120, 20))
 
         self.gridLayout_3.addWidget(self.exportToFitButton, 1, 10, 1, 1)
 
@@ -2245,6 +2245,7 @@ class Ui_MainWindow(object):
         self.exportToPrefitButton.setObjectName(u"exportToPrefitButton")
         sizePolicy5.setHeightForWidth(self.exportToPrefitButton.sizePolicy().hasHeightForWidth())
         self.exportToPrefitButton.setSizePolicy(sizePolicy5)
+        self.exportToPrefitButton.setMinimumSize(QSize(120, 20))
 
         self.gridLayout_6.addWidget(self.exportToPrefitButton, 1, 9, 1, 1)
 
