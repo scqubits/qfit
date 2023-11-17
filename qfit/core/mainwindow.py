@@ -216,7 +216,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.uiExtractedDataControlConnects()
 
         self.taggingCtrl = TaggingCtrl(
-            self.hilbertspace.subsystem_count, 
+            self.hilbertspace.subsystem_count,
             (self.allDatasets, self.activeDataset),
             self.ui,
         )
@@ -552,17 +552,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.x_snap_mode = False
 
         # cursor
-        if (
-            self.ui.modeTagButton.isChecked()
-            and self.ui.selectViewButton.isChecked()
-        ):
+        if self.ui.modeTagButton.isChecked() and self.ui.selectViewButton.isChecked():
             horizOn, vertOn = True, True
         else:
             horizOn, vertOn = False, False
 
         self.ui.mplFigureCanvas.select_crosshair(
             x_snap_mode=self.x_snap_mode,
-            horizOn=horizOn, vertOn=vertOn,
+            horizOn=horizOn,
+            vertOn=vertOn,
         )
 
     def calibrationButtonIsChecked(self):
@@ -608,7 +606,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def toggleSelect(self):
         if appstate.state != State.SELECT:
             appstate.state = State.SELECT
-            self.ui.mplFigureCanvas.selectOn(showCrosshair=self.ui.modeTagButton.isChecked())
+            self.ui.mplFigureCanvas.selectOn(
+                showCrosshair=self.ui.modeTagButton.isChecked()
+            )
 
     @Slot()
     def toggleZoom(self):
@@ -789,9 +789,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.axes.set_xlim(xlim)
             self.axes.set_ylim(ylim)
 
-        self.axes.figure.canvas.draw()
-        self.ui.mplFigureCanvas.x_snap_mode = self.x_snap_mode
-        self.ui.mplFigureCanvas.set_callback_for_extracted_data(self.allDatasets)
+        # if toggle calibration is checked, change the xlabel to the scqubits parameter
+        # name and ylabel to energy in GHz; also apply changes to the ticks.
         if self.ui.calibratedCheckBox.isChecked():
             xlabel = (
                 list(list(self.sweepParameterSet.values())[0].keys())[0]
@@ -804,9 +803,27 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             )
             self.axes.set_xlabel(xlabel)
             self.axes.set_ylabel("energy [GHz]")
+            # xlocs, xticklabels = self.axes.get_xticks(), self.axes.get_xticklabels()
+            # ylocs, yticklabels = self.axes.get_yticks(), self.axes.get_yticklabels()
+            # xticklabels = self.calibrationData.calibrateDataset(
+            #     array=[[xticklabel, 0] for xticklabel in xticklabels],
+            #     calibration_axis="x",
+            # )[:, 0]
+            # yticklabels = self.calibrationData.calibrateDataset(
+            #     array=[[0, yticklabel] for yticklabel in yticklabels],
+            #     calibration_axis="y",
+            # )[:, 1]
+            # self.axes.set_xticks(xlocs)
+            # self.axes.set_xticklabels(xticklabels)
+            # self.axes.set_yticks(ylocs)
+            # self.axes.set_yticklabels(yticklabels)
         else:
             self.axes.set_xlabel(self.measurementData.currentX.name)
             self.axes.set_ylabel(self.measurementData.currentY.name)
+
+        self.axes.figure.canvas.draw()
+        self.ui.mplFigureCanvas.x_snap_mode = self.x_snap_mode
+        self.ui.mplFigureCanvas.set_callback_for_extracted_data(self.allDatasets)
 
     def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
         """Highlight the button by changing its color."""
@@ -851,6 +868,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         calibrationData. Also induce change at the level of the displayed data of
         selected points."""
         self.calibrationData.toggleCalibration()
+        # update the plot to reflect the change in calibration label
+        self.updatePlot()
         self.activeDataset.toggleCalibratedView()
 
     @Slot()
