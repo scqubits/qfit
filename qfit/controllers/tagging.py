@@ -81,8 +81,8 @@ class TaggingCtrl(QObject):
         Relevant model:
         - extracted data (all and active)
 
-        ARGUMENTS
-        ---------
+        Parameters
+        ----------
         subsysCount: int
             number of subsystems in the system
         dataSets: Tuple[AllExtractedData, ActiveExtractedData]
@@ -148,21 +148,21 @@ class TaggingCtrl(QObject):
         # each view (LineEdit and SpinBox) has its own signal and a common slot _tagViewToModel to
         # update the model
         self.ui.initialStateLineEdit.editingFinished.connect(self._tagViewToModel)
-        self.ui.initialStateLineEdit.editingFinished.connect(lambda: print("initial"))
+        # self.ui.initialStateLineEdit.editingFinished.connect(lambda: print("initial"))
         self.ui.finalStateLineEdit.editingFinished.connect(self._tagViewToModel)
-        self.ui.finalStateLineEdit.editingFinished.connect(lambda: print("final"))
+        # self.ui.finalStateLineEdit.editingFinished.connect(lambda: print("final"))
         self.ui.phNumberBareSpinBox.valueChanged.connect(lambda: self._tagViewToModel())
-        self.ui.phNumberBareSpinBox.valueChanged.connect(lambda: print("ph spin bare"))
+        # self.ui.phNumberBareSpinBox.valueChanged.connect(lambda: print("ph spin bare"))
         self.ui.initialStateSpinBox.valueChanged.connect(lambda: self._tagViewToModel())
-        self.ui.initialStateSpinBox.valueChanged.connect(lambda: print("init spin"))
+        # self.ui.initialStateSpinBox.valueChanged.connect(lambda: print("init spin"))
         self.ui.finalStateSpinBox.valueChanged.connect(lambda: self._tagViewToModel())
-        self.ui.finalStateSpinBox.valueChanged.connect(lambda: print("final spin"))
+        # self.ui.finalStateSpinBox.valueChanged.connect(lambda: print("final spin"))
         self.ui.phNumberDressedSpinBox.valueChanged.connect(
             lambda: self._tagViewToModel()
         )
-        self.ui.phNumberDressedSpinBox.valueChanged.connect(
-            lambda: print("ph spin bare")
-        )
+        # self.ui.phNumberDressedSpinBox.valueChanged.connect(
+        #     lambda: print("ph spin bare")
+        # )
 
     def _modelUpdatedConnects(self):
         """
@@ -180,7 +180,7 @@ class TaggingCtrl(QObject):
         # Whenever the activae dataset is switched, reflect the change on the tag so that it
         # matches the current data set
         self.activeDataset.dataSwitchSignal.signal.connect(self._tagModelToView)
-        self.activeDataset.dataSwitchSignal.signal.connect(lambda: print("data switch"))
+        # self.activeDataset.dataSwitchSignal.signal.connect(lambda: print("data switch"))
 
     # Processing =======================================================
     def _clear(self):
@@ -290,7 +290,7 @@ class TaggingCtrl(QObject):
         Provide an external interface (outside of this class) to generate the tag from the view.
         It returns a tag based on the current view
 
-        RETURNS
+        Returns
         -------
         tag: Tag
             tag data from the view
@@ -318,8 +318,8 @@ class TaggingCtrl(QObject):
         Provide an external interface (outside of this class) to set the tag in the view.
         It sets the tag view based on the tag data.
 
-        ARGUMENTS
-        ---------
+        Parameters
+        ----------
         tag: Tag
             tag data to be set in the view
         """
@@ -393,7 +393,7 @@ class TaggingCtrl(QObject):
         self._setTagTitle()
 
         tag = self.allDatasets.currentTagItem()
-        print("M2V:", tag.tagType)
+        # print("M2V:", tag.tagType)
         self.setTagInView(tag)
 
     @Slot()
@@ -403,5 +403,5 @@ class TaggingCtrl(QObject):
         """
         # obtain the tag from the view
         tag = self.getTagFromView()
-        print("V2M:", tag.tagType)
+        # print("V2M:", tag.tagType)
         self.allDatasets.updateCurrentTag(tag)
