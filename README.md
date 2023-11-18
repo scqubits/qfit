@@ -1,20 +1,43 @@
 qfit: a tool component of scQubits
-========================================
+==================================
 
 [J. Koch](https://github.com/jkochNU)
 
-scQubits is an open-source Python library for simulating superconducting qubits. The qfit package provides a GUI tool
-for loading and displaying experimental data, such as two-tone spectroscopy data. The GUI simplifies the extraction of 
-data points from measurement results, as required for fitting experimental data to theoretical qubit models.
+Overview
+--------
+# Welcome to QFit!
+
+QFit is your go-to Python application for extracting parameters of superconducting circuits from measured spectroscopy data. It's designed with a user-friendly interface that lets you navigate through the fitting process with ease.
+
+Here's how it works:
+
+1. **Calibration**: QFit automates the mapping from voltage (your experimental tunable input) to circuit parameters (your simulation ingredients). It even provides filters and plotting parameters for easy data visualization.
+
+2. **Point Extraction**: With just a few clicks, you can auto-locate the peak of the transmission data. QFit supports various transition types, including parametric conversions.
+
+3. **Interactive Pre-fit**: See your numerical model result and the data on the same plot for intuitive comparison. Adjust the numerical simulator with simple sliders to get the perfect fit.
+
+4. **Automated Fitting**: With one click, let the numerical optimizers do the work. You can easily configure your fitting: fix or free parameters, set their range, and more.
+
+QFit supports a wide variety of circuit quantum electrodynamic systems, thanks to the powerful Python library scqubits that it uses as its backend simulator. Once you've extracted your parameters, you can pass them directly to scQubits for any further numerical simulations you need to do.
+
+So, why wait? Dive in and explore what QFit can do for you!
+
+Installation and Usage
+----------------------
 
 Install qfit via
 
     pip install qfit
 
-Once done, you the application can be launched this way::
+Once done, you the application can be launched in a python script via
 
-    python -m qfit
+    from qfit import Fit
+    Fit(<HilbertSpace>)
 
+where `<HilbertSpace>` is a scqubits HilbertSpace object, the circuit model you want to fit against.
+
+Check out the notebook `Learn_QFit_in_10mins.ipynb` for a quick start guide.
 
 License
 -------
