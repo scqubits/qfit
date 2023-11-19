@@ -749,6 +749,26 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                     s=130,
                     alpha=0.3,
                 )
+            for data in self.allDatasets.assocDataList:
+                if data.size > 0 and data is not self.activeDataset.all():
+                    self.axes.scatter(
+                        data[0],
+                        data[1],
+                        c=scatter_color,
+                        marker=r"$\times$",
+                        s=70,
+                        alpha=0.3,
+                    )
+            if not self.allDatasets.isEmpty():
+                dataXY = self.activeDataset.all()
+                self.axes.scatter(
+                    dataXY[0],
+                    dataXY[1],
+                    c=scatter_color,
+                    marker=r"$\odot$",
+                    s=130,
+                    alpha=0.3,
+                )
         elif not self.ui.modeSelectButton.isChecked():
             if not self.allDatasets.isEmpty():
                 dataXY = self.allDatasets.allDataSorted(
@@ -1103,7 +1123,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 self.minMaxTable.insertParams(group_name, para_name)
 
         # add the minmax table to the scroll area
-        foldable_widget = FoldableWidget("Adjusting Sliders' Range", self.minMaxTable)
+        foldable_widget = FoldableWidget("RANGES OF SLIDERS", self.minMaxTable)
         prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
         prefitScrollLayout.addWidget(foldable_widget)
 
