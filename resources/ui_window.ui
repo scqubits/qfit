@@ -458,6 +458,12 @@ ListView::item:selected {
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>120</width>
+        <height>0</height>
+       </size>
+      </property>
       <property name="styleSheet">
        <string notr="true">QFrame {
 	background-color: rgb(33,33,33);
@@ -1085,7 +1091,7 @@ color: rgb(30, 30, 30);</string>
          </property>
          <property name="minimumSize">
           <size>
-           <width>410</width>
+           <width>120</width>
            <height>0</height>
           </size>
          </property>
@@ -1095,16 +1101,18 @@ color: rgb(30, 30, 30);</string>
            <height>10000</height>
           </size>
          </property>
+         <property name="font">
+          <font>
+           <family>Roboto Medium</family>
+           <pointsize>9</pointsize>
+           <kerning>true</kerning>
+          </font>
+         </property>
          <property name="styleSheet">
-          <string>QPushButton {
-	background-color: rgb(93, 93, 93);
-	border: 0px solid rgb(52, 59, 72);
-	border-radius: 5px;	
-	text-align: center;
-}
-QPushButton:pressed {
-    background-color: rgb(103, 39, 125);
-}</string>
+          <string notr="true"/>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
           <number>0</number>
@@ -1119,6 +1127,15 @@ QPushButton:pressed {
           <layout class="QVBoxLayout" name="verticalLayout_9">
            <item>
             <widget class="QFrame" name="frame">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="cursor">
+              <cursorShape>ArrowCursor</cursorShape>
+             </property>
              <property name="styleSheet">
               <string notr="true"/>
              </property>
@@ -1165,11 +1182,11 @@ QPushButton:pressed {
                 <property name="minimumSize">
                  <size>
                   <width>40</width>
-                  <height>30</height>
+                  <height>20</height>
                  </size>
                 </property>
                 <property name="cursor">
-                 <cursorShape>PointingHandCursor</cursorShape>
+                 <cursorShape>ArrowCursor</cursorShape>
                 </property>
                 <property name="text">
                  <string>X↔Y</string>
@@ -2341,7 +2358,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
 font: 57 11pt &quot;Roboto Medium&quot;;</string>
                 </property>
                 <property name="text">
-                 <string>LABEL for Transition 1</string>
+                 <string>LABEL FOR Transition 1</string>
                 </property>
                 <property name="margin">
                  <number>3</number>
@@ -2863,7 +2880,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                    <x>0</x>
                    <y>0</y>
                    <width>352</width>
-                   <height>374</height>
+                   <height>366</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -2888,6 +2905,18 @@ font: 57 11pt &quot;Roboto Medium&quot;;
            </item>
            <item>
             <widget class="QFrame" name="frame_3">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>35</height>
+              </size>
+             </property>
              <property name="styleSheet">
               <string notr="true"/>
              </property>
@@ -2897,7 +2926,13 @@ font: 57 11pt &quot;Roboto Medium&quot;;
              <property name="frameShadow">
               <enum>QFrame::Raised</enum>
              </property>
+             <property name="lineWidth">
+              <number>1</number>
+             </property>
              <layout class="QHBoxLayout" name="horizontalLayout_3">
+              <property name="spacing">
+               <number>-1</number>
+              </property>
               <property name="leftMargin">
                <number>12</number>
               </property>
@@ -2921,11 +2956,24 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                   <height>20</height>
                  </size>
                 </property>
+                <property name="font">
+                 <font>
+                  <family>Roboto Medium</family>
+                  <pointsize>9</pointsize>
+                  <kerning>true</kerning>
+                 </font>
+                </property>
                 <property name="toolTip">
                  <string notr="true"/>
                 </property>
+                <property name="accessibleDescription">
+                 <string/>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true"/>
+                </property>
                 <property name="text">
-                 <string notr="true">PLOT SPECTRUM</string>
+                 <string>PLOT SPECTRUM</string>
                 </property>
                </widget>
               </item>
@@ -3131,7 +3179,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
                    <x>0</x>
                    <y>0</y>
                    <width>352</width>
-                   <height>375</height>
+                   <height>363</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -3241,7 +3289,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;
           <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="calibrationPage">
           <property name="sizePolicy">
@@ -3333,7 +3381,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  <enum>QFrame::NoFrame</enum>
                 </property>
                 <property name="text">
-                 <string>SETTINGS: VISUALS</string>
+                 <string>SETTINGS: VISUAL</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -3871,6 +3919,21 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
           <layout class="QHBoxLayout" name="horizontalLayout_9">
            <item>
             <widget class="QFrame" name="frame_4">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="accessibleDescription">
+              <string/>
+             </property>
              <property name="frameShape">
               <enum>QFrame::NoFrame</enum>
              </property>
