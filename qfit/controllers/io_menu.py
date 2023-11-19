@@ -1,28 +1,23 @@
-from PySide6.QtCore import Slot
-from PySide6.QtWidgets import (
-    QMessageBox,
-    QFileDialog,
-)
-
-from qfit.models.registry import Registry
-
-from qfit.widgets.menu import MenuWidget
-
-from qfit.utils.helpers import StopExecution
-
-from qfit.io_utils.measurement_file_readers import readMeasurementFile
 
 import sys
 import os
 import numpy as np
 import copy
 
-from typing import TYPE_CHECKING, Union, Dict, Any
-
-from qfit.models.measurement_data import (
-    ImageMeasurementData,
-    NumericalMeasurementData,
+from PySide6.QtCore import Slot
+from PySide6.QtWidgets import (
+    QMessageBox,
+    QFileDialog,
 )
+
+from scqubits.core.hilbert_space import HilbertSpace
+
+from qfit.models.registry import Registry
+from qfit.widgets.menu import MenuWidget
+from qfit.utils.helpers import StopExecution
+from qfit.io_utils.measurement_file_readers import readMeasurementFile
+
+from typing import TYPE_CHECKING, Union, Dict, Any
 
 if TYPE_CHECKING:
     from qfit.core.mainwindow import MainWindow
@@ -382,6 +377,21 @@ class IOCtrl:
         self.mainWindow.destroy()
         # raise StopExecution
 
+    # export ##################################################################
+    def exportParameters(self) -> Dict[str, Any]:
+        """
+        Return the parameters as a dict.
+        """
+        return self.mainWindow.fitParameterSet.exportAttrDict("value")
+    
+    def exportHilbertSpace(self, deepcopy: bool = False) -> HilbertSpace:
+        """
+        Return the hilbert space object.
+        """
+        if deepcopy:
+            return copy.deepcopy(self.mainWindow.hilbertspace)
+        return self.mainWindow.hilbertspace
+
     # slots ###################################################################
     @Slot()
     def newProject(self, __value=None, from_menu: bool = True):
@@ -431,3 +441,4 @@ class IOCtrl:
         if not success:
             return
         self._quit()
+

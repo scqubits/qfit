@@ -31,7 +31,7 @@ from qfit.utils.helpers import executed_in_ipython
 from qfit.io_utils.measurement_file_readers import readMeasurementFile
 from qfit.controllers.io_menu import IOCtrl
 
-from typing import Union
+from typing import Union, Dict, Any
 
 import scqubits as scq
 from scqubits.core.hilbert_space import HilbertSpace
@@ -48,6 +48,8 @@ class Fit:
     app: Union[QApplication, None] = None
     window: MainWindow
     _hilbertSpace: HilbertSpace
+
+    # IOs ####################################################################
 
     @classmethod
     def _newProject(
@@ -203,3 +205,22 @@ class Fit:
             instance.app.exec_()
 
         return instance
+
+    # methods to export data ##################################################
+    def exportParameters(self) -> Dict[str, Any]:
+        """
+        Export the fit parameters to a file.
+        """
+        return self.window.ioMenuCtrl.exportParameters()
+    
+    def exportHilbertSpace(self, deepcopy: bool = False) -> HilbertSpace:
+        """
+        Export the HilbertSpace object.
+
+        Parameters
+        ----------
+        deepcope: bool
+            If True, a deepcopy of the HilbertSpace object is returned.
+            If False, the original HilbertSpace object is returned.
+        """
+        return self.window.ioMenuCtrl.exportHilbertSpace(deepcopy)
