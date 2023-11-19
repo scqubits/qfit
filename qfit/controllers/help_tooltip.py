@@ -1,12 +1,11 @@
 from PySide6.QtCore import (
     QObject,
-    Signal,
     Slot,
 )
 from PySide6.QtWidgets import QPushButton
 
 
-from typing import Tuple, Dict
+from typing import Dict
 
 from qfit.widgets.gif_tooltip import DialogWindowWithMedia
 
