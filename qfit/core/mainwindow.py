@@ -62,11 +62,10 @@ from qfit.utils.helpers import (
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.models.measurement_data import MeasurementDataType
 from qfit.controllers.tagging import TaggingCtrl
+from qfit.controllers.help_tooltip import HelpButtonCtrl
 from qfit.settings import color_dict
-from qfit.ui_views.resizable_window import ResizableFramelessWindow
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
-from qfit.widgets.gif_tooltip import DialogWindowWithMedia
 
 # pre-fit
 from qfit.models.quantum_model_parameters import (
@@ -165,6 +164,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.uiPagesConnects()
 
+        # calibration
         self.setupUICalibration()
         self.calibrationData = CalibrationData()
         self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
@@ -196,6 +196,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.fitDynamicalElementsBuild()
         self.fitStaticElementsBuild()
 
+        # help button
+        self.helpButtonConnects()
+
         # register all the data
         self.registry = Registry()
 
@@ -208,6 +211,18 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # status bar
         # self.statusBar().showMessage("Ready")
+
+    # help button and gif tooltip ######################################
+    ####################################################################
+    def helpButtonConnects(self):
+        self.helpButtons = {
+            "calibration": self.ui.calibrationHelpPushButton,
+            "fit": self.ui.fitHelpPushButton,
+            "fitResult": self.ui.fitResultHelpPushButton,
+            "prefitResult": self.ui.prefitResultHelpPushButton,
+            "numericalSpectrumSettings": self.ui.numericalSpectrumSettingsHelpPushButton,
+        }
+        self.helpButtonCtrl = HelpButtonCtrl(self.helpButtons)
 
     # calibration, data, plot setup ####################################
     ####################################################################
@@ -499,8 +514,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def uiCalibrationConnects(self):
         """Connect UI elements for data calibration."""
         self.ui.calibratedCheckBox.toggled.connect(self.toggleCalibration)
-
-        self.ui.calibrationHelpPushButton.clicked.connect(self.calibrationHelp)
 
         for label in self.calibrationButtons:
             self.calibrationButtons[label].clicked.connect(
@@ -903,17 +916,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # update the plot to reflect the change in calibration label
         self.updatePlot()
         self.activeDataset.toggleCalibratedView()
-
-    @Slot()
-    def calibrationHelp(self):
-        tutorial_dialog = DialogWindowWithMedia(
-            "test",
-            [
-                (":/gifs/calibration_gif.gif", 600),
-                (":/images/calibration_x1x2y1y2.png", 400),
-            ],
-        )
-        tutorial_dialog.exec()
 
     @Slot(int)
     def zDataUpdate(self, itemIndex: int):
