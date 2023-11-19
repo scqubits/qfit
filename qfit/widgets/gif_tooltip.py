@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QToolButton,
     QHBoxLayout,
+    QSizePolicy,
 )
 from PySide6.QtCore import QEvent
 from PySide6.QtGui import QMovie, QColor, QPalette, QPixmap
@@ -73,28 +74,22 @@ class DialogWindowWithMedia(QDialog):
 
         # Setup layout
         layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignCenter)
 
         # Setup label for text
         text_label = QLabel(text)
         layout.addWidget(text_label)
+        text_label.setAlignment(Qt.AlignLeft)
 
         media_label_list = []
-        media_widget_list = []
-        media_layout_list = []
         # insert media here
         for media in media_list:
-            media_widget_list.append(QWidget())
-            layout.addWidget(media_widget_list[-1])
-            media_layout_list.append(QVBoxLayout(media_widget_list[-1]))
-            media_layout_list[-1].setContentsMargins(0, 0, 0, 0)
-            media_layout_list[-1].setSpacing(0)
-            media_layout_list[-1].setAlignment(Qt.AlignCenter)
-            media_path, width = media
             media_label_list.append(QLabel())
+            media_label_list[-1].setAlignment(Qt.AlignCenter)
+            media_path, width = media
             # if the media is a GIF
             if media_path.endswith(".gif"):
                 # Setup label
-                media_layout_list[-1].addWidget(media_label_list[-1])
                 # Load and start movie (GIF)
                 movie = QMovie(media_path)
                 media_label_list[-1].setMovie(movie)
@@ -103,18 +98,23 @@ class DialogWindowWithMedia(QDialog):
                 if width is not None:
                     media_label_list[-1].setFixedWidth(width)
                     # scale the GIF down by the same factor as the width
+                    scaled_size = movie.currentPixmap().size() * (
+                        width / movie.currentPixmap().width()
+                    )
                     movie.setScaledSize(
                         movie.currentPixmap().size()
                         * (width / movie.currentPixmap().width())
                     )
+                    # get current height
+                    height = scaled_size.height()
+                    # set the height of the GIF
+                    media_label_list[-1].setFixedHeight(height)
                 else:
                     media_label_list[-1].setFixedWidth(movie.currentPixmap().width())
+                    media_label_list[-1].setFixedHeight(movie.currentPixmap().height())
 
             # if the media is an image
             elif media_path.endswith(".png") or media_path.endswith(".jpg"):
-                # Setup label
-                media_label_list.append(QLabel())
-                media_layout_list[-1].addWidget(media_label_list[-1])
                 # Load image
                 pixmap = QPixmap(media_path)
                 media_label_list[-1].setPixmap(pixmap)
@@ -123,23 +123,22 @@ class DialogWindowWithMedia(QDialog):
                     media_label_list[-1].setFixedWidth(width)
                     # scale the image down by the same factor as the width
                     media_label_list[-1].setPixmap(pixmap.scaledToWidth(width))
+                    # get current height
+                    height = pixmap.scaledToWidth(width).height()
+                    # set the height of the image
+                    media_label_list[-1].setFixedHeight(height)
                 else:
                     media_label_list[-1].setFixedWidth(pixmap.width())
-
-        # Setup a widget for the close button to be centered
-        close_button_widget = QWidget()
-        layout.addWidget(close_button_widget)
-        close_button_widget_layout = QHBoxLayout(close_button_widget)
-        close_button_widget_layout.setContentsMargins(0, 0, 0, 0)
-        close_button_widget_layout.setSpacing(0)
+                    media_label_list[-1].setFixedHeight(pixmap.height())
+            layout.addWidget(media_label_list[-1], alignment=Qt.AlignCenter)
 
         # Setup close button
         close_button = QPushButton("CLOSE")
-        close_button_widget_layout.addWidget(close_button)
+        layout.addWidget(close_button, alignment=Qt.AlignCenter)
         # set close button width
         close_button.setFixedWidth(100)
         # center the button position
-        close_button_widget_layout.setAlignment(Qt.AlignCenter)
+        # close_button_widget_layout.setAlignment(Qt.AlignCenter)
 
         close_button.setStyleSheet("QPushButton { text-align: center; }")
         close_button.setFocusPolicy(Qt.NoFocus)
