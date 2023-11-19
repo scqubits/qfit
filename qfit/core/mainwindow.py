@@ -1123,7 +1123,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 self.minMaxTable.insertParams(group_name, para_name)
 
         # add the minmax table to the scroll area
-        foldable_widget = FoldableWidget("Adjusting Sliders' Range", self.minMaxTable)
+        foldable_widget = FoldableWidget("RANGES OF SLIDERS", self.minMaxTable)
         prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
         prefitScrollLayout.addWidget(foldable_widget)
 

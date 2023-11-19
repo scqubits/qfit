@@ -2122,7 +2122,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>140</width>
+                  <width>170</width>
                   <height>20</height>
                  </size>
                 </property>
@@ -2130,7 +2130,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  <enum>Qt::RightToLeft</enum>
                 </property>
                 <property name="text">
-                 <string notr="true">TOGGLE CALIBRATION</string>
+                 <string notr="true">PLOT IN CALIBRATED UNITS</string>
                 </property>
                </widget>
               </item>
@@ -2383,7 +2383,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  <property name="geometry">
                   <rect>
                    <x>0</x>
-                   <y>0</y>
+                   <y>-88</y>
                    <width>342</width>
                    <height>361</height>
                   </rect>
@@ -2733,7 +2733,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                         </sizepolicy>
                        </property>
                        <property name="text">
-                        <string>    Ordered by: </string>
+                        <string>    ORDERED BY: </string>
                        </property>
                        <property name="wordWrap">
                         <bool>true</bool>
@@ -4193,7 +4193,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
               <item row="6" column="8" rowspan="2" colspan="6">
                <widget class="QLabel" name="statusTextLabel">
                 <property name="text">
-                 <string>Status Text</string>
+                 <string>-</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -4228,6 +4228,12 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>150</width>
+                  <height>0</height>
+                 </size>
+                </property>
                 <property name="font">
                  <font>
                   <family>Roboto Medium</family>
@@ -4236,7 +4242,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  </font>
                 </property>
                 <property name="text">
-                 <string>MSE:  0.647 GHz^2   (+0.86%)</string>
+                 <string>MSE:  - GHz²   (+0.00%)</string>
                 </property>
                </widget>
               </item>
@@ -4438,10 +4444,16 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
               <item row="1" column="7">
                <widget class="QLabel" name="mseLabel_2">
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>150</width>
+                  <height>0</height>
+                 </size>
                 </property>
                 <property name="font">
                  <font>
@@ -4451,7 +4463,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  </font>
                 </property>
                 <property name="text">
-                 <string>MSE:  0.647 GHz^2   (+0.86%)</string>
+                 <string>MSE:  - GHz²   (+0.00%)</string>
                 </property>
                </widget>
               </item>
@@ -4464,7 +4476,7 @@ font: 57 11pt &quot;Roboto Medium&quot;;</string>
                  </sizepolicy>
                 </property>
                 <property name="text">
-                 <string>Status Text</string>
+                 <string>-</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
