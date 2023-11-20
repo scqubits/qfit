@@ -1,5 +1,5 @@
-qfit: a tool component of scQubits
-==================================
+QFit: Interactive Parameter Fitting for Superconducting Circuits
+================================================================
 
 [Tianpu Zhao](https://github.com/ZhaoTianPu), [Danyang Chen](https://github.com/Harrinive), [Jens Koch](https://github.com/jkochNU)
 
@@ -22,16 +22,17 @@ So, why wait? Dive in and explore what QFit can do for you!
 Installation and Usage
 ----------------------
 
-Install qfit via
+Download and unzip the source code to a `<directory>`. Install qfit via
 
-    pip install qfit
+    cd <directory>/qfit
+    pip install .
 
 Once done, you the application can be launched in a python script via
 
     from qfit import Fit
     Fit(<HilbertSpace>)
 
-where `<HilbertSpace>` is a scqubits HilbertSpace object, the circuit model you want to fit against.
+where `<HilbertSpace>` is a `scqubits.HilbertSpace` object, the circuit model you want to fit against.
 
 Check out the notebook `Learn_QFit_in_10mins.ipynb` for a quick start guide.
 
