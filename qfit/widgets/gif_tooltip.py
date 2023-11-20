@@ -8,9 +8,10 @@ from PySide6.QtWidgets import (
     QToolButton,
     QHBoxLayout,
     QSizePolicy,
+    QTextEdit,
 )
 from PySide6.QtCore import QEvent
-from PySide6.QtGui import QMovie, QColor, QPalette, QPixmap
+from PySide6.QtGui import QMovie, QPixmap, QTextBlockFormat
 from PySide6.QtCore import Qt
 
 from typing import List, Tuple, Union
@@ -51,15 +52,32 @@ class ButtonWithAnimatedTooltip(QPushButton):
 
 
 class DialogWindowWithMedia(QDialog):
-    def __init__(self, text: str, media_list: List[Tuple[str, Union[int, None]]]):
+    def __init__(
+        self,
+        text: str,
+        media_list: Union[List[Tuple[str, Union[int, None]]], None] = None,
+    ):
+        """
+        A dialog window with text and media (GIF or image).
+
+        ARGUMENTS
+        ---------
+        text: str
+            text to be shown in the dialog window
+        media_list: Union[List[Tuple[str, Union[int, None]]], None]
+            list of media to be shown in the dialog window. Each element in the list is a tuple
+            of the media path and the width of the media. If the width is None, the media will
+            be shown in its original size. If the width is not None, the media will be scaled
+            down to the width. Can be set to None if no media is needed.
+        """
         super().__init__()
         self.setStyleSheet(
             "QDialog {\n"
-            "	background-color: rgb(18, 18, 18);\n"
+            "	background-color: rgb(50, 50, 50);\n"
             "}\n"
             "\n"
             "QFrame {\n"
-            "	background-color: rgb(18, 18, 18);\n"
+            "	background-color: rgb(50, 50, 50);\n"
             "}\n"
             "\n"
             "QWidget {\n"
@@ -69,6 +87,7 @@ class DialogWindowWithMedia(QDialog):
             "\n"
             "QLabel {\n"
             "	color: rgb(170, 170, 170);\n"
+            "   line-height: 150%; \n"
             "}\n"
         )
 
@@ -78,59 +97,70 @@ class DialogWindowWithMedia(QDialog):
 
         # Setup label for text
         text_label = QLabel(text)
+        # text_label.setReadOnly(True)
+
+        # block_format = QTextBlockFormat()
+        # block_format.setLineHeight(1.5 * text_label.font().pointSize(), QTextBlockFormat.LineHeightTypes.ProportionalHeight)
+
         layout.addWidget(text_label)
         text_label.setAlignment(Qt.AlignLeft)
+        # text_label.setline
 
         media_label_list = []
         # insert media here
-        for media in media_list:
-            media_label_list.append(QLabel())
-            media_label_list[-1].setAlignment(Qt.AlignCenter)
-            media_path, width = media
-            # if the media is a GIF
-            if media_path.endswith(".gif"):
-                # Setup label
-                # Load and start movie (GIF)
-                movie = QMovie(media_path)
-                media_label_list[-1].setMovie(movie)
-                movie.start()
-                # set the width of the GIF, if width is provided, scale the GIF down
-                if width is not None:
-                    media_label_list[-1].setFixedWidth(width)
-                    # scale the GIF down by the same factor as the width
-                    scaled_size = movie.currentPixmap().size() * (
-                        width / movie.currentPixmap().width()
-                    )
-                    movie.setScaledSize(
-                        movie.currentPixmap().size()
-                        * (width / movie.currentPixmap().width())
-                    )
-                    # get current height
-                    height = scaled_size.height()
-                    # set the height of the GIF
-                    media_label_list[-1].setFixedHeight(height)
-                else:
-                    media_label_list[-1].setFixedWidth(movie.currentPixmap().width())
-                    media_label_list[-1].setFixedHeight(movie.currentPixmap().height())
+        if media_list is not None:
+            for media in media_list:
+                media_label_list.append(QLabel())
+                media_label_list[-1].setAlignment(Qt.AlignCenter)
+                media_path, width = media
+                # if the media is a GIF
+                if media_path.endswith(".gif"):
+                    # Setup label
+                    # Load and start movie (GIF)
+                    movie = QMovie(media_path)
+                    media_label_list[-1].setMovie(movie)
+                    movie.start()
+                    # set the width of the GIF, if width is provided, scale the GIF down
+                    if width is not None:
+                        media_label_list[-1].setFixedWidth(width)
+                        # scale the GIF down by the same factor as the width
+                        scaled_size = movie.currentPixmap().size() * (
+                            width / movie.currentPixmap().width()
+                        )
+                        movie.setScaledSize(
+                            movie.currentPixmap().size()
+                            * (width / movie.currentPixmap().width())
+                        )
+                        # get current height
+                        height = scaled_size.height()
+                        # set the height of the GIF
+                        media_label_list[-1].setFixedHeight(height)
+                    else:
+                        media_label_list[-1].setFixedWidth(
+                            movie.currentPixmap().width()
+                        )
+                        media_label_list[-1].setFixedHeight(
+                            movie.currentPixmap().height()
+                        )
 
-            # if the media is an image
-            elif media_path.endswith(".png") or media_path.endswith(".jpg"):
-                # Load image
-                pixmap = QPixmap(media_path)
-                media_label_list[-1].setPixmap(pixmap)
-                # set the width of the image, if width is provided, scale the image
-                if width is not None:
-                    media_label_list[-1].setFixedWidth(width)
-                    # scale the image down by the same factor as the width
-                    media_label_list[-1].setPixmap(pixmap.scaledToWidth(width))
-                    # get current height
-                    height = pixmap.scaledToWidth(width).height()
-                    # set the height of the image
-                    media_label_list[-1].setFixedHeight(height)
-                else:
-                    media_label_list[-1].setFixedWidth(pixmap.width())
-                    media_label_list[-1].setFixedHeight(pixmap.height())
-            layout.addWidget(media_label_list[-1], alignment=Qt.AlignCenter)
+                # if the media is an image
+                elif media_path.endswith(".png") or media_path.endswith(".jpg"):
+                    # Load image
+                    pixmap = QPixmap(media_path)
+                    media_label_list[-1].setPixmap(pixmap)
+                    # set the width of the image, if width is provided, scale the image
+                    if width is not None:
+                        media_label_list[-1].setFixedWidth(width)
+                        # scale the image down by the same factor as the width
+                        media_label_list[-1].setPixmap(pixmap.scaledToWidth(width))
+                        # get current height
+                        height = pixmap.scaledToWidth(width).height()
+                        # set the height of the image
+                        media_label_list[-1].setFixedHeight(height)
+                    else:
+                        media_label_list[-1].setFixedWidth(pixmap.width())
+                        media_label_list[-1].setFixedHeight(pixmap.height())
+                layout.addWidget(media_label_list[-1], alignment=Qt.AlignCenter)
 
         # Setup close button
         close_button = QPushButton("CLOSE")
