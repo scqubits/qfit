@@ -17,6 +17,12 @@ from qfit.widgets.menu import MenuWidget
 from qfit.utils.helpers import StopExecution
 from qfit.io_utils.measurement_file_readers import readMeasurementFile
 
+# This import is necessary for the registry (in method openProjectWithRegistryDict)
+from qfit.models.measurement_data import (
+    ImageMeasurementData,
+    NumericalMeasurementData,
+)
+
 from typing import TYPE_CHECKING, Union, Dict, Any
 
 if TYPE_CHECKING:
