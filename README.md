@@ -34,7 +34,7 @@ Once done, you the application can be launched in a python script via
 
 where `<HilbertSpace>` is a `scqubits.HilbertSpace` object, the circuit model you want to fit against.
 
-Check out the notebook `Learn_QFit_in_10mins.ipynb` for a quick start guide.
+Check out the notebook [QFit_Quick_Start.ipynb](./QFit_Quick_Start.ipynb) for a quick start guide
 
 License
 -------
