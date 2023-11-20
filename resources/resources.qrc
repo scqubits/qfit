@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/">
+    <file>images/calibration_new.png</file>
     <file>images/calibration_x1x2y1y2.png</file>
     <file>gifs/calibration_gif.gif</file>
     <file>icons/bwr.png</file>

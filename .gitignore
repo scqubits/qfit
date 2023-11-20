@@ -21,6 +21,8 @@ qfit/controllers/.ipynb_checkpoints/test-checkpoint.ipynb
 build
 dist/qfit-0.1.0-py3.9.egg
 dist/qfit-0.1.0-py3.11.egg
+
+# Tianpu's unwanted files
 example_data/test.qfit
 gif_raw_source/.$calibration.drawio.bkp
 gif_raw_source/.$calibration.drawio.dtmp
@@ -30,3 +32,6 @@ gif_raw_source/calibration_mp4.mp4
 gif_raw_source/calibration_raw.mov
 gif_raw_source/calibration.drawio
 gif_raw_source/calibration.svg
+gif_raw_source/.$calibration_new.drawio.bkp
+gif_raw_source/calibration_new.drawio
+gif_raw_source/.$calibration_new.drawio.dtmp
