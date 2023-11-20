@@ -770,7 +770,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                         c=scatter_color,
                         marker=r"$\times$",
                         s=70,
-                        alpha=0.3,
+                        alpha=0.23,
                     )
             if not self.allDatasets.isEmpty():
                 dataXY = self.activeDataset.all()
