@@ -10,7 +10,7 @@
 ############################################################################
 
 
-from typing import Union, Literal
+from typing import Union, Literal, List
 
 import numpy as np
 from PySide6 import QtGui
@@ -46,7 +46,7 @@ class ActiveExtractedData(QAbstractTableModel):
     addition, it references calibration data to expose either the raw selected data,
     or their calibrated counterparts."""
 
-    def __init__(self, data: np.ndarray | None = None):
+    def __init__(self, data: Union[np.ndarray, None] = None):
         """
         Parameters
         ----------
@@ -397,7 +397,7 @@ class AllExtractedData(
         applyCalibration: bool = True, 
         calibration_axis: Literal["xy", "x", "y"] = "xy",
         concat_data: bool = False,
-    ) -> list[np.ndarray] | np.ndarray:
+    ) -> Union[List[np.ndarray], np.ndarray]:
         """
         Return all data points sorted by x value.
 

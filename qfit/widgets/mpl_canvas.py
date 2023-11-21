@@ -26,11 +26,11 @@ from matplotlib.widgets import Cursor
 
 
 import qfit.core.app_state as appstate
-
 from qfit.core.app_state import State
-
 from qfit.utils.helpers import y_snap
 from qfit.models.extracted_data import AllExtractedData
+
+from typing import Union
 
 
 class MplNavButtons(QFrame):
@@ -239,9 +239,9 @@ class MplFigureCanvas(QFrame):
 
     def select_crosshair(
         self, 
-        x_snap_mode: bool | None = None,
-        horizOn: bool | None = None,
-        vertOn: bool | None = None,
+        x_snap_mode: Union[bool, None] = None,
+        horizOn: Union[bool, None] = None,
+        vertOn: Union[bool, None] = None,
     ):
         """
         set up the crosshair cursor. This class memorizes the state of the crosshair
