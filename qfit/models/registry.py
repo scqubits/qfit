@@ -110,16 +110,25 @@ class Registry:
         self,
         obj: Any,
     ):
-        """Register the object to the registry."""
+        """
+        Register the object to the registry.
+        
+        There are two ways to register an object:
+        1. The object is a Registrable object. In this case, the
+        registerAll() method will be called.
+        2. The object is not a Registrable object. In this case, the object
+        will be directly saved and this entry will be read-only.
+        """
         try:
             reg_dict = obj.registerAll()
             self._registry.update(reg_dict)
         except AttributeError:
             name = obj.__class__.__name__
+            obj_wrap = [obj]    # list wrapper to make the object mutable
             entry = RegistryEntry(
                 name,
                 "r",
-                lambda: obj,
+                lambda: obj_wrap[0],
             )
             self._registry[name] = entry
 
