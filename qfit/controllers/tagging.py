@@ -130,19 +130,19 @@ class TaggingCtrl(QObject):
         self.ui.tagDispersiveBareRadioButton.toggled.connect(
             lambda: self._onBareRadioButtonToggled()
         )
-        self.ui.tagDispersiveBareRadioButton.toggled.connect(
-            lambda: print("Mode clicked: bare")
-        )
+        # self.ui.tagDispersiveBareRadioButton.toggled.connect(
+        #     lambda: print("Mode clicked: bare")
+        # )
         self.ui.tagDispersiveDressedRadioButton.toggled.connect(
             lambda: self._onDressedRadioButtonToggled()
         )
-        self.ui.tagDispersiveDressedRadioButton.toggled.connect(
-            lambda: print("Mode clicked: dressed")
-        )
+        # self.ui.tagDispersiveDressedRadioButton.toggled.connect(
+        #     lambda: print("Mode clicked: dressed")
+        # )
         self.ui.noTagRadioButton.toggled.connect(
             lambda: self._onNoTagRadioButtonToggled()
         )
-        self.ui.noTagRadioButton.toggled.connect(lambda: print("Mode clicked: no tag"))
+        # self.ui.noTagRadioButton.toggled.connect(lambda: print("Mode clicked: no tag"))
 
         # Once the user has finished editing the tag, update the AllExtractedData data
         # each view (LineEdit and SpinBox) has its own signal and a common slot _tagViewToModel to
