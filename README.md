@@ -40,11 +40,9 @@ License
 -------
 [![license](https://img.shields.io/badge/license-New%20BSD-blue.svg)](http://en.wikipedia.org/wiki/BSD_licenses#3-clause_license_.28.22Revised_BSD_License.22.2C_.22New_BSD_License.22.2C_or_.22Modified_BSD_License.22.29)
 
-You are free to use this software, with or without modification, provided that the conditions listed in the LICENSE file
- are satisfied.
+You are free to use this software, with or without modification, provided that the conditions listed in the LICENSE file are satisfied.
  
-qfit uses [CoreUI icons]([https://pjonori.com/](https://coreui.io/docs/icons/)), licensed under 
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+qfit uses [CoreUI icons]([https://pjonori.com/](https://coreui.io/docs/icons/)), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
