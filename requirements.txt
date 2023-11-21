@@ -6,3 +6,5 @@ h5py>=2.7.1
 scikit-image
 scqubits>=3.0.0
 matplotlib-label-lines
+ipykernel
+jupyter
