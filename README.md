@@ -29,25 +29,25 @@ Follow these steps to install `QFit`:
 OR 
 
 1b. Open a terminal, `cd <directory>` to the directory where you would like to store the source code of `QFit`, then
-
+```
     git clone https://github.com/scqubits/qfit
-
+```
 2. (Recommended) Create a virtual environment with python (python >= 3.8 and <= 3.11 is recommended), e.g. run on terminal
-
+```
     conda create -n <env name> python=3.11
     conda activate <env name>
-
+```
 3. On terminal, install `QFit` by
-
+```
     cd <directory>/qfit
     conda install --yes --file requirements.txt
     pip install .
-
+```
 Once done, the application can be launched in a python script via
-
+```
     from qfit import Fit
     Fit(<HilbertSpace>)
-
+```
 where `<HilbertSpace>` is a `scqubits.HilbertSpace` object, the circuit model you want to fit against.
 
 Check out the notebook [QFit_Quick_Start.ipynb](./QFit_Quick_Start.ipynb) for a quick intro tutorial.
