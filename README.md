@@ -43,7 +43,7 @@ OR
     conda install --yes --file requirements.txt
     pip install .
 ```
-Once done, the application can be launched in a python script via
+Once done, the application can be launched in a jupyter notebook session via
 ```
     from qfit import Fit
     Fit(<HilbertSpace>)
