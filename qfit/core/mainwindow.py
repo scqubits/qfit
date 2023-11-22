@@ -757,7 +757,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         cmap.set_bad(color="black")
 
         # plot the background data
-        self.measurementData.canvasPlot(self.axes, cmap=cmap)
+        self.measurementData.canvasPlot(self.axes, cmap=cmap, rasterized=True)
 
         # plot the numerically calculated spectrum
         if not initialize:
