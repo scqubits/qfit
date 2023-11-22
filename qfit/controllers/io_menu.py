@@ -255,7 +255,7 @@ class IOCtrl:
         To load a measurementData from file, use ioMenuCtrl.measurementDataFromFile
         """
         self.mainWindow.initializeDynamicalElements(
-            hilbertspace=self.mainWindow.hilbertspace,
+            hilbertspace=self.mainWindow.quantumModel.hilbertspace,
             measurementData=measurementData,
         )
 
@@ -395,8 +395,8 @@ class IOCtrl:
         Return the hilbert space object.
         """
         if deepcopy:
-            return copy.deepcopy(self.mainWindow.hilbertspace)
-        return self.mainWindow.hilbertspace
+            return copy.deepcopy(self.mainWindow.quantumModel.hilbertspace)
+        return self.mainWindow.quantumModel.hilbertspace
 
     # slots ###################################################################
     @Slot()

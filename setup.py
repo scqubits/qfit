@@ -65,11 +65,11 @@ PACKAGES = [
     "qfit/ui_views",
 ]
 
-PYTHON_VERSION = ">=3.6"
+PYTHON_VERSION = ">=3.10"
 
 
 NAME = "qfit"
-AUTHOR = "Jens Koch"
+AUTHOR = "Tianpu Zhao, Danyang Chen, Jens Koch"
 AUTHOR_EMAIL = "jens-koch@northwestern.edu"
 LICENSE = "BSD"
 DESCRIPTION = DOCLINES[0]

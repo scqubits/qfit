@@ -105,6 +105,15 @@ class Registry:
 
     def __getitem__(self, key: str) -> Any:
         return self._registry[key].getter()
+    
+    def keys(self):
+        return self._registry.keys()
+    
+    def values(self):
+        return self._registry.values()
+    
+    def items(self):
+        return self._registry.items()
 
     def register(
         self,

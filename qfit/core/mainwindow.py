@@ -141,7 +141,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def __init__(
         self, measurementData: MeasurementDataType, hilbertspace: HilbertSpace
     ):
-        self.hilbertspace = hilbertspace
+        # self.hilbertspace = hilbertspace
 
         # ResizableFramelessWindow.__init__(self)
         QMainWindow.__init__(self)
@@ -176,9 +176,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.measurementData = measurementData
         self.initializeExtractedData()
-        self.staticExtractedDataConnects()
+        self.staticExtractedDataConnects(hilbertspace)
 
-        self.dynamicalMeasurementDataSetupConnects()
+        self.dynamicalMeasurementDataSetupConnects(hilbertspace)
         self.uiDataLoadConnects()
 
         # setup mpl canvas
@@ -189,7 +189,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # self.ui.mplFigureCanvas.selectOn()
 
         # prefit: controller, two models and their connection to view (sliders)
-        self.prefitDynamicalElementsBuild(self.hilbertspace)
+        self.prefitDynamicalElementsBuild(hilbertspace)
         self.prefitStaticElementsBuild()
 
         # fit
@@ -226,17 +226,17 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # calibration, data, plot setup ####################################
     ####################################################################
-    def staticExtractedDataConnects(self):
+    def staticExtractedDataConnects(self, hilbertspace: HilbertSpace):
         self.uiExtractedDataConnects()
         self.uiExtractedDataControlConnects()
 
         self.taggingCtrl = TaggingCtrl(
-            self.hilbertspace.subsystem_count,
+            hilbertspace.subsystem_count,
             (self.allDatasets, self.activeDataset),
             self.ui,
         )
 
-    def dynamicalMeasurementDataSetupConnects(self):
+    def dynamicalMeasurementDataSetupConnects(self, hilbertspace: HilbertSpace):
         self.measurementData.setupUICallbacks(
             self.dataCheckBoxCallbacks, self.plotRangeCallback
         )
@@ -244,7 +244,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # inform the use of the bare transition label
         self.ui.bareLabelOrder.setText(
             "   Labels ordered by: "  # Three space to align with the label title
-            + ", ".join([subsys.id_str for subsys in self.hilbertspace.subsystem_list])
+            + ", ".join([subsys.id_str for subsys in hilbertspace.subsystem_list])
         )
 
         self.uiMeasurementDataOptionsConnects()
@@ -1232,7 +1232,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
 
         # set line edit property:
-        self.ui.initStateLineEdit.setTupleLength(self.hilbertspace.subsystem_count)
+        self.ui.initStateLineEdit.setTupleLength(self.quantumModel.hilbertspace.subsystem_count)
 
         # when change those numbers, update the spectrum data using the
         # existing sweep
@@ -1563,7 +1563,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.calibrationData.resetCalibration()
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
-        self.dynamicalMeasurementDataSetupConnects()
+        self.dynamicalMeasurementDataSetupConnects(hilbertspace)
         self.uiDataLoadConnects()
         self.setupUIXYZComboBoxes()
 
