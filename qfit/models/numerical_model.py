@@ -1,3 +1,5 @@
+from PySide6.QtCore import Slot
+
 import numpy as np
 
 from numpy import ndarray
@@ -454,20 +456,16 @@ class QuantumModel:
             for parameter in parameters.values():
                 self._updateQuantumModelParameter(parameter)
 
-    def updateCalculation(
+    def newSweep(
         self,
         slider_or_fit_parameter_set: QuantumModelParameterSet,
         sweep_parameter_set: QuantumModelParameterSet,
-        spectrum_data: CalculatedSpecData,
         calibration_data: CalibrationData,
         extracted_data: AllExtractedData,
         prefit_result: Result,
     ) -> None:
         """
-        It is connected to the signal emitted by the UI when the user changes the slider
-        of a parameter. It receives a QuantumModelParameterSet object and updates the
-        the HilbertSpace object. If auto run is on, it will also compute the spectrum
-        and MSE.
+        Create a new ParameterSweep object.
 
         Parameters
         ----------
@@ -477,8 +475,6 @@ class QuantumModel:
         sweep_parameter_set: QuantumModelParameterSet
             A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
             which are subject to changes in the parameter sweep.
-        spectrum_data: CalculatedSpecData
-            The CalculatedSpecData object that stores the spectrum data.
         calibration_data: CalibrationData
             The CalibrationData object that stores the calibration data.
         extracted_data: AllExtractedData
@@ -515,20 +511,14 @@ class QuantumModel:
         prefit_result.status_type = "SUCCESS"
         prefit_result.status_text = f""
 
-        # if autorun, perform the rest of the steps (compute spectrum, plot, calculate MSE)
-        if self.autorun_callback():
-            self.sweep2SpecNMSE(
-                spectrum_data=spectrum_data,
-                extracted_data=extracted_data,
-                calibration_data=calibration_data,
-                result=prefit_result,
-            )
-
+    @Slot()
     def sweep2SpecNMSE(
         self,
+        slider_or_fit_parameter_set: QuantumModelParameterSet,
+        sweep_parameter_set: QuantumModelParameterSet,
         spectrum_data: CalculatedSpecData,
-        extracted_data: AllExtractedData,
         calibration_data: CalibrationData,
+        extracted_data: AllExtractedData,
         result: Result,
     ):
         """
@@ -538,16 +528,20 @@ class QuantumModel:
 
         It's not allowed to use when the sweep is not generated.
         """
-        # run sweep
+        # run sweep (generate a new sweep if not exist)
         try:
-            result.status_type = "COMPUTING"
-            self.sweep.run()
+            self.sweep
         except AttributeError:
-            result.status_type = "ERROR"
-            result.status_text = (
-                "The parameter sweep is not generated. Please play with sliders first."
+            self.newSweep(
+                slider_or_fit_parameter_set=slider_or_fit_parameter_set,
+                sweep_parameter_set=sweep_parameter_set,
+                calibration_data=calibration_data,
+                extracted_data=extracted_data,
+                prefit_result=result,
             )
-        # TODO: generate a sweep when there is no sweep available
+            
+        result.status_type = "COMPUTING"
+        self.sweep.run()
 
         # generate specdata --------------------------------------------
         # for highlighting
@@ -585,6 +579,57 @@ class QuantumModel:
         result.current_mse = mse
         result.status_type = status_type
         result.status_text = status_text
+
+
+    @Slot()
+    def updateCalculation(
+        self,
+        slider_or_fit_parameter_set: QuantumModelParameterSet,
+        sweep_parameter_set: QuantumModelParameterSet,
+        spectrum_data: CalculatedSpecData,
+        calibration_data: CalibrationData,
+        extracted_data: AllExtractedData,
+        prefit_result: Result,
+    ) -> None:
+        """
+        It is connected to the signal emitted by the UI when the user changes the slider
+        of a parameter. It receives a QuantumModelParameterSet object and updates the
+        the HilbertSpace object. If auto run is on, it will also compute the spectrum
+        and MSE.
+
+        Parameters
+        ----------
+        slider_parameter_set: QuantumModelParameterSet
+            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
+            which are controlled by sliders.
+        sweep_parameter_set: QuantumModelParameterSet
+            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
+            which are subject to changes in the parameter sweep.
+        spectrum_data: CalculatedSpecData
+            The CalculatedSpecData object that stores the spectrum data.
+        calibration_data: CalibrationData
+            The CalibrationData object that stores the calibration data.
+        extracted_data: AllExtractedData
+            The extracted data from the two-tone spectroscopy experiment.
+        """
+        self.newSweep(
+            slider_or_fit_parameter_set=slider_or_fit_parameter_set,
+            sweep_parameter_set=sweep_parameter_set,
+            calibration_data=calibration_data,
+            extracted_data=extracted_data,
+            prefit_result=prefit_result,
+        )
+
+        # if autorun, perform the rest of the steps (compute spectrum, plot, calculate MSE)
+        if self.autorun_callback():
+            self.sweep2SpecNMSE(
+                slider_or_fit_parameter_set=slider_or_fit_parameter_set,
+                sweep_parameter_set=sweep_parameter_set,
+                spectrum_data=spectrum_data,
+                extracted_data=extracted_data,
+                calibration_data=calibration_data,
+                result=prefit_result,
+            )
 
     def _scaleYByInverseCalibration(
         self, 
