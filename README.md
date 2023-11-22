@@ -32,7 +32,7 @@ OR
 ```
     git clone https://github.com/scqubits/qfit
 ```
-2. (Recommended) Create a virtual environment with python (python >= 3.8 and <= 3.11 is recommended), e.g. run on terminal
+2. (Optional but highly Recommended) Create a virtual environment with python (python >= 3.8 and <= 3.11 is recommended), e.g. run on terminal
 ```
     conda create -n <env name> python=3.11
     conda activate <env name>
