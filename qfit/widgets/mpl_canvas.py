@@ -30,7 +30,7 @@ from qfit.core.app_state import State
 from qfit.utils.helpers import y_snap
 from qfit.models.extracted_data import AllExtractedData
 
-from typing import Union
+from typing import Union, Literal, Tuple
 
 
 class MplNavButtons(QFrame):
@@ -134,16 +134,20 @@ class SpecialCursor(Cursor):
         ax,
         allExtractedData: AllExtractedData = None,
         x_snap_mode=None,
+        axis_snap_mode: Union[None, Literal["X", "Y"]] = None,
+        xy_min: Union[None, Tuple[float]] = None,
         horizOn=True,
         vertOn=True,
         useblit=False,
-        **lineprops
+        **lineprops,
     ):
         super().__init__(
             ax, horizOn=horizOn, vertOn=vertOn, useblit=useblit, **lineprops
         )
         self.allExtractedData = allExtractedData
         self.x_snap_mode = x_snap_mode
+        self.axis_snap_mode = axis_snap_mode
+        self.xy_min = xy_min
 
     def onmove(self, event):
         """Internal event handler to draw the cursor when the mouse moves."""
@@ -165,13 +169,21 @@ class SpecialCursor(Cursor):
         self.linev.set_xdata((event.xdata, event.xdata))
 
         self.lineh.set_ydata((event.ydata, event.ydata))
+        # x coordinate of the point
         if self.x_snap_mode == True:
             point_x_coordinate = self.closest_line(event.xdata)
+        elif self.axis_snap_mode == "Y":
+            point_x_coordinate = self.xy_min[0]
         else:
             point_x_coordinate = event.xdata
+        # y coordinate of the point
+        if self.axis_snap_mode == "X":
+            point_y_coordinate = self.xy_min[1]
+        else:
+            point_y_coordinate = event.ydata
         self.cross = self.ax.scatter(
             point_x_coordinate,
-            event.ydata,
+            point_y_coordinate,
             c="red",
             marker=r"$\odot$",
             s=130,
@@ -238,14 +250,15 @@ class MplFigureCanvas(QFrame):
         return self.canvas.figure.axes[0]
 
     def select_crosshair(
-        self, 
+        self,
         x_snap_mode: Union[bool, None] = None,
+        axis_snap_mode: Union[None, Literal["X", "Y"]] = None,
         horizOn: Union[bool, None] = None,
         vertOn: Union[bool, None] = None,
     ):
         """
         set up the crosshair cursor. This class memorizes the state of the crosshair
-        cursor when no arguments are passed. 
+        cursor when no arguments are passed.
         """
         if x_snap_mode is not None:
             self.x_snap_mode = x_snap_mode
@@ -258,6 +271,8 @@ class MplFigureCanvas(QFrame):
             self.axes(),
             allExtractedData=self.allExtractedData,
             x_snap_mode=self.x_snap_mode,
+            axis_snap_mode=axis_snap_mode,
+            xy_min=(self.axes().get_xlim()[0], self.axes().get_ylim()[0]),
             useblit=True,
             horizOn=self.cross_hair_horizOn,
             vertOn=self.cross_hair_vertOn,
@@ -286,9 +301,9 @@ class MplFigureCanvas(QFrame):
     def selectOn(self, showCrosshair=True):
         """
         On the view level, turning on the selection mode means showing
-        the crosshair cursor. 
-        
-        However, there is a situation where on a wrong 
+        the crosshair cursor.
+
+        However, there is a situation where on a wrong
         page, clicking the selection button will not turn on the selection mode,
         so the crosshair cursor should be turned off.
         """
@@ -300,16 +315,16 @@ class MplFigureCanvas(QFrame):
         else:
             self.select_crosshair(horizOn=False, vertOn=False)
 
-    def calibrateOn(self, strXY):
+    def calibrateOn(self):
         self.toolbar.setZoomMode(on=False)
         self.toolbar.setPanMode(on=False)
-        if strXY == "X":
-            horizOn = False
-            vertOn = True
-        else:
-            horizOn = True
-            vertOn = False
-        self.select_crosshair(horizOn=horizOn, vertOn=vertOn)
+        # if strXY == "X":
+        #     horizOn = False
+        #     vertOn = True
+        # else:
+        #     horizOn = True
+        #     vertOn = False
+        # self.select_crosshair(axis_snap_mode=strXY, horizOn=horizOn, vertOn=vertOn)
 
     @Slot()
     def resetView(self):

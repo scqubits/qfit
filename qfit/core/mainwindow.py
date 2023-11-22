@@ -564,13 +564,27 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         else:
             self.x_snap_mode = False
 
+        strXY = None
         # cursor
         if self.ui.modeTagButton.isChecked() and self.ui.selectViewButton.isChecked():
             horizOn, vertOn = True, True
         else:
             horizOn, vertOn = False, False
+        if (
+            appstate.state == self.calibrationStates["X1"]
+            or appstate.state == self.calibrationStates["X2"]
+        ):
+            horizOn, vertOn = False, True
+            strXY = "X"
+        elif (
+            appstate.state == self.calibrationStates["Y1"]
+            or appstate.state == self.calibrationStates["Y2"]
+        ):
+            horizOn, vertOn = True, False
+            strXY = "Y"
 
         self.ui.mplFigureCanvas.select_crosshair(
+            axis_snap_mode=strXY,
             x_snap_mode=self.x_snap_mode,
             horizOn=horizOn,
             vertOn=vertOn,
@@ -895,8 +909,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self._resetHighlightButtons()
         self._highlightCaliButton(self.calibrationButtons[calibrationLabel])
         # mpl canvas mode & cursor
-        self.ui.mplFigureCanvas.calibrateOn(calibrationLabel[0])
         self.updateMatchingModeAndCursor()
+        # notice that this line overwrites the crosshair selection in updateMatchingModeAndCursor
+        self.ui.mplFigureCanvas.calibrateOn()
 
     @Slot()
     def updateCalibration(self):
@@ -1067,8 +1082,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     def onPrefitPlotClicked(self):
         self.quantumModel.sweep2SpecNMSE(
-            slider_or_fit_parameter_set=self.sliderParameterSet,
-            sweep_parameter_set=self.sweepParameterSet,
             spectrum_data=self.spectrumData,
             extracted_data=self.allDatasets,
             calibration_data=self.calibrationData,
@@ -1234,7 +1247,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
 
         # set line edit property:
-        self.ui.initStateLineEdit.setTupleLength(self.quantumModel.hilbertspace.subsystem_count)
+        self.ui.initStateLineEdit.setTupleLength(
+            self.quantumModel.hilbertspace.subsystem_count
+        )
 
         # when change those numbers, update the spectrum data using the
         # existing sweep
