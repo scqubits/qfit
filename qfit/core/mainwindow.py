@@ -1082,6 +1082,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     def onPrefitPlotClicked(self):
         self.quantumModel.sweep2SpecNMSE(
+            slider_or_fit_parameter_set=self.sliderParameterSet,
+            sweep_parameter_set=self.sweepParameterSet,
             spectrum_data=self.spectrumData,
             extracted_data=self.allDatasets,
             calibration_data=self.calibrationData,
