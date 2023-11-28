@@ -40,7 +40,7 @@ OR
 3. On terminal, install `QFit` by
 ```
     cd <directory>/qfit
-    conda install --yes --file requirements.txt
+    conda install requirements.txt --yes --file -c conda-forge
     pip install .
 ```
 Once done, the application can be launched in a jupyter notebook session via
