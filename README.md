@@ -19,7 +19,7 @@ QFit is your go-to Python application for extracting parameters of superconducti
 
 QFit supports a wide variety of circuit quantum electrodynamic systems, thanks to the powerful Python library `scqubits` as its backend simulator. Once you've extracted your parameters, you can pass them directly to scQubits for any further numerical simulations you need to do.
 
-So, why wait? Dive in and explore what QFit can do for you!
+Join us in refining QFit during its beta phase! Your insights and reports are invaluable in making QFit a robust tool for this community. Dive in and explore what QFit can do for you, and let us know your experience!
 
 Installation and Usage
 ----------------------
