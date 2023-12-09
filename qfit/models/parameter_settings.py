@@ -51,7 +51,7 @@ DEFAULT_PARAM_MINMAX = {
     "ng": {"min": 0.0, "max": 1.0},
     "flux": {"min": 0.0, "max": 1.0},
     "cutoff": {"min": 10, "max": 50},
-    "interaction_strength": {"min": -0.1, "max": 0.1},
+    "interaction_strength": {"min": -1, "max": 1},
     "truncated_dim": {"min": 1, "max": 30},
 }
 
