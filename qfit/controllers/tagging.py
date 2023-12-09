@@ -101,6 +101,7 @@ class TaggingCtrl(QObject):
 
         self._initializeUI()
 
+        self._modeSwitchConnects()
         self._viewUpdatedConnects()
         self._modelUpdatedConnects()
 
@@ -120,10 +121,9 @@ class TaggingCtrl(QObject):
         self.ui.finalStateLineEdit.setTupleLength(self.subsysCount)
 
     # Connections ======================================================
-    def _viewUpdatedConnects(self):
+    def _modeSwitchConnects(self):
         """
-        Connect the signals for user changes through UI in the tagging section to the corresponding
-        slots that update the model accordingly.
+        respond to the user switching between the three modes (no tag, bare tag, dressed tag)
         """
         # connect the radio buttons to the corresponding tagging panels
         # one for each mode
@@ -143,7 +143,12 @@ class TaggingCtrl(QObject):
             lambda: self._onNoTagRadioButtonToggled()
         )
         # self.ui.noTagRadioButton.toggled.connect(lambda: print("Mode clicked: no tag"))
-
+        
+    def _viewUpdatedConnects(self):
+        """
+        Connect the signals for user changes through UI in the tagging section to the corresponding
+        slots that update the model accordingly.
+        """
         # Once the user has finished editing the tag, update the AllExtractedData data
         # each view (LineEdit and SpinBox) has its own signal and a common slot _tagViewToModel to
         # update the model
