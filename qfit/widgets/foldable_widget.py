@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
-    QGroupBox, 
-    QVBoxLayout, 
-    QLabel, 
+    QGroupBox,
+    QVBoxLayout,
+    QLabel,
     QSizePolicy,
     QPushButton,
 )
@@ -14,13 +14,15 @@ from PySide6.QtCore import Qt, QSize, QCoreApplication, Slot
 SPACING = 12
 MARGIN = -1
 
+
 class FoldPushButton(QPushButton):
     """
     Push button that has an icon.
     """
+
     def __init__(self, title="Foldable", parent=None):
         super().__init__()
-        
+
         # icon
         self.icon = QIcon()
         self.icon.addFile(
@@ -46,9 +48,7 @@ class FoldPushButton(QPushButton):
         )
         self.setIcon(self.icon)
         # set title
-        self.setText(
-            QCoreApplication.translate("MainWindow", title, None)
-        )
+        self.setText(QCoreApplication.translate("MainWindow", title, None))
         # set checkable
         self.setCheckable(True)
         self.setChecked(True)
@@ -87,9 +87,7 @@ class FoldableWidget(QGroupBox):
         self.boxLayout.addWidget(self.content_widget)
 
         # connect the push button to the setVisible method
-        self.foldPushButton.clicked.connect(
-            self._toggleContent
-        )
+        self.foldPushButton.clicked.connect(self._toggleContent)
         # initialize the content
         self._toggleContent(self.foldPushButton.isChecked())
 

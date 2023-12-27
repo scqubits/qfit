@@ -6,10 +6,14 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QCheckBox,
+    QTableWidgetItem,
+    QSizePolicy,
+    QSpacerItem,
 )
 from PySide6.QtCore import (
     Qt,
 )
+from PySide6.QtGui import QColor, QPalette
 
 from qfit.widgets.foldable_widget import FoldPushButton
 from qfit.utils.helpers import modifyStyleSheet
@@ -17,16 +21,22 @@ from qfit.widgets.validated_line_edits import FloatLineEdit
 
 from typing import List, Dict, Tuple, Union, Type
 
+
 class CenteredItem(QWidget):
     """
     A container widget that centers its contents.
     """
+
     def __init__(self, widget):
         super().__init__()
         layout = QHBoxLayout(self)
         layout.setAlignment(Qt.AlignCenter)
+        layout.addItem(QSpacerItem(5, 0, QSizePolicy.Fixed))
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(widget)
+        layout.addItem(QSpacerItem(5, 0, QSizePolicy.Fixed))
+        # inherit the style sheet from the widget
+        self.setStyleSheet(widget.styleSheet())
 
 
 class WidgetCollection:
@@ -44,6 +54,8 @@ class WidgetCollection:
         assert key in self.columns
 
         self.widgetForInserting[key] = CenteredItem(widget)
+        # # inherit the style sheet from the widget
+        # self.widgetForInserting[key].setStyleSheet(widget.styleSheet())
 
 
 class FittingParameterItems(WidgetCollection):
@@ -51,7 +63,25 @@ class FittingParameterItems(WidgetCollection):
     A collection of widgets that represents a row in the FittingParameterTable.
     """
 
-    columns = ["Name", "Fix", "Initial", "Min", "Max", "Current", ]
+    columns = [
+        "NAME",
+        "FIX",
+        "INITIAL",
+        "MIN",
+        "MAX",
+        "RESULT",
+    ]
+    # the background color of each column
+    # None = default (transparent)
+    # based on the UI/UX design
+    columnBackgroundColors = {
+        "NAME": None,
+        "FIX": None,
+        "INITIAL": "#292929",
+        "MIN": None,
+        "MAX": "#292929",
+        "RESULT": "#363636",
+    }
     columnCount = len(columns)
 
     def __init__(
@@ -65,24 +95,47 @@ class FittingParameterItems(WidgetCollection):
         self.nameLabel = QLabel(name)
         self.fixCheckbox = QCheckBox()
         self.initialValue = FloatLineEdit("")
-        self.currentValue = QLabel("")
+        self.resultValue = QLabel("")
         self.minValue = FloatLineEdit("")
         self.maxValue = FloatLineEdit("")
+        # keep them in a dict
+        self.entriesDict = {
+            "NAME": self.nameLabel,
+            "FIX": self.fixCheckbox,
+            "INITIAL": self.initialValue,
+            "RESULT": self.resultValue,
+            "MIN": self.minValue,
+            "MAX": self.maxValue,
+        }
+        # loop over the dict to set the style sheet
+        for key, value in self.entriesDict.items():
+            modifyStyleSheet(value, "color", "white")
+            value.setMinimumSize(45, 20)
+            if self.columnBackgroundColors[key] is not None:
+                modifyStyleSheet(
+                    value, "background-color", self.columnBackgroundColors[key]
+                )
+            self.addWidget(key, value)
 
-        self.addWidget("Name", self.nameLabel)
-        self.addWidget("Fix", self.fixCheckbox)
-        self.addWidget("Initial", self.initialValue)
-        self.addWidget("Current", self.currentValue)
-        self.addWidget("Min", self.minValue)
-        self.addWidget("Max", self.maxValue)
 
 class MinMaxItems(WidgetCollection):
     """
-    A collection of widgets that represents a row in the MinMaxTable. 
+    A collection of widgets that represents a row in the MinMaxTable.
     (May not be a row actually)
     """
 
-    columns = ["Name", "Min", "Max", ]
+    columns = [
+        "NAME",
+        "MIN",
+        "MAX",
+    ]
+    # the background color of each column
+    # None = default (transparent)
+    columnBackgroundColors = {
+        "NAME": None,
+        "MIN": "#292929",
+        "MAX": "#363636",
+    }
     columnCount = len(columns)
 
     def __init__(
@@ -97,9 +150,9 @@ class MinMaxItems(WidgetCollection):
         self.minValue = FloatLineEdit("")
         self.maxValue = FloatLineEdit("")
 
-        self.addWidget("Name", self.nameLabel)
-        self.addWidget("Min", self.minValue)
-        self.addWidget("Max", self.maxValue)
+        self.addWidget("NAME", self.nameLabel)
+        self.addWidget("MIN", self.minValue)
+        self.addWidget("MAX", self.maxValue)
 
 
 class FoldableTable(QTableWidget):
@@ -118,12 +171,12 @@ class FoldableTable(QTableWidget):
 
         self._paramType = paramType
         self._paramNumPerRow = paramNumPerRow
-        
+
         # record the position of the groups
         self._groupNames: List[str] = groupNames
-        self._groupRows: Dict[str, int] = dict(zip(
-            self._groupNames, range(len(groupNames))
-        ))
+        self._groupRows: Dict[str, int] = dict(
+            zip(self._groupNames, range(len(groupNames)))
+        )
 
         # store the items in the table
         self._groupButtons: Dict[str, FoldPushButton] = {}
@@ -140,9 +193,9 @@ class FoldableTable(QTableWidget):
         # connect the buttons to the fold/unfold function
         for group in self._groupNames:
             # this might be an ugly way to do this
-            # but `checked` and `group` are all required keywords 
-            # arguments with default values. 
-            
+            # but `checked` and `group` are all required keywords
+            # arguments with default values.
+
             # when the slot function with a single argument is called,
             # the argument is always the checked state of the button.
 
@@ -175,9 +228,11 @@ class FoldableTable(QTableWidget):
 
     def _insertParamRow(self, row_position):
         """
-        Insert a row to the table after initialization. 
+        Insert a row to the table after initialization.
         """
         self.insertRow(row_position)
+        # change the height of the row to 40
+        self.setRowHeight(row_position, 40)
 
         # shift the group rows
         for name, value in self._groupRows.items():
@@ -191,7 +246,7 @@ class FoldableTable(QTableWidget):
         """
         # Set the column widths.
         for idx, entry_type in enumerate(self._columns):
-            width = 40 if entry_type in ["Name", "Fix"] else 60
+            width = 40 if entry_type in ["NAME", "FIX"] else 60
             self.setHorizontalHeaderLabels(self._columns)
             self.setColumnWidth(idx, width)
 
@@ -200,24 +255,31 @@ class FoldableTable(QTableWidget):
         self.setShowGrid(False)
         self.setFrameShape(QTableWidget.NoFrame)
 
-        # separate the group rows and the parameter rows by increasing 
-        # the row height
+        # change the row height for group rows to 35
         for row in self._groupRows.values():
             self.setRowHeight(row, 35)
 
         # set header and group names' style
-        modifyStyleSheet(self.horizontalHeader(), "color", "white")
+        modifyStyleSheet(self.horizontalHeader(), "color", "#AAAAAA")
         for name in self._groupNames:
-            modifyStyleSheet(self._groupButtons[name], "color", "white")
+            modifyStyleSheet(self._groupButtons[name], "color", "#AAAAAA")
+            modifyStyleSheet(self._groupButtons[name], "background-color", "#212121")
 
     def _resizeTable(self):
         # fix the height of the table
-        self.setFixedHeight((
-            self.horizontalHeader().height() 
-            + np.sum([self.rowHeight(i) for i in range(self.rowCount())])
-            + 2 * self.frameWidth()
-            + self.horizontalScrollBar().height()
-        ) * 1.2 + 10)   # need some offsets that I don't know why
+        self.setFixedHeight(
+            (
+                self.horizontalHeader().height()
+                + np.sum([self.rowHeight(i) for i in range(self.rowCount())])
+                + 2 * self.frameWidth()
+                + self.horizontalScrollBar().height()
+            )
+            * 1.2
+            + 10
+        )  # need some offsets that I don't know why
+
+        for i in range(self.rowCount()):
+            print(self.rowHeight(i))
 
         # self.resizeColumnsToContents()
         # self.resizeRowsToContents()
@@ -249,7 +311,7 @@ class FoldableTable(QTableWidget):
 
         # Since one parameter may occupy multiple columns, we need to
         # calculate the position of the parameter row / columns in the table.
-        param_idx = len(self.params[group]) - 1      # which param
+        param_idx = len(self.params[group]) - 1  # which param
         param_row_idx = param_idx // self._paramNumPerRow
         param_column_idx = param_idx % self._paramNumPerRow
 
@@ -262,6 +324,14 @@ class FoldableTable(QTableWidget):
 
         # insert the widgets
         for idx, entry_type in enumerate(self._paramType.columns):
+            if self._paramType.columnBackgroundColors[entry_type] is not None:
+                # Create an invisible table item for each cell, and set color
+                # to the background color of the column.
+                item = QTableWidgetItem()
+                item.setBackground(
+                    QColor(self._paramType.columnBackgroundColors[entry_type])
+                )
+                self.setItem(current_row, current_column + idx, item)
             self.setCellWidget(
                 current_row,
                 current_column + idx,
@@ -273,9 +343,11 @@ class FoldableTable(QTableWidget):
         Return the rows below a group.
         """
         group_upper_row = self._groupRows[group] + 1
-        try: 
+        try:
             # it's the row of the next group
-            group_lower_row = self._groupRows[self._groupNames[self._groupNames.index(group) + 1]]
+            group_lower_row = self._groupRows[
+                self._groupNames[self._groupNames.index(group) + 1]
+            ]
         except IndexError:
             group_lower_row = self.rowCount()
 
@@ -287,7 +359,7 @@ class FoldableTable(QTableWidget):
         """
         for row in self._rowsBelow(group):
             self.setRowHidden(row, True)
-    
+
     def _unfold(self, group):
         """
         Unfold the content below a group by setting the rows to visible.
@@ -295,7 +367,7 @@ class FoldableTable(QTableWidget):
 
         for row in self._rowsBelow(group):
             self.setRowHidden(row, False)
-        
+
     def _onButtonClicked(self, group):
         """
         Fold or unfold the content below a group.

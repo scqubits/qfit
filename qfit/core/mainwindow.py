@@ -1354,6 +1354,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 self.fitTableSet.insertParams(group_name, para_name)
 
         fitScrollLayout.addWidget(self.fitTableSet)
+        print("ran fitTableInserts")
 
     def fittingParameterLoad(self, source: QuantumModelParameterSet):
         """
@@ -1479,8 +1480,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 para.setupUICallbacks(
                     single_row.initialValue.text,
                     single_row.initialValue.setText,
-                    single_row.currentValue.text,
-                    single_row.currentValue.setText,
+                    single_row.resultValue.text,
+                    single_row.resultValue.setText,
                     single_row.minValue.text,
                     single_row.minValue.setText,
                     single_row.maxValue.text,
