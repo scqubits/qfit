@@ -1,5 +1,8 @@
 <RCC>
   <qresource prefix="/">
+    <file>icons/svg/trash.svg</file>
+    <file>icons/svg/plus.svg</file>
+    <file>icons/svg/minus.svg</file>
     <file>icons/svg/eye-solid.svg</file>
     <file>images/calibration_new.png</file>
     <file>icons/svg/eye-solid.svg</file>
