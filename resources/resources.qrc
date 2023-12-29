@@ -1,11 +1,15 @@
 <RCC>
   <qresource prefix="/">
+    <file>images/result-to-initial-arrow.svg</file>
+    <file>icons/svg/updown.svg</file>
+    <file>icons/svg/target.svg</file>
+    <file>icons/svg/copy.svg</file>
+    <file>icons/svg/play.svg</file>
     <file>icons/svg/trash.svg</file>
     <file>icons/svg/plus.svg</file>
     <file>icons/svg/minus.svg</file>
     <file>icons/svg/eye-solid.svg</file>
     <file>images/calibration_new.png</file>
-    <file>icons/svg/eye-solid.svg</file>
     <file>images/calibration_x1x2y1y2.png</file>
     <file>gifs/calibration_gif.gif</file>
     <file>icons/bwr.png</file>

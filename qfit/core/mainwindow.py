@@ -1354,7 +1354,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 self.fitTableSet.insertParams(group_name, para_name)
 
         fitScrollLayout.addWidget(self.fitTableSet)
-        print("ran fitTableInserts")
 
     def fittingParameterLoad(self, source: QuantumModelParameterSet):
         """

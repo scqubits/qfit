@@ -9,11 +9,14 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QSizePolicy,
     QSpacerItem,
+    QHeaderView,
+    QStyleOptionHeader,
+    QStyle,
 )
 from PySide6.QtCore import (
     Qt,
 )
-from PySide6.QtGui import QColor, QPalette
+from PySide6.QtGui import QColor, QPalette, QBrush, QFontMetrics
 
 from qfit.widgets.foldable_widget import FoldPushButton
 from qfit.utils.helpers import modifyStyleSheet
@@ -37,6 +40,57 @@ class CenteredItem(QWidget):
         layout.addItem(QSpacerItem(5, 0, QSizePolicy.Fixed))
         # inherit the style sheet from the widget
         self.setStyleSheet(widget.styleSheet())
+
+
+class NoSeparatorHeaderView(QHeaderView):
+    def __init__(
+        self,
+        orientation,
+        parent=None,
+        color_list: List[str] = None,
+        text_color: str = "#ffffff",
+    ):
+        super(NoSeparatorHeaderView, self).__init__(orientation, parent)
+        self.colorList = color_list
+        self.text_color = text_color
+
+    def paintSection(self, painter, rect, logicalIndex):
+        painter.save()
+
+        # Set up the painter
+        # loop over the color list for each header item
+        # if None in the color list, make it transparent
+        if self.colorList is not None:
+            if self.colorList[logicalIndex] is not None:
+                painter.fillRect(rect, QColor(self.colorList[logicalIndex]))
+            else:
+                painter.fillRect(rect, QColor(Qt.transparent))
+        painter.setPen(QColor(self.text_color))
+
+        # Set up the option
+        option = QStyleOptionHeader()
+        option.rect = rect
+        option.textAlignment = Qt.AlignCenter
+        option.text = self.model().headerData(logicalIndex, self.orientation())
+
+        # Draw the text
+        # self.style().drawControl(QStyle.CE_HeaderLabel, option, painter, self)
+        # Retrieve the text for the header section
+        text = self.model().headerData(logicalIndex, self.orientation(), Qt.DisplayRole)
+
+        # Draw the text manually
+        if text:
+            # Calculate text position (this will align text to the left; modify as needed)
+            font_metrics = QFontMetrics(painter.font())
+            text_width = font_metrics.horizontalAdvance(str(text))
+            text_x = rect.x() + (rect.width() - text_width) / 2  # Center text
+            text_y = (
+                rect.y()
+                + (rect.height() + font_metrics.ascent() - font_metrics.descent()) / 2
+            )
+            painter.drawText(text_x, text_y, str(text))
+
+        painter.restore()
 
 
 class WidgetCollection:
@@ -81,6 +135,15 @@ class FittingParameterItems(WidgetCollection):
         "MIN": None,
         "MAX": "#292929",
         "RESULT": "#363636",
+    }
+    # column widths
+    columnWidths = {
+        "NAME": 55,
+        "FIX": 30,
+        "INITIAL": 73,
+        "MIN": 73,
+        "MAX": 73,
+        "RESULT": 73,
     }
     columnCount = len(columns)
 
@@ -136,6 +199,12 @@ class MinMaxItems(WidgetCollection):
         "MIN": "#292929",
         "MAX": "#363636",
     }
+    # column widths
+    columnWidths = {
+        "NAME": 55,
+        "MIN": 73,
+        "MAX": 73,
+    }
     columnCount = len(columns)
 
     def __init__(
@@ -171,6 +240,15 @@ class FoldableTable(QTableWidget):
 
         self._paramType = paramType
         self._paramNumPerRow = paramNumPerRow
+
+        # replace the default header view with a custom one
+        header = NoSeparatorHeaderView(
+            Qt.Horizontal,
+            color_list=list(self._paramType.columnBackgroundColors.values()),
+            text_color="#AAAAAA",
+        )
+        header.setModel(self.model())  # Make sure to set the model for the header
+        self.setHorizontalHeader(header)
 
         # record the position of the groups
         self._groupNames: List[str] = groupNames
@@ -246,9 +324,11 @@ class FoldableTable(QTableWidget):
         """
         # Set the column widths.
         for idx, entry_type in enumerate(self._columns):
-            width = 40 if entry_type in ["NAME", "FIX"] else 60
+            width = self._paramType.columnWidths[entry_type]
             self.setHorizontalHeaderLabels(self._columns)
             self.setColumnWidth(idx, width)
+            # fix the width
+            self.horizontalHeader().setSectionResizeMode(idx, QHeaderView.Fixed)
 
         # disable the vertical header, grid, and frame
         self.verticalHeader().setVisible(False)
@@ -259,8 +339,13 @@ class FoldableTable(QTableWidget):
         for row in self._groupRows.values():
             self.setRowHeight(row, 35)
 
-        # set header and group names' style
-        modifyStyleSheet(self.horizontalHeader(), "color", "#AAAAAA")
+        # change the header color and style
+        modifyStyleSheet(self.horizontalHeader(), "font", '13pt "Roboto Medium"')
+        modifyStyleSheet(self.horizontalHeader(), "font-weight", "bold")
+        # header height (same as row height for parameters)
+        self.horizontalHeader().setFixedHeight(40)
+
+        # set header and group names' style color
         for name in self._groupNames:
             modifyStyleSheet(self._groupButtons[name], "color", "#AAAAAA")
             modifyStyleSheet(self._groupButtons[name], "background-color", "#212121")
@@ -277,9 +362,6 @@ class FoldableTable(QTableWidget):
             * 1.2
             + 10
         )  # need some offsets that I don't know why
-
-        for i in range(self.rowCount()):
-            print(self.rowHeight(i))
 
         # self.resizeColumnsToContents()
         # self.resizeRowsToContents()
