@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/">
+    <file>images/spin_box_bg.svg</file>
     <file>images/result-to-initial-arrow.svg</file>
     <file>icons/svg/updown.svg</file>
     <file>icons/svg/target.svg</file>

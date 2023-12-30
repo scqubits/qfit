@@ -486,7 +486,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_17 = QVBoxLayout(self.frame)
         self.verticalLayout_17.setSpacing(5)
         self.verticalLayout_17.setObjectName(u"verticalLayout_17")
-        self.verticalLayout_17.setContentsMargins(0, 0, 9, -1)
+        self.verticalLayout_17.setContentsMargins(5, 20, 0, 0)
         self.widget_3 = QWidget(self.frame)
         self.widget_3.setObjectName(u"widget_3")
         self.horizontalLayout_7 = QHBoxLayout(self.widget_3)
@@ -1042,7 +1042,7 @@ class Ui_MainWindow(object):
         self.frame_10.setFrameShadow(QFrame.Raised)
         self.gridLayout_7 = QGridLayout(self.frame_10)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
-        self.gridLayout_7.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_7.setContentsMargins(5, 20, 0, 0)
         self.widget_9 = QWidget(self.frame_10)
         self.widget_9.setObjectName(u"widget_9")
         self.horizontalLayout_16 = QHBoxLayout(self.widget_9)
@@ -1209,10 +1209,14 @@ class Ui_MainWindow(object):
 "\n"
 "QSpinBox {\n"
 "    color: #FFFFFF;\n"
-"    background-color: #2F2F2F;\n"
+"    background-color: #171717;\n"
 "	height: 28px;\n"
 "    width: 28px; \n"
-"    border-radius: 4px;\n"
+"    background-image: url(:/images/spin_box_bg.svg) 1;\n"
+"    background-repeat: no-repeat;\n"
+"    background-position: center center;\n"
+"    background-origin: content;\n"
+"   /*padding: -5px 0px -14px 0px;*/\n"
 "}\n"
 "\n"
 "QSpinBox::up-button {\n"
@@ -1238,7 +1242,8 @@ class Ui_MainWindow(object):
 "    width: 20px;\n"
 "    height: 20px;\n"
 "    image: url(:/icons/svg/plus.svg) 1;\n"
-"}\n"
+""
+                        "}\n"
 "\n"
 "QSpinBox::down-arrow {\n"
 "    image: url(:/icons/svg/minus.svg) 1;\n"
@@ -1247,8 +1252,7 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QSpinBox::up-button:pressed {\n"
-"    background-c"
-                        "olor: #1E1E1E;\n"
+"    background-color: #1E1E1E;\n"
 "}\n"
 "\n"
 "QSpinBox::down-button:pressed {\n"
@@ -1275,9 +1279,10 @@ class Ui_MainWindow(object):
 
         self.finalStateSpinBox = QSpinBox(self.tagDressedGroupBox)
         self.finalStateSpinBox.setObjectName(u"finalStateSpinBox")
-        sizePolicy5.setHeightForWidth(self.finalStateSpinBox.sizePolicy().hasHeightForWidth())
-        self.finalStateSpinBox.setSizePolicy(sizePolicy5)
-        self.finalStateSpinBox.setMinimumSize(QSize(65, 30))
+        sizePolicy2.setHeightForWidth(self.finalStateSpinBox.sizePolicy().hasHeightForWidth())
+        self.finalStateSpinBox.setSizePolicy(sizePolicy2)
+        self.finalStateSpinBox.setMinimumSize(QSize(96, 35))
+        self.finalStateSpinBox.setMaximumSize(QSize(16777215, 30))
         self.finalStateSpinBox.setFrame(True)
         self.finalStateSpinBox.setAlignment(Qt.AlignCenter)
         self.finalStateSpinBox.setValue(1)
@@ -1302,9 +1307,11 @@ class Ui_MainWindow(object):
         self.phNumberDressedSpinBox = QSpinBox(self.tagDressedGroupBox)
         self.phNumberDressedSpinBox.setObjectName(u"phNumberDressedSpinBox")
         self.phNumberDressedSpinBox.setEnabled(True)
-        sizePolicy5.setHeightForWidth(self.phNumberDressedSpinBox.sizePolicy().hasHeightForWidth())
-        self.phNumberDressedSpinBox.setSizePolicy(sizePolicy5)
-        self.phNumberDressedSpinBox.setMinimumSize(QSize(65, 30))
+        sizePolicy2.setHeightForWidth(self.phNumberDressedSpinBox.sizePolicy().hasHeightForWidth())
+        self.phNumberDressedSpinBox.setSizePolicy(sizePolicy2)
+        self.phNumberDressedSpinBox.setMinimumSize(QSize(96, 35))
+        self.phNumberDressedSpinBox.setMaximumSize(QSize(96, 16777215))
+        self.phNumberDressedSpinBox.setBaseSize(QSize(0, 0))
         self.phNumberDressedSpinBox.setAlignment(Qt.AlignCenter)
         self.phNumberDressedSpinBox.setMinimum(1)
 
@@ -1324,9 +1331,9 @@ class Ui_MainWindow(object):
         self.initialStateSpinBox = QSpinBox(self.tagDressedGroupBox)
         self.initialStateSpinBox.setObjectName(u"initialStateSpinBox")
         self.initialStateSpinBox.setEnabled(True)
-        sizePolicy5.setHeightForWidth(self.initialStateSpinBox.sizePolicy().hasHeightForWidth())
-        self.initialStateSpinBox.setSizePolicy(sizePolicy5)
-        self.initialStateSpinBox.setMinimumSize(QSize(96, 30))
+        sizePolicy2.setHeightForWidth(self.initialStateSpinBox.sizePolicy().hasHeightForWidth())
+        self.initialStateSpinBox.setSizePolicy(sizePolicy2)
+        self.initialStateSpinBox.setMinimumSize(QSize(96, 35))
         self.initialStateSpinBox.setAutoFillBackground(False)
         self.initialStateSpinBox.setStyleSheet(u"")
         self.initialStateSpinBox.setAlignment(Qt.AlignCenter)
@@ -1379,10 +1386,14 @@ class Ui_MainWindow(object):
 "\n"
 "QSpinBox {\n"
 "    color: #FFFFFF;\n"
-"    background-color: #2F2F2F;\n"
+"    background-color: #171717;\n"
 "	height: 28px;\n"
 "    width: 28px; \n"
-"    border-radius: 4px;\n"
+"    background-image: url(:/images/spin_box_bg.svg) 1;\n"
+"    background-repeat: no-repeat;\n"
+"    background-position: center center;\n"
+"    background-origin: content;\n"
+"   /*padding: -5px 0px -14px 0px;*/\n"
 "}\n"
 "\n"
 "QSpinBox::up-button {\n"
@@ -1408,7 +1419,8 @@ class Ui_MainWindow(object):
 "    width: 20px;\n"
 "    height: 20px;\n"
 "    image: url(:/icons/svg/plus.svg) 1;\n"
-"}\n"
+""
+                        "}\n"
 "\n"
 "QSpinBox::down-arrow {\n"
 "    image: url(:/icons/svg/minus.svg) 1;\n"
@@ -1417,8 +1429,7 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QSpinBox::up-button:pressed {\n"
-"    background-c"
-                        "olor: #1E1E1E;\n"
+"    background-color: #1E1E1E;\n"
 "}\n"
 "\n"
 "QSpinBox::down-button:pressed {\n"
@@ -1474,7 +1485,7 @@ class Ui_MainWindow(object):
         sizePolicy11.setVerticalStretch(0)
         sizePolicy11.setHeightForWidth(self.phNumberBareSpinBox.sizePolicy().hasHeightForWidth())
         self.phNumberBareSpinBox.setSizePolicy(sizePolicy11)
-        self.phNumberBareSpinBox.setMinimumSize(QSize(96, 30))
+        self.phNumberBareSpinBox.setMinimumSize(QSize(96, 35))
         self.phNumberBareSpinBox.setAlignment(Qt.AlignCenter)
         self.phNumberBareSpinBox.setMinimum(1)
 
@@ -1574,7 +1585,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_6 = QVBoxLayout(self.frame_prefit)
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
         self.verticalLayout_6.setSizeConstraint(QLayout.SetDefaultConstraint)
-        self.verticalLayout_6.setContentsMargins(25, 20, 9, -1)
+        self.verticalLayout_6.setContentsMargins(5, 20, 0, 0)
         self.widget_8 = QWidget(self.frame_prefit)
         self.widget_8.setObjectName(u"widget_8")
         sizePolicy5.setHeightForWidth(self.widget_8.sizePolicy().hasHeightForWidth())
@@ -1618,7 +1629,7 @@ class Ui_MainWindow(object):
         self.prefitScrollArea.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.prefitScrollAreaWidget = QWidget()
         self.prefitScrollAreaWidget.setObjectName(u"prefitScrollAreaWidget")
-        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 352, 702))
+        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 381, 714))
         self.verticalLayout_11 = QVBoxLayout(self.prefitScrollAreaWidget)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -1685,7 +1696,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_8 = QVBoxLayout(self.frame_fit)
         self.verticalLayout_8.setSpacing(0)
         self.verticalLayout_8.setObjectName(u"verticalLayout_8")
-        self.verticalLayout_8.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_8.setContentsMargins(5, 20, 0, 0)
         self.fitTitleWidget = QWidget(self.frame_fit)
         self.fitTitleWidget.setObjectName(u"fitTitleWidget")
         self.horizontalLayout_5 = QHBoxLayout(self.fitTitleWidget)
@@ -1790,7 +1801,7 @@ class Ui_MainWindow(object):
         self.fitScrollArea.setWidgetResizable(True)
         self.fitScrollAreaWidget = QWidget()
         self.fitScrollAreaWidget.setObjectName(u"fitScrollAreaWidget")
-        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 386, 527))
+        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 381, 507))
         self.verticalLayout_4 = QVBoxLayout(self.fitScrollAreaWidget)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -1958,6 +1969,22 @@ class Ui_MainWindow(object):
         self.gridLayout_5.setObjectName(u"gridLayout_5")
         self.gridLayout_5.setHorizontalSpacing(-1)
         self.gridLayout_5.setContentsMargins(0, 0, 0, 0)
+        self.widget = QWidget(self.frame_8)
+        self.widget.setObjectName(u"widget")
+        sizePolicy7.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
+        self.widget.setSizePolicy(sizePolicy7)
+        self.widget.setMinimumSize(QSize(300, 0))
+        self.widget.setMaximumSize(QSize(500, 16777215))
+        self.verticalLayout_2 = QVBoxLayout(self.widget)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
+
+        self.gridLayout_5.addWidget(self.widget, 4, 0, 1, 1)
+
+        self.verticalSpacer_7 = QSpacerItem(20, 5, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.gridLayout_5.addItem(self.verticalSpacer_7, 5, 3, 1, 1)
+
         self.widget_2 = QWidget(self.frame_8)
         self.widget_2.setObjectName(u"widget_2")
         sizePolicy7.setHeightForWidth(self.widget_2.sizePolicy().hasHeightForWidth())
@@ -2063,65 +2090,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout_5.addWidget(self.widget_2, 2, 4, 3, 1)
 
-        self.label_4 = QLabel(self.frame_8)
-        self.label_4.setObjectName(u"label_4")
-        self.label_4.setEnabled(True)
-        sizePolicy1.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
-        self.label_4.setSizePolicy(sizePolicy1)
-        font9 = QFont()
-        font9.setFamilies([u"Roboto Medium"])
-        font9.setPointSize(16)
-        font9.setWeight(QFont.Light)
-        font9.setItalic(False)
-        self.label_4.setFont(font9)
-        self.label_4.setStyleSheet(u"color: rgb(190, 130, 250);\n"
-"")
-        self.label_4.setFrameShape(QFrame.NoFrame)
-        self.label_4.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
-        self.label_4.setMargin(0)
-        self.label_4.setIndent(0)
-
-        self.gridLayout_5.addWidget(self.label_4, 0, 0, 1, 1)
-
-        self.coloringPushButton = QPushButton(self.frame_8)
-        self.coloringPushButton.setObjectName(u"coloringPushButton")
-        font10 = QFont()
-        font10.setFamilies([u"Roboto Medium"])
-        font10.setPointSize(13)
-        font10.setWeight(QFont.Light)
-        self.coloringPushButton.setFont(font10)
-        self.coloringPushButton.setCheckable(True)
-        self.coloringPushButton.setChecked(True)
-
-        self.gridLayout_5.addWidget(self.coloringPushButton, 1, 0, 1, 1)
-
-        self.horizontalSpacer_13 = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.gridLayout_5.addItem(self.horizontalSpacer_13, 4, 5, 1, 1)
-
-        self.bgndSubtractPushButton = QPushButton(self.frame_8)
-        self.bgndSubtractPushButton.setObjectName(u"bgndSubtractPushButton")
-        self.bgndSubtractPushButton.setCheckable(True)
-        self.bgndSubtractPushButton.setChecked(True)
-
-        self.gridLayout_5.addWidget(self.bgndSubtractPushButton, 1, 4, 1, 1)
-
-        self.widget = QWidget(self.frame_8)
-        self.widget.setObjectName(u"widget")
-        sizePolicy7.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
-        self.widget.setSizePolicy(sizePolicy7)
-        self.widget.setMinimumSize(QSize(300, 0))
-        self.widget.setMaximumSize(QSize(500, 16777215))
-        self.verticalLayout_2 = QVBoxLayout(self.widget)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
-
-        self.gridLayout_5.addWidget(self.widget, 4, 0, 1, 1)
-
-        self.verticalSpacer_7 = QSpacerItem(20, 5, QSizePolicy.Minimum, QSizePolicy.Expanding)
-
-        self.gridLayout_5.addItem(self.verticalSpacer_7, 5, 3, 1, 1)
-
         self.colorGridWidget = QWidget(self.frame_8)
         self.colorGridWidget.setObjectName(u"colorGridWidget")
         sizePolicy10.setHeightForWidth(self.colorGridWidget.sizePolicy().hasHeightForWidth())
@@ -2208,6 +2176,49 @@ class Ui_MainWindow(object):
 
 
         self.gridLayout_5.addWidget(self.colorGridWidget, 2, 0, 1, 1)
+
+        self.bgndSubtractPushButton = QPushButton(self.frame_8)
+        self.bgndSubtractPushButton.setObjectName(u"bgndSubtractPushButton")
+        self.bgndSubtractPushButton.setCheckable(True)
+        self.bgndSubtractPushButton.setChecked(True)
+
+        self.gridLayout_5.addWidget(self.bgndSubtractPushButton, 1, 4, 1, 1)
+
+        self.label_4 = QLabel(self.frame_8)
+        self.label_4.setObjectName(u"label_4")
+        self.label_4.setEnabled(True)
+        sizePolicy1.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
+        self.label_4.setSizePolicy(sizePolicy1)
+        font9 = QFont()
+        font9.setFamilies([u"Roboto Medium"])
+        font9.setPointSize(16)
+        font9.setWeight(QFont.Light)
+        font9.setItalic(False)
+        self.label_4.setFont(font9)
+        self.label_4.setStyleSheet(u"color: rgb(190, 130, 250);\n"
+"")
+        self.label_4.setFrameShape(QFrame.NoFrame)
+        self.label_4.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
+        self.label_4.setMargin(0)
+        self.label_4.setIndent(0)
+
+        self.gridLayout_5.addWidget(self.label_4, 0, 0, 1, 1)
+
+        self.coloringPushButton = QPushButton(self.frame_8)
+        self.coloringPushButton.setObjectName(u"coloringPushButton")
+        font10 = QFont()
+        font10.setFamilies([u"Roboto Medium"])
+        font10.setPointSize(13)
+        font10.setWeight(QFont.Light)
+        self.coloringPushButton.setFont(font10)
+        self.coloringPushButton.setCheckable(True)
+        self.coloringPushButton.setChecked(True)
+
+        self.gridLayout_5.addWidget(self.coloringPushButton, 1, 0, 1, 1)
+
+        self.horizontalSpacer_13 = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.gridLayout_5.addItem(self.horizontalSpacer_13, 4, 5, 1, 1)
 
 
         self.horizontalLayout.addWidget(self.frame_8)
@@ -2385,17 +2396,17 @@ class Ui_MainWindow(object):
         self.prefitPhotonSpinBox.setObjectName(u"prefitPhotonSpinBox")
         sizePolicy2.setHeightForWidth(self.prefitPhotonSpinBox.sizePolicy().hasHeightForWidth())
         self.prefitPhotonSpinBox.setSizePolicy(sizePolicy2)
-        self.prefitPhotonSpinBox.setMinimumSize(QSize(96, 30))
-        self.prefitPhotonSpinBox.setStyleSheet(u"QGroupBox {\n"
-"	font: 13pt \"Roboto\";\n"
-"}\n"
-"\n"
-"QSpinBox {\n"
+        self.prefitPhotonSpinBox.setMinimumSize(QSize(96, 35))
+        self.prefitPhotonSpinBox.setStyleSheet(u"QSpinBox {\n"
 "    color: #FFFFFF;\n"
-"    background-color: #2F2F2F;\n"
+"    background-color: #212121;\n"
 "	height: 28px;\n"
 "    width: 28px; \n"
-"    border-radius: 4px;\n"
+"    background-image: url(:/images/spin_box_bg.svg) 1;\n"
+"    background-repeat: no-repeat;\n"
+"    background-position: center center;\n"
+"    background-origin: content;\n"
+"   /*padding: -5px 0px -14px 0px;*/\n"
 "}\n"
 "\n"
 "QSpinBox::up-button {\n"
@@ -2424,14 +2435,14 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QSpinBox::down-arrow {\n"
-"    image: url(:/icons/svg/minus.svg) 1;\n"
+"    image: url("
+                        ":/icons/svg/minus.svg) 1;\n"
 "    width: 20px;\n"
 "    height: 20px;\n"
 "}\n"
 "\n"
 "QSpinBox::up-button:pressed {\n"
-"    background-c"
-                        "olor: #1E1E1E;\n"
+"    background-color: #1E1E1E;\n"
 "}\n"
 "\n"
 "QSpinBox::down-button:pressed {\n"
@@ -2904,13 +2915,13 @@ class Ui_MainWindow(object):
         self.fitButton.setText(QCoreApplication.translate("MainWindow", u"   Run Fit", None))
         self.calibratedCheckBox.setText(QCoreApplication.translate("MainWindow", u"   View Calibrated Axes", None))
         self.filtersPushButton.setText(QCoreApplication.translate("MainWindow", u"FILTERS", None))
-        self.label_4.setText(QCoreApplication.translate("MainWindow", u"SETTINGS: VISUAL", None))
-        self.coloringPushButton.setText(QCoreApplication.translate("MainWindow", u"COLORING", None))
-        self.bgndSubtractPushButton.setText(QCoreApplication.translate("MainWindow", u"BACKGROUND SUBTRACT", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"MAX", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"MIN", None))
 
         self.colorComboBox.setCurrentText(QCoreApplication.translate("MainWindow", u"PuOr", None))
+        self.bgndSubtractPushButton.setText(QCoreApplication.translate("MainWindow", u"BACKGROUND SUBTRACT", None))
+        self.label_4.setText(QCoreApplication.translate("MainWindow", u"SETTINGS: VISUAL", None))
+        self.coloringPushButton.setText(QCoreApplication.translate("MainWindow", u"COLORING", None))
 #if QT_CONFIG(accessibility)
         self.frame_4.setAccessibleDescription("")
 #endif // QT_CONFIG(accessibility)
