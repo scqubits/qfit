@@ -1781,6 +1781,9 @@ class Ui_MainWindow(object):
 
         self.label_7 = QLabel(self.widget_12)
         self.label_7.setObjectName(u"label_7")
+        font6 = QFont()
+        font6.setFamilies([u"Roboto Medium"])
+        self.label_7.setFont(font6)
         self.label_7.setPixmap(QPixmap(u":/images/result-to-initial-arrow.svg"))
         self.label_7.setScaledContents(False)
 
@@ -1830,11 +1833,11 @@ class Ui_MainWindow(object):
         self.exportToPrefitButton.setSizePolicy(sizePolicy2)
         self.exportToPrefitButton.setMinimumSize(QSize(191, 34))
         self.exportToPrefitButton.setMaximumSize(QSize(191, 34))
-        font6 = QFont()
-        font6.setFamilies([u"Roboto Medium"])
-        font6.setPointSize(14)
-        font6.setBold(True)
-        self.exportToPrefitButton.setFont(font6)
+        font7 = QFont()
+        font7.setFamilies([u"Roboto Medium"])
+        font7.setPointSize(14)
+        font7.setBold(True)
+        self.exportToPrefitButton.setFont(font7)
         self.exportToPrefitButton.setStyleSheet(u"color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
 "border-radius: 6px;")
@@ -1860,7 +1863,7 @@ class Ui_MainWindow(object):
         self.fitButton.setSizePolicy(sizePolicy2)
         self.fitButton.setMinimumSize(QSize(191, 34))
         self.fitButton.setMaximumSize(QSize(191, 34))
-        self.fitButton.setFont(font6)
+        self.fitButton.setFont(font7)
         self.fitButton.setStyleSheet(u"color: #212121;\n"
 "background-color: #BE82FA;\n"
 "border-radius: 6px;")
@@ -1891,9 +1894,7 @@ class Ui_MainWindow(object):
         sizePolicy10.setHeightForWidth(self.bottomStackedWidget.sizePolicy().hasHeightForWidth())
         self.bottomStackedWidget.setSizePolicy(sizePolicy10)
         self.bottomStackedWidget.setMinimumSize(QSize(0, 220))
-        font7 = QFont()
-        font7.setFamilies([u"Roboto Medium"])
-        self.bottomStackedWidget.setFont(font7)
+        self.bottomStackedWidget.setFont(font6)
         self.bottomStackedWidget.setStyleSheet(u"")
         self.bottomStackedWidget.setFrameShape(QFrame.NoFrame)
         self.bottomStackedWidget.setFrameShadow(QFrame.Raised)
@@ -2866,7 +2867,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.pagesStackedWidget.setCurrentIndex(0)
+        self.pagesStackedWidget.setCurrentIndex(3)
         self.bottomStackedWidget.setCurrentIndex(0)
 
 

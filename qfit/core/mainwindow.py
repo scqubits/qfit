@@ -1128,7 +1128,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def prefitMinMaxInserts(self):
         self.minMaxTable = FoldableTable(
             MinMaxItems,
-            paramNumPerRow=2,
+            paramNumPerRow=1,
             groupNames=list(self.sliderParameterSet.parentNameByObj.values()),
         )
         self.minMaxTable.setCheckable(False)

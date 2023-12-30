@@ -511,7 +511,7 @@ ListView::item:selected {
           <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>3</number>
          </property>
          <widget class="DataExtractingWidget" name="extractPointsWidget">
           <property name="sizePolicy">
@@ -3293,6 +3293,11 @@ border-radius: 6px;</string>
                  </item>
                  <item>
                   <widget class="QLabel" name="label_7">
+                   <property name="font">
+                    <font>
+                     <family>Roboto Medium</family>
+                    </font>
+                   </property>
                    <property name="text">
                     <string/>
                    </property>

@@ -11,12 +11,11 @@ from PySide6.QtWidgets import (
     QSpacerItem,
     QHeaderView,
     QStyleOptionHeader,
-    QStyle,
 )
 from PySide6.QtCore import (
     Qt,
 )
-from PySide6.QtGui import QColor, QPalette, QBrush, QFontMetrics
+from PySide6.QtGui import QColor, QFontMetrics
 
 from qfit.widgets.foldable_widget import FoldPushButton
 from qfit.utils.helpers import modifyStyleSheet
@@ -43,6 +42,22 @@ class CenteredItem(QWidget):
 
 
 class NoSeparatorHeaderView(QHeaderView):
+    """
+    A header view that does not draw the separator between columns.
+
+    Parameters
+    ----------
+    orientation : Qt.Orientation
+        The orientation of the header view.
+    parent : QWidget
+        The parent widget. By default None.
+    color_list : List[str], optional
+        A list of color strings for each header item, by default None.
+    text_color : str, optional
+        The color of the text, can be specified in various formats, by default
+        "#ffffff", the white color in hex format.
+    """
+
     def __init__(
         self,
         orientation,
@@ -53,8 +68,23 @@ class NoSeparatorHeaderView(QHeaderView):
         super(NoSeparatorHeaderView, self).__init__(orientation, parent)
         self.colorList = color_list
         self.text_color = text_color
+        # change the header color and style
+        modifyStyleSheet(self, "font", '13pt "Roboto Medium"')
+        modifyStyleSheet(self, "font-weight", "bold")
 
     def paintSection(self, painter, rect, logicalIndex):
+        """
+        Paint the section of the header.
+
+        Parameters
+        ----------
+        painter : QPainter
+            The painter object.
+        rect : QRect
+            The rectangle of the section.
+        logicalIndex : int
+            The logical index of the section.
+        """
         painter.save()
 
         # Set up the painter
@@ -65,6 +95,7 @@ class NoSeparatorHeaderView(QHeaderView):
                 painter.fillRect(rect, QColor(self.colorList[logicalIndex]))
             else:
                 painter.fillRect(rect, QColor(Qt.transparent))
+        # set the text color
         painter.setPen(QColor(self.text_color))
 
         # Set up the option
@@ -74,13 +105,11 @@ class NoSeparatorHeaderView(QHeaderView):
         option.text = self.model().headerData(logicalIndex, self.orientation())
 
         # Draw the text
-        # self.style().drawControl(QStyle.CE_HeaderLabel, option, painter, self)
         # Retrieve the text for the header section
         text = self.model().headerData(logicalIndex, self.orientation(), Qt.DisplayRole)
-
         # Draw the text manually
         if text:
-            # Calculate text position (this will align text to the left; modify as needed)
+            # text position is computed based on the font metrics
             font_metrics = QFontMetrics(painter.font())
             text_width = font_metrics.horizontalAdvance(str(text))
             text_x = rect.x() + (rect.width() - text_width) / 2  # Center text
@@ -201,9 +230,9 @@ class MinMaxItems(WidgetCollection):
     }
     # column widths
     columnWidths = {
-        "NAME": 55,
-        "MIN": 73,
-        "MAX": 73,
+        "NAME": 100,
+        "MIN": 100,
+        "MAX": 100,
     }
     columnCount = len(columns)
 
@@ -218,10 +247,25 @@ class MinMaxItems(WidgetCollection):
         self.nameLabel = QLabel(name)
         self.minValue = FloatLineEdit("")
         self.maxValue = FloatLineEdit("")
+        # keep them in a dict
+        self.entriesDict = {
+            "NAME": self.nameLabel,
+            "MIN": self.minValue,
+            "MAX": self.maxValue,
+        }
 
         self.addWidget("NAME", self.nameLabel)
         self.addWidget("MIN", self.minValue)
         self.addWidget("MAX", self.maxValue)
+        # loop over the dict to set the style sheet
+        for key, value in self.entriesDict.items():
+            modifyStyleSheet(value, "color", "white")
+            value.setMinimumSize(45, 20)
+            if self.columnBackgroundColors[key] is not None:
+                modifyStyleSheet(
+                    value, "background-color", self.columnBackgroundColors[key]
+                )
+            self.addWidget(key, value)
 
 
 class FoldableTable(QTableWidget):
@@ -284,6 +328,7 @@ class FoldableTable(QTableWidget):
             )
 
         # set the default state of the group buttons
+        # TODO why the table has to be checkable?
         self.setCheckable(True)
         self.setChecked(True)
 
@@ -308,6 +353,7 @@ class FoldableTable(QTableWidget):
         """
         Insert a row to the table after initialization.
         """
+        # insert a row at row_position
         self.insertRow(row_position)
         # change the height of the row to 40
         self.setRowHeight(row_position, 40)
@@ -339,16 +385,8 @@ class FoldableTable(QTableWidget):
         for row in self._groupRows.values():
             self.setRowHeight(row, 35)
 
-        # change the header color and style
-        modifyStyleSheet(self.horizontalHeader(), "font", '13pt "Roboto Medium"')
-        modifyStyleSheet(self.horizontalHeader(), "font-weight", "bold")
         # header height (same as row height for parameters)
         self.horizontalHeader().setFixedHeight(40)
-
-        # set header and group names' style color
-        for name in self._groupNames:
-            modifyStyleSheet(self._groupButtons[name], "color", "#AAAAAA")
-            modifyStyleSheet(self._groupButtons[name], "background-color", "#212121")
 
     def _resizeTable(self):
         # fix the height of the table
