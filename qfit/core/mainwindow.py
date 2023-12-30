@@ -1126,6 +1126,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         prefitScrollLayout.addSpacing(SPACING_BETWEEN_GROUPS)
 
     def prefitMinMaxInserts(self):
+        # remove the existing widgets, if we somehow want to rebuild the sliders
+        clearChildren(self.ui.prefitMinmaxScrollAreaWidget)
+
+        # create a QWidget for the minmax scroll area and set a layout for it
+        prefitMinmaxScrollLayout = self.ui.prefitMinmaxScrollAreaWidget.layout()
+
+        # set the alignment of the entire prefit minmax scroll layout
+        prefitMinmaxScrollLayout.setAlignment(Qt.AlignTop)
+
         self.minMaxTable = FoldableTable(
             MinMaxItems,
             paramNumPerRow=1,
@@ -1143,8 +1152,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # add the minmax table to the scroll area
         foldable_widget = FoldableWidget("RANGES OF SLIDERS", self.minMaxTable)
-        prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
-        prefitScrollLayout.addWidget(foldable_widget)
+        prefitMinmaxScrollLayout.addWidget(foldable_widget)
 
         # default to fold the table
         foldable_widget.toggle()

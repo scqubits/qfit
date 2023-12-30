@@ -231,8 +231,8 @@ class MinMaxItems(WidgetCollection):
     # column widths
     columnWidths = {
         "NAME": 100,
-        "MIN": 100,
-        "MAX": 100,
+        "MIN": 120,
+        "MAX": 120,
     }
     columnCount = len(columns)
 
