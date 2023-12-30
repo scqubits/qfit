@@ -62,7 +62,7 @@ License
 
 You are free to use this software, with or without modification, provided that the conditions listed in the LICENSE file are satisfied.
  
-qfit uses [CoreUI icons]([https://pjonori.com/](https://coreui.io/docs/icons/)), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+qfit uses [CoreUI icons](https://coreui.io/docs/icons/) and [Font Awesome icons](https://fontawesome.com/icons), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
