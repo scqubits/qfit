@@ -1,5 +1,11 @@
 <RCC>
   <qresource prefix="/">
+    <file>icons/svg/arrow-right-737373.svg</file>
+    <file>icons/svg/arrow-down-2F2F2F.svg</file>
+    <file>icons/svg/arrow-down-737373.svg</file>
+    <file>icons/svg/toggle-off.svg</file>
+    <file>icons/svg/toggle-on.svg</file>
+    <file>icons/svg/check.svg</file>
     <file>images/spin_box_bg.svg</file>
     <file>images/result-to-initial-arrow.svg</file>
     <file>icons/svg/updown.svg</file>

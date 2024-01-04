@@ -26,13 +26,13 @@ class FoldPushButton(QPushButton):
         # icon
         self.icon = QIcon()
         self.icon.addFile(
-            ":/icons/svg/cil-caret-right.svg",
+            ":/icons/svg/arrow-right-737373.svg",
             QSize(),
             QIcon.Normal,
             QIcon.Off,
         )
         self.icon.addFile(
-            ":/icons/svg/cil-caret-bottom.svg",
+            ":/icons/svg/arrow-down-737373.svg",
             QSize(),
             QIcon.Normal,
             QIcon.On,

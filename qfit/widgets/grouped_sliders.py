@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 from PySide6.QtCore import Qt
+from qfit.utils.helpers import modifyStyleSheet
 
 from qfit.widgets.foldable_widget import (
     FoldableWidget,
@@ -20,6 +21,7 @@ from typing import Dict, List, Tuple, Union, Optional, Any
 SLIDER_RANGE = 100
 SPACING_BETWEEN_GROUPS = 15
 MARGIN = 12
+
 
 class LabeledSlider(QWidget):
     """
@@ -67,6 +69,9 @@ class LabeledSlider(QWidget):
         self.slider.setSingleStep(1)
         self.value = FloatLineEdit("0", self)
         self.value.setMaximumWidth(50)
+
+        # format the widgets
+        self.formatLabeledSlider()
 
         # initialize the layout
         self.sliderLayout = QGridLayout(self)
@@ -207,6 +212,16 @@ class LabeledSlider(QWidget):
         self.value.setText(value)
         self.user_is_typing = False
 
+    def formatLabeledSlider(self):
+        """
+        Format the labeled slider.
+        """
+        modifyStyleSheet(self.value, "border", "1px solid #5F5F5F")
+        modifyStyleSheet(self.value, "font", '13pt "Roboto Medium"')
+        modifyStyleSheet(self.value, "color", "#FFFFFF")
+        modifyStyleSheet(self.label, "font", '13pt "Roboto Medium"')
+        modifyStyleSheet(self.label, "color", "#FFFFFF")
+
 
 class GroupedWidget(QWidget):
     """
@@ -249,8 +264,7 @@ class GroupedWidget(QWidget):
         # set the layout that no vertical space between the widgets (labelled sliders here)
         self.gridLayout.setContentsMargins(MARGIN, 0, MARGIN, 0)
 
-        # self.gridLayout.setVerticalSpacing(SPACING_BETWEEN_SLIDERS) 
-
+        # self.gridLayout.setVerticalSpacing(SPACING_BETWEEN_SLIDERS)
 
     def keys(self):
         return self.widgets.keys()

@@ -202,6 +202,9 @@ class FittingParameterItems(WidgetCollection):
         # loop over the dict to set the style sheet
         for key, value in self.entriesDict.items():
             modifyStyleSheet(value, "color", "white")
+            # change the border color of the line edit
+            if isinstance(value, FloatLineEdit):
+                modifyStyleSheet(value, "border", "1px solid #5F5F5F")
             value.setMinimumSize(45, 20)
             if self.columnBackgroundColors[key] is not None:
                 modifyStyleSheet(
@@ -261,6 +264,9 @@ class MinMaxItems(WidgetCollection):
         for key, value in self.entriesDict.items():
             modifyStyleSheet(value, "color", "white")
             value.setMinimumSize(45, 20)
+            # change the border color of the line edit
+            if isinstance(value, FloatLineEdit):
+                modifyStyleSheet(value, "border", "1px solid #5F5F5F")
             if self.columnBackgroundColors[key] is not None:
                 modifyStyleSheet(
                     value, "background-color", self.columnBackgroundColors[key]
