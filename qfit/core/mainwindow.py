@@ -243,7 +243,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # inform the use of the bare transition label
         self.ui.bareLabelOrder.setText(
-            "   Labels ordered by: "  # Three space to align with the label title
+            "Labels ordered by: <br>"  # Three space to align with the label title
             + ", ".join([subsys.id_str for subsys in hilbertspace.subsystem_list])
         )
 
@@ -538,7 +538,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # update the backend model
         self.ui.newRowButton.clicked.connect(self.allDatasets.newRow)
         self.ui.deleteRowButton.clicked.connect(self.allDatasets.removeCurrentRow)
-        self.ui.clearAllButton.clicked.connect(self.allDatasets.removeAll)
+        self.ui.clearAllButton.clicked.connect(self.allDatasets.onClearClicked)
 
     def uiDataLoadConnects(self):
         self.allDatasets.loadFromRegistrySignal.signal.connect(self.extractedDataSetup)
@@ -1148,9 +1148,18 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         View init: pre-fit min max table
         """
+        # remove the existing widgets, if we somehow want to rebuild the sliders
+        clearChildren(self.ui.prefitMinmaxScrollAreaWidget)
+
+        # create a QWidget for the minmax scroll area and set a layout for it
+        prefitMinmaxScrollLayout = self.ui.prefitMinmaxScrollAreaWidget.layout()
+
+        # set the alignment of the entire prefit minmax scroll layout
+        prefitMinmaxScrollLayout.setAlignment(Qt.AlignTop)
+
         self.minMaxTable = FoldableTable(
             MinMaxItems,
-            paramNumPerRow=2,
+            paramNumPerRow=1,
             groupNames=list(self.sliderParameterSet.parentNameByObj.values()),
         )
         self.minMaxTable.setCheckable(False)
@@ -1165,8 +1174,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # add the minmax table to the scroll area
         foldable_widget = FoldableWidget("RANGES OF SLIDERS", self.minMaxTable)
-        prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
-        prefitScrollLayout.addWidget(foldable_widget)
+        prefitMinmaxScrollLayout.addWidget(foldable_widget)
 
         # default to fold the table
         foldable_widget.toggle()
@@ -1529,8 +1537,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 para.setupUICallbacks(
                     single_row.initialValue.text,
                     single_row.initialValue.setText,
-                    single_row.currentValue.text,
-                    single_row.currentValue.setText,
+                    single_row.resultValue.text,
+                    single_row.resultValue.setText,
                     single_row.minValue.text,
                     single_row.minValue.setText,
                     single_row.maxValue.text,
@@ -1631,6 +1639,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.measurementData = measurementData
         self.calibrationData.resetCalibration()
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
+        self.allDatasets.removeAll()
 
         self.dynamicalMeasurementDataSetupConnects(hilbertspace)
         self.uiDataLoadConnects()

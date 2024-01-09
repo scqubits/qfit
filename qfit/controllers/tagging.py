@@ -23,7 +23,7 @@ class Tag:
     - NO_TAG: user did not tag data
     - DISPERSIVE_DRESSED: transition between two states tagged by
     dressed-states indices
-    - DISPERSIVE_BARE: transition between two states tagged by 
+    - DISPERSIVE_BARE: transition between two states tagged by
     bare-states indices
 
     Parameters
@@ -58,6 +58,9 @@ class Tag:
             str(self.photons),
             str(self.subsysList),
         )
+    
+    def __repr__(self):
+        return self.__str__()
 
 
 class TaggingCtrl(QObject):
@@ -143,7 +146,7 @@ class TaggingCtrl(QObject):
             lambda: self._onNoTagRadioButtonToggled()
         )
         # self.ui.noTagRadioButton.toggled.connect(lambda: print("Mode clicked: no tag"))
-        
+
     def _viewUpdatedConnects(self):
         """
         Connect the signals for user changes through UI in the tagging section to the corresponding
@@ -179,7 +182,7 @@ class TaggingCtrl(QObject):
         # self.ui.datasetListView.clicked.connect(lambda: print("dataset list"))
 
         # Whenever a dataset is renamed, update the title for tags
-        self.allDatasets.dataChanged.connect(self._setTagTitle)
+        # self.allDatasets.dataChanged.connect(self._setTagTitle)
         # self.allDatasets.dataChanged.connect(lambda: print("data changed"))
 
         # Whenever the activae dataset is switched, reflect the change on the tag so that it
@@ -200,7 +203,7 @@ class TaggingCtrl(QObject):
         self.ui.phNumberDressedSpinBox.setValue(1)
 
     def _isValidInitialBare(self):
-        """ 
+        """
         Check if the input initial state is valid for bare-states tagging.
         """
         if not self.ui.tagBareGroupBox.isVisible():
@@ -210,7 +213,7 @@ class TaggingCtrl(QObject):
         return True
 
     def _isValidFinalBare(self):
-        """ 
+        """
         Check if the input final state is valid for bare-states tagging.
         """
         if not self.ui.tagBareGroupBox.isVisible():
@@ -220,7 +223,7 @@ class TaggingCtrl(QObject):
         return True
 
     def _isValid(self):
-        """ 
+        """
         Check if the input tag is valid.
         """
         return self._isValidInitialBare() and self._isValidFinalBare()
@@ -351,7 +354,7 @@ class TaggingCtrl(QObject):
     @Slot()
     def _onBareRadioButtonToggled(self):
         """
-        Slot for bare button being toggled. If the bare button is checked, switch the 
+        Slot for bare button being toggled. If the bare button is checked, switch the
         UI to the bare tag page. Else, do nothing.
         """
         if not self.ui.tagDispersiveBareRadioButton.isChecked():
@@ -362,7 +365,7 @@ class TaggingCtrl(QObject):
     @Slot()
     def _onDressedRadioButtonToggled(self):
         """
-        Slot for dressed button being toggled. If the dressed button is checked, switch the 
+        Slot for dressed button being toggled. If the dressed button is checked, switch the
         UI to the dressed tag page. Else, do nothing.
         """
         if not self.ui.tagDispersiveDressedRadioButton.isChecked():
@@ -373,7 +376,7 @@ class TaggingCtrl(QObject):
     @Slot()
     def _onNoTagRadioButtonToggled(self):
         """
-        Slot for no tag button being toggled. If the no tag button is checked, switch the 
+        Slot for no tag button being toggled. If the no tag button is checked, switch the
         UI to the no tag page. Else, do nothing.
         """
         if not self.ui.noTagRadioButton.isChecked():
@@ -381,21 +384,21 @@ class TaggingCtrl(QObject):
         self._toNoTagPage()
         self._tagViewToModel()
 
-    @Slot()
-    def _setTagTitle(self):
-        """
-        Set the title for the tag panel based on the current dataset.
-        """
-        self.ui.transitionLabel.setText(
-            f"LABEL for {self.allDatasets.currentDataName()}"
-        )
+    # @Slot()
+    # def _setTagTitle(self):
+    #     """
+    #     Set the title for the tag panel based on the current dataset.
+    #     """
+    #     self.ui.transitionLabel.setText(
+    #         f"LABEL for {self.allDatasets.currentDataName()}"
+    #     )
 
     @Slot()
     def _tagModelToView(self):
         """
         Whenever the active dataset is switched, update the tag panel to match the current dataset.
         """
-        self._setTagTitle()
+        # self._setTagTitle()
 
         tag = self.allDatasets.currentTagItem()
         # print("M2V:", tag.tagType)

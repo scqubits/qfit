@@ -1,5 +1,21 @@
 <RCC>
   <qresource prefix="/">
+    <file>icons/svg/arrow-right-737373.svg</file>
+    <file>icons/svg/arrow-down-2F2F2F.svg</file>
+    <file>icons/svg/arrow-down-737373.svg</file>
+    <file>icons/svg/toggle-off.svg</file>
+    <file>icons/svg/toggle-on.svg</file>
+    <file>icons/svg/check.svg</file>
+    <file>images/spin_box_bg.svg</file>
+    <file>images/result-to-initial-arrow.svg</file>
+    <file>icons/svg/updown.svg</file>
+    <file>icons/svg/target.svg</file>
+    <file>icons/svg/copy.svg</file>
+    <file>icons/svg/play.svg</file>
+    <file>icons/svg/trash.svg</file>
+    <file>icons/svg/plus.svg</file>
+    <file>icons/svg/minus.svg</file>
+    <file>icons/svg/eye-solid.svg</file>
     <file>images/calibration_new.png</file>
     <file>images/calibration_x1x2y1y2.png</file>
     <file>gifs/calibration_gif.gif</file>

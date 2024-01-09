@@ -823,7 +823,7 @@ class QuantumModel:
 
         # if provided dressed label
         if (
-            tag.tagType is DISPERSIVE_DRESSED 
+            tag.tagType == DISPERSIVE_DRESSED 
             # or tag.tagType is CROSSING_DRESSED
         ):
             # if the state is above evals_count, terminate the computation and return error status
@@ -838,7 +838,7 @@ class QuantumModel:
                 return simulation_freq, status
             
         # if provided bare label
-        elif tag.tagType is DISPERSIVE_BARE:
+        elif tag.tagType == DISPERSIVE_BARE:
             initial_energy = sweep["x-coordinate":x_coord].energy_by_bare_index(
                 tag.initial
             )
@@ -868,6 +868,7 @@ class QuantumModel:
                 ).argmin()
                 simulation_freq = possible_transitions[closest_traansition_index]
                 return simulation_freq, status
+            
             elif final_energy is np.nan and initial_energy is not np.nan:
                 status = "NO_MATCHED_BARE_FINAL"
                 eigenenergies = sweep["evals"]["x-coordinate":x_coord]
