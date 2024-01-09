@@ -243,7 +243,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # inform the use of the bare transition label
         self.ui.bareLabelOrder.setText(
-            "   Labels ordered by: "  # Three space to align with the label title
+            "Labels ordered by: <br>"  # Three space to align with the label title
             + ", ".join([subsys.id_str for subsys in hilbertspace.subsystem_list])
         )
 
