@@ -11,6 +11,7 @@ import scqubits as scq
 from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.param_sweep import ParameterSweep
 from scqubits.core.storage import SpectrumData
+from scqubits import Circuit
 
 from typing import Dict, List, Tuple, Union, Callable
 from typing_extensions import Literal
@@ -163,7 +164,7 @@ class QuantumModel:
 
     def initial_state(self):
         return self._state_str_2_label(self.initialStateCallback())
-    
+
     def photons(self):
         return self.photonsCallback()
 
@@ -209,13 +210,19 @@ class QuantumModel:
             raise ValueError(
                 "Only one of included_parameter_type or excluded_parameter_type can be specified."
             )
-        
+
         # obtain all the parameters in the subsystems of the HilbertSpace object
         subsystems = self.hilbertspace.subsystem_list
         for subsystem in subsystems:
             # obtain the available parameters in the subsystem
             subsystem_type = subsystem.__class__
-            parameters = QSYS_PARAM_NAMES[subsystem_type]
+            # if the subsystem is not a Circuit instance, look up parameters from
+            # QSYS_PARAM_NAMES
+            if subsystem_type is not Circuit:
+                parameters = QSYS_PARAM_NAMES[subsystem_type]
+            # else, generate parameter lookup dict for the circuit
+            else:
+                parameters = self._generateParamDictForCircuit(subsystem)
 
             # loop over different types of the parameters
             for parameter_type, parameter_names in parameters.items():
@@ -310,6 +317,53 @@ class QuantumModel:
     #     the x axis of the transition plot. This funcition serves as a map between the two.
     #     """
     #     return
+
+    def _generateParamDictForCircuit(self, subsystem: Circuit) -> Dict[str, List[str]]:
+        """
+        generate parameter dict for a Circuit instance, conforming with those stored in
+        QSYS_PARAM_NAMES
+        """
+        parameters = {}
+        # loop over branches to search for symbolic EJ, EC, EL
+        branches = subsystem.symbolic_circuit.branches
+        EJ_list = []
+        EC_list = []
+        EL_list = []
+        for branch in branches:
+            if branch.type == "L":
+                # check if the EL parameter is a symbol
+                if type(branch.parameters["EL"]) is not float:
+                    # get the parameter string
+                    param_name = branch.parameters["EL"].name
+                    # if the parameter is not in the list, append to the EL list
+                    if param_name not in EL_list:
+                        EL_list.append(param_name)
+            elif branch.type == "C":
+                if type(branch.parameters["EC"]) is not float:
+                    param_name = branch.parameters["EC"].name
+                    if param_name not in EC_list:
+                        EC_list.append(param_name)
+            elif branch.type == "JJ":
+                if type(branch.parameters["ECJ"]) is not float:
+                    param_name = branch.parameters["ECJ"].name
+                    if param_name not in EC_list:
+                        EC_list.append(param_name)
+                if type(branch.parameters["EJ"]) is not float:
+                    param_name = branch.parameters["EJ"].name
+                    if param_name not in EJ_list:
+                        EJ_list.append(param_name)
+        parameters["EL"] = EL_list
+        parameters["EJ"] = EJ_list
+        parameters["EC"] = EC_list
+        parameters["flux"] = [
+            external_flux.name for external_flux in subsystem.external_fluxes
+        ]
+        parameters["ng"] = [
+            offset_charge.name for offset_charge in subsystem.offset_charges
+        ]
+        parameters["cutoff"] = subsystem.cutoff_names
+        parameters["truncated_dim"] = ["truncated_dim"]
+        return parameters
 
     def _generateXcoordinateListForMarkedPoints(
         self, extracted_data: AllExtractedData
@@ -492,8 +546,8 @@ class QuantumModel:
             self.sweep = self._generateParameterSweep(
                 x_coordinate_list=self._generateXcoordinateListForPrefit(
                     extracted_data
-                ), 
-                sweep_parameter_set=sweep_parameter_set
+                ),
+                sweep_parameter_set=sweep_parameter_set,
             )
         except Exception as e:
             prefit_result.status_type = "ERROR"
@@ -523,7 +577,7 @@ class QuantumModel:
     ):
         """
         It is connected to the signal emitted by the UI when the user clicks the plot button
-        for the prefit stage. It make use of the existing sweep object to 
+        for the prefit stage. It make use of the existing sweep object to
         get a spectrum data and MSE.
 
         It's not allowed to use when the sweep is not generated.
@@ -539,7 +593,7 @@ class QuantumModel:
                 extracted_data=extracted_data,
                 prefit_result=result,
             )
-            
+
         result.status_type = "COMPUTING"
         self.sweep.run()
 
@@ -553,7 +607,7 @@ class QuantumModel:
             make_positive=False,
             as_specdata=True,
         )
-        
+
         # overall data
         overall_specdata = copy.deepcopy(self.sweep[(slice(None),)].dressed_specdata)
         overall_specdata.energy_table -= specdata_for_highlighting.subtract
@@ -579,7 +633,6 @@ class QuantumModel:
         result.current_mse = mse
         result.status_type = status_type
         result.status_text = status_text
-
 
     @Slot()
     def updateCalculation(
@@ -632,13 +685,13 @@ class QuantumModel:
             )
 
     def _scaleYByInverseCalibration(
-        self, 
+        self,
         calibration_data: CalibrationData,
         specdata: SpectrumData,
     ):
         """
         scale the spectrum data accordingly, based on the calibration
-        this step is carried out based on the inverse calibration function 
+        this step is carried out based on the inverse calibration function
         in the calibration data
         """
         for param_idx in range(len(specdata.energy_table)):
@@ -805,7 +858,7 @@ class QuantumModel:
     ]:
         """
         Obtain the cooresponding transition frequency provided by the tag from a ParameterSweep
-        instance. If the tag is not provided or can not identify states, 
+        instance. If the tag is not provided or can not identify states,
         the closest transition frequency is returned.
 
         Parameters
@@ -823,7 +876,8 @@ class QuantumModel:
 
         # if provided dressed label
         if (
-            tag.tagType is DISPERSIVE_DRESSED 
+            tag.tagType
+            is DISPERSIVE_DRESSED
             # or tag.tagType is CROSSING_DRESSED
         ):
             # if the state is above evals_count, terminate the computation and return error status
@@ -836,7 +890,7 @@ class QuantumModel:
                 simulation_freq = final_energy - initial_energy
                 status = "SUCCESS"
                 return simulation_freq, status
-            
+
         # if provided bare label
         elif tag.tagType is DISPERSIVE_BARE:
             initial_energy = sweep["x-coordinate":x_coord].energy_by_bare_index(
@@ -913,7 +967,7 @@ class QuantumModel:
         extracted_data: AllExtractedData,
     ):
         """
-        For parameter fitting purpose, calculate the MSE with just the 
+        For parameter fitting purpose, calculate the MSE with just the
         parameters
         """
         # set calibration functions for the parameters in the sweep parameter set
@@ -927,8 +981,8 @@ class QuantumModel:
         self.sweep = self._generateParameterSweep(
             x_coordinate_list=self._generateXcoordinateListForMarkedPoints(
                 extracted_data
-            ), 
-            sweep_parameter_set=sweep_parameter_set
+            ),
+            sweep_parameter_set=sweep_parameter_set,
         )
         # run sweep
         self.sweep.run()
