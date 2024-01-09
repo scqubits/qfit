@@ -538,7 +538,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # update the backend model
         self.ui.newRowButton.clicked.connect(self.allDatasets.newRow)
         self.ui.deleteRowButton.clicked.connect(self.allDatasets.removeCurrentRow)
-        self.ui.clearAllButton.clicked.connect(self.allDatasets.removeAll)
+        self.ui.clearAllButton.clicked.connect(self.allDatasets.onClearClicked)
 
     def uiDataLoadConnects(self):
         self.allDatasets.loadFromRegistrySignal.signal.connect(self.extractedDataSetup)
@@ -1589,6 +1589,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.measurementData = measurementData
         self.calibrationData.resetCalibration()
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
+        self.allDatasets.removeAll()
 
         self.dynamicalMeasurementDataSetupConnects(hilbertspace)
         self.uiDataLoadConnects()
