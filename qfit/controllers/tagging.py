@@ -58,6 +58,9 @@ class Tag:
             str(self.photons),
             str(self.subsysList),
         )
+    
+    def __repr__(self):
+        return self.__str__()
 
 
 class TaggingCtrl(QObject):
