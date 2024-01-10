@@ -2719,7 +2719,7 @@ class Ui_MainWindow(object):
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setHorizontalSpacing(0)
         self.gridLayout_3.setVerticalSpacing(-1)
-        self.gridLayout_3.setContentsMargins(20, 0, 0, 0)
+        self.gridLayout_3.setContentsMargins(20, 0, 20, 0)
         self.mseLabel = QLabel(self.frame_4)
         self.mseLabel.setObjectName(u"mseLabel")
         sizePolicy6.setHeightForWidth(self.mseLabel.sizePolicy().hasHeightForWidth())
@@ -2781,14 +2781,6 @@ class Ui_MainWindow(object):
         self.label_33.setObjectName(u"label_33")
 
         self.gridLayout_3.addWidget(self.label_33, 7, 0, 1, 1)
-
-        self.statusTextLabel = QLabel(self.frame_4)
-        self.statusTextLabel.setObjectName(u"statusTextLabel")
-        self.statusTextLabel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
-        self.statusTextLabel.setWordWrap(True)
-        self.statusTextLabel.setMargin(5)
-
-        self.gridLayout_3.addWidget(self.statusTextLabel, 5, 6, 1, 1)
 
         self.numericalSpectrumSettingsTitleWidget = QWidget(self.frame_4)
         self.numericalSpectrumSettingsTitleWidget.setObjectName(u"numericalSpectrumSettingsTitleWidget")
@@ -2858,6 +2850,9 @@ class Ui_MainWindow(object):
 
         self.label_46 = QLabel(self.frame_4)
         self.label_46.setObjectName(u"label_46")
+        sizePolicy9.setHeightForWidth(self.label_46.sizePolicy().hasHeightForWidth())
+        self.label_46.setSizePolicy(sizePolicy9)
+        self.label_46.setMaximumSize(QSize(200, 16777215))
 
         self.gridLayout_3.addWidget(self.label_46, 4, 6, 1, 1)
 
@@ -2948,6 +2943,14 @@ class Ui_MainWindow(object):
         self.prefitPhotonSpinBox.setMinimum(1)
 
         self.gridLayout_3.addWidget(self.prefitPhotonSpinBox, 7, 2, 1, 1)
+
+        self.statusTextLabel = QLabel(self.frame_4)
+        self.statusTextLabel.setObjectName(u"statusTextLabel")
+        self.statusTextLabel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
+        self.statusTextLabel.setWordWrap(True)
+        self.statusTextLabel.setMargin(5)
+
+        self.gridLayout_3.addWidget(self.statusTextLabel, 5, 6, 1, 5)
 
 
         self.horizontalLayout_9.addWidget(self.frame_4)
@@ -3103,7 +3106,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
 
         self.pagesStackedWidget.setCurrentIndex(0)
-        self.bottomStackedWidget.setCurrentIndex(0)
+        self.bottomStackedWidget.setCurrentIndex(2)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -3189,7 +3192,6 @@ class Ui_MainWindow(object):
         self.label_43.setText(QCoreApplication.translate("MainWindow", u"POINTS ADDED", None))
         self.prefitResultHelpPushButton.setText("")
         self.label_33.setText(QCoreApplication.translate("MainWindow", u"PHOTONS", None))
-        self.statusTextLabel.setText(QCoreApplication.translate("MainWindow", u"-", None))
         self.numericalSpectrumSettingsLabel.setText(QCoreApplication.translate("MainWindow", u"SETTINGS: NUMERICAL SPECTRUM", None))
         self.numericalSpectrumSettingsHelpPushButton.setText("")
         self.label_42.setText(QCoreApplication.translate("MainWindow", u"EVALS COUNT", None))
@@ -3197,6 +3199,7 @@ class Ui_MainWindow(object):
         self.evalsCountLineEdit.setText(QCoreApplication.translate("MainWindow", u"20", None))
         self.label_46.setText(QCoreApplication.translate("MainWindow", u"STATUS:", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"INITIAL STATE", None))
+        self.statusTextLabel.setText(QCoreApplication.translate("MainWindow", u"-", None))
         self.mseLabel_2.setText(QCoreApplication.translate("MainWindow", u"MSE:  - GHz\u00b2   (+0.00%)", None))
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"TOLERANCE", None))
         self.tolLineEdit.setText(QCoreApplication.translate("MainWindow", u"1e-6", None))
