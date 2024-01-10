@@ -150,6 +150,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
 
+        # ui
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
@@ -163,6 +164,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.verticalSnapButton.setAutoExclusive(False)
 
         self.uiPagesConnects()
+        self.uiGrouping()
 
         # calibration
         self.setupUICalibration()
@@ -212,6 +214,37 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # status bar
         # self.statusBar().showMessage("Ready")
 
+    # ui grouping ######################################################
+    ####################################################################
+    def uiGrouping(self):
+        """
+        Group the UI elements into different groups, making it easier to
+        hand over to the controller.
+        """
+
+        # Extract: Labling
+        self.uiLabelBoxes = {
+            "bare": self.ui.tagBareGroupBox,
+            "dressed": self.ui.tagDressedGroupBox,
+        }
+        self.uiLabelRadioButtons = {
+            "bare": self.ui.tagDispersiveBareRadioButton,
+            "dressed": self.ui.tagDispersiveDressedRadioButton,
+            "no tag": self.ui.noTagRadioButton,
+        }
+        self.uiBareLabelInputs = {
+            "initial": self.ui.initialStateLineEdit,
+            "final": self.ui.finalStateLineEdit,
+            "photons": self.ui.phNumberBareSpinBox,
+        }
+        self.uiDressedLabelInputs = {
+            "initial": self.ui.initialStateSpinBox,
+            "final": self.ui.finalStateSpinBox,
+            "photons": self.ui.phNumberDressedSpinBox,
+        }
+
+        return 
+
     # help button and gif tooltip ######################################
     ####################################################################
     def helpButtonConnects(self):
@@ -234,6 +267,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             hilbertspace.subsystem_count,
             (self.allDatasets, self.activeDataset),
             self.ui,
+            (self.uiLabelBoxes, self.uiLabelRadioButtons, self.uiBareLabelInputs, self.uiDressedLabelInputs)
         )
 
     def dynamicalMeasurementDataSetupConnects(self, hilbertspace: HilbertSpace):
