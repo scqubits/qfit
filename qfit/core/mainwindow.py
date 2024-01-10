@@ -266,7 +266,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.taggingCtrl = TaggingCtrl(
             hilbertspace.subsystem_count,
             (self.allDatasets, self.activeDataset),
-            self.ui,
             (self.uiLabelBoxes, self.uiLabelRadioButtons, self.uiBareLabelInputs, self.uiDressedLabelInputs)
         )
 
@@ -1673,7 +1672,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.measurementData = measurementData
         self.calibrationData.resetCalibration()
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
+
+        self.allDatasets.blockSignals(True)
         self.allDatasets.removeAll()
+        self.allDatasets.blockSignals(False)
 
         self.dynamicalMeasurementDataSetupConnects(hilbertspace)
         self.uiDataLoadConnects()

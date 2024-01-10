@@ -68,7 +68,6 @@ class TaggingCtrl(QObject):
         self,
         subsysCount: int,
         dataSets: Tuple["AllExtractedData", "ActiveExtractedData"],
-        ui: "Ui_MainWindow",
         ui_groups: Tuple[Dict[str, Any], ...],
         *args,
         **kwargs,
@@ -101,7 +100,6 @@ class TaggingCtrl(QObject):
         """
         super().__init__(*args, **kwargs)
 
-        self.ui = ui
         self.groupBox, self.radioButtons, self.bareLabels, self.dressedLabels = ui_groups
         self.allDatasets, self.activeDataset = dataSets
 
@@ -288,7 +286,6 @@ class TaggingCtrl(QObject):
             tag.initial = self.bareLabels["initial"].getTuple()
             tag.final = self.bareLabels["final"].getTuple()
             tag.photons = self.bareLabels["photons"].value()
-            # tag.subsysList = self.ui.subsysNamesLineEdit.getSubsysNameList()
         elif self.radioButtons["dressed"].isChecked():
             tag.tagType = DISPERSIVE_DRESSED
             tag.initial = self.dressedLabels["initial"].value()
@@ -358,15 +355,6 @@ class TaggingCtrl(QObject):
             return
         self._toNoTagPage()
         self._tagViewToModel()
-
-    # @Slot()
-    # def _setTagTitle(self):
-    #     """
-    #     Set the title for the tag panel based on the current dataset.
-    #     """
-    #     self.ui.transitionLabel.setText(
-    #         f"LABEL for {self.allDatasets.currentDataName()}"
-    #     )
 
     @Slot()
     def _tagModelToView(self):
