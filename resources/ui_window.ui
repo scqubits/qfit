@@ -14,7 +14,7 @@
     <x>0</x>
     <y>0</y>
     <width>1276</width>
-    <height>928</height>
+    <height>926</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -529,7 +529,7 @@ ListView::item:selected {
           <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>0</number>
          </property>
          <widget class="DataExtractingWidget" name="extractPointsWidget">
           <property name="sizePolicy">
@@ -810,11 +810,12 @@ ListView::item:selected {
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
-	background-color: #5D5D5D;
+	background-color: #4B4B4B;
 	border-radius: 5px;	
 }
 QPushButton:pressed {
-    background-color: rgb(71, 30, 79);
+    background-color: #363636;
+    icon: url(:/icons/svg/target-pressed.svg)
 }</string>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_10">
@@ -1262,13 +1263,12 @@ QPushButton:pressed {
                 </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
-	background-color: rgb(93, 93, 93);
-	border: 0px solid rgb(52, 59, 72);
+	background-color: #4B4B4B;
 	border-radius: 5px;	
-	text-align: center;
 }
 QPushButton:pressed {
-    background-color: rgb(71, 30, 79);
+    background-color: #363636;
+    icon: url(:/icons/svg/target-pressed.svg)
 }</string>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_11">
@@ -1695,9 +1695,17 @@ QPushButton:pressed {
                     <cursorShape>ArrowCursor</cursorShape>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">color: #DBBCFB;
+                    <string notr="true">QPushButton {
+color: #DBBCFB;
 background-color: #4B4B4B;
-border-radius: 6px;</string>
+border-radius: 6px;
+}
+
+QPushButton:pressed {
+color: #A08CB5;
+background-color: #353535;
+icon: url(:/icons/svg/updown-pressed.svg);
+}</string>
                    </property>
                    <property name="text">
                     <string>   Switch X And Y Axis</string>
@@ -1836,7 +1844,12 @@ border-radius: 6px;</string>
     border-radius: 6px;
     color: #DBBCFB;
 }
-</string>
+
+QPushButton:pressed {
+color: #A08CB5;
+background-color: #353535;
+icon: url(:/icons/svg/plus-pressed.svg);
+}</string>
                       </property>
                       <property name="text">
                        <string notr="true">  New</string>
@@ -1888,6 +1901,12 @@ border-radius: 6px;</string>
     background-color: #4B4B4B;
     border-radius: 6px;
     color: #DBBCFB;
+}
+
+QPushButton:pressed {
+color: #A08CB5;
+background-color: #353535;
+icon: url(:/icons/svg/trash-pressed.svg);
 }</string>
                       </property>
                       <property name="text">
@@ -2184,18 +2203,30 @@ QSpinBox::up-arrow {
     image: url(:/icons/svg/plus.svg) 1;
 }
 
+QSpinBox::up-arrow:pressed {
+    width: 20px;
+    height: 20px;
+    image: url(:/icons/svg/plus-pressed.svg) 1;
+}
+
 QSpinBox::down-arrow {
     image: url(:/icons/svg/minus.svg) 1;
     width: 20px;
     height: 20px;
 }
 
+QSpinBox::down-arrow:pressed {
+    image: url(:/icons/svg/minus-pressed.svg) 1;
+    width: 20px;
+    height: 20px;
+}
+
 QSpinBox::up-button:pressed {
-    background-color: #1E1E1E;
+    background-color: #262626;
 }
 
 QSpinBox::down-button:pressed {
-    background-color: #1E1E1E;
+    background-color: #262626;
 }</string>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_13">
@@ -2227,7 +2258,7 @@ QSpinBox::down-button:pressed {
                             </property>
                             <property name="sizeHint" stdset="0">
                              <size>
-                              <width>120</width>
+                              <width>124</width>
                               <height>20</height>
                              </size>
                             </property>
@@ -2507,18 +2538,30 @@ QSpinBox::up-arrow {
     image: url(:/icons/svg/plus.svg) 1;
 }
 
+QSpinBox::up-arrow:pressed {
+    width: 20px;
+    height: 20px;
+    image: url(:/icons/svg/plus-pressed.svg) 1;
+}
+
 QSpinBox::down-arrow {
     image: url(:/icons/svg/minus.svg) 1;
     width: 20px;
     height: 20px;
 }
 
+QSpinBox::down-arrow:pressed {
+    image: url(:/icons/svg/minus-pressed.svg) 1;
+    width: 20px;
+    height: 20px;
+}
+
 QSpinBox::up-button:pressed {
-    background-color: #1E1E1E;
+    background-color: #262626;
 }
 
 QSpinBox::down-button:pressed {
-    background-color: #1E1E1E;
+    background-color: #262626;
 }</string>
                          </property>
                          <layout class="QGridLayout" name="gridLayout_14">
@@ -2726,6 +2769,11 @@ border-style: inset;</string>
     width: 40px;
     background-color: #2F2F2F;
     border-radius: 14px;
+}
+
+QPushButton: pressed{
+    background-color: #1F1F1F;
+    icon: url(:/icons/svg/trash-pressed.svg)
 }</string>
                          </property>
                          <property name="text">
@@ -2941,7 +2989,7 @@ border-style: inset;</string>
                    <x>0</x>
                    <y>0</y>
                    <width>381</width>
-                   <height>430</height>
+                   <height>428</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -3060,9 +3108,17 @@ border-style: inset;</string>
                  <string>Load the pre-fitted parameters to the initial value of the fit section</string>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">color: #DBBCFB;
+                 <string notr="true">QPushButton {
+color: #DBBCFB;
 background-color: #4B4B4B;
-border-radius: 6px;</string>
+border-radius: 6px;
+}
+
+QPushButton:pressed {
+color: #A08CB5;
+background-color: #353535;
+icon: url(:/icons/svg/copy-pressed.svg);
+}</string>
                 </property>
                 <property name="text">
                  <string>   Results To Fit</string>
@@ -3127,9 +3183,15 @@ border-radius: 6px;</string>
                  <string/>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">color: #212121;
+                 <string notr="true">QPushButton{
+color: #212121;
 background-color: #BE82FA;
-border-radius: 6px;</string>
+border-radius: 6px;
+}
+
+QPushButton:pressed{
+background-color: #9163BF;
+}</string>
                 </property>
                 <property name="text">
                  <string>   Plot Spectrum</string>
@@ -3466,9 +3528,17 @@ border-radius: 6px;</string>
                     <string>Load the current value to the initial value</string>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">color: #DBBCFB;
+                    <string notr="true">QPushButton {
+color: #DBBCFB;
 background-color: #4B4B4B;
-border-radius: 6px;</string>
+border-radius: 6px;
+}
+
+QPushButton:pressed {
+color: #A08CB5;
+background-color: #353535;
+icon: url(:/icons/svg/copy-pressed.svg);
+}</string>
                    </property>
                    <property name="text">
                     <string>   Results To Initial</string>
@@ -3583,7 +3653,7 @@ border-radius: 6px;</string>
                    <x>0</x>
                    <y>0</y>
                    <width>381</width>
-                   <height>557</height>
+                   <height>555</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -3679,9 +3749,17 @@ border-radius: 6px;</string>
                  <string>Load the fitted parameters to the pre-fit section</string>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">color: #DBBCFB;
+                 <string notr="true">QPushButton {
+color: #DBBCFB;
 background-color: #4B4B4B;
-border-radius: 6px;</string>
+border-radius: 6px;
+}
+
+QPushButton:pressed {
+color: #A08CB5;
+background-color: #353535;
+icon: url(:/icons/svg/copy-pressed.svg);
+}</string>
                 </property>
                 <property name="text">
                  <string>   Results To Pre-Fit</string>
@@ -3765,9 +3843,15 @@ border-radius: 6px;</string>
                  </font>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">color: #212121;
+                 <string notr="true">QPushButton{
+color: #212121;
 background-color: #BE82FA;
-border-radius: 6px;</string>
+border-radius: 6px;
+}
+
+QPushButton:pressed{
+background-color: #9163BF;
+}</string>
                 </property>
                 <property name="text">
                  <string>   Run Fit</string>
@@ -5825,18 +5909,30 @@ QSpinBox::up-arrow {
     image: url(:/icons/svg/plus.svg) 1;
 }
 
+QSpinBox::up-arrow:pressed {
+    width: 20px;
+    height: 20px;
+    image: url(:/icons/svg/plus-pressed.svg) 1;
+}
+
 QSpinBox::down-arrow {
     image: url(:/icons/svg/minus.svg) 1;
     width: 20px;
     height: 20px;
 }
 
+QSpinBox::down-arrow:pressed {
+    image: url(:/icons/svg/minus-pressed.svg) 1;
+    width: 20px;
+    height: 20px;
+}
+
 QSpinBox::up-button:pressed {
-    background-color: #1E1E1E;
+    background-color: #262626;
 }
 
 QSpinBox::down-button:pressed {
-    background-color: #1E1E1E;
+    background-color: #262626;
 }</string>
                 </property>
                 <property name="alignment">

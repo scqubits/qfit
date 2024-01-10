@@ -34,7 +34,7 @@ class Ui_MainWindow(object):
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.setWindowModality(Qt.NonModal)
         MainWindow.setEnabled(True)
-        MainWindow.resize(1276, 928)
+        MainWindow.resize(1276, 926)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -615,11 +615,12 @@ class Ui_MainWindow(object):
         self.calibrateXGridFrame.setMinimumSize(QSize(363, 100))
         self.calibrateXGridFrame.setMaximumSize(QSize(363, 16777215))
         self.calibrateXGridFrame.setStyleSheet(u"QPushButton {\n"
-"	background-color: #5D5D5D;\n"
+"	background-color: #4B4B4B;\n"
 "	border-radius: 5px;	\n"
 "}\n"
 "QPushButton:pressed {\n"
-"    background-color: rgb(71, 30, 79);\n"
+"    background-color: #363636;\n"
+"    icon: url(:/icons/svg/target-pressed.svg)\n"
 "}")
         self.gridLayout_10 = QGridLayout(self.calibrateXGridFrame)
         self.gridLayout_10.setObjectName(u"gridLayout_10")
@@ -822,13 +823,12 @@ class Ui_MainWindow(object):
         self.calibrateYGridFrame.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
         self.calibrateYGridFrame.setStyleSheet(u"QPushButton {\n"
-"	background-color: rgb(93, 93, 93);\n"
-"	border: 0px solid rgb(52, 59, 72);\n"
+"	background-color: #4B4B4B;\n"
 "	border-radius: 5px;	\n"
-"	text-align: center;\n"
 "}\n"
 "QPushButton:pressed {\n"
-"    background-color: rgb(71, 30, 79);\n"
+"    background-color: #363636;\n"
+"    icon: url(:/icons/svg/target-pressed.svg)\n"
 "}")
         self.gridLayout_11 = QGridLayout(self.calibrateYGridFrame)
         self.gridLayout_11.setObjectName(u"gridLayout_11")
@@ -1014,9 +1014,17 @@ class Ui_MainWindow(object):
         font3.setBold(True)
         self.swapXYButton.setFont(font3)
         self.swapXYButton.setCursor(QCursor(Qt.ArrowCursor))
-        self.swapXYButton.setStyleSheet(u"color: #DBBCFB;\n"
+        self.swapXYButton.setStyleSheet(u"QPushButton {\n"
+"color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
-"border-radius: 6px;")
+"border-radius: 6px;\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"color: #A08CB5;\n"
+"background-color: #353535;\n"
+"icon: url(:/icons/svg/updown-pressed.svg);\n"
+"}")
         icon3 = QIcon()
         icon3.addFile(u":/icons/svg/updown.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.swapXYButton.setIcon(icon3)
@@ -1080,7 +1088,12 @@ class Ui_MainWindow(object):
 "    border-radius: 6px;\n"
 "    color: #DBBCFB;\n"
 "}\n"
-"")
+"\n"
+"QPushButton:pressed {\n"
+"color: #A08CB5;\n"
+"background-color: #353535;\n"
+"icon: url(:/icons/svg/plus-pressed.svg);\n"
+"}")
         self.newRowButton.setText(u"  New")
         icon4 = QIcon()
         icon4.addFile(u":/icons/svg/plus.svg", QSize(), QIcon.Normal, QIcon.Off)
@@ -1103,6 +1116,12 @@ class Ui_MainWindow(object):
 "    background-color: #4B4B4B;\n"
 "    border-radius: 6px;\n"
 "    color: #DBBCFB;\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"color: #A08CB5;\n"
+"background-color: #353535;\n"
+"icon: url(:/icons/svg/trash-pressed.svg);\n"
 "}")
         self.clearAllButton.setText(u"  Clear All")
         icon5 = QIcon()
@@ -1262,25 +1281,37 @@ class Ui_MainWindow(object):
 ""
                         "}\n"
 "\n"
+"QSpinBox::up-arrow:pressed {\n"
+"    width: 20px;\n"
+"    height: 20px;\n"
+"    image: url(:/icons/svg/plus-pressed.svg) 1;\n"
+"}\n"
+"\n"
 "QSpinBox::down-arrow {\n"
 "    image: url(:/icons/svg/minus.svg) 1;\n"
 "    width: 20px;\n"
 "    height: 20px;\n"
 "}\n"
 "\n"
+"QSpinBox::down-arrow:pressed {\n"
+"    image: url(:/icons/svg/minus-pressed.svg) 1;\n"
+"    width: 20px;\n"
+"    height: 20px;\n"
+"}\n"
+"\n"
 "QSpinBox::up-button:pressed {\n"
-"    background-color: #1E1E1E;\n"
+"    background-color: #262626;\n"
 "}\n"
 "\n"
 "QSpinBox::down-button:pressed {\n"
-"    background-color: #1E1E1E;\n"
+"    background-color: #262626;\n"
 "}")
         self.gridLayout_13 = QGridLayout(self.tagDressedGroupBox)
         self.gridLayout_13.setObjectName(u"gridLayout_13")
         self.gridLayout_13.setHorizontalSpacing(0)
         self.gridLayout_13.setVerticalSpacing(12)
         self.gridLayout_13.setContentsMargins(0, 0, 0, 0)
-        self.horizontalSpacer_3 = QSpacerItem(120, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
+        self.horizontalSpacer_3 = QSpacerItem(124, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
 
         self.gridLayout_13.addItem(self.horizontalSpacer_3, 4, 2, 1, 1)
 
@@ -1441,18 +1472,30 @@ class Ui_MainWindow(object):
 ""
                         "}\n"
 "\n"
+"QSpinBox::up-arrow:pressed {\n"
+"    width: 20px;\n"
+"    height: 20px;\n"
+"    image: url(:/icons/svg/plus-pressed.svg) 1;\n"
+"}\n"
+"\n"
 "QSpinBox::down-arrow {\n"
 "    image: url(:/icons/svg/minus.svg) 1;\n"
 "    width: 20px;\n"
 "    height: 20px;\n"
 "}\n"
 "\n"
+"QSpinBox::down-arrow:pressed {\n"
+"    image: url(:/icons/svg/minus-pressed.svg) 1;\n"
+"    width: 20px;\n"
+"    height: 20px;\n"
+"}\n"
+"\n"
 "QSpinBox::up-button:pressed {\n"
-"    background-color: #1E1E1E;\n"
+"    background-color: #262626;\n"
 "}\n"
 "\n"
 "QSpinBox::down-button:pressed {\n"
-"    background-color: #1E1E1E;\n"
+"    background-color: #262626;\n"
 "}")
         self.gridLayout_14 = QGridLayout(self.tagBareGroupBox)
         self.gridLayout_14.setObjectName(u"gridLayout_14")
@@ -1560,6 +1603,11 @@ class Ui_MainWindow(object):
 "    width: 40px;\n"
 "    background-color: #2F2F2F;\n"
 "    border-radius: 14px;\n"
+"}\n"
+"\n"
+"QPushButton: pressed{\n"
+"    background-color: #1F1F1F;\n"
+"    icon: url(:/icons/svg/trash-pressed.svg)\n"
 "}")
         self.deleteRowButton.setText(u"")
         self.deleteRowButton.setIcon(icon5)
@@ -1648,7 +1696,7 @@ class Ui_MainWindow(object):
         self.prefitScrollArea.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.prefitScrollAreaWidget = QWidget()
         self.prefitScrollAreaWidget.setObjectName(u"prefitScrollAreaWidget")
-        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 381, 430))
+        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 381, 428))
         self.verticalLayout_11 = QVBoxLayout(self.prefitScrollAreaWidget)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -1690,9 +1738,17 @@ class Ui_MainWindow(object):
         font7.setPointSize(14)
         font7.setBold(True)
         self.exportToFitButton.setFont(font7)
-        self.exportToFitButton.setStyleSheet(u"color: #DBBCFB;\n"
+        self.exportToFitButton.setStyleSheet(u"QPushButton {\n"
+"color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
-"border-radius: 6px;")
+"border-radius: 6px;\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"color: #A08CB5;\n"
+"background-color: #353535;\n"
+"icon: url(:/icons/svg/copy-pressed.svg);\n"
+"}")
         icon6 = QIcon()
         icon6.addFile(u":/icons/svg/copy.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.exportToFitButton.setIcon(icon6)
@@ -1722,9 +1778,15 @@ class Ui_MainWindow(object):
 #if QT_CONFIG(tooltip)
         self.plotButton.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
-        self.plotButton.setStyleSheet(u"color: #212121;\n"
+        self.plotButton.setStyleSheet(u"QPushButton{\n"
+"color: #212121;\n"
 "background-color: #BE82FA;\n"
-"border-radius: 6px;")
+"border-radius: 6px;\n"
+"}\n"
+"\n"
+"QPushButton:pressed{\n"
+"background-color: #9163BF;\n"
+"}")
         icon7 = QIcon()
         icon7.addFile(u":/icons/svg/play.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.plotButton.setIcon(icon7)
@@ -1853,9 +1915,17 @@ class Ui_MainWindow(object):
         self.pushButton_2.setSizePolicy(sizePolicy2)
         self.pushButton_2.setMinimumSize(QSize(150, 30))
         self.pushButton_2.setFont(font4)
-        self.pushButton_2.setStyleSheet(u"color: #DBBCFB;\n"
+        self.pushButton_2.setStyleSheet(u"QPushButton {\n"
+"color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
-"border-radius: 6px;")
+"border-radius: 6px;\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"color: #A08CB5;\n"
+"background-color: #353535;\n"
+"icon: url(:/icons/svg/copy-pressed.svg);\n"
+"}")
         self.pushButton_2.setIcon(icon6)
 
         self.horizontalLayout_18.addWidget(self.pushButton_2)
@@ -1902,7 +1972,7 @@ class Ui_MainWindow(object):
         self.fitScrollArea.setWidgetResizable(True)
         self.fitScrollAreaWidget = QWidget()
         self.fitScrollAreaWidget.setObjectName(u"fitScrollAreaWidget")
-        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 381, 557))
+        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 381, 555))
         self.verticalLayout_4 = QVBoxLayout(self.fitScrollAreaWidget)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -1932,9 +2002,17 @@ class Ui_MainWindow(object):
         self.exportToPrefitButton.setMinimumSize(QSize(191, 34))
         self.exportToPrefitButton.setMaximumSize(QSize(191, 34))
         self.exportToPrefitButton.setFont(font7)
-        self.exportToPrefitButton.setStyleSheet(u"color: #DBBCFB;\n"
+        self.exportToPrefitButton.setStyleSheet(u"QPushButton {\n"
+"color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
-"border-radius: 6px;")
+"border-radius: 6px;\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"color: #A08CB5;\n"
+"background-color: #353535;\n"
+"icon: url(:/icons/svg/copy-pressed.svg);\n"
+"}")
         self.exportToPrefitButton.setIcon(icon6)
 
         self.gridLayout_12.addWidget(self.exportToPrefitButton, 3, 1, 1, 1)
@@ -1958,9 +2036,15 @@ class Ui_MainWindow(object):
         self.fitButton.setMinimumSize(QSize(191, 34))
         self.fitButton.setMaximumSize(QSize(191, 34))
         self.fitButton.setFont(font7)
-        self.fitButton.setStyleSheet(u"color: #212121;\n"
+        self.fitButton.setStyleSheet(u"QPushButton{\n"
+"color: #212121;\n"
 "background-color: #BE82FA;\n"
-"border-radius: 6px;")
+"border-radius: 6px;\n"
+"}\n"
+"\n"
+"QPushButton:pressed{\n"
+"background-color: #9163BF;\n"
+"}")
         self.fitButton.setIcon(icon7)
         self.fitButton.setIconSize(QSize(20, 20))
 
@@ -2834,19 +2918,31 @@ class Ui_MainWindow(object):
 "    image: url(:/icons/svg/plus.svg) 1;\n"
 "}\n"
 "\n"
+"QSpinBox::up-arrow:pressed {\n"
+"    width"
+                        ": 20px;\n"
+"    height: 20px;\n"
+"    image: url(:/icons/svg/plus-pressed.svg) 1;\n"
+"}\n"
+"\n"
 "QSpinBox::down-arrow {\n"
-"    image: url("
-                        ":/icons/svg/minus.svg) 1;\n"
+"    image: url(:/icons/svg/minus.svg) 1;\n"
+"    width: 20px;\n"
+"    height: 20px;\n"
+"}\n"
+"\n"
+"QSpinBox::down-arrow:pressed {\n"
+"    image: url(:/icons/svg/minus-pressed.svg) 1;\n"
 "    width: 20px;\n"
 "    height: 20px;\n"
 "}\n"
 "\n"
 "QSpinBox::up-button:pressed {\n"
-"    background-color: #1E1E1E;\n"
+"    background-color: #262626;\n"
 "}\n"
 "\n"
 "QSpinBox::down-button:pressed {\n"
-"    background-color: #1E1E1E;\n"
+"    background-color: #262626;\n"
 "}")
         self.prefitPhotonSpinBox.setAlignment(Qt.AlignCenter)
         self.prefitPhotonSpinBox.setMinimum(1)
@@ -3006,7 +3102,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.pagesStackedWidget.setCurrentIndex(2)
+        self.pagesStackedWidget.setCurrentIndex(0)
         self.bottomStackedWidget.setCurrentIndex(0)
 
 

@@ -1,5 +1,12 @@
 <RCC>
   <qresource prefix="/">
+    <file>icons/svg/updown-pressed.svg</file>
+    <file>icons/svg/copy-pressed.svg</file>
+    <file>icons/svg/eye-pressed.svg</file>
+    <file>icons/svg/minus-pressed.svg</file>
+    <file>icons/svg/target-pressed.svg</file>
+    <file>icons/svg/plus-pressed.svg</file>
+    <file>icons/svg/trash-pressed.svg</file>
     <file>icons/svg/arrow-right-737373.svg</file>
     <file>icons/svg/arrow-down-2F2F2F.svg</file>
     <file>icons/svg/arrow-down-737373.svg</file>
