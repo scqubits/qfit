@@ -344,8 +344,10 @@ class AllExtractedData(
     def removeCurrentRow(self):
         self.removeRow(self.currentRow)
 
-    @Slot()
     def removeAll(self):
+        """
+        Remove all rows of dataset
+        """
         self.beginRemoveRows(QModelIndex(), 0, self.rowCount() - 1)
         self.dataNames = ["Transition 1"]
         self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
@@ -359,6 +361,10 @@ class AllExtractedData(
 
         self.layoutChanged.emit()
         return True
+
+    @Slot()
+    def onClearClicked(self):
+        self.removeAll()
 
     @property
     def currentRow(self):
