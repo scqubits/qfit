@@ -4,7 +4,7 @@ from PySide6.QtCore import (
     Slot,
 )
 
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Tuple, Dict, Any
 
 if TYPE_CHECKING:
     from qfit.ui_designer.ui_window import Ui_MainWindow
@@ -68,7 +68,7 @@ class TaggingCtrl(QObject):
         self,
         subsysCount: int,
         dataSets: Tuple["AllExtractedData", "ActiveExtractedData"],
-        ui: "Ui_MainWindow",
+        ui_groups: Tuple[Dict[str, Any], ...],
         *args,
         **kwargs,
     ):
@@ -93,11 +93,14 @@ class TaggingCtrl(QObject):
             we need the active dataset to update the tag panel when the dataset is changed
         ui: Ui_MainWindow
             the main window UI
+        ui_groups:
+            A tuple of UI dictionaries: uiLabelBoxes, uiLabelRadioButtons, uiBareLabelInputs 
+            and uiDressedLabelInputs
         additional arguments are passed to QObject.__init__()
         """
         super().__init__(*args, **kwargs)
 
-        self.ui = ui
+        self.groupBox, self.radioButtons, self.bareLabels, self.dressedLabels = ui_groups
         self.allDatasets, self.activeDataset = dataSets
 
         self.subsysCount = subsysCount
@@ -115,13 +118,13 @@ class TaggingCtrl(QObject):
         - In NO_TAG mode, switch off (hide) the bare and dressed tagging panels
         - Set the number of subsystems
         """
-        self.ui.tagDressedGroupBox.setVisible(False)
-        self.ui.tagBareGroupBox.setVisible(False)
+        self.groupBox["bare"].setVisible(False)
+        self.groupBox["dressed"].setVisible(False)
 
         # the number of subsystems are used by the initial and final state line edits
         # to check the validity of the input
-        self.ui.initialStateLineEdit.setTupleLength(self.subsysCount)
-        self.ui.finalStateLineEdit.setTupleLength(self.subsysCount)
+        self.bareLabels["initial"].setTupleLength(self.subsysCount)
+        self.bareLabels["final"].setTupleLength(self.subsysCount)
 
     # Connections ======================================================
     def _modeSwitchConnects(self):
@@ -130,22 +133,15 @@ class TaggingCtrl(QObject):
         """
         # connect the radio buttons to the corresponding tagging panels
         # one for each mode
-        self.ui.tagDispersiveBareRadioButton.toggled.connect(
+        self.radioButtons["bare"].toggled.connect(
             lambda: self._onBareRadioButtonToggled()
         )
-        # self.ui.tagDispersiveBareRadioButton.toggled.connect(
-        #     lambda: print("Mode clicked: bare")
-        # )
-        self.ui.tagDispersiveDressedRadioButton.toggled.connect(
+        self.radioButtons["dressed"].toggled.connect(
             lambda: self._onDressedRadioButtonToggled()
         )
-        # self.ui.tagDispersiveDressedRadioButton.toggled.connect(
-        #     lambda: print("Mode clicked: dressed")
-        # )
-        self.ui.noTagRadioButton.toggled.connect(
+        self.radioButtons["no tag"].toggled.connect(
             lambda: self._onNoTagRadioButtonToggled()
         )
-        # self.ui.noTagRadioButton.toggled.connect(lambda: print("Mode clicked: no tag"))
 
     def _viewUpdatedConnects(self):
         """
@@ -155,60 +151,41 @@ class TaggingCtrl(QObject):
         # Once the user has finished editing the tag, update the AllExtractedData data
         # each view (LineEdit and SpinBox) has its own signal and a common slot _tagViewToModel to
         # update the model
-        self.ui.initialStateLineEdit.editingFinished.connect(self._tagViewToModel)
-        # self.ui.initialStateLineEdit.editingFinished.connect(lambda: print("initial"))
-        self.ui.finalStateLineEdit.editingFinished.connect(self._tagViewToModel)
-        # self.ui.finalStateLineEdit.editingFinished.connect(lambda: print("final"))
-        self.ui.phNumberBareSpinBox.valueChanged.connect(lambda: self._tagViewToModel())
-        # self.ui.phNumberBareSpinBox.valueChanged.connect(lambda: print("ph spin bare"))
-        self.ui.initialStateSpinBox.valueChanged.connect(lambda: self._tagViewToModel())
-        # self.ui.initialStateSpinBox.valueChanged.connect(lambda: print("init spin"))
-        self.ui.finalStateSpinBox.valueChanged.connect(lambda: self._tagViewToModel())
-        # self.ui.finalStateSpinBox.valueChanged.connect(lambda: print("final spin"))
-        self.ui.phNumberDressedSpinBox.valueChanged.connect(
+        self.bareLabels["initial"].editingFinished.connect(self._tagViewToModel)
+        self.bareLabels["final"].editingFinished.connect(self._tagViewToModel)
+        self.bareLabels["photons"].valueChanged.connect(lambda: self._tagViewToModel())
+        self.dressedLabels["initial"].valueChanged.connect(lambda: self._tagViewToModel())
+        self.dressedLabels["final"].valueChanged.connect(lambda: self._tagViewToModel())
+        self.dressedLabels["photons"].valueChanged.connect(
             lambda: self._tagViewToModel()
         )
-        # self.ui.phNumberDressedSpinBox.valueChanged.connect(
-        #     lambda: print("ph spin bare")
-        # )
 
     def _modelUpdatedConnects(self):
         """
         Once the dataset selection and title selection is changed, change the tag panel
         correspondingly
         """
-        # # Whenever a new dataset is activated in the AllExtractedData, update the TagDataView
-        # self.ui.datasetListView.clicked.connect(self._setTagViewWithDataset)
-        # self.ui.datasetListView.clicked.connect(lambda: print("dataset list"))
-
-        # Whenever a dataset is renamed, update the title for tags
-        # self.allDatasets.dataChanged.connect(self._setTagTitle)
-        # self.allDatasets.dataChanged.connect(lambda: print("data changed"))
-
-        # Whenever the activae dataset is switched, reflect the change on the tag so that it
-        # matches the current data set
         self.activeDataset.dataSwitchSignal.signal.connect(self._tagModelToView)
-        # self.activeDataset.dataSwitchSignal.signal.connect(lambda: print("data switch"))
 
     # Processing =======================================================
     def _clear(self):
         """
         Clear all previous tag inputs in the UI.
         """
-        self.ui.initialStateLineEdit.clear()
-        self.ui.finalStateLineEdit.clear()
-        self.ui.phNumberBareSpinBox.setValue(1)
-        self.ui.initialStateSpinBox.setValue(0)
-        self.ui.finalStateSpinBox.setValue(1)
-        self.ui.phNumberDressedSpinBox.setValue(1)
+        self.bareLabels["initial"].clear()
+        self.bareLabels["final"].clear()
+        self.bareLabels["photons"].setValue(1)
+        self.dressedLabels["initial"].setValue(0)
+        self.dressedLabels["final"].setValue(1)
+        self.dressedLabels["photons"].setValue(1)
 
     def _isValidInitialBare(self):
         """
         Check if the input initial state is valid for bare-states tagging.
         """
-        if not self.ui.tagBareGroupBox.isVisible():
+        if not self.groupBox["bare"].isVisible():
             return True  # only bare-states tags require validation
-        if not self.ui.initialStateLineEdit.isValid():
+        if not self.bareLabels["initial"].isValid():
             return False
         return True
 
@@ -216,9 +193,9 @@ class TaggingCtrl(QObject):
         """
         Check if the input final state is valid for bare-states tagging.
         """
-        if not self.ui.tagBareGroupBox.isVisible():
+        if not self.groupBox["bare"].isVisible():
             return True  # only bare-states tags require validation
-        if not self.ui.finalStateLineEdit.isValid():
+        if not self.bareLabels["final"].isValid():
             return False
         return True
 
@@ -232,8 +209,8 @@ class TaggingCtrl(QObject):
         """
         Switch the UI to the no tag page
         """
-        self.ui.tagBareGroupBox.setVisible(False)
-        self.ui.tagDressedGroupBox.setVisible(False)
+        self.groupBox["bare"].setVisible(False)
+        self.groupBox["dressed"].setVisible(False)
 
     def _setNoTagInView(self, tag: Tag):
         """
@@ -245,31 +222,31 @@ class TaggingCtrl(QObject):
         """
         Switch the UI to the bare-states tag page.
         """
-        self.ui.tagDressedGroupBox.setVisible(False)
-        self.ui.tagBareGroupBox.setVisible(True)
+        self.groupBox["bare"].setVisible(True)
+        self.groupBox["dressed"].setVisible(False)
 
     def _setBareTagInView(self, tag: Tag):
         """
         Set the UI to display a bare-states tag (should be in the bare tag page first).
         """
-        self.ui.initialStateLineEdit.setFromTuple(tag.initial)
-        self.ui.finalStateLineEdit.setFromTuple(tag.final)
-        self.ui.phNumberBareSpinBox.setValue(tag.photons)
+        self.bareLabels["initial"].setFromTuple(tag.initial)
+        self.bareLabels["final"].setFromTuple(tag.final)
+        self.bareLabels["photons"].setValue(tag.photons)
 
     def _toDressedTagPage(self):
         """
         Switch the UI to the dressed-states tag page.
         """
-        self.ui.tagBareGroupBox.setVisible(False)
-        self.ui.tagDressedGroupBox.setVisible(True)
+        self.groupBox["bare"].setVisible(False)
+        self.groupBox["dressed"].setVisible(True)
 
     def _setDressedTagInView(self, tag: Tag):
         """
         Set the UI to display a dressed-states tag (should be in the dressed tag page first).
         """
-        self.ui.initialStateSpinBox.setValue(tag.initial)
-        self.ui.finalStateSpinBox.setValue(tag.final)
-        self.ui.phNumberDressedSpinBox.setValue(tag.photons)
+        self.dressedLabels["initial"].setValue(tag.initial)
+        self.dressedLabels["final"].setValue(tag.final)
+        self.dressedLabels["photons"].setValue(tag.photons)
 
     def blockAllSignals(self, block: bool):
         """
@@ -278,17 +255,13 @@ class TaggingCtrl(QObject):
         self.blockSignals(block)
 
         # View: Tag panel
-        self.ui.initialStateLineEdit.blockSignals(block)
-        self.ui.finalStateLineEdit.blockSignals(block)
-        self.ui.phNumberBareSpinBox.blockSignals(block)
-        self.ui.initialStateSpinBox.blockSignals(block)
-        self.ui.finalStateSpinBox.blockSignals(block)
-        self.ui.phNumberDressedSpinBox.blockSignals(block)
-
-        self.ui.noTagRadioButton.blockSignals(block)
-        self.ui.tagDispersiveBareRadioButton.blockSignals(block)
-        self.ui.tagDispersiveDressedRadioButton.blockSignals(block)
-
+        for values in self.radioButtons.values():
+            values.blockSignals(block)
+        for values in self.bareLabels.values():
+            values.blockSignals(block)
+        for values in self.dressedLabels.values():
+            values.blockSignals(block)
+            
         # Model: transitions
         self.allDatasets.blockSignals(block)
         self.activeDataset.blockSignals(block)
@@ -306,19 +279,18 @@ class TaggingCtrl(QObject):
         tag = Tag()
         # if no tag radio button selected, or the input for other tag types are invalid,
         # set the tag type to NO_TAG
-        if self.ui.noTagRadioButton.isChecked() or not self._isValid():
+        if self.radioButtons["no tag"].isChecked() or not self._isValid():
             tag.tagType = NO_TAG
-        elif self.ui.tagDispersiveBareRadioButton.isChecked():
+        elif self.radioButtons["bare"].isChecked():
             tag.tagType = DISPERSIVE_BARE
-            tag.initial = self.ui.initialStateLineEdit.getTuple()
-            tag.final = self.ui.finalStateLineEdit.getTuple()
-            tag.photons = self.ui.phNumberBareSpinBox.value()
-            # tag.subsysList = self.ui.subsysNamesLineEdit.getSubsysNameList()
-        elif self.ui.tagDispersiveDressedRadioButton.isChecked():
+            tag.initial = self.bareLabels["initial"].getTuple()
+            tag.final = self.bareLabels["final"].getTuple()
+            tag.photons = self.bareLabels["photons"].value()
+        elif self.radioButtons["dressed"].isChecked():
             tag.tagType = DISPERSIVE_DRESSED
-            tag.initial = self.ui.initialStateSpinBox.value()
-            tag.final = self.ui.finalStateSpinBox.value()
-            tag.photons = self.ui.phNumberDressedSpinBox.value()
+            tag.initial = self.dressedLabels["initial"].value()
+            tag.final = self.dressedLabels["final"].value()
+            tag.photons = self.dressedLabels["photons"].value()
         return tag
 
     def setTagInView(self, tag):
@@ -336,15 +308,15 @@ class TaggingCtrl(QObject):
 
         self._clear()
         if tag.tagType == NO_TAG:
-            self.ui.noTagRadioButton.toggle()
+            self.radioButtons["no tag"].toggle()
             self._toNoTagPage()
             self._setNoTagInView(tag)
         elif tag.tagType == DISPERSIVE_BARE:
-            self.ui.tagDispersiveBareRadioButton.toggle()
+            self.radioButtons["bare"].toggle()
             self._toBareTagPage()
             self._setBareTagInView(tag)
         elif tag.tagType == DISPERSIVE_DRESSED:
-            self.ui.tagDispersiveDressedRadioButton.toggle()
+            self.radioButtons["dressed"].toggle()
             self._toDressedTagPage()
             self._setDressedTagInView(tag)
 
@@ -357,7 +329,7 @@ class TaggingCtrl(QObject):
         Slot for bare button being toggled. If the bare button is checked, switch the
         UI to the bare tag page. Else, do nothing.
         """
-        if not self.ui.tagDispersiveBareRadioButton.isChecked():
+        if not self.radioButtons["bare"].isChecked():
             return
         self._toBareTagPage()  # switch to bare tag page
         self._tagViewToModel()  # update the model's tag as user indended to switch to bare tag
@@ -368,7 +340,7 @@ class TaggingCtrl(QObject):
         Slot for dressed button being toggled. If the dressed button is checked, switch the
         UI to the dressed tag page. Else, do nothing.
         """
-        if not self.ui.tagDispersiveDressedRadioButton.isChecked():
+        if not self.radioButtons["dressed"].isChecked():
             return
         self._toDressedTagPage()
         self._tagViewToModel()
@@ -379,19 +351,10 @@ class TaggingCtrl(QObject):
         Slot for no tag button being toggled. If the no tag button is checked, switch the
         UI to the no tag page. Else, do nothing.
         """
-        if not self.ui.noTagRadioButton.isChecked():
+        if not self.radioButtons["no tag"].isChecked():
             return
         self._toNoTagPage()
         self._tagViewToModel()
-
-    # @Slot()
-    # def _setTagTitle(self):
-    #     """
-    #     Set the title for the tag panel based on the current dataset.
-    #     """
-    #     self.ui.transitionLabel.setText(
-    #         f"LABEL for {self.allDatasets.currentDataName()}"
-    #     )
 
     @Slot()
     def _tagModelToView(self):

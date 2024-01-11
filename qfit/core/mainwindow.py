@@ -150,6 +150,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.setFocusPolicy(Qt.StrongFocus)
         self.offset = None
 
+        # ui
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
@@ -163,6 +164,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.verticalSnapButton.setAutoExclusive(False)
 
         self.uiPagesConnects()
+        self.uiGrouping()
 
         # calibration
         self.setupUICalibration()
@@ -212,6 +214,37 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # status bar
         # self.statusBar().showMessage("Ready")
 
+    # ui grouping ######################################################
+    ####################################################################
+    def uiGrouping(self):
+        """
+        Group the UI elements into different groups, making it easier to
+        hand over to the controller.
+        """
+
+        # Extract: Labling
+        self.uiLabelBoxes = {
+            "bare": self.ui.tagBareGroupBox,
+            "dressed": self.ui.tagDressedGroupBox,
+        }
+        self.uiLabelRadioButtons = {
+            "bare": self.ui.tagDispersiveBareRadioButton,
+            "dressed": self.ui.tagDispersiveDressedRadioButton,
+            "no tag": self.ui.noTagRadioButton,
+        }
+        self.uiBareLabelInputs = {
+            "initial": self.ui.initialStateLineEdit,
+            "final": self.ui.finalStateLineEdit,
+            "photons": self.ui.phNumberBareSpinBox,
+        }
+        self.uiDressedLabelInputs = {
+            "initial": self.ui.initialStateSpinBox,
+            "final": self.ui.finalStateSpinBox,
+            "photons": self.ui.phNumberDressedSpinBox,
+        }
+
+        return 
+
     # help button and gif tooltip ######################################
     ####################################################################
     def helpButtonConnects(self):
@@ -233,7 +266,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.taggingCtrl = TaggingCtrl(
             hilbertspace.subsystem_count,
             (self.allDatasets, self.activeDataset),
-            self.ui,
+            (self.uiLabelBoxes, self.uiLabelRadioButtons, self.uiBareLabelInputs, self.uiDressedLabelInputs)
         )
 
     def dynamicalMeasurementDataSetupConnects(self, hilbertspace: HilbertSpace):
@@ -1021,7 +1054,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitIdentifySweepParameters()
         self.prefitSlidersInserts()
         self.prefitMinMaxInserts()
-        self.prefitSlidersConnects()
+        self.prefitSliderParamConnects()
         self.prefitSubsystemComboBoxLoads()
         self.prefitQuantumModelOptionsConnects()
         self.setUpPrefitRunConnects()
@@ -1033,6 +1066,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitGeneralOptionsConnects()
 
     def prefitIdentifySweepParameters(self):
+        """
+        Model init: identify sweep parameters
+
+        sweepParameterSet -init-> sliderParameterSet
+        """
         # check how many sweep parameters are found and create sliders
         # for the remaining parameters
         param_types = set(self.sweepParameterSet.exportAttrDict("param_type").values())
@@ -1069,7 +1107,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             )
             self.close()
 
+    @Slot()
     def onParameterChange(self, slider_or_fit_parameter_set: QuantumModelParameterSet):
+        """
+        Model & View updates
+        """
         self.quantumModel.updateCalculation(
             slider_or_fit_parameter_set=slider_or_fit_parameter_set,
             sweep_parameter_set=self.sweepParameterSet,
@@ -1078,9 +1120,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             extracted_data=self.allDatasets,
             prefit_result=self.prefitResult,
         )
+
+        # TODO: move to a separate connection: model --> view
         self.updatePlot()
 
+    @Slot()
     def onPrefitPlotClicked(self):
+        """
+        Model & View updates
+        """
         self.quantumModel.sweep2SpecNMSE(
             slider_or_fit_parameter_set=self.sliderParameterSet,
             sweep_parameter_set=self.sweepParameterSet,
@@ -1089,10 +1137,14 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             calibration_data=self.calibrationData,
             result=self.prefitResult,
         )
+
+        # TODO: move to a separate connection: model --> view
         self.updatePlot()
 
     def prefitSlidersInserts(self):
         """
+        View init: pre-fit sliders
+
         Insert a set of sliders for the prefit parameters according to the parameter set
         """
         # remove the existing widgets, if we somehow want to rebuild the sliders
@@ -1126,6 +1178,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         prefitScrollLayout.addSpacing(SPACING_BETWEEN_GROUPS)
 
     def prefitMinMaxInserts(self):
+        """
+        View init: pre-fit min max table
+        """
         # remove the existing widgets, if we somehow want to rebuild the sliders
         clearChildren(self.ui.prefitMinmaxScrollAreaWidget)
 
@@ -1157,9 +1212,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # default to fold the table
         foldable_widget.toggle()
 
-    def prefitSlidersConnects(self):
+    def prefitSliderParamConnects(self):
         """
-        Connect the sliders to the controller - update hilbertspace and spectrum
+        View --> model: slider --> parameter
         """
         for key, para_dict in self.sliderParameterSet.items():
             group_name = self.sliderParameterSet.parentNameByObj[key]
@@ -1189,16 +1244,31 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 minMax.minValue.editingFinished.connect(para.onMinEditingFinished)
                 minMax.maxValue.editingFinished.connect(para.onMaxEditingFinished)
 
+                para.setParameterForParent()
+
+    def prefitParamModelConnects(self):
+        """
+        View --> model: slider --> parameter
+        TODO: This should be param --> model rather than slider --> model.
+        model --> model: parameter --> numerical model
+        model --> view: numerical model --> prefit plot
+        TODO: should be able to seprate the connection
+
+        It complete a flow of information from the slider to the model.
+        """
+        for key, para_dict in self.sliderParameterSet.items():
+            group_name = self.sliderParameterSet.parentNameByObj[key]
+            for para_name, para in para_dict.items():
+                labeled_slider: LabeledSlider = self.sliderSet[group_name][para_name]
+
                 # connect to the controller to update the spectrum
                 labeled_slider.editingFinishedConnect(
                     lambda: self.onParameterChange(self.sliderParameterSet)
                 )
-                labeled_slider.editingFinishedConnect(self.updatePlot)
-
-                para.setParameterForParent()
 
     def prefitSubsystemComboBoxLoads(self):
         """
+        View init: pre-fit subsystem combo box
         loading the subsystem names to the combo box (drop down menu)
         """
         # clear the existing items and temporarily disable the signal
@@ -1217,6 +1287,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     def setUpPrefitResultConnects(self):
         """
+        Model --> View: pre-fit result
         connect the prefit result to the relevant UI textboxes; whenever there is
         a change in the UI, reflect in the UI text change
         """
@@ -1237,6 +1308,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
 
     def prefitQuantumModelOptionsConnects(self):
+        """
+        View --> model: pre-fit options
+
+        TODO: Should be able to combine with prefitGeneralOptionsConnects
+        """
         # connect the prefit options to the controller
         self.quantumModel.setupPlotUICallbacks(
             subsystemNameCallback=self.ui.subsysComboBox.currentText,
@@ -1248,6 +1324,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     def prefitGeneralOptionsConnects(self):
         """
+        View --> model: numerical model options
+        model --> view: numerical model --> prefit plot
+        TODO: should be able to seprate the connection
+        TODO: Should be able to combine with prefitQuantumModelOptionsConnects
+
         Set up the connects for the prefit options for UI:
         1. subsystem combo box
         2. initial state line edit
@@ -1280,6 +1361,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     def setUpPrefitRunConnects(self):
         """
+        View --> model: run sweep
+        model --> view: pre-fit plot
+        TODO: should be able to seprate the connection
+
         Set up the connects for the prefit run for UI:
         1. autorun checkbox
         2. run (or "plot") button
@@ -1297,8 +1382,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # fit parameters; if user want to plot with prefit parameters, clicking the plot button
         # in the prefit will not update the parameters based on the sliders.
         self.ui.plotButton.clicked.connect(self.onPrefitPlotClicked)
-        # update plot after the fit button is clicked
-        self.ui.plotButton.clicked.connect(self.updatePlot)
 
     # Fit ##############################################################
     # ##################################################################
@@ -1589,7 +1672,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.measurementData = measurementData
         self.calibrationData.resetCalibration()
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
+
+        self.allDatasets.blockSignals(True)
         self.allDatasets.removeAll()
+        self.allDatasets.blockSignals(False)
 
         self.dynamicalMeasurementDataSetupConnects(hilbertspace)
         self.uiDataLoadConnects()
