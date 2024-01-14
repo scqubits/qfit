@@ -43,7 +43,7 @@ class Ui_MainWindow(object):
         MainWindow.setMinimumSize(QSize(0, 0))
         MainWindow.setMaximumSize(QSize(16777215, 16777190))
         font = QFont()
-        font.setFamilies([u"Arial Medium"])
+        font.setFamilies([u"Arial"])
         font.setPointSize(7)
         MainWindow.setFont(font)
         MainWindow.setWindowTitle(u"qfit")
@@ -67,7 +67,7 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QWidget {\n"
-"	font-family: \"Arial Medium\";\n"
+"	font-family: \"Arial\";\n"
 "}\n"
 "\n"
 "QLabel {\n"
@@ -101,8 +101,8 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QScrollBar::handle:horizontal {\n"
-"    background: rgb(85, 1"
-                        "70, 255);\n"
+"    background: rgb(85, 170, 255"
+                        ");\n"
 "    min-width: 20px;\n"
 "	border-radius: 5px\n"
 "}\n"
@@ -145,8 +145,8 @@ class Ui_MainWindow(object):
 "	border-radius: 0px;\n"
 " }\n"
 "\n"
-" QS"
-                        "crollBar::handle:vertical {	\n"
+" QScrollBa"
+                        "r::handle:vertical {	\n"
 "	background: rgb(85, 170, 255);\n"
 "    min-height: 25px;\n"
 "	border-radius: 5px\n"
@@ -187,8 +187,8 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QCheckBox::indicator {\n"
-"    bo"
-                        "rder: 1px solid #DBBCFB;\n"
+"    border: 1"
+                        "px solid #DBBCFB;\n"
 "	width: 20px;\n"
 "	height: 20px;\n"
 " 	border-radius: 11px;\n"
@@ -236,8 +236,8 @@ class Ui_MainWindow(object):
 "/* SLIDERS */\n"
 "QSlider::groove:horizontal {\n"
 "    border-radius: 9px;\n"
-"    hei"
-                        "ght: 18px;\n"
+"    height: 18"
+                        "px;\n"
 "	margin: 0px;\n"
 "	background-color: #38363B;\n"
 "}\n"
@@ -284,8 +284,8 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QSlider::handle:vertical:hover {\n"
-"    background-color: rgb(105, 18"
-                        "0, 255);\n"
+"    background-color: rgb(105, 180, 255)"
+                        ";\n"
 "}\n"
 "\n"
 "QSlider::handle:vertical:pressed {\n"
@@ -328,8 +328,8 @@ class Ui_MainWindow(object):
 "QSpinBox::up-arrow {\n"
 "    width: 20px;\n"
 "    height: 20px;\n"
-""
-                        "    image: url(:/icons/svg/plus.svg) 1;\n"
+"    "
+                        "image: url(:/icons/svg/plus.svg) 1;\n"
 "}\n"
 "\n"
 "QSpinBox::down-arrow {\n"
@@ -375,8 +375,8 @@ class Ui_MainWindow(object):
 "	width: 25px; \n"
 " }\n"
 "\n"
-"QComboBox::down-"
-                        "arrow{\n"
+"QComboBox::down-arro"
+                        "w{\n"
 "	image: url(:/icons/svg/arrow-down-2F2F2F.svg);\n"
 "	width: 12px;\n"
 "	height: 9px;\n"
@@ -420,8 +420,8 @@ class Ui_MainWindow(object):
 "ListView\n"
 "{\n"
 "	selection-background-color: rgb(93, 93, 93);\n"
-"	backgroun"
-                        "d: rgb(63,63,63);\n"
+"	background: r"
+                        "gb(63,63,63);\n"
 "	color: rgb(220,220,220);\n"
 "}\n"
 "\n"
@@ -468,7 +468,7 @@ class Ui_MainWindow(object):
         self.bottomStackedWidget.setSizePolicy(sizePolicy2)
         self.bottomStackedWidget.setMinimumSize(QSize(0, 220))
         font1 = QFont()
-        font1.setFamilies([u"Arial Medium"])
+        font1.setFamilies([u"Arial"])
         self.bottomStackedWidget.setFont(font1)
         self.bottomStackedWidget.setStyleSheet(u"")
         self.bottomStackedWidget.setFrameShape(QFrame.NoFrame)
@@ -505,7 +505,7 @@ class Ui_MainWindow(object):
         self.calibratedCheckBox.setMinimumSize(QSize(200, 40))
         self.calibratedCheckBox.setMaximumSize(QSize(200, 40))
         font2 = QFont()
-        font2.setFamilies([u"Arial Medium"])
+        font2.setFamilies([u"Arial"])
         font2.setPointSize(14)
         font2.setKerning(False)
         self.calibratedCheckBox.setFont(font2)
@@ -602,7 +602,7 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.bgndSubtractXCheckBox.sizePolicy().hasHeightForWidth())
         self.bgndSubtractXCheckBox.setSizePolicy(sizePolicy4)
         font3 = QFont()
-        font3.setFamilies([u"Arial Medium"])
+        font3.setFamilies([u"Arial"])
         font3.setPointSize(14)
         self.bgndSubtractXCheckBox.setFont(font3)
 #if QT_CONFIG(tooltip)
@@ -787,7 +787,7 @@ class Ui_MainWindow(object):
         sizePolicy1.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
         self.label_4.setSizePolicy(sizePolicy1)
         font4 = QFont()
-        font4.setFamilies([u"Arial Medium"])
+        font4.setFamilies([u"Arial"])
         font4.setPointSize(16)
         font4.setWeight(QFont.Light)
         font4.setItalic(False)
@@ -804,7 +804,7 @@ class Ui_MainWindow(object):
         self.coloringPushButton = QPushButton(self.frame_8)
         self.coloringPushButton.setObjectName(u"coloringPushButton")
         font5 = QFont()
-        font5.setFamilies([u"Arial Medium"])
+        font5.setFamilies([u"Arial"])
         font5.setPointSize(13)
         font5.setWeight(QFont.Light)
         self.coloringPushButton.setFont(font5)
@@ -848,7 +848,7 @@ class Ui_MainWindow(object):
         self.mseLabel.setSizePolicy(sizePolicy7)
         self.mseLabel.setMinimumSize(QSize(200, 0))
         font6 = QFont()
-        font6.setFamilies([u"Arial Medium"])
+        font6.setFamilies([u"Arial"])
         font6.setPointSize(13)
         font6.setBold(True)
         self.mseLabel.setFont(font6)
@@ -1095,7 +1095,7 @@ class Ui_MainWindow(object):
         sizePolicy1.setHeightForWidth(self.frame_5.sizePolicy().hasHeightForWidth())
         self.frame_5.setSizePolicy(sizePolicy1)
         font7 = QFont()
-        font7.setFamilies([u"Arial Medium"])
+        font7.setFamilies([u"Arial"])
         font7.setWeight(QFont.Light)
         self.frame_5.setFont(font7)
         self.frame_5.setFrameShape(QFrame.NoFrame)
@@ -1254,7 +1254,7 @@ class Ui_MainWindow(object):
         self.modeFitButton.setMinimumSize(QSize(120, 70))
         self.modeFitButton.setMaximumSize(QSize(120, 70))
         font8 = QFont()
-        font8.setFamilies([u"Arial Medium"])
+        font8.setFamilies([u"Arial"])
         font8.setPointSize(16)
         font8.setWeight(QFont.Light)
         self.modeFitButton.setFont(font8)
@@ -1483,7 +1483,7 @@ class Ui_MainWindow(object):
         self.label_9.setObjectName(u"label_9")
         self.label_9.setGeometry(QRect(30, 50, 41, 20))
         font9 = QFont()
-        font9.setFamilies([u"Arial Medium"])
+        font9.setFamilies([u"Arial"])
         font9.setBold(False)
         self.label_9.setFont(font9)
         self.label_9.setStyleSheet(u"color: #5d5d5d; background-color: transparent;")
@@ -1523,7 +1523,7 @@ class Ui_MainWindow(object):
         self.pagesStackedWidget.setMinimumSize(QSize(410, 0))
         self.pagesStackedWidget.setMaximumSize(QSize(410, 10000))
         font10 = QFont()
-        font10.setFamilies([u"Arial Medium"])
+        font10.setFamilies([u"Arial"])
         font10.setPointSize(9)
         font10.setKerning(True)
         self.pagesStackedWidget.setFont(font10)
@@ -2049,7 +2049,7 @@ class Ui_MainWindow(object):
         self.swapXYButton.setSizePolicy(sizePolicy4)
         self.swapXYButton.setMinimumSize(QSize(208, 30))
         font11 = QFont()
-        font11.setFamilies([u"Arial Medium"])
+        font11.setFamilies([u"Arial"])
         font11.setBold(True)
         self.swapXYButton.setFont(font11)
         self.swapXYButton.setCursor(QCursor(Qt.ArrowCursor))
@@ -2115,7 +2115,7 @@ class Ui_MainWindow(object):
         self.newRowButton.setSizePolicy(sizePolicy4)
         self.newRowButton.setMinimumSize(QSize(86, 30))
         font12 = QFont()
-        font12.setFamilies([u"Arial Medium"])
+        font12.setFamilies([u"Arial"])
         font12.setPointSize(12)
         font12.setBold(True)
         self.newRowButton.setFont(font12)
@@ -2202,7 +2202,7 @@ class Ui_MainWindow(object):
         self.datasetListView.setMinimumSize(QSize(120, 412))
         self.datasetListView.setMaximumSize(QSize(120, 412))
         font13 = QFont()
-        font13.setFamilies([u"Arial Medium"])
+        font13.setFamilies([u"Arial"])
         font13.setPointSize(13)
         self.datasetListView.setFont(font13)
         self.datasetListView.setStyleSheet(u"QListView\n"
@@ -2761,7 +2761,7 @@ class Ui_MainWindow(object):
         self.exportToFitButton.setSizePolicy(sizePolicy4)
         self.exportToFitButton.setMinimumSize(QSize(170, 34))
         font14 = QFont()
-        font14.setFamilies([u"Arial Medium"])
+        font14.setFamilies([u"Arial"])
         font14.setPointSize(14)
         font14.setBold(True)
         self.exportToFitButton.setFont(font14)
@@ -2797,7 +2797,7 @@ class Ui_MainWindow(object):
         self.plotButton.setSizePolicy(sizePolicy4)
         self.plotButton.setMinimumSize(QSize(170, 34))
         font15 = QFont()
-        font15.setFamilies([u"Arial Medium"])
+        font15.setFamilies([u"Arial"])
         font15.setPointSize(14)
         font15.setBold(True)
         font15.setKerning(True)
