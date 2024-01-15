@@ -528,7 +528,7 @@ ListView::item:selected {
           <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="calibrationPage">
           <property name="sizePolicy">
@@ -705,43 +705,7 @@ background-color: transparent;
               <property name="spacing">
                <number>-1</number>
               </property>
-              <item row="4" column="0">
-               <widget class="QWidget" name="widget" native="true">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>300</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>500</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <layout class="QVBoxLayout" name="verticalLayout_2">
-                 <property name="leftMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>0</number>
-                 </property>
-                </layout>
-               </widget>
-              </item>
-              <item row="5" column="3">
+              <item row="6" column="3">
                <spacer name="verticalSpacer_7">
                 <property name="orientation">
                  <enum>Qt::Vertical</enum>
@@ -754,223 +718,7 @@ background-color: transparent;
                 </property>
                </spacer>
               </item>
-              <item row="2" column="4" rowspan="3">
-               <widget class="QWidget" name="widget_2" native="true">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>300</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>500</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <layout class="QVBoxLayout" name="verticalLayout_5">
-                 <property name="spacing">
-                  <number>-1</number>
-                 </property>
-                 <property name="leftMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>0</number>
-                 </property>
-                 <item>
-                  <widget class="QFrame" name="bgndSubtractQFrame">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>330</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="layoutDirection">
-                    <enum>Qt::LeftToRight</enum>
-                   </property>
-                   <layout class="QVBoxLayout" name="verticalLayout_7">
-                    <property name="spacing">
-                     <number>15</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>0</number>
-                    </property>
-                    <item>
-                     <widget class="QCheckBox" name="bgndSubtractXCheckBox">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="font">
-                       <font>
-                        <family>Roboto Medium</family>
-                        <pointsize>-1</pointsize>
-                       </font>
-                      </property>
-                      <property name="toolTip">
-                       <string notr="true">Background subtraction along X</string>
-                      </property>
-                      <property name="text">
-                       <string notr="true">Along X axis</string>
-                      </property>
-                      <property name="checked">
-                       <bool>false</bool>
-                      </property>
-                      <property name="tristate">
-                       <bool>false</bool>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QCheckBox" name="bgndSubtractYCheckBox">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="font">
-                       <font>
-                        <family>Roboto Medium</family>
-                        <pointsize>-1</pointsize>
-                       </font>
-                      </property>
-                      <property name="toolTip">
-                       <string notr="true">Background subtraction along Y</string>
-                      </property>
-                      <property name="text">
-                       <string notr="true">Along Y axis</string>
-                      </property>
-                      <property name="tristate">
-                       <bool>false</bool>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="filtersPushButton">
-                   <property name="text">
-                    <string>FILTERS</string>
-                   </property>
-                   <property name="checkable">
-                    <bool>true</bool>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QFrame" name="filterQFrame">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <layout class="QVBoxLayout" name="verticalLayout_12">
-                    <property name="spacing">
-                     <number>15</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>0</number>
-                    </property>
-                    <item>
-                     <widget class="QCheckBox" name="waveletCheckBox">
-                      <property name="font">
-                       <font>
-                        <family>Roboto Medium</family>
-                        <pointsize>-1</pointsize>
-                       </font>
-                      </property>
-                      <property name="toolTip">
-                       <string notr="true"/>
-                      </property>
-                      <property name="text">
-                       <string notr="true">Denoise</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QCheckBox" name="edgeFilterCheckBox">
-                      <property name="font">
-                       <font>
-                        <family>Roboto Medium</family>
-                        <pointsize>-1</pointsize>
-                       </font>
-                      </property>
-                      <property name="toolTip">
-                       <string notr="true"/>
-                      </property>
-                      <property name="text">
-                       <string notr="true">Edge</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QCheckBox" name="topHatCheckBox">
-                      <property name="font">
-                       <font>
-                        <family>Roboto Medium</family>
-                        <pointsize>-1</pointsize>
-                       </font>
-                      </property>
-                      <property name="toolTip">
-                       <string notr="true"/>
-                      </property>
-                      <property name="text">
-                       <string notr="true">Top-hat</string>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item row="2" column="0">
+              <item row="3" column="0">
                <widget class="QWidget" name="colorGridWidget" native="true">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -1190,19 +938,6 @@ background-color: transparent;
                 </layout>
                </widget>
               </item>
-              <item row="1" column="4">
-               <widget class="QPushButton" name="bgndSubtractPushButton">
-                <property name="text">
-                 <string>BACKGROUND SUBTRACT</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
               <item row="0" column="0">
                <widget class="QLabel" name="label_4">
                 <property name="enabled">
@@ -1248,26 +983,220 @@ background-color: transparent;
                 </property>
                </widget>
               </item>
-              <item row="1" column="0">
-               <widget class="QPushButton" name="coloringPushButton">
-                <property name="font">
-                 <font>
-                  <family>Roboto Medium</family>
-                  <bold>false</bold>
-                 </font>
+              <item row="3" column="4" rowspan="3">
+               <widget class="QWidget" name="widget_2" native="true">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
                 </property>
-                <property name="text">
-                 <string>COLORING</string>
+                <property name="minimumSize">
+                 <size>
+                  <width>300</width>
+                  <height>0</height>
+                 </size>
                 </property>
-                <property name="checkable">
-                 <bool>true</bool>
+                <property name="maximumSize">
+                 <size>
+                  <width>500</width>
+                  <height>16777215</height>
+                 </size>
                 </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_5">
+                 <property name="spacing">
+                  <number>-1</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QFrame" name="bgndSubtractQFrame">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>330</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="layoutDirection">
+                    <enum>Qt::LeftToRight</enum>
+                   </property>
+                   <layout class="QVBoxLayout" name="verticalLayout_7">
+                    <property name="spacing">
+                     <number>15</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QCheckBox" name="bgndSubtractXCheckBox">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <family>Roboto Medium</family>
+                        <pointsize>-1</pointsize>
+                       </font>
+                      </property>
+                      <property name="toolTip">
+                       <string notr="true">Background subtraction along X</string>
+                      </property>
+                      <property name="text">
+                       <string notr="true">Along X axis</string>
+                      </property>
+                      <property name="checked">
+                       <bool>false</bool>
+                      </property>
+                      <property name="tristate">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="bgndSubtractYCheckBox">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <family>Roboto Medium</family>
+                        <pointsize>-1</pointsize>
+                       </font>
+                      </property>
+                      <property name="toolTip">
+                       <string notr="true">Background subtraction along Y</string>
+                      </property>
+                      <property name="text">
+                       <string notr="true">Along Y axis</string>
+                      </property>
+                      <property name="tristate">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="label_39">
+                   <property name="styleSheet">
+                    <string notr="true">font-size: 13px</string>
+                   </property>
+                   <property name="text">
+                    <string>FILTERS</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="filterQFrame">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <layout class="QVBoxLayout" name="verticalLayout_12">
+                    <property name="spacing">
+                     <number>15</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QCheckBox" name="waveletCheckBox">
+                      <property name="font">
+                       <font>
+                        <family>Roboto Medium</family>
+                        <pointsize>-1</pointsize>
+                       </font>
+                      </property>
+                      <property name="toolTip">
+                       <string notr="true"/>
+                      </property>
+                      <property name="text">
+                       <string notr="true">Denoise</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="edgeFilterCheckBox">
+                      <property name="font">
+                       <font>
+                        <family>Roboto Medium</family>
+                        <pointsize>-1</pointsize>
+                       </font>
+                      </property>
+                      <property name="toolTip">
+                       <string notr="true"/>
+                      </property>
+                      <property name="text">
+                       <string notr="true">Edge</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="topHatCheckBox">
+                      <property name="font">
+                       <font>
+                        <family>Roboto Medium</family>
+                        <pointsize>-1</pointsize>
+                       </font>
+                      </property>
+                      <property name="toolTip">
+                       <string notr="true"/>
+                      </property>
+                      <property name="text">
+                       <string notr="true">Top-hat</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                </layout>
                </widget>
               </item>
-              <item row="4" column="5">
+              <item row="5" column="5">
                <spacer name="horizontalSpacer_13">
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
@@ -1282,6 +1211,62 @@ background-color: transparent;
                  </size>
                 </property>
                </spacer>
+              </item>
+              <item row="2" column="4">
+               <widget class="QLabel" name="label_38">
+                <property name="styleSheet">
+                 <string notr="true">font-size: 13px</string>
+                </property>
+                <property name="text">
+                 <string>BACKGROUND SUBTRACT</string>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="0">
+               <widget class="QWidget" name="widget" native="true">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>300</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>500</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_2">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                </layout>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_40">
+                <property name="styleSheet">
+                 <string notr="true">font-size: 13px</string>
+                </property>
+                <property name="text">
+                 <string>COLORING</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </widget>
@@ -1371,6 +1356,9 @@ background-color: transparent;
                   <bold>true</bold>
                  </font>
                 </property>
+                <property name="styleSheet">
+                 <string notr="true">font-size: 13px</string>
+                </property>
                 <property name="text">
                  <string>MSE:  - GHz²   (+0.00%)</string>
                 </property>
@@ -1412,6 +1400,9 @@ background-color: transparent;
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="styleSheet">
+                 <string notr="true">font-size: 13px</string>
+                </property>
                 <property name="text">
                  <string>TRANSITIONS</string>
                 </property>
@@ -1424,6 +1415,9 @@ background-color: transparent;
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">font-size: 13px</string>
                 </property>
                 <property name="text">
                  <string>POINTS ADDED</string>
@@ -1493,6 +1487,9 @@ background-color: transparent;
               </item>
               <item row="7" column="0">
                <widget class="QLabel" name="label_33">
+                <property name="styleSheet">
+                 <string notr="true">font-size: 13px</string>
+                </property>
                 <property name="text">
                  <string>PHOTONS</string>
                 </property>
@@ -1583,6 +1580,9 @@ background-color: transparent;
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">font-size: 13px</string>
                 </property>
                 <property name="text">
                  <string>EVALS COUNT</string>
@@ -1681,6 +1681,9 @@ background-color: transparent;
                   <height>16777215</height>
                  </size>
                 </property>
+                <property name="styleSheet">
+                 <string notr="true">font-size: 13px</string>
+                </property>
                 <property name="text">
                  <string>STATUS:</string>
                 </property>
@@ -1706,6 +1709,9 @@ background-color: transparent;
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">font-size: 13px</string>
                 </property>
                 <property name="text">
                  <string>INITIAL STATE</string>
@@ -1934,6 +1940,9 @@ QSpinBox::down-button:pressed {
                   <bold>true</bold>
                  </font>
                 </property>
+                <property name="styleSheet">
+                 <string notr="true">font-size: 13px</string>
+                </property>
                 <property name="text">
                  <string>MSE:  - GHz²   (+0.00%)</string>
                 </property>
@@ -1952,6 +1961,9 @@ QSpinBox::down-button:pressed {
                   <width>0</width>
                   <height>0</height>
                  </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">font-size: 13px</string>
                 </property>
                 <property name="text">
                  <string>TOLERANCE</string>
@@ -2007,6 +2019,9 @@ QSpinBox::down-button:pressed {
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="styleSheet">
+                 <string notr="true">font-size: 13px</string>
+                </property>
                 <property name="text">
                  <string>OPTIMIZER</string>
                 </property>
@@ -2048,6 +2063,9 @@ QSpinBox::down-button:pressed {
               </item>
               <item row="4" column="0">
                <widget class="QLabel" name="label_49">
+                <property name="styleSheet">
+                 <string notr="true">font-size: 13px</string>
+                </property>
                 <property name="text">
                  <string>STATUS:</string>
                 </property>

@@ -560,129 +560,9 @@ class Ui_MainWindow(object):
 #endif
         self.gridLayout_5.setObjectName(u"gridLayout_5")
         self.gridLayout_5.setContentsMargins(20, 0, 0, 0)
-        self.widget = QWidget(self.frame_8)
-        self.widget.setObjectName(u"widget")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
-        sizePolicy5.setHorizontalStretch(0)
-        sizePolicy5.setVerticalStretch(0)
-        sizePolicy5.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
-        self.widget.setSizePolicy(sizePolicy5)
-        self.widget.setMinimumSize(QSize(300, 0))
-        self.widget.setMaximumSize(QSize(500, 16777215))
-        self.verticalLayout_2 = QVBoxLayout(self.widget)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
-
-        self.gridLayout_5.addWidget(self.widget, 4, 0, 1, 1)
-
         self.verticalSpacer_7 = QSpacerItem(20, 5, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.gridLayout_5.addItem(self.verticalSpacer_7, 5, 3, 1, 1)
-
-        self.widget_2 = QWidget(self.frame_8)
-        self.widget_2.setObjectName(u"widget_2")
-        sizePolicy5.setHeightForWidth(self.widget_2.sizePolicy().hasHeightForWidth())
-        self.widget_2.setSizePolicy(sizePolicy5)
-        self.widget_2.setMinimumSize(QSize(300, 0))
-        self.widget_2.setMaximumSize(QSize(500, 16777215))
-        self.verticalLayout_5 = QVBoxLayout(self.widget_2)
-#ifndef Q_OS_MAC
-        self.verticalLayout_5.setSpacing(-1)
-#endif
-        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
-        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
-        self.bgndSubtractQFrame = QFrame(self.widget_2)
-        self.bgndSubtractQFrame.setObjectName(u"bgndSubtractQFrame")
-        sizePolicy2.setHeightForWidth(self.bgndSubtractQFrame.sizePolicy().hasHeightForWidth())
-        self.bgndSubtractQFrame.setSizePolicy(sizePolicy2)
-        self.bgndSubtractQFrame.setMinimumSize(QSize(330, 0))
-        self.bgndSubtractQFrame.setLayoutDirection(Qt.LeftToRight)
-        self.verticalLayout_7 = QVBoxLayout(self.bgndSubtractQFrame)
-        self.verticalLayout_7.setSpacing(15)
-        self.verticalLayout_7.setObjectName(u"verticalLayout_7")
-        self.verticalLayout_7.setContentsMargins(-1, 0, -1, 0)
-        self.bgndSubtractXCheckBox = QCheckBox(self.bgndSubtractQFrame)
-        self.bgndSubtractXCheckBox.setObjectName(u"bgndSubtractXCheckBox")
-        sizePolicy4.setHeightForWidth(self.bgndSubtractXCheckBox.sizePolicy().hasHeightForWidth())
-        self.bgndSubtractXCheckBox.setSizePolicy(sizePolicy4)
-        self.bgndSubtractXCheckBox.setFont(font1)
-#if QT_CONFIG(tooltip)
-        self.bgndSubtractXCheckBox.setToolTip(u"Background subtraction along X")
-#endif // QT_CONFIG(tooltip)
-        self.bgndSubtractXCheckBox.setText(u"Along X axis")
-        self.bgndSubtractXCheckBox.setChecked(False)
-        self.bgndSubtractXCheckBox.setTristate(False)
-
-        self.verticalLayout_7.addWidget(self.bgndSubtractXCheckBox)
-
-        self.bgndSubtractYCheckBox = QCheckBox(self.bgndSubtractQFrame)
-        self.bgndSubtractYCheckBox.setObjectName(u"bgndSubtractYCheckBox")
-        sizePolicy4.setHeightForWidth(self.bgndSubtractYCheckBox.sizePolicy().hasHeightForWidth())
-        self.bgndSubtractYCheckBox.setSizePolicy(sizePolicy4)
-        self.bgndSubtractYCheckBox.setFont(font1)
-#if QT_CONFIG(tooltip)
-        self.bgndSubtractYCheckBox.setToolTip(u"Background subtraction along Y")
-#endif // QT_CONFIG(tooltip)
-        self.bgndSubtractYCheckBox.setText(u"Along Y axis")
-        self.bgndSubtractYCheckBox.setTristate(False)
-
-        self.verticalLayout_7.addWidget(self.bgndSubtractYCheckBox)
-
-
-        self.verticalLayout_5.addWidget(self.bgndSubtractQFrame)
-
-        self.filtersPushButton = QPushButton(self.widget_2)
-        self.filtersPushButton.setObjectName(u"filtersPushButton")
-        self.filtersPushButton.setCheckable(True)
-        self.filtersPushButton.setChecked(True)
-
-        self.verticalLayout_5.addWidget(self.filtersPushButton)
-
-        self.filterQFrame = QFrame(self.widget_2)
-        self.filterQFrame.setObjectName(u"filterQFrame")
-        sizePolicy2.setHeightForWidth(self.filterQFrame.sizePolicy().hasHeightForWidth())
-        self.filterQFrame.setSizePolicy(sizePolicy2)
-        self.filterQFrame.setMinimumSize(QSize(0, 0))
-        self.filterQFrame.setMaximumSize(QSize(16777215, 16777215))
-        self.verticalLayout_12 = QVBoxLayout(self.filterQFrame)
-        self.verticalLayout_12.setSpacing(15)
-        self.verticalLayout_12.setObjectName(u"verticalLayout_12")
-        self.verticalLayout_12.setContentsMargins(-1, 0, -1, 0)
-        self.waveletCheckBox = QCheckBox(self.filterQFrame)
-        self.waveletCheckBox.setObjectName(u"waveletCheckBox")
-        self.waveletCheckBox.setFont(font1)
-#if QT_CONFIG(tooltip)
-        self.waveletCheckBox.setToolTip(u"")
-#endif // QT_CONFIG(tooltip)
-        self.waveletCheckBox.setText(u"Denoise")
-
-        self.verticalLayout_12.addWidget(self.waveletCheckBox)
-
-        self.edgeFilterCheckBox = QCheckBox(self.filterQFrame)
-        self.edgeFilterCheckBox.setObjectName(u"edgeFilterCheckBox")
-        self.edgeFilterCheckBox.setFont(font1)
-#if QT_CONFIG(tooltip)
-        self.edgeFilterCheckBox.setToolTip(u"")
-#endif // QT_CONFIG(tooltip)
-        self.edgeFilterCheckBox.setText(u"Edge")
-
-        self.verticalLayout_12.addWidget(self.edgeFilterCheckBox)
-
-        self.topHatCheckBox = QCheckBox(self.filterQFrame)
-        self.topHatCheckBox.setObjectName(u"topHatCheckBox")
-        self.topHatCheckBox.setFont(font1)
-#if QT_CONFIG(tooltip)
-        self.topHatCheckBox.setToolTip(u"")
-#endif // QT_CONFIG(tooltip)
-        self.topHatCheckBox.setText(u"Top-hat")
-
-        self.verticalLayout_12.addWidget(self.topHatCheckBox)
-
-
-        self.verticalLayout_5.addWidget(self.filterQFrame)
-
-
-        self.gridLayout_5.addWidget(self.widget_2, 2, 4, 3, 1)
+        self.gridLayout_5.addItem(self.verticalSpacer_7, 6, 3, 1, 1)
 
         self.colorGridWidget = QWidget(self.frame_8)
         self.colorGridWidget.setObjectName(u"colorGridWidget")
@@ -758,11 +638,11 @@ class Ui_MainWindow(object):
         icon7.addFile(u":/icons/gray.png", QSize(), QIcon.Normal, QIcon.Off)
         self.colorComboBox.addItem(icon7, u"gray")
         self.colorComboBox.setObjectName(u"colorComboBox")
-        sizePolicy6 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        sizePolicy6.setHorizontalStretch(0)
-        sizePolicy6.setVerticalStretch(0)
-        sizePolicy6.setHeightForWidth(self.colorComboBox.sizePolicy().hasHeightForWidth())
-        self.colorComboBox.setSizePolicy(sizePolicy6)
+        sizePolicy5 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.colorComboBox.sizePolicy().hasHeightForWidth())
+        self.colorComboBox.setSizePolicy(sizePolicy5)
         self.colorComboBox.setMinimumSize(QSize(100, 30))
 #if QT_CONFIG(tooltip)
         self.colorComboBox.setToolTip(u"")
@@ -773,20 +653,13 @@ class Ui_MainWindow(object):
         self.gridLayout_9.addWidget(self.colorComboBox, 1, 0, 1, 2)
 
 
-        self.gridLayout_5.addWidget(self.colorGridWidget, 2, 0, 1, 1)
-
-        self.bgndSubtractPushButton = QPushButton(self.frame_8)
-        self.bgndSubtractPushButton.setObjectName(u"bgndSubtractPushButton")
-        self.bgndSubtractPushButton.setCheckable(True)
-        self.bgndSubtractPushButton.setChecked(True)
-
-        self.gridLayout_5.addWidget(self.bgndSubtractPushButton, 1, 4, 1, 1)
+        self.gridLayout_5.addWidget(self.colorGridWidget, 3, 0, 1, 1)
 
         self.label_4 = QLabel(self.frame_8)
         self.label_4.setObjectName(u"label_4")
         self.label_4.setEnabled(True)
-        sizePolicy6.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
-        self.label_4.setSizePolicy(sizePolicy6)
+        sizePolicy5.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
+        self.label_4.setSizePolicy(sizePolicy5)
         self.label_4.setMinimumSize(QSize(0, 23))
         font3 = QFont()
         font3.setFamilies([u"Roboto Medium"])
@@ -801,20 +674,140 @@ class Ui_MainWindow(object):
 
         self.gridLayout_5.addWidget(self.label_4, 0, 0, 1, 1)
 
-        self.coloringPushButton = QPushButton(self.frame_8)
-        self.coloringPushButton.setObjectName(u"coloringPushButton")
-        font4 = QFont()
-        font4.setFamilies([u"Roboto Medium"])
-        font4.setBold(False)
-        self.coloringPushButton.setFont(font4)
-        self.coloringPushButton.setCheckable(True)
-        self.coloringPushButton.setChecked(True)
+        self.widget_2 = QWidget(self.frame_8)
+        self.widget_2.setObjectName(u"widget_2")
+        sizePolicy6 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.widget_2.sizePolicy().hasHeightForWidth())
+        self.widget_2.setSizePolicy(sizePolicy6)
+        self.widget_2.setMinimumSize(QSize(300, 0))
+        self.widget_2.setMaximumSize(QSize(500, 16777215))
+        self.verticalLayout_5 = QVBoxLayout(self.widget_2)
+#ifndef Q_OS_MAC
+        self.verticalLayout_5.setSpacing(-1)
+#endif
+        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
+        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
+        self.bgndSubtractQFrame = QFrame(self.widget_2)
+        self.bgndSubtractQFrame.setObjectName(u"bgndSubtractQFrame")
+        sizePolicy2.setHeightForWidth(self.bgndSubtractQFrame.sizePolicy().hasHeightForWidth())
+        self.bgndSubtractQFrame.setSizePolicy(sizePolicy2)
+        self.bgndSubtractQFrame.setMinimumSize(QSize(330, 0))
+        self.bgndSubtractQFrame.setLayoutDirection(Qt.LeftToRight)
+        self.verticalLayout_7 = QVBoxLayout(self.bgndSubtractQFrame)
+        self.verticalLayout_7.setSpacing(15)
+        self.verticalLayout_7.setObjectName(u"verticalLayout_7")
+        self.verticalLayout_7.setContentsMargins(-1, 0, -1, 0)
+        self.bgndSubtractXCheckBox = QCheckBox(self.bgndSubtractQFrame)
+        self.bgndSubtractXCheckBox.setObjectName(u"bgndSubtractXCheckBox")
+        sizePolicy4.setHeightForWidth(self.bgndSubtractXCheckBox.sizePolicy().hasHeightForWidth())
+        self.bgndSubtractXCheckBox.setSizePolicy(sizePolicy4)
+        self.bgndSubtractXCheckBox.setFont(font1)
+#if QT_CONFIG(tooltip)
+        self.bgndSubtractXCheckBox.setToolTip(u"Background subtraction along X")
+#endif // QT_CONFIG(tooltip)
+        self.bgndSubtractXCheckBox.setText(u"Along X axis")
+        self.bgndSubtractXCheckBox.setChecked(False)
+        self.bgndSubtractXCheckBox.setTristate(False)
 
-        self.gridLayout_5.addWidget(self.coloringPushButton, 1, 0, 1, 1)
+        self.verticalLayout_7.addWidget(self.bgndSubtractXCheckBox)
+
+        self.bgndSubtractYCheckBox = QCheckBox(self.bgndSubtractQFrame)
+        self.bgndSubtractYCheckBox.setObjectName(u"bgndSubtractYCheckBox")
+        sizePolicy4.setHeightForWidth(self.bgndSubtractYCheckBox.sizePolicy().hasHeightForWidth())
+        self.bgndSubtractYCheckBox.setSizePolicy(sizePolicy4)
+        self.bgndSubtractYCheckBox.setFont(font1)
+#if QT_CONFIG(tooltip)
+        self.bgndSubtractYCheckBox.setToolTip(u"Background subtraction along Y")
+#endif // QT_CONFIG(tooltip)
+        self.bgndSubtractYCheckBox.setText(u"Along Y axis")
+        self.bgndSubtractYCheckBox.setTristate(False)
+
+        self.verticalLayout_7.addWidget(self.bgndSubtractYCheckBox)
+
+
+        self.verticalLayout_5.addWidget(self.bgndSubtractQFrame)
+
+        self.label_39 = QLabel(self.widget_2)
+        self.label_39.setObjectName(u"label_39")
+        self.label_39.setStyleSheet(u"font-size: 13px")
+
+        self.verticalLayout_5.addWidget(self.label_39)
+
+        self.filterQFrame = QFrame(self.widget_2)
+        self.filterQFrame.setObjectName(u"filterQFrame")
+        sizePolicy2.setHeightForWidth(self.filterQFrame.sizePolicy().hasHeightForWidth())
+        self.filterQFrame.setSizePolicy(sizePolicy2)
+        self.filterQFrame.setMinimumSize(QSize(0, 0))
+        self.filterQFrame.setMaximumSize(QSize(16777215, 16777215))
+        self.verticalLayout_12 = QVBoxLayout(self.filterQFrame)
+        self.verticalLayout_12.setSpacing(15)
+        self.verticalLayout_12.setObjectName(u"verticalLayout_12")
+        self.verticalLayout_12.setContentsMargins(-1, 0, -1, 0)
+        self.waveletCheckBox = QCheckBox(self.filterQFrame)
+        self.waveletCheckBox.setObjectName(u"waveletCheckBox")
+        self.waveletCheckBox.setFont(font1)
+#if QT_CONFIG(tooltip)
+        self.waveletCheckBox.setToolTip(u"")
+#endif // QT_CONFIG(tooltip)
+        self.waveletCheckBox.setText(u"Denoise")
+
+        self.verticalLayout_12.addWidget(self.waveletCheckBox)
+
+        self.edgeFilterCheckBox = QCheckBox(self.filterQFrame)
+        self.edgeFilterCheckBox.setObjectName(u"edgeFilterCheckBox")
+        self.edgeFilterCheckBox.setFont(font1)
+#if QT_CONFIG(tooltip)
+        self.edgeFilterCheckBox.setToolTip(u"")
+#endif // QT_CONFIG(tooltip)
+        self.edgeFilterCheckBox.setText(u"Edge")
+
+        self.verticalLayout_12.addWidget(self.edgeFilterCheckBox)
+
+        self.topHatCheckBox = QCheckBox(self.filterQFrame)
+        self.topHatCheckBox.setObjectName(u"topHatCheckBox")
+        self.topHatCheckBox.setFont(font1)
+#if QT_CONFIG(tooltip)
+        self.topHatCheckBox.setToolTip(u"")
+#endif // QT_CONFIG(tooltip)
+        self.topHatCheckBox.setText(u"Top-hat")
+
+        self.verticalLayout_12.addWidget(self.topHatCheckBox)
+
+
+        self.verticalLayout_5.addWidget(self.filterQFrame)
+
+
+        self.gridLayout_5.addWidget(self.widget_2, 3, 4, 3, 1)
 
         self.horizontalSpacer_13 = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
-        self.gridLayout_5.addItem(self.horizontalSpacer_13, 4, 5, 1, 1)
+        self.gridLayout_5.addItem(self.horizontalSpacer_13, 5, 5, 1, 1)
+
+        self.label_38 = QLabel(self.frame_8)
+        self.label_38.setObjectName(u"label_38")
+        self.label_38.setStyleSheet(u"font-size: 13px")
+
+        self.gridLayout_5.addWidget(self.label_38, 2, 4, 1, 1)
+
+        self.widget = QWidget(self.frame_8)
+        self.widget.setObjectName(u"widget")
+        sizePolicy6.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
+        self.widget.setSizePolicy(sizePolicy6)
+        self.widget.setMinimumSize(QSize(300, 0))
+        self.widget.setMaximumSize(QSize(500, 16777215))
+        self.verticalLayout_2 = QVBoxLayout(self.widget)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
+
+        self.gridLayout_5.addWidget(self.widget, 5, 0, 1, 1)
+
+        self.label_40 = QLabel(self.frame_8)
+        self.label_40.setObjectName(u"label_40")
+        self.label_40.setStyleSheet(u"font-size: 13px")
+
+        self.gridLayout_5.addWidget(self.label_40, 2, 0, 1, 1)
 
 
         self.horizontalLayout.addWidget(self.frame_8)
@@ -846,10 +839,11 @@ class Ui_MainWindow(object):
         sizePolicy7.setHeightForWidth(self.mseLabel.sizePolicy().hasHeightForWidth())
         self.mseLabel.setSizePolicy(sizePolicy7)
         self.mseLabel.setMinimumSize(QSize(200, 0))
-        font5 = QFont()
-        font5.setFamilies([u"Roboto Medium"])
-        font5.setBold(True)
-        self.mseLabel.setFont(font5)
+        font4 = QFont()
+        font4.setFamilies([u"Roboto Medium"])
+        font4.setBold(True)
+        self.mseLabel.setFont(font4)
+        self.mseLabel.setStyleSheet(u"font-size: 13px")
 
         self.gridLayout_3.addWidget(self.mseLabel, 3, 6, 1, 1)
 
@@ -866,6 +860,7 @@ class Ui_MainWindow(object):
         self.label_44.setObjectName(u"label_44")
         sizePolicy7.setHeightForWidth(self.label_44.sizePolicy().hasHeightForWidth())
         self.label_44.setSizePolicy(sizePolicy7)
+        self.label_44.setStyleSheet(u"font-size: 13px")
 
         self.gridLayout_3.addWidget(self.label_44, 3, 0, 1, 1)
 
@@ -873,6 +868,7 @@ class Ui_MainWindow(object):
         self.label_43.setObjectName(u"label_43")
         sizePolicy7.setHeightForWidth(self.label_43.sizePolicy().hasHeightForWidth())
         self.label_43.setSizePolicy(sizePolicy7)
+        self.label_43.setStyleSheet(u"font-size: 13px")
 
         self.gridLayout_3.addWidget(self.label_43, 6, 0, 1, 1)
 
@@ -901,6 +897,7 @@ class Ui_MainWindow(object):
 
         self.label_33 = QLabel(self.frame_4)
         self.label_33.setObjectName(u"label_33")
+        self.label_33.setStyleSheet(u"font-size: 13px")
 
         self.gridLayout_3.addWidget(self.label_33, 7, 0, 1, 1)
 
@@ -912,13 +909,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_6.setContentsMargins(0, 0, 16, 0)
         self.numericalSpectrumSettingsLabel = QLabel(self.numericalSpectrumSettingsTitleWidget)
         self.numericalSpectrumSettingsLabel.setObjectName(u"numericalSpectrumSettingsLabel")
-        sizePolicy6.setHeightForWidth(self.numericalSpectrumSettingsLabel.sizePolicy().hasHeightForWidth())
-        self.numericalSpectrumSettingsLabel.setSizePolicy(sizePolicy6)
-        font6 = QFont()
-        font6.setFamilies([u"Roboto Medium"])
-        font6.setWeight(QFont.Light)
-        font6.setItalic(False)
-        self.numericalSpectrumSettingsLabel.setFont(font6)
+        sizePolicy5.setHeightForWidth(self.numericalSpectrumSettingsLabel.sizePolicy().hasHeightForWidth())
+        self.numericalSpectrumSettingsLabel.setSizePolicy(sizePolicy5)
+        font5 = QFont()
+        font5.setFamilies([u"Roboto Medium"])
+        font5.setWeight(QFont.Light)
+        font5.setItalic(False)
+        self.numericalSpectrumSettingsLabel.setFont(font5)
         self.numericalSpectrumSettingsLabel.setStyleSheet(u"color: rgb(190, 130, 250);\n"
 " font-size: 16px;")
         self.numericalSpectrumSettingsLabel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
@@ -948,6 +945,7 @@ class Ui_MainWindow(object):
         self.label_42.setObjectName(u"label_42")
         sizePolicy7.setHeightForWidth(self.label_42.sizePolicy().hasHeightForWidth())
         self.label_42.setSizePolicy(sizePolicy7)
+        self.label_42.setStyleSheet(u"font-size: 13px")
 
         self.gridLayout_3.addWidget(self.label_42, 5, 0, 1, 1)
 
@@ -988,6 +986,7 @@ class Ui_MainWindow(object):
         sizePolicy9.setHeightForWidth(self.label_46.sizePolicy().hasHeightForWidth())
         self.label_46.setSizePolicy(sizePolicy9)
         self.label_46.setMaximumSize(QSize(200, 16777215))
+        self.label_46.setStyleSheet(u"font-size: 13px")
 
         self.gridLayout_3.addWidget(self.label_46, 4, 6, 1, 1)
 
@@ -999,6 +998,7 @@ class Ui_MainWindow(object):
         self.label.setObjectName(u"label")
         sizePolicy7.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
         self.label.setSizePolicy(sizePolicy7)
+        self.label.setStyleSheet(u"font-size: 13px")
 
         self.gridLayout_3.addWidget(self.label, 4, 0, 1, 1)
 
@@ -1120,7 +1120,8 @@ class Ui_MainWindow(object):
         self.mseLabel_2.setSizePolicy(sizePolicy4)
         self.mseLabel_2.setMinimumSize(QSize(200, 0))
         self.mseLabel_2.setMaximumSize(QSize(200, 16777215))
-        self.mseLabel_2.setFont(font5)
+        self.mseLabel_2.setFont(font4)
+        self.mseLabel_2.setStyleSheet(u"font-size: 13px")
 
         self.gridLayout_6.addWidget(self.mseLabel_2, 1, 7, 1, 1)
 
@@ -1129,6 +1130,7 @@ class Ui_MainWindow(object):
         sizePolicy7.setHeightForWidth(self.label_8.sizePolicy().hasHeightForWidth())
         self.label_8.setSizePolicy(sizePolicy7)
         self.label_8.setMinimumSize(QSize(0, 0))
+        self.label_8.setStyleSheet(u"font-size: 13px")
 
         self.gridLayout_6.addWidget(self.label_8, 2, 0, 1, 1)
 
@@ -1149,15 +1151,16 @@ class Ui_MainWindow(object):
         self.label_47.setObjectName(u"label_47")
         sizePolicy7.setHeightForWidth(self.label_47.sizePolicy().hasHeightForWidth())
         self.label_47.setSizePolicy(sizePolicy7)
+        self.label_47.setStyleSheet(u"font-size: 13px")
 
         self.gridLayout_6.addWidget(self.label_47, 1, 0, 1, 1)
 
         self.label_45 = QLabel(self.frame_5)
         self.label_45.setObjectName(u"label_45")
-        sizePolicy6.setHeightForWidth(self.label_45.sizePolicy().hasHeightForWidth())
-        self.label_45.setSizePolicy(sizePolicy6)
+        sizePolicy5.setHeightForWidth(self.label_45.sizePolicy().hasHeightForWidth())
+        self.label_45.setSizePolicy(sizePolicy5)
         self.label_45.setMinimumSize(QSize(0, 23))
-        self.label_45.setFont(font6)
+        self.label_45.setFont(font5)
         self.label_45.setStyleSheet(u"color: rgb(190, 130, 250);\n"
 " font-size: 16px;")
         self.label_45.setIndent(-1)
@@ -1166,6 +1169,7 @@ class Ui_MainWindow(object):
 
         self.label_49 = QLabel(self.frame_5)
         self.label_49.setObjectName(u"label_49")
+        self.label_49.setStyleSheet(u"font-size: 13px")
 
         self.gridLayout_6.addWidget(self.label_49, 4, 0, 1, 1)
 
@@ -1488,7 +1492,10 @@ class Ui_MainWindow(object):
         self.label_9 = QLabel(self.mplFigureCanvas)
         self.label_9.setObjectName(u"label_9")
         self.label_9.setGeometry(QRect(30, 50, 41, 20))
-        self.label_9.setFont(font4)
+        font6 = QFont()
+        font6.setFamilies([u"Roboto Medium"])
+        font6.setBold(False)
+        self.label_9.setFont(font6)
         self.label_9.setStyleSheet(u"color: #5d5d5d; background-color: transparent;")
         self.label_9.setAlignment(Qt.AlignCenter)
         self.label_27 = QLabel(self.mplFigureCanvas)
@@ -1729,8 +1736,8 @@ class Ui_MainWindow(object):
 
         self.label_15 = QLabel(self.calibrateXGridFrame)
         self.label_15.setObjectName(u"label_15")
-        sizePolicy5.setHeightForWidth(self.label_15.sizePolicy().hasHeightForWidth())
-        self.label_15.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.label_15.sizePolicy().hasHeightForWidth())
+        self.label_15.setSizePolicy(sizePolicy6)
         self.label_15.setFont(font1)
         self.label_15.setText(u"<html><head/><body><p align=\"right\">X<span style=\" vertical-align:sub;\">1</span></p></body></html>")
 
@@ -1770,8 +1777,8 @@ class Ui_MainWindow(object):
 
         self.label_16 = QLabel(self.calibrateXGridFrame)
         self.label_16.setObjectName(u"label_16")
-        sizePolicy5.setHeightForWidth(self.label_16.sizePolicy().hasHeightForWidth())
-        self.label_16.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.label_16.sizePolicy().hasHeightForWidth())
+        self.label_16.setSizePolicy(sizePolicy6)
         self.label_16.setText(u"<html><head/><body><p align=\"right\">X<span style=\" vertical-align:sub;\">2</span></p></body></html>")
 
         self.gridLayout_10.addWidget(self.label_16, 2, 2, 1, 1)
@@ -1800,8 +1807,8 @@ class Ui_MainWindow(object):
 
         self.label_17 = QLabel(self.calibrateXGridFrame)
         self.label_17.setObjectName(u"label_17")
-        sizePolicy5.setHeightForWidth(self.label_17.sizePolicy().hasHeightForWidth())
-        self.label_17.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.label_17.sizePolicy().hasHeightForWidth())
+        self.label_17.setSizePolicy(sizePolicy6)
         self.label_17.setMaximumSize(QSize(16777215, 16777215))
         self.label_17.setText(u"<html><head/><body><p align=\"right\">X<span style=\" vertical-align:sub;\">1</span>'</p></body></html>")
 
@@ -1832,8 +1839,8 @@ class Ui_MainWindow(object):
 
         self.label_18 = QLabel(self.calibrateXGridFrame)
         self.label_18.setObjectName(u"label_18")
-        sizePolicy5.setHeightForWidth(self.label_18.sizePolicy().hasHeightForWidth())
-        self.label_18.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.label_18.sizePolicy().hasHeightForWidth())
+        self.label_18.setSizePolicy(sizePolicy6)
         self.label_18.setText(u"<html><head/><body><p align=\"right\">X<span style=\" vertical-align:sub;\">2</span>'</p></body></html>")
 
         self.gridLayout_10.addWidget(self.label_18, 2, 5, 1, 1)
@@ -1940,8 +1947,8 @@ class Ui_MainWindow(object):
 
         self.label_22 = QLabel(self.calibrateYGridFrame)
         self.label_22.setObjectName(u"label_22")
-        sizePolicy5.setHeightForWidth(self.label_22.sizePolicy().hasHeightForWidth())
-        self.label_22.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.label_22.sizePolicy().hasHeightForWidth())
+        self.label_22.setSizePolicy(sizePolicy6)
         self.label_22.setText(u"<html><head/><body><p align=\"right\">Y<span style=\" vertical-align:sub;\">2</span>'</p></body></html>")
 
         self.gridLayout_11.addWidget(self.label_22, 2, 6, 1, 1)
@@ -1980,8 +1987,8 @@ class Ui_MainWindow(object):
 
         self.label_20 = QLabel(self.calibrateYGridFrame)
         self.label_20.setObjectName(u"label_20")
-        sizePolicy5.setHeightForWidth(self.label_20.sizePolicy().hasHeightForWidth())
-        self.label_20.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.label_20.sizePolicy().hasHeightForWidth())
+        self.label_20.setSizePolicy(sizePolicy6)
         self.label_20.setFont(font1)
         self.label_20.setText(u"<html><head/><body><p align=\"right\">Y<span style=\" vertical-align:sub;\">2</span></p></body></html>")
 
@@ -2013,8 +2020,8 @@ class Ui_MainWindow(object):
 
         self.label_21 = QLabel(self.calibrateYGridFrame)
         self.label_21.setObjectName(u"label_21")
-        sizePolicy5.setHeightForWidth(self.label_21.sizePolicy().hasHeightForWidth())
-        self.label_21.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.label_21.sizePolicy().hasHeightForWidth())
+        self.label_21.setSizePolicy(sizePolicy6)
         self.label_21.setText(u"<html><head/><body><p align=\"right\">Y<span style=\" vertical-align:sub;\">1</span>'</p></body></html>")
 
         self.gridLayout_11.addWidget(self.label_21, 1, 6, 1, 1)
@@ -2025,8 +2032,8 @@ class Ui_MainWindow(object):
 
         self.label_19 = QLabel(self.calibrateYGridFrame)
         self.label_19.setObjectName(u"label_19")
-        sizePolicy5.setHeightForWidth(self.label_19.sizePolicy().hasHeightForWidth())
-        self.label_19.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.label_19.sizePolicy().hasHeightForWidth())
+        self.label_19.setSizePolicy(sizePolicy6)
         self.label_19.setText(u"<html><head/><body><p align=\"right\">Y<span style=\" vertical-align:sub;\">1</span></p></body></html>")
 
         self.gridLayout_11.addWidget(self.label_19, 1, 3, 1, 1)
@@ -2065,7 +2072,7 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.swapXYButton.sizePolicy().hasHeightForWidth())
         self.swapXYButton.setSizePolicy(sizePolicy4)
         self.swapXYButton.setMinimumSize(QSize(208, 30))
-        self.swapXYButton.setFont(font5)
+        self.swapXYButton.setFont(font4)
         self.swapXYButton.setCursor(QCursor(Qt.ArrowCursor))
         self.swapXYButton.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
@@ -2128,7 +2135,7 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.newRowButton.sizePolicy().hasHeightForWidth())
         self.newRowButton.setSizePolicy(sizePolicy4)
         self.newRowButton.setMinimumSize(QSize(86, 30))
-        self.newRowButton.setFont(font5)
+        self.newRowButton.setFont(font4)
 #if QT_CONFIG(tooltip)
         self.newRowButton.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
@@ -2153,11 +2160,11 @@ class Ui_MainWindow(object):
 
         self.clearAllButton = QPushButton(self.widget_9)
         self.clearAllButton.setObjectName(u"clearAllButton")
-        sizePolicy6.setHeightForWidth(self.clearAllButton.sizePolicy().hasHeightForWidth())
-        self.clearAllButton.setSizePolicy(sizePolicy6)
+        sizePolicy5.setHeightForWidth(self.clearAllButton.sizePolicy().hasHeightForWidth())
+        self.clearAllButton.setSizePolicy(sizePolicy5)
         self.clearAllButton.setMinimumSize(QSize(109, 30))
         self.clearAllButton.setMaximumSize(QSize(109, 30))
-        self.clearAllButton.setFont(font5)
+        self.clearAllButton.setFont(font4)
 #if QT_CONFIG(tooltip)
         self.clearAllButton.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
@@ -2188,8 +2195,8 @@ class Ui_MainWindow(object):
 
         self.label_32 = QLabel(self.frame_10)
         self.label_32.setObjectName(u"label_32")
-        sizePolicy6.setHeightForWidth(self.label_32.sizePolicy().hasHeightForWidth())
-        self.label_32.setSizePolicy(sizePolicy6)
+        sizePolicy5.setHeightForWidth(self.label_32.sizePolicy().hasHeightForWidth())
+        self.label_32.setSizePolicy(sizePolicy5)
         self.label_32.setMinimumSize(QSize(0, 23))
         self.label_32.setFont(font3)
         self.label_32.setStyleSheet(u"color: rgb(190, 130, 250);\n"
@@ -2282,8 +2289,8 @@ class Ui_MainWindow(object):
         self.tagDressedGroupBox = QGroupBox(self.widget_11)
         self.tagDressedGroupBox.setObjectName(u"tagDressedGroupBox")
         self.tagDressedGroupBox.setEnabled(True)
-        sizePolicy6.setHeightForWidth(self.tagDressedGroupBox.sizePolicy().hasHeightForWidth())
-        self.tagDressedGroupBox.setSizePolicy(sizePolicy6)
+        sizePolicy5.setHeightForWidth(self.tagDressedGroupBox.sizePolicy().hasHeightForWidth())
+        self.tagDressedGroupBox.setSizePolicy(sizePolicy5)
         font9 = QFont()
         font9.setFamilies([u"Roboto"])
         font9.setPointSize(13)
@@ -2577,8 +2584,8 @@ class Ui_MainWindow(object):
 
         self.label_28 = QLabel(self.tagBareGroupBox)
         self.label_28.setObjectName(u"label_28")
-        sizePolicy6.setHeightForWidth(self.label_28.sizePolicy().hasHeightForWidth())
-        self.label_28.setSizePolicy(sizePolicy6)
+        sizePolicy5.setHeightForWidth(self.label_28.sizePolicy().hasHeightForWidth())
+        self.label_28.setSizePolicy(sizePolicy5)
         self.label_28.setText(u"Initial")
         self.label_28.setIndent(-1)
 
@@ -2586,8 +2593,8 @@ class Ui_MainWindow(object):
 
         self.label_26 = QLabel(self.tagBareGroupBox)
         self.label_26.setObjectName(u"label_26")
-        sizePolicy6.setHeightForWidth(self.label_26.sizePolicy().hasHeightForWidth())
-        self.label_26.setSizePolicy(sizePolicy6)
+        sizePolicy5.setHeightForWidth(self.label_26.sizePolicy().hasHeightForWidth())
+        self.label_26.setSizePolicy(sizePolicy5)
         self.label_26.setText(u"Final")
 
         self.gridLayout_14.addWidget(self.label_26, 3, 1, 1, 1)
@@ -2707,15 +2714,15 @@ class Ui_MainWindow(object):
         self.verticalLayout_6.setContentsMargins(5, 20, 0, 0)
         self.widget_8 = QWidget(self.frame_prefit)
         self.widget_8.setObjectName(u"widget_8")
-        sizePolicy6.setHeightForWidth(self.widget_8.sizePolicy().hasHeightForWidth())
-        self.widget_8.setSizePolicy(sizePolicy6)
+        sizePolicy5.setHeightForWidth(self.widget_8.sizePolicy().hasHeightForWidth())
+        self.widget_8.setSizePolicy(sizePolicy5)
         self.horizontalLayout_15 = QHBoxLayout(self.widget_8)
         self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
         self.horizontalLayout_15.setContentsMargins(0, 0, 0, 0)
         self.label_6 = QLabel(self.widget_8)
         self.label_6.setObjectName(u"label_6")
-        sizePolicy6.setHeightForWidth(self.label_6.sizePolicy().hasHeightForWidth())
-        self.label_6.setSizePolicy(sizePolicy6)
+        sizePolicy5.setHeightForWidth(self.label_6.sizePolicy().hasHeightForWidth())
+        self.label_6.setSizePolicy(sizePolicy5)
         self.label_6.setMinimumSize(QSize(0, 23))
         self.label_6.setFont(font3)
         self.label_6.setStyleSheet(u"color: rgb(190, 130, 250); \n"
@@ -2783,7 +2790,7 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.exportToFitButton.sizePolicy().hasHeightForWidth())
         self.exportToFitButton.setSizePolicy(sizePolicy4)
         self.exportToFitButton.setMinimumSize(QSize(170, 34))
-        self.exportToFitButton.setFont(font5)
+        self.exportToFitButton.setFont(font4)
         self.exportToFitButton.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
@@ -2854,8 +2861,8 @@ class Ui_MainWindow(object):
 
         self.frame_prefit_minmax = QFrame(self.prefitWidget)
         self.frame_prefit_minmax.setObjectName(u"frame_prefit_minmax")
-        sizePolicy6.setHeightForWidth(self.frame_prefit_minmax.sizePolicy().hasHeightForWidth())
-        self.frame_prefit_minmax.setSizePolicy(sizePolicy6)
+        sizePolicy5.setHeightForWidth(self.frame_prefit_minmax.sizePolicy().hasHeightForWidth())
+        self.frame_prefit_minmax.setSizePolicy(sizePolicy5)
         self.frame_prefit_minmax.setMinimumSize(QSize(0, 0))
         self.verticalLayout_14 = QVBoxLayout(self.frame_prefit_minmax)
 #ifndef Q_OS_MAC
@@ -2914,8 +2921,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout_5.setContentsMargins(0, 0, 0, 0)
         self.fitLabel = QLabel(self.fitTitleWidget)
         self.fitLabel.setObjectName(u"fitLabel")
-        sizePolicy6.setHeightForWidth(self.fitLabel.sizePolicy().hasHeightForWidth())
-        self.fitLabel.setSizePolicy(sizePolicy6)
+        sizePolicy5.setHeightForWidth(self.fitLabel.sizePolicy().hasHeightForWidth())
+        self.fitLabel.setSizePolicy(sizePolicy5)
         self.fitLabel.setMinimumSize(QSize(0, 23))
         self.fitLabel.setMaximumSize(QSize(16777215, 16777215))
         self.fitLabel.setFont(font3)
@@ -2960,7 +2967,7 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.pushButton_2.sizePolicy().hasHeightForWidth())
         self.pushButton_2.setSizePolicy(sizePolicy4)
         self.pushButton_2.setMinimumSize(QSize(160, 30))
-        self.pushButton_2.setFont(font5)
+        self.pushButton_2.setFont(font4)
         self.pushButton_2.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
@@ -3029,8 +3036,8 @@ class Ui_MainWindow(object):
 
         self.frame_6 = QFrame(self.fitWidget)
         self.frame_6.setObjectName(u"frame_6")
-        sizePolicy6.setHeightForWidth(self.frame_6.sizePolicy().hasHeightForWidth())
-        self.frame_6.setSizePolicy(sizePolicy6)
+        sizePolicy5.setHeightForWidth(self.frame_6.sizePolicy().hasHeightForWidth())
+        self.frame_6.setSizePolicy(sizePolicy5)
         self.frame_6.setMinimumSize(QSize(0, 200))
         self.frame_6.setMaximumSize(QSize(16777215, 200))
         self.frame_6.setFrameShape(QFrame.NoFrame)
@@ -3045,7 +3052,7 @@ class Ui_MainWindow(object):
         self.exportToPrefitButton.setSizePolicy(sizePolicy4)
         self.exportToPrefitButton.setMinimumSize(QSize(191, 34))
         self.exportToPrefitButton.setMaximumSize(QSize(191, 34))
-        self.exportToPrefitButton.setFont(font5)
+        self.exportToPrefitButton.setFont(font4)
         self.exportToPrefitButton.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
@@ -3080,7 +3087,7 @@ class Ui_MainWindow(object):
         self.fitButton.setSizePolicy(sizePolicy4)
         self.fitButton.setMinimumSize(QSize(191, 34))
         self.fitButton.setMaximumSize(QSize(191, 34))
-        self.fitButton.setFont(font5)
+        self.fitButton.setFont(font4)
         self.fitButton.setStyleSheet(u"QPushButton{\n"
 "color: #212121;\n"
 "background-color: #BE82FA;\n"
@@ -3118,15 +3125,15 @@ class Ui_MainWindow(object):
         self.statusBar = QStatusBar(MainWindow)
         self.statusBar.setObjectName(u"statusBar")
         self.statusBar.setEnabled(True)
-        sizePolicy6.setHeightForWidth(self.statusBar.sizePolicy().hasHeightForWidth())
-        self.statusBar.setSizePolicy(sizePolicy6)
+        sizePolicy5.setHeightForWidth(self.statusBar.sizePolicy().hasHeightForWidth())
+        self.statusBar.setSizePolicy(sizePolicy5)
         self.statusBar.setMinimumSize(QSize(0, 27))
         self.statusBar.setStyleSheet(u"")
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
 
-        self.bottomStackedWidget.setCurrentIndex(2)
+        self.bottomStackedWidget.setCurrentIndex(1)
         self.pagesStackedWidget.setCurrentIndex(3)
 
 
@@ -3135,14 +3142,14 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         self.calibratedCheckBox.setText(QCoreApplication.translate("MainWindow", u"View Calibrated Axes", None))
-        self.filtersPushButton.setText(QCoreApplication.translate("MainWindow", u"FILTERS", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"MAX", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"MIN", None))
 
         self.colorComboBox.setCurrentText(QCoreApplication.translate("MainWindow", u"PuOr", None))
-        self.bgndSubtractPushButton.setText(QCoreApplication.translate("MainWindow", u"BACKGROUND SUBTRACT", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"SETTINGS: VISUAL", None))
-        self.coloringPushButton.setText(QCoreApplication.translate("MainWindow", u"COLORING", None))
+        self.label_39.setText(QCoreApplication.translate("MainWindow", u"FILTERS", None))
+        self.label_38.setText(QCoreApplication.translate("MainWindow", u"BACKGROUND SUBTRACT", None))
+        self.label_40.setText(QCoreApplication.translate("MainWindow", u"COLORING", None))
 #if QT_CONFIG(accessibility)
         self.frame_4.setAccessibleDescription("")
 #endif // QT_CONFIG(accessibility)
