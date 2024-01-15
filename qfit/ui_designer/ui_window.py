@@ -43,8 +43,8 @@ class Ui_MainWindow(object):
         MainWindow.setMinimumSize(QSize(0, 0))
         MainWindow.setMaximumSize(QSize(16777215, 16777190))
         font = QFont()
-        font.setFamilies([u"Roboto Light"])
-        font.setPointSize(7)
+        font.setFamilies([u"Roboto"])
+        font.setPointSize(13)
         MainWindow.setFont(font)
         MainWindow.setWindowTitle(u"qfit")
         icon = QIcon()
@@ -67,7 +67,7 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QWidget {\n"
-"	font-family: \"Roboto Light\";\n"
+"	font-family: \"Roboto\";\n"
 "}\n"
 "\n"
 "QLabel {\n"
@@ -101,8 +101,8 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QScrollBar::handle:horizontal {\n"
-"    background: rgb(85, 1"
-                        "70, 255);\n"
+"    background: rgb(85, 170, 25"
+                        "5);\n"
 "    min-width: 20px;\n"
 "	border-radius: 5px\n"
 "}\n"
@@ -145,8 +145,8 @@ class Ui_MainWindow(object):
 "	border-radius: 0px;\n"
 " }\n"
 "\n"
-" QS"
-                        "crollBar::handle:vertical {	\n"
+" QScrollB"
+                        "ar::handle:vertical {	\n"
 "	background: rgb(85, 170, 255);\n"
 "    min-height: 25px;\n"
 "	border-radius: 5px\n"
@@ -187,8 +187,8 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QCheckBox::indicator {\n"
-"    bo"
-                        "rder: 1px solid #DBBCFB;\n"
+"    border: "
+                        "1px solid #DBBCFB;\n"
 "	width: 20px;\n"
 "	height: 20px;\n"
 " 	border-radius: 11px;\n"
@@ -236,8 +236,8 @@ class Ui_MainWindow(object):
 "/* SLIDERS */\n"
 "QSlider::groove:horizontal {\n"
 "    border-radius: 9px;\n"
-"    hei"
-                        "ght: 18px;\n"
+"    height: 1"
+                        "8px;\n"
 "	margin: 0px;\n"
 "	background-color: #38363B;\n"
 "}\n"
@@ -284,8 +284,8 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QSlider::handle:vertical:hover {\n"
-"    background-color: rgb(105, 18"
-                        "0, 255);\n"
+"    background-color: rgb(105, 180, 255"
+                        ");\n"
 "}\n"
 "\n"
 "QSlider::handle:vertical:pressed {\n"
@@ -328,8 +328,8 @@ class Ui_MainWindow(object):
 "QSpinBox::up-arrow {\n"
 "    width: 20px;\n"
 "    height: 20px;\n"
-""
-                        "    image: url(:/icons/svg/plus.svg) 1;\n"
+"   "
+                        " image: url(:/icons/svg/plus.svg) 1;\n"
 "}\n"
 "\n"
 "QSpinBox::down-arrow {\n"
@@ -375,8 +375,8 @@ class Ui_MainWindow(object):
 "	width: 25px; \n"
 " }\n"
 "\n"
-"QComboBox::down-"
-                        "arrow{\n"
+"QComboBox::down-arr"
+                        "ow{\n"
 "	image: url(:/icons/svg/arrow-down-2F2F2F.svg);\n"
 "	width: 12px;\n"
 "	height: 9px;\n"
@@ -420,8 +420,8 @@ class Ui_MainWindow(object):
 "ListView\n"
 "{\n"
 "	selection-background-color: rgb(93, 93, 93);\n"
-"	backgroun"
-                        "d: rgb(63,63,63);\n"
+"	background: "
+                        "rgb(63,63,63);\n"
 "	color: rgb(220,220,220);\n"
 "}\n"
 "\n"
@@ -468,7 +468,7 @@ class Ui_MainWindow(object):
         self.bottomStackedWidget.setSizePolicy(sizePolicy2)
         self.bottomStackedWidget.setMinimumSize(QSize(0, 220))
         font1 = QFont()
-        font1.setFamilies([u"Roboto Light"])
+        font1.setFamilies([u"Roboto"])
         self.bottomStackedWidget.setFont(font1)
         self.bottomStackedWidget.setStyleSheet(u"")
         self.bottomStackedWidget.setFrameShape(QFrame.NoFrame)
@@ -505,7 +505,7 @@ class Ui_MainWindow(object):
         self.calibratedCheckBox.setMinimumSize(QSize(200, 40))
         self.calibratedCheckBox.setMaximumSize(QSize(200, 40))
         font2 = QFont()
-        font2.setFamilies([u"Roboto Light"])
+        font2.setFamilies([u"Roboto"])
         font2.setPointSize(14)
         font2.setKerning(False)
         self.calibratedCheckBox.setFont(font2)
@@ -602,7 +602,7 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.bgndSubtractXCheckBox.sizePolicy().hasHeightForWidth())
         self.bgndSubtractXCheckBox.setSizePolicy(sizePolicy4)
         font3 = QFont()
-        font3.setFamilies([u"Roboto Light"])
+        font3.setFamilies([u"Roboto"])
         font3.setPointSize(14)
         self.bgndSubtractXCheckBox.setFont(font3)
 #if QT_CONFIG(tooltip)
@@ -787,10 +787,8 @@ class Ui_MainWindow(object):
         sizePolicy1.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
         self.label_4.setSizePolicy(sizePolicy1)
         font4 = QFont()
-        font4.setFamilies([u"Roboto Light"])
+        font4.setFamilies([u"Roboto"])
         font4.setPointSize(16)
-        font4.setWeight(QFont.Light)
-        font4.setItalic(False)
         self.label_4.setFont(font4)
         self.label_4.setStyleSheet(u"color: rgb(190, 130, 250);\n"
 "")
@@ -804,7 +802,7 @@ class Ui_MainWindow(object):
         self.coloringPushButton = QPushButton(self.frame_8)
         self.coloringPushButton.setObjectName(u"coloringPushButton")
         font5 = QFont()
-        font5.setFamilies([u"Roboto Light"])
+        font5.setFamilies([u"Roboto"])
         font5.setPointSize(13)
         font5.setWeight(QFont.Light)
         self.coloringPushButton.setFont(font5)
@@ -848,7 +846,7 @@ class Ui_MainWindow(object):
         self.mseLabel.setSizePolicy(sizePolicy7)
         self.mseLabel.setMinimumSize(QSize(200, 0))
         font6 = QFont()
-        font6.setFamilies([u"Roboto Light"])
+        font6.setFamilies([u"Roboto"])
         font6.setPointSize(13)
         font6.setBold(True)
         self.mseLabel.setFont(font6)
@@ -916,7 +914,12 @@ class Ui_MainWindow(object):
         self.numericalSpectrumSettingsLabel.setObjectName(u"numericalSpectrumSettingsLabel")
         sizePolicy6.setHeightForWidth(self.numericalSpectrumSettingsLabel.sizePolicy().hasHeightForWidth())
         self.numericalSpectrumSettingsLabel.setSizePolicy(sizePolicy6)
-        self.numericalSpectrumSettingsLabel.setFont(font4)
+        font7 = QFont()
+        font7.setFamilies([u"Roboto"])
+        font7.setPointSize(16)
+        font7.setWeight(QFont.Light)
+        font7.setItalic(False)
+        self.numericalSpectrumSettingsLabel.setFont(font7)
         self.numericalSpectrumSettingsLabel.setStyleSheet(u"color: rgb(190, 130, 250);")
         self.numericalSpectrumSettingsLabel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
 
@@ -1094,10 +1097,10 @@ class Ui_MainWindow(object):
         self.frame_5.setObjectName(u"frame_5")
         sizePolicy1.setHeightForWidth(self.frame_5.sizePolicy().hasHeightForWidth())
         self.frame_5.setSizePolicy(sizePolicy1)
-        font7 = QFont()
-        font7.setFamilies([u"Roboto Light"])
-        font7.setWeight(QFont.Light)
-        self.frame_5.setFont(font7)
+        font8 = QFont()
+        font8.setFamilies([u"Roboto"])
+        font8.setWeight(QFont.Light)
+        self.frame_5.setFont(font8)
         self.frame_5.setFrameShape(QFrame.NoFrame)
         self.frame_5.setFrameShadow(QFrame.Plain)
         self.gridLayout_6 = QGridLayout(self.frame_5)
@@ -1151,7 +1154,7 @@ class Ui_MainWindow(object):
         self.label_45.setObjectName(u"label_45")
         sizePolicy6.setHeightForWidth(self.label_45.sizePolicy().hasHeightForWidth())
         self.label_45.setSizePolicy(sizePolicy6)
-        self.label_45.setFont(font4)
+        self.label_45.setFont(font7)
         self.label_45.setStyleSheet(u"color: rgb(190, 130, 250);\n"
 "")
         self.label_45.setIndent(-1)
@@ -1253,10 +1256,7 @@ class Ui_MainWindow(object):
         self.modeFitButton.setObjectName(u"modeFitButton")
         self.modeFitButton.setMinimumSize(QSize(120, 70))
         self.modeFitButton.setMaximumSize(QSize(120, 70))
-        font8 = QFont()
-        font8.setFamilies([u"Roboto Light"])
-        font8.setPointSize(16)
-        self.modeFitButton.setFont(font8)
+        self.modeFitButton.setFont(font4)
         icon9 = QIcon()
         icon9.addFile(u":/icons/svg/cil-speedometer.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.modeFitButton.setIcon(icon9)
@@ -1270,7 +1270,7 @@ class Ui_MainWindow(object):
         self.modeTagButton.setObjectName(u"modeTagButton")
         self.modeTagButton.setMinimumSize(QSize(120, 70))
         self.modeTagButton.setMaximumSize(QSize(120, 70))
-        self.modeTagButton.setFont(font8)
+        self.modeTagButton.setFont(font4)
         icon10 = QIcon()
         icon10.addFile(u":/icons/svg/cil-location-pin.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.modeTagButton.setIcon(icon10)
@@ -1288,7 +1288,7 @@ class Ui_MainWindow(object):
         self.modeSelectButton.setObjectName(u"modeSelectButton")
         self.modeSelectButton.setMinimumSize(QSize(120, 70))
         self.modeSelectButton.setMaximumSize(QSize(120, 70))
-        self.modeSelectButton.setFont(font8)
+        self.modeSelectButton.setFont(font4)
         icon11 = QIcon()
         icon11.addFile(u":/icons/svg/cil-list.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.modeSelectButton.setIcon(icon11)
@@ -1329,7 +1329,7 @@ class Ui_MainWindow(object):
         self.modePrefitButton.setObjectName(u"modePrefitButton")
         self.modePrefitButton.setMinimumSize(QSize(120, 70))
         self.modePrefitButton.setMaximumSize(QSize(120, 70))
-        self.modePrefitButton.setFont(font8)
+        self.modePrefitButton.setFont(font4)
         icon13 = QIcon()
         icon13.addFile(u":/icons/svg/cil-chart-line.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.modePrefitButton.setIcon(icon13)
@@ -1482,7 +1482,7 @@ class Ui_MainWindow(object):
         self.label_9.setObjectName(u"label_9")
         self.label_9.setGeometry(QRect(30, 50, 41, 20))
         font9 = QFont()
-        font9.setFamilies([u"Roboto Light"])
+        font9.setFamilies([u"Roboto"])
         font9.setBold(False)
         self.label_9.setFont(font9)
         self.label_9.setStyleSheet(u"color: #5d5d5d; background-color: transparent;")
@@ -1523,7 +1523,7 @@ class Ui_MainWindow(object):
         self.pagesStackedWidget.setMinimumSize(QSize(410, 0))
         self.pagesStackedWidget.setMaximumSize(QSize(410, 10000))
         font10 = QFont()
-        font10.setFamilies([u"Roboto Light"])
+        font10.setFamilies([u"Roboto"])
         font10.setPointSize(9)
         font10.setKerning(True)
         self.pagesStackedWidget.setFont(font10)
@@ -1566,7 +1566,7 @@ class Ui_MainWindow(object):
         sizePolicy6.setHeightForWidth(self.label_5.sizePolicy().hasHeightForWidth())
         self.label_5.setSizePolicy(sizePolicy6)
         self.label_5.setMinimumSize(QSize(0, 15))
-        self.label_5.setFont(font8)
+        self.label_5.setFont(font)
         self.label_5.setStyleSheet(u"color: rgb(190, 130, 250);")
         self.label_5.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
 
@@ -2052,7 +2052,7 @@ class Ui_MainWindow(object):
         self.swapXYButton.setSizePolicy(sizePolicy4)
         self.swapXYButton.setMinimumSize(QSize(208, 30))
         font11 = QFont()
-        font11.setFamilies([u"Roboto Light"])
+        font11.setFamilies([u"Roboto"])
         font11.setBold(True)
         self.swapXYButton.setFont(font11)
         self.swapXYButton.setCursor(QCursor(Qt.ArrowCursor))
@@ -2118,7 +2118,7 @@ class Ui_MainWindow(object):
         self.newRowButton.setSizePolicy(sizePolicy4)
         self.newRowButton.setMinimumSize(QSize(86, 30))
         font12 = QFont()
-        font12.setFamilies([u"Roboto Light"])
+        font12.setFamilies([u"Roboto"])
         font12.setPointSize(12)
         font12.setBold(True)
         self.newRowButton.setFont(font12)
@@ -2184,7 +2184,7 @@ class Ui_MainWindow(object):
         sizePolicy6.setHeightForWidth(self.label_32.sizePolicy().hasHeightForWidth())
         self.label_32.setSizePolicy(sizePolicy6)
         font13 = QFont()
-        font13.setFamilies([u"Roboto Light"])
+        font13.setFamilies([u"Roboto"])
         font13.setPointSize(16)
         font13.setWeight(QFont.Light)
         self.label_32.setFont(font13)
@@ -2208,10 +2208,7 @@ class Ui_MainWindow(object):
         self.datasetListView.setSizePolicy(sizePolicy12)
         self.datasetListView.setMinimumSize(QSize(120, 412))
         self.datasetListView.setMaximumSize(QSize(120, 412))
-        font14 = QFont()
-        font14.setFamilies([u"Roboto Light"])
-        font14.setPointSize(13)
-        self.datasetListView.setFont(font14)
+        self.datasetListView.setFont(font)
         self.datasetListView.setStyleSheet(u"QListView\n"
 "{\n"
 "    background-color: #2F2F2F;\n"
@@ -2767,11 +2764,11 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.exportToFitButton.sizePolicy().hasHeightForWidth())
         self.exportToFitButton.setSizePolicy(sizePolicy4)
         self.exportToFitButton.setMinimumSize(QSize(170, 34))
-        font15 = QFont()
-        font15.setFamilies([u"Roboto Light"])
-        font15.setPointSize(14)
-        font15.setBold(True)
-        self.exportToFitButton.setFont(font15)
+        font14 = QFont()
+        font14.setFamilies([u"Roboto"])
+        font14.setPointSize(14)
+        font14.setBold(True)
+        self.exportToFitButton.setFont(font14)
         self.exportToFitButton.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
@@ -2803,12 +2800,12 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.plotButton.sizePolicy().hasHeightForWidth())
         self.plotButton.setSizePolicy(sizePolicy4)
         self.plotButton.setMinimumSize(QSize(170, 34))
-        font16 = QFont()
-        font16.setFamilies([u"Roboto Light"])
-        font16.setPointSize(14)
-        font16.setBold(True)
-        font16.setKerning(True)
-        self.plotButton.setFont(font16)
+        font15 = QFont()
+        font15.setFamilies([u"Roboto"])
+        font15.setPointSize(14)
+        font15.setBold(True)
+        font15.setKerning(True)
+        self.plotButton.setFont(font15)
 #if QT_CONFIG(tooltip)
         self.plotButton.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
@@ -3033,7 +3030,7 @@ class Ui_MainWindow(object):
         self.exportToPrefitButton.setSizePolicy(sizePolicy4)
         self.exportToPrefitButton.setMinimumSize(QSize(191, 34))
         self.exportToPrefitButton.setMaximumSize(QSize(191, 34))
-        self.exportToPrefitButton.setFont(font15)
+        self.exportToPrefitButton.setFont(font14)
         self.exportToPrefitButton.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
@@ -3067,7 +3064,7 @@ class Ui_MainWindow(object):
         self.fitButton.setSizePolicy(sizePolicy4)
         self.fitButton.setMinimumSize(QSize(191, 34))
         self.fitButton.setMaximumSize(QSize(191, 34))
-        self.fitButton.setFont(font15)
+        self.fitButton.setFont(font14)
         self.fitButton.setStyleSheet(u"QPushButton{\n"
 "color: #212121;\n"
 "background-color: #BE82FA;\n"
@@ -3112,7 +3109,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.bottomStackedWidget.setCurrentIndex(2)
+        self.bottomStackedWidget.setCurrentIndex(1)
         self.pagesStackedWidget.setCurrentIndex(0)
 
 
