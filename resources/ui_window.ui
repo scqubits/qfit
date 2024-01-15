@@ -3000,7 +3000,7 @@ color: rgb(30, 30, 30);</string>
           <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
-          <number>3</number>
+          <number>1</number>
          </property>
          <widget class="DataExtractingWidget" name="extractPointsWidget">
           <property name="sizePolicy">
@@ -4512,13 +4512,13 @@ icon: url(:/icons/svg/trash-pressed.svg);
                       <property name="minimumSize">
                        <size>
                         <width>120</width>
-                        <height>412</height>
+                        <height>500</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
                         <width>120</width>
-                        <height>412</height>
+                        <height>500</height>
                        </size>
                       </property>
                       <property name="font">
@@ -4570,13 +4570,13 @@ QListView::item {
                       <property name="minimumSize">
                        <size>
                         <width>265</width>
-                        <height>412</height>
+                        <height>500</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
                         <width>265</width>
-                        <height>412</height>
+                        <height>500</height>
                        </size>
                       </property>
                       <property name="styleSheet">

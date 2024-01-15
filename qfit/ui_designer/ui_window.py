@@ -2218,8 +2218,8 @@ class Ui_MainWindow(object):
         sizePolicy13.setVerticalStretch(0)
         sizePolicy13.setHeightForWidth(self.datasetListView.sizePolicy().hasHeightForWidth())
         self.datasetListView.setSizePolicy(sizePolicy13)
-        self.datasetListView.setMinimumSize(QSize(120, 412))
-        self.datasetListView.setMaximumSize(QSize(120, 412))
+        self.datasetListView.setMinimumSize(QSize(120, 500))
+        self.datasetListView.setMaximumSize(QSize(120, 500))
         font8 = QFont()
         font8.setFamilies([u"Roboto Medium"])
         font8.setPointSize(13)
@@ -2255,8 +2255,8 @@ class Ui_MainWindow(object):
         self.widget_11.setObjectName(u"widget_11")
         sizePolicy4.setHeightForWidth(self.widget_11.sizePolicy().hasHeightForWidth())
         self.widget_11.setSizePolicy(sizePolicy4)
-        self.widget_11.setMinimumSize(QSize(265, 412))
-        self.widget_11.setMaximumSize(QSize(265, 412))
+        self.widget_11.setMinimumSize(QSize(265, 500))
+        self.widget_11.setMaximumSize(QSize(265, 500))
         self.widget_11.setStyleSheet(u"background-color: #171717;\n"
 "\n"
 "")
@@ -3134,7 +3134,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
 
         self.bottomStackedWidget.setCurrentIndex(1)
-        self.pagesStackedWidget.setCurrentIndex(3)
+        self.pagesStackedWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
