@@ -803,7 +803,10 @@ class Ui_MainWindow(object):
 
         self.coloringPushButton = QPushButton(self.frame_8)
         self.coloringPushButton.setObjectName(u"coloringPushButton")
-        self.coloringPushButton.setFont(font)
+        font4 = QFont()
+        font4.setFamilies([u"Roboto Medium"])
+        font4.setBold(False)
+        self.coloringPushButton.setFont(font4)
         self.coloringPushButton.setCheckable(True)
         self.coloringPushButton.setChecked(True)
 
@@ -843,10 +846,10 @@ class Ui_MainWindow(object):
         sizePolicy7.setHeightForWidth(self.mseLabel.sizePolicy().hasHeightForWidth())
         self.mseLabel.setSizePolicy(sizePolicy7)
         self.mseLabel.setMinimumSize(QSize(200, 0))
-        font4 = QFont()
-        font4.setFamilies([u"Roboto Medium"])
-        font4.setBold(True)
-        self.mseLabel.setFont(font4)
+        font5 = QFont()
+        font5.setFamilies([u"Roboto Medium"])
+        font5.setBold(True)
+        self.mseLabel.setFont(font5)
 
         self.gridLayout_3.addWidget(self.mseLabel, 3, 6, 1, 1)
 
@@ -911,11 +914,11 @@ class Ui_MainWindow(object):
         self.numericalSpectrumSettingsLabel.setObjectName(u"numericalSpectrumSettingsLabel")
         sizePolicy6.setHeightForWidth(self.numericalSpectrumSettingsLabel.sizePolicy().hasHeightForWidth())
         self.numericalSpectrumSettingsLabel.setSizePolicy(sizePolicy6)
-        font5 = QFont()
-        font5.setFamilies([u"Roboto Medium"])
-        font5.setWeight(QFont.Light)
-        font5.setItalic(False)
-        self.numericalSpectrumSettingsLabel.setFont(font5)
+        font6 = QFont()
+        font6.setFamilies([u"Roboto Medium"])
+        font6.setWeight(QFont.Light)
+        font6.setItalic(False)
+        self.numericalSpectrumSettingsLabel.setFont(font6)
         self.numericalSpectrumSettingsLabel.setStyleSheet(u"color: rgb(190, 130, 250);\n"
 " font-size: 16px;")
         self.numericalSpectrumSettingsLabel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
@@ -1117,7 +1120,7 @@ class Ui_MainWindow(object):
         self.mseLabel_2.setSizePolicy(sizePolicy4)
         self.mseLabel_2.setMinimumSize(QSize(200, 0))
         self.mseLabel_2.setMaximumSize(QSize(200, 16777215))
-        self.mseLabel_2.setFont(font4)
+        self.mseLabel_2.setFont(font5)
 
         self.gridLayout_6.addWidget(self.mseLabel_2, 1, 7, 1, 1)
 
@@ -1154,7 +1157,7 @@ class Ui_MainWindow(object):
         sizePolicy6.setHeightForWidth(self.label_45.sizePolicy().hasHeightForWidth())
         self.label_45.setSizePolicy(sizePolicy6)
         self.label_45.setMinimumSize(QSize(0, 23))
-        self.label_45.setFont(font5)
+        self.label_45.setFont(font6)
         self.label_45.setStyleSheet(u"color: rgb(190, 130, 250);\n"
 " font-size: 16px;")
         self.label_45.setIndent(-1)
@@ -1485,10 +1488,7 @@ class Ui_MainWindow(object):
         self.label_9 = QLabel(self.mplFigureCanvas)
         self.label_9.setObjectName(u"label_9")
         self.label_9.setGeometry(QRect(30, 50, 41, 20))
-        font6 = QFont()
-        font6.setFamilies([u"Roboto Medium"])
-        font6.setBold(False)
-        self.label_9.setFont(font6)
+        self.label_9.setFont(font4)
         self.label_9.setStyleSheet(u"color: #5d5d5d; background-color: transparent;")
         self.label_9.setAlignment(Qt.AlignCenter)
         self.label_27 = QLabel(self.mplFigureCanvas)
@@ -2065,7 +2065,7 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.swapXYButton.sizePolicy().hasHeightForWidth())
         self.swapXYButton.setSizePolicy(sizePolicy4)
         self.swapXYButton.setMinimumSize(QSize(208, 30))
-        self.swapXYButton.setFont(font4)
+        self.swapXYButton.setFont(font5)
         self.swapXYButton.setCursor(QCursor(Qt.ArrowCursor))
         self.swapXYButton.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
@@ -2128,11 +2128,7 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.newRowButton.sizePolicy().hasHeightForWidth())
         self.newRowButton.setSizePolicy(sizePolicy4)
         self.newRowButton.setMinimumSize(QSize(86, 30))
-        font8 = QFont()
-        font8.setFamilies([u"Roboto Medium"])
-        font8.setPointSize(13)
-        font8.setBold(True)
-        self.newRowButton.setFont(font8)
+        self.newRowButton.setFont(font5)
 #if QT_CONFIG(tooltip)
         self.newRowButton.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
@@ -2161,7 +2157,7 @@ class Ui_MainWindow(object):
         self.clearAllButton.setSizePolicy(sizePolicy6)
         self.clearAllButton.setMinimumSize(QSize(109, 30))
         self.clearAllButton.setMaximumSize(QSize(109, 30))
-        self.clearAllButton.setFont(font8)
+        self.clearAllButton.setFont(font5)
 #if QT_CONFIG(tooltip)
         self.clearAllButton.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
@@ -2217,10 +2213,10 @@ class Ui_MainWindow(object):
         self.datasetListView.setSizePolicy(sizePolicy13)
         self.datasetListView.setMinimumSize(QSize(120, 412))
         self.datasetListView.setMaximumSize(QSize(120, 412))
-        font9 = QFont()
-        font9.setFamilies([u"Roboto Medium"])
-        font9.setPointSize(13)
-        self.datasetListView.setFont(font9)
+        font8 = QFont()
+        font8.setFamilies([u"Roboto Medium"])
+        font8.setPointSize(13)
+        self.datasetListView.setFont(font8)
         self.datasetListView.setStyleSheet(u"QListView\n"
 "{\n"
 "    background-color: #2F2F2F;\n"
@@ -2288,12 +2284,12 @@ class Ui_MainWindow(object):
         self.tagDressedGroupBox.setEnabled(True)
         sizePolicy6.setHeightForWidth(self.tagDressedGroupBox.sizePolicy().hasHeightForWidth())
         self.tagDressedGroupBox.setSizePolicy(sizePolicy6)
-        font10 = QFont()
-        font10.setFamilies([u"Roboto"])
-        font10.setPointSize(13)
-        font10.setBold(False)
-        font10.setItalic(False)
-        self.tagDressedGroupBox.setFont(font10)
+        font9 = QFont()
+        font9.setFamilies([u"Roboto"])
+        font9.setPointSize(13)
+        font9.setBold(False)
+        font9.setItalic(False)
+        self.tagDressedGroupBox.setFont(font9)
 #if QT_CONFIG(tooltip)
         self.tagDressedGroupBox.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
@@ -2459,10 +2455,10 @@ class Ui_MainWindow(object):
 
         self.tagDispersiveDressedRadioButton = QRadioButton(self.widget_11)
         self.tagDispersiveDressedRadioButton.setObjectName(u"tagDispersiveDressedRadioButton")
-        font11 = QFont()
-        font11.setFamilies([u"Roboto Medium"])
-        font11.setKerning(True)
-        self.tagDispersiveDressedRadioButton.setFont(font11)
+        font10 = QFont()
+        font10.setFamilies([u"Roboto Medium"])
+        font10.setKerning(True)
+        self.tagDispersiveDressedRadioButton.setFont(font10)
 #if QT_CONFIG(tooltip)
         self.tagDispersiveDressedRadioButton.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
@@ -2787,7 +2783,7 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.exportToFitButton.sizePolicy().hasHeightForWidth())
         self.exportToFitButton.setSizePolicy(sizePolicy4)
         self.exportToFitButton.setMinimumSize(QSize(170, 34))
-        self.exportToFitButton.setFont(font4)
+        self.exportToFitButton.setFont(font5)
         self.exportToFitButton.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
@@ -2820,11 +2816,11 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.plotButton.sizePolicy().hasHeightForWidth())
         self.plotButton.setSizePolicy(sizePolicy4)
         self.plotButton.setMinimumSize(QSize(170, 34))
-        font12 = QFont()
-        font12.setFamilies([u"Roboto Medium"])
-        font12.setBold(True)
-        font12.setKerning(True)
-        self.plotButton.setFont(font12)
+        font11 = QFont()
+        font11.setFamilies([u"Roboto Medium"])
+        font11.setBold(True)
+        font11.setKerning(True)
+        self.plotButton.setFont(font11)
 #if QT_CONFIG(tooltip)
         self.plotButton.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
@@ -2964,7 +2960,7 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.pushButton_2.sizePolicy().hasHeightForWidth())
         self.pushButton_2.setSizePolicy(sizePolicy4)
         self.pushButton_2.setMinimumSize(QSize(160, 30))
-        self.pushButton_2.setFont(font4)
+        self.pushButton_2.setFont(font5)
         self.pushButton_2.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
@@ -3049,7 +3045,7 @@ class Ui_MainWindow(object):
         self.exportToPrefitButton.setSizePolicy(sizePolicy4)
         self.exportToPrefitButton.setMinimumSize(QSize(191, 34))
         self.exportToPrefitButton.setMaximumSize(QSize(191, 34))
-        self.exportToPrefitButton.setFont(font4)
+        self.exportToPrefitButton.setFont(font5)
         self.exportToPrefitButton.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
@@ -3084,7 +3080,7 @@ class Ui_MainWindow(object):
         self.fitButton.setSizePolicy(sizePolicy4)
         self.fitButton.setMinimumSize(QSize(191, 34))
         self.fitButton.setMaximumSize(QSize(191, 34))
-        self.fitButton.setFont(font4)
+        self.fitButton.setFont(font5)
         self.fitButton.setStyleSheet(u"QPushButton{\n"
 "color: #212121;\n"
 "background-color: #BE82FA;\n"
@@ -3130,8 +3126,8 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.bottomStackedWidget.setCurrentIndex(1)
-        self.pagesStackedWidget.setCurrentIndex(1)
+        self.bottomStackedWidget.setCurrentIndex(2)
+        self.pagesStackedWidget.setCurrentIndex(3)
 
 
         QMetaObject.connectSlotsByName(MainWindow)

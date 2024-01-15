@@ -528,7 +528,7 @@ ListView::item:selected {
           <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="calibrationPage">
           <property name="sizePolicy">
@@ -1253,8 +1253,7 @@ background-color: transparent;
                 <property name="font">
                  <font>
                   <family>Roboto Medium</family>
-                  <pointsize>13</pointsize>
-                  <fontweight>Light</fontweight>
+                  <bold>false</bold>
                  </font>
                 </property>
                 <property name="text">
@@ -2983,7 +2982,7 @@ color: rgb(30, 30, 30);</string>
           <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>3</number>
          </property>
          <widget class="DataExtractingWidget" name="extractPointsWidget">
           <property name="sizePolicy">
@@ -4332,7 +4331,6 @@ icon: url(:/icons/svg/updown-pressed.svg);
                       <property name="font">
                        <font>
                         <family>Roboto Medium</family>
-                        <pointsize>13</pointsize>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -4390,7 +4388,6 @@ icon: url(:/icons/svg/plus-pressed.svg);
                       <property name="font">
                        <font>
                         <family>Roboto Medium</family>
-                        <pointsize>13</pointsize>
                         <bold>true</bold>
                        </font>
                       </property>
