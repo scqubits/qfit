@@ -38,7 +38,8 @@
   <property name="font">
    <font>
     <family>Roboto Medium</family>
-    <pointsize>7</pointsize>
+    <pointsize>13</pointsize>
+    <fontweight>Light</fontweight>
    </font>
   </property>
   <property name="windowTitle">
@@ -73,6 +74,7 @@ QWidget {
 
 QLabel {
 	color: rgb(170, 170, 170);
+    font-size: 14px;
 }
 
 /* LINE EDIT */
@@ -183,6 +185,7 @@ QScrollBar:vertical {
 QCheckBox {
 	color: #AAAAAA;
     spacing: 10px;
+    font-size: 14px;
 }
 
 QCheckBox::indicator {
@@ -208,6 +211,7 @@ QCheckBox::indicator:checked {
 QRadioButton {
 	color: #AAAAAA;
     spacing: 10px;
+    font-size: 14px;
 }
 
 QRadioButton::indicator {
@@ -524,7 +528,7 @@ ListView::item:selected {
           <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="calibrationPage">
           <property name="sizePolicy">
@@ -606,7 +610,7 @@ ListView::item:selected {
                 <property name="font">
                  <font>
                   <family>Roboto Medium</family>
-                  <pointsize>14</pointsize>
+                  <pointsize>-1</pointsize>
                   <kerning>false</kerning>
                  </font>
                 </property>
@@ -614,6 +618,7 @@ ListView::item:selected {
                  <string notr="true">QPushButton {
 color: #DBBCFB;
 background-color: transparent;
+font-size: 14px;
 }
 
 QPushButton::checked {
@@ -823,7 +828,7 @@ background-color: transparent;
                       <property name="font">
                        <font>
                         <family>Roboto Medium</family>
-                        <pointsize>14</pointsize>
+                        <pointsize>-1</pointsize>
                        </font>
                       </property>
                       <property name="toolTip">
@@ -851,7 +856,7 @@ background-color: transparent;
                       <property name="font">
                        <font>
                         <family>Roboto Medium</family>
-                        <pointsize>14</pointsize>
+                        <pointsize>-1</pointsize>
                        </font>
                       </property>
                       <property name="toolTip">
@@ -916,7 +921,7 @@ background-color: transparent;
                       <property name="font">
                        <font>
                         <family>Roboto Medium</family>
-                        <pointsize>14</pointsize>
+                        <pointsize>-1</pointsize>
                        </font>
                       </property>
                       <property name="toolTip">
@@ -932,7 +937,7 @@ background-color: transparent;
                       <property name="font">
                        <font>
                         <family>Roboto Medium</family>
-                        <pointsize>14</pointsize>
+                        <pointsize>-1</pointsize>
                        </font>
                       </property>
                       <property name="toolTip">
@@ -948,7 +953,7 @@ background-color: transparent;
                       <property name="font">
                        <font>
                         <family>Roboto Medium</family>
-                        <pointsize>14</pointsize>
+                        <pointsize>-1</pointsize>
                        </font>
                       </property>
                       <property name="toolTip">
@@ -1035,7 +1040,7 @@ background-color: transparent;
                    <property name="font">
                     <font>
                      <family>Roboto Medium</family>
-                     <pointsize>14</pointsize>
+                     <pointsize>-1</pointsize>
                     </font>
                    </property>
                    <property name="layoutDirection">
@@ -1204,22 +1209,27 @@ background-color: transparent;
                  <bool>true</bool>
                 </property>
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>23</height>
+                 </size>
+                </property>
                 <property name="font">
                  <font>
                   <family>Roboto Medium</family>
-                  <pointsize>16</pointsize>
-                  <italic>false</italic>
+                  <pointsize>-1</pointsize>
                   <fontweight>Light</fontweight>
                  </font>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">color: rgb(190, 130, 250);
-</string>
+ font-size:16px;</string>
                 </property>
                 <property name="frameShape">
                  <enum>QFrame::NoFrame</enum>
@@ -1228,7 +1238,7 @@ background-color: transparent;
                  <string>SETTINGS: VISUAL</string>
                 </property>
                 <property name="alignment">
-                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                 </property>
                 <property name="margin">
                  <number>0</number>
@@ -1358,7 +1368,7 @@ background-color: transparent;
                 <property name="font">
                  <font>
                   <family>Roboto Medium</family>
-                  <pointsize>13</pointsize>
+                  <pointsize>-1</pointsize>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -1518,13 +1528,14 @@ background-color: transparent;
                    <property name="font">
                     <font>
                      <family>Roboto Medium</family>
-                     <pointsize>16</pointsize>
+                     <pointsize>-1</pointsize>
                      <italic>false</italic>
                      <fontweight>Light</fontweight>
                     </font>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">color: rgb(190, 130, 250);</string>
+                    <string notr="true">color: rgb(190, 130, 250);
+ font-size: 16px;</string>
                    </property>
                    <property name="text">
                     <string>SETTINGS: NUMERICAL SPECTRUM</string>
@@ -1536,6 +1547,12 @@ background-color: transparent;
                  </item>
                  <item>
                   <widget class="QPushButton" name="numericalSpectrumSettingsHelpPushButton">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
                    <property name="styleSheet">
                     <string notr="true">QPushButton {
     border: none;
@@ -1914,7 +1931,7 @@ QSpinBox::down-button:pressed {
                 <property name="font">
                  <font>
                   <family>Roboto Medium</family>
-                  <pointsize>13</pointsize>
+                  <pointsize>-1</pointsize>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -2004,17 +2021,23 @@ QSpinBox::down-button:pressed {
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>23</height>
+                 </size>
+                </property>
                 <property name="font">
                  <font>
                   <family>Roboto Medium</family>
-                  <pointsize>16</pointsize>
+                  <pointsize>-1</pointsize>
                   <italic>false</italic>
                   <fontweight>Light</fontweight>
                  </font>
                 </property>
                 <property name="styleSheet">
                  <string notr="true">color: rgb(190, 130, 250);
-</string>
+ font-size: 16px;</string>
                 </property>
                 <property name="text">
                  <string>SETTINGS: FIT</string>
@@ -2251,9 +2274,12 @@ QPushButton:checked {
             <property name="font">
              <font>
               <family>Roboto Medium</family>
-              <pointsize>16</pointsize>
+              <pointsize>-1</pointsize>
               <fontweight>Light</fontweight>
              </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">font-size: 16px;</string>
             </property>
             <property name="text">
              <string>   FIT</string>
@@ -2293,9 +2319,12 @@ QPushButton:checked {
             <property name="font">
              <font>
               <family>Roboto Medium</family>
-              <pointsize>16</pointsize>
+              <pointsize>-1</pointsize>
               <fontweight>Light</fontweight>
              </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">font-size: 16px;</string>
             </property>
             <property name="text">
              <string>  EXTRACT</string>
@@ -2351,9 +2380,12 @@ QPushButton:checked {
             <property name="font">
              <font>
               <family>Roboto Medium</family>
-              <pointsize>16</pointsize>
+              <pointsize>-1</pointsize>
               <fontweight>Light</fontweight>
              </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">font-size: 16px;</string>
             </property>
             <property name="text">
              <string>  CALIBRATE</string>
@@ -2452,9 +2484,12 @@ QPushButton:pressed {
             <property name="font">
              <font>
               <family>Roboto Medium</family>
-              <pointsize>16</pointsize>
+              <pointsize>-1</pointsize>
               <fontweight>Light</fontweight>
              </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">font-size: 16px;</string>
             </property>
             <property name="text">
              <string>  PRE-FIT</string>
@@ -2797,6 +2832,7 @@ color: rgb(30, 30, 30);</string>
           <property name="font">
            <font>
             <family>Roboto Medium</family>
+            <pointsize>-1</pointsize>
             <bold>false</bold>
            </font>
           </property>
@@ -2895,6 +2931,12 @@ color: rgb(30, 30, 30);</string>
             <height>20</height>
            </rect>
           </property>
+          <property name="font">
+           <font>
+            <family>Roboto Medium</family>
+            <pointsize>-1</pointsize>
+           </font>
+          </property>
           <property name="styleSheet">
            <string notr="true">color: #5d5d5d; background-color: transparent;</string>
           </property>
@@ -2941,7 +2983,7 @@ color: rgb(30, 30, 30);</string>
           <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="DataExtractingWidget" name="extractPointsWidget">
           <property name="sizePolicy">
@@ -2964,6 +3006,11 @@ color: rgb(30, 30, 30);</string>
                <width>0</width>
                <height>0</height>
               </size>
+             </property>
+             <property name="font">
+              <font>
+               <family>Roboto Medium</family>
+              </font>
              </property>
              <property name="cursor">
               <cursorShape>ArrowCursor</cursorShape>
@@ -3014,7 +3061,7 @@ color: rgb(30, 30, 30);</string>
                  <item>
                   <widget class="QLabel" name="label_5">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -3022,24 +3069,28 @@ color: rgb(30, 30, 30);</string>
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>15</height>
+                     <height>23</height>
                     </size>
                    </property>
                    <property name="font">
                     <font>
                      <family>Roboto Medium</family>
-                     <pointsize>16</pointsize>
+                     <pointsize>-1</pointsize>
                      <fontweight>Light</fontweight>
                     </font>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">color: rgb(190, 130, 250);</string>
+                    <string notr="true">QLabel {
+    font-family: &quot;Roboto Medium&quot;;
+    font-size: 16px;
+    color: rgb(190, 130, 250);
+}</string>
                    </property>
                    <property name="text">
                     <string>DATA</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -3108,6 +3159,15 @@ color: rgb(30, 30, 30);</string>
                      <height>0</height>
                     </size>
                    </property>
+                   <property name="font">
+                    <font>
+                     <family>Roboto Medium</family>
+                     <pointsize>-1</pointsize>
+                    </font>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">font-size: 13px;</string>
+                   </property>
                    <property name="text">
                     <string notr="true">Z</string>
                    </property>
@@ -3169,6 +3229,9 @@ color: rgb(30, 30, 30);</string>
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">font-size: 13px;</string>
                    </property>
                    <property name="text">
                     <string notr="true">AXIS X</string>
@@ -3359,6 +3422,12 @@ QPushButton:pressed {
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <family>Roboto Medium</family>
+                     <pointsize>-1</pointsize>
+                    </font>
                    </property>
                    <property name="text">
                     <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;X&lt;span style=&quot; vertical-align:sub;&quot;&gt;1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -3554,6 +3623,12 @@ QPushButton:pressed {
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
+                   <property name="font">
+                    <font>
+                     <family>Roboto Medium</family>
+                     <pointsize>-1</pointsize>
+                    </font>
+                   </property>
                    <property name="text">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Raw X&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
@@ -3619,6 +3694,9 @@ QPushButton:pressed {
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">font-size: 13px;</string>
                    </property>
                    <property name="text">
                     <string notr="true">AXIS Y</string>
@@ -3759,6 +3837,11 @@ QPushButton:pressed {
                      <width>120</width>
                      <height>16777215</height>
                     </size>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <family>Roboto Medium</family>
+                    </font>
                    </property>
                    <property name="toolTip">
                     <string notr="true"/>
@@ -3916,6 +3999,12 @@ QPushButton:pressed {
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <family>Roboto Medium</family>
+                     <pointsize>-1</pointsize>
+                    </font>
                    </property>
                    <property name="text">
                     <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Y&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -4243,7 +4332,7 @@ icon: url(:/icons/svg/updown-pressed.svg);
                       <property name="font">
                        <font>
                         <family>Roboto Medium</family>
-                        <pointsize>12</pointsize>
+                        <pointsize>13</pointsize>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -4301,7 +4390,7 @@ icon: url(:/icons/svg/plus-pressed.svg);
                       <property name="font">
                        <font>
                         <family>Roboto Medium</family>
-                        <pointsize>12</pointsize>
+                        <pointsize>13</pointsize>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -4354,21 +4443,28 @@ icon: url(:/icons/svg/trash-pressed.svg);
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>23</height>
+                    </size>
+                   </property>
                    <property name="font">
                     <font>
                      <family>Roboto Medium</family>
-                     <pointsize>16</pointsize>
+                     <pointsize>-1</pointsize>
                      <fontweight>Light</fontweight>
                     </font>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">color: rgb(190, 130, 250);</string>
+                    <string notr="true">color: rgb(190, 130, 250);
+ font-size:16px;</string>
                    </property>
                    <property name="text">
                     <string>TRANSITIONS</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -4510,7 +4606,7 @@ QListView::item {
                          <property name="font">
                           <font>
                            <family>Roboto Medium</family>
-                           <pointsize>14</pointsize>
+                           <pointsize>-1</pointsize>
                           </font>
                          </property>
                          <property name="text">
@@ -4569,6 +4665,14 @@ QListView::item {
                            <horstretch>0</horstretch>
                            <verstretch>0</verstretch>
                           </sizepolicy>
+                         </property>
+                         <property name="font">
+                          <font>
+                           <family>Roboto</family>
+                           <pointsize>13</pointsize>
+                           <italic>false</italic>
+                           <bold>false</bold>
+                          </font>
                          </property>
                          <property name="toolTip">
                           <string notr="true"/>
@@ -4845,7 +4949,8 @@ border-style: inset;</string>
                          <property name="font">
                           <font>
                            <family>Roboto Medium</family>
-                           <pointsize>14</pointsize>
+                           <pointsize>-1</pointsize>
+                           <kerning>true</kerning>
                           </font>
                          </property>
                          <property name="toolTip">
@@ -4870,7 +4975,7 @@ border-style: inset;</string>
                          <property name="font">
                           <font>
                            <family>Roboto Medium</family>
-                           <pointsize>14</pointsize>
+                           <pointsize>-1</pointsize>
                           </font>
                          </property>
                          <property name="toolTip">
@@ -5014,6 +5119,9 @@ QSpinBox::down-button:pressed {
                               <width>230</width>
                               <height>30</height>
                              </size>
+                            </property>
+                            <property name="styleSheet">
+                             <string notr="true"/>
                             </property>
                             <property name="placeholderText">
                              <string notr="true">&lt;level subsys1&gt;, &lt;level subsys2&gt;, ...</string>
@@ -5319,24 +5427,28 @@ QPushButton: pressed{
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>23</height>
+                    </size>
+                   </property>
                    <property name="font">
                     <font>
                      <family>Roboto Medium</family>
-                     <pointsize>16</pointsize>
+                     <pointsize>-1</pointsize>
                      <fontweight>Light</fontweight>
                     </font>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">color: rgb(190, 130, 250);</string>
+                    <string notr="true">color: rgb(190, 130, 250); 
+ font-size: 16px;</string>
                    </property>
                    <property name="frameShape">
                     <enum>QFrame::NoFrame</enum>
                    </property>
                    <property name="text">
                     <string>PRE-FIT</string>
-                   </property>
-                   <property name="margin">
-                    <number>3</number>
                    </property>
                   </widget>
                  </item>
@@ -5401,7 +5513,7 @@ QPushButton: pressed{
                    <x>0</x>
                    <y>0</y>
                    <width>381</width>
-                   <height>428</height>
+                   <height>427</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -5512,7 +5624,7 @@ QPushButton: pressed{
                 <property name="font">
                  <font>
                   <family>Roboto Medium</family>
-                  <pointsize>14</pointsize>
+                  <pointsize>-1</pointsize>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -5524,6 +5636,7 @@ QPushButton: pressed{
 color: #DBBCFB;
 background-color: #4B4B4B;
 border-radius: 6px;
+font-size: 14px;
 }
 
 QPushButton:pressed {
@@ -5562,7 +5675,7 @@ icon: url(:/icons/svg/copy-pressed.svg);
                  </size>
                 </property>
                 <property name="text">
-                 <string>AUTO-UPDATE</string>
+                 <string>Auto Update</string>
                 </property>
                </widget>
               </item>
@@ -5583,7 +5696,7 @@ icon: url(:/icons/svg/copy-pressed.svg);
                 <property name="font">
                  <font>
                   <family>Roboto Medium</family>
-                  <pointsize>14</pointsize>
+                  <pointsize>-1</pointsize>
                   <bold>true</bold>
                   <kerning>true</kerning>
                  </font>
@@ -5599,6 +5712,7 @@ icon: url(:/icons/svg/copy-pressed.svg);
 color: #212121;
 background-color: #BE82FA;
 border-radius: 6px;
+font-size: 14px;
 }
 
 QPushButton:pressed{
@@ -5797,7 +5911,7 @@ background-color: #9163BF;
                  <item>
                   <widget class="QLabel" name="fitLabel">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -5805,7 +5919,7 @@ background-color: #9163BF;
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>0</height>
+                     <height>23</height>
                     </size>
                    </property>
                    <property name="maximumSize">
@@ -5817,12 +5931,13 @@ background-color: #9163BF;
                    <property name="font">
                     <font>
                      <family>Roboto Medium</family>
-                     <pointsize>16</pointsize>
+                     <pointsize>-1</pointsize>
                      <fontweight>Light</fontweight>
                     </font>
                    </property>
                    <property name="styleSheet">
                     <string notr="true">color: rgb(190, 130, 250);
+font-size: 16px;
 </string>
                    </property>
                    <property name="frameShape">
@@ -5833,12 +5948,6 @@ background-color: #9163BF;
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                   </property>
-                   <property name="margin">
-                    <number>0</number>
-                   </property>
-                   <property name="indent">
-                    <number>0</number>
                    </property>
                   </widget>
                  </item>
@@ -5925,14 +6034,13 @@ background-color: #9163BF;
                    </property>
                    <property name="minimumSize">
                     <size>
-                     <width>150</width>
+                     <width>160</width>
                      <height>30</height>
                     </size>
                    </property>
                    <property name="font">
                     <font>
                      <family>Roboto Medium</family>
-                     <pointsize>12</pointsize>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -6016,6 +6124,7 @@ icon: url(:/icons/svg/copy-pressed.svg);
                    <property name="font">
                     <font>
                      <family>Roboto Medium</family>
+                     <pointsize>-1</pointsize>
                     </font>
                    </property>
                    <property name="text">
@@ -6153,7 +6262,7 @@ icon: url(:/icons/svg/copy-pressed.svg);
                 <property name="font">
                  <font>
                   <family>Roboto Medium</family>
-                  <pointsize>14</pointsize>
+                  <pointsize>-1</pointsize>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -6165,6 +6274,7 @@ icon: url(:/icons/svg/copy-pressed.svg);
 color: #DBBCFB;
 background-color: #4B4B4B;
 border-radius: 6px;
+font-size: 14px;
 }
 
 QPushButton:pressed {
@@ -6250,7 +6360,7 @@ icon: url(:/icons/svg/copy-pressed.svg);
                 <property name="font">
                  <font>
                   <family>Roboto Medium</family>
-                  <pointsize>14</pointsize>
+                  <pointsize>-1</pointsize>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -6259,6 +6369,7 @@ icon: url(:/icons/svg/copy-pressed.svg);
 color: #212121;
 background-color: #BE82FA;
 border-radius: 6px;
+font-size: 14px;
 }
 
 QPushButton:pressed{
