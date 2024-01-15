@@ -3036,13 +3036,17 @@ color: rgb(30, 30, 30);</string>
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto Medium</family>
+                     <family>Roboto Light</family>
                      <pointsize>16</pointsize>
                      <fontweight>Light</fontweight>
                     </font>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">color: rgb(190, 130, 250);</string>
+                    <string notr="true">QLabel {
+    font-family: &quot;Roboto Light&quot;;
+    font-size: 16pt;
+    color: rgb(190, 130, 250);
+}</string>
                    </property>
                    <property name="text">
                     <string>DATA</string>
@@ -4262,7 +4266,7 @@ icon: url(:/icons/svg/updown-pressed.svg);
                       <property name="font">
                        <font>
                         <family>Roboto Medium</family>
-                        <pointsize>12</pointsize>
+                        <pointsize>13</pointsize>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -4320,7 +4324,7 @@ icon: url(:/icons/svg/plus-pressed.svg);
                       <property name="font">
                        <font>
                         <family>Roboto Medium</family>
-                        <pointsize>12</pointsize>
+                        <pointsize>13</pointsize>
                         <bold>true</bold>
                        </font>
                       </property>

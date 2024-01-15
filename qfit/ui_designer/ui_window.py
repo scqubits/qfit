@@ -1570,8 +1570,16 @@ class Ui_MainWindow(object):
         sizePolicy12.setHeightForWidth(self.label_5.sizePolicy().hasHeightForWidth())
         self.label_5.setSizePolicy(sizePolicy12)
         self.label_5.setMinimumSize(QSize(0, 15))
-        self.label_5.setFont(font8)
-        self.label_5.setStyleSheet(u"color: rgb(190, 130, 250);")
+        font11 = QFont()
+        font11.setFamilies([u"Roboto Light"])
+        font11.setPointSize(16)
+        font11.setWeight(QFont.Light)
+        self.label_5.setFont(font11)
+        self.label_5.setStyleSheet(u"QLabel {\n"
+"    font-family: \"Roboto Light\";\n"
+"    font-size: 16pt;\n"
+"    color: rgb(190, 130, 250);\n"
+"}")
         self.label_5.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
 
         self.horizontalLayout_7.addWidget(self.label_5)
@@ -2055,10 +2063,10 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.swapXYButton.sizePolicy().hasHeightForWidth())
         self.swapXYButton.setSizePolicy(sizePolicy4)
         self.swapXYButton.setMinimumSize(QSize(208, 30))
-        font11 = QFont()
-        font11.setFamilies([u"Roboto Medium"])
-        font11.setBold(True)
-        self.swapXYButton.setFont(font11)
+        font12 = QFont()
+        font12.setFamilies([u"Roboto Medium"])
+        font12.setBold(True)
+        self.swapXYButton.setFont(font12)
         self.swapXYButton.setCursor(QCursor(Qt.ArrowCursor))
         self.swapXYButton.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
@@ -2121,11 +2129,7 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.newRowButton.sizePolicy().hasHeightForWidth())
         self.newRowButton.setSizePolicy(sizePolicy4)
         self.newRowButton.setMinimumSize(QSize(86, 30))
-        font12 = QFont()
-        font12.setFamilies([u"Roboto Medium"])
-        font12.setPointSize(12)
-        font12.setBold(True)
-        self.newRowButton.setFont(font12)
+        self.newRowButton.setFont(font5)
 #if QT_CONFIG(tooltip)
         self.newRowButton.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
@@ -2154,7 +2158,7 @@ class Ui_MainWindow(object):
         self.clearAllButton.setSizePolicy(sizePolicy6)
         self.clearAllButton.setMinimumSize(QSize(109, 30))
         self.clearAllButton.setMaximumSize(QSize(109, 30))
-        self.clearAllButton.setFont(font12)
+        self.clearAllButton.setFont(font5)
 #if QT_CONFIG(tooltip)
         self.clearAllButton.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
@@ -2948,7 +2952,11 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.pushButton_2.sizePolicy().hasHeightForWidth())
         self.pushButton_2.setSizePolicy(sizePolicy4)
         self.pushButton_2.setMinimumSize(QSize(150, 30))
-        self.pushButton_2.setFont(font12)
+        font16 = QFont()
+        font16.setFamilies([u"Roboto Medium"])
+        font16.setPointSize(12)
+        font16.setBold(True)
+        self.pushButton_2.setFont(font16)
         self.pushButton_2.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
