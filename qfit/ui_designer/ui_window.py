@@ -1570,14 +1570,10 @@ class Ui_MainWindow(object):
         sizePolicy12.setHeightForWidth(self.label_5.sizePolicy().hasHeightForWidth())
         self.label_5.setSizePolicy(sizePolicy12)
         self.label_5.setMinimumSize(QSize(0, 15))
-        font11 = QFont()
-        font11.setFamilies([u"Roboto Light"])
-        font11.setPointSize(16)
-        font11.setWeight(QFont.Light)
-        self.label_5.setFont(font11)
+        self.label_5.setFont(font7)
         self.label_5.setStyleSheet(u"QLabel {\n"
-"    font-family: \"Roboto Light\";\n"
-"    font-size: 16pt;\n"
+"    font-family: \"Roboto Medium\";\n"
+"    font-size: 16px;\n"
 "    color: rgb(190, 130, 250);\n"
 "}")
         self.label_5.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
@@ -1616,6 +1612,7 @@ class Ui_MainWindow(object):
         sizePolicy7.setHeightForWidth(self.label_13.sizePolicy().hasHeightForWidth())
         self.label_13.setSizePolicy(sizePolicy7)
         self.label_13.setMinimumSize(QSize(42, 0))
+        self.label_13.setFont(font1)
         self.label_13.setText(u"Z")
         self.label_13.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
@@ -2063,10 +2060,10 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.swapXYButton.sizePolicy().hasHeightForWidth())
         self.swapXYButton.setSizePolicy(sizePolicy4)
         self.swapXYButton.setMinimumSize(QSize(208, 30))
-        font12 = QFont()
-        font12.setFamilies([u"Roboto Medium"])
-        font12.setBold(True)
-        self.swapXYButton.setFont(font12)
+        font11 = QFont()
+        font11.setFamilies([u"Roboto Medium"])
+        font11.setBold(True)
+        self.swapXYButton.setFont(font11)
         self.swapXYButton.setCursor(QCursor(Qt.ArrowCursor))
         self.swapXYButton.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
@@ -2212,10 +2209,10 @@ class Ui_MainWindow(object):
         self.datasetListView.setSizePolicy(sizePolicy13)
         self.datasetListView.setMinimumSize(QSize(120, 412))
         self.datasetListView.setMaximumSize(QSize(120, 412))
-        font13 = QFont()
-        font13.setFamilies([u"Roboto Medium"])
-        font13.setPointSize(13)
-        self.datasetListView.setFont(font13)
+        font12 = QFont()
+        font12.setFamilies([u"Roboto Medium"])
+        font12.setPointSize(13)
+        self.datasetListView.setFont(font12)
         self.datasetListView.setStyleSheet(u"QListView\n"
 "{\n"
 "    background-color: #2F2F2F;\n"
@@ -2771,11 +2768,11 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.exportToFitButton.sizePolicy().hasHeightForWidth())
         self.exportToFitButton.setSizePolicy(sizePolicy4)
         self.exportToFitButton.setMinimumSize(QSize(170, 34))
-        font14 = QFont()
-        font14.setFamilies([u"Roboto Medium"])
-        font14.setPointSize(14)
-        font14.setBold(True)
-        self.exportToFitButton.setFont(font14)
+        font13 = QFont()
+        font13.setFamilies([u"Roboto Medium"])
+        font13.setPointSize(14)
+        font13.setBold(True)
+        self.exportToFitButton.setFont(font13)
         self.exportToFitButton.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
@@ -2807,12 +2804,12 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.plotButton.sizePolicy().hasHeightForWidth())
         self.plotButton.setSizePolicy(sizePolicy4)
         self.plotButton.setMinimumSize(QSize(170, 34))
-        font15 = QFont()
-        font15.setFamilies([u"Roboto Medium"])
-        font15.setPointSize(14)
-        font15.setBold(True)
-        font15.setKerning(True)
-        self.plotButton.setFont(font15)
+        font14 = QFont()
+        font14.setFamilies([u"Roboto Medium"])
+        font14.setPointSize(14)
+        font14.setBold(True)
+        font14.setKerning(True)
+        self.plotButton.setFont(font14)
 #if QT_CONFIG(tooltip)
         self.plotButton.setToolTip(u"")
 #endif // QT_CONFIG(tooltip)
@@ -2952,11 +2949,11 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.pushButton_2.sizePolicy().hasHeightForWidth())
         self.pushButton_2.setSizePolicy(sizePolicy4)
         self.pushButton_2.setMinimumSize(QSize(150, 30))
-        font16 = QFont()
-        font16.setFamilies([u"Roboto Medium"])
-        font16.setPointSize(12)
-        font16.setBold(True)
-        self.pushButton_2.setFont(font16)
+        font15 = QFont()
+        font15.setFamilies([u"Roboto Medium"])
+        font15.setPointSize(12)
+        font15.setBold(True)
+        self.pushButton_2.setFont(font15)
         self.pushButton_2.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
@@ -3041,7 +3038,7 @@ class Ui_MainWindow(object):
         self.exportToPrefitButton.setSizePolicy(sizePolicy4)
         self.exportToPrefitButton.setMinimumSize(QSize(191, 34))
         self.exportToPrefitButton.setMaximumSize(QSize(191, 34))
-        self.exportToPrefitButton.setFont(font14)
+        self.exportToPrefitButton.setFont(font13)
         self.exportToPrefitButton.setStyleSheet(u"QPushButton {\n"
 "color: #DBBCFB;\n"
 "background-color: #4B4B4B;\n"
@@ -3075,7 +3072,7 @@ class Ui_MainWindow(object):
         self.fitButton.setSizePolicy(sizePolicy4)
         self.fitButton.setMinimumSize(QSize(191, 34))
         self.fitButton.setMaximumSize(QSize(191, 34))
-        self.fitButton.setFont(font14)
+        self.fitButton.setFont(font13)
         self.fitButton.setStyleSheet(u"QPushButton{\n"
 "color: #212121;\n"
 "background-color: #BE82FA;\n"

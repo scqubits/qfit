@@ -3036,15 +3036,15 @@ color: rgb(30, 30, 30);</string>
                    </property>
                    <property name="font">
                     <font>
-                     <family>Roboto Light</family>
-                     <pointsize>16</pointsize>
+                     <family>Roboto Medium</family>
+                     <pointsize>-1</pointsize>
                      <fontweight>Light</fontweight>
                     </font>
                    </property>
                    <property name="styleSheet">
                     <string notr="true">QLabel {
-    font-family: &quot;Roboto Light&quot;;
-    font-size: 16pt;
+    font-family: &quot;Roboto Medium&quot;;
+    font-size: 16px;
     color: rgb(190, 130, 250);
 }</string>
                    </property>
@@ -3120,6 +3120,11 @@ color: rgb(30, 30, 30);</string>
                      <width>42</width>
                      <height>0</height>
                     </size>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <family>Roboto Medium</family>
+                    </font>
                    </property>
                    <property name="text">
                     <string notr="true">Z</string>
