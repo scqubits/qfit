@@ -43,8 +43,9 @@ class Ui_MainWindow(object):
         MainWindow.setMinimumSize(QSize(0, 0))
         MainWindow.setMaximumSize(QSize(16777215, 16777190))
         font = QFont()
-        font.setFamilies([u"Roboto"])
+        font.setFamilies([u"Roboto Medium"])
         font.setPointSize(13)
+        font.setWeight(QFont.Light)
         MainWindow.setFont(font)
         MainWindow.setWindowTitle(u"qfit")
         icon = QIcon()
@@ -67,7 +68,7 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QWidget {\n"
-"	font-family: \"Roboto\";\n"
+"	font-family: \"Roboto Medium\";\n"
 "}\n"
 "\n"
 "QLabel {\n"
@@ -101,8 +102,8 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QScrollBar::handle:horizontal {\n"
-"    background: rgb(85, 170, 25"
-                        "5);\n"
+"    background: rgb(85, "
+                        "170, 255);\n"
 "    min-width: 20px;\n"
 "	border-radius: 5px\n"
 "}\n"
@@ -145,8 +146,8 @@ class Ui_MainWindow(object):
 "	border-radius: 0px;\n"
 " }\n"
 "\n"
-" QScrollB"
-                        "ar::handle:vertical {	\n"
+" Q"
+                        "ScrollBar::handle:vertical {	\n"
 "	background: rgb(85, 170, 255);\n"
 "    min-height: 25px;\n"
 "	border-radius: 5px\n"
@@ -187,8 +188,8 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QCheckBox::indicator {\n"
-"    border: "
-                        "1px solid #DBBCFB;\n"
+"    b"
+                        "order: 1px solid #DBBCFB;\n"
 "	width: 20px;\n"
 "	height: 20px;\n"
 " 	border-radius: 11px;\n"
@@ -236,8 +237,8 @@ class Ui_MainWindow(object):
 "/* SLIDERS */\n"
 "QSlider::groove:horizontal {\n"
 "    border-radius: 9px;\n"
-"    height: 1"
-                        "8px;\n"
+"    he"
+                        "ight: 18px;\n"
 "	margin: 0px;\n"
 "	background-color: #38363B;\n"
 "}\n"
@@ -284,8 +285,8 @@ class Ui_MainWindow(object):
 "}\n"
 "\n"
 "QSlider::handle:vertical:hover {\n"
-"    background-color: rgb(105, 180, 255"
-                        ");\n"
+"    background-color: rgb(105, 1"
+                        "80, 255);\n"
 "}\n"
 "\n"
 "QSlider::handle:vertical:pressed {\n"
@@ -328,8 +329,8 @@ class Ui_MainWindow(object):
 "QSpinBox::up-arrow {\n"
 "    width: 20px;\n"
 "    height: 20px;\n"
-"   "
-                        " image: url(:/icons/svg/plus.svg) 1;\n"
+""
+                        "    image: url(:/icons/svg/plus.svg) 1;\n"
 "}\n"
 "\n"
 "QSpinBox::down-arrow {\n"
@@ -375,8 +376,8 @@ class Ui_MainWindow(object):
 "	width: 25px; \n"
 " }\n"
 "\n"
-"QComboBox::down-arr"
-                        "ow{\n"
+"QComboBox::down-"
+                        "arrow{\n"
 "	image: url(:/icons/svg/arrow-down-2F2F2F.svg);\n"
 "	width: 12px;\n"
 "	height: 9px;\n"
@@ -420,8 +421,8 @@ class Ui_MainWindow(object):
 "ListView\n"
 "{\n"
 "	selection-background-color: rgb(93, 93, 93);\n"
-"	background: "
-                        "rgb(63,63,63);\n"
+"	backgroun"
+                        "d: rgb(63,63,63);\n"
 "	color: rgb(220,220,220);\n"
 "}\n"
 "\n"
@@ -468,7 +469,7 @@ class Ui_MainWindow(object):
         self.bottomStackedWidget.setSizePolicy(sizePolicy2)
         self.bottomStackedWidget.setMinimumSize(QSize(0, 220))
         font1 = QFont()
-        font1.setFamilies([u"Roboto"])
+        font1.setFamilies([u"Roboto Medium"])
         self.bottomStackedWidget.setFont(font1)
         self.bottomStackedWidget.setStyleSheet(u"")
         self.bottomStackedWidget.setFrameShape(QFrame.NoFrame)
@@ -505,7 +506,7 @@ class Ui_MainWindow(object):
         self.calibratedCheckBox.setMinimumSize(QSize(200, 40))
         self.calibratedCheckBox.setMaximumSize(QSize(200, 40))
         font2 = QFont()
-        font2.setFamilies([u"Roboto"])
+        font2.setFamilies([u"Roboto Medium"])
         font2.setPointSize(14)
         font2.setKerning(False)
         self.calibratedCheckBox.setFont(font2)
@@ -602,7 +603,7 @@ class Ui_MainWindow(object):
         sizePolicy4.setHeightForWidth(self.bgndSubtractXCheckBox.sizePolicy().hasHeightForWidth())
         self.bgndSubtractXCheckBox.setSizePolicy(sizePolicy4)
         font3 = QFont()
-        font3.setFamilies([u"Roboto"])
+        font3.setFamilies([u"Roboto Medium"])
         font3.setPointSize(14)
         self.bgndSubtractXCheckBox.setFont(font3)
 #if QT_CONFIG(tooltip)
@@ -787,7 +788,7 @@ class Ui_MainWindow(object):
         sizePolicy1.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
         self.label_4.setSizePolicy(sizePolicy1)
         font4 = QFont()
-        font4.setFamilies([u"Roboto"])
+        font4.setFamilies([u"Roboto Medium"])
         font4.setPointSize(16)
         self.label_4.setFont(font4)
         self.label_4.setStyleSheet(u"color: rgb(190, 130, 250);\n"
@@ -801,11 +802,7 @@ class Ui_MainWindow(object):
 
         self.coloringPushButton = QPushButton(self.frame_8)
         self.coloringPushButton.setObjectName(u"coloringPushButton")
-        font5 = QFont()
-        font5.setFamilies([u"Roboto"])
-        font5.setPointSize(13)
-        font5.setWeight(QFont.Light)
-        self.coloringPushButton.setFont(font5)
+        self.coloringPushButton.setFont(font)
         self.coloringPushButton.setCheckable(True)
         self.coloringPushButton.setChecked(True)
 
@@ -845,11 +842,11 @@ class Ui_MainWindow(object):
         sizePolicy7.setHeightForWidth(self.mseLabel.sizePolicy().hasHeightForWidth())
         self.mseLabel.setSizePolicy(sizePolicy7)
         self.mseLabel.setMinimumSize(QSize(200, 0))
-        font6 = QFont()
-        font6.setFamilies([u"Roboto"])
-        font6.setPointSize(13)
-        font6.setBold(True)
-        self.mseLabel.setFont(font6)
+        font5 = QFont()
+        font5.setFamilies([u"Roboto Medium"])
+        font5.setPointSize(13)
+        font5.setBold(True)
+        self.mseLabel.setFont(font5)
 
         self.gridLayout_3.addWidget(self.mseLabel, 3, 6, 1, 1)
 
@@ -914,12 +911,12 @@ class Ui_MainWindow(object):
         self.numericalSpectrumSettingsLabel.setObjectName(u"numericalSpectrumSettingsLabel")
         sizePolicy6.setHeightForWidth(self.numericalSpectrumSettingsLabel.sizePolicy().hasHeightForWidth())
         self.numericalSpectrumSettingsLabel.setSizePolicy(sizePolicy6)
-        font7 = QFont()
-        font7.setFamilies([u"Roboto"])
-        font7.setPointSize(16)
-        font7.setWeight(QFont.Light)
-        font7.setItalic(False)
-        self.numericalSpectrumSettingsLabel.setFont(font7)
+        font6 = QFont()
+        font6.setFamilies([u"Roboto Medium"])
+        font6.setPointSize(16)
+        font6.setWeight(QFont.Light)
+        font6.setItalic(False)
+        self.numericalSpectrumSettingsLabel.setFont(font6)
         self.numericalSpectrumSettingsLabel.setStyleSheet(u"color: rgb(190, 130, 250);")
         self.numericalSpectrumSettingsLabel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
 
@@ -1097,10 +1094,10 @@ class Ui_MainWindow(object):
         self.frame_5.setObjectName(u"frame_5")
         sizePolicy1.setHeightForWidth(self.frame_5.sizePolicy().hasHeightForWidth())
         self.frame_5.setSizePolicy(sizePolicy1)
-        font8 = QFont()
-        font8.setFamilies([u"Roboto"])
-        font8.setWeight(QFont.Light)
-        self.frame_5.setFont(font8)
+        font7 = QFont()
+        font7.setFamilies([u"Roboto Medium"])
+        font7.setWeight(QFont.Light)
+        self.frame_5.setFont(font7)
         self.frame_5.setFrameShape(QFrame.NoFrame)
         self.frame_5.setFrameShadow(QFrame.Plain)
         self.gridLayout_6 = QGridLayout(self.frame_5)
@@ -1118,7 +1115,7 @@ class Ui_MainWindow(object):
         self.mseLabel_2.setSizePolicy(sizePolicy4)
         self.mseLabel_2.setMinimumSize(QSize(200, 0))
         self.mseLabel_2.setMaximumSize(QSize(200, 16777215))
-        self.mseLabel_2.setFont(font6)
+        self.mseLabel_2.setFont(font5)
 
         self.gridLayout_6.addWidget(self.mseLabel_2, 1, 7, 1, 1)
 
@@ -1154,7 +1151,7 @@ class Ui_MainWindow(object):
         self.label_45.setObjectName(u"label_45")
         sizePolicy6.setHeightForWidth(self.label_45.sizePolicy().hasHeightForWidth())
         self.label_45.setSizePolicy(sizePolicy6)
-        self.label_45.setFont(font7)
+        self.label_45.setFont(font6)
         self.label_45.setStyleSheet(u"color: rgb(190, 130, 250);\n"
 "")
         self.label_45.setIndent(-1)
@@ -1256,7 +1253,11 @@ class Ui_MainWindow(object):
         self.modeFitButton.setObjectName(u"modeFitButton")
         self.modeFitButton.setMinimumSize(QSize(120, 70))
         self.modeFitButton.setMaximumSize(QSize(120, 70))
-        self.modeFitButton.setFont(font4)
+        font8 = QFont()
+        font8.setFamilies([u"Roboto Medium"])
+        font8.setPointSize(16)
+        font8.setWeight(QFont.Light)
+        self.modeFitButton.setFont(font8)
         icon9 = QIcon()
         icon9.addFile(u":/icons/svg/cil-speedometer.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.modeFitButton.setIcon(icon9)
@@ -1270,7 +1271,7 @@ class Ui_MainWindow(object):
         self.modeTagButton.setObjectName(u"modeTagButton")
         self.modeTagButton.setMinimumSize(QSize(120, 70))
         self.modeTagButton.setMaximumSize(QSize(120, 70))
-        self.modeTagButton.setFont(font4)
+        self.modeTagButton.setFont(font8)
         icon10 = QIcon()
         icon10.addFile(u":/icons/svg/cil-location-pin.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.modeTagButton.setIcon(icon10)
@@ -1288,7 +1289,7 @@ class Ui_MainWindow(object):
         self.modeSelectButton.setObjectName(u"modeSelectButton")
         self.modeSelectButton.setMinimumSize(QSize(120, 70))
         self.modeSelectButton.setMaximumSize(QSize(120, 70))
-        self.modeSelectButton.setFont(font4)
+        self.modeSelectButton.setFont(font8)
         icon11 = QIcon()
         icon11.addFile(u":/icons/svg/cil-list.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.modeSelectButton.setIcon(icon11)
@@ -1329,7 +1330,7 @@ class Ui_MainWindow(object):
         self.modePrefitButton.setObjectName(u"modePrefitButton")
         self.modePrefitButton.setMinimumSize(QSize(120, 70))
         self.modePrefitButton.setMaximumSize(QSize(120, 70))
-        self.modePrefitButton.setFont(font4)
+        self.modePrefitButton.setFont(font8)
         icon13 = QIcon()
         icon13.addFile(u":/icons/svg/cil-chart-line.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.modePrefitButton.setIcon(icon13)
@@ -1482,7 +1483,7 @@ class Ui_MainWindow(object):
         self.label_9.setObjectName(u"label_9")
         self.label_9.setGeometry(QRect(30, 50, 41, 20))
         font9 = QFont()
-        font9.setFamilies([u"Roboto"])
+        font9.setFamilies([u"Roboto Medium"])
         font9.setBold(False)
         self.label_9.setFont(font9)
         self.label_9.setStyleSheet(u"color: #5d5d5d; background-color: transparent;")
@@ -1523,7 +1524,7 @@ class Ui_MainWindow(object):
         self.pagesStackedWidget.setMinimumSize(QSize(410, 0))
         self.pagesStackedWidget.setMaximumSize(QSize(410, 10000))
         font10 = QFont()
-        font10.setFamilies([u"Roboto"])
+        font10.setFamilies([u"Roboto Medium"])
         font10.setPointSize(9)
         font10.setKerning(True)
         self.pagesStackedWidget.setFont(font10)
@@ -1563,10 +1564,10 @@ class Ui_MainWindow(object):
         self.horizontalLayout_7.setContentsMargins(0, 0, 0, 0)
         self.label_5 = QLabel(self.widget_3)
         self.label_5.setObjectName(u"label_5")
-        sizePolicy6.setHeightForWidth(self.label_5.sizePolicy().hasHeightForWidth())
-        self.label_5.setSizePolicy(sizePolicy6)
+        sizePolicy4.setHeightForWidth(self.label_5.sizePolicy().hasHeightForWidth())
+        self.label_5.setSizePolicy(sizePolicy4)
         self.label_5.setMinimumSize(QSize(0, 15))
-        self.label_5.setFont(font)
+        self.label_5.setFont(font8)
         self.label_5.setStyleSheet(u"color: rgb(190, 130, 250);")
         self.label_5.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
 
@@ -2052,7 +2053,7 @@ class Ui_MainWindow(object):
         self.swapXYButton.setSizePolicy(sizePolicy4)
         self.swapXYButton.setMinimumSize(QSize(208, 30))
         font11 = QFont()
-        font11.setFamilies([u"Roboto"])
+        font11.setFamilies([u"Roboto Medium"])
         font11.setBold(True)
         self.swapXYButton.setFont(font11)
         self.swapXYButton.setCursor(QCursor(Qt.ArrowCursor))
@@ -2118,7 +2119,7 @@ class Ui_MainWindow(object):
         self.newRowButton.setSizePolicy(sizePolicy4)
         self.newRowButton.setMinimumSize(QSize(86, 30))
         font12 = QFont()
-        font12.setFamilies([u"Roboto"])
+        font12.setFamilies([u"Roboto Medium"])
         font12.setPointSize(12)
         font12.setBold(True)
         self.newRowButton.setFont(font12)
@@ -2183,11 +2184,7 @@ class Ui_MainWindow(object):
         self.label_32.setObjectName(u"label_32")
         sizePolicy6.setHeightForWidth(self.label_32.sizePolicy().hasHeightForWidth())
         self.label_32.setSizePolicy(sizePolicy6)
-        font13 = QFont()
-        font13.setFamilies([u"Roboto"])
-        font13.setPointSize(16)
-        font13.setWeight(QFont.Light)
-        self.label_32.setFont(font13)
+        self.label_32.setFont(font8)
         self.label_32.setStyleSheet(u"color: rgb(190, 130, 250);")
         self.label_32.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
 
@@ -2208,7 +2205,10 @@ class Ui_MainWindow(object):
         self.datasetListView.setSizePolicy(sizePolicy12)
         self.datasetListView.setMinimumSize(QSize(120, 412))
         self.datasetListView.setMaximumSize(QSize(120, 412))
-        self.datasetListView.setFont(font)
+        font13 = QFont()
+        font13.setFamilies([u"Roboto Medium"])
+        font13.setPointSize(13)
+        self.datasetListView.setFont(font13)
         self.datasetListView.setStyleSheet(u"QListView\n"
 "{\n"
 "    background-color: #2F2F2F;\n"
@@ -2698,7 +2698,7 @@ class Ui_MainWindow(object):
         self.label_6.setObjectName(u"label_6")
         sizePolicy6.setHeightForWidth(self.label_6.sizePolicy().hasHeightForWidth())
         self.label_6.setSizePolicy(sizePolicy6)
-        self.label_6.setFont(font13)
+        self.label_6.setFont(font8)
         self.label_6.setStyleSheet(u"color: rgb(190, 130, 250);")
         self.label_6.setFrameShape(QFrame.NoFrame)
         self.label_6.setMargin(3)
@@ -2765,7 +2765,7 @@ class Ui_MainWindow(object):
         self.exportToFitButton.setSizePolicy(sizePolicy4)
         self.exportToFitButton.setMinimumSize(QSize(170, 34))
         font14 = QFont()
-        font14.setFamilies([u"Roboto"])
+        font14.setFamilies([u"Roboto Medium"])
         font14.setPointSize(14)
         font14.setBold(True)
         self.exportToFitButton.setFont(font14)
@@ -2801,7 +2801,7 @@ class Ui_MainWindow(object):
         self.plotButton.setSizePolicy(sizePolicy4)
         self.plotButton.setMinimumSize(QSize(170, 34))
         font15 = QFont()
-        font15.setFamilies([u"Roboto"])
+        font15.setFamilies([u"Roboto Medium"])
         font15.setPointSize(14)
         font15.setBold(True)
         font15.setKerning(True)
@@ -2902,7 +2902,7 @@ class Ui_MainWindow(object):
         self.fitLabel.setSizePolicy(sizePolicy1)
         self.fitLabel.setMinimumSize(QSize(0, 0))
         self.fitLabel.setMaximumSize(QSize(16777215, 16777215))
-        self.fitLabel.setFont(font13)
+        self.fitLabel.setFont(font8)
         self.fitLabel.setStyleSheet(u"color: rgb(190, 130, 250);\n"
 "")
         self.fitLabel.setFrameShape(QFrame.NoFrame)
