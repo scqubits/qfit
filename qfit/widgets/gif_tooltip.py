@@ -82,7 +82,7 @@ class DialogWindowWithMedia(QDialog):
             "\n"
             "QWidget {\n"
             '	font-family: "Roboto Medium";\n'
-            "	font-size: 11pt;\n"
+            "	font-size: 14px;\n"
             "}\n"
             "\n"
             "QLabel {\n"
