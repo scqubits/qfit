@@ -27,12 +27,7 @@ from qfit.models.status_result_data import Result
 from qfit.models.numerical_spectrum_data import CalculatedSpecData
 from qfit.models.calibration_data import CalibrationData
 from qfit.models.extracted_data import AllExtractedData
-from qfit.controllers.tagging import (
-    NO_TAG,
-    DISPERSIVE_DRESSED,
-    DISPERSIVE_BARE,
-    Tag,
-)
+from qfit.models.data_structures import Tag
 
 from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
 
@@ -876,7 +871,7 @@ class QuantumModel:
 
         # if provided dressed label
         if (
-            tag.tagType == DISPERSIVE_DRESSED 
+            tag.tagType == "DISPERSIVE_DRESSED" 
             # or tag.tagType is CROSSING_DRESSED
         ):
             # if the state is above evals_count, terminate the computation and return error status
@@ -891,7 +886,7 @@ class QuantumModel:
                 return simulation_freq, status
 
         # if provided bare label
-        elif tag.tagType == DISPERSIVE_BARE:
+        elif tag.tagType == "DISPERSIVE_BARE":
             initial_energy = sweep["x-coordinate":x_coord].energy_by_bare_index(
                 tag.initial
             )

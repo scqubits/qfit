@@ -27,7 +27,7 @@ from PySide6.QtCore import (
 
 import qfit.io_utils.file_io_serializers as serializers
 
-from qfit.controllers.tagging import NO_TAG, Tag
+from qfit.models.data_structures import Tag
 
 from qfit.models.registry import Registrable, RegistryEntry
 
@@ -229,8 +229,8 @@ class AllExtractedData(
     def __init__(self):
         super().__init__()
         self.dataNames = ["Transition 1"]
-        self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
-        self.assocTagList = [Tag()]
+        self.assocDataList: List[np.ndarray] = [np.empty(shape=(2, 0), dtype=np.float_)]
+        self.assocTagList: List[Tag] = [Tag()]
         self._calibrationFunc = None
         self._currentRow = 0
         # this signal is used for updating the plot
@@ -246,7 +246,7 @@ class AllExtractedData(
 
         if role == Qt.DecorationRole:
             icon1 = QtGui.QIcon()
-            if self.assocTagList[index.row()].tagType != NO_TAG:
+            if self.assocTagList[index.row()].tagType != "NO_TAG":
                 icon1.addPixmap(
                     QtGui.QPixmap(":/icons/svg/cil-list.svg"),
                     QtGui.QIcon.Normal,
@@ -377,17 +377,17 @@ class AllExtractedData(
     def currentItem(self):
         return self.data(self.index(self.currentRow, 0), role=Qt.EditRole)
 
-    def currentAssocItem(self):
+    def currentAssocItem(self) -> np.ndarray:
         return self.assocDataList[self.currentRow]
 
-    def currentTagItem(self):
+    def currentTagItem(self) -> Tag:
         return self.assocTagList[self.currentRow]
     
-    def currentDataName(self):
+    def currentDataName(self) -> str:
         return self.dataNames[self.currentRow]
 
     @Slot()
-    def updateAssocData(self, newData):
+    def updateAssocData(self, newData: np.ndarray):
         self.assocDataList[self.currentRow] = newData
 
     @Slot()
