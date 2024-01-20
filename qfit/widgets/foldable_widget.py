@@ -40,7 +40,7 @@ class FoldPushButton(QPushButton):
         # set the style sheet (which controls the font, color, text align, border, etc.)
         self.setStyleSheet(
             "QPushButton {\n"
-            '	font: 12pt "Roboto Medium";\n'
+            '	font: 14px "Roboto Medium";\n'
             "   font-weight: bold;\n"
             "	color: #AAAAAA;\n"
             "	text-align: left;\n"

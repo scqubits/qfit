@@ -59,13 +59,16 @@ from qfit.utils.helpers import (
     StopExecution,
     y_snap,
 )
-from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.models.measurement_data import MeasurementDataType
-from qfit.controllers.tagging import TaggingCtrl
 from qfit.controllers.help_tooltip import HelpButtonCtrl
 from qfit.settings import color_dict
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
+
+# extract
+from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
+from qfit.controllers.tagging import TaggingCtrl
+from qfit.views.tagging import TaggingView
 
 # pre-fit
 from qfit.models.quantum_model_parameters import (
@@ -177,8 +180,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.setupUIPlotOptions()
 
         self.measurementData = measurementData
-        self.initializeExtractedData()
-        self.staticExtractedDataConnects(hilbertspace)
+        self.initializeExtractedData(hilbertspace)
+        self.staticExtractedDataConnects()
 
         self.dynamicalMeasurementDataSetupConnects(hilbertspace)
         self.uiDataLoadConnects()
@@ -259,15 +262,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # calibration, data, plot setup ####################################
     ####################################################################
-    def staticExtractedDataConnects(self, hilbertspace: HilbertSpace):
-        self.uiExtractedDataConnects()
-        self.uiExtractedDataControlConnects()
-
-        self.taggingCtrl = TaggingCtrl(
-            hilbertspace.subsystem_count,
-            (self.allDatasets, self.activeDataset),
-            (self.uiLabelBoxes, self.uiLabelRadioButtons, self.uiBareLabelInputs, self.uiDressedLabelInputs)
-        )
 
     def dynamicalMeasurementDataSetupConnects(self, hilbertspace: HilbertSpace):
         self.measurementData.setupUICallbacks(
@@ -396,20 +390,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         max_val = max(val1, val2)
         return [min_val, max_val]
 
-    def initializeExtractedData(self):
-        """Set up the main class instances holding the data extracted from placing
-        markers on the canvas. The AllExtractedData instance holds all data, whereas the
-        ActiveExtractedData instance holds data of the currently selected data set."""
-        self.activeDataset = ActiveExtractedData()
-        self.activeDataset.setAdaptiveCalibrationFunc(
-            self.calibrationData.adaptiveConversionFunc
-        )
-        # self.ui.dataTableView.setModel(self.activeDataset)
-
-        self.allDatasets = AllExtractedData()
-        self.allDatasets.setCalibrationFunc(self.calibrationData.calibrateDataset)
-        self.ui.datasetListView.setModel(self.allDatasets)
-
     def setupUIXYZComboBoxes(self):
         zDataNames = list(self.measurementData.zCandidates.keys())
         self.ui.zComboBox.clear()
@@ -461,68 +441,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.updateMatchingModeAndCursor()
         self.updatePlot()
-
-    def uiExtractedDataConnects(self):
-        """Make connections for changes in extracted data."""
-
-        # whenever a row is inserted or removed, select the current row
-        # this connection should be put before the connection of layoutChanged
-        # as the latter will be triggered by the former
-        self.allDatasets.rowsInserted.connect(
-            lambda: self.ui.datasetListView.selectItem(self.allDatasets.currentRow)
-        )
-        self.allDatasets.rowsRemoved.connect(
-            lambda: self.ui.datasetListView.selectItem(self.allDatasets.currentRow)
-        )
-
-        # Whenever the data layout in the ActiveExtractedData changes, update
-        # the corresponding AllExtractedData data; this includes the important
-        # event of adding extraction points to the ActiveExtractedData
-        self.activeDataset.layoutChanged.connect(
-            lambda: self.ui.datasetListView.model().updateAssocData(
-                newData=self.activeDataset.all()
-            )
-        )
-
-        # If data in the TableView is changed manually through editing,
-        # the 'dataChanged' signal will be emitted. The following connects the signal
-        # to an update in th data stored in the AllExtractedData
-        self.activeDataset.dataChanged.connect(
-            lambda topLeft, bottomRight: self.ui.datasetListView.model().updateAssocData(
-                newData=self.activeDataset.all()
-            )
-        )
-
-        # Whenever the AllExtractedData changes layout - for example, due to
-        # switching from one existing data set to another one, this connection will
-        # ensure that the TableView will be updated with the correct data
-        self.allDatasets.layoutChanged.connect(
-            lambda: self.activeDataset.setAllData(
-                newData=self.allDatasets.currentAssocItem()
-            )
-        )
-
-        # Whenever data sets are added or removed from the ListView, this ensures
-        # that the canvas display is updated.
-        self.allDatasets.layoutChanged.connect(self.updatePlot)
-
-        # Each time the data set is changed on ListView/Model by clicking a data set,
-        # the data in ActiveExtractedData is updated to reflect the new selection.
-        self.ui.datasetListView.clicked.connect(
-            lambda: self.activeDataset.setAllData(
-                newData=self.allDatasets.currentAssocItem()
-            )
-        )
-
-        # A new selection of a data set item in ListView is accompanied by an update
-        # of the canvas to show the appropriate plot of selected points
-        self.ui.datasetListView.clicked.connect(
-            lambda: self.updatePlot(initialize=False)
-        )
-
-        # Whenever a new selection of data set is made, update the matching mode and the cursor
-        self.allDatasets.layoutChanged.connect(self.updateMatchingModeAndCursor)
-        self.ui.datasetListView.clicked.connect(self.updateMatchingModeAndCursor)
 
     def uiMeasurementDataOptionsConnects(self):
         """Connect the UI elements related to display of data"""
@@ -922,7 +840,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         if reset:
             button.setStyleSheet("")
         else:
-            button.setStyleSheet("QPushButton {background-color: #6c278c}")
+            button.setStyleSheet("QPushButton {background-color: #BE82FA}")
 
     def _resetHighlightButtons(self):
         """Reset the highlighting of all calibration buttons."""
@@ -1037,6 +955,108 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         all_x_list = self.allDatasets.distinctSortedXValues()
         allxdiff = {np.abs(xdat - i): i for i in all_x_list}
         return allxdiff[min(allxdiff.keys())]
+    
+    # extract and tag ##################################################
+    # ##################################################################
+    def initializeExtractedData(self, hilbertspace: HilbertSpace):
+        """Set up the main class instances holding the data extracted from placing
+        markers on the canvas. The AllExtractedData instance holds all data, whereas the
+        ActiveExtractedData instance holds data of the currently selected data set."""
+        self.activeDataset = ActiveExtractedData()
+        self.activeDataset.setAdaptiveCalibrationFunc(
+            self.calibrationData.adaptiveConversionFunc
+        )
+        # self.ui.dataTableView.setModel(self.activeDataset)
+
+        self.allDatasets = AllExtractedData()
+        self.allDatasets.setCalibrationFunc(self.calibrationData.calibrateDataset)
+        self.ui.datasetListView.setModel(self.allDatasets)
+
+        self.taggingView = TaggingView(
+            hilbertspace.subsystem_count,
+            (self.uiLabelBoxes, self.uiLabelRadioButtons, self.uiBareLabelInputs, self.uiDressedLabelInputs)
+        )
+
+        self.taggingCtrl = TaggingCtrl(
+            (self.allDatasets, self.activeDataset),
+            self.taggingView,
+        )
+
+    def staticExtractedDataConnects(self):
+        self.uiExtractedDataConnects()
+        self.uiExtractedDataControlConnects()
+
+    def uiExtractedDataConnects(self):
+        """Make connections for changes in extracted data."""
+
+        # whenever a row is inserted or removed, select the current row
+        # this connection should be put before the connection of layoutChanged
+        # as the latter will be triggered by the former
+        self.allDatasets.rowsInserted.connect(
+            lambda: self.ui.datasetListView.selectItem(self.allDatasets.currentRow)
+        )
+        self.allDatasets.rowsRemoved.connect(
+            lambda: self.ui.datasetListView.selectItem(self.allDatasets.currentRow)
+        )
+
+        # Whenever the data layout in the ActiveExtractedData changes, update
+        # the corresponding AllExtractedData data; this includes the important
+        # event of adding extraction points to the ActiveExtractedData
+        self.activeDataset.layoutChanged.connect(
+            lambda: self.ui.datasetListView.model().updateAssocData(
+                newData=self.activeDataset.all()
+            )
+        )
+
+        # If data in the TableView is changed manually through editing,
+        # the 'dataChanged' signal will be emitted. The following connects the signal
+        # to an update in th data stored in the AllExtractedData
+        self.activeDataset.dataChanged.connect(
+            lambda topLeft, bottomRight: self.ui.datasetListView.model().updateAssocData(
+                newData=self.activeDataset.all()
+            )
+        )
+
+        # Whenever the AllExtractedData changes layout - for example, due to
+        # switching from one existing data set to another one, this connection will
+        # ensure that the TableView will be updated with the correct data
+        self.allDatasets.layoutChanged.connect(
+            lambda: self.activeDataset.setAllData(
+                newData=self.allDatasets.currentAssocItem()
+            )
+        )
+        self.allDatasets.layoutChanged.connect(
+            lambda: print("allDatasets.layoutChanged")
+        )
+        
+        # Whenever data sets are added or removed from the ListView, this ensures
+        # that the canvas display is updated.
+        self.allDatasets.layoutChanged.connect(self.updatePlot)
+
+        # Each time the data set is changed on ListView/Model by clicking a data set,
+        # the data in ActiveExtractedData is updated to reflect the new selection.
+        self.ui.datasetListView.clicked.connect(
+            lambda: self.activeDataset.setAllData(
+                newData=self.allDatasets.currentAssocItem()
+            )
+        )
+        self.ui.datasetListView.clicked.connect(
+            lambda: print("ui.datasetListView.clicked")
+        )
+
+        # A new selection of a data set item in ListView is accompanied by an update
+        # of the canvas to show the appropriate plot of selected points
+        self.ui.datasetListView.clicked.connect(
+            lambda: self.updatePlot(initialize=False)
+        )
+
+        # Whenever a new selection of data set is made, update the matching mode and the cursor
+        self.allDatasets.layoutChanged.connect(self.updateMatchingModeAndCursor)
+        self.ui.datasetListView.clicked.connect(self.updateMatchingModeAndCursor)
+
+    # @Slot()
+    # def _switchDataset
+
 
     # Pre-fit ##########################################################
     # ##################################################################
@@ -1063,7 +1083,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitResult = Result()
         self.spectrumData = CalculatedSpecData()
         self.setUpPrefitResultConnects()
-        self.prefitGeneralOptionsConnects()
+        self.prefitConnects()
 
     def prefitIdentifySweepParameters(self):
         """
@@ -1322,7 +1342,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             pointsAddCallback=self.ui.pointsAddLineEdit.text,
         )
 
-    def prefitGeneralOptionsConnects(self):
+    def prefitConnects(self):
         """
         View --> model: numerical model options
         model --> view: numerical model --> prefit plot

@@ -217,9 +217,9 @@ class LabeledSlider(QWidget):
         Format the labeled slider.
         """
         modifyStyleSheet(self.value, "border", "1px solid #5F5F5F")
-        modifyStyleSheet(self.value, "font", '13pt "Roboto Medium"')
+        modifyStyleSheet(self.value, "font", '13px "Roboto Medium"')
         modifyStyleSheet(self.value, "color", "#FFFFFF")
-        modifyStyleSheet(self.label, "font", '13pt "Roboto Medium"')
+        modifyStyleSheet(self.label, "font", '13px "Roboto Medium"')
         modifyStyleSheet(self.label, "color", "#FFFFFF")
 
 

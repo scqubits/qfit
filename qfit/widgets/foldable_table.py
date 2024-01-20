@@ -69,7 +69,7 @@ class NoSeparatorHeaderView(QHeaderView):
         self.colorList = color_list
         self.text_color = text_color
         # change the header color and style
-        modifyStyleSheet(self, "font", '13pt "Roboto Medium"')
+        modifyStyleSheet(self, "font", '13px "Roboto Medium"')
         modifyStyleSheet(self, "font-weight", "bold")
 
     def paintSection(self, painter, rect, logicalIndex):
