@@ -1077,6 +1077,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitSliderParamConnects()
         self.prefitSubsystemComboBoxLoads()
         self.prefitQuantumModelOptionsConnects()
+        self.prefitParamModelConnects()
         self.setUpPrefitRunConnects()
 
     def prefitStaticElementsBuild(self):
@@ -1132,6 +1133,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         Model & View updates
         """
+        print("onParameterChange")
         self.quantumModel.updateCalculation(
             slider_or_fit_parameter_set=slider_or_fit_parameter_set,
             sweep_parameter_set=self.sweepParameterSet,
@@ -1149,6 +1151,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         Model & View updates
         """
+        print("onPrefitPlotClicked")
+
         self.quantumModel.sweep2SpecNMSE(
             slider_or_fit_parameter_set=self.sliderParameterSet,
             sweep_parameter_set=self.sweepParameterSet,
@@ -1379,6 +1383,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             lambda: self.onParameterChange(self.sliderParameterSet)
         )
 
+        # connect the run button callback to the generation and run of parameter sweep
+        # notice that parameter update is done in the slider connects
+        # TODO: here is a bug, since the parameter update is done in the slider connects,
+        # if parameters are updated due to the fitting step, and the fitting result parameters
+        # are not imported to the prefit parameters, then the HilbertSpace is still using the
+        # fit parameters; if user want to plot with prefit parameters, clicking the plot button
+        # in the prefit will not update the parameters based on the sliders.
+        self.ui.plotButton.clicked.connect(self.onPrefitPlotClicked)
+
     def setUpPrefitRunConnects(self):
         """
         View --> model: run sweep
@@ -1394,14 +1407,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             autorun_callback=self.ui.autoRunCheckBox.isChecked,
         )
         self.ui.autoRunCheckBox.setChecked(True)
-        # connect the run button callback to the generation and run of parameter sweep
-        # notice that parameter update is done in the slider connects
-        # TODO: here is a bug, since the parameter update is done in the slider connects,
-        # if parameters are updated due to the fitting step, and the fitting result parameters
-        # are not imported to the prefit parameters, then the HilbertSpace is still using the
-        # fit parameters; if user want to plot with prefit parameters, clicking the plot button
-        # in the prefit will not update the parameters based on the sliders.
-        self.ui.plotButton.clicked.connect(self.onPrefitPlotClicked)
 
     # Fit ##############################################################
     # ##################################################################
