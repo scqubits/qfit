@@ -33,18 +33,12 @@ from qfit.models.registry import Registrable, RegistryEntry
 
 from copy import deepcopy
 
-
-class LoadFromRegistrySignal(QObject):
-    signal = Signal(dict)
-
-
-class DataSwitchSignal(QObject):
-    signal = Signal()
-
 class ActiveExtractedData(QAbstractTableModel):
     """This class holds one data set, as extracted by markers on the canvas. In
     addition, it references calibration data to expose either the raw selected data,
     or their calibrated counterparts."""
+
+    dataUpdated = Signal(np.ndarray)
 
     def __init__(self, data: Union[np.ndarray, None] = None):
         """
@@ -56,7 +50,6 @@ class ActiveExtractedData(QAbstractTableModel):
         super().__init__()
         self._data: np.ndarray = data or np.empty(shape=(2, 0), dtype=np.float_)
         self._adaptiveCalibrationFunc = None
-        self.dataSwitchSignal = DataSwitchSignal()
 
     @Slot()
     def all(self) -> np.ndarray:
@@ -159,7 +152,7 @@ class ActiveExtractedData(QAbstractTableModel):
             self._data[index.row(), index.column()] = value
         except (ValueError, IndexError):
             return False
-        self.dataChanged.emit(index, index)
+        self.dataUpdated.emit(self.all())
         return True
 
     @Slot()
@@ -174,7 +167,6 @@ class ActiveExtractedData(QAbstractTableModel):
         """
         self._data = newData
         self.layoutChanged.emit()
-        self.dataSwitchSignal.signal.emit()
 
     def flags(self, index: QModelIndex):
         flags = super(self.__class__, self).flags(index)
@@ -225,6 +217,8 @@ class ListModelMeta(type(QAbstractListModel), type(serializers.Serializable)):
 class AllExtractedData(
     QAbstractListModel, serializers.Serializable, Registrable, metaclass=ListModelMeta
 ):
+    focusChanged = Signal(np.ndarray, Tag)
+    loadedFromRegistry = Signal(dict)
 
     def __init__(self):
         super().__init__()
@@ -234,7 +228,6 @@ class AllExtractedData(
         self._calibrationFunc = None
         self._currentRow = 0
         # this signal is used for updating the plot
-        self.loadFromRegistrySignal = LoadFromRegistrySignal()
 
     def rowCount(self, *args) -> int:
         return len(self.dataNames)
@@ -260,14 +253,15 @@ class AllExtractedData(
                 )
             return icon1
 
-    def setData(self, index: QModelIndex, value, role=None):
+    def setData(self, index: QModelIndex, data, role=None):
         """
-        Set the data at index `index` to `value`.
+        Set the data at index `index` to `data`. Note that right now 
+        data in the table is the name of the transition.
         """
         if not (index.isValid() and role == Qt.EditRole):
             return False
         try:
-            self.dataNames[index.row()] = value
+            self.dataNames[index.row()] = data
         except (ValueError, IndexError):
             return False
         self.dataChanged.emit(index, index)
@@ -288,11 +282,9 @@ class AllExtractedData(
 
         # update the current row before emitting the rowsRemoved signal 
         # (which will be emitted by endRemoveRows)
-        self._currentRow = row
+        self.setCurrentRow(row)
 
         self.endInsertRows()
-
-        self.layoutChanged.emit()
 
         return True
 
@@ -300,7 +292,7 @@ class AllExtractedData(
         if self.rowCount() == 1:
             self.assocDataList[0] = np.empty(shape=(2, 0), dtype=np.float_)
             self.assocTagList[0] = Tag()
-            self.layoutChanged.emit()
+            self.setCurrentRow(0)
             return True
 
         self.beginRemoveRows(parent, row, row)
@@ -311,13 +303,12 @@ class AllExtractedData(
         # update the current row before emitting the rowsRemoved signal 
         # (which will be emitted by endRemoveRows)
         if row == self.rowCount():  # now row count is 1 less than before
-            self._currentRow = row - 1
+            self.setCurrentRow(row - 1)
         else:
-            self._currentRow = row
+            self.setCurrentRow(row)
 
         self.endRemoveRows()
 
-        self.layoutChanged.emit()
         return True
 
     def isEmpty(self):
@@ -332,11 +323,14 @@ class AllExtractedData(
     @Slot()
     def newRow(self, str_value=None):
         rowCount = self.rowCount()
+
+        # find a unique name for the new row
         str_value = str_value or "Transition " + str(rowCount + 1)
         counter = 1
         while str_value in self.dataNames:
             str_value = "Transition " + str(rowCount + 1 + counter)
             counter += 1
+        
         self.insertRow(rowCount)
         self.setData(self.index(rowCount, 0), str_value, role=Qt.EditRole)
 
@@ -355,11 +349,10 @@ class AllExtractedData(
 
         # update the current row before emitting the rowsRemoved signal
         # (which will be emitted by endRemoveRows)
-        self._currentRow = 0
+        self.setCurrentRow(0)
 
         self.endRemoveRows()
 
-        self.layoutChanged.emit()
         return True
 
     @Slot()
@@ -371,8 +364,11 @@ class AllExtractedData(
         return self._currentRow
 
     @Slot()
-    def setCurrentRow(self, index):
-        self._currentRow = index.row()
+    def setCurrentRow(self, row: int):
+        self._currentRow = row
+        self.focusChanged.emit(
+            self.currentAssocItem(), self.currentTagItem()
+        )
 
     def currentItem(self):
         return self.data(self.index(self.currentRow, 0), role=Qt.EditRole)
@@ -513,9 +509,8 @@ class AllExtractedData(
             # emit the signal to the controller to register the data through controller
             # the reason for such special setter is that merely recovering the attributes
             # does not update the view correctly; additional steps are needed to update
-            # the viewe accordingly through mainwindow (specifically allDataSet.layoutChanged
-            # methods),
-            self.loadFromRegistrySignal.signal.emit(initdata)
+            # the viewe accordingly through mainwindow
+            self.loadedFromRegistry.emit(initdata)
 
         registry_entry = RegistryEntry(
             name="allExtractedData",

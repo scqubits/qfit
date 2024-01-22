@@ -10,7 +10,7 @@
 ############################################################################
 
 
-from PySide6.QtCore import Slot, QItemSelectionModel
+from PySide6.QtCore import Slot, QItemSelectionModel, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QFrame, QListView, QTableView
 
@@ -44,6 +44,8 @@ class TableView(QTableView):
 
 
 class ListView(QListView):
+    focusChanged = Signal(int)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # font = QFont()
@@ -53,24 +55,34 @@ class ListView(QListView):
 
     def setModel(self, model):
         result = super().setModel(model)
-        # self.model().rowsRemoved.connect(self.setCurrentToLast)
-        # self.model().rowsInserted.connect(self.setCurrentToLast)
         self.setCurrentToLast()
         return result
 
-    @Slot()
     def setCurrentToLast(self):
+        """
+        Set the current index to the last row of the list.
+        """
         maxRowIndex = self.model().rowCount() - 1
         self.setCurrentIndex(self.model().index(maxRowIndex, 0))
 
     def currentChanged(self, current, previous):
         result = super().currentChanged(current, previous)
-        self.model().setCurrentRow(current)
+        self.focusChanged.emit(current.row())
         return result
     
-    @Slot()
-    def selectItem(self, idx):
+    def selectItem(self, idx, blockSignals=False):
+        """
+        Select (highlight) the item at the given index.
+        """
+        if blockSignals:
+            self.blockSignals(True)
+
+        # set an item that has the keyboard focus
         self.setCurrentIndex(self.model().index(idx, 0))
+
+        # select (highlight) an item visually
         self.selectionModel().select(
             self.model().index(idx, 0), QItemSelectionModel.ClearAndSelect
         )
+
+        self.blockSignals(False)

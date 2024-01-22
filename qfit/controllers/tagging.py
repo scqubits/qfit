@@ -63,8 +63,6 @@ class TaggingCtrl(QObject):
         slots that update the model accordingly.
         """
         # Once the user has finished editing the tag, update the AllExtractedData data
-        # each view (LineEdit and SpinBox) has its own signal and a common slot _tagViewToModel to
-        # update the model
         self.taggingView.tagChanged.connect(self.allDatasets.updateCurrentTag)
 
     def _modelUpdatedConnects(self):
@@ -72,15 +70,6 @@ class TaggingCtrl(QObject):
         Once the dataset selection and title selection is changed, change the tag panel
         correspondingly
         """
-        self.activeDataset.dataSwitchSignal.signal.connect(self._tagModelToView)
-
-    # Slots ============================================================
-    @Slot()
-    def _tagModelToView(self):
-        """
-        Whenever the active dataset is switched, update the tag panel to match the current dataset.
-        """
-        # self._setTagTitle()
-
-        tag = self.allDatasets.currentTagItem()
-        self.taggingView.setTag(tag)
+        self.allDatasets.focusChanged.connect(
+            lambda data, tag: self.taggingView.setTag(tag)
+        )

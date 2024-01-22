@@ -6,6 +6,7 @@ from scqubits import (
     Cos2PhiQubit,
     Oscillator,
     KerrOscillator,
+    GenericQubit,
 )
 
 from typing_extensions import Literal
@@ -45,6 +46,7 @@ DEFAULT_PARAM_MINMAX = {
     "EC": {"min": 1e-5, "max": 2.0},
     "EL": {"min": 1e-5, "max": 1.0},
     "E_osc": {"min": 1e-5, "max": 10.0},
+    "E": {"min": 1e-5, "max": 10.0},
     "l_osc": {"min": 1e-5, "max": 1.0},
     "K": {"min": 1e-5, "max": 1.0},
     "disorder": {"min": -1 + 1e-5, "max": 1 - 1e-5},
@@ -109,4 +111,7 @@ QSYS_PARAM_NAMES = {
         "K": ["K"],
         "truncated_dim": ["truncated_dim"],
     },
+    GenericQubit: {
+        "E": ["E"],
+    }
 }
