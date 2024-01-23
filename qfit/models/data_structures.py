@@ -67,6 +67,9 @@ class PlotElement(ABC):
         pass
 
     def remove(self) -> None:
+        """
+        Remove the element from the canvas
+        """
         if self.artists is None:
             return
         
@@ -81,7 +84,7 @@ class ImageElement(PlotElement):
     Data structure for passing and plotting images
     """
     artists: AxesImage
-    
+
     def __init__(
         self, 
         z: np.ndarray,
@@ -91,7 +94,12 @@ class ImageElement(PlotElement):
         self.kwargs = kwargs
 
     def canvasPlot(self, axes: Axes) -> None:
+        """
+        Plot the image on the canvas
+        """
         self.artists = axes.imshow(self.z, **self.kwargs)
+
+        axes.figure.canvas.draw()
     
 class ScatterElement(PlotElement):
     """
@@ -109,8 +117,12 @@ class ScatterElement(PlotElement):
         self.y = y
         self.kwargs = kwargs
 
-    def canvasPlot(self, axes) -> None:
+    def canvasPlot(self, axes: Axes) -> None:
+        """
+        Plot the scatter on the canvas
+        """
         self.artists = axes.scatter(self.x, self.y, **self.kwargs)
+        axes.figure.canvas.draw()
     
 class SpectrumElement(PlotElement):
     """
@@ -128,6 +140,9 @@ class SpectrumElement(PlotElement):
         self.highlighted_specdata = highlighted_specdata
 
     def canvasPlot(self, axes: Axes) -> None:
+        """
+        Plot the spectrum on the canvas
+        """
         fig = axes.get_figure()
 
         # since the scqubits backend do not return the artists, we need to
@@ -141,7 +156,6 @@ class SpectrumElement(PlotElement):
             alpha=0.3,
             fig_ax=(fig, axes),
         )
-
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.highlighted_specdata.plot_evals_vs_paramvals(
@@ -152,3 +166,5 @@ class SpectrumElement(PlotElement):
 
         artist_after = set(axes.get_children())
         self.artists = list(artist_after - artist_before)
+
+        axes.figure.canvas.draw()

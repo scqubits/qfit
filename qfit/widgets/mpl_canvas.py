@@ -136,8 +136,8 @@ class SpecialCursor(Cursor):
     def __init__(
         self,
         ax,
-        allExtractedData: AllExtractedData = None,
-        x_snap_mode=None,
+        x_snap_mode: bool,
+        x_snap_values: np.ndarray,
         axis_snap_mode: Union[None, Literal["X", "Y"]] = None,
         xy_min: Union[None, Tuple[float]] = None,
         horizOn=True,
@@ -148,13 +148,18 @@ class SpecialCursor(Cursor):
         super().__init__(
             ax, horizOn=horizOn, vertOn=vertOn, useblit=useblit, **lineprops
         )
-        self.allExtractedData = allExtractedData
         self.x_snap_mode = x_snap_mode
         self.axis_snap_mode = axis_snap_mode
+        self.x_snap_values = x_snap_values
         self.xy_min = xy_min
 
     def onmove(self, event):
-        """Internal event handler to draw the cursor when the mouse moves."""
+        """
+        Internal event handler to draw the cursor when the mouse moves.
+        
+        When the mouse moves, the cursor (a scatter plot) is drawn at the
+        closest x value in the list of all x values.
+        """
         if self.ignore(event):
             return
         if not self.canvas.widgetlock.available(self):
@@ -202,8 +207,10 @@ class SpecialCursor(Cursor):
         self._update()
 
     def closest_line(self, xdat):
-        all_x_list = self.allExtractedData.distinctSortedXValues()
-        allxdiff = {np.abs(xdat - i): i for i in all_x_list}
+        """
+        Find the closest x value in the list of all x values
+        """
+        allxdiff = {np.abs(xdat - i): i for i in self.x_snap_values}
         if allxdiff:
             return allxdiff[min(allxdiff.keys())]
         else:
@@ -232,11 +239,13 @@ class MplFigureCanvas(QFrame):
     x_snap_mode: bool = False
     cross_hair_horizOn: bool = False
     cross_hair_vertOn: bool = False
+    axis_snap_mode: Union[None, Literal["X", "Y"]] = None
 
     def __init__(self, parent=None):
         QFrame.__init__(self, parent)
 
         self.allExtractedData = None
+        self.cursorXSnapValues = np.array([])
         self.canvas = FigureCanvasQTAgg(Figure())
         self.toolbar = NavigationHidden(self.canvas, self)
 
@@ -253,7 +262,7 @@ class MplFigureCanvas(QFrame):
     def axes(self):
         return self.canvas.figure.axes[0]
 
-    def select_crosshair(
+    def updateCrosshair(
         self,
         x_snap_mode: Union[bool, None] = None,
         axis_snap_mode: Union[None, Literal["X", "Y"]] = None,
@@ -270,18 +279,20 @@ class MplFigureCanvas(QFrame):
             self.cross_hair_horizOn = horizOn
         if vertOn is not None:
             self.cross_hair_vertOn = vertOn
+        if axis_snap_mode is not None:
+            self.axis_snap_mode = axis_snap_mode
 
         self._crosshair = SpecialCursor(
             self.axes(),
-            allExtractedData=self.allExtractedData,
-            x_snap_mode=self.x_snap_mode,
-            axis_snap_mode=axis_snap_mode,
-            xy_min=(self.axes().get_xlim()[0], self.axes().get_ylim()[0]),
-            useblit=True,
-            horizOn=self.cross_hair_horizOn,
-            vertOn=self.cross_hair_vertOn,
-            color="black",
-            alpha=0.5,
+            x_snap_mode = self.x_snap_mode,
+            x_snap_values = self.cursorXSnapValues,
+            axis_snap_mode = self.axis_snap_mode,
+            xy_min = (self.axes().get_xlim()[0], self.axes().get_ylim()[0]),
+            useblit = True,
+            horizOn = self.cross_hair_horizOn,
+            vertOn = self.cross_hair_vertOn,
+            color = "black",
+            alpha = 0.5,
         )
         self.canvas.draw()
         self._crosshair.line_blit_on()
@@ -292,7 +303,7 @@ class MplFigureCanvas(QFrame):
         )  # toggle zoom at the level of the NavigationToolbar2QT, enabling actual
         # zoom functionality
         appstate.state = State.ZOOM
-        self.select_crosshair(horizOn=False, vertOn=False)
+        self.updateCrosshair(horizOn=False, vertOn=False)
 
     def panOn(self):
         self.toolbar.setPanMode(
@@ -300,7 +311,7 @@ class MplFigureCanvas(QFrame):
         )  # toggle pan at the level of the NavigationToolbar2QT, enabling actual
         # pan functionality
         appstate.state = State.PAN
-        self.select_crosshair(horizOn=False, vertOn=False)
+        self.updateCrosshair(horizOn=False, vertOn=False)
 
     def selectOn(self, showCrosshair=True):
         """
@@ -315,9 +326,9 @@ class MplFigureCanvas(QFrame):
         self.toolbar.setPanMode(on=False)
         appstate.state = State.SELECT
         if showCrosshair:
-            self.select_crosshair(horizOn=True, vertOn=True)
+            self.updateCrosshair(horizOn=True, vertOn=True)
         else:
-            self.select_crosshair(horizOn=False, vertOn=False)
+            self.updateCrosshair(horizOn=False, vertOn=False)
 
     def calibrateOn(self):
         self.toolbar.setZoomMode(on=False)
@@ -341,3 +352,12 @@ class MplFigureCanvas(QFrame):
     @Slot()
     def panView(self):
         self.panOn()
+
+    @Slot()
+    def updateCursorXSnapValues(self, newCursorXSnapValues: np.ndarray):
+        self.cursorXSnapValues = newCursorXSnapValues
+        self.updateCrosshair()
+    
+
+    # Signal Processing ================================================
+    

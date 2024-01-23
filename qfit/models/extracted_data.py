@@ -10,7 +10,7 @@
 ############################################################################
 
 
-from typing import Union, Literal, List
+from typing import Union, Literal, List, Callable
 
 import numpy as np
 from PySide6 import QtGui
@@ -22,12 +22,9 @@ from PySide6.QtCore import (
     Qt,
     Slot,
     Signal,
-    QObject,
 )
 
-import qfit.io_utils.file_io_serializers as serializers
-
-from qfit.models.data_structures import Tag
+from qfit.models.data_structures import Tag, ScatterElement
 
 from qfit.models.registry import Registrable, RegistryEntry
 
@@ -141,7 +138,7 @@ class ActiveExtractedData(QAbstractTableModel):
             elif orientation == Qt.Horizontal:
                 return str(section)
 
-    def updateData(self, index: QModelIndex, value: float, role=Qt.EditRole) -> bool:
+    def _updateData(self, index: QModelIndex, value: float, role=Qt.EditRole) -> bool:
         """
 
         Parameters
@@ -162,7 +159,6 @@ class ActiveExtractedData(QAbstractTableModel):
             self._data[index.row(), index.column()] = value
         except (ValueError, IndexError):
             return False
-        self.emitDataUpdated()
         return True
     
     def updateTag(self, tag: Tag):
@@ -198,28 +194,37 @@ class ActiveExtractedData(QAbstractTableModel):
         return flags
 
     def insertColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
+        # it will not emit custom signals 
         self.beginInsertColumns(parent, column, column)
         self._data = np.insert(self._data, column, np.asarray([0.0, 0.0]), axis=1)
         self.endInsertColumns()
-        self.emitDataUpdated()
-
         return True
 
     def removeColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
+        # it will not emit custom signals 
         self.beginRemoveColumns(parent, column, column)
         self._data = np.delete(self._data, column, axis=1)
         self.endRemoveColumns()
-        self.emitDataUpdated()
         return True
+    
+    def remove(self, index: int):
+        """
+        Public method to remove a point
+        """
+        self.removeColumn(index)
+        self.emitDataUpdated()
 
     def append(self, xval: float, yval: float):
+        """
+        Public method to append a new point to the data set.
+        """
         max_col = self.columnCount()
         self.insertColumn(max_col)
-        self.updateData(self.index(0, max_col), xval, role=Qt.EditRole)
-        self.updateData(self.index(1, max_col), yval, role=Qt.EditRole)
+        self._updateData(self.index(0, max_col), xval, role=Qt.EditRole)
+        self._updateData(self.index(1, max_col), yval, role=Qt.EditRole)
         self.emitDataUpdated()
 
-    def setAdaptiveCalibrationFunc(self, adaptiveCalibrationCallback: callable):
+    def setAdaptiveCalibrationFunc(self, adaptiveCalibrationCallback: Callable):
         """
         Record the CalibrationData instance associated with the data.
 
@@ -233,15 +238,17 @@ class ActiveExtractedData(QAbstractTableModel):
         return self._data.size == 0
 
 
-class ListModelMeta(type(QAbstractListModel), type(serializers.Serializable)):
+class ListModelMeta(type(QAbstractListModel), type(Registrable)):
     pass
 
 
 class AllExtractedData(
-    QAbstractListModel, serializers.Serializable, Registrable, metaclass=ListModelMeta
+    QAbstractListModel, Registrable, metaclass=ListModelMeta
 ):
-    focusChanged = Signal(np.ndarray, Tag)
-    loadedFromRegistry = Signal(dict)
+    focusChanged = Signal(np.ndarray, Tag) # when user select and focus on a new row
+    distinctXUpdated = Signal(np.ndarray) # when user extract (remove) data points
+    readyToPlot = Signal(ScatterElement, ScatterElement) # when user extract (remove) data points
+    loadedFromRegistry = Signal(dict) # when user load a project file
 
     def __init__(self):
         super().__init__()
@@ -276,7 +283,7 @@ class AllExtractedData(
                 )
             return icon1
 
-    def updateData(self, index: QModelIndex, data, role=None):
+    def updateName(self, index: QModelIndex, data, role=None):
         """
         Set the data at index `index` to `data`. Note that right now 
         data in the table is the name of the transition.
@@ -354,7 +361,7 @@ class AllExtractedData(
             counter += 1
         
         self.insertRow(rowCount)
-        self.updateData(self.index(rowCount, 0), str_value, role=Qt.EditRole)
+        self.updateName(self.index(rowCount, 0), str_value, role=Qt.EditRole)
 
     @Slot()
     def removeCurrentRow(self):
@@ -406,13 +413,12 @@ class AllExtractedData(
 
     @Slot()
     def updateAssocData(self, newData: np.ndarray, newTag: Tag):
+        """
+        Associted extracted data and tag updated from the active extracted data
+        """
         self.assocDataList[self.currentRow] = newData
         self.assocTagList[self.currentRow] = newTag
-
-    @Slot()
-    def updateCurrentTag(self, newTag):
-        # print("updating: ", newTag)
-        self.assocTagList[self.currentRow] = newTag
+        self.emitDataUpdated()
 
     def setCalibrationFunc(self, calibrationDataCallback):
         self._calibrationFunc = calibrationDataCallback
@@ -483,30 +489,26 @@ class AllExtractedData(
             if data.size > 0:
                 return False
         return True
+    
+    # Signal processing ================================================
+    def emitReadyToPlot(self, *args):
+        pass
 
-    def serialize(self):
+    def emitDataUpdated(self, *args):
         """
-        Convert the content of the current class instance into IOData format.
-
-        Returns
-        -------
-        IOData
+        Update the distinct x values and send out plot data
         """
-        processedData = self.allDataSorted(applyCalibration=False)
-        initdata = {
-            "dataNames": self.dataNames,
-            "assocDataList": processedData,
-            "assocTagList": self.assocTagList,
-        }
-        iodata = serializers.dict_serialize(initdata)
-        iodata.typename = "QfitData"
-        return iodata
+        self.distinctXUpdated.emit(self.distinctSortedXValues())
+        self.emitReadyToPlot()
 
-    attrToRegister = [
-        "dataNames",
-        "assocDataList",
-        "assocTagList",
-    ]
+    def connects(self):
+        # focus changed --> update plot 
+        self.focusChanged.connect(self.emitReadyToPlot)
+
+
+
+
+    # Registry =========================================================
 
     def registerAll(self):
         """

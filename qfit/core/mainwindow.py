@@ -478,7 +478,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             horizOn, vertOn = True, False
             strXY = "Y"
 
-        self.ui.mplFigureCanvas.select_crosshair(
+        self.ui.mplFigureCanvas.updateCrosshair(
             axis_snap_mode=strXY,
             x_snap_mode=self.x_snap_mode,
             horizOn=horizOn,
@@ -524,7 +524,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 self.ui.horizontalSnapButton.setChecked(True)
             for index, x2y2 in enumerate(current_data.transpose()):
                 if self.isRelativelyClose(x1y1, x2y2):
-                    self.activeDataset.removeColumn(index)
+                    self.activeDataset.remove(index)
                     self.updatePlot()
                     return
             if self.ui.verticalSnapButton.isChecked():
@@ -773,7 +773,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         To enble the x-snap mode, connect the measurement data with the 
         extracted data.
         """
-        self.ui.mplFigureCanvas.set_callback_for_extracted_data(self.allDatasets)
+        self.allDatasets.distinctXUpdated.connect(
+            self.ui.mplFigureCanvas.updateCursorXSnapValues
+        )
+        self.allDatasets.distinctXUpdated.connect(
+            lambda x: print("distinctXUpdated")
+        )
         self.updateMatchingModeAndCursor()
 
     # menu #############################################################
@@ -1000,11 +1005,18 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             lambda: self.updateMatchingModeAndCursor()
         )
 
+        self.allDatasets.dataChanged.connect(
+            lambda: print("data changed")
+        )
+
         # If data in the TableView is changed manually through editing,
         # the 'dataChanged' signal will be emitted. The following connects the signal
         # to an update in th data stored in the AllExtractedData
         self.activeDataset.dataUpdated.connect(
             self.allDatasets.updateAssocData
+        )        
+        self.activeDataset.dataUpdated.connect(
+            lambda: print("assoc data updated")
         )        
 
         # whenever a row is inserted or removed, select the current row 
