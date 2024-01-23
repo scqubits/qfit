@@ -144,54 +144,38 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def __init__(
         self, measurementData: MeasurementDataType, hilbertspace: HilbertSpace
     ):
-        # self.hilbertspace = hilbertspace
 
-        # ResizableFramelessWindow.__init__(self)
         QMainWindow.__init__(self)
         self.openFromIPython = executed_in_ipython()
-        self.disconnectCanvas = False  # used to temporarily switch off canvas updates
         self.setFocusPolicy(Qt.StrongFocus)
-        self.offset = None
 
         # ui
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-
-        # fix visibility of collapsible panels
-        # self.ui.xyzDataGridFrame.setVisible(False)
-        # self.ui.filterQFrame.setVisible(False)
-
-        self.ui_menu = MenuWidget(parent=self)
-
         self.setShadows()
         self.ui.verticalSnapButton.setAutoExclusive(False)
-
-        self.uiPagesConnects()
         self.uiGrouping()
+
+        # navigation
+        self.ui_menu = MenuWidget(parent=self)
+        self.uiPagesConnects()
 
         # calibration
         self.setupUICalibration()
         self.calibrationData = CalibrationData()
         self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
-
-        self.x_snap_mode = False
-        self.mousedat = None
-
-        self.setupUIPlotOptions()
-
-        self.measurementData = measurementData
-        self.initializeExtractedData(hilbertspace)
-        self.staticExtractedDataConnects()
-
-        self.dynamicalMeasurementDataSetupConnects(hilbertspace)
-        self.uiDataLoadConnects()
-
-        # setup mpl canvas
-        self.uiColorScaleConnects()
         self.uiCalibrationConnects()
-        self.uiCanvasControlConnects()
-        self.uiMplCanvasConnects()
-        # self.ui.mplFigureCanvas.selectOn()
+
+        # plot, mpl canvas
+        self.measurementData = measurementData
+        self.staticMeasurementDataBuild()
+        self.dynamicalMeasurementDataBuild(hilbertspace)
+
+        # extract
+        self.initializeExtractedData(hilbertspace)
+        self.staticExtractedDataBuild()
+        self.dynamicalExtractedDataBuild()
+        self.measurementExtractedDataConnects()
 
         # prefit: controller, two models and their connection to view (sliders)
         self.prefitDynamicalElementsBuild(hilbertspace)
@@ -217,8 +201,39 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # status bar
         # self.statusBar().showMessage("Ready")
 
-    # ui grouping ######################################################
+    # ui setup & grouping ##############################################
     ####################################################################
+    def setShadows(self):
+        for button in [
+            self.ui.newRowButton,
+            self.ui.deleteRowButton,
+            self.ui.clearAllButton,
+            self.ui.horizontalSnapButton,
+            self.ui.verticalSnapButton,
+            self.ui.calibrateX1Button,
+            self.ui.calibrateX2Button,
+            self.ui.calibrateY1Button,
+            self.ui.calibrateY2Button,
+        ]:
+            eff = QGraphicsDropShadowEffect(button)
+            eff.setOffset(2)
+            eff.setBlurRadius(18.0)
+            eff.setColor(QColor(0, 0, 0, 90))
+            button.setGraphicsEffect(eff)
+
+        for button in [
+            self.ui.zoomViewButton,
+            self.ui.resetViewButton,
+            self.ui.panViewButton,
+            self.ui.selectViewButton,
+            self.ui.swapXYButton,
+        ]:
+            eff = QGraphicsDropShadowEffect(button)
+            eff.setOffset(2)
+            eff.setBlurRadius(18.0)
+            eff.setColor(QColor(0, 0, 0, 90))
+            button.setGraphicsEffect(eff)
+
     def uiGrouping(self):
         """
         Group the UI elements into different groups, making it easier to
@@ -260,10 +275,45 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         }
         self.helpButtonCtrl = HelpButtonCtrl(self.helpButtons)
 
-    # calibration, data, plot setup ####################################
-    ####################################################################
+    # plot #############################################################
+    ####################################################################    
+    def uiMplCanvasConnects(self):
+        """Set up the matplotlib canvas and start monitoring for mouse click events in the canvas area."""
+        self.axes = self.ui.mplFigureCanvas.canvas.figure.subplots()
+        # self.updatePlot(initialize=True)
+        self.cidCanvas = self.axes.figure.canvas.mpl_connect(
+            "button_press_event", self.canvasClickMonitoring
+        )
+        self.ui.horizontalSnapButton.toggled.connect(self.updateMatchingModeAndCursor)
+        # connects the updateMatchingModeAndCursor with calibration buttons
+        for label in self.calibrationButtons:
+            self.calibrationButtons[label].toggled.connect(
+                self.updateMatchingModeAndCursor
+            )
+        self.cidMove = self.axes.figure.canvas.mpl_connect(
+            "motion_notify_event", self.canvasMouseMonitoring
+        )
 
-    def dynamicalMeasurementDataSetupConnects(self, hilbertspace: HilbertSpace):
+    def uiCanvasControlConnects(self):
+        """Connect the UI buttons for reset, zoom, and pan functions of the matplotlib canvas."""
+        self.ui.resetViewButton.clicked.connect(self.ui.mplFigureCanvas.resetView)
+        self.ui.zoomViewButton.clicked.connect(self.toggleZoom)
+        self.ui.panViewButton.clicked.connect(self.togglePan)
+        self.ui.selectViewButton.clicked.connect(self.toggleSelect)
+        self.ui.swapXYButton.clicked.connect(self.swapXY)
+        
+    # measurement data -------------------------------------------------
+    def staticMeasurementDataBuild(self):
+        self.disconnectCanvas = False  # used to temporarily switch off canvas updates
+        self.x_snap_mode = False
+        self.offset = None
+    
+        self.setupUIPlotOptions()
+        self.uiColorScaleConnects()
+        self.uiCanvasControlConnects()
+        self.uiMplCanvasConnects()
+    
+    def dynamicalMeasurementDataBuild(self, hilbertspace: HilbertSpace):
         self.measurementData.setupUICallbacks(
             self.dataCheckBoxCallbacks, self.plotRangeCallback
         )
@@ -275,103 +325,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
 
         self.uiMeasurementDataOptionsConnects()
-
         self.setupUIXYZComboBoxes()
         self.uiXYZComboBoxesConnects()
 
-    def recoverFromExtractedData(self):
-        if self.extractedData is not None:
-            self.allDatasets.dataNames = self.extractedData.datanames
-            self.allDatasets.assocDataList = transposeEach(self.extractedData.datalist)
-            self.allDatasets.assocTagList = self.extractedData.tag_data
-            self.calibrationData.setCalibration(
-                *self.extractedData.calibration_data.allCalibrationVecs()
-            )
-
-            self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
-            self.activeDataset._data = self.allDatasets.currentAssocItem()
-            self.taggingCtrl.setTagInView(self.allDatasets.currentTagItem())
-            self.allDatasets.layoutChanged.emit()
-            self.activeDataset.layoutChanged.emit()
-
-    def mousePressEvent(self, event: QMouseEvent):
-        if event.button() == Qt.LeftButton:
-            self.offset = event.pos()
-        else:
-            super().mousePressEvent(event)
-
-    def mouseMoveEvent(self, event: QMouseEvent):
-        if self.offset is not None and event.buttons() == Qt.LeftButton:
-            self.move(self.pos() + event.pos() - self.offset)
-        else:
-            super().mouseMoveEvent(event)
-
-    def mouseReleaseEvent(self, event: QMouseEvent):
-        self.offset = None
-        super().mouseReleaseEvent(event)
-
-    def setShadows(self):
-        for button in [
-            self.ui.newRowButton,
-            self.ui.deleteRowButton,
-            self.ui.clearAllButton,
-            self.ui.horizontalSnapButton,
-            self.ui.verticalSnapButton,
-            self.ui.calibrateX1Button,
-            self.ui.calibrateX2Button,
-            self.ui.calibrateY1Button,
-            self.ui.calibrateY2Button,
-        ]:
-            eff = QGraphicsDropShadowEffect(button)
-            eff.setOffset(2)
-            eff.setBlurRadius(18.0)
-            eff.setColor(QColor(0, 0, 0, 90))
-            button.setGraphicsEffect(eff)
-
-        for button in [
-            self.ui.zoomViewButton,
-            self.ui.resetViewButton,
-            self.ui.panViewButton,
-            self.ui.selectViewButton,
-            self.ui.swapXYButton,
-        ]:
-            eff = QGraphicsDropShadowEffect(button)
-            eff.setOffset(2)
-            eff.setBlurRadius(18.0)
-            eff.setColor(QColor(0, 0, 0, 90))
-            button.setGraphicsEffect(eff)
-
-    def setupUICalibration(self):
-        """For the interface that enables calibration of data with respect to x and y axis, group QLineEdit elements
-        and the corresponding buttons in dicts. Set up a dictionary mapping calibration labels to the corresponding
-        State choices. Finally, set up an instance of CalibrationData and CalibrationView.
-        """
-        self.rawLineEdits = {
-            "X1": self.ui.rawX1LineEdit,
-            "X2": self.ui.rawX2LineEdit,
-            "Y1": self.ui.rawY1LineEdit,
-            "Y2": self.ui.rawY2LineEdit,
-        }
-        self.mapLineEdits = {
-            "X1": self.ui.mapX1LineEdit,
-            "X2": self.ui.mapX2LineEdit,
-            "Y1": self.ui.mapY1LineEdit,
-            "Y2": self.ui.mapY2LineEdit,
-        }
-        self.calibrationButtons = {
-            "X1": self.ui.calibrateX1Button,
-            "X2": self.ui.calibrateX2Button,
-            "Y1": self.ui.calibrateY1Button,
-            "Y2": self.ui.calibrateY2Button,
-        }
-        self.calibrationStates = {
-            "X1": State.CALIBRATE_X1,
-            "X2": State.CALIBRATE_X2,
-            "Y1": State.CALIBRATE_Y1,
-            "Y2": State.CALIBRATE_Y2,
-        }
-
-        self.calibrationView = CalibrationView(self.rawLineEdits, self.mapLineEdits)
+    def setupUIXYZComboBoxes(self):
+        zDataNames = list(self.measurementData.zCandidates.keys())
+        self.ui.zComboBox.clear()
+        self.ui.zComboBox.addItems(zDataNames)
+        self.ui.zComboBox.setCurrentText(self.measurementData.currentZ.name)
+        self.setupXYDataBoxes()
 
     def setupUIPlotOptions(self):
         self.dataCheckBoxCallbacks = {
@@ -383,65 +345,30 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "logColoring": self.ui.logScaleCheckBox.isChecked,
         }
 
+    @Slot(int)
+    def zDataUpdate(self, itemIndex: int):
+        self.measurementData.setCurrentZ(itemIndex)
+        self.setupXYDataBoxes()
+        self.updatePlot(initialize=True)
+
+    @Slot(int)
+    def xAxisUpdate(self, itemIndex: int):
+        self.measurementData.setCurrentX(itemIndex)
+        self.updatePlot(initialize=True)
+
+    @Slot(int)
+    def yAxisUpdate(self, itemIndex: int):
+        self.measurementData.setCurrentY(itemIndex)
+        self.updatePlot(initialize=True)
+
+
     def plotRangeCallback(self):
         val1 = self.ui.rangeSliderMin.value() / 100.0
         val2 = self.ui.rangeSliderMax.value() / 100.0
         min_val = min(val1, val2)
         max_val = max(val1, val2)
         return [min_val, max_val]
-
-    def setupUIXYZComboBoxes(self):
-        zDataNames = list(self.measurementData.zCandidates.keys())
-        self.ui.zComboBox.clear()
-        self.ui.zComboBox.addItems(zDataNames)
-        self.ui.zComboBox.setCurrentText(self.measurementData.currentZ.name)
-        self.setupXYDataBoxes()
-
-    def uiPagesConnects(self):
-        """Connect the UI elements for switching between the different pages."""
-
-        # page 0: Calibrate (previously Extract)
-        self.ui.modeSelectButton.clicked.connect(lambda: self._switchToPage(0))
-        # page 1: Extract & Tag (previously Tag)
-        self.ui.modeTagButton.clicked.connect(lambda: self._switchToPage(1))
-        # page 2: Prefit
-        self.ui.modePrefitButton.clicked.connect(lambda: self._switchToPage(2))
-        # page 3: Fit
-        self.ui.modeFitButton.clicked.connect(lambda: self._switchToPage(3))
-
-        # when clicked parameter export button, switch to the desired page
-        self.ui.exportToFitButton.clicked.connect(lambda: self._switchToPage(3))
-        self.ui.exportToPrefitButton.clicked.connect(lambda: self._switchToPage(2))
-
-    @Slot()
-    def _switchToPage(self, page: int):
-        # update MSE when switching between fit / pre-fit page
-        if self.ui.pagesStackedWidget.currentIndex() == 2 and page == 3:
-            self.ui.mseLabel_2.setText(self.ui.mseLabel.text())
-        elif self.ui.pagesStackedWidget.currentIndex() == 3 and page == 2:
-            self.ui.mseLabel.setText(self.ui.mseLabel_2.text())
-
-        # switch to the desired page
-        self.ui.pagesStackedWidget.setCurrentIndex(page)
-        self.ui.bottomStackedWidget.setCurrentIndex(page)
-
-        # set the corresponding button to checked
-        self.ui.modeSelectButton.setChecked(False)
-        self.ui.modeTagButton.setChecked(False)
-        self.ui.modePrefitButton.setChecked(False)
-        self.ui.modeFitButton.setChecked(False)
-        if page == 0:
-            self.ui.modeSelectButton.setChecked(True)
-        elif page == 1:
-            self.ui.modeTagButton.setChecked(True)
-        elif page == 2:
-            self.ui.modePrefitButton.setChecked(True)
-        elif page == 3:
-            self.ui.modeFitButton.setChecked(True)
-
-        self.updateMatchingModeAndCursor()
-        self.updatePlot()
-
+    
     def uiMeasurementDataOptionsConnects(self):
         """Connect the UI elements related to display of data"""
         self.ui.topHatCheckBox.toggled.connect(lambda x: self.updatePlot())
@@ -462,35 +389,59 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.rangeSliderMin.valueChanged.connect(lambda x: self.updatePlot())
         self.ui.rangeSliderMax.valueChanged.connect(lambda x: self.updatePlot())
 
-    def uiCalibrationConnects(self):
-        """Connect UI elements for data calibration."""
-        self.ui.calibratedCheckBox.toggled.connect(self.toggleCalibration)
-
-        for label in self.calibrationButtons:
-            self.calibrationButtons[label].clicked.connect(
-                partial(self.calibrate, label)
-            )
-
-        for lineEdit in list(self.rawLineEdits.values()) + list(
-            self.mapLineEdits.values()
-        ):
-            lineEdit.editingFinished.connect(self.updateCalibration)
-
-    def uiCanvasControlConnects(self):
-        """Connect the UI buttons for reset, zoom, and pan functions of the matplotlib canvas."""
-        self.ui.resetViewButton.clicked.connect(self.ui.mplFigureCanvas.resetView)
-        self.ui.zoomViewButton.clicked.connect(self.toggleZoom)
-        self.ui.panViewButton.clicked.connect(self.togglePan)
-        self.ui.selectViewButton.clicked.connect(self.toggleSelect)
-        self.ui.swapXYButton.clicked.connect(self.swapXY)
-
-    def uiDataLoadConnects(self):
-        self.allDatasets.loadedFromRegistry.connect(self.extractedDataSetup)
-
     def uiXYZComboBoxesConnects(self):
         self.ui.zComboBox.activated.connect(self.zDataUpdate)
         self.ui.xComboBox.activated.connect(self.xAxisUpdate)
         self.ui.yComboBox.activated.connect(self.yAxisUpdate)
+
+    
+    def setupXYDataBoxes(self):
+        self.ui.xComboBox.clear()
+        xDataNames = list(self.measurementData.currentXCompatibles.keys())
+        self.ui.xComboBox.addItems(xDataNames)
+        self.ui.xComboBox.setCurrentText(self.measurementData.currentX.name)
+
+        self.ui.yComboBox.clear()
+        yDataNames = list(self.measurementData.currentYCompatibles.keys())
+        self.ui.yComboBox.addItems(yDataNames)
+        self.ui.yComboBox.setCurrentText(self.measurementData.currentY.name)
+
+    @Slot()
+    def toggleSelect(self):
+        if appstate.state != State.SELECT:
+            appstate.state = State.SELECT
+            self.ui.mplFigureCanvas.selectOn(
+                showCrosshair=self.ui.modeTagButton.isChecked()
+            )
+
+    @Slot()
+    def toggleZoom(self):
+        if appstate.state != "ZOOM":
+            appstate.state = State.ZOOM
+            self.ui.mplFigureCanvas.zoomView()
+
+    @Slot()
+    def togglePan(self):
+        if appstate.state != "PAN":
+            appstate.state = State.PAN
+            self.ui.mplFigureCanvas.panView()
+
+    # cursor -----------------------------------------------------------
+    def mousePressEvent(self, event: QMouseEvent):
+        if event.button() == Qt.LeftButton:
+            self.offset = event.pos()
+        else:
+            super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event: QMouseEvent):
+        if self.offset is not None and event.buttons() == Qt.LeftButton:
+            self.move(self.pos() + event.pos() - self.offset)
+        else:
+            super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        self.offset = None
+        super().mouseReleaseEvent(event)
 
     def updateMatchingModeAndCursor(self):
         """
@@ -534,76 +485,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             vertOn=vertOn,
         )
 
-    def calibrationButtonIsChecked(self):
-        """
-        Check if any of the calibration buttons is checked
-        """
-        for label in self.calibrationButtons:
-            if self.calibrationButtons[label].isChecked():
-                return True
-        return False
-
-    def uiMplCanvasConnects(self):
-        """Set up the matplotlib canvas and start monitoring for mouse click events in the canvas area."""
-        self.axes = self.ui.mplFigureCanvas.canvas.figure.subplots()
-        self.updatePlot(initialize=True)
-        self.cidCanvas = self.axes.figure.canvas.mpl_connect(
-            "button_press_event", self.canvasClickMonitoring
-        )
-        self.ui.horizontalSnapButton.toggled.connect(self.updateMatchingModeAndCursor)
-        # connects the updateMatchingModeAndCursor with calibration buttons
-        for label in self.calibrationButtons:
-            self.calibrationButtons[label].toggled.connect(
-                self.updateMatchingModeAndCursor
-            )
-        self.updateMatchingModeAndCursor()
-        self.ui.mplFigureCanvas.set_callback_for_extracted_data(self.allDatasets)
-        self.cidMove = self.axes.figure.canvas.mpl_connect(
-            "motion_notify_event", self.canvasMouseMonitoring
-        )
-
-    def setupXYDataBoxes(self):
-        self.ui.xComboBox.clear()
-        xDataNames = list(self.measurementData.currentXCompatibles.keys())
-        self.ui.xComboBox.addItems(xDataNames)
-        self.ui.xComboBox.setCurrentText(self.measurementData.currentX.name)
-
-        self.ui.yComboBox.clear()
-        yDataNames = list(self.measurementData.currentYCompatibles.keys())
-        self.ui.yComboBox.addItems(yDataNames)
-        self.ui.yComboBox.setCurrentText(self.measurementData.currentY.name)
-
-    @Slot()
-    def toggleSelect(self):
-        if appstate.state != State.SELECT:
-            appstate.state = State.SELECT
-            self.ui.mplFigureCanvas.selectOn(
-                showCrosshair=self.ui.modeTagButton.isChecked()
-            )
-
-    @Slot()
-    def toggleZoom(self):
-        if appstate.state != "ZOOM":
-            appstate.state = State.ZOOM
-            self.ui.mplFigureCanvas.zoomView()
-
-    @Slot()
-    def togglePan(self):
-        if appstate.state != "PAN":
-            appstate.state = State.PAN
-            self.ui.mplFigureCanvas.panView()
-
-    def line_select_callback(self, eclick, erelease):
-        """
-        Callback for line selection.
-
-        *eclick* and *erelease* are the press and release events.
-        """
-        x1, y1 = eclick.xdata, eclick.ydata
-        x2, y2 = erelease.xdata, erelease.ydata
-        # print(f"({x1:3.2f}, {y1:3.2f}) --> ({x2:3.2f}, {y2:3.2f})")
-        # print(f" The buttons you used were: {eclick.button} {erelease.button}")
-
+    
     @Slot()
     def canvasClickMonitoring(self, event):
         """Main loop for acting on mouse events occurring in the canvas area."""
@@ -633,7 +515,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # select mode
         if self.ui.modeTagButton.isChecked() and appstate.state == State.SELECT:
-            current_data = self.activeDataset.all()
+            current_data = self.activeDataset.allTransitions()
             if self.x_snap_mode:
                 x1y1 = np.asarray([self.closest_line(event.xdata), event.ydata])
             else:
@@ -710,8 +592,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # If there are any extracted data points in the currently active data set, show
         # those via a scatter plot.
         if self.ui.modeTagButton.isChecked():
+            # in the extracting (tagging) page, show both
             if not self.activeDataset.isEmpty():
-                dataXY = self.activeDataset.all()
+                dataXY = self.activeDataset.allTransitions()
                 self.axes.scatter(
                     dataXY[0],
                     dataXY[1],
@@ -721,7 +604,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                     alpha=0.3,
                 )
             for data in self.allDatasets.assocDataList:
-                if data.size > 0 and data is not self.activeDataset.all():
+                if data.size > 0 and data is not self.activeDataset.allTransitions():
                     self.axes.scatter(
                         data[0],
                         data[1],
@@ -730,16 +613,16 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                         s=70,
                         alpha=0.23,
                     )
-            if not self.allDatasets.isEmpty():
-                dataXY = self.activeDataset.all()
-                self.axes.scatter(
-                    dataXY[0],
-                    dataXY[1],
-                    c=scatter_color,
-                    marker=r"$\odot$",
-                    s=130,
-                    alpha=0.3,
-                )
+            # if not self.allDatasets.isEmpty():
+            #     dataXY = self.activeDataset.allTransitions()
+            #     self.axes.scatter(
+            #         dataXY[0],
+            #         dataXY[1],
+            #         c=scatter_color,
+            #         marker=r"$\odot$",
+            #         s=130,
+            #         alpha=0.3,
+            #     )
         elif not self.ui.modeSelectButton.isChecked():
             if not self.allDatasets.isEmpty():
                 dataXY = self.allDatasets.allDataSorted(
@@ -828,70 +711,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.mplFigureCanvas.x_snap_mode = self.x_snap_mode
         self.ui.mplFigureCanvas.set_callback_for_extracted_data(self.allDatasets)
 
-    def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
-        """Highlight the button by changing its color."""
-        if reset:
-            button.setStyleSheet("")
-        else:
-            button.setStyleSheet("QPushButton {background-color: #BE82FA}")
-
-    def _resetHighlightButtons(self):
-        """Reset the highlighting of all calibration buttons."""
-        for label in self.calibrationButtons:
-            self._highlightCaliButton(self.calibrationButtons[label], reset=True)
-
-    @Slot()
-    def calibrate(self, calibrationLabel: str):
-        """
-        Mouse click on one of the calibration buttons prompts switching to
-        calibration mode. Mouse cursor crosshair is adjusted and canvas waits for
-        click setting calibration point x or y component.
-        Besides, the button is highlighted.
-        """
-        appstate.state = self.calibrationStates[calibrationLabel]
-        # button highlighting
-        self._resetHighlightButtons()
-        self._highlightCaliButton(self.calibrationButtons[calibrationLabel])
-        # mpl canvas mode & cursor
-        self.updateMatchingModeAndCursor()
-        # notice that this line overwrites the crosshair selection in updateMatchingModeAndCursor
-        self.ui.mplFigureCanvas.calibrateOn()
-
-    @Slot()
-    def updateCalibration(self):
-        """Transfer new calibration data from CalibrationView over to calibrationData
-        instance. If the model is currently applying the calibration, then emit
-        signal to rewrite the table."""
-        self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
-        if self.calibrationData.applyCalibration:
-            self.activeDataset.layoutChanged.emit()
-
-    @Slot()
-    def toggleCalibration(self):
-        """If calibration check box is changed, toggle the calibration status of the
-        calibrationData. Also induce change at the level of the displayed data of
-        selected points."""
-        self.calibrationData.toggleCalibration()
-        # update the plot to reflect the change in calibration label
-        self.updatePlot()
-        self.activeDataset.toggleCalibratedView()
-
-    @Slot(int)
-    def zDataUpdate(self, itemIndex: int):
-        self.measurementData.setCurrentZ(itemIndex)
-        self.setupXYDataBoxes()
-        self.updatePlot(initialize=True)
-
-    @Slot(int)
-    def xAxisUpdate(self, itemIndex: int):
-        self.measurementData.setCurrentX(itemIndex)
-        self.updatePlot(initialize=True)
-
-    @Slot(int)
-    def yAxisUpdate(self, itemIndex: int):
-        self.measurementData.setCurrentY(itemIndex)
-        self.updatePlot(initialize=True)
-
     @Slot()
     def swapXY(self):
         self.disconnectCanvas = True
@@ -899,7 +718,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.setupXYDataBoxes()
 
         self.allDatasets.swapXY()
-        self.allDatasets.layoutChanged.emit()
 
         xBgndSub = self.ui.bgndSubtractXCheckBox.checkState()
         yBgndSub = self.ui.bgndSubtractYCheckBox.checkState()
@@ -949,6 +767,178 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         allxdiff = {np.abs(xdat - i): i for i in all_x_list}
         return allxdiff[min(allxdiff.keys())]
     
+    # x-snap: connect measurement data with extracted data #############
+    def measurementExtractedDataConnects(self):
+        """
+        To enble the x-snap mode, connect the measurement data with the 
+        extracted data.
+        """
+        self.ui.mplFigureCanvas.set_callback_for_extracted_data(self.allDatasets)
+        self.updateMatchingModeAndCursor()
+
+    # menu #############################################################
+    ####################################################################
+    def uiPagesConnects(self):
+        """Connect the UI elements for switching between the different pages."""
+
+        # page 0: Calibrate (previously Extract)
+        self.ui.modeSelectButton.clicked.connect(lambda: self._switchToPage(0))
+        # page 1: Extract & Tag (previously Tag)
+        self.ui.modeTagButton.clicked.connect(lambda: self._switchToPage(1))
+        # page 2: Prefit
+        self.ui.modePrefitButton.clicked.connect(lambda: self._switchToPage(2))
+        # page 3: Fit
+        self.ui.modeFitButton.clicked.connect(lambda: self._switchToPage(3))
+
+        # when clicked parameter export button, switch to the desired page
+        self.ui.exportToFitButton.clicked.connect(lambda: self._switchToPage(3))
+        self.ui.exportToPrefitButton.clicked.connect(lambda: self._switchToPage(2))
+
+    @Slot()
+    def _switchToPage(self, page: int):
+        # update MSE when switching between fit / pre-fit page
+        if self.ui.pagesStackedWidget.currentIndex() == 2 and page == 3:
+            self.ui.mseLabel_2.setText(self.ui.mseLabel.text())
+        elif self.ui.pagesStackedWidget.currentIndex() == 3 and page == 2:
+            self.ui.mseLabel.setText(self.ui.mseLabel_2.text())
+
+        # switch to the desired page
+        self.ui.pagesStackedWidget.setCurrentIndex(page)
+        self.ui.bottomStackedWidget.setCurrentIndex(page)
+
+        # set the corresponding button to checked
+        self.ui.modeSelectButton.setChecked(False)
+        self.ui.modeTagButton.setChecked(False)
+        self.ui.modePrefitButton.setChecked(False)
+        self.ui.modeFitButton.setChecked(False)
+        if page == 0:
+            self.ui.modeSelectButton.setChecked(True)
+        elif page == 1:
+            self.ui.modeTagButton.setChecked(True)
+        elif page == 2:
+            self.ui.modePrefitButton.setChecked(True)
+        elif page == 3:
+            self.ui.modeFitButton.setChecked(True)
+
+        self.updateMatchingModeAndCursor()
+        self.updatePlot()
+
+    # calibration ####################################
+    ####################################################################
+    def setupUICalibration(self):
+        """For the interface that enables calibration of data with respect to x and y axis, group QLineEdit elements
+        and the corresponding buttons in dicts. Set up a dictionary mapping calibration labels to the corresponding
+        State choices. Finally, set up an instance of CalibrationData and CalibrationView.
+        """
+        self.rawLineEdits = {
+            "X1": self.ui.rawX1LineEdit,
+            "X2": self.ui.rawX2LineEdit,
+            "Y1": self.ui.rawY1LineEdit,
+            "Y2": self.ui.rawY2LineEdit,
+        }
+        self.mapLineEdits = {
+            "X1": self.ui.mapX1LineEdit,
+            "X2": self.ui.mapX2LineEdit,
+            "Y1": self.ui.mapY1LineEdit,
+            "Y2": self.ui.mapY2LineEdit,
+        }
+        self.calibrationButtons = {
+            "X1": self.ui.calibrateX1Button,
+            "X2": self.ui.calibrateX2Button,
+            "Y1": self.ui.calibrateY1Button,
+            "Y2": self.ui.calibrateY2Button,
+        }
+        self.calibrationStates = {
+            "X1": State.CALIBRATE_X1,
+            "X2": State.CALIBRATE_X2,
+            "Y1": State.CALIBRATE_Y1,
+            "Y2": State.CALIBRATE_Y2,
+        }
+
+        self.calibrationView = CalibrationView(self.rawLineEdits, self.mapLineEdits)
+
+    def uiCalibrationConnects(self):
+        """Connect UI elements for data calibration."""
+        self.ui.calibratedCheckBox.toggled.connect(self.toggleCalibration)
+
+        for label in self.calibrationButtons:
+            self.calibrationButtons[label].clicked.connect(
+                partial(self.calibrate, label)
+            )
+
+        for lineEdit in list(self.rawLineEdits.values()) + list(
+            self.mapLineEdits.values()
+        ):
+            lineEdit.editingFinished.connect(self.updateCalibration)
+
+    def calibrationButtonIsChecked(self):
+        """
+        Check if any of the calibration buttons is checked
+        """
+        for label in self.calibrationButtons:
+            if self.calibrationButtons[label].isChecked():
+                return True
+        return False
+
+    def line_select_callback(self, eclick, erelease):
+        """
+        Callback for line selection.
+
+        *eclick* and *erelease* are the press and release events.
+        """
+        x1, y1 = eclick.xdata, eclick.ydata
+        x2, y2 = erelease.xdata, erelease.ydata
+        # print(f"({x1:3.2f}, {y1:3.2f}) --> ({x2:3.2f}, {y2:3.2f})")
+        # print(f" The buttons you used were: {eclick.button} {erelease.button}")
+
+    def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
+        """Highlight the button by changing its color."""
+        if reset:
+            button.setStyleSheet("")
+        else:
+            button.setStyleSheet("QPushButton {background-color: #BE82FA}")
+
+    def _resetHighlightButtons(self):
+        """Reset the highlighting of all calibration buttons."""
+        for label in self.calibrationButtons:
+            self._highlightCaliButton(self.calibrationButtons[label], reset=True)
+
+    @Slot()
+    def calibrate(self, calibrationLabel: str):
+        """
+        Mouse click on one of the calibration buttons prompts switching to
+        calibration mode. Mouse cursor crosshair is adjusted and canvas waits for
+        click setting calibration point x or y component.
+        Besides, the button is highlighted.
+        """
+        appstate.state = self.calibrationStates[calibrationLabel]
+        # button highlighting
+        self._resetHighlightButtons()
+        self._highlightCaliButton(self.calibrationButtons[calibrationLabel])
+        # mpl canvas mode & cursor
+        self.updateMatchingModeAndCursor()
+        # notice that this line overwrites the crosshair selection in updateMatchingModeAndCursor
+        self.ui.mplFigureCanvas.calibrateOn()
+
+    @Slot()
+    def updateCalibration(self):
+        """Transfer new calibration data from CalibrationView over to calibrationData
+        instance. If the model is currently applying the calibration, then emit
+        signal to rewrite the table."""
+        self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
+        if self.calibrationData.applyCalibration:
+            self.activeDataset.emitDataSwitched()
+
+    @Slot()
+    def toggleCalibration(self):
+        """If calibration check box is changed, toggle the calibration status of the
+        calibrationData. Also induce change at the level of the displayed data of
+        selected points."""
+        self.calibrationData.toggleCalibration()
+        # update the plot to reflect the change in calibration label
+        self.updatePlot()
+        self.activeDataset.emitDataUpdated()
+    
     # extract and tag ##################################################
     # ##################################################################
     def initializeExtractedData(self, hilbertspace: HilbertSpace):
@@ -975,9 +965,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.taggingView,
         )
 
-    def staticExtractedDataConnects(self):
+    def staticExtractedDataBuild(self):
         self.uiExtractedDataConnects()
         self.uiExtractedDataControlConnects()
+
+    def dynamicalExtractedDataBuild(self):
+        self.allDatasets.loadedFromRegistry.connect(self.extractedDataSetup)
 
     def uiExtractedDataControlConnects(self):
         """Connect buttons for inserting and deleting a data set, or clearing all data sets"""
@@ -996,9 +989,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # allDataset selection --> activeDataset update
         self.allDatasets.focusChanged.connect(
-            lambda data, tag: self.activeDataset.setAllData(
-                newData=data
-            )
+            self.activeDataset.replaceAllData
         )
 
         # allDataset selection --> view update
@@ -1009,19 +1000,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             lambda: self.updateMatchingModeAndCursor()
         )
 
-        # Whenever the data layout in the ActiveExtractedData changes, update
-        # the corresponding AllExtractedData data; this includes the important
-        # event of adding extraction points to the ActiveExtractedData
-        self.activeDataset.layoutChanged.connect(
-            lambda: self.allDatasets.updateAssocData(
-                newData=self.activeDataset.all()
-            )
-        )
-        
         # If data in the TableView is changed manually through editing,
         # the 'dataChanged' signal will be emitted. The following connects the signal
         # to an update in th data stored in the AllExtractedData
-        self.activeDataset.dataChanged.connect(
+        self.activeDataset.dataUpdated.connect(
             self.allDatasets.updateAssocData
         )        
 
@@ -1676,8 +1658,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.allDatasets.removeAll()
         self.allDatasets.blockSignals(False)
 
-        self.dynamicalMeasurementDataSetupConnects(hilbertspace)
-        self.uiDataLoadConnects()
+        self.dynamicalMeasurementDataBuild(hilbertspace)
+        self.dynamicalExtractedDataBuild()
         self.setupUIXYZComboBoxes()
 
         self.prefitDynamicalElementsBuild(hilbertspace)
@@ -1724,10 +1706,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # calibration.
         self.calibrationData.setCalibration(*self.calibrationData.allCalibrationVecs())
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
-        # set active dataset
+        # set dataset
+        self.allDatasets.layoutChanged.emit()   # show everything in the list of transitions
         self.activeDataset._data = self.allDatasets.currentAssocItem()
-        self.allDatasets.layoutChanged.emit()
-        self.activeDataset.layoutChanged.emit()
+        self.activeDataset.emitDataSwitched()
 
     def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)

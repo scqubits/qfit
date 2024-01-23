@@ -1,4 +1,15 @@
+from abc import ABC, abstractmethod
+from typing import List, Tuple, Union, Dict, Any, Optional
 
+import numpy as np
+from scqubits.core.storage import SpectrumData
+import warnings
+
+from matplotlib.axes import Axes
+from matplotlib.collections import PathCollection
+from matplotlib.image import AxesImage
+from matplotlib.lines import Line2D
+from matplotlib.artist import Artist
 
 class Tag:
     """
@@ -25,22 +36,119 @@ class Tag:
     """
 
     def __init__(
-        self, tagType="NO_TAG", initial=None, final=None, photons=None, subsysList=None
+        self, 
+        tagType: str = "NO_TAG", 
+        initial: Optional[Union[Tuple[int, ...], int]] = None, 
+        final: Optional[Union[Tuple[int, ...], int]] = None, 
+        photons: Optional[int] = None, 
     ):
         self.tagType = tagType
         self.initial = initial
         self.final = final
         self.photons = photons
-        self.subsysList = subsysList
 
     def __str__(self):
-        return "Tag: {0} {1} {2} {3} {4}".format(
+        return "Tag: {0} {1} {2} {3}".format(
             self.tagType,
             str(self.initial),
             str(self.final),
             str(self.photons),
-            str(self.subsysList),
         )
     
     def __repr__(self):
         return self.__str__()
+    
+# ######################################################################
+class PlotElement(ABC):
+    artists: Union[Artist, List[Artist]]
+
+    @abstractmethod
+    def canvasPlot(self, **kwargs) -> None:
+        pass
+
+    def remove(self) -> None:
+        if self.artists is None:
+            return
+        
+        if isinstance(self.artists, list):
+            for artist in self.artists:
+                artist.remove()
+        else:
+            self.artists.remove()
+
+class ImageElement(PlotElement):
+    """
+    Data structure for passing and plotting images
+    """
+    artists: AxesImage
+    
+    def __init__(
+        self, 
+        z: np.ndarray,
+        **kwargs
+    ):
+        self.z = z
+        self.kwargs = kwargs
+
+    def canvasPlot(self, axes: Axes) -> None:
+        self.artists = axes.imshow(self.z, **self.kwargs)
+    
+class ScatterElement(PlotElement):
+    """
+    Data structure for passing and plotting lines
+    """
+    artists: PathCollection
+
+    def __init__(
+        self, 
+        x: np.ndarray, 
+        y: np.ndarray,
+        **kwargs
+    ):
+        self.x = x
+        self.y = y
+        self.kwargs = kwargs
+
+    def canvasPlot(self, axes) -> None:
+        self.artists = axes.scatter(self.x, self.y, **self.kwargs)
+    
+class SpectrumElement(PlotElement):
+    """
+    Data structure for passing and plotting spectra from scqubits
+    """
+    artists: List[Line2D]
+
+    def __init__(
+        self,
+        overall_specdata: SpectrumData,
+        highlighted_specdata: SpectrumData,
+
+    ):
+        self.overall_specdata = overall_specdata
+        self.highlighted_specdata = highlighted_specdata
+
+    def canvasPlot(self, axes: Axes) -> None:
+        fig = axes.get_figure()
+
+        # since the scqubits backend do not return the artists, we need to
+        # obtain the new artists by comparing the old and new artists
+        artist_before = set(axes.get_children())
+
+        self.overall_specdata.plot_evals_vs_paramvals(
+            color="black",
+            linewidth=2,
+            linestyle="--",
+            alpha=0.3,
+            fig_ax=(fig, axes),
+        )
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.highlighted_specdata.plot_evals_vs_paramvals(
+                label_list=self.highlighted_specdata.labels,
+                linewidth=2,
+                fig_ax=(fig, axes),
+            )
+
+        artist_after = set(axes.get_children())
+        self.artists = list(artist_after - artist_before)

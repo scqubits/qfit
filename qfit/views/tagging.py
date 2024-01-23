@@ -64,7 +64,6 @@ class TaggingView(QObject):
         Slot for bare button being toggled. If the bare button is checked, switch the
         UI to the bare tag page. Else, do nothing.
         """
-        print("bare toggled")
         if self.radioButtons["bare"].isChecked():
             self.groupBox["bare"].setVisible(True)
             self.groupBox["dressed"].setVisible(False)
@@ -76,7 +75,6 @@ class TaggingView(QObject):
         Slot for dressed button being toggled. If the dressed button is checked, switch the
         UI to the dressed tag page. Else, do nothing.
         """
-        print("dressed toggled")
         if self.radioButtons["dressed"].isChecked():
             self.groupBox["bare"].setVisible(False)
             self.groupBox["dressed"].setVisible(True)
@@ -88,7 +86,6 @@ class TaggingView(QObject):
         Slot for no tag button being toggled. If the no tag button is checked, switch the
         UI to the no tag page. Else, do nothing.
         """
-        print("no tag toggled")
         if self.radioButtons["no tag"].isChecked():
             self.groupBox["bare"].setVisible(False)
             self.groupBox["dressed"].setVisible(False)
@@ -184,7 +181,7 @@ class TaggingView(QObject):
         self.dressedLabels["photons"].setValue(1)        
 
     @Slot(Tag)
-    def setTag(self, tag: Tag):
+    def replaceTag(self, tag: Tag):
         """
         Provide an external interface (outside of this class) to set the tag in the view.
         It sets the tag view based on the tag data.

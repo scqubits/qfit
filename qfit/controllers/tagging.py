@@ -63,13 +63,13 @@ class TaggingCtrl(QObject):
         slots that update the model accordingly.
         """
         # Once the user has finished editing the tag, update the AllExtractedData data
-        self.taggingView.tagChanged.connect(self.allDatasets.updateCurrentTag)
+        self.taggingView.tagChanged.connect(self.activeDataset.updateTag)
 
     def _modelUpdatedConnects(self):
         """
         Once the dataset selection and title selection is changed, change the tag panel
         correspondingly
         """
-        self.allDatasets.focusChanged.connect(
-            lambda data, tag: self.taggingView.setTag(tag)
+        self.activeDataset.dataSwitched.connect(
+            lambda data, tag: self.taggingView.replaceTag(tag)
         )
