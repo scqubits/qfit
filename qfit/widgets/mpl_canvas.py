@@ -28,7 +28,6 @@ from matplotlib.widgets import Cursor
 import qfit.core.app_state as appstate
 from qfit.core.app_state import State
 from qfit.utils.helpers import y_snap
-from qfit.models.extracted_data import AllExtractedData
 
 from typing import Union, Literal, Tuple
 
@@ -136,22 +135,43 @@ class SpecialCursor(Cursor):
     def __init__(
         self,
         ax,
-        x_snap_mode: bool,
-        x_snap_values: np.ndarray,
-        axis_snap_mode: Union[None, Literal["X", "Y"]] = None,
-        xy_min: Union[None, Tuple[float]] = None,
+        xSnapMode: bool,
+        xSnapValues: np.ndarray,
+        axisSnapMode: Union[None, Literal["X", "Y"]] = None,
+        xyMin: Union[None, Tuple[float]] = None,
         horizOn=True,
         vertOn=True,
         useblit=False,
         **lineprops,
     ):
+        """
+        Parameters:
+        -----------
+        ax: Axes
+            The Axes to attach the cursor to.
+        x_snap_mode: bool
+            Whether to snap the cursor to the closest x value in the list of all x values
+        x_snap_values: np.ndarray
+            The list of all x values
+        axis_snap_mode: Union[None, Literal["X", "Y"]]
+            Whether to snap the cursor to the minimum x or y value (edge of the plot)
+        xy_min: Union[None, Tuple[float]]
+            The minimum x and y values
+        horizOn: bool
+            Whether to show the horizontal line
+        vertOn: bool
+            Whether to show the vertical line
+        useblit: bool
+            Whether to use blitting for faster drawing
+        """
         super().__init__(
             ax, horizOn=horizOn, vertOn=vertOn, useblit=useblit, **lineprops
         )
-        self.x_snap_mode = x_snap_mode
-        self.axis_snap_mode = axis_snap_mode
-        self.x_snap_values = x_snap_values
-        self.xy_min = xy_min
+        self.xSnapMode = xSnapMode
+        self.xSnapValues = xSnapValues
+
+        self.axis_snap_mode = axisSnapMode
+        self.xyMin = xyMin
 
     def onmove(self, event):
         """
@@ -162,9 +182,12 @@ class SpecialCursor(Cursor):
         """
         if self.ignore(event):
             return
+        
         if not self.canvas.widgetlock.available(self):
             return
+        
         if event.inaxes != self.ax:
+            # Hide the vertical and horizontal lines when the mouse is outside the axes
             self.linev.set_visible(False)
             self.lineh.set_visible(False)
 
@@ -172,24 +195,33 @@ class SpecialCursor(Cursor):
                 self.canvas.draw()
                 self.needclear = False
             return
+        
         self.needclear = True
+        
         if not self.visible:
             return
+        
+        # Update the vertical line position based on the mouse x-coordinate
         self.linev.set_xdata((event.xdata, event.xdata))
 
+        # Update the horizontal line position based on the mouse y-coordinate
         self.lineh.set_ydata((event.ydata, event.ydata))
-        # x coordinate of the point
-        if self.x_snap_mode == True:
+        
+        # Calculate the x-coordinate of the point based on the snapping mode and axis snap mode
+        if self.xSnapMode == True:
             point_x_coordinate = self.closest_line(event.xdata)
         elif self.axis_snap_mode == "Y":
-            point_x_coordinate = self.xy_min[0]
+            point_x_coordinate = self.xyMin[0]
         else:
             point_x_coordinate = event.xdata
-        # y coordinate of the point
+        
+        # Calculate the y-coordinate of the point based on the axis snap mode
         if self.axis_snap_mode == "X":
-            point_y_coordinate = self.xy_min[1]
+            point_y_coordinate = self.xyMin[1]
         else:
             point_y_coordinate = event.ydata
+        
+        # Draw the cursor (a scatter plot) at the calculated coordinates
         self.cross = self.ax.scatter(
             point_x_coordinate,
             point_y_coordinate,
@@ -200,17 +232,19 @@ class SpecialCursor(Cursor):
             animated=True,
         )
 
+        # Set the visibility of the cursor and lines
         self.cross.set_visible(self.visible)
         self.linev.set_visible(self.visible and self.vertOn)
         self.lineh.set_visible(self.visible and self.horizOn)
 
+        # Update the canvas to reflect the changes
         self._update()
 
     def closest_line(self, xdat):
         """
         Find the closest x value in the list of all x values
         """
-        allxdiff = {np.abs(xdat - i): i for i in self.x_snap_values}
+        allxdiff = {np.abs(xdat - i): i for i in self.xSnapValues}
         if allxdiff:
             return allxdiff[min(allxdiff.keys())]
         else:
@@ -244,7 +278,6 @@ class MplFigureCanvas(QFrame):
     def __init__(self, parent=None):
         QFrame.__init__(self, parent)
 
-        self.allExtractedData = None
         self.cursorXSnapValues = np.array([])
         self.canvas = FigureCanvasQTAgg(Figure())
         self.toolbar = NavigationHidden(self.canvas, self)
@@ -255,13 +288,11 @@ class MplFigureCanvas(QFrame):
 
         self._crosshair = None
 
-    def set_callback_for_extracted_data(self, new_extracted_data):
-        self.allExtractedData = new_extracted_data
-        # self.select_crosshair()
-
+    # Properties =======================================================
     def axes(self):
         return self.canvas.figure.axes[0]
-
+    
+    # View Manipulation ================================================
     def updateCrosshair(
         self,
         x_snap_mode: Union[bool, None] = None,
@@ -284,10 +315,10 @@ class MplFigureCanvas(QFrame):
 
         self._crosshair = SpecialCursor(
             self.axes(),
-            x_snap_mode = self.x_snap_mode,
-            x_snap_values = self.cursorXSnapValues,
-            axis_snap_mode = self.axis_snap_mode,
-            xy_min = (self.axes().get_xlim()[0], self.axes().get_ylim()[0]),
+            xSnapMode = self.x_snap_mode,
+            xSnapValues = self.cursorXSnapValues,
+            axisSnapMode = self.axis_snap_mode,
+            xyMin = (self.axes().get_xlim()[0], self.axes().get_ylim()[0]),
             useblit = True,
             horizOn = self.cross_hair_horizOn,
             vertOn = self.cross_hair_vertOn,
@@ -358,6 +389,5 @@ class MplFigureCanvas(QFrame):
         self.cursorXSnapValues = newCursorXSnapValues
         self.updateCrosshair()
     
-
     # Signal Processing ================================================
     

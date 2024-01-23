@@ -48,52 +48,8 @@ class ActiveExtractedData(QAbstractTableModel):
         super().__init__()
         self._data: np.ndarray = data or np.empty(shape=(2, 0), dtype=np.float_)
         self._tag: Tag = Tag()
-        self._adaptiveCalibrationFunc = None
 
-    @Slot()
-    def allTransitions(self) -> np.ndarray:
-        """
-        Return the raw data as a numpy array.
-
-        Returns
-        -------
-        ndarray
-        """
-        return self._data
-    
-    def emitDataUpdated(self):
-        """
-        view updated the model
-        """
-        self.dataUpdated.emit(self._data, self._tag)
-
-    def emitDataSwitched(self):
-        """
-        model (allDatasets) switched it to a new data set
-        """
-        self.dataSwitched.emit(self._data, self._tag)
-
-    def data(self, index: QModelIndex, role=Qt.DisplayRole):
-        """
-        Return data at index `index` in string format, assuming that it is a float.
-
-        Parameters
-        ----------
-        index: QModelIndex
-            index of requested data
-        role: int, default=QtCore.Qt.DisplayRole
-
-        Returns
-        -------
-        str
-        """
-        if role == Qt.DisplayRole:
-            conversionFunc = self._adaptiveCalibrationFunc()
-            value = conversionFunc(
-                [self._data[0, index.column()], self._data[1, index.column()]]
-            )
-            return "{:#.6g}".format(value[index.row()])
-
+    # Properties =======================================================
     def rowCount(self, *args):
         """
         Return number of rows.
@@ -114,6 +70,20 @@ class ActiveExtractedData(QAbstractTableModel):
         """
         return self._data.shape[1]
 
+    @Slot()
+    def allTransitions(self) -> np.ndarray:
+        """
+        Return the raw data as a numpy array.
+
+        Returns
+        -------
+        ndarray
+        """
+        return self._data
+
+    def isEmpty(self) -> bool:
+        return self._data.size == 0
+    
     def headerData(
         self, section: int, orientation: Qt.Orientation, role=Qt.DisplayRole
     ):
@@ -137,6 +107,21 @@ class ActiveExtractedData(QAbstractTableModel):
                 return str(["x", "y"][section])
             elif orientation == Qt.Horizontal:
                 return str(section)
+        
+    # Internal data manipulation methods================================
+    def insertColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
+        # it will not emit custom signals 
+        self.beginInsertColumns(parent, column, column)
+        self._data = np.insert(self._data, column, np.asarray([0.0, 0.0]), axis=1)
+        self.endInsertColumns()
+        return True
+
+    def removeColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
+        # it will not emit custom signals 
+        self.beginRemoveColumns(parent, column, column)
+        self._data = np.delete(self._data, column, axis=1)
+        self.endRemoveColumns()
+        return True
 
     def _updateData(self, index: QModelIndex, value: float, role=Qt.EditRole) -> bool:
         """
@@ -160,53 +145,8 @@ class ActiveExtractedData(QAbstractTableModel):
         except (ValueError, IndexError):
             return False
         return True
-    
-    def updateTag(self, tag: Tag):
-        """
-        Set the tag of the data.
 
-        Parameters
-        ----------
-        tag: Tag
-        """
-        self._tag = tag
-        self.emitDataUpdated()
-
-    @Slot()
-    def replaceAllData(self, newData: np.ndarray, newTag: Tag):
-        """
-        Replaces the current table of extracted data points with a new dataset of points
-
-        Parameters
-        ----------
-        newData: np.ndarray of float
-            float array of data points to substitute the current data set
-        """
-        self._data = newData
-        self._tag = newTag
-        self.emitDataSwitched()
-
-    def flags(self, index: QModelIndex):
-        flags = super(self.__class__, self).flags(index)
-        flags |= Qt.ItemIsEditable
-        flags |= Qt.ItemIsSelectable
-        flags |= Qt.ItemIsEnabled
-        return flags
-
-    def insertColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
-        # it will not emit custom signals 
-        self.beginInsertColumns(parent, column, column)
-        self._data = np.insert(self._data, column, np.asarray([0.0, 0.0]), axis=1)
-        self.endInsertColumns()
-        return True
-
-    def removeColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
-        # it will not emit custom signals 
-        self.beginRemoveColumns(parent, column, column)
-        self._data = np.delete(self._data, column, axis=1)
-        self.endRemoveColumns()
-        return True
-    
+    # Data manipulation ================================================
     def remove(self, index: int):
         """
         Public method to remove a point
@@ -223,19 +163,44 @@ class ActiveExtractedData(QAbstractTableModel):
         self._updateData(self.index(0, max_col), xval, role=Qt.EditRole)
         self._updateData(self.index(1, max_col), yval, role=Qt.EditRole)
         self.emitDataUpdated()
-
-    def setAdaptiveCalibrationFunc(self, adaptiveCalibrationCallback: Callable):
+    
+    @Slot()
+    def replaceAllData(self, newData: np.ndarray, newTag: Tag):
         """
-        Record the CalibrationData instance associated with the data.
+        Replaces the current table of extracted data points with a new dataset of points
 
         Parameters
         ----------
-        adaptiveCalibrationCallback: function
+        newData: np.ndarray of float
+            float array of data points to substitute the current data set
         """
-        self._adaptiveCalibrationFunc = adaptiveCalibrationCallback
+        self._data = newData
+        self._tag = newTag
+        self.emitDataSwitched()
 
-    def isEmpty(self) -> bool:
-        return self._data.size == 0
+    # Signal processing ================================================
+    def emitDataUpdated(self):
+        """
+        view updated the model
+        """
+        self.dataUpdated.emit(self._data, self._tag)
+
+    def emitDataSwitched(self):
+        """
+        model (allDatasets) switched it to a new data set
+        """
+        self.dataSwitched.emit(self._data, self._tag)
+
+    def updateTag(self, tag: Tag):
+        """
+        Set the tag of the data.
+
+        Parameters
+        ----------
+        tag: Tag
+        """
+        self._tag = tag
+        self.emitDataUpdated()
 
 
 class ListModelMeta(type(QAbstractListModel), type(Registrable)):
@@ -259,10 +224,32 @@ class AllExtractedData(
         self._currentRow = 0
         # this signal is used for updating the plot
 
+    # Properties =======================================================
     def rowCount(self, *args) -> int:
         return len(self.dataNames)
 
+    def currentItem(self):
+        return self.data(self.index(self.currentRow, 0), role=Qt.EditRole)
+
+    def currentAssocItem(self) -> np.ndarray:
+        return self.assocDataList[self.currentRow]
+
+    def currentTagItem(self) -> Tag:
+        return self.assocTagList[self.currentRow]
+    
+    def currentDataName(self) -> str:
+        return self.dataNames[self.currentRow]
+    
+    def isEmpty(self) -> bool:
+        for data in self.assocDataList:
+            if data.size > 0:
+                return False
+        return True
+
     def data(self, index: QModelIndex, role):
+        """
+        The NAME & Icon of the transition!
+        """
         if role == Qt.DisplayRole:
             str_value = self.dataNames[index.row()]
             return str_value
@@ -283,26 +270,32 @@ class AllExtractedData(
                 )
             return icon1
 
-    def updateName(self, index: QModelIndex, data, role=None):
-        """
-        Set the data at index `index` to `data`. Note that right now 
-        data in the table is the name of the transition.
-        """
-        if not (index.isValid() and role == Qt.EditRole):
-            return False
-        try:
-            self.dataNames[index.row()] = data
-        except (ValueError, IndexError):
-            return False
-        return True
-
     def flags(self, index):
         flags = super(self.__class__, self).flags(index)
         flags |= Qt.ItemIsEditable
         flags |= Qt.ItemIsSelectable
         flags |= Qt.ItemIsEnabled
         return flags
+    
+    # Signal processing ================================================
+    def emitReadyToPlot(self, *args):
+        pass
 
+    def emitDataUpdated(self, *args):
+        """
+        Update the distinct x values and send out plot data
+        """
+        self.distinctXUpdated.emit(self.distinctSortedXValues())
+        self.emitReadyToPlot()
+
+    def connects(self):
+        # focus changed --> update plot 
+        self.focusChanged.connect(self.emitReadyToPlot)
+
+    def setCalibrationFunc(self, calibrationDataCallback):
+        self._calibrationFunc = calibrationDataCallback
+
+    # Internal data manipulation methods ===============================
     def insertRow(self, row, parent=QModelIndex(), *args, **kwargs):
         self.beginInsertRows(parent, row, row)
         self.dataNames.insert(row, "")
@@ -340,15 +333,46 @@ class AllExtractedData(
 
         return True
 
-    def isEmpty(self):
-        if len(self.assocDataList) == 1 and self.assocDataList[0].size == 0:
-            return True
-        return False
+    # Data manipulation ================================================
+    def updateName(self, index: QModelIndex, data, role=None):
+        """
+        Set the data at index `index` to `data`. Note that right now 
+        data in the table is the name of the transition.
+        """
+        if not (index.isValid() and role == Qt.EditRole):
+            return False
+        try:
+            self.dataNames[index.row()] = data
+        except (ValueError, IndexError):
+            return False
+        return True
 
     def swapXY(self):
         swappedAssocDataList = [array[[1, 0]] for array in self.assocDataList]
-        self.assocDataList = swappedAssocDataList
+        self.assocDataList = swappedAssocDataList    
 
+    @property
+    def currentRow(self):
+        return self._currentRow
+    
+    @Slot()
+    def removeAll(self):
+        """
+        Remove all rows of dataset
+        """
+        self.beginRemoveRows(QModelIndex(), 0, self.rowCount() - 1)
+        self.dataNames = ["Transition 1"]
+        self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
+        self.assocTagList = [Tag()]
+
+        # update the current row before emitting the rowsRemoved signal
+        # (which will be emitted by endRemoveRows)
+        self.setCurrentRow(0)
+
+        self.endRemoveRows()
+
+        return True
+    
     @Slot()
     def newRow(self, str_value=None):
         rowCount = self.rowCount()
@@ -367,50 +391,6 @@ class AllExtractedData(
     def removeCurrentRow(self):
         self.removeRow(self.currentRow)
 
-    def removeAll(self):
-        """
-        Remove all rows of dataset
-        """
-        self.beginRemoveRows(QModelIndex(), 0, self.rowCount() - 1)
-        self.dataNames = ["Transition 1"]
-        self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
-        self.assocTagList = [Tag()]
-
-        # update the current row before emitting the rowsRemoved signal
-        # (which will be emitted by endRemoveRows)
-        self.setCurrentRow(0)
-
-        self.endRemoveRows()
-
-        return True
-
-    @Slot()
-    def onClearClicked(self):
-        self.removeAll()
-
-    @property
-    def currentRow(self):
-        return self._currentRow
-
-    @Slot()
-    def setCurrentRow(self, row: int):
-        self._currentRow = row
-        self.focusChanged.emit(
-            self.currentAssocItem(), self.currentTagItem()
-        )
-
-    def currentItem(self):
-        return self.data(self.index(self.currentRow, 0), role=Qt.EditRole)
-
-    def currentAssocItem(self) -> np.ndarray:
-        return self.assocDataList[self.currentRow]
-
-    def currentTagItem(self) -> Tag:
-        return self.assocTagList[self.currentRow]
-    
-    def currentDataName(self) -> str:
-        return self.dataNames[self.currentRow]
-
     @Slot()
     def updateAssocData(self, newData: np.ndarray, newTag: Tag):
         """
@@ -420,8 +400,12 @@ class AllExtractedData(
         self.assocTagList[self.currentRow] = newTag
         self.emitDataUpdated()
 
-    def setCalibrationFunc(self, calibrationDataCallback):
-        self._calibrationFunc = calibrationDataCallback
+    @Slot()
+    def setCurrentRow(self, row: int):
+        self._currentRow = row
+        self.focusChanged.emit(
+            self.currentAssocItem(), self.currentTagItem()
+        )
 
     def allDataSorted(
         self, 
@@ -483,32 +467,6 @@ class AllExtractedData(
         for dataset in self.assocDataList:
             all_x_list = np.concatenate((all_x_list, dataset[0]))
         return np.sort(np.unique(all_x_list))
-    
-    def isEmpty(self) -> bool:
-        for data in self.assocDataList:
-            if data.size > 0:
-                return False
-        return True
-    
-    # Signal processing ================================================
-    def emitReadyToPlot(self, *args):
-        pass
-
-    def emitDataUpdated(self, *args):
-        """
-        Update the distinct x values and send out plot data
-        """
-        self.distinctXUpdated.emit(self.distinctSortedXValues())
-        self.emitReadyToPlot()
-
-    def connects(self):
-        # focus changed --> update plot 
-        self.focusChanged.connect(self.emitReadyToPlot)
-
-
-
-
-    # Registry =========================================================
 
     def registerAll(self):
         """

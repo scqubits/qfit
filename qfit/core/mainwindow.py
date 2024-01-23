@@ -951,10 +951,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         markers on the canvas. The AllExtractedData instance holds all data, whereas the
         ActiveExtractedData instance holds data of the currently selected data set."""
         self.activeDataset = ActiveExtractedData()
-        self.activeDataset.setAdaptiveCalibrationFunc(
-            self.calibrationData.adaptiveConversionFunc
-        )
-
         self.allDatasets = AllExtractedData()
         self.allDatasets.setCalibrationFunc(self.calibrationData.calibrateDataset)
         self.ui.datasetListView.setModel(self.allDatasets)
@@ -982,7 +978,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # update the backend model
         self.ui.newRowButton.clicked.connect(self.allDatasets.newRow)
         self.ui.deleteRowButton.clicked.connect(self.allDatasets.removeCurrentRow)
-        self.ui.clearAllButton.clicked.connect(self.allDatasets.onClearClicked)
+        self.ui.clearAllButton.clicked.connect(self.allDatasets.removeAll)
 
     def uiExtractedDataConnects(self):
         """Make connections for changes in extracted data."""
