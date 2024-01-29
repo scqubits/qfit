@@ -1,4 +1,4 @@
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, Signal, QObject
 
 import numpy as np
 
@@ -27,7 +27,7 @@ from qfit.models.status_result_data import Result
 from qfit.models.numerical_spectrum_data import CalculatedSpecData
 from qfit.models.calibration_data import CalibrationData
 from qfit.models.extracted_data import AllExtractedData
-from qfit.models.data_structures import Tag
+from qfit.models.data_structures import Tag, SpectrumElement
 
 from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
 
@@ -56,7 +56,7 @@ def dummy_hilbert_space():
     return hilbertspace
 
 
-class QuantumModel:
+class QuantumModel(QObject):
     """
     Class for handling the HilbertSpace object, including: (1) identifying parameters in each subsystem of the Hamiltonian
     and coupling coefficients of the interaction terms, (2) receiving updated values of parameters and coupling coefficients
@@ -68,10 +68,13 @@ class QuantumModel:
     hilbertspace: HilbertSpace
     """
 
+    readyToPlot = Signal(SpectrumElement)
+
     def __init__(
         self,
         hilbertspace: HilbertSpace,
     ):
+        super().__init__()
         self.hilbertspace: HilbertSpace = hilbertspace
 
     def setupPlotUICallbacks(
@@ -553,7 +556,7 @@ class QuantumModel:
             else:
                 prefit_result.status_text = (
                     f"Fail to initialize the parameter sweep with "
-                    f"{type(e).__name__}: {e}"
+                    f"{type(e).__name__}: {e}."
                 )
             return
 
@@ -565,7 +568,7 @@ class QuantumModel:
         self,
         slider_or_fit_parameter_set: QuantumModelParameterSet,
         sweep_parameter_set: QuantumModelParameterSet,
-        spectrum_data: CalculatedSpecData,
+        # spectrum_data: CalculatedSpecData,
         calibration_data: CalibrationData,
         extracted_data: AllExtractedData,
         result: Result,
@@ -611,13 +614,14 @@ class QuantumModel:
         self._scaleYByInverseCalibration(calibration_data, overall_specdata)
         self._scaleYByInverseCalibration(calibration_data, specdata_for_highlighting)
 
-        # update spectrum_data
-        # do not need call spectrum_data.canvasPlot(). It is done in the mainwindow with
-        # another connection
-        spectrum_data.update(
+        # emit the spectrum data to the plot view
+        spectrum_element = SpectrumElement(
+            "spectrum",
             overall_specdata,
             specdata_for_highlighting,
         )
+        self.readyToPlot.emit(spectrum_element)
+
         # --------------------------------------------------------------
 
         # mse calculation
@@ -634,7 +638,7 @@ class QuantumModel:
         self,
         slider_or_fit_parameter_set: QuantumModelParameterSet,
         sweep_parameter_set: QuantumModelParameterSet,
-        spectrum_data: CalculatedSpecData,
+        # spectrum_data: CalculatedSpecData,
         calibration_data: CalibrationData,
         extracted_data: AllExtractedData,
         prefit_result: Result,
@@ -673,7 +677,7 @@ class QuantumModel:
             self.sweep2SpecNMSE(
                 slider_or_fit_parameter_set=slider_or_fit_parameter_set,
                 sweep_parameter_set=sweep_parameter_set,
-                spectrum_data=spectrum_data,
+                # spectrum_data=spectrum_data,
                 extracted_data=extracted_data,
                 calibration_data=calibration_data,
                 result=prefit_result,

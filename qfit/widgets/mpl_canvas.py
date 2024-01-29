@@ -11,6 +11,9 @@
 
 
 import numpy as np
+import copy
+import warnings
+from typing import Union, Literal, Tuple, Dict, Any
 
 from PySide6 import QtCore
 from PySide6.QtCore import Slot
@@ -23,13 +26,13 @@ from matplotlib.backends.backend_qtagg import (
 )
 from matplotlib.figure import Figure
 from matplotlib.widgets import Cursor
+import matplotlib.cm as cm
 
-
-import qfit.core.app_state as appstate
-from qfit.core.app_state import State
 from qfit.utils.helpers import y_snap
 
-from typing import Union, Literal, Tuple
+from qfit.models.data_structures import PlotElement
+from qfit.settings import color_dict
+
 
 
 class MplNavButtons(QFrame):
@@ -46,7 +49,11 @@ class NavigationHidden(NavigationToolbar2QT):
         t for t in NavigationToolbar2QT.toolitems if t[0] in ("Home", "Pan", "Zoom")
     ]
 
-    def __init__(self, canvas, parent, coordinates=True):
+    def __init__(
+        self, 
+        canvas: FigureCanvasQTAgg, 
+        parent: "MplFigureCanvas", 
+    ):
         super().__init__(canvas, parent, coordinates=False)
         self.set_cursor(cursors.SELECT_REGION)
         self._idPress = None
@@ -58,6 +65,7 @@ class NavigationHidden(NavigationToolbar2QT):
     def _update_buttons_checked(self):
         pass
 
+    # override the default mpl keypress callback
     def setPanMode(self, on=True):
         """
         Activate pan/zoom mode. on is a boolean. It first disconnects any
@@ -129,6 +137,30 @@ class NavigationHidden(NavigationToolbar2QT):
 
     def set_cursor(self, cursor):
         self.canvas.setCursor(QtCore.Qt.CrossCursor)
+
+    def release_zoom(self, event):
+        """
+        The x and y limits of the axes can only be changed by zoom, pan, or
+        home buttons. To do this, we need to record the x and y limits of the
+        axes after each zoom/pan/home action. The recorded x and y limits 
+        will be used when the plot element is updated.
+        """
+        super().release_zoom(event)
+        self.parent()._recordXYLim()
+
+    def release_pan(self, event):
+        """
+        See release_zoom
+        """
+        super().release_pan(event)
+        self.parent()._recordXYLim()
+
+    def home(self):
+        """
+        See release_zoom
+        """
+        super().home()
+        self.parent()._recordXYLim()
 
 
 class SpecialCursor(Cursor):
@@ -270,30 +302,67 @@ class SpecialCursor(Cursor):
 
 
 class MplFigureCanvas(QFrame):
-    x_snap_mode: bool = False
-    cross_hair_horizOn: bool = False
-    cross_hair_vertOn: bool = False
-    axis_snap_mode: Union[None, Literal["X", "Y"]] = None
+    _crosshair: SpecialCursor
 
     def __init__(self, parent=None):
         QFrame.__init__(self, parent)
 
+        # View elements
         self.cursorXSnapValues = np.array([])
         self.canvas = FigureCanvasQTAgg(Figure())
         self.toolbar = NavigationHidden(self.canvas, self)
 
+        # initialize the layout
         vertical_layout = QVBoxLayout()
         vertical_layout.addWidget(self.canvas)
         self.setLayout(vertical_layout)
 
-        self._crosshair = None
+        # initialize the properties
+        self.initializeProperties()
+
+        # initialize the ploting elements
+        self._plottingElements: Dict[str, PlotElement] = {}
+
+    def initializeProperties(self):
+        self.canvas.figure.subplots()
+        self.axes().autoscale(enable=False)
+
+        self.plottingDisabled: bool = False
+        self.plotMode: Literal["calibrate", "select", "fit"] = "calibrate"
+
+        self.x_snap_mode: bool = False
+        self.crosshairHorizOn: bool = False
+        self.crosshairVertOn: bool = False
+        self.axisSnapMode: Union[None, Literal["X", "Y"]] = None
+
+        self.colorMapStr: str = "PuOr"
+        self._updateElementColors()
+
+        self.xlim: Tuple[float, float] = (0, 1)
+        self.ylim: Tuple[float, float] = (0, 1)
 
     # Properties =======================================================
     def axes(self):
         return self.canvas.figure.axes[0]
     
-    # View Manipulation ================================================
-    def updateCrosshair(
+    @Slot()
+    def updateColorMap(self, colorMap: str):
+        self.colorMapStr = colorMap
+        self._updateElementColors()
+        self.plotAllElements()
+
+    def _updateElementColors(self):
+        """
+        According to the color map, update the colors of the elements. 
+        It won't redraw the elements, but wait for the next updateAllElements() call.
+        """
+        self.crossColor = color_dict[self.colorMapStr]["Cross"]
+        self.lineColor = color_dict[self.colorMapStr]["line"]
+        self.scatterColor = color_dict[self.colorMapStr]["Scatter"]
+        self.cmap = copy.copy(getattr(cm, self.colorMapStr))
+
+    # Cursor Configuration =============================================
+    def _updateCrosshair(
         self,
         x_snap_mode: Union[bool, None] = None,
         axis_snap_mode: Union[None, Literal["X", "Y"]] = None,
@@ -307,42 +376,60 @@ class MplFigureCanvas(QFrame):
         if x_snap_mode is not None:
             self.x_snap_mode = x_snap_mode
         if horizOn is not None:
-            self.cross_hair_horizOn = horizOn
+            self.crosshairHorizOn = horizOn
         if vertOn is not None:
-            self.cross_hair_vertOn = vertOn
+            self.crosshairVertOn = vertOn
         if axis_snap_mode is not None:
-            self.axis_snap_mode = axis_snap_mode
+            self.axisSnapMode = axis_snap_mode
 
         self._crosshair = SpecialCursor(
             self.axes(),
             xSnapMode = self.x_snap_mode,
             xSnapValues = self.cursorXSnapValues,
-            axisSnapMode = self.axis_snap_mode,
+            axisSnapMode = self.axisSnapMode,
             xyMin = (self.axes().get_xlim()[0], self.axes().get_ylim()[0]),
             useblit = True,
-            horizOn = self.cross_hair_horizOn,
-            vertOn = self.cross_hair_vertOn,
-            color = "black",
+            horizOn = self.crosshairHorizOn,
+            vertOn = self.crosshairVertOn,
+            color = self.crossColor,
             alpha = 0.5,
         )
         self.canvas.draw()
         self._crosshair.line_blit_on()
+
+    def _recordXYLim(self):
+        """
+        It will be called when:
+        1. the view is initializes/reset internally, for example, 
+            when the measurement data is loaded / transposed
+        2. the view's x and y limits are zoomed/panned/reset externally
+        """
+        self.xlim = self.axes().get_xlim()
+        self.ylim = self.axes().get_ylim()
+        print("Recording x and y limits, x: ", self.xlim, "y: ", self.ylim)
+
+    def _keepXYLim(self):
+        """
+        Keep the x and y limits of the axes unchanged.
+        It will be called when the plot elements are updated and the x and y limits
+        are automatically changed by matplotlib.
+        """
+        self.axes().set_xlim(self.xlim)
+        self.axes().set_ylim(self.ylim)
 
     def zoomOn(self):
         self.toolbar.setZoomMode(
             on=True
         )  # toggle zoom at the level of the NavigationToolbar2QT, enabling actual
         # zoom functionality
-        appstate.state = State.ZOOM
-        self.updateCrosshair(horizOn=False, vertOn=False)
+        self._updateCrosshair(horizOn=False, vertOn=False)
 
     def panOn(self):
         self.toolbar.setPanMode(
             on=True
         )  # toggle pan at the level of the NavigationToolbar2QT, enabling actual
         # pan functionality
-        appstate.state = State.PAN
-        self.updateCrosshair(horizOn=False, vertOn=False)
+        self._updateCrosshair(horizOn=False, vertOn=False)
 
     def selectOn(self, showCrosshair=True):
         """
@@ -355,22 +442,14 @@ class MplFigureCanvas(QFrame):
         """
         self.toolbar.setZoomMode(on=False)
         self.toolbar.setPanMode(on=False)
-        appstate.state = State.SELECT
         if showCrosshair:
-            self.updateCrosshair(horizOn=True, vertOn=True)
+            self._updateCrosshair(horizOn=True, vertOn=True)
         else:
-            self.updateCrosshair(horizOn=False, vertOn=False)
+            self._updateCrosshair(horizOn=False, vertOn=False)
 
     def calibrateOn(self):
         self.toolbar.setZoomMode(on=False)
         self.toolbar.setPanMode(on=False)
-        # if strXY == "X":
-        #     horizOn = False
-        #     vertOn = True
-        # else:
-        #     horizOn = True
-        #     vertOn = False
-        # self.select_crosshair(axis_snap_mode=strXY, horizOn=horizOn, vertOn=vertOn)
 
     @Slot()
     def resetView(self):
@@ -387,7 +466,180 @@ class MplFigureCanvas(QFrame):
     @Slot()
     def updateCursorXSnapValues(self, newCursorXSnapValues: np.ndarray):
         self.cursorXSnapValues = newCursorXSnapValues
-        self.updateCrosshair()
-    
+        self._updateCrosshair()        
+
+    # View Manipulation: Plotting ======================================
+    # toolbox
+    def _checkElementName(self, name: str):
+        """
+        Check whether the element name is valid
+        """
+        if name not in [
+            "measurement", 
+            "active_extractions",
+            "all_extractions",
+            "extraction_vlines",
+            "spectrum"
+        ]:
+            raise ValueError(
+                f"Invalid element name: {name}. "
+            )    
+        
+    def _hasElement(self, elementName: str) -> bool:
+        """
+        Check whether the element is in the plotting elements dictionary
+        """
+        self._checkElementName(elementName)
+        return elementName in self._plottingElements.keys()
+        
+    def _coloringKwargs(self, elementName: str) -> Dict[str, Any]:
+        """
+        For different elements, they accept different coloring kwargs.
+        """
+        self._checkElementName(elementName)
+
+        if elementName == "measurement":
+            return {"cmap": self.cmap}
+        elif elementName == "active_extractions":
+            return {"color": self.scatterColor}
+        elif elementName == "all_extractions":
+            return {"color": self.scatterColor}
+        elif elementName == "extraction_vlines":
+            return {"color": self.lineColor}
+        else:
+            return {} 
+        
+    def _setVisible(self, elementName: str, visible: bool):
+        """
+        Set the visibility of the element. If the element does not exist, 
+        create a dummy element and set its visibility. It will be updated
+        when the actual element is created, and the visibility will be
+        inherited.
+        """
+        if self._hasElement(elementName):
+            self._plottingElements[elementName].set_visible(visible)
+        else:
+            # create a dummy element
+            dummy_element = PlotElement(elementName)
+            dummy_element.set_visible(visible)
+            self.updateElement(dummy_element)
+
+    @Slot() 
+    def relimByMeasData(self):
+        """
+        Set the x and y limits of the axes to fit the measurement data
+        """
+        if not self._hasElement("measurement"):
+            # measurement data not loaded
+            return 
+        
+        self.axes().set_xlim(self._plottingElements["measurement"].xLim)
+        self.axes().set_ylim(self._plottingElements["measurement"].yLim)
+        self._recordXYLim()
+
+    # manipulate plotting elements        
+    @Slot()
+    def toPlotMode(self, mode: Literal["calibrate", "select", "fit"]):
+        """
+        Switch to the mode and update the plotting elements
+        """
+        self.plotConfigMode = mode
+
+        if mode == "calibrate":
+            self._setVisible("measurement", True)
+            self._setVisible("extraction_vlines", False)
+            self._setVisible("active_extractions", False)
+            self._setVisible("all_extractions", False)
+            self._setVisible("spectrum", False)
+        elif mode == "select":
+            self._setVisible("measurement", True)
+            self._setVisible("extraction_vlines", True)
+            self._setVisible("active_extractions", True)
+            self._setVisible("all_extractions", True)
+            self._setVisible("spectrum", False)
+        elif mode == "fit":
+            self._setVisible("measurement", True)
+            self._setVisible("extraction_vlines", True)
+            self._setVisible("active_extractions", True)
+            self._setVisible("all_extractions", True)
+            self._setVisible("spectrum", True)
+
+        self.plotAllElements()
+        
+    def _plotElement(
+        self, 
+        element: Union[PlotElement, str], 
+        draw: bool = True,
+        **kwargs
+    ):
+        """
+        Plot the element by name
+        """
+        if self.plottingDisabled:
+            return
+        
+        if isinstance(element, str):
+            element = self._plottingElements[element]
+
+        element.canvasPlot(
+            self.axes(), 
+            **self._coloringKwargs(element.name),
+            **kwargs
+        )
+        self._keepXYLim()
+
+        if draw:
+            self.canvas.draw()
+
+        print(f"Updated element: {element.name}")
+
+    @Slot()
+    def updateElement(self, element: PlotElement, **kwargs):
+        """
+        Update the element in the plotting elements dictionary and 
+        redraw the element on the canvas. Note that the visibility of the
+        element will be inherited from the previous element with the same
+        name.
+        """
+        name = element.name
+        self._checkElementName(name)
+
+        # remove the old element and inherit its properties
+        if name in self._plottingElements.keys():
+            old_element = self._plottingElements[name]
+            element.inheritProperties(old_element)
+            old_element.remove()
+        
+        # draw the new element
+        self._plottingElements[name] = element
+        self._plotElement(name, draw=True, **kwargs)
+
+    @Slot()
+    def updateMultiElements(self, *elements: PlotElement, **kwargs):
+        """
+        Update multiple elements in the plotting elements dictionary and 
+        redraw the elements on the canvas
+        """
+        for element in elements:
+            self.updateElement(element, **kwargs)
+
+    def plotAllElements(self, resetXYLim: bool = False):
+        """
+        Plot all elements stored in the plotting elements dictionary.
+
+        Parameters:
+        -----------
+        resetXYLim: bool
+            Whether to reset the x and y limits of the axes to fit all elements.
+            If not, the x and y limits will be the same as before.
+        """
+        for element in self._plottingElements.values():
+            self._plotElement(element, draw=False)
+
+        if resetXYLim:
+            self.relimByMeasData()
+
+        self.canvas.draw()
+        
     # Signal Processing ================================================
     

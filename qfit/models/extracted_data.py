@@ -10,7 +10,7 @@
 ############################################################################
 
 
-from typing import Union, Literal, List, Callable
+from typing import Union, Literal, List, Callable, Tuple
 
 import numpy as np
 from PySide6 import QtGui
@@ -24,11 +24,11 @@ from PySide6.QtCore import (
     Signal,
 )
 
-from qfit.models.data_structures import Tag, ScatterElement
+from qfit.models.data_structures import Tag, ScatterElement, VLineElement
 
 from qfit.models.registry import Registrable, RegistryEntry
 
-from copy import deepcopy
+from copy import deepcopy, copy
 
 class ActiveExtractedData(QAbstractTableModel):
     """This class holds one data set, as extracted by markers on the canvas. In
@@ -212,7 +212,7 @@ class AllExtractedData(
 ):
     focusChanged = Signal(np.ndarray, Tag) # when user select and focus on a new row
     distinctXUpdated = Signal(np.ndarray) # when user extract (remove) data points
-    readyToPlot = Signal(ScatterElement, ScatterElement) # when user extract (remove) data points
+    readyToPlot = Signal(ScatterElement, ScatterElement, VLineElement) # when user extract (remove) data points
     loadedFromRegistry = Signal(dict) # when user load a project file
 
     def __init__(self):
@@ -233,6 +233,82 @@ class AllExtractedData(
 
     def currentAssocItem(self) -> np.ndarray:
         return self.assocDataList[self.currentRow]
+    
+    def allDataSorted(
+        self, 
+        removeCurrentRow: bool = False,
+        applyCalibration: bool = True, 
+        calibration_axis: Literal["xy", "x", "y"] = "xy",
+        concat_data: bool = False,
+    ) -> Union[List[np.ndarray], np.ndarray]:
+        """
+        Return all data points sorted by x value.
+
+        Parameters
+        ----------
+        applyCalibration: bool, by default, True
+            If True, apply the calibration function to the data points.
+        calibration_axis: str, by default, "xy"
+            If "xy", apply the calibration function to both x and y values.
+            If "x", apply the calibration function to x values only.
+            If "y", apply the calibration function to y values only.
+        concat_data: bool, by default, False
+            If True, concatenate all data points from different transitions 
+            into a single array.
+
+        Returns
+        -------
+        list of ndarray
+            list of numpy arrays of length M, where M is the number
+            of transitions. Each array may have shape (N, 2), where N is the 
+            number of data points for each transition. If `concat_data` is True,
+            then the output is a single numpy array of shape (~M*N, 2).
+        """
+        assocDataList = copy(self.assocDataList)
+        if removeCurrentRow:
+            assocDataList.pop(self.currentRow)
+
+        if applyCalibration:
+            data = [
+                self._calibrationFunc(dataSet, calibration_axis=calibration_axis)
+                for dataSet in assocDataList
+            ]
+        else:
+            data = assocDataList
+
+        # tianpu's implmentation
+        # sortIndices = [np.argsort(xValues) for xValues, _ in data]
+        # xData = [dataSet[0] for dataSet in data]
+        # yData = [dataSet[1] for dataSet in data]
+        # sortedXData = [
+        #     np.take(xValues, indices) for xValues, indices in zip(xData, sortIndices)
+        # ]
+        # sortedYData = [
+        #     np.take(yValues, indices) for yValues, indices in zip(yData, sortIndices)
+        # ]
+        # allData = [
+        #     np.asarray([xSet, ySet]).transpose()
+        #     for xSet, ySet in zip(sortedXData, sortedYData)
+        # ]
+
+        allData = []
+        for x, y in data:
+            sorted_indices = np.argsort(x)
+            allData.append(np.asarray([x[sorted_indices], y[sorted_indices]]).transpose())
+
+        if allData == []:
+            allData = [np.empty(shape=(0, 2), dtype=np.float_)]
+
+        if concat_data:
+            return np.concatenate(allData, axis=0)
+        else:
+            return allData
+
+    def distinctSortedXValues(self):
+        all_x_list = np.array([])
+        for dataset in self.assocDataList:
+            all_x_list = np.concatenate((all_x_list, dataset[0]))
+        return np.sort(np.unique(all_x_list))
 
     def currentTagItem(self) -> Tag:
         return self.assocTagList[self.currentRow]
@@ -279,7 +355,8 @@ class AllExtractedData(
     
     # Signal processing ================================================
     def emitReadyToPlot(self, *args):
-        pass
+        print("All extracted data is ready to plot")
+        self.readyToPlot.emit(*self.generatePlotElement())
 
     def emitDataUpdated(self, *args):
         """
@@ -350,6 +427,7 @@ class AllExtractedData(
     def swapXY(self):
         swappedAssocDataList = [array[[1, 0]] for array in self.assocDataList]
         self.assocDataList = swappedAssocDataList    
+        self.emitDataUpdated()
 
     @property
     def currentRow(self):
@@ -370,10 +448,11 @@ class AllExtractedData(
         self.setCurrentRow(0)
 
         self.endRemoveRows()
+        self.emitDataUpdated()
 
         return True
     
-    @Slot()
+    @Slot(str)
     def newRow(self, str_value=None):
         rowCount = self.rowCount()
 
@@ -386,12 +465,14 @@ class AllExtractedData(
         
         self.insertRow(rowCount)
         self.updateName(self.index(rowCount, 0), str_value, role=Qt.EditRole)
+        self.emitDataUpdated()
 
     @Slot()
     def removeCurrentRow(self):
         self.removeRow(self.currentRow)
+        self.emitDataUpdated()
 
-    @Slot()
+    @Slot(np.ndarray, Tag)
     def updateAssocData(self, newData: np.ndarray, newTag: Tag):
         """
         Associted extracted data and tag updated from the active extracted data
@@ -400,73 +481,43 @@ class AllExtractedData(
         self.assocTagList[self.currentRow] = newTag
         self.emitDataUpdated()
 
-    @Slot()
+    @Slot(int)
     def setCurrentRow(self, row: int):
         self._currentRow = row
         self.focusChanged.emit(
             self.currentAssocItem(), self.currentTagItem()
         )
+    
+    def generatePlotElement(self) -> Tuple[ScatterElement, ScatterElement, VLineElement]:
+        # tag mode
+        data_active = self.currentAssocItem()
+        scat_active = ScatterElement(
+            "active_extractions",
+            data_active[0],
+            data_active[1],
+            marker=r"$\odot$",
+            s=130,
+            alpha=0.3,
+        )
 
-    def allDataSorted(
-        self, 
-        applyCalibration: bool = True, 
-        calibration_axis: Literal["xy", "x", "y"] = "xy",
-        concat_data: bool = False,
-    ) -> Union[List[np.ndarray], np.ndarray]:
-        """
-        Return all data points sorted by x value.
+        all_data = self.allDataSorted(
+            applyCalibration=False,
+            removeCurrentRow=True, 
+            concat_data=True,
+        )
+        scat_all = ScatterElement(
+            "all_extractions",
+            all_data[:, 0],
+            all_data[:, 1],
+            marker=r"$\times$",
+            s=70,
+            alpha=0.23,
+        )
 
-        Parameters
-        ----------
-        applyCalibration: bool, by default, True
-            If True, apply the calibration function to the data points.
-        calibration_axis: str, by default, "xy"
-            If "xy", apply the calibration function to both x and y values.
-            If "x", apply the calibration function to x values only.
-            If "y", apply the calibration function to y values only.
-        concat_data: bool, by default, False
-            If True, concatenate all data points from different transitions 
-            into a single array.
+        vline_data = self.distinctSortedXValues()
+        vline = VLineElement("extraction_vlines", vline_data, alpha=0.5)
 
-        Returns
-        -------
-        list of ndarray
-            list of numpy arrays of length M, where M is the number
-            of transitions. Each array may have shape (N, 2), where N is the 
-            number of data points for each transition. If `concat_data` is True,
-            then the output is a single numpy array of shape (~M*N, 2).
-        """
-        if applyCalibration:
-            data = [
-                self._calibrationFunc(dataSet, calibration_axis=calibration_axis)
-                for dataSet in self.assocDataList
-            ]
-        else:
-            data = self.assocDataList
-        sortIndices = [np.argsort(xValues) for xValues, _ in data]
-        xData = [dataSet[0] for dataSet in data]
-        yData = [dataSet[1] for dataSet in data]
-        sortedXData = [
-            np.take(xValues, indices) for xValues, indices in zip(xData, sortIndices)
-        ]
-        sortedYData = [
-            np.take(yValues, indices) for yValues, indices in zip(yData, sortIndices)
-        ]
-        allData = [
-            np.asarray([xSet, ySet]).transpose()
-            for xSet, ySet in zip(sortedXData, sortedYData)
-        ]
-
-        if concat_data:
-            return np.concatenate(allData, axis=0)
-        else:
-            return allData
-
-    def distinctSortedXValues(self):
-        all_x_list = np.array([])
-        for dataset in self.assocDataList:
-            all_x_list = np.concatenate((all_x_list, dataset[0]))
-        return np.sort(np.unique(all_x_list))
+        return scat_active, scat_all, vline
 
     def registerAll(self):
         """

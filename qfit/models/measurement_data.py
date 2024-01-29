@@ -14,7 +14,7 @@ import abc
 import copy
 import distutils.version as version
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 
 import matplotlib
 import numpy as np
@@ -27,9 +27,10 @@ import matplotlib.pyplot as plt
 
 from scipy.ndimage import gaussian_laplace
 
-import qfit.io_utils.file_io_serializers as serializers
-from qfit.models.registry import Registry, Registrable, RegistryEntry
+from PySide6.QtCore import Signal, Slot, QObject, QAbstractListModel
 
+from qfit.models.data_structures import PlotElement, ImageElement, MeshgridElement
+from qfit.models.registry import Registry, Registrable, RegistryEntry
 from qfit.utils.helpers import (
     DataItem,
     OrderedDictMod,
@@ -39,13 +40,21 @@ from qfit.utils.helpers import (
     isValid2dArray,
 )
 
-from typing import Union
 
+class CombinedMeta(type(QObject), type(Registrable)):
+    pass
 
-class MeasurementData(abc.ABC):
+class MeasurementData(QObject, Registrable, metaclass=CombinedMeta):
     """Abstract basis class to enforce implementation of a data type specific plot method"""
 
+    randomSignal = Signal()
+
+    readyToPlot = Signal(PlotElement)
+    relimCanvas = Signal()
+
     def __init__(self, rawData):
+        super().__init__()
+        
         self.rawData = rawData
         self.checkBoxCallbacks = None
         self.plotRangeCallback = None
@@ -56,10 +65,7 @@ class MeasurementData(abc.ABC):
         self.zCandidates = OrderedDictMod()
         self.currentXCompatibles = OrderedDictMod()
         self.currentYCompatibles = OrderedDictMod()
-
-    def setupUICallbacks(self, checkBoxCallbacks, plotRangeCallback):
-        self.checkBoxCallbacks = checkBoxCallbacks
-        self.plotRangeCallback = plotRangeCallback
+        self._initializeDataOptions()
 
     @property
     def currentX(self):
@@ -96,11 +102,81 @@ class MeasurementData(abc.ABC):
         """
         return self._currentZ
 
-    def canvasPlot(self, axes, **kwargs):
+    # data =============================================================
+
+    @abc.abstractmethod
+    def generatePlotElement(self) -> Union[ImageElement, MeshgridElement]:
+        """
+        Generate a plot element from the current data
+
+        Returns
+        -------
+        PlotElement
+        """
         pass
 
+    def emitReadyToPlot(self):
+        self.readyToPlot.emit(self.generatePlotElement())
 
-class NumericalMeasurementData(MeasurementData, Registrable, serializers.Serializable):
+    # filters ==========================================================
+    def _initializeDataOptions(self):
+        self.bgndSubtractX = False
+        self.bgndSubtractY = False
+        self.topHatFilter = False
+        self.waveletFilter = False
+        self.edgeFilter = False
+
+        self.logColoring = False
+        self._zMin = 0
+        self._zMax = 1
+
+    @Slot(bool)    
+    def toggleBgndSubtractX(self, value: bool):
+        self.bgndSubtractX = value
+        self.emitReadyToPlot()
+
+    @Slot(bool)
+    def toggleBgndSubtractY(self, value: bool):
+        self.bgndSubtractY = value
+        self.emitReadyToPlot()
+
+    @Slot(bool)
+    def toggleTopHatFilter(self, value: bool):  
+        self.topHatFilter = value
+        self.emitReadyToPlot()
+
+    @Slot(bool)
+    def toggleWaveletFilter(self, value: bool): 
+        self.waveletFilter = value
+        self.emitReadyToPlot()
+
+    @Slot(bool)
+    def toggleEdgeFilter(self, value: bool):    
+        self.edgeFilter = value
+        self.emitReadyToPlot()
+
+    @Slot(bool)
+    def toggleLogColoring(self, value: bool):
+        self.logColoring = value
+        self.emitReadyToPlot()
+
+    @Slot(float)
+    def setZMin(self, value: float):
+        self._zMin = value / 100
+        self.emitReadyToPlot()
+
+    @Slot(float)
+    def setZMax(self, value: float):
+        self._zMax = value / 100
+        self.emitReadyToPlot()
+
+    def currentMinMax(self) -> Tuple[float, float]:
+        min_val = min(self._zMin, self._zMax)
+        max_val = max(self._zMin, self._zMax)
+        return (min_val, max_val)
+    
+
+class NumericalMeasurementData(MeasurementData):
     """
     Class for storing and manipulating measurement data. The primary measurement data (zData) is expected to be a
     2d float ndarray representing, for example, a two-tone spectroscopy amplitude as a function of probe frequency
@@ -159,22 +235,19 @@ class NumericalMeasurementData(MeasurementData, Registrable, serializers.Seriali
         """
         zData = copy.copy(self._currentZ)
 
-        if self.checkBoxCallbacks["bgndSubtractX"]():
-            zData.data = self.doBgndSubtraction(zData.data, axis=1)
-
-        if self.checkBoxCallbacks["bgndSubtractY"]():
-            zData.data = self.doBgndSubtraction(zData.data, axis=0)
-
-        if self.checkBoxCallbacks["topHatFilter"]():
-            zData.data = self.applyTopHatFilter(zData.data)
-
-        if self.checkBoxCallbacks["waveletFilter"]():
-            zData.data = self.applyWaveletFilter(zData.data)
-
-        if self.checkBoxCallbacks["edgeFilter"]():
+        if self.bgndSubtractX:
+            zData.data = self._doBgndSubtraction(zData.data, axis=1)
+        if self.bgndSubtractY:
+            zData.data = self._doBgndSubtraction(zData.data, axis=0)
+        if self.topHatFilter:
+            zData.data = self._applyTopHatFilter(zData.data)
+        if self.waveletFilter:
+            zData.data = self._applyWaveletFilter(zData.data)
+        if self.edgeFilter:
             zData.data = gaussian_laplace(zData.data, 1.0)
-        return zData
 
+        return zData
+    
     @property
     def currentX(self):
         """
@@ -200,12 +273,18 @@ class NumericalMeasurementData(MeasurementData, Registrable, serializers.Seriali
     def setCurrentZ(self, itemIndex):
         self._currentZ = self.zCandidates.itemByIndex(itemIndex)
         self.inferXYData()
+        self.emitReadyToPlot()
+        self.relimCanvas.emit()
 
     def setCurrentX(self, itemIndex):
         self._currentX = self.currentXCompatibles.itemByIndex(itemIndex)
+        self.emitReadyToPlot()
+        self.relimCanvas.emit()
 
     def setCurrentY(self, itemIndex):
         self._currentY = self.currentYCompatibles.itemByIndex(itemIndex)
+        self.emitReadyToPlot()
+        self.relimCanvas.emit()
 
     def inferXYData(self):
         self.xyCandidates = self.findXYData()
@@ -250,15 +329,17 @@ class NumericalMeasurementData(MeasurementData, Registrable, serializers.Seriali
         )
         self._currentX, self._currentY = self._currentY, self._currentX
 
-    def doBgndSubtraction(self, array, axis=0):
+        self.emitReadyToPlot()
+
+    def _doBgndSubtraction(self, array, axis=0):
         globalAverage = np.nanmean(array)
         avgArray = array - np.nanmean(array, axis=axis, keepdims=True)
         return avgArray
 
-    def applyWaveletFilter(self, array):
+    def _applyWaveletFilter(self, array):
         return skimage.restoration.denoise_wavelet(array, rescale_sigma=True)
 
-    def applyTopHatFilter(self, array):
+    def _applyTopHatFilter(self, array):
         array = array - np.mean(array)
         stdvar = np.std(array)
 
@@ -279,18 +360,18 @@ class NumericalMeasurementData(MeasurementData, Registrable, serializers.Seriali
             * array
         )
 
-    def canvasPlot(self, axes: plt.Axes, **kwargs):
+    def generatePlotElement(self) -> Union[ImageElement, MeshgridElement]:
         zData = self.currentZ.data
         rawZMin = zData.min()
         rawZMax = zData.max()
 
         # Extract zRange from range slider values
-        zRange = self.plotRangeCallback()
+        zRange = self.currentMinMax()
         # Choose Z value range according to the range slider values.
         zMin = rawZMin + zRange[0] * (rawZMax - rawZMin)
         zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
 
-        if self.checkBoxCallbacks["logColoring"]():
+        if self.logColoring:
             linthresh = max(abs(zMin), abs(zMax)) / 20.0
             # if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion(
             #     "3.2.0"
@@ -307,25 +388,34 @@ class NumericalMeasurementData(MeasurementData, Registrable, serializers.Seriali
         else:
             norm = None
 
+        # Construct the plot element
         if (self.currentX.data is None) or (self.currentY.data is None):
-            _ = axes.imshow(
+            return ImageElement(
+                "measurement",
                 zData,
                 vmin=zMin,
                 vmax=zMax,
                 norm=norm,
                 aspect="auto",
                 interpolation="none",
-                **kwargs
+                rasterized=True,
             )
         else:
             # generate a meshgrid for the x and y data
             xData, yData = np.meshgrid(self.currentX.data, self.currentY.data)
-            _ = axes.pcolormesh(
-                xData, yData, zData, vmin=zMin, vmax=zMax, norm=norm, **kwargs
+            return MeshgridElement(
+                "measurement",
+                xData,
+                yData,
+                zData,
+                vmin=zMin,
+                vmax=zMax,
+                norm=norm,
+                rasterized=True,
             )
 
 
-class ImageMeasurementData(MeasurementData, serializers.Serializable):
+class ImageMeasurementData(MeasurementData):
     def __init__(self, fileName, image):
         super().__init__(None)
         self._currentZ = DataItem(fileName, image)
@@ -356,7 +446,7 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
             ),
         }
 
-    def canvasPlot(self, axes, **kwargs):
+    def generatePlotElement(self, **kwargs) -> ImageElement:
         zData = (
             np.sum(self.currentZ.data, axis=2)
             if (self.currentZ.data.ndim == 3)
@@ -366,12 +456,12 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
         rawZMax = zData.max()
 
         # Extract zRange from range slider values
-        zRange = self.plotRangeCallback()
+        zRange = self.currentMinMax()
         # Choose Z value range according to the range slider values.
         zMin = rawZMin + zRange[0] * (rawZMax - rawZMin)
         zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
 
-        if self.checkBoxCallbacks["logColoring"]():
+        if self.logColoring:
             # if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion(
             #     "3.2.0"
             # ):
@@ -387,18 +477,17 @@ class ImageMeasurementData(MeasurementData, serializers.Serializable):
         else:
             norm = None
 
-        _ = axes.imshow(
+        return ImageElement(
+            "measurement",
             zData,
-            # vmin=zMin,
-            # vmax=zMax,
             vmin=-max([abs(zMin), abs(zMax)]),
             vmax=max([abs(zMin), abs(zMax)]),
             norm=norm,
-            **kwargs
+            rasterized=True,
         )
 
     def swapXY(self):
-        pass
+        raise NotImplementedError
 
 
 def dummy_measurement_data() -> NumericalMeasurementData:
