@@ -338,7 +338,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         Should be done at the end and will emit all readyToPlot signal
         """
-        self.allDatasets.readyToPlot.connect(self.ui.mplFigureCanvas.updateMultiElements)
+        self.activeDataset.readyToPlot.connect(self.ui.mplFigureCanvas.updateElement)
+        self.allDatasets.readyToPlot.connect(self.ui.mplFigureCanvas.updateElement)
+        self.allDatasets.readyToPlotX.connect(self.ui.mplFigureCanvas.updateElement)
         return
         
     def dynamicalPlotElementsConnects(self):
@@ -898,6 +900,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # to an update in th data stored in the AllExtractedData
         self.activeDataset.dataUpdated.connect(
             self.allDatasets.updateAssocData
+        ) 
+        self.activeDataset.dataUpdated.connect(
+            lambda: print("activeDataset.dataUpdated")
         ) 
 
         # whenever a row is inserted or removed, select the current row 

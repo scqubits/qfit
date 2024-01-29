@@ -37,6 +37,7 @@ class ActiveExtractedData(QAbstractTableModel):
 
     dataUpdated = Signal(np.ndarray, Tag)
     dataSwitched = Signal(np.ndarray, Tag)
+    readyToPlot = Signal(ScatterElement)
 
     def __init__(self, data: Union[np.ndarray, None] = None):
         """
@@ -48,6 +49,7 @@ class ActiveExtractedData(QAbstractTableModel):
         super().__init__()
         self._data: np.ndarray = data or np.empty(shape=(2, 0), dtype=np.float_)
         self._tag: Tag = Tag()
+        self.connects()
 
     # Properties =======================================================
     def rowCount(self, *args):
@@ -178,6 +180,29 @@ class ActiveExtractedData(QAbstractTableModel):
         self._tag = newTag
         self.emitDataSwitched()
 
+    def updateTag(self, tag: Tag):
+        """
+        Set the tag of the data.
+
+        Parameters
+        ----------
+        tag: Tag
+        """
+        self._tag = tag
+        self.emitDataUpdated()
+
+    def generatePlotElement(self) -> ScatterElement:
+        # tag mode
+        scat_active = ScatterElement(
+            "active_extractions",
+            self._data[0],
+            self._data[1],
+            marker=r"$\odot$",
+            s=130,
+            alpha=0.3,
+        )
+        return scat_active
+
     # Signal processing ================================================
     def emitDataUpdated(self):
         """
@@ -191,16 +216,16 @@ class ActiveExtractedData(QAbstractTableModel):
         """
         self.dataSwitched.emit(self._data, self._tag)
 
-    def updateTag(self, tag: Tag):
+    def emitReadyToPlot(self):
         """
-        Set the tag of the data.
+        Emit signal to update the plot
+        """
+        print("Active extracted data is ready to plot")
+        self.readyToPlot.emit(self.generatePlotElement())
 
-        Parameters
-        ----------
-        tag: Tag
-        """
-        self._tag = tag
-        self.emitDataUpdated()
+    def connects(self):
+        self.dataUpdated.connect(self.emitReadyToPlot)
+        self.dataSwitched.connect(self.emitReadyToPlot)
 
 
 class ListModelMeta(type(QAbstractListModel), type(Registrable)):
@@ -212,7 +237,8 @@ class AllExtractedData(
 ):
     focusChanged = Signal(np.ndarray, Tag) # when user select and focus on a new row
     distinctXUpdated = Signal(np.ndarray) # when user extract (remove) data points
-    readyToPlot = Signal(ScatterElement, ScatterElement, VLineElement) # when user extract (remove) data points
+    readyToPlot = Signal(ScatterElement) # when user extract (remove) data points
+    readyToPlotX = Signal(VLineElement) # when user extract (remove) data points
     loadedFromRegistry = Signal(dict) # when user load a project file
 
     def __init__(self):
@@ -275,21 +301,6 @@ class AllExtractedData(
             ]
         else:
             data = assocDataList
-
-        # tianpu's implmentation
-        # sortIndices = [np.argsort(xValues) for xValues, _ in data]
-        # xData = [dataSet[0] for dataSet in data]
-        # yData = [dataSet[1] for dataSet in data]
-        # sortedXData = [
-        #     np.take(xValues, indices) for xValues, indices in zip(xData, sortIndices)
-        # ]
-        # sortedYData = [
-        #     np.take(yValues, indices) for yValues, indices in zip(yData, sortIndices)
-        # ]
-        # allData = [
-        #     np.asarray([xSet, ySet]).transpose()
-        #     for xSet, ySet in zip(sortedXData, sortedYData)
-        # ]
 
         allData = []
         for x, y in data:
@@ -356,14 +367,18 @@ class AllExtractedData(
     # Signal processing ================================================
     def emitReadyToPlot(self, *args):
         print("All extracted data is ready to plot")
-        self.readyToPlot.emit(*self.generatePlotElement())
+        self.readyToPlot.emit(self.generatePlotElement())
 
-    def emitDataUpdated(self, *args):
+    def emitReadyToPlotX(self, *args):
+        print("Xis ready to plot")
+        self.readyToPlotX.emit(self.generatePlotElementX())
+
+    def emitXUpdated(self, *args):
         """
         Update the distinct x values and send out plot data
         """
         self.distinctXUpdated.emit(self.distinctSortedXValues())
-        self.emitReadyToPlot()
+        self.emitReadyToPlotX()
 
     def connects(self):
         # focus changed --> update plot 
@@ -427,7 +442,8 @@ class AllExtractedData(
     def swapXY(self):
         swappedAssocDataList = [array[[1, 0]] for array in self.assocDataList]
         self.assocDataList = swappedAssocDataList    
-        self.emitDataUpdated()
+        self.emitXUpdated()
+        self.emitReadyToPlot()
 
     @property
     def currentRow(self):
@@ -448,7 +464,9 @@ class AllExtractedData(
         self.setCurrentRow(0)
 
         self.endRemoveRows()
-        self.emitDataUpdated()
+
+        self.emitXUpdated()
+        self.emitReadyToPlot()
 
         return True
     
@@ -465,12 +483,13 @@ class AllExtractedData(
         
         self.insertRow(rowCount)
         self.updateName(self.index(rowCount, 0), str_value, role=Qt.EditRole)
-        self.emitDataUpdated()
+        self.emitReadyToPlot()
 
     @Slot()
     def removeCurrentRow(self):
         self.removeRow(self.currentRow)
-        self.emitDataUpdated()
+        self.emitXUpdated()
+        self.emitReadyToPlot()
 
     @Slot(np.ndarray, Tag)
     def updateAssocData(self, newData: np.ndarray, newTag: Tag):
@@ -479,7 +498,7 @@ class AllExtractedData(
         """
         self.assocDataList[self.currentRow] = newData
         self.assocTagList[self.currentRow] = newTag
-        self.emitDataUpdated()
+        self.emitXUpdated()
 
     @Slot(int)
     def setCurrentRow(self, row: int):
@@ -488,18 +507,7 @@ class AllExtractedData(
             self.currentAssocItem(), self.currentTagItem()
         )
     
-    def generatePlotElement(self) -> Tuple[ScatterElement, ScatterElement, VLineElement]:
-        # tag mode
-        data_active = self.currentAssocItem()
-        scat_active = ScatterElement(
-            "active_extractions",
-            data_active[0],
-            data_active[1],
-            marker=r"$\odot$",
-            s=130,
-            alpha=0.3,
-        )
-
+    def generatePlotElement(self) -> ScatterElement:
         all_data = self.allDataSorted(
             applyCalibration=False,
             removeCurrentRow=True, 
@@ -514,10 +522,14 @@ class AllExtractedData(
             alpha=0.23,
         )
 
+        return scat_all
+    
+    def generatePlotElementX(self) -> VLineElement:
+
         vline_data = self.distinctSortedXValues()
         vline = VLineElement("extraction_vlines", vline_data, alpha=0.5)
 
-        return scat_active, scat_all, vline
+        return vline
 
     def registerAll(self):
         """
