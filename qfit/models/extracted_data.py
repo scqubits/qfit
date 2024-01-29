@@ -236,9 +236,11 @@ class AllExtractedData(
     QAbstractListModel, Registrable, metaclass=ListModelMeta
 ):
     focusChanged = Signal(np.ndarray, Tag) # when user select and focus on a new row
+    readyToPlot = Signal(ScatterElement)
+
     distinctXUpdated = Signal(np.ndarray) # when user extract (remove) data points
-    readyToPlot = Signal(ScatterElement) # when user extract (remove) data points
-    readyToPlotX = Signal(VLineElement) # when user extract (remove) data points
+    readyToPlotX = Signal(VLineElement)
+
     loadedFromRegistry = Signal(dict) # when user load a project file
 
     def __init__(self):
@@ -248,7 +250,8 @@ class AllExtractedData(
         self.assocTagList: List[Tag] = [Tag()]
         self._calibrationFunc = None
         self._currentRow = 0
-        # this signal is used for updating the plot
+        
+        self.connects()
 
     # Properties =======================================================
     def rowCount(self, *args) -> int:
@@ -370,7 +373,7 @@ class AllExtractedData(
         self.readyToPlot.emit(self.generatePlotElement())
 
     def emitReadyToPlotX(self, *args):
-        print("Xis ready to plot")
+        print("X is ready to plot")
         self.readyToPlotX.emit(self.generatePlotElementX())
 
     def emitXUpdated(self, *args):
@@ -378,11 +381,13 @@ class AllExtractedData(
         Update the distinct x values and send out plot data
         """
         self.distinctXUpdated.emit(self.distinctSortedXValues())
-        self.emitReadyToPlotX()
 
     def connects(self):
         # focus changed --> update plot 
         self.focusChanged.connect(self.emitReadyToPlot)
+
+        # distinct x values updated --> update plot
+        self.distinctXUpdated.connect(self.emitReadyToPlotX)
 
     def setCalibrationFunc(self, calibrationDataCallback):
         self._calibrationFunc = calibrationDataCallback
@@ -466,7 +471,6 @@ class AllExtractedData(
         self.endRemoveRows()
 
         self.emitXUpdated()
-        self.emitReadyToPlot()
 
         return True
     
@@ -483,13 +487,11 @@ class AllExtractedData(
         
         self.insertRow(rowCount)
         self.updateName(self.index(rowCount, 0), str_value, role=Qt.EditRole)
-        self.emitReadyToPlot()
 
     @Slot()
     def removeCurrentRow(self):
         self.removeRow(self.currentRow)
         self.emitXUpdated()
-        self.emitReadyToPlot()
 
     @Slot(np.ndarray, Tag)
     def updateAssocData(self, newData: np.ndarray, newTag: Tag):
@@ -502,6 +504,7 @@ class AllExtractedData(
 
     @Slot(int)
     def setCurrentRow(self, row: int):
+        print("Current row is set to", row)
         self._currentRow = row
         self.focusChanged.emit(
             self.currentAssocItem(), self.currentTagItem()
