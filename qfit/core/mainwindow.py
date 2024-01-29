@@ -1543,6 +1543,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # regenerated from the data file
         self.measurementData = measurementData
         self.calibrationData.resetCalibration()
+        self.calibrationData.setCalibration(*self.calibrationData.allCalibrationVecs())
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
         self.allDatasets.blockSignals(True)
@@ -1595,10 +1596,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # calibration.
         self.calibrationData.setCalibration(*self.calibrationData.allCalibrationVecs())
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
+
         # set dataset
-        self.allDatasets.layoutChanged.emit()   # show everything in the list of transitions
-        self.activeDataset._data = self.allDatasets.currentAssocItem()
-        self.activeDataset.emitDataSwitched()
+        self.allDatasets.layoutChanged.emit() # update the list view to show the new data
+        self.allDatasets.emitFocusChanged() 
+        self.allDatasets.emitXUpdated() 
 
     def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)

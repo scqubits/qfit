@@ -302,6 +302,8 @@ class SpecialCursor(Cursor):
 
 
 class MplFigureCanvas(QFrame):
+    plotConfigMode: Literal["calibrate", "select", "fit"]
+
     _crosshair: SpecialCursor
 
     def __init__(self, parent=None):
@@ -317,18 +319,15 @@ class MplFigureCanvas(QFrame):
         vertical_layout.addWidget(self.canvas)
         self.setLayout(vertical_layout)
 
-        # initialize the properties
-        self.initializeProperties()
-
-        # initialize the ploting elements
+        # initialize the plotting elements and properties
         self._plottingElements: Dict[str, PlotElement] = {}
+        self.initializeProperties()
 
     def initializeProperties(self):
         self.canvas.figure.subplots()
         self.axes().autoscale(enable=False)
 
         self.plottingDisabled: bool = False
-        self.plotMode: Literal["calibrate", "select", "fit"] = "calibrate"
 
         self.x_snap_mode: bool = False
         self.crosshairHorizOn: bool = False
@@ -340,6 +339,11 @@ class MplFigureCanvas(QFrame):
 
         self.xlim: Tuple[float, float] = (0, 1)
         self.ylim: Tuple[float, float] = (0, 1)
+
+        # should be call at the end - it will make use of other properties like 
+        # coloring
+        self.toPlotMode("calibrate")
+
 
     # Properties =======================================================
     def axes(self):

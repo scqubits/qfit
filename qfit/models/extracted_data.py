@@ -37,7 +37,7 @@ class ActiveExtractedData(QAbstractTableModel):
 
     dataUpdated = Signal(np.ndarray, Tag)
     dataSwitched = Signal(np.ndarray, Tag)
-    readyToPlot = Signal(ScatterElement)
+    readyToPlot = Signal(ScatterElement)  # the above two signals are connected to this signal
 
     def __init__(self, data: Union[np.ndarray, None] = None):
         """
@@ -236,10 +236,10 @@ class AllExtractedData(
     QAbstractListModel, Registrable, metaclass=ListModelMeta
 ):
     focusChanged = Signal(np.ndarray, Tag) # when user select and focus on a new row
-    readyToPlot = Signal(ScatterElement)
+    readyToPlot = Signal(ScatterElement)    # connected to the above signal
 
     distinctXUpdated = Signal(np.ndarray) # when user extract (remove) data points
-    readyToPlotX = Signal(VLineElement)
+    readyToPlotX = Signal(VLineElement)  # connected to the above signal
 
     loadedFromRegistry = Signal(dict) # when user load a project file
 
@@ -368,6 +368,17 @@ class AllExtractedData(
         return flags
     
     # Signal processing ================================================
+    def emitFocusChanged(self, *args):
+        self.focusChanged.emit(
+            self.currentAssocItem(), self.currentTagItem()
+        )
+
+    def emitXUpdated(self, *args):
+        """
+        Update the distinct x values and send out plot data
+        """
+        self.distinctXUpdated.emit(self.distinctSortedXValues())
+
     def emitReadyToPlot(self, *args):
         print("All extracted data is ready to plot")
         self.readyToPlot.emit(self.generatePlotElement())
@@ -375,12 +386,6 @@ class AllExtractedData(
     def emitReadyToPlotX(self, *args):
         print("X is ready to plot")
         self.readyToPlotX.emit(self.generatePlotElementX())
-
-    def emitXUpdated(self, *args):
-        """
-        Update the distinct x values and send out plot data
-        """
-        self.distinctXUpdated.emit(self.distinctSortedXValues())
 
     def connects(self):
         # focus changed --> update plot 
@@ -506,9 +511,7 @@ class AllExtractedData(
     def setCurrentRow(self, row: int):
         print("Current row is set to", row)
         self._currentRow = row
-        self.focusChanged.emit(
-            self.currentAssocItem(), self.currentTagItem()
-        )
+        self.emitFocusChanged()
     
     def generatePlotElement(self) -> ScatterElement:
         all_data = self.allDataSorted(
