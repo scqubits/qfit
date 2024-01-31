@@ -3,26 +3,33 @@ from PySide6.QtCore import (
     Signal,
     Slot,
 )
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, List
 
 from qfit.models.data_structures import Tag
     
 
-class TaggingView(QObject):
+class ExtractingView(QObject):
     tagChanged = Signal(Tag)
 
     def __init__(
         self,
-        subsysCount: int,
-        uiGroups: Tuple[Dict[str, Any], ...],
+        subsysNames: List[str],
+        uiGroups: Tuple,
     ):
         """
         All widgets related to tagging.
         """
         super().__init__()
 
-        self.subsysCount = subsysCount
-        self.groupBox, self.radioButtons, self.bareLabels, self.dressedLabels = uiGroups
+        self.subsysNames = subsysNames
+        self.subsysCount = len(subsysNames)
+        (
+            self.groupBox, self.radioButtons, 
+            self.bareLabels, self.dressedLabels,
+            self.extractionCtrls, 
+            self.extractionList,
+            self.bareLabelOrder,
+        ) = uiGroups
 
         self._initializeUI()
         self._modeSwitchSignalsConnects()
@@ -42,6 +49,11 @@ class TaggingView(QObject):
         # to check the validity of the input
         self.bareLabels["initial"].setTupleLength(self.subsysCount)
         self.bareLabels["final"].setTupleLength(self.subsysCount)
+
+        self.bareLabelOrder.setText(
+            "Labels ordered by: <br>"  # Three space to align with the label title
+            + ", ".join(self.subsysNames)
+        )
 
     # signal processing ================================================
     @Slot()

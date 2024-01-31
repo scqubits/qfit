@@ -14,23 +14,28 @@ from typing_extensions import Literal
 
 import numpy as np
 
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, Slot
 
-import qfit.io_utils.file_io_serializers as serializers
 from qfit.models.registry import Registrable, RegistryEntry
 
 
-class UpdateCalibrationViewSignal(QObject):
-    signal = Signal()
+class CombinedMeta(type(QObject), type(Registrable)):
+    pass
 
 
-class CalibrationData(serializers.Serializable, Registrable):
+class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
+    plotCaliOn = Signal(str)
+    plotCaliOff = Signal()
+    caliClicked = Signal(str, float)
+
+    calibrationIsOn: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2", False]
+
     def __init__(
         self,
-        rawVec1: Optional[np.ndarray] = None,
-        rawVec2: Optional[np.ndarray] = None,
-        mapVec1: Optional[np.ndarray] = None,
-        mapVec2: Optional[np.ndarray] = None,
+        rawVec1: Tuple[float, float] = (0.0, 0.0),
+        rawVec2: Tuple[float, float] = (1.0, 1.0),
+        mapVec1: Tuple[float, float] = (0.0, 0.0),
+        mapVec2: Tuple[float, float] = (1.0, 1.0),
     ):
         """
         Store calibration data for x and y axes, and provide methods to transform between uncalibrated and calibrated
@@ -42,6 +47,7 @@ class CalibrationData(serializers.Serializable, Registrable):
             Each of these is a two component vector (x,y) marking a point. The calibration maps rawVec1 -> mapVec1,
             rawVec2 -> mapVec2 with an affine-linear transformation:   mapVecN = alphaMat . rawVecN + bVec.
         """
+        super().__init__()
         self.rawVec1 = rawVec1
         self.rawVec2 = rawVec2
         self.mapVec1 = mapVec1
@@ -55,14 +61,40 @@ class CalibrationData(serializers.Serializable, Registrable):
             self.resetCalibration()
         self.applyCalibration = False
 
-        self.updateCalibrationViewSignal = UpdateCalibrationViewSignal()
+        self.calibrationIsOn = False
 
     def resetCalibration(self):
-        self.setCalibration((1.0, 0.0), (0.0, 1.0), (1.0, 0.0), (0.0, 1.0))
+        self.setCalibration((0.0, 0.0), (1.0, 1.0), (0.0, 0.0), (1.0, 1.0))
         self.applyCalibration = False
 
     def toggleCalibration(self):
         self.applyCalibration = not self.applyCalibration
+
+    def calibrationOn(self, label):
+        self.calibrationIsOn = label
+        self.plotCaliOn.emit(label)
+
+    def calibrationOff(self):
+        self.calibrationIsOn = False
+        self.plotCaliOff.emit()
+
+    def acceptCalibration(self, label: Literal[
+        "CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2"
+    ], data):
+        """
+        Called by the canvas click event to accept the calibration data.
+        """
+        if label == "CALI_X1":
+            self.rawVec1 = (data, self.rawVec1[1])
+        elif label == "CALI_X2":
+            self.rawVec1 = (self.rawVec1[0], data)
+        elif label == "CALI_Y1":
+            self.rawVec2 = (data, self.rawVec2[1])
+        elif label == "CALI_Y2":
+            self.rawVec2 = (self.rawVec2[0], data)
+        
+        self.calibrationOff()
+        self.caliClicked.emit(label, data)  # update the calibration view
 
     def setCalibration(
         self,
@@ -90,7 +122,7 @@ class CalibrationData(serializers.Serializable, Registrable):
 
     def allCalibrationVecs(
         self,
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    ) -> Tuple[Tuple[float, float], Tuple[float, float], Tuple[float, float], Tuple[float, float]]:
         return self.rawVec1, self.rawVec2, self.mapVec1, self.mapVec2
 
     def calibrateDataset(

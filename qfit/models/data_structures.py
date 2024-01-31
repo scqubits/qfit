@@ -60,6 +60,9 @@ class Tag:
     
 # ######################################################################
 class PlotElement:
+    """
+    A data structure for passing and plotting elements on the canvas. 
+    """
     name: str
     artists: Union[None, Artist, List[Artist]] = None
     _visible: bool = True
