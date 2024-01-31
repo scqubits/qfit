@@ -26,7 +26,7 @@ class PlottingCtrl(QObject):
     trans0Focused: bool
     axisSnap: Literal["X", "Y", "OFF"]
     clickResponse: Literal[
-        "ZOOM", "PAN", "SELECT",
+        "ZOOM", "PAN", "EXTRACT",
     ]
     dataDestination: Literal[
         "CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2",
@@ -64,7 +64,7 @@ class PlottingCtrl(QObject):
         self.xSnapTool = True        # whether the horizontal snap is on
         self.trans0Focused = True   # whether the first transition is focused
         self.axisSnap = "OFF"   # the axis snap mode, override xSnap when not "OFF"
-        self.clickResponse = "SELECT"   # the response to a mouse click
+        self.clickResponse = "EXTRACT"   # the response to a mouse click
         self.dataDestination = "NONE"   # the destination of the data after a click
     
         self.canvasToolConnects()
@@ -279,7 +279,7 @@ class PlottingCtrl(QObject):
         else:
             self.axisSnap = "OFF"
 
-    def setClickResponse(self, response: Literal["ZOOM", "PAN", "SELECT"]):
+    def setClickResponse(self, response: Literal["ZOOM", "PAN", "EXTRACT"]):
         self.clickResponse = response
 
     @Slot()
@@ -293,7 +293,7 @@ class PlottingCtrl(QObject):
     
     @Slot()
     def toggleSelect(self):
-        self.setClickResponse("SELECT")
+        self.setClickResponse("EXTRACT")
         self.mplCanvas.selectOn()
 
     @Slot()
@@ -347,9 +347,8 @@ class PlottingCtrl(QObject):
 
         if self.dataDestination == "NONE":
             return
-        if self.clickResponse != "SELECT":
+        if self.clickResponse != "EXTRACT":
             return
-        
         if event.xdata is None or event.ydata is None:
             return
 

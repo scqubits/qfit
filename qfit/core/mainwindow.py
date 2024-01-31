@@ -1000,7 +1000,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         Run optimization step 1: setup the optimization using various parameters
         """
-
         self.optInitialized = self.numericalFitting.setupOptimization(
             self.fitParameterSet,
             self.quantumModel.MSEByParameters,
