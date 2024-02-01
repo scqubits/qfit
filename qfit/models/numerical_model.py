@@ -23,7 +23,7 @@ from qfit.models.quantum_model_parameters import (
     QuantumModelSliderParameter,
     QuantumModelParameterSet,
 )
-from qfit.models.status_result_data import Result
+from qfit.models.status import StatusModel
 from qfit.models.numerical_spectrum_data import CalculatedSpecData
 from qfit.models.calibration_data import CalibrationData
 from qfit.models.extracted_data import AllExtractedData
@@ -514,7 +514,7 @@ class QuantumModel(QObject):
         sweep_parameter_set: QuantumModelParameterSet,
         calibration_data: CalibrationData,
         extracted_data: AllExtractedData,
-        prefit_result: Result,
+        prefit_result: StatusModel,
     ) -> None:
         """
         Create a new ParameterSweep object.
@@ -550,18 +550,18 @@ class QuantumModel(QObject):
         except Exception as e:
             prefit_result.status_type = "ERROR"
             if str(e).startswith("min()"):
-                prefit_result.status_text = (
+                prefit_result.statusStrForView = (
                     f"Please extract data before running the prefit."
                 )
             else:
-                prefit_result.status_text = (
+                prefit_result.statusStrForView = (
                     f"Fail to initialize the parameter sweep with "
                     f"{type(e).__name__}: {e}."
                 )
             return
 
         prefit_result.status_type = "SUCCESS"
-        prefit_result.status_text = f""
+        prefit_result.statusStrForView = f""
 
     @Slot()
     def sweep2SpecNMSE(
@@ -571,7 +571,7 @@ class QuantumModel(QObject):
         # spectrum_data: CalculatedSpecData,
         calibration_data: CalibrationData,
         extracted_data: AllExtractedData,
-        result: Result,
+        result: StatusModel,
     ):
         """
         It is connected to the signal emitted by the UI when the user clicks the plot button
@@ -628,10 +628,10 @@ class QuantumModel(QObject):
         mse, status_type, status_text = self.calculateMSE(extracted_data=extracted_data)
 
         # pass MSE and status messages to the model
-        result.previous_mse = result.current_mse
-        result.current_mse = mse
+        result.oldMseForComputingDelta = result.newMseForComputingDelta
+        result.newMseForComputingDelta = mse
         result.status_type = status_type
-        result.status_text = status_text
+        result.statusStrForView = status_text
 
     @Slot()
     def updateCalculation(
@@ -641,7 +641,7 @@ class QuantumModel(QObject):
         # spectrum_data: CalculatedSpecData,
         calibration_data: CalibrationData,
         extracted_data: AllExtractedData,
-        prefit_result: Result,
+        prefit_result: StatusModel,
     ) -> None:
         """
         It is connected to the signal emitted by the UI when the user changes the slider
@@ -875,7 +875,8 @@ class QuantumModel(QObject):
 
         # if provided dressed label
         if (
-            tag.tagType == "DISPERSIVE_DRESSED" 
+            tag.tagType
+            == "DISPERSIVE_DRESSED"
             # or tag.tagType is CROSSING_DRESSED
         ):
             # if the state is above evals_count, terminate the computation and return error status
@@ -920,7 +921,7 @@ class QuantumModel(QObject):
                 ).argmin()
                 simulation_freq = possible_transitions[closest_traansition_index]
                 return simulation_freq, status
-            
+
             elif final_energy is np.nan and initial_energy is not np.nan:
                 status = "NO_MATCHED_BARE_FINAL"
                 eigenenergies = sweep["evals"]["x-coordinate":x_coord]

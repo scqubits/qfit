@@ -70,6 +70,11 @@ from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.controllers.extracting import ExtractingCtrl
 from qfit.views.extracting import ExtractingView
 
+# status bar
+from qfit.models.status import StatusModel
+from qfit.controllers.status import StatusCtrl
+from qfit.views.status_bar import StatusBarView
+
 # pre-fit
 from qfit.models.quantum_model_parameters import (
     QuantumModelSliderParameter,
@@ -96,9 +101,6 @@ from qfit.models.fit import NumericalFitting
 # plot
 from qfit.controllers.plotting import PlottingCtrl
 
-# message
-from qfit.models.status_result_data import Result
-
 # registry
 from qfit.models.registry import Registry, RegistryEntry, Registrable
 
@@ -119,6 +121,8 @@ class CombinedMeta(type(QMainWindow), type(Registrable)):
 class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     """Class for the main window of the app."""
 
+    status: StatusModel
+
     optInitialized: bool = False
 
     unsavedChanges: bool
@@ -128,7 +132,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def __init__(
         self, measurementData: MeasurementDataType, hilbertspace: HilbertSpace
     ):
-
         QMainWindow.__init__(self)
         self.openFromIPython = executed_in_ipython()
         self.setFocusPolicy(Qt.StrongFocus)
@@ -180,7 +183,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
 
         # status bar
-        # self.statusBar().showMessage("Ready")
+        self.initializeStatusBar()
 
     # ui setup #########################################################
     def setShadows(self):
@@ -525,7 +528,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.setUpPrefitRunConnects()
 
     def prefitStaticElementsBuild(self):
-        self.prefitResult = Result()
+        self.prefitResult = StatusModel()
         # self.spectrumData = CalculatedSpecData()
         self.setUpPrefitResultConnects()
         self.prefitConnects()
@@ -754,7 +757,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.prefitResult.displayed_status_type
         )
         status_text_ui_setter = lambda: self.ui.statusTextLabel.setText(
-            self.prefitResult.status_text
+            self.prefitResult.statusStrForView
         )
         mse_change_ui_setter = lambda: self.ui.mseLabel.setText(
             self.prefitResult.displayed_MSE
@@ -763,7 +766,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitResult.setupUISetters(
             status_type_ui_setter=status_type_ui_setter,
             status_text_ui_setter=status_text_ui_setter,
-            mse_change_ui_setter=mse_change_ui_setter,
+            mseChangeUISetter=mse_change_ui_setter,
         )
 
     def prefitQuantumModelOptionsConnects(self):
@@ -863,7 +866,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.fittingCallbackConnects()
         self.fitPushButtonConnects()
 
-        self.fitResult = Result()
+        self.fitResult = StatusModel()
         self.setUpFitResultConnects()
 
     def setupFitConnects(self):
@@ -1056,7 +1059,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.fitResult.displayed_status_type
         )
         status_text_ui_setter = lambda: self.ui.statusTextLabel_2.setText(
-            self.fitResult.status_text
+            self.fitResult.statusStrForView
         )
         mse_change_ui_setter = lambda: self.ui.mseLabel_2.setText(
             self.fitResult.displayed_MSE
@@ -1065,7 +1068,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.fitResult.setupUISetters(
             status_type_ui_setter=status_type_ui_setter,
             status_text_ui_setter=status_text_ui_setter,
-            mse_change_ui_setter=mse_change_ui_setter,
+            mseChangeUISetter=mse_change_ui_setter,
         )
 
     # Save Location & Window Title #####################################
@@ -1181,9 +1184,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
         # set dataset
-        self.allDatasets.layoutChanged.emit() # update the list view to show the new data
-        self.allDatasets.emitFocusChanged() 
-        self.allDatasets.emitXUpdated() 
+        self.allDatasets.layoutChanged.emit()  # update the list view to show the new data
+        self.allDatasets.emitFocusChanged()
+        self.allDatasets.emitXUpdated()
 
     def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)
@@ -1191,6 +1194,13 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.setGeometry(
             QStyle.alignedRect(Qt.LeftToRight, Qt.AlignCenter, newSize, maxRect)
         )
+
+    # error message system #############################################
+    # ##################################################################
+    def initializeStatusBar(self):
+        self.status = StatusModel()
+        self.statusBarView = StatusBarView(self.ui.statusBar)
+        self.statusCtrl = StatusCtrl(None, self.status, self.statusBarView)
 
     # event filter and save state ######################################
     # ##################################################################
