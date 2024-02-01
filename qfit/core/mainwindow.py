@@ -55,7 +55,6 @@ from qfit.utils.helpers import (
     clearChildren,
     executed_in_ipython,
     StopExecution,
-    y_snap,
 )
 from qfit.models.measurement_data import MeasurementDataType
 from qfit.controllers.help_tooltip import HelpButtonCtrl
@@ -81,7 +80,6 @@ from qfit.models.quantum_model_parameters import (
     QuantumModelParameterSet,
     QuantumModelFittingParameter,
 )
-from qfit.models.numerical_spectrum_data import CalculatedSpecData
 from qfit.models.numerical_model import QuantumModel
 from qfit.widgets.foldable_widget import FoldableWidget
 from qfit.widgets.grouped_sliders import (
@@ -183,7 +181,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
 
         # status bar
-        self.initializeStatusBar()
+        self.statusMVCInits()
 
     # ui setup #########################################################
     def setShadows(self):
@@ -1197,10 +1195,14 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # error message system #############################################
     # ##################################################################
-    def initializeStatusBar(self):
+    def statusMVCInits(self):
         self.status = StatusModel()
         self.statusBarView = StatusBarView(self.ui.statusBar)
-        self.statusCtrl = StatusCtrl(None, self.status, self.statusBarView)
+        self.statusCtrl = StatusCtrl(
+            (self.allDatasets, self.activeDataset), 
+            self.status, 
+            self.statusBarView,
+        )
 
     # event filter and save state ######################################
     # ##################################################################
