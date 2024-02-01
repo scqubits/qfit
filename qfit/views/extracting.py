@@ -105,8 +105,7 @@ class ExtractingView(QObject):
 
     # ------------------------------------------------------------------
     def _tagChangedSignalConnects(self):
-        self.bareLabels["initial"].editingFinished.connect(self._emitTagChangedSignal
-)
+        self.bareLabels["initial"].editingFinished.connect(self._emitTagChangedSignal)
         self.bareLabels["final"].editingFinished.connect(self._emitTagChangedSignal)
         self.bareLabels["photons"].valueChanged.connect(lambda: self._emitTagChangedSignal())
         self.dressedLabels["initial"].valueChanged.connect(lambda: self._emitTagChangedSignal())

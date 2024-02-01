@@ -62,6 +62,9 @@ from qfit.controllers.help_tooltip import HelpButtonCtrl
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
 
+# paging:
+from qfit.views.paging import PageView
+
 # extract
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.controllers.extracting import ExtractingCtrl
@@ -116,24 +119,6 @@ class CombinedMeta(type(QMainWindow), type(Registrable)):
 class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     """Class for the main window of the app."""
 
-    ui: Ui_MainWindow
-    # ui_menu: Ui_MenuWidget
-
-    measurementData: MeasurementDataType
-    activeDataset: ActiveExtractedData
-    allDatasets: AllExtractedData
-    extractingCtrl: ExtractingCtrl
-
-    calibrationData: CalibrationData
-    calibrationView: CalibrationView
-    rawLineEdits: Dict[str, "CalibrationLineEdit"]
-    mapLineEdits: Dict[str, "CalibrationLineEdit"]
-    calibrationButtons: Dict[str, QPushButton]
-
-    axes: mpl.axes.Axes
-    cidCanvas: int
-    # offset: Union[None, QPoint]
-
     optInitialized: bool = False
 
     unsavedChanges: bool
@@ -156,7 +141,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # navigation
         self.ui_menu = MenuWidget(parent=self)
-        self.uiPagesConnects()
+        self.pagingMVCInits()
 
         # calibration
         self.calibrationMVCInits()
@@ -164,7 +149,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # extract
         self.extractingMVCInits(hilbertspace)
-        self.extractingCtrl.staticInit()
         self.extractingCtrl.dynamicalInit()
 
         # prefit: controller, two models and their connection to view (sliders)
@@ -178,7 +162,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # plot, mpl canvas
         self.measurementData = measurementData
         self.plottingMVCInits()
-        self.plottingCtrl.staticInit()
         self.plottingCtrl.dynamicalInit(
             self.measurementData, self.quantumModel
         )
@@ -281,88 +264,34 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             ), (
                 self.measComboBoxes, self.measPlotSettings, self.ui.swapXYButton,
                 self.canvasTools, self.calibrationButtons, self.ui.calibratedCheckBox, 
-                self.pageButtons
+                self.pageView
             ),
         )  
 
-    # measurement data -------------------------------------------------
-
-
-    # cursor -----------------------------------------------------------
-    # def mousePressEvent(self, event: QMouseEvent):
-    #     if event.button() == Qt.LeftButton:
-    #         self.offset = event.pos()
-    #     else:
-    #         super().mousePressEvent(event)
-
-    # def mouseMoveEvent(self, event: QMouseEvent):
-    #     if self.offset is not None and event.buttons() == Qt.LeftButton:
-    #         self.move(self.pos() + event.pos() - self.offset)
-    #     else:
-    #         super().mouseMoveEvent(event)
-
-    # def mouseReleaseEvent(self, event: QMouseEvent):
-    #     self.offset = None
-    #     super().mouseReleaseEvent(event)
-
-
     # menu #############################################################
     ####################################################################
-    def uiPagesConnects(self):
-        """Connect the UI elements for switching between the different pages."""
-
-        # should be in the a MVC inits function
+    def pagingMVCInits(self):
+        """
+        Set up an instance of PageView.
+        """
         self.pageButtons = {
             "calibrate": self.ui.modeSelectButton,
             "extract": self.ui.modeTagButton,
             "prefit": self.ui.modePrefitButton,
             "fit": self.ui.modeFitButton,
         }
+        self.dataExportButtons = {
+            "prefit": self.ui.exportToPrefitButton,
+            "fit": self.ui.exportToFitButton,
+        }
+        self.pageStackedWidgets = {
+            "center": self.ui.pagesStackedWidget,
+            "bottom": self.ui.bottomStackedWidget,
+        }
 
-        # page 0: Calibrate (previously Extract)
-        self.ui.modeSelectButton.clicked.connect(lambda: self._switchToPage(0))
-        # page 1: Extract & Tag (previously Tag)
-        self.ui.modeTagButton.clicked.connect(lambda: self._switchToPage(1))
-        # page 2: Prefit
-        self.ui.modePrefitButton.clicked.connect(lambda: self._switchToPage(2))
-        # page 3: Fit
-        self.ui.modeFitButton.clicked.connect(lambda: self._switchToPage(3))
-
-        # when clicked parameter export button, switch to the desired page
-        self.ui.exportToFitButton.clicked.connect(lambda: self._switchToPage(3))
-        self.ui.exportToPrefitButton.clicked.connect(lambda: self._switchToPage(2))
-
-    @Slot()
-    def _switchToPage(self, page: int):
-        # switch to the desired page
-        print("switch to page", page)
-
-        # update MSE when switching between fit / pre-fit page
-        if self.ui.pagesStackedWidget.currentIndex() == 2 and page == 3:
-            self.ui.mseLabel_2.setText(self.ui.mseLabel.text())
-        elif self.ui.pagesStackedWidget.currentIndex() == 3 and page == 2:
-            self.ui.mseLabel.setText(self.ui.mseLabel_2.text())
-        
-        self.ui.pagesStackedWidget.setCurrentIndex(page)
-        self.ui.bottomStackedWidget.setCurrentIndex(page)
-
-        # set the corresponding button to checked
-        self.ui.modeSelectButton.setChecked(False)
-        self.ui.modeTagButton.setChecked(False)
-        self.ui.modePrefitButton.setChecked(False)
-        self.ui.modeFitButton.setChecked(False)
-        if page == 0:
-            self.ui.modeSelectButton.setChecked(True)
-            self.ui.mplFigureCanvas.toPlotMode("calibrate")
-        elif page == 1:
-            self.ui.modeTagButton.setChecked(True)
-            self.ui.mplFigureCanvas.toPlotMode("extract")
-        elif page == 2:
-            self.ui.modePrefitButton.setChecked(True)
-            self.ui.mplFigureCanvas.toPlotMode("fit")
-        elif page == 3:
-            self.ui.modeFitButton.setChecked(True)
-            self.ui.mplFigureCanvas.toPlotMode("fit")
+        self.pageView = PageView(
+            self.pageButtons, self.dataExportButtons, self.pageStackedWidgets
+        )
 
 
     # calibration ####################################
@@ -1074,10 +1003,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # the prefit parameter import
         # first update the slider parameter set, then perform the necessary changes
         # as slider parameter changes
-        self.ui.exportToPrefitButton.clicked.connect(
+        self.dataExportButtons["fit"].clicked.connect(
             lambda: self.sliderParameterSet.update(self.fitParameterSet)
         )
-        self.ui.exportToPrefitButton.clicked.connect(
+        self.dataExportButtons["prefit"].clicked.connect(
             lambda: self.onParameterChange(self.sliderParameterSet)
         )
 

@@ -55,15 +55,13 @@ class ExtractingCtrl(QObject):
 
         self._viewUpdatedConnects()
         self._modelUpdatedConnects()
-
-    # initialization ===================================================
-    def staticInit(self):
         self._uiExtractedDataConnects()
         self._uiExtractedDataControlConnects()
 
+    # initialization ===================================================
     def dynamicalInit(self):
         self.allDatasets.blockSignals(True)
-        self.allDatasets.removeAll()
+        self.allDatasets.removeAll()        # move to load from registry
         self.allDatasets.blockSignals(False)
 
     def _uiExtractedDataControlConnects(self):

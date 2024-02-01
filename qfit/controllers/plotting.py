@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
     from qfit.models.quantum_model_parameters import QuantumModelParameterSet
     from qfit.models.numerical_model import QuantumModel
+    from qfit.views.paging import PageView
 
 
 class PlottingCtrl(QObject):
@@ -32,6 +33,9 @@ class PlottingCtrl(QObject):
         "CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2",
         "EXTRACT", "NONE"
     ]
+
+    # other annotations
+    pageView: "PageView"
 
     def __init__(
         self,
@@ -53,13 +57,13 @@ class PlottingCtrl(QObject):
         (
             self.measComboBoxes, self.measPlotSettings, self.swapXYButton,
             self.canvasTools, self.calibrationButtons, self.calibratedCheckBox, 
-            self.pageButtons
+            self.pageView
         ) = views
         self.mplCanvas = mplCanvas
         self.axes = mplCanvas.axes()
-        # self.calibrationStates = calibrationStates
+        self._staticInit()
 
-    def staticInit(self):
+    def _staticInit(self):
         self.disconnectCanvas = False   # used to temporarily switch off canvas updates
         self.xSnapTool = True        # whether the horizontal snap is on
         self.trans0Focused = True   # whether the first transition is focused
@@ -230,24 +234,18 @@ class PlottingCtrl(QObject):
 
     def plottingModeConnects(self):
         # calibration --> data destination
-        self.calibrationData.plotCaliOn.connect(self.setDataDestination)
+        self.calibrationData.plotCaliOn.connect(self.setDataDestAxisSnap)
         self.calibrationData.plotCaliOff.connect(
-            lambda: self.setDataDestination("NONE")
+            lambda: self.setDataDestAxisSnap("NONE")
         )
 
         # page switch --> data destination
-        self.pageButtons["extract"].clicked.connect(
-            lambda: self.setDataDestination("EXTRACT")
+        self.pageView.pageChanged.connect(
+            lambda curr: self.setDataDestAxisSnap("EXTRACT" if curr == "extract" else "NONE")
         )
-        self.pageButtons["calibrate"].clicked.connect(
-            lambda: self.setDataDestination("NONE")
-        )
-        self.pageButtons["prefit"].clicked.connect(
-            lambda: self.setDataDestination("NONE")
-        )
-        self.pageButtons["fit"].clicked.connect(
-            lambda: self.setDataDestination("NONE") 
-        )
+
+        # page switch --> plotting element property change (visibility)
+        self.pageView.pageChanged.connect(self.mplCanvas.updateElemPropertyByPage)
 
         # x snap
         self.canvasTools["snapX"].toggled.connect(self.setXSnapTool)
@@ -268,27 +266,23 @@ class PlottingCtrl(QObject):
         self.trans0Focused = checked
         self.updateCursor()
 
-    def _setAxisSnapByDestimation(self, destination: Literal[
+    def setClickResponse(self, response: Literal["ZOOM", "PAN", "EXTRACT"]):
+        self.clickResponse = response
+
+    @Slot()
+    def setDataDestAxisSnap(self, destination: Literal[
         "CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2",
         "EXTRACT", "NONE"
     ]):
+        self.dataDestination = destination
+
         if destination in ["CALI_X1", "CALI_X2"]:
             self.axisSnap = "X"
         elif destination in ["CALI_Y1", "CALI_Y2"]:
             self.axisSnap = "Y"
         else:
             self.axisSnap = "OFF"
-
-    def setClickResponse(self, response: Literal["ZOOM", "PAN", "EXTRACT"]):
-        self.clickResponse = response
-
-    @Slot()
-    def setDataDestination(self, destination: Literal[
-        "CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2",
-        "EXTRACT", "NONE"
-    ]):
-        self.dataDestination = destination
-        self._setAxisSnapByDestimation(destination)
+            
         self.updateCursor()
     
     @Slot()
@@ -369,12 +363,14 @@ class PlottingCtrl(QObject):
         # select mode
         if self.dataDestination == "EXTRACT":
             current_data = self.activeDataset.allTransitions()
+
             if self.xSnap:
-                x1y1 = np.asarray([self.mplCanvas._cursor.closest_line(event.xdata), event.ydata])
+                x1y1 = np.asarray([self.mplCanvas.cursor.closest_line(event.xdata), event.ydata])
             else:
                 x1y1 = np.asarray([event.xdata, event.ydata])
                 # turn on the horizontal snap automatically, if the user turned it off
                 self.canvasTools["snapX"].setChecked(True)
+
             for index, x2y2 in enumerate(current_data.transpose()):
                 if self.isRelativelyClose(x1y1, x2y2):
                     self.activeDataset.remove(index)

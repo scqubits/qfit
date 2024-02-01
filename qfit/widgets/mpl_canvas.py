@@ -307,7 +307,7 @@ class SpecialCursor(Cursor):
 
 class MplFigureCanvas(QFrame):
 
-    _cursor: SpecialCursor
+    cursor: SpecialCursor
 
     def __init__(self, parent=None):
         QFrame.__init__(self, parent)
@@ -332,7 +332,7 @@ class MplFigureCanvas(QFrame):
 
         self.plottingDisabled: bool = False
 
-        self.x_snap_mode: bool = False
+        self.xSnapMode: bool = False
         self.crosshairHorizOn: bool = False
         self.crosshairVertOn: bool = False
         self.axisSnapMode: Literal["X", "Y", "OFF"] = "OFF"
@@ -412,16 +412,16 @@ class MplFigureCanvas(QFrame):
         """
         # memorize the state of the crosshair cursor
         if xSnapMode is not None:
-            self.x_snap_mode = xSnapMode
+            self.xSnapMode = xSnapMode
         if horizOn is not None:
             self.crosshairHorizOn = horizOn
         if vertOn is not None:
             self.crosshairVertOn = vertOn
         self.axisSnapMode = axisSnapMode
 
-        self._cursor = SpecialCursor(
+        self.cursor = SpecialCursor(
             self.axes(),
-            xSnapMode = self.x_snap_mode,
+            xSnapMode = self.xSnapMode,
             xSnapValues = self.cursorXSnapValues,
             xyMin = (self.axes().get_xlim()[0], self.axes().get_ylim()[0]),
             axisSnapMode = self.axisSnapMode,
@@ -432,7 +432,7 @@ class MplFigureCanvas(QFrame):
             alpha = 0.5,
         )
         self.canvas.draw()
-        self._cursor.line_blit_on()
+        self.cursor.line_blit_on()
 
     def zoomOn(self):
         self.toolbar.setZoomMode(
@@ -540,25 +540,26 @@ class MplFigureCanvas(QFrame):
 
     # manipulate plotting elements        
     @Slot()
-    def toPlotMode(self, mode: Literal["calibrate", "extract", "fit"]):
+    def updateElemPropertyByPage(
+        self, 
+        page: Literal["calibrate", "extract", "prefit", "fit"]
+    ):
         """
         Switch to the mode and update the plotting elements
         """
-        self.plotConfigMode = mode
-
-        if mode == "calibrate":
+        if page == "calibrate":
             self._setVisible("measurement", True)
             self._setVisible("extraction_vlines", False)
             self._setVisible("active_extractions", False)
             self._setVisible("all_extractions", False)
             self._setVisible("spectrum", False)
-        elif mode == "extract":
+        elif page == "extract":
             self._setVisible("measurement", True)
             self._setVisible("extraction_vlines", True)
             self._setVisible("active_extractions", True)
             self._setVisible("all_extractions", True)
             self._setVisible("spectrum", False)
-        elif mode == "fit":
+        elif page == "fit" or page == "prefit":
             self._setVisible("measurement", True)
             self._setVisible("extraction_vlines", False)
             self._setVisible("active_extractions", True)
