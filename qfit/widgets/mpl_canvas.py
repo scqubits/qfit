@@ -169,8 +169,8 @@ class SpecialCursor(Cursor):
         ax,
         xSnapMode: bool,
         xSnapValues: np.ndarray,
-        axisSnapMode: Union[None, Literal["X", "Y"]] = None,
-        xyMin: Union[None, Tuple[float]] = None,
+        xyMin: Tuple[float, float],
+        axisSnapMode: Literal["X", "Y", "OFF"] = "OFF",
         horizOn=True,
         vertOn=True,
         useblit=False,
@@ -181,13 +181,14 @@ class SpecialCursor(Cursor):
         -----------
         ax: Axes
             The Axes to attach the cursor to.
-        x_snap_mode: bool
+        xSnapMode: bool
             Whether to snap the cursor to the closest x value in the list of all x values
-        x_snap_values: np.ndarray
+        xSnapValues: np.ndarray
             The list of all x values
-        axis_snap_mode: Union[None, Literal["X", "Y"]]
-            Whether to snap the cursor to the minimum x or y value (edge of the plot)
-        xy_min: Union[None, Tuple[float]]
+        axisSnapMode: Literal["X", "Y", "OFF"]
+            Whether to snap the cursor to the minimum x or y value (edge of the plot).
+            It overrides xSnapMode.
+        xyMin: Tuple[float, float]
             The minimum x and y values
         horizOn: bool
             Whether to show the horizontal line
@@ -240,10 +241,10 @@ class SpecialCursor(Cursor):
         self.lineh.set_ydata((event.ydata, event.ydata))
         
         # Calculate the x-coordinate of the point based on the snapping mode and axis snap mode
-        if self.xSnapMode == True:
-            point_x_coordinate = self.closest_line(event.xdata)
-        elif self.axis_snap_mode == "Y":
+        if self.axis_snap_mode == "Y":
             point_x_coordinate = self.xyMin[0]
+        elif self.xSnapMode == True:
+            point_x_coordinate = self.closest_line(event.xdata)
         else:
             point_x_coordinate = event.xdata
         
@@ -276,6 +277,9 @@ class SpecialCursor(Cursor):
         """
         Find the closest x value in the list of all x values
         """
+        if self.xSnapValues is None or len(self.xSnapValues) == 0:
+            return xdat
+        
         allxdiff = {np.abs(xdat - i): i for i in self.xSnapValues}
         if allxdiff:
             return allxdiff[min(allxdiff.keys())]
@@ -302,9 +306,8 @@ class SpecialCursor(Cursor):
 
 
 class MplFigureCanvas(QFrame):
-    plotConfigMode: Literal["calibrate", "select", "fit"]
 
-    _crosshair: SpecialCursor
+    _cursor: SpecialCursor
 
     def __init__(self, parent=None):
         QFrame.__init__(self, parent)
@@ -332,7 +335,7 @@ class MplFigureCanvas(QFrame):
         self.x_snap_mode: bool = False
         self.crosshairHorizOn: bool = False
         self.crosshairVertOn: bool = False
-        self.axisSnapMode: Union[None, Literal["X", "Y"]] = None
+        self.axisSnapMode: Literal["X", "Y", "OFF"] = "OFF"
 
         self.colorMapStr: str = "PuOr"
         self._updateElementColors()
@@ -342,8 +345,6 @@ class MplFigureCanvas(QFrame):
 
         # should be call at the end - it will make use of other properties like 
         # coloring
-        self.toPlotMode("calibrate")
-
 
     # Properties =======================================================
     def axes(self):
@@ -365,42 +366,6 @@ class MplFigureCanvas(QFrame):
         self.scatterColor = color_dict[self.colorMapStr]["Scatter"]
         self.cmap = copy.copy(getattr(cm, self.colorMapStr))
 
-    # Cursor Configuration =============================================
-    def _updateCrosshair(
-        self,
-        x_snap_mode: Union[bool, None] = None,
-        axis_snap_mode: Union[None, Literal["X", "Y"]] = None,
-        horizOn: Union[bool, None] = None,
-        vertOn: Union[bool, None] = None,
-    ):
-        """
-        set up the crosshair cursor. This class memorizes the state of the crosshair
-        cursor when no arguments are passed.
-        """
-        if x_snap_mode is not None:
-            self.x_snap_mode = x_snap_mode
-        if horizOn is not None:
-            self.crosshairHorizOn = horizOn
-        if vertOn is not None:
-            self.crosshairVertOn = vertOn
-        if axis_snap_mode is not None:
-            self.axisSnapMode = axis_snap_mode
-
-        self._crosshair = SpecialCursor(
-            self.axes(),
-            xSnapMode = self.x_snap_mode,
-            xSnapValues = self.cursorXSnapValues,
-            axisSnapMode = self.axisSnapMode,
-            xyMin = (self.axes().get_xlim()[0], self.axes().get_ylim()[0]),
-            useblit = True,
-            horizOn = self.crosshairHorizOn,
-            vertOn = self.crosshairVertOn,
-            color = self.crossColor,
-            alpha = 0.5,
-        )
-        self.canvas.draw()
-        self._crosshair.line_blit_on()
-
     def _recordXYLim(self):
         """
         It will be called when:
@@ -421,37 +386,69 @@ class MplFigureCanvas(QFrame):
         self.axes().set_xlim(self.xlim)
         self.axes().set_ylim(self.ylim)
 
+    # View Manipulation: Cursor ========================================
+    def updateCursor(
+        self,
+        xSnapMode: Union[bool, None] = None,
+        axisSnapMode: Literal["X", "Y", "OFF"] = "OFF",
+        horizOn: Union[bool, None] = None,
+        vertOn: Union[bool, None] = None,
+    ):
+        """
+        set up the crosshair cursor. This class memorizes the state of the crosshair
+        cursor when no arguments are passed.
+
+        Parameters:
+        -----------
+        x_snap_mode: Union[bool, None]
+            Whether to snap the cursor to the closest x value in the list of all x values
+        axis_snap_mode: Union[None, Literal["X", "Y"]]
+            Whether to snap the cursor to the minimum x or y value (edge of the plot),
+            it overrides x_snap_mode
+        horizOn: Union[bool, None]
+            whether to show the horizontal line
+        vertOn: Union[bool, None]
+            whether to show the vertical line
+        """
+        # memorize the state of the crosshair cursor
+        if xSnapMode is not None:
+            self.x_snap_mode = xSnapMode
+        if horizOn is not None:
+            self.crosshairHorizOn = horizOn
+        if vertOn is not None:
+            self.crosshairVertOn = vertOn
+        self.axisSnapMode = axisSnapMode
+
+        self._cursor = SpecialCursor(
+            self.axes(),
+            xSnapMode = self.x_snap_mode,
+            xSnapValues = self.cursorXSnapValues,
+            xyMin = (self.axes().get_xlim()[0], self.axes().get_ylim()[0]),
+            axisSnapMode = self.axisSnapMode,
+            useblit = True,
+            horizOn = self.crosshairHorizOn,
+            vertOn = self.crosshairVertOn,
+            color = self.crossColor,
+            alpha = 0.5,
+        )
+        self.canvas.draw()
+        self._cursor.line_blit_on()
+
     def zoomOn(self):
         self.toolbar.setZoomMode(
             on=True
         )  # toggle zoom at the level of the NavigationToolbar2QT, enabling actual
         # zoom functionality
-        self._updateCrosshair(horizOn=False, vertOn=False)
+        self.updateCursor(horizOn=False, vertOn=False)
 
     def panOn(self):
         self.toolbar.setPanMode(
             on=True
         )  # toggle pan at the level of the NavigationToolbar2QT, enabling actual
         # pan functionality
-        self._updateCrosshair(horizOn=False, vertOn=False)
+        self.updateCursor(horizOn=False, vertOn=False)
 
-    def selectOn(self, showCrosshair=True):
-        """
-        On the view level, turning on the selection mode means showing
-        the crosshair cursor.
-
-        However, there is a situation where on a wrong
-        page, clicking the selection button will not turn on the selection mode,
-        so the crosshair cursor should be turned off.
-        """
-        self.toolbar.setZoomMode(on=False)
-        self.toolbar.setPanMode(on=False)
-        if showCrosshair:
-            self._updateCrosshair(horizOn=True, vertOn=True)
-        else:
-            self._updateCrosshair(horizOn=False, vertOn=False)
-
-    def calibrateOn(self):
+    def selectOn(self):
         self.toolbar.setZoomMode(on=False)
         self.toolbar.setPanMode(on=False)
 
@@ -470,7 +467,7 @@ class MplFigureCanvas(QFrame):
     @Slot()
     def updateCursorXSnapValues(self, newCursorXSnapValues: np.ndarray):
         self.cursorXSnapValues = newCursorXSnapValues
-        self._updateCrosshair()        
+        self.updateCursor()        
 
     # View Manipulation: Plotting ======================================
     # toolbox
@@ -543,7 +540,7 @@ class MplFigureCanvas(QFrame):
 
     # manipulate plotting elements        
     @Slot()
-    def toPlotMode(self, mode: Literal["calibrate", "select", "fit"]):
+    def toPlotMode(self, mode: Literal["calibrate", "extract", "fit"]):
         """
         Switch to the mode and update the plotting elements
         """
@@ -555,7 +552,7 @@ class MplFigureCanvas(QFrame):
             self._setVisible("active_extractions", False)
             self._setVisible("all_extractions", False)
             self._setVisible("spectrum", False)
-        elif mode == "select":
+        elif mode == "extract":
             self._setVisible("measurement", True)
             self._setVisible("extraction_vlines", True)
             self._setVisible("active_extractions", True)
@@ -563,7 +560,7 @@ class MplFigureCanvas(QFrame):
             self._setVisible("spectrum", False)
         elif mode == "fit":
             self._setVisible("measurement", True)
-            self._setVisible("extraction_vlines", True)
+            self._setVisible("extraction_vlines", False)
             self._setVisible("active_extractions", True)
             self._setVisible("all_extractions", True)
             self._setVisible("spectrum", True)
