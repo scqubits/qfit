@@ -11,6 +11,39 @@ from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
 from matplotlib.artist import Artist
 
+from datetime import datetime
+
+
+class Status:
+    """
+    Store the status of the application.
+    """
+
+    def __init__(
+        self,
+        statusSource: str,
+        statusType: str,
+        message: str,
+        mse: Optional[float] = None,
+        messageTime: Optional[float] = None,
+    ):
+        self.statusSource: str = statusSource
+        self.statusType: str = statusType
+        self.message: str = message
+        self.mse: Union[float, None] = mse
+        self.timestamp: datetime = datetime.now()
+        self.messageTime: Optional[float] = messageTime
+
+    def __str__(self):
+        if self.statusType != "temp":
+            return f"{self.timestamp} ({self.statusSource}) {self.statusType}, MSE: {self.mse} - {self.message}"
+        else:
+            return f"{self.timestamp} ({self.statusSource}) {self.statusType} lasting time {self.messageTime} s - {self.message}"
+
+    def __repr__(self):
+        return self.__str__()
+
+
 class Tag:
     """
     Store a single dataset tag. The tag can be of different types:
@@ -36,11 +69,11 @@ class Tag:
     """
 
     def __init__(
-        self, 
-        tagType: str = "NO_TAG", 
-        initial: Optional[Union[Tuple[int, ...], int]] = None, 
-        final: Optional[Union[Tuple[int, ...], int]] = None, 
-        photons: Optional[int] = None, 
+        self,
+        tagType: str = "NO_TAG",
+        initial: Optional[Union[Tuple[int, ...], int]] = None,
+        final: Optional[Union[Tuple[int, ...], int]] = None,
+        photons: Optional[int] = None,
     ):
         self.tagType = tagType
         self.initial = initial
@@ -54,10 +87,11 @@ class Tag:
             str(self.final),
             str(self.photons),
         )
-    
+
     def __repr__(self):
         return self.__str__()
-    
+
+
 # ######################################################################
 class PlotElement:
     name: str
@@ -69,13 +103,13 @@ class PlotElement:
 
     def get_visible(self) -> bool:
         return self._visible
-    
+
     def set_visible(self, value: bool) -> None:
         self._visible = value
-        
+
         if self.artists is None:
             return
-        
+
         if isinstance(self.artists, list):
             for artist in self.artists:
                 artist.set_visible(value)
@@ -101,7 +135,7 @@ class PlotElement:
         """
         if self.artists is None:
             return
-        
+
         if isinstance(self.artists, list):
             for artist in self.artists:
                 self._remove_artist(artist)
@@ -123,14 +157,10 @@ class ImageElement(PlotElement):
     """
     Data structure for passing and plotting images
     """
+
     artists: AxesImage
 
-    def __init__(
-        self, 
-        name: str,
-        z: np.ndarray,
-        **kwargs
-    ):
+    def __init__(self, name: str, z: np.ndarray, **kwargs):
         self.name = name
         self.z = z
         self.kwargs = kwargs
@@ -151,7 +181,7 @@ class ImageElement(PlotElement):
         Return the x limits of the image
         """
         return (0, self.z.shape[1])
-    
+
     @property
     def yLim(self) -> Tuple[float, float]:
         """
@@ -164,15 +194,11 @@ class MeshgridElement(PlotElement):
     """
     Data structure for passing and plotting meshgrids
     """
+
     artists: QuadMesh
 
     def __init__(
-        self, 
-        name: str,
-        x: np.ndarray, 
-        y: np.ndarray, 
-        z: np.ndarray,
-        **kwargs
+        self, name: str, x: np.ndarray, y: np.ndarray, z: np.ndarray, **kwargs
     ):
         self.name = name
         self.x = x
@@ -196,7 +222,7 @@ class MeshgridElement(PlotElement):
         Return the x limits of the meshgrid
         """
         return (np.min(self.x), np.max(self.x))
-    
+
     @property
     def yLim(self) -> Tuple[float, float]:
         """
@@ -204,20 +230,15 @@ class MeshgridElement(PlotElement):
         """
         return (np.min(self.y), np.max(self.y))
 
-    
+
 class ScatterElement(PlotElement):
     """
     Data structure for passing and plotting lines
     """
+
     artists: PathCollection
 
-    def __init__(
-        self, 
-        name: str,
-        x: np.ndarray, 
-        y: np.ndarray,
-        **kwargs
-    ):
+    def __init__(self, name: str, x: np.ndarray, y: np.ndarray, **kwargs):
         self.name = name
         self.x = x
         self.y = y
@@ -238,6 +259,7 @@ class SpectrumElement(PlotElement):
     """
     Data structure for passing and plotting spectra from scqubits
     """
+
     artists: List[Line2D]
 
     def __init__(
@@ -268,7 +290,7 @@ class SpectrumElement(PlotElement):
             linestyle="--",
             alpha=0.3,
             fig_ax=(fig, axes),
-            **kwargs
+            **kwargs,
         )
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -276,7 +298,7 @@ class SpectrumElement(PlotElement):
                 label_list=self.highlighted_specdata.labels,
                 linewidth=2,
                 fig_ax=(fig, axes),
-                **kwargs
+                **kwargs,
             )
 
         artist_after = set(axes.get_children())
@@ -288,14 +310,10 @@ class VLineElement(PlotElement):
     """
     Data structure for passing and plotting vertical lines
     """
+
     artists: List[Line2D]
 
-    def __init__(
-        self,
-        name: str,
-        x: Union[List[float], np.ndarray],
-        **kwargs
-    ):
+    def __init__(self, name: str, x: Union[List[float], np.ndarray], **kwargs):
         self.name = name
         self.x = x
         self.kwargs = kwargs
@@ -305,7 +323,7 @@ class VLineElement(PlotElement):
         Plot the vertical line on the canvas
         """
         super().canvasPlot(axes, **kwargs)
-        
+
         combined_kwargs = {**self.kwargs, **kwargs}
 
         artists = []

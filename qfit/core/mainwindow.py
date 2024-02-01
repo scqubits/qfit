@@ -68,6 +68,11 @@ from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.controllers.tagging import TaggingCtrl
 from qfit.views.tagging import TaggingView
 
+# status bar
+from qfit.models.status import StatusModel
+from qfit.controllers.status import StatusCtrl
+from qfit.views.status_bar import StatusBarView
+
 # pre-fit
 from qfit.models.quantum_model_parameters import (
     QuantumModelSliderParameter,
@@ -90,9 +95,6 @@ from qfit.widgets.foldable_table import (
 
 # fit
 from qfit.models.fit import NumericalFitting
-
-# message
-from qfit.models.status_result_data import Result
 
 # registry
 from qfit.models.registry import Registry, RegistryEntry, Registrable
@@ -122,19 +124,28 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     allDatasets: AllExtractedData
     taggingCtrl: TaggingCtrl
 
+    status: StatusModel
+
     calibrationData: CalibrationData
     calibrationView: CalibrationView
     rawLineEdits: Dict[str, "CalibrationLineEdit"]
     mapLineEdits: Dict[str, "CalibrationLineEdit"]
     calibrationButtons: Dict[str, QPushButton]
-    calibrationStates: Dict[str, Literal["CALIBRATE_X1", "CALIBRATE_X2", "CALIBRATE_Y1", "CALIBRATE_Y2"]]
+    calibrationStates: Dict[
+        str, Literal["CALIBRATE_X1", "CALIBRATE_X2", "CALIBRATE_Y1", "CALIBRATE_Y2"]
+    ]
 
     axes: mpl.axes.Axes
     cidCanvas: int
     # offset: Union[None, QPoint]
     clickResponse: Literal[
-        "ZOOM", "PAN", "SELECT", 
-        "CALIBRATE_X1", "CALIBRATE_X2", "CALIBRATE_Y1", "CALIBRATE_Y2"
+        "ZOOM",
+        "PAN",
+        "SELECT",
+        "CALIBRATE_X1",
+        "CALIBRATE_X2",
+        "CALIBRATE_Y1",
+        "CALIBRATE_Y2",
     ]
 
     optInitialized: bool = False
@@ -146,7 +157,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def __init__(
         self, measurementData: MeasurementDataType, hilbertspace: HilbertSpace
     ):
-
         QMainWindow.__init__(self)
         self.openFromIPython = executed_in_ipython()
         self.setFocusPolicy(Qt.StrongFocus)
@@ -201,7 +211,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
 
         # status bar
-        # self.statusBar().showMessage("Ready")
+        self.initializeStatusBar()
 
     # ui setup & grouping ##############################################
     ####################################################################
@@ -263,7 +273,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "photons": self.ui.phNumberDressedSpinBox,
         }
 
-        return 
+        return
 
     # help button and gif tooltip ######################################
     ####################################################################
@@ -278,17 +288,17 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.helpButtonCtrl = HelpButtonCtrl(self.helpButtons)
 
     # plot #############################################################
-    ####################################################################    
+    ####################################################################
     def staticPlottingBuild(self):
         self.disconnectCanvas = False  # used to temporarily switch off canvas updates
         self.x_snap_mode = False
         # self.offset = None
-        self.clickResponse = "SELECT" 
-    
+        self.clickResponse = "SELECT"
+
         self.uiCanvasControlConnects()
         self.uiMplCanvasConnects()
         self.staticPlotElementsConnects()
-    
+
     def dynamicalPlottingBuild(self, hilbertspace: HilbertSpace):
         # inform the use of the bare transition label
         self.ui.bareLabelOrder.setText(
@@ -332,7 +342,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.ui.swapXYButton.clicked.connect(self.swapXY)
 
-        self.ui.colorComboBox.currentTextChanged.connect(self.ui.mplFigureCanvas.updateColorMap)
+        self.ui.colorComboBox.currentTextChanged.connect(
+            self.ui.mplFigureCanvas.updateColorMap
+        )
 
     def staticPlotElementsConnects(self):
         """
@@ -342,16 +354,18 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.allDatasets.readyToPlot.connect(self.ui.mplFigureCanvas.updateElement)
         self.allDatasets.readyToPlotX.connect(self.ui.mplFigureCanvas.updateElement)
         return
-        
+
     def dynamicalPlotElementsConnects(self):
         """
         Should be done at the end and will emit all readyToPlot signal
         """
         self.measurementData.readyToPlot.connect(self.ui.mplFigureCanvas.updateElement)
-        self.measurementData.relimCanvas.connect(self.ui.mplFigureCanvas.relimByMeasData)
+        self.measurementData.relimCanvas.connect(
+            self.ui.mplFigureCanvas.relimByMeasData
+        )
         self.quantumModel.readyToPlot.connect(self.ui.mplFigureCanvas.updateElement)
         return
-    
+
     # measurement data -------------------------------------------------
     def setupUIXYZComboBoxes(self):
         zDataNames = list(self.measurementData.zCandidates.keys())
@@ -372,14 +386,22 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     @Slot(int)
     def yAxisUpdate(self, itemIndex: int):
         self.measurementData.setCurrentY(itemIndex)
-    
+
     def uiMeasurementDataOptionsConnects(self):
         """Connect the UI elements related to display of data"""
         self.ui.topHatCheckBox.toggled.connect(self.measurementData.toggleTopHatFilter)
-        self.ui.waveletCheckBox.toggled.connect(self.measurementData.toggleWaveletFilter)
-        self.ui.edgeFilterCheckBox.toggled.connect(self.measurementData.toggleEdgeFilter)
-        self.ui.bgndSubtractXCheckBox.toggled.connect(self.measurementData.toggleBgndSubtractX)
-        self.ui.bgndSubtractYCheckBox.toggled.connect(self.measurementData.toggleBgndSubtractY)
+        self.ui.waveletCheckBox.toggled.connect(
+            self.measurementData.toggleWaveletFilter
+        )
+        self.ui.edgeFilterCheckBox.toggled.connect(
+            self.measurementData.toggleEdgeFilter
+        )
+        self.ui.bgndSubtractXCheckBox.toggled.connect(
+            self.measurementData.toggleBgndSubtractX
+        )
+        self.ui.bgndSubtractYCheckBox.toggled.connect(
+            self.measurementData.toggleBgndSubtractY
+        )
         self.ui.logScaleCheckBox.toggled.connect(self.measurementData.toggleLogColoring)
         self.ui.rangeSliderMin.valueChanged.connect(self.measurementData.setZMin)
         self.ui.rangeSliderMax.valueChanged.connect(self.measurementData.setZMax)
@@ -388,7 +410,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.zComboBox.activated.connect(self.zDataUpdate)
         self.ui.xComboBox.activated.connect(self.xAxisUpdate)
         self.ui.yComboBox.activated.connect(self.yAxisUpdate)
-    
+
     def setupXYDataBoxes(self):
         self.ui.xComboBox.clear()
         xDataNames = list(self.measurementData.currentXCompatibles.keys())
@@ -406,6 +428,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.mplFigureCanvas.selectOn(
             showCrosshair=self.ui.modeTagButton.isChecked()
         )
+
     @Slot()
     def toggleZoom(self):
         self.clickResponse = "ZOOM"
@@ -662,11 +685,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         all_x_list = self.allDatasets.distinctSortedXValues()
         allxdiff = {np.abs(xdat - i): i for i in all_x_list}
         return allxdiff[min(allxdiff.keys())]
-    
+
     # x-snap: connect measurement data with extracted data -------------
     def measurementExtractedDataConnects(self):
         """
-        To enble the x-snap mode, connect the measurement data with the 
+        To enble the x-snap mode, connect the measurement data with the
         extracted data.
         """
         self.allDatasets.distinctXUpdated.connect(
@@ -841,7 +864,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # update the plot to reflect the change in calibration label
         self.toggleCanvasLabels(checked)
         # self.activeDataset.emitDataUpdated()
-    
+
     # extract and tag ##################################################
     # ##################################################################
     def initializeExtractedData(self, hilbertspace: HilbertSpace):
@@ -852,11 +875,18 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.allDatasets = AllExtractedData()
         self.allDatasets.setCalibrationFunc(self.calibrationData.calibrateDataset)
         self.ui.datasetListView.setModel(self.allDatasets)
-        self.ui.datasetListView.selectItem(self.allDatasets.currentRow) # select the first row
+        self.ui.datasetListView.selectItem(
+            self.allDatasets.currentRow
+        )  # select the first row
 
         self.taggingView = TaggingView(
             hilbertspace.subsystem_count,
-            (self.uiLabelBoxes, self.uiLabelRadioButtons, self.uiBareLabelInputs, self.uiDressedLabelInputs)
+            (
+                self.uiLabelBoxes,
+                self.uiLabelRadioButtons,
+                self.uiBareLabelInputs,
+                self.uiDressedLabelInputs,
+            ),
         )
 
         self.taggingCtrl = TaggingCtrl(
@@ -882,14 +912,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """Make connections for changes in extracted data."""
 
         # UI selection --> Model selection
-        self.ui.datasetListView.focusChanged.connect(
-            self.allDatasets.setCurrentRow
-        )
+        self.ui.datasetListView.focusChanged.connect(self.allDatasets.setCurrentRow)
 
         # allDataset selection --> activeDataset update
-        self.allDatasets.focusChanged.connect(
-            self.activeDataset.replaceAllData
-        )
+        self.allDatasets.focusChanged.connect(self.activeDataset.replaceAllData)
 
         self.allDatasets.focusChanged.connect(
             lambda: self.updateMatchingModeAndCursor()
@@ -898,21 +924,23 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # If data in the TableView is changed manually through editing,
         # the 'dataChanged' signal will be emitted. The following connects the signal
         # to an update in th data stored in the AllExtractedData
-        self.activeDataset.dataUpdated.connect(
-            self.allDatasets.updateAssocData
-        ) 
+        self.activeDataset.dataUpdated.connect(self.allDatasets.updateAssocData)
         self.activeDataset.dataUpdated.connect(
             lambda: print("activeDataset.dataUpdated")
-        ) 
+        )
 
-        # whenever a row is inserted or removed, select the current row 
-        # in the view VISUALLY. It comlete a loop from the view to model 
+        # whenever a row is inserted or removed, select the current row
+        # in the view VISUALLY. It comlete a loop from the view to model
         # and back to view. To avoid infinite loop, block the signal
         self.allDatasets.rowsInserted.connect(
-            lambda: self.ui.datasetListView.selectItem(self.allDatasets.currentRow, blockSignals=True)
+            lambda: self.ui.datasetListView.selectItem(
+                self.allDatasets.currentRow, blockSignals=True
+            )
         )
         self.allDatasets.rowsRemoved.connect(
-            lambda: self.ui.datasetListView.selectItem(self.allDatasets.currentRow, blockSignals=True)
+            lambda: self.ui.datasetListView.selectItem(
+                self.allDatasets.currentRow, blockSignals=True
+            )
         )
 
     # Pre-fit ##########################################################
@@ -938,7 +966,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.setUpPrefitRunConnects()
 
     def prefitStaticElementsBuild(self):
-        self.prefitResult = Result()
+        self.prefitResult = StatusModel()
         # self.spectrumData = CalculatedSpecData()
         self.setUpPrefitResultConnects()
         self.prefitConnects()
@@ -1167,7 +1195,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.prefitResult.displayed_status_type
         )
         status_text_ui_setter = lambda: self.ui.statusTextLabel.setText(
-            self.prefitResult.status_text
+            self.prefitResult.statusStrForView
         )
         mse_change_ui_setter = lambda: self.ui.mseLabel.setText(
             self.prefitResult.displayed_MSE
@@ -1176,7 +1204,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitResult.setupUISetters(
             status_type_ui_setter=status_type_ui_setter,
             status_text_ui_setter=status_text_ui_setter,
-            mse_change_ui_setter=mse_change_ui_setter,
+            mseChangeUISetter=mse_change_ui_setter,
         )
 
     def prefitQuantumModelOptionsConnects(self):
@@ -1276,7 +1304,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.fittingCallbackConnects()
         self.fitPushButtonConnects()
 
-        self.fitResult = Result()
+        self.fitResult = StatusModel()
         self.setUpFitResultConnects()
 
     def setupFitConnects(self):
@@ -1470,7 +1498,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.fitResult.displayed_status_type
         )
         status_text_ui_setter = lambda: self.ui.statusTextLabel_2.setText(
-            self.fitResult.status_text
+            self.fitResult.statusStrForView
         )
         mse_change_ui_setter = lambda: self.ui.mseLabel_2.setText(
             self.fitResult.displayed_MSE
@@ -1479,7 +1507,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.fitResult.setupUISetters(
             status_type_ui_setter=status_type_ui_setter,
             status_text_ui_setter=status_text_ui_setter,
-            mse_change_ui_setter=mse_change_ui_setter,
+            mseChangeUISetter=mse_change_ui_setter,
         )
 
     # Save Location & Window Title #####################################
@@ -1598,9 +1626,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
         # set dataset
-        self.allDatasets.layoutChanged.emit() # update the list view to show the new data
-        self.allDatasets.emitFocusChanged() 
-        self.allDatasets.emitXUpdated() 
+        self.allDatasets.layoutChanged.emit()  # update the list view to show the new data
+        self.allDatasets.emitFocusChanged()
+        self.allDatasets.emitXUpdated()
 
     def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)
@@ -1608,6 +1636,13 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.setGeometry(
             QStyle.alignedRect(Qt.LeftToRight, Qt.AlignCenter, newSize, maxRect)
         )
+
+    # error message system #############################################
+    # ##################################################################
+    def initializeStatusBar(self):
+        self.status = StatusModel()
+        self.statusBarView = StatusBarView(self.ui.statusBar)
+        self.statusCtrl = StatusCtrl(None, self.status, self.statusBarView)
 
     # event filter and save state ######################################
     # ##################################################################
