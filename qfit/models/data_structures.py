@@ -14,6 +14,28 @@ from matplotlib.artist import Artist
 from datetime import datetime
 
 
+class CalibrationRawMapPair:
+    """
+    Store a pair of raw and mapped vectors for calibration.
+    """
+
+    def __init__(
+        self,
+        rawVec: Tuple[float],
+        mapVec: Tuple[float],
+        source: Union[str, None] = None,
+    ):
+        self.rawVec = rawVec
+        self.mapVec = mapVec
+        self.source = source
+
+    def __str__(self):
+        return f"Raw: {self.rawVec}, Mapped: {self.mapVec}, Source: {self.source}"
+
+    def __repr__(self):
+        return self.__str__()
+
+
 class Status:
     """
     Store the status of the application.
@@ -95,8 +117,9 @@ class Tag:
 # ######################################################################
 class PlotElement:
     """
-    A data structure for passing and plotting elements on the canvas. 
+    A data structure for passing and plotting elements on the canvas.
     """
+
     name: str
     artists: Union[None, Artist, List[Artist]] = None
     _visible: bool = True

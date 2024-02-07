@@ -18,6 +18,8 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 from qfit.models.registry import Registrable, RegistryEntry
 
+from qfit.models.data_structures import CalibrationRawMapPair
+
 
 class CombinedMeta(type(QObject), type(Registrable)):
     pass
@@ -78,9 +80,9 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
         self.calibrationIsOn = False
         self.plotCaliOff.emit()
 
-    def acceptCalibration(self, label: Literal[
-        "CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2"
-    ], data):
+    def acceptCalibration(
+        self, label: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2"], data
+    ):
         """
         Called by the canvas click event to accept the calibration data.
         """
@@ -92,7 +94,7 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
             self.rawVec2 = (data, self.rawVec2[1])
         elif label == "CALI_Y2":
             self.rawVec2 = (self.rawVec2[0], data)
-        
+
         self.calibrationOff()
         self.caliClicked.emit(label, data)  # update the calibration view
 
@@ -122,7 +124,12 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
 
     def allCalibrationVecs(
         self,
-    ) -> Tuple[Tuple[float, float], Tuple[float, float], Tuple[float, float], Tuple[float, float]]:
+    ) -> Tuple[
+        Tuple[float, float],
+        Tuple[float, float],
+        Tuple[float, float],
+        Tuple[float, float],
+    ]:
         return self.rawVec1, self.rawVec2, self.mapVec1, self.mapVec2
 
     def calibrateDataset(
@@ -234,3 +241,52 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
         )
         registry = {"CalibrationData": registry_entry}
         return registry
+
+    def _isSufficientForFullCalibration(
+        self, voltageNumber: int, figureNumber: int
+    ) -> bool:
+        """
+        Determine if the calibration data is sufficient for a full calibration. For a full
+        calibration, the number of points required is equal to the number of voltages + 1.
+        If we restrict user to select max 2 points in each figure, the minimum number of
+        figures required is (voltageNumber+1)/2, round up. However this number does not check
+        for the case when the user provides scans for voltages along the same direction.
+
+        Parameters
+        ----------
+        voltageNumber: int
+            The number of voltages used in the scan. Obtained from the two-tone data.
+        figureNumber: int
+            The number of figures imported.
+
+        Returns
+        -------
+        bool
+            True if the calibration data is sufficient for a full calibration, False otherwise.
+        """
+        pointsRequired = voltageNumber + 1
+        if pointsRequired > figureNumber * 2:
+            return False
+        else:
+            return True
+
+    @Slot()
+    def updateRawVec(self):
+        """
+        The function that updates raw vector for calibration
+        """
+        pass
+
+    @Slot()
+    def updateMapVec(self):
+        """
+        The function that updates mapped vector for calibration
+        """
+        pass
+
+    @Slot()
+    def initializeCalibration(self):
+        """
+        The function that initializes calibration
+        """
+        pass
