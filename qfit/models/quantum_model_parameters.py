@@ -20,7 +20,7 @@ ParentSystem = Union[QuantumSystem, HilbertSpace]
 ParamCls = TypeVar("ParamCls", bound="ParamBase")
 
 
-class QuantumModelParameterSet(Registrable, Generic[ParamCls]):
+class ParamSet(Registrable, Generic[ParamCls]):
     """
     A class to store all the parameters of a quantum system
     """
@@ -98,97 +98,6 @@ class QuantumModelParameterSet(Registrable, Generic[ParamCls]):
 
         # add the parameter to the parameter set
         self.parameters[parameter.parent][parameter.name] = parameter
-
-    def addParameter(
-        self,
-        name: str,
-        parent_system: ParentSystem,
-        param_type: ParameterType,
-        param_usage: Literal["slider", "static", "fitting"],
-        min: Union[float, int, None] = None,
-        max: Union[float, int, None] = None,
-        value: Union[float, int, None] = None,
-    ):
-        """
-        Add a QuantumModelParameter or a QuantumModelSliderParameter object to
-        the parameter set. When a QuantumModelSliderParameter object is added,
-        minmax need to be provided, otherwise the value need to be provided.
-
-        Parameters
-        ----------
-        name: str
-            Name of the parameter
-        parent_system: Union[QuantumSystem, HilbertSpace]
-            The parent system of the parameter
-        param_type: Literal[
-            "EC",
-            "EJ",
-            "EL",
-            "E_osc",
-            "l_osc",
-            "ng",
-            "flux",
-            "cutoff",
-            "interaction_strength",
-            "truncated_dim",
-        ]
-            The type of the parameter
-        minmax: Union[Tuple[int], Tuple[float], None]
-            The range of the parameter, only needed when a QuantumModelSliderParameter
-            object is added
-        value: Union[float, int, None]
-            The value of the parameter, only needed when a QuantumModelParameter
-            object is added
-        """
-
-        # if the parent system is not in the parameter set, create a new entry
-        if parent_system not in self.parameters:
-            self.parameters[parent_system] = {}
-            self._updateNameMap(parent_system)
-
-        # if the parameter is not a slider parameter, add it to the parameter set
-        if param_usage == "static":
-            # check if the value is provided
-            if value is None:
-                raise ValueError(
-                    f"Value of parameter {name} is not provided for a static parameter."
-                )
-            self.parameters[parent_system][name] = QMSweepParam(
-                name=name, parent=parent_system, value=value, param_type=param_type
-            )
-
-        # if the parameter is a slider parameter, add it to the parameter set
-        elif param_usage == "slider":
-            # check if minmax is provided
-            if min is None or max is None or value is None:
-                raise ValueError(
-                    f"Min, max or value of parameter {name} is not provided for a slider parameter."
-                )
-            self.parameters[parent_system][name] = QuantumModelSliderParameter(
-                name=name,
-                parent=parent_system,
-                param_type=param_type,
-                value=value,
-                min=min,
-                max=max,
-                # TODO: should add min, max, value when initialized, when the model
-                # and the controller are more separated
-            )
-        elif param_usage == "fitting":
-            # check if minmax and value are provided
-            if min is None or max is None or value is None:
-                raise ValueError(
-                    f"Min, max, or value of parameter {name} is not provided for a fitting parameter."
-                )
-            self.parameters[parent_system][name] = QuantumModelFittingParameter(
-                name=name,
-                parent=parent_system,
-                param_type=param_type,
-                # TODO: should add min, max, value when initialized, when the model
-                # and the controller are more separated
-            )
-        else:
-            raise ValueError(f"Unknown parameter usage {param_usage}.")
 
     def clean(self):
         """
@@ -343,7 +252,7 @@ class QuantumModelParameterSet(Registrable, Generic[ParamCls]):
 
     def update(
         self,
-        param_set: "QuantumModelParameterSet",
+        param_set: "ParamSet",
         attribute: Union[str, List[str]] = "value",
     ):
         """
@@ -404,3 +313,5 @@ class QuantumModelParameterSet(Registrable, Generic[ParamCls]):
                     registry[new_name] = entry
 
         return registry
+
+

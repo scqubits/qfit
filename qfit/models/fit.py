@@ -8,7 +8,7 @@ from qfit.models.extracted_data import AllExtractedData
 from qfit.models.calibration_data import CalibrationData
 from qfit.models.quantum_model_parameters import (
     QuantumModelFittingParameter,
-    QuantumModelParameterSet,
+    ParamSet,
 )
 from qfit.models.status import StatusModel
 
@@ -22,7 +22,7 @@ class WorkerSignals(QObject):
 
 class NumericalFitting(QRunnable):
     opt: Optimization
-    parameterSet: QuantumModelParameterSet
+    parameterSet: ParamSet
 
     def __init__(
         self,
@@ -44,10 +44,10 @@ class NumericalFitting(QRunnable):
     def _targetFunctionWrapper(
         self,
         paramDict: Dict[str, float],
-        parameterSet: QuantumModelParameterSet,
+        parameterSet: ParamSet,
         MSE: Callable,
         extractedData: AllExtractedData,
-        sweepParameterSet: QuantumModelParameterSet,
+        sweepParameterSet: ParamSet,
         calibrationData: CalibrationData,
     ):
         """
@@ -66,10 +66,10 @@ class NumericalFitting(QRunnable):
 
     def setupOptimization(
         self,
-        parameterSet: QuantumModelParameterSet,
+        parameterSet: ParamSet,
         MSE: Callable,
         extractedData: AllExtractedData,
-        sweepParameterSet: QuantumModelParameterSet,
+        sweepParameterSet: ParamSet,
         calibrationData: CalibrationData,
         result: StatusModel,
     ) -> bool:
@@ -157,7 +157,7 @@ class NumericalFitting(QRunnable):
         self,
         freeParams: Dict[str, float],
         targetValue: float,
-        parameterSet: QuantumModelParameterSet,
+        parameterSet: ParamSet,
         result: StatusModel,
     ):
         # update the free parameters in the parameter set and display the target value
@@ -166,7 +166,7 @@ class NumericalFitting(QRunnable):
         result.newMseForComputingDelta = targetValue**2
 
     @staticmethod
-    def _paramHitBound(parameterSet: QuantumModelParameterSet) -> bool:
+    def _paramHitBound(parameterSet: ParamSet) -> bool:
         for param_dict in parameterSet.parameters.values():
             for param in param_dict.values():
                 param: QuantumModelFittingParameter

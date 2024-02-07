@@ -19,10 +19,10 @@ from typing_extensions import Literal
 from qfit.models.parameter_settings import ParameterType
 
 from qfit.models.quantum_model_parameters import (
-    QuantumModelParameterSet,
+    ParamSet,
 )
 from qfit.models.data_structures import (
-    ParamBase, QMSliderParam, QMSweepParam,
+    ParamBase, QMSliderParam, QMSweepParam, QMFitParam
 )
 from qfit.models.status import StatusModel
 from qfit.models.numerical_spectrum_data import CalculatedSpecData
@@ -95,7 +95,7 @@ class QuantumModel(QObject):
         # for test only
         # ------------------------------------------------------------------------------
         self.subsystem_names_to_plot = lambda: (
-            QuantumModelParameterSet.parentSystemIdstrByName(subsystemNameCallback())
+            ParamSet.parentSystemIdstrByName(subsystemNameCallback())
         )
         self.initialStateCallback = initialStateCallback
         self.photonsCallback = photonsCallback
@@ -183,7 +183,7 @@ class QuantumModel(QObject):
 
     def addParamToSet(
         self,
-        parameterSet: QuantumModelParameterSet,
+        parameterSet: ParamSet,
         parameter_usage: Literal["slider", "sweep", "fit"],
         included_parameter_type: Union[List[ParameterType], None] = None,
         excluded_parameter_type: Union[List[ParameterType], None] = None,
@@ -241,32 +241,33 @@ class QuantumModel(QObject):
                     # value = range_dict["min"] * 4/5 + range_dict["max"] * 1/5
                     value = getattr(subsystem, parameter_name)
                     if parameter_usage == "slider":
-                        parameterSet.addParameter(
+                        param = QMSliderParam(
                             name=parameter_name,
-                            parent_system=subsystem,
+                            parent=subsystem,
                             param_type=parameter_type,
-                            value=value,  # TODO: change this value later
+                            value=value,
                             **range_dict,
-                            param_usage="slider",
                         )
+                        parameterSet.addParameter(param)
+
                     elif parameter_usage == "sweep":
-                        parameterSet.addParameter(
-                            name=parameter_name,
-                            parent_system=subsystem,
+                        param = QMSweepParam(
+                            name=parameter_name, 
+                            parent=subsystem, 
+                            value=value, 
                             param_type=parameter_type,
-                            value=value,  # TODO: change this value later
-                            **range_dict,
-                            param_usage="static",
                         )
+                        parameterSet.addParameter(param)
+
                     elif parameter_usage == "fit":
-                        parameterSet.addParameter(
+                        param = QMFitParam(
                             name=parameter_name,
                             parent_system=subsystem,
                             param_type=parameter_type,
-                            value=value,  # TODO: change this value later
+                            value=value,
                             **range_dict,
-                            param_usage="fitting",
                         )
+                        parameterSet.addParameter(param)
 
         #  add interaction strengths to the parameter set
         if (
@@ -281,32 +282,41 @@ class QuantumModel(QObject):
             interactions = self.hilbertspace.interaction_list
             for interaction_term_index in range(len(interactions)):
                 value = interactions[interaction_term_index].g_strength
+
+                if isinstance(value, complex):
+                    raise ValueError(
+                        "The interaction strength is complex. "
+                        "The current implementation does not support complex interaction strength."
+                    )
+                    
                 if parameter_usage == "slider":
-                    parameterSet.addParameter(
+                    param = QMSliderParam(
                         name=f"g{interaction_term_index+1}",
-                        parent_system=self.hilbertspace,
+                        parent=self.hilbertspace,
                         param_type="interaction_strength",
-                        value=value,  # TODO: change this value later
+                        value=value,
                         **DEFAULT_PARAM_MINMAX["interaction_strength"],
-                        param_usage="slider",
                     )
+                    parameterSet.addParameter(param)
+
                 elif parameter_usage == "sweep":
-                    parameterSet.addParameter(
-                        name=f"g{interaction_term_index+1}",
-                        parent_system=self.hilbertspace,
+                    param = QMSweepParam(
+                        name=f"g{interaction_term_index+1}", 
+                        parent=self.hilbertspace, 
+                        value=value, 
                         param_type="interaction_strength",
-                        value=value,  # TODO: change this value later
-                        param_usage="static",
                     )
+                    parameterSet.addParameter(param)
+                    
                 elif parameter_usage == "fit":
-                    parameterSet.addParameter(
+                    param = QMFitParam(
                         name=f"g{interaction_term_index+1}",
-                        parent_system=self.hilbertspace,
+                        parent=self.hilbertspace,
                         param_type="interaction_strength",
-                        value=value,  # TODO: change this value later
+                        value=value,
                         **DEFAULT_PARAM_MINMAX["interaction_strength"],
-                        param_usage="fitting",
                     )
+                    parameterSet.addParameter(param)
 
     # TODO: in future implement this function (for multiple ng and flux case)
     # @staticmethod
@@ -439,7 +449,7 @@ class QuantumModel(QObject):
     def _generateParameterSweep(
         self,
         x_coordinate_list: ndarray,
-        sweep_parameter_set: QuantumModelParameterSet,
+        sweep_parameter_set: ParamSet,
     ) -> ParameterSweep:
         """
         Generate a ParameterSweep object from the HilbertSpace object.
@@ -496,7 +506,7 @@ class QuantumModel(QObject):
         # TODO: for future, phi grid min/max would need special care here
 
     def _updateQuantumModelFromParameterSet(
-        self, parameter_set: QuantumModelParameterSet
+        self, parameter_set: ParamSet
     ) -> None:
         """
         Update HilbertSpace object with a set of parameters in QuantumModelParameterSet.
@@ -511,8 +521,8 @@ class QuantumModel(QObject):
 
     def newSweep(
         self,
-        slider_or_fit_parameter_set: QuantumModelParameterSet,
-        sweep_parameter_set: QuantumModelParameterSet,
+        slider_or_fit_parameter_set: ParamSet,
+        sweep_parameter_set: ParamSet,
         calibration_data: CalibrationData,
         extracted_data: AllExtractedData,
         prefit_result: StatusModel,
@@ -567,8 +577,8 @@ class QuantumModel(QObject):
     @Slot()
     def sweep2SpecNMSE(
         self,
-        slider_or_fit_parameter_set: QuantumModelParameterSet,
-        sweep_parameter_set: QuantumModelParameterSet,
+        slider_or_fit_parameter_set: ParamSet,
+        sweep_parameter_set: ParamSet,
         # spectrum_data: CalculatedSpecData,
         calibration_data: CalibrationData,
         extracted_data: AllExtractedData,
@@ -637,8 +647,8 @@ class QuantumModel(QObject):
     @Slot()
     def updateCalculation(
         self,
-        slider_or_fit_parameter_set: QuantumModelParameterSet,
-        sweep_parameter_set: QuantumModelParameterSet,
+        slider_or_fit_parameter_set: ParamSet,
+        sweep_parameter_set: ParamSet,
         # spectrum_data: CalculatedSpecData,
         calibration_data: CalibrationData,
         extracted_data: AllExtractedData,
@@ -707,7 +717,7 @@ class QuantumModel(QObject):
 
     def _update_hilbertspace_for_ParameterSweep(
         self,
-        sweptParameterSet: QuantumModelParameterSet,
+        sweptParameterSet: ParamSet,
     ) -> None:
         """
         Update the HilbertSpace object with the values of parameters and coupling coefficients
@@ -962,8 +972,8 @@ class QuantumModel(QObject):
 
     def MSEByParameters(
         self,
-        parameterSet: QuantumModelParameterSet,
-        sweep_parameter_set: QuantumModelParameterSet,
+        parameterSet: ParamSet,
+        sweep_parameter_set: ParamSet,
         calibration_data: CalibrationData,
         extracted_data: AllExtractedData,
     ):

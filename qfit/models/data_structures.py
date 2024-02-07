@@ -489,16 +489,6 @@ class QMSliderParam(DispParamBase):
         The type of the parameter
     """
 
-    sliderValueCallback: Callable
-    sliderValueSetter: Callable
-    boxValueCallback: Callable
-    boxValueSetter: Callable
-    minCallback: Callable
-    minSetter: Callable
-    maxCallback: Callable
-    maxSetter: Callable
-    overallValueSetter: Callable
-
     attrToRegister = ["value", "min", "max"]
 
     def __init__(
@@ -521,32 +511,32 @@ class QMSliderParam(DispParamBase):
         self._init_min = min
         self._init_max = max
 
-    def setupUICallbacks(
-        self,
-        sliderValueCallback,
-        sliderValueSetter,
-        boxValueCallback,
-        boxValueSetter,
-        minCallback,
-        minSetter,
-        maxCallback,
-        maxSetter,
-    ):
-        self.sliderValueCallback = sliderValueCallback
-        self.sliderValueSetter = sliderValueSetter
-        self.boxValueCallback = boxValueCallback
-        self.boxValueSetter = boxValueSetter
-        self.minCallback = minCallback
-        self.minSetter = minSetter
-        self.maxCallback = maxCallback
-        self.maxSetter = maxSetter
+    # def setupUICallbacks(
+    #     self,
+    #     sliderValueCallback,
+    #     sliderValueSetter,
+    #     boxValueCallback,
+    #     boxValueSetter,
+    #     minCallback,
+    #     minSetter,
+    #     maxCallback,
+    #     maxSetter,
+    # ):
+    #     self.sliderValueCallback = sliderValueCallback
+    #     self.sliderValueSetter = sliderValueSetter
+    #     self.boxValueCallback = boxValueCallback
+    #     self.boxValueSetter = boxValueSetter
+    #     self.minCallback = minCallback
+    #     self.minSetter = minSetter
+    #     self.maxCallback = maxCallback
+    #     self.maxSetter = maxSetter
 
-        # a very bad temporary solution, when the model and the controller
-        # are more separated, this should be in the controller.
-        # after connect everything, we should update the value of the UI
-        self.min = self._init_min
-        self.max = self._init_max
-        self.value = self._init_value
+    #     # a very bad temporary solution, when the model and the controller
+    #     # are more separated, this should be in the controller.
+    #     # after connect everything, we should update the value of the UI
+    #     self.min = self._init_min
+    #     self.max = self._init_max
+    #     self.value = self._init_value
 
     def _normalizeValue(self, value: Union[int, float]) -> int:
         """
@@ -694,16 +684,6 @@ class QMSliderParam(DispParamBase):
 
 
 class QMFitParam(DispParamBase):
-    initValueCallback: Callable
-    initValueSetter: Callable
-    valueCallback: Callable
-    valueSetter: Callable
-    minCallback: Callable
-    minSetter: Callable
-    maxCallback: Callable
-    maxSetter: Callable
-    fixCallback: Callable
-    fixSetter: Callable
 
     attrToRegister = ["initValue", "value", "min", "max", "isFixed"]
 
@@ -711,35 +691,36 @@ class QMFitParam(DispParamBase):
         self,
         name: str,
         parent: ParentType,
+        value: Union[int, float],
         param_type: ParameterType,
     ):
         super().__init__(name=name, parent=parent, paramType=param_type)
-        self._initValue = None
-        self._value = None
+        self._initValue = value
+        self._value = value
 
-    def setupUICallbacks(
-        self,
-        initValueCallback,
-        initValueSetter,
-        valueCallback,
-        valueSetter,
-        minCallback,
-        minSetter,
-        maxCallback,
-        maxSetter,
-        fixCallback,
-        fixSetter,
-    ):
-        self.initValueCallback = initValueCallback
-        self.initValueSetter = initValueSetter
-        self.valueCallback = valueCallback
-        self.valueSetter = valueSetter
-        self.minCallback = minCallback
-        self.minSetter = minSetter
-        self.maxCallback = maxCallback
-        self.maxSetter = maxSetter
-        self.fixCallback = fixCallback
-        self.fixSetter = fixSetter
+    # def setupUICallbacks(
+    #     self,
+    #     initValueCallback,
+    #     initValueSetter,
+    #     valueCallback,
+    #     valueSetter,
+    #     minCallback,
+    #     minSetter,
+    #     maxCallback,
+    #     maxSetter,
+    #     fixCallback,
+    #     fixSetter,
+    # ):
+    #     self.initValueCallback = initValueCallback
+    #     self.initValueSetter = initValueSetter
+    #     self.valueCallback = valueCallback
+    #     self.valueSetter = valueSetter
+    #     self.minCallback = minCallback
+    #     self.minSetter = minSetter
+    #     self.maxCallback = maxCallback
+    #     self.maxSetter = maxSetter
+    #     self.fixCallback = fixCallback
+    #     self.fixSetter = fixSetter
 
     @property
     def min(self) -> Union[int, float]:

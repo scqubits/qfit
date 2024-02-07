@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from qfit.models.measurement_data import MeasurementDataType
     from qfit.models.calibration_data import CalibrationData
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
-    from qfit.models.quantum_model_parameters import QuantumModelParameterSet
+    from qfit.models.quantum_model_parameters import ParamSet
     from qfit.models.numerical_model import QuantumModel
     from qfit.views.paging import PageView
 
@@ -43,7 +43,7 @@ class PlottingCtrl(QObject):
         models: Tuple[
             "MeasurementDataType", "CalibrationData",
             "AllExtractedData", "ActiveExtractedData",
-            "QuantumModel", "QuantumModelParameterSet",
+            "QuantumModel", "ParamSet",
         ],
         views: Tuple[Any, ...],
         # calibrationStates: Dict[str, Literal['CALIBRATE_X1', 'CALIBRATE_X2', 'CALIBRATE_Y1', 'CALIBRATE_Y2']],
