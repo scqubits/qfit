@@ -510,7 +510,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.sweepParameterSet = QuantumModelParameterSet("sweepParameterSet")
         self.quantumModel = QuantumModel(hilbertspace)
 
-        self.quantumModel.addParametersToParameterSet(
+        self.quantumModel.addParamToSet(
             self.sweepParameterSet,
             parameter_usage="sweep",
             included_parameter_type=["ng", "flux"],
@@ -549,7 +549,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         elif len(self.sweepParameterSet) == 1:
             # only one sweep parameter is found, so we can create sliders
             # for the remaining parameters
-            self.quantumModel.addParametersToParameterSet(
+            self.quantumModel.addParamToSet(
                 self.sliderParameterSet,
                 parameter_usage="slider",
                 excluded_parameter_type=(
@@ -560,7 +560,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         elif len(self.sweepParameterSet) == 2 and param_types == set(["flux", "ng"]):
             # a flux and ng are detected in the HilbertSpace object
             # right now, we assume that the flux is always swept in this case
-            self.quantumModel.addParametersToParameterSet(
+            self.quantumModel.addParamToSet(
                 self.sliderParameterSet,
                 parameter_usage="slider",
                 excluded_parameter_type=(["flux", "cutoff", "truncated_dim", "l_osc"]),
@@ -697,7 +697,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
                 # synchronize slider and box
                 labeled_slider.sliderValueChangedConnect(para.sliderValueToBox)
-                labeled_slider.valueTextChangeConnect(para.boxValueToSlider)
+                labeled_slider.textValueChangedConnect(para.boxValueToSlider)
 
                 # format the user's input
                 labeled_slider.value.editingFinished.connect(para.onBoxEditingFinished)
@@ -849,7 +849,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     def fitDynamicalElementsBuild(self):
         self.fitParameterSet = QuantumModelParameterSet("fitParameterSet")
-        self.quantumModel.addParametersToParameterSet(
+        self.quantumModel.addParamToSet(
             self.fitParameterSet,
             parameter_usage="fit",
             excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],

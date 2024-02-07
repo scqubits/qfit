@@ -140,7 +140,7 @@ class LabeledSlider(QWidget):
             self.slider.setValue(int(self.value.text()))
 
         self.sliderValueChangedConnect(updateValue)
-        self.valueTextChangeConnect(updateSlider)
+        self.textValueChangedConnect(updateSlider)
 
     def _userSliding(self):
         self.user_is_sliding = True
@@ -176,7 +176,7 @@ class LabeledSlider(QWidget):
 
         self.slider.valueChanged.connect(func_wrapper)
 
-    def valueTextChangeConnect(self, func):
+    def textValueChangedConnect(self, func):
         """
         Both user and (potentially) slider value change will emit the value.textChanged
         signal. This function will react to the signal only when the user is typing
