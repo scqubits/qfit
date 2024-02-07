@@ -75,18 +75,12 @@ from qfit.controllers.status import StatusCtrl
 from qfit.views.status_bar import StatusBarView
 
 # pre-fit
+from qfit.views.parameters import SliderParamView
 from qfit.models.quantum_model_parameters import (
-    QuantumModelSliderParameter,
-    QuantumModelParameterSet,
-    QuantumModelFittingParameter,
+    ParamSet,
 )
 from qfit.models.numerical_model import QuantumModel
 from qfit.widgets.foldable_widget import FoldableWidget
-from qfit.widgets.grouped_sliders import (
-    LabeledSlider,
-    GroupedWidgetSet,
-    SPACING_BETWEEN_GROUPS,
-)
 from qfit.widgets.foldable_table import (
     FoldableTable,
     MinMaxItems,
@@ -107,6 +101,7 @@ from qfit.controllers.io_menu import IOCtrl
 
 if TYPE_CHECKING:
     from qfit.widgets.calibration import CalibrationLineEdit
+    from qfit.widgets.grouped_sliders import LabeledSlider
 
 mpl.rcParams["toolbar"] = "None"
 
@@ -153,8 +148,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.extractingCtrl.dynamicalInit()
 
         # prefit: controller, two models and their connection to view (sliders)
-        self.prefitDynamicalElementsBuild(hilbertspace)
-        self.prefitStaticElementsBuild()
+        self.prefitMCVInits(hilbertspace)
 
         # fit
         self.fitDynamicalElementsBuild()
@@ -505,9 +499,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # Pre-fit ##########################################################
     # ##################################################################
+    def prefitMCVInits(self, hilbertspace: HilbertSpace):
+
+
+        self.prefitStaticElementsBuild()
+        self.prefitDynamicalElementsBuild(hilbertspace)
+
     def prefitDynamicalElementsBuild(self, hilbertspace: HilbertSpace):
-        self.sliderParameterSet = QuantumModelParameterSet("sliderParameterSet")
-        self.sweepParameterSet = QuantumModelParameterSet("sweepParameterSet")
+        self.sliderParameterSet = ParamSet("sliderParameterSet")
+        self.sweepParameterSet = ParamSet("sweepParameterSet")
         self.quantumModel = QuantumModel(hilbertspace)
 
         self.quantumModel.addParamToSet(
@@ -517,8 +517,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
 
         self.prefitIdentifySweepParameters()
-        self.prefitSlidersInserts()
-        self.prefitMinMaxInserts()
         self.prefitSliderParamConnects()
         self.prefitSubsystemComboBoxLoads()
         self.prefitQuantumModelOptionsConnects()
@@ -574,7 +572,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.close()
 
     @Slot()
-    def onParameterChange(self, slider_or_fit_parameter_set: QuantumModelParameterSet):
+    def onParameterChange(self, slider_or_fit_parameter_set: ParamSet):
         """
         Model & View updates
         """
@@ -601,77 +599,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             result=self.prefitResult,
         )
 
-    def prefitSlidersInserts(self):
-        """
-        View init: pre-fit sliders
-
-        Insert a set of sliders for the prefit parameters according to the parameter set
-        """
-        # remove the existing widgets, if we somehow want to rebuild the sliders
-        clearChildren(self.ui.prefitScrollAreaWidget)
-
-        # create a QWidget for the scrollArea and set a layout for it
-        prefitScrollLayout = self.ui.prefitScrollAreaWidget.layout()
-
-        # set the alignment of the entire prefit scroll layout
-        prefitScrollLayout.setAlignment(Qt.AlignTop)
-
-        # generate the slider set
-        self.sliderSet = GroupedWidgetSet(
-            widget_class=LabeledSlider,
-            init_kwargs={"label_value_position": "left_right"},
-            columns=1,
-            parent=self.ui.prefitScrollAreaWidget,
-        )
-
-        for key, para_dict in self.sliderParameterSet.items():
-            group_name = self.sliderParameterSet.parentNameByObj[key]
-
-            self.sliderSet.addGroupedWidgets(
-                group_name,
-                list(para_dict.keys()),
-            )
-
-        prefitScrollLayout.addWidget(self.sliderSet)
-
-        # add a spacing between the sliders and the min max table
-        prefitScrollLayout.addSpacing(SPACING_BETWEEN_GROUPS)
-
-    def prefitMinMaxInserts(self):
-        """
-        View init: pre-fit min max table
-        """
-        # remove the existing widgets, if we somehow want to rebuild the sliders
-        clearChildren(self.ui.prefitMinmaxScrollAreaWidget)
-
-        # create a QWidget for the minmax scroll area and set a layout for it
-        prefitMinmaxScrollLayout = self.ui.prefitMinmaxScrollAreaWidget.layout()
-
-        # set the alignment of the entire prefit minmax scroll layout
-        prefitMinmaxScrollLayout.setAlignment(Qt.AlignTop)
-
-        self.minMaxTable = FoldableTable(
-            MinMaxItems,
-            paramNumPerRow=1,
-            groupNames=list(self.sliderParameterSet.parentNameByObj.values()),
-        )
-        self.minMaxTable.setCheckable(False)
-        self.minMaxTable.setChecked(False)
-
-        # insert parameters
-        for key, para_dict in self.sliderParameterSet.items():
-            group_name = self.sliderParameterSet.parentNameByObj[key]
-
-            for para_name in para_dict.keys():
-                self.minMaxTable.insertParams(group_name, para_name)
-
-        # add the minmax table to the scroll area
-        foldable_widget = FoldableWidget("RANGES OF SLIDERS", self.minMaxTable)
-        prefitMinmaxScrollLayout.addWidget(foldable_widget)
-
-        # default to fold the table
-        foldable_widget.toggle()
-
     def prefitSliderParamConnects(self):
         """
         View --> model: slider --> parameter
@@ -681,7 +608,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
             for para_name, para in para_dict.items():
                 para: QuantumModelSliderParameter
-                labeled_slider: LabeledSlider = self.sliderSet[group_name][para_name]
+                labeled_slider: "LabeledSlider" = self.sliderSet[group_name][para_name]
                 minMax: MinMaxItems = self.minMaxTable.params[group_name][para_name]
 
                 para.setupUICallbacks(
@@ -719,7 +646,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         for key, para_dict in self.sliderParameterSet.items():
             group_name = self.sliderParameterSet.parentNameByObj[key]
             for para_name, para in para_dict.items():
-                labeled_slider: LabeledSlider = self.sliderSet[group_name][para_name]
+                labeled_slider: "LabeledSlider" = self.sliderSet[group_name][para_name]
 
                 # connect to the controller to update the spectrum
                 labeled_slider.editingFinishedConnect(
@@ -736,7 +663,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.subsysComboBox.clear()
 
         subsys_name_list = [
-            QuantumModelParameterSet.parentSystemNames(subsys)
+            ParamSet.parentSystemNames(subsys)
             for subsys in self.quantumModel.hilbertspace.subsystem_list[::-1]
         ]
         for subsys_name in subsys_name_list:
@@ -848,7 +775,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     # ##################################################################
 
     def fitDynamicalElementsBuild(self):
-        self.fitParameterSet = QuantumModelParameterSet("fitParameterSet")
+        self.fitParameterSet = ParamSet("fitParameterSet")
         self.quantumModel.addParamToSet(
             self.fitParameterSet,
             parameter_usage="fit",
@@ -907,7 +834,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         fitScrollLayout.addWidget(self.fitTableSet)
 
-    def fittingParameterLoad(self, source: QuantumModelParameterSet):
+    def fittingParameterLoad(self, source: ParamSet):
         """
         Load the initial value, min, and max from the source parameter set
         """
