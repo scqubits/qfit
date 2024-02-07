@@ -54,16 +54,6 @@ class StatusModel(QObject):
         self.newMseForComputingDelta: Optional[float] = None
         self._updateMseForComputingDelta()
 
-    def setupUISetters(
-        self,
-        mseChangeUISetter: Callable,
-        status_type_ui_setter: Callable,
-        status_text_ui_setter: Callable,
-    ):
-        self.mse_change_ui_setter = mseChangeUISetter
-        self.status_type_ui_setter = status_type_ui_setter
-        self.status_text_ui_setter = status_text_ui_setter
-
     @property
     def deltaMse(self):
         return self._deltaMse
@@ -83,6 +73,7 @@ class StatusModel(QObject):
             else:
                 self._mseChangeSign = "+"
 
+    # to be deleted
     @property
     def displayed_status_type(self):
         if self.current_status_type is None:
@@ -104,6 +95,17 @@ class StatusModel(QObject):
         else:
             plus_minus = "-" if self.deltaMse < 0 else "+"
             return f"MSE:  {self.newMseForComputingDelta:.4f} GHz\u00B2  ({plus_minus}{self.deltaMse:.2f} %)"
+        
+    def setupUISetters(
+        self,
+        mseChangeUISetter: Callable,
+        status_type_ui_setter: Callable,
+        status_text_ui_setter: Callable,
+    ):
+        self.mse_change_ui_setter = mseChangeUISetter
+        self.status_type_ui_setter = status_type_ui_setter
+        self.status_text_ui_setter = status_text_ui_setter
+    # to be deleted
 
     # @mse_change.setter
     # def mse_change(self, value: float):

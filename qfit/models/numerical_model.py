@@ -19,9 +19,10 @@ from typing_extensions import Literal
 from qfit.models.parameter_settings import ParameterType
 
 from qfit.models.quantum_model_parameters import (
-    QuantumModelParameter,
-    QuantumModelSliderParameter,
     QuantumModelParameterSet,
+)
+from qfit.models.data_structures import (
+    ParamBase, QMSliderParam, QMSweepParam,
 )
 from qfit.models.status import StatusModel
 from qfit.models.numerical_spectrum_data import CalculatedSpecData
@@ -180,9 +181,9 @@ class QuantumModel(QObject):
     # ) -> QuantumModelParameterSet:
     #     ...
 
-    def addParametersToParameterSet(
+    def addParamToSet(
         self,
-        parameter_set: QuantumModelParameterSet,
+        parameterSet: QuantumModelParameterSet,
         parameter_usage: Literal["slider", "sweep", "fit"],
         included_parameter_type: Union[List[ParameterType], None] = None,
         excluded_parameter_type: Union[List[ParameterType], None] = None,
@@ -240,7 +241,7 @@ class QuantumModel(QObject):
                     # value = range_dict["min"] * 4/5 + range_dict["max"] * 1/5
                     value = getattr(subsystem, parameter_name)
                     if parameter_usage == "slider":
-                        parameter_set.addParameter(
+                        parameterSet.addParameter(
                             name=parameter_name,
                             parent_system=subsystem,
                             param_type=parameter_type,
@@ -249,7 +250,7 @@ class QuantumModel(QObject):
                             param_usage="slider",
                         )
                     elif parameter_usage == "sweep":
-                        parameter_set.addParameter(
+                        parameterSet.addParameter(
                             name=parameter_name,
                             parent_system=subsystem,
                             param_type=parameter_type,
@@ -258,7 +259,7 @@ class QuantumModel(QObject):
                             param_usage="static",
                         )
                     elif parameter_usage == "fit":
-                        parameter_set.addParameter(
+                        parameterSet.addParameter(
                             name=parameter_name,
                             parent_system=subsystem,
                             param_type=parameter_type,
@@ -281,7 +282,7 @@ class QuantumModel(QObject):
             for interaction_term_index in range(len(interactions)):
                 value = interactions[interaction_term_index].g_strength
                 if parameter_usage == "slider":
-                    parameter_set.addParameter(
+                    parameterSet.addParameter(
                         name=f"g{interaction_term_index+1}",
                         parent_system=self.hilbertspace,
                         param_type="interaction_strength",
@@ -290,7 +291,7 @@ class QuantumModel(QObject):
                         param_usage="slider",
                     )
                 elif parameter_usage == "sweep":
-                    parameter_set.addParameter(
+                    parameterSet.addParameter(
                         name=f"g{interaction_term_index+1}",
                         parent_system=self.hilbertspace,
                         param_type="interaction_strength",
@@ -298,7 +299,7 @@ class QuantumModel(QObject):
                         param_usage="static",
                     )
                 elif parameter_usage == "fit":
-                    parameter_set.addParameter(
+                    parameterSet.addParameter(
                         name=f"g{interaction_term_index+1}",
                         parent_system=self.hilbertspace,
                         param_type="interaction_strength",
@@ -482,7 +483,7 @@ class QuantumModel(QObject):
         return param_sweep
 
     def _updateQuantumModelParameter(
-        self, parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
+        self, parameter: Union[QMSweepParam, QMSliderParam]
     ) -> None:
         """
         Update HilbertSpace object with a parameter.
