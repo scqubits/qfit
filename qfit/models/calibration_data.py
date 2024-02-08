@@ -18,7 +18,12 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 from qfit.models.registry import Registrable, RegistryEntry
 
-from qfit.models.data_structures import CalibrationRawMapPair
+from qfit.models.data_structures import (
+    CalibrationRawMapPair,
+    CaliTableParam,
+    CaliTableRow,
+)
+from qfit.models.quantum_model_parameters import ParamSet, QMSweepParam
 
 
 class CombinedMeta(type(QObject), type(Registrable)):
@@ -34,6 +39,9 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
 
     def __init__(
         self,
+        rawVecName: List[str],
+        figName: List[str],
+        sweepParamSet: ParamSet[QMSweepParam],
         rawVec1: Tuple[float, float] = (0.0, 0.0),
         rawVec2: Tuple[float, float] = (1.0, 1.0),
         mapVec1: Tuple[float, float] = (0.0, 0.0),
@@ -50,17 +58,33 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
             rawVec2 -> mapVec2 with an affine-linear transformation:   mapVecN = alphaMat . rawVecN + bVec.
         """
         super().__init__()
-        self.rawVec1 = rawVec1
-        self.rawVec2 = rawVec2
-        self.mapVec1 = mapVec1
-        self.mapVec2 = mapVec2
-        self.bVec = None
-        self.alphaMat = None
+        self.rawVecName = rawVecName
+        self.rawVecDim = len(rawVecName)
+        self.figName = figName
+        self.figNr = len(figName)
+        self.sweepParamSet = sweepParamSet
+        self.sweepParamNr = len(sweepParamSet)
+        self.isFullCalibration: bool
+        self.caliTableRowNr: int
+        self._isSufficientForFullCalibration(self.rawVecDim, self.figNr)
 
-        if rawVec1 and rawVec2 and mapVec1 and mapVec2:
-            self.setCalibration(rawVec1, rawVec2, mapVec1, mapVec2)
-        else:
-            self.resetCalibration()
+        self.caliTable: List[CaliTableRow] = []
+
+        # only used for full calibration
+        self.MMat = None
+        self.offsetVec = None
+
+        # self.rawVec1 = rawVec1
+        # self.rawVec2 = rawVec2
+        # self.mapVec1 = mapVec1
+        # self.mapVec2 = mapVec2
+        # self.bVec = None
+        # self.alphaMat = None
+
+        # if rawVec1 and rawVec2 and mapVec1 and mapVec2:
+        #     self.setCalibration(rawVec1, rawVec2, mapVec1, mapVec2)
+        # else:
+        #     self.resetCalibration()
         self.applyCalibration = False
 
         self.calibrationIsOn = False
@@ -242,9 +266,7 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
         registry = {"CalibrationData": registry_entry}
         return registry
 
-    def _isSufficientForFullCalibration(
-        self, voltageNumber: int, figureNumber: int
-    ) -> bool:
+    def _isSufficientForFullCalibration(self, rawVecDim: int, figNr: int):
         """
         Determine if the calibration data is sufficient for a full calibration. For a full
         calibration, the number of points required is equal to the number of voltages + 1.
@@ -254,24 +276,69 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
 
         Parameters
         ----------
-        voltageNumber: int
-            The number of voltages used in the scan. Obtained from the two-tone data.
-        figureNumber: int
+        rawVecDim: int
+            The raw vector dimension (number of voltages) used in the scan. Obtained from the two-tone data.
+        figNr: int
             The number of figures imported.
-
-        Returns
-        -------
-        bool
-            True if the calibration data is sufficient for a full calibration, False otherwise.
         """
-        pointsRequired = voltageNumber + 1
-        if pointsRequired > figureNumber * 2:
-            return False
+        pointsRequired = rawVecDim + 1
+        if pointsRequired > figNr * 2:
+            self.isFullCalibration = False
+            self.caliTableRowNr = figNr * 2
         else:
-            return True
+            self.isFullCalibration = True
+            self.caliTableRowNr = pointsRequired
+
+    def rawToMappedX(self, rawVec: np.ndarray, figName: Union[str, None]) -> np.ndarray:
+        """
+        Map the raw vector to the mapped vector using the calibration data.
+        """
+        if self.isFullCalibration:
+            return self._fullXCalibration(rawVec)
+        else:
+            if figName is None:
+                raise ValueError(
+                    "The figure name must be provided for partial calibration."
+                )
+            return self._partialXCalibration(rawVec, figName)
+
+    def _fullXCalibration(self, rawVec: np.ndarray) -> np.ndarray:
+        return self.calibrateDataPoint(rawVec)
+
+    def _partialXCalibration(self, rawVec: np.ndarray, figName: str) -> np.ndarray:
+        pass
+
+    def _initializeCalibrationTable(self):
+        if self.isFullCalibration:
+            defaultMapVecList = self.defaultMapVec()
+            # for rowIdx in range(self.caliTableRowNr):
+            # caliTableRow = CaliTableRow(mapVec=defaultMapVecList,ParamSet,pointSource=)
+            # self.caliTable.append(caliTableRow)
+
+    def defaultMapVec(self) -> List[Dict[str, float]]:
+        """
+        Return the default mapped vector for the calibration table.
+        """
+        defaultMapVecList = []
+        for rowIdx in range(self.caliTableRowNr):
+            defaultMapVecList.append({name: 0.0 for name in self.rawVecName})
+        return defaultMapVecList
+
+    def defaultCaliTableRowParamSet(self) -> List[ParamSet]:
+        """
+        Return the default parameter set for the calibration table.
+        """
+        # the idea: extract parameter set info from the sweep parameter set
+        self.sweepParamSet
+        defaultParamSetList = []
+        for rowIdx in range(self.caliTableRowNr):
+            defaultParamSetList.append(ParamSet())
+        return defaultParamSetList
 
     @Slot()
-    def updateRawVec(self):
+    def updateRawVec(
+        self, row: int, newValue: Dict[str, float], figName: Union[str, None]
+    ):
         """
         The function that updates raw vector for calibration
         """
@@ -281,12 +348,5 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
     def updateMapVec(self):
         """
         The function that updates mapped vector for calibration
-        """
-        pass
-
-    @Slot()
-    def initializeCalibration(self):
-        """
-        The function that initializes calibration
         """
         pass

@@ -201,7 +201,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
         except KeyError:
             raise KeyError(f"Cannot find parameter {name} in the parameter set.")
 
-    def toParamDict(self) -> Dict[str, ParameterBase]:
+    def toParamDict(self) -> Dict[str, ParamBase]:
         """
         Provide a way to iterate through the parameter set.
 

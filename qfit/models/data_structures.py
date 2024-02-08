@@ -14,10 +14,12 @@ from matplotlib.artist import Artist
 from datetime import datetime
 
 from qfit.models.parameter_settings import ParameterType
+from qfit.models.quantum_model_parameters import ParamSet
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
 
 from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.qubit_base import QuantumSystem
+
 ParentType = Union[QuantumSystem, HilbertSpace]
 
 
@@ -431,7 +433,7 @@ class DispParamBase(ParamBase):
 
 class QMSweepParam(ParamBase):
     """
-    A class for quantum model parameters that will be swept in experiments. 
+    A class for quantum model parameters that will be swept in experiments.
     For example, ng and flux parameters in qubits. It stores a calibration_function
     for map the parameter value to the actual value (voltage) used in the experiment.
 
@@ -480,12 +482,12 @@ class QMSweepParam(ParamBase):
         Set the value of the parameter. Will update the both the parameter stored and the
         parent object.
         """
-        self._value = self._toInt(value)
+        self._value = self.value
 
 
 class QMSliderParam(DispParamBase):
     """
-    A class for parameters that are adjusted by a slider. 
+    A class for parameters that are adjusted by a slider.
 
     Parameters
     ----------
@@ -525,9 +527,9 @@ class QMSliderParam(DispParamBase):
     ):
         super().__init__(name=name, parent=parent, paramType=param_type)
 
-        # a very bad temporary solution, when the model and the controller 
+        # a very bad temporary solution, when the model and the controller
         # are more separated, this should be changed to:
-        # parameter object only stores the value, min, max, and the type 
+        # parameter object only stores the value, min, max, and the type
         # of the parameter. The controller should be responsible for
         # synchronizing the value of the parameter and the UI.
         self._init_value = value
@@ -640,12 +642,10 @@ class QMSliderParam(DispParamBase):
         """
         Get the minimum value of the parameter from the UI
         """
-        boxValue = float(
-            self.minCallback()
-        )
+        boxValue = float(self.minCallback())
 
         return self._toInt(boxValue)
-    
+
     @min.setter
     def min(self, value: Union[int, float]):
         """
@@ -656,7 +656,7 @@ class QMSliderParam(DispParamBase):
     def onMinEditingFinished(self, *args, **kwargs):
         """
         When the user is done editing the min box, update the value of the box and make the
-        value consistent with the parameter type. 
+        value consistent with the parameter type.
         Besides, adjust the slider position.
         """
         try:
@@ -673,12 +673,10 @@ class QMSliderParam(DispParamBase):
         """
         Get the maximum value of the parameter from the UI
         """
-        boxValue = float(
-            self.maxCallback()
-        )
+        boxValue = float(self.maxCallback())
 
         return self._toInt(boxValue)
-    
+
     @max.setter
     def max(self, value: Union[int, float]):
         """
@@ -689,7 +687,7 @@ class QMSliderParam(DispParamBase):
     def onMaxEditingFinished(self, *args, **kwargs):
         """
         When the user is done editing the max box, update the value of the box and make the
-        value consistent with the parameter type. 
+        value consistent with the parameter type.
         Besides, adjust the slider position.
         """
         try:
@@ -707,7 +705,6 @@ class QMSliderParam(DispParamBase):
 
 
 class QMFitParam(DispParamBase):
-
     attrToRegister = ["initValue", "value", "min", "max", "isFixed"]
 
     def __init__(
@@ -884,3 +881,82 @@ class QMFitParam(DispParamBase):
         Set the value of the parameter to the initial value
         """
         self.value = self.initValue
+
+
+class CaliTableParam(DispParamBase):
+    """
+    A class for quantum model parameters that stores individual sweep parameter (out of all
+    ng and flux in the model) for each (rawVec, mapVec) pair, i.e. it stores an element of
+    mapVec for one such pair.
+
+    Parameters
+    ----------
+    name: str
+        The name of the parameter
+    value: Union[float, int]
+        The value of the parameter
+    param_type: ParameterType
+        The type of the parameter
+    """
+
+    attrToRegister = ["value"]
+
+    def __init__(
+        self,
+        name: str,
+        value: Union[float, int],
+        parent: ParameterType,
+        param_type: ParameterType,
+    ):
+        super().__init__(name=name, parent=parent, paramType=param_type)
+
+        self._value = value
+        self.calibration_func = None
+
+    @property
+    def value(self) -> Union[int, float]:
+        """
+        Get the value of the parameter
+        """
+        return self._value
+
+    @value.setter
+    def value(self, value: Union[int, float]):
+        """
+        Set the value of the parameter. Will update the both the parameter stored and the
+        parent object.
+        """
+        self._value = self.value
+
+    def setParameterForParent(self):
+        """
+        Disable this method for CaliTableParam
+        """
+        raise NotImplementedError("CaliTableParam should not set parameter for parent.")
+
+
+class CaliTableRow:
+    """
+    A class that gathers all information for a single calibration table entry.
+
+    Parameters
+    ----------
+    rawVec: Dict[str, float]
+        The raw vector of the calibration table entry
+    mapVec: ParamSet
+        The mapped vector of the calibration table entry, which is a set of parameters
+        for CaliTableParam
+    pointSource: Union[str, None]
+        The source of the calibration table entry, if user did not specify rawVec from
+        any of the figure, it will be None.
+    """
+
+    def __init__(
+        self,
+        rawVec: Dict[str, float],
+        mapVec: ParamSet["CaliTableParam"],
+        pointSource: Union[str, None],
+    ) -> None:
+        self.rawVec = rawVec
+        self.mapVec = mapVec
+        self.pointSource = pointSource
