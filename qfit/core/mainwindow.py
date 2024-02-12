@@ -78,7 +78,7 @@ from qfit.views.status_bar import StatusBarView
 from qfit.views.parameters import PrefitParamView
 from qfit.models.data_structures import QMSliderParam, QMSweepParam
 from qfit.models.quantum_model_parameters import (
-    ParamSet, PrefitParamModel, FitParamModel
+    ParamSet, HSParamSet, PrefitParamModel, FitParamModel
 )
 from qfit.models.numerical_model import QuantumModel
 from qfit.widgets.foldable_table import (
@@ -501,7 +501,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     # Pre-fit ##########################################################
     # ##################################################################
     def prefitMVCInits(self, hilbertspace: HilbertSpace):
-        self.sweepParameterSet = ParamSet(hilbertspace, QMSweepParam)
+        self.quantumModel = QuantumModel(hilbertspace)
+        self.sweepParameterSet = HSParamSet(hilbertspace, QMSweepParam)
         
         self.prefitParamModel = PrefitParamModel(hilbertspace, QMSliderParam)
         self.prefitView = PrefitParamView(
@@ -513,8 +514,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitStaticElementsBuild(hilbertspace)
 
     def prefitDynamicalElementsBuild(self, hilbertspace: HilbertSpace):
-        self.quantumModel = QuantumModel(hilbertspace)
-
         self.prefitIdentifySweepParameters()
         self.prefitViewInserts()
         self.prefitSubsystemComboBoxLoads()
@@ -674,7 +673,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui.subsysComboBox.clear()
 
         subsys_name_list = [
-            ParamSet.parentSystemNames(subsys)
+            HSParamSet.parentSystemNames(subsys)
             for subsys in self.quantumModel.hilbertspace.subsystem_list[::-1]
         ]
         for subsys_name in subsys_name_list:
@@ -938,7 +937,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         controller and the model (hosting the parameterset)
         """
         # update the value
-        self.fitView.dataEditingFinished.connect(self.fitParamModel.storeParamAttr)
+        self.fitView.dataEditingFinished.connect(self.fitParamModel._storeParamAttr)
         self.fitParamModel.updateBox.connect(self.fitView.setBoxValue)
 
     def setUpFitResultConnects(self):
@@ -1009,7 +1008,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # parameters
         self.registry.register(self.prefitParamModel)
         self.registry.register(self.fitParamModel)
-        self.registry.register(self.sweepParameterSet)
+        # self.registry.register(self.sweepParameterSet)
 
         # main window
         self.registry.register(self)

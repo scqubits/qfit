@@ -427,17 +427,10 @@ class ParamBase(ABC):
             return np.round(value).astype(int)
         else:
             return value
-        
-    def registerAll(self) -> Dict[str, "RegistryEntry"]:
-        """
-        Register all the quantities in the class. This should be
-        implemented by the descendant class.
-        """
-        raise NotImplementedError
 
 
 class DispParamBase(ParamBase):
-    min: float
+    attrToRegister: List[str]
 
     def _toIntString(self, value: Union[int, float], precision=4) -> str:
         """

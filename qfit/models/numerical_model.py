@@ -18,7 +18,7 @@ from typing_extensions import Literal
 from qfit.models.parameter_settings import ParameterType
 
 from qfit.models.quantum_model_parameters import (
-    ParamSet,
+    ParamSet, HSParamSet
 )
 from qfit.models.data_structures import (
     ParamBase, QMSliderParam, QMSweepParam, QMFitParam
@@ -89,7 +89,7 @@ class QuantumModel(QObject):
         # for test only
         # ------------------------------------------------------------------------------
         self.subsystem_names_to_plot = lambda: (
-            ParamSet.parentSystemIdstrByName(subsystemNameCallback())
+            HSParamSet.parentSystemIdstrByName(subsystemNameCallback())
         )
         self.initialStateCallback = initialStateCallback
         self.photonsCallback = photonsCallback
@@ -160,29 +160,6 @@ class QuantumModel(QObject):
 
     def photons(self):
         return self.photonsCallback()
-
-    # @overload
-    # def generateParameterSets(
-    #     self,
-    #     included_parameter_type: List[ParameterType],
-    # ) -> QuantumModelParameterSet:
-    #     ...
-
-    # @overload
-    # def generateParameterSets(
-    #     self,
-    #     excluded_parameter_type: List[ParameterType],
-    # ) -> QuantumModelParameterSet:
-    #     ...
-
-    # TODO: in future implement this function (for multiple ng and flux case)
-    # @staticmethod
-    # def _map1D(x: float, coeffs, biases) -> Tuple[QuantumModelParameter, ...]:
-    #     """
-    #     The actual swept parameters (flux, ng, ...) are linearly related to the value of
-    #     the x axis of the transition plot. This funcition serves as a map between the two.
-    #     """
-    #     return
 
     def _generateXcoordinateListForMarkedPoints(
         self, extracted_data: AllExtractedData
@@ -259,7 +236,7 @@ class QuantumModel(QObject):
     def _generateParameterSweep(
         self,
         x_coordinate_list: ndarray,
-        sweep_parameter_set: ParamSet,
+        sweep_parameter_set: HSParamSet,
     ) -> ParameterSweep:
         """
         Generate a ParameterSweep object from the HilbertSpace object.
@@ -279,7 +256,9 @@ class QuantumModel(QObject):
         # set paramvals_by_name
         paramvals_by_name = {"x-coordinate": x_coordinate_list}
         # set subsys_update_info
-        subsys_update_info = {"x-coordinate": list(sweep_parameter_set.keys())}
+        subsys_update_info = {
+            "x-coordinate": [sweep_parameter_set.parentObjByName[list(sweep_parameter_set.keys())[0]]]
+        }
         # set update_hilbertspace
         update_hilbertspace = self._update_hilbertspace_for_ParameterSweep(
             sweep_parameter_set
@@ -332,7 +311,7 @@ class QuantumModel(QObject):
     def newSweep(
         self,
         slider_or_fit_parameter_set: ParamSet,
-        sweep_parameter_set: ParamSet,
+        sweep_parameter_set: HSParamSet,
         calibration_data: CalibrationData,
         extracted_data: AllExtractedData,
         prefit_result: StatusModel,
@@ -538,10 +517,15 @@ class QuantumModel(QObject):
         # update parameters according to the x-coordinate
         # TODO consider adding hilbertspace regeneration here
         def update_hilbertspace(x) -> None:
+            # print("Sweep on x =", x)
             for parameters in sweptParameterSet.values():
                 for parameter in parameters.values():
                     parameter.value = parameter.calibration_func(x)
                     parameter.setParameterForParent()
+
+                    # print(f"\t {parameter.name} = {parameter.value}")
+                    # print(f"\t parent.flux = {parameter.parent.flux}")
+                    # print(f"\t sweep.parent.flux = {self.sweep.hilbertspace['fluxonium'].flux}")
 
         return update_hilbertspace
 
