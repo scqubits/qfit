@@ -144,8 +144,7 @@ class ParamSet(QObject, Registrable, Generic[ParamCls], metaclass=CombinedMeta):
         parameters["truncated_dim"] = ["truncated_dim"]
         return parameters
 
-
-    def addParamToSet(
+    def insertParamToSet(
         self,
         included_parameter_type: Union[List[ParameterType], None] = None,
         excluded_parameter_type: Union[List[ParameterType], None] = None,
@@ -203,7 +202,7 @@ class ParamSet(QObject, Registrable, Generic[ParamCls], metaclass=CombinedMeta):
                     # value = range_dict["min"] * 4/5 + range_dict["max"] * 1/5
                     value = getattr(subsystem, parameter_name)
 
-                    self._addParameterByArgs(
+                    self._insertParamByArgs(
                         paramName = parameter_name,
                         parent = subsystem,
                         paramType = parameter_type,
@@ -231,7 +230,7 @@ class ParamSet(QObject, Registrable, Generic[ParamCls], metaclass=CombinedMeta):
                         "The current implementation does not support complex interaction strength."
                     )
                 
-                self._addParameterByArgs(
+                self._insertParamByArgs(
                     paramName = f"g{interaction_term_index+1}",
                     parent = self.hilbertspace,
                     paramType = "interaction_strength",
@@ -239,7 +238,7 @@ class ParamSet(QObject, Registrable, Generic[ParamCls], metaclass=CombinedMeta):
                     rangeDict = DEFAULT_PARAM_MINMAX["interaction_strength"],
                 )
                     
-    def _addParameterByArgs(
+    def _insertParamByArgs(
         self,
         paramName: str,
         parent: ParentSystem,
@@ -430,39 +429,6 @@ class ParamSet(QObject, Registrable, Generic[ParamCls], metaclass=CombinedMeta):
         for key, value in paramval_dict.items():
             parent_name, name = key.split(".")
             self.setParameter(parent_name, name, value, attr=attribute)
-        
-    # def update(
-    #     self,
-    #     param_set: "ParamSet",
-    #     attribute: Union[str, List[str]] = "value",
-    # ):
-    #     """
-    #     Update the parameter set from another parameter set. Only affect the parameters
-    #     that exist in both parameter sets.
-
-    #     Parameters
-    #     ----------
-    #     param_set: QuantumModelParameterSet
-    #         The parameter set to update from
-
-    #     attribute: Union[str, List[str]]
-    #         The attribute(s) to update
-    #     """
-    #     if isinstance(attribute, str):
-    #         attribute = [attribute]
-
-    #     for parent_system, para_dict in param_set.items():
-    #         for name, para in para_dict.items():
-    #             try:
-    #                 for attr in attribute:
-    #                     self.setParameter(
-    #                         parent_system,
-    #                         name,
-    #                         getattr(para, attr),
-    #                         attribute=attr,
-    #                     )
-    #             except KeyError:
-    #                 continue
 
     def registerAll(
         self,
@@ -496,7 +462,10 @@ class ParamSet(QObject, Registrable, Generic[ParamCls], metaclass=CombinedMeta):
         return registry
     
 
-class ParamModel(ParamSet[DispParamBase], Generic[ParamCls]):
+DispParamCls = TypeVar("DispParamCls", bound="DispParamBase")
+    
+
+class ParamModel(ParamSet[DispParamCls], Generic[DispParamCls]):
     attrs: List[str] = ["value"]
 
     updateBox = Signal(ParamAttr)
@@ -528,7 +497,7 @@ class ParamModel(ParamSet[DispParamBase], Generic[ParamCls]):
         **kwargs,
     ):
         """
-        Emit the signal to update the view. 
+        Emit the signals to update the view. 
         """
         # select the parent system
         if parentName is None:
@@ -643,7 +612,6 @@ class PrefitParamModel(ParamModel[QMSliderParam]):
     def storeParamAttr(
         self, 
         paramAttr: ParamAttr,
-        updateHspace: bool = False,
         fromSlider: bool = False,
     ):
         """
@@ -651,7 +619,6 @@ class PrefitParamModel(ParamModel[QMSliderParam]):
         """
         super().storeParamAttr(
             paramAttr, 
-            updateHspace=updateHspace,
             fromSlider=fromSlider
         )
 

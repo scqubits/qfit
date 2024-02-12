@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, ABCMeta, abstractmethod, abstractproperty
 from typing import List, Tuple, Union, Dict, Any, Optional, overload, Literal
 
 import numpy as np
@@ -402,6 +402,13 @@ class ParamBase(ABC):
             return np.round(value).astype(int)
         else:
             return value
+        
+    def registerAll(self) -> Dict[str, "RegistryEntry"]:
+        """
+        Register all the quantities in the class. This should be
+        implemented by the descendant class.
+        """
+        raise NotImplementedError
 
 
 class DispParamBase(ParamBase):

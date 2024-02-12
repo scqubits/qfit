@@ -536,7 +536,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         # check how many sweep parameters are found and create sliders
         # for the remaining parameters
-        self.sweepParameterSet.addParamToSet(
+        self.sweepParameterSet.insertParamToSet(
             included_parameter_type=["ng", "flux"],
         )
 
@@ -550,7 +550,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         elif len(self.sweepParameterSet) == 1:
             # only one sweep parameter is found, so we can create sliders
             # for the remaining parameters
-            self.prefitParamModel.addParamToSet(
+            self.prefitParamModel.insertParamToSet(
                 excluded_parameter_type=(
                     ["cutoff", "truncated_dim", "l_osc"]
                     + [list(param_types)[0]]  # exclude the sweep parameter
@@ -559,7 +559,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         elif len(self.sweepParameterSet) == 2 and param_types == set(["flux", "ng"]):
             # a flux and ng are detected in the HilbertSpace object
             # right now, we assume that the flux is always swept in this case
-            self.prefitParamModel.addParamToSet(
+            self.prefitParamModel.insertParamToSet(
                 excluded_parameter_type=["flux", "cutoff", "truncated_dim", "l_osc"],
             )
         else:
@@ -791,7 +791,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.ui.fitScrollAreaWidget,
         )
         self.fitParamModel = FitParamModel(hilbertspace, QMFitParam)
-        self.fitParamModel.addParamToSet(
+        self.fitParamModel.insertParamToSet(
             excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
         )
 
