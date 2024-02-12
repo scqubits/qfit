@@ -16,7 +16,7 @@ from qfit.widgets.foldable_widget import (
 )
 from qfit.widgets.validated_line_edits import FloatLineEdit
 
-from typing import Dict, List, Tuple, Union, Optional, Any
+from typing import Dict, List, Tuple, Union, Optional, Any, TypeVar, Generic, Type
 
 SLIDER_RANGE = 100
 SPACING_BETWEEN_GROUPS = 15
@@ -63,12 +63,12 @@ class LabeledSlider(QWidget):
 
         # initialize the widgets
         self.label = QLabel(name)
-        self.slider = QSlider(Qt.Horizontal, self)
-        self.slider.setMinimum(1)
-        self.slider.setMaximum(SLIDER_RANGE)
-        self.slider.setSingleStep(1)
-        self.value = FloatLineEdit("0", self)
-        self.value.setMaximumWidth(50)
+        self._slider = QSlider(Qt.Horizontal, self)
+        self._slider.setMinimum(1)
+        self._slider.setMaximum(SLIDER_RANGE)
+        self._slider.setSingleStep(1)
+        self._value = FloatLineEdit("0", self)
+        self._value.setMaximumWidth(50)
 
         # format the widgets
         self.formatLabeledSlider()
@@ -83,10 +83,10 @@ class LabeledSlider(QWidget):
         # This is the most important part of this class. We assume the slider and the value
         # will later be connected by the user. This class will keep track of the user's
         # behavior and avoid endless call loops, realized by the following connections.
-        self.slider.sliderPressed.connect(self._userSliding)
-        self.slider.sliderReleased.connect(self._userSlidingEnds)
-        self.value.textChanged.connect(self._userTyping)
-        self.value.editingFinished.connect(self._userTypingEnds)
+        self._slider.sliderPressed.connect(self._userSliding)
+        self._slider.sliderReleased.connect(self._userSlidingEnds)
+        self._value.textChanged.connect(self._userTyping)
+        self._value.editingFinished.connect(self._userTypingEnds)
 
         # margin and spacing
         self.sliderLayout.setContentsMargins(0, 0, 0, 0)
@@ -124,9 +124,9 @@ class LabeledSlider(QWidget):
             raise ValueError(f"Unknown label_value_position: {label_value_position}")
 
         if with_label:
-            self.sliderLayout.addWidget(self.slider, *slider_position)
+            self.sliderLayout.addWidget(self._slider, *slider_position)
         self.sliderLayout.addWidget(self.label, *label_position)
-        self.sliderLayout.addWidget(self.value, *value_position)
+        self.sliderLayout.addWidget(self._value, *value_position)
 
     def _naiveConnection(self):
         """
@@ -134,10 +134,10 @@ class LabeledSlider(QWidget):
         """
 
         def updateValue():
-            self.value.setText(str(self.slider.value()))
+            self._value.setText(str(self._slider.value()))
 
         def updateSlider():
-            self.slider.setValue(int(self.value.text()))
+            self._slider.setValue(int(self._value.text()))
 
         self.sliderValueChangedConnect(updateValue)
         self.textValueChangedConnect(updateSlider)
@@ -174,7 +174,7 @@ class LabeledSlider(QWidget):
                 func(*args, **kwargs)
                 self.user_is_sliding = False
 
-        self.slider.valueChanged.connect(func_wrapper)
+        self._slider.valueChanged.connect(func_wrapper)
 
     def textValueChangedConnect(self, func):
         """
@@ -187,7 +187,7 @@ class LabeledSlider(QWidget):
             if self.user_is_typing and not self.user_is_sliding:
                 func(*args, **kwargs)
 
-        self.value.textChanged.connect(func_wrapper)
+        self._value.textChanged.connect(func_wrapper)
 
     def editingFinishedConnect(self, func):
         """
@@ -195,35 +195,41 @@ class LabeledSlider(QWidget):
         """
 
         # remove the last connection, which is always self.editingFinished
-        self.value.editingFinished.disconnect(self._userTypingEnds)
+        self._value.editingFinished.disconnect(self._userTypingEnds)
 
         # connect
-        self.value.editingFinished.connect(func)
-        self.slider.sliderReleased.connect(func)
+        self._value.editingFinished.connect(func)
+        self._slider.sliderReleased.connect(func)
 
         # put the self.editingFinished back
-        self.value.editingFinished.connect(self._userTypingEnds)
+        self._value.editingFinished.connect(self._userTypingEnds)
 
-    def setValue(self, value: str):
+    def setValue(self, value: Union[str, int], toSlider: bool = True):
         """
         A wrapper of self.value.setText() that will NOT trigger any signals.
         """
-        self.user_is_typing = False
-        self.value.setText(value)
-        self.user_is_typing = False
+        if toSlider:
+            self._slider.setValue(int(value))
+        else:
+            self.user_is_typing = False
+            self._value.setText(value)
+            self.user_is_typing = False
 
     def formatLabeledSlider(self):
         """
         Format the labeled slider.
         """
-        modifyStyleSheet(self.value, "border", "1px solid #5F5F5F")
-        modifyStyleSheet(self.value, "font", '13px "Roboto Medium"')
-        modifyStyleSheet(self.value, "color", "#FFFFFF")
+        modifyStyleSheet(self._value, "border", "1px solid #5F5F5F")
+        modifyStyleSheet(self._value, "font", '13px "Roboto Medium"')
+        modifyStyleSheet(self._value, "color", "#FFFFFF")
         modifyStyleSheet(self.label, "font", '13px "Roboto Medium"')
         modifyStyleSheet(self.label, "color", "#FFFFFF")
 
 
-class GroupedWidget(QWidget):
+WidgetCls = TypeVar("WidgetCls", bound=QWidget)
+
+
+class GroupedWidget(QWidget, Generic[WidgetCls]):
     """
     A class that contains multiple LabeledSlider widgets. The sliders will be displayed
     in a grid layout.
@@ -244,22 +250,22 @@ class GroupedWidget(QWidget):
 
     def __init__(
         self,
-        widget_class,
-        widget_names: List[str],
-        init_kwargs: Dict[str, Any] = {},
+        widgetClass: Type[WidgetCls],
+        widgetNames: List[str],
+        initKwargs: Dict[str, Any] = {},
         columns: int = 2,
-        parent=None,
+        parent = None,
     ):
         super().__init__(parent)
 
-        self.widget_class = widget_class
-        self.widgets = {}
-        self.init_kwargs = init_kwargs
+        self.widgetClass = widgetClass
+        self.widgets: Dict[str, WidgetCls] = {}
+        self.initKwargs = initKwargs
 
         self.columns = columns
         self.gridLayout = QGridLayout(self)
 
-        self.createWidgets(widget_names)
+        self.createWidgets(widgetNames)
 
         # set the layout that no vertical space between the widgets (labelled sliders here)
         self.gridLayout.setContentsMargins(MARGIN, 0, MARGIN, 0)
@@ -277,38 +283,56 @@ class GroupedWidget(QWidget):
 
     def __getitem__(self, key):
         return self.widgets[key]
+    
+    def insertWidget(self, name: str, idx: Optional[int] = None):
+        if idx is None:
+            idx = len(self.widgets)
+        widget = self.widgetClass(name, **self.initKwargs)
+        self.widgets[name] = widget
+        self.gridLayout.addWidget(widget, idx // self.columns, idx % self.columns)
 
-    def createWidgets(self, widget_names):
+    def removeWidget(self, name: str):
+        widget = self.widgets.pop(name)
+        widget.setParent(None)
+        del widget
+
+    def createWidgets(self, widget_names: List[str]):
         # Clear existing sliders
         self.clearLayout()
 
         for idx, name in enumerate(widget_names):
-            widget = self.widget_class(name, **self.init_kwargs)
-            self.widgets[name] = widget
-            self.gridLayout.addWidget(widget, idx // self.columns, idx % self.columns)
+            self.insertWidget(name, idx)
+
+    # def clearLayout(self):
+    #     for i in reversed(range(self.gridLayout.count())):
+    #         self.gridLayout.itemAt(i).widget().setParent(None)
+    #     self.widgets.clear()
 
     def clearLayout(self):
-        for i in reversed(range(self.gridLayout.count())):
-            self.gridLayout.itemAt(i).widget().setParent(None)
-        self.widgets.clear()
+        for widget in self.widgets.values():
+            self.removeWidget(widget)
 
     def setEnabled(self, value):
         for widget in self.values():
             widget.setEnabled(value)
 
 
-class GroupedWidgetSet(QWidget):
+class GroupedWidgetSet(QWidget, Generic[WidgetCls]):
     """
     Represent a set of grouped sliders. Each group will be displayed in a FoldableWidget.
     """
 
     def __init__(
-        self, widget_class, init_kwargs: Dict[str, Any] = {}, columns=2, parent=None
+        self, 
+        widgetClass: Type[WidgetCls], 
+        initKwargs: Dict[str, Any] = {}, 
+        columns = 2, 
+        parent = None
     ):
         super().__init__(parent)
 
-        self.widget_class = widget_class
-        self.init_kwargs = init_kwargs
+        self.widgetClass = widgetClass
+        self.initKwargs = initKwargs
 
         self.columns = columns
         self.widgetSetLayout = QVBoxLayout(self)
@@ -331,14 +355,14 @@ class GroupedWidgetSet(QWidget):
 
     def addGroupedWidgets(
         self,
-        set_name: str,
-        widget_names: List[str],
+        setName: str,
+        widgetNames: List[str],
     ):
         # store the group
-        self.widgetGroups[set_name] = GroupedWidget(
-            widget_class=self.widget_class,
-            widget_names=widget_names,
-            init_kwargs=self.init_kwargs,
+        self.widgetGroups[setName] = GroupedWidget(
+            widgetClass=self.widgetClass,
+            widgetNames=widgetNames,
+            initKwargs=self.initKwargs,
             columns=self.columns,
             parent=self,
         )
@@ -346,11 +370,17 @@ class GroupedWidgetSet(QWidget):
         # add the group to the layout
         self.widgetSetLayout.addWidget(
             FoldableWidget(
-                set_name,
-                self.widgetGroups[set_name],
+                setName,
+                self.widgetGroups[setName],
             )
         )
+
+    def removeGroupedWidgets(self, set_name: str):
+        self.widgetSetLayout.removeWidget(self.widgetGroups[set_name])
+        self.widgetGroups[set_name].setParent(None)
+        del self.widgetGroups[set_name]
 
     def setEnabled(self, value):
         for group in self.values():
             group.setEnabled(value)
+

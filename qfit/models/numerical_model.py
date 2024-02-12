@@ -11,7 +11,6 @@ import scqubits as scq
 from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.param_sweep import ParameterSweep
 from scqubits.core.storage import SpectrumData
-from scqubits import Circuit
 
 from typing import Dict, List, Tuple, Union, Callable
 from typing_extensions import Literal
@@ -29,11 +28,6 @@ from qfit.models.numerical_spectrum_data import CalculatedSpecData
 from qfit.models.calibration_data import CalibrationData
 from qfit.models.extracted_data import AllExtractedData
 from qfit.models.data_structures import Tag, SpectrumElement
-
-from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
-
-# scq.settings.FUZZY_SLICING = True
-
 
 def dummy_hilbert_space():
     resonator = scq.Oscillator(
@@ -181,143 +175,6 @@ class QuantumModel(QObject):
     # ) -> QuantumModelParameterSet:
     #     ...
 
-    def addParamToSet(
-        self,
-        parameterSet: ParamSet,
-        parameter_usage: Literal["slider", "sweep", "fit"],
-        included_parameter_type: Union[List[ParameterType], None] = None,
-        excluded_parameter_type: Union[List[ParameterType], None] = None,
-    ) -> None:
-        """
-        Add parameters to a QuantumModelParameterSet object for the HilbertSpace object
-        for parameters that are supposed to be adjusted by using sliders or by using parameter sweeps.
-        User may optionally specify parameter types that are excluded/included.
-
-        Parameters:
-        -----------
-        parameter_set: QuantumModelParameterSet
-            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object.
-        parameter_type: Literal["slider", "sweep", "fit"]
-            The type of the parameter.
-        included_parameter_type: List[ParameterType]
-            A list of parameter types that are included in the returned parameter set.
-        excluded_parameter_type: List[ParameterType]
-            A list of parameter types that are excluded in the returned parameter set.
-        """
-
-        if included_parameter_type is not None and excluded_parameter_type is not None:
-            raise ValueError(
-                "Only one of included_parameter_type or excluded_parameter_type can be specified."
-            )
-
-        # obtain all the parameters in the subsystems of the HilbertSpace object
-        subsystems = self.hilbertspace.subsystem_list
-        for subsystem in subsystems:
-            # obtain the available parameters in the subsystem
-            subsystem_type = subsystem.__class__
-            # if the subsystem is not a Circuit instance, look up parameters from
-            # QSYS_PARAM_NAMES
-            if subsystem_type is not Circuit:
-                parameters = QSYS_PARAM_NAMES[subsystem_type]
-            # else, generate parameter lookup dict for the circuit
-            else:
-                parameters = self._generateParamDictForCircuit(subsystem)
-
-            # loop over different types of the parameters
-            for parameter_type, parameter_names in parameters.items():
-                # check if the parameter type is included or excluded
-                if (
-                    (included_parameter_type is not None)
-                    and (parameter_type not in included_parameter_type)
-                ) or (
-                    (excluded_parameter_type is not None)
-                    and (parameter_type in excluded_parameter_type)
-                ):
-                    continue
-
-                # for each parameter type, loop over the parameters
-                for parameter_name in parameter_names:
-                    range_dict = DEFAULT_PARAM_MINMAX[parameter_type]
-                    # value = range_dict["min"] * 4/5 + range_dict["max"] * 1/5
-                    value = getattr(subsystem, parameter_name)
-                    if parameter_usage == "slider":
-                        param = QMSliderParam(
-                            name=parameter_name,
-                            parent=subsystem,
-                            param_type=parameter_type,
-                            value=value,
-                            **range_dict,
-                        )
-                        parameterSet.addParameter(param)
-
-                    elif parameter_usage == "sweep":
-                        param = QMSweepParam(
-                            name=parameter_name, 
-                            parent=subsystem, 
-                            value=value, 
-                            param_type=parameter_type,
-                        )
-                        parameterSet.addParameter(param)
-
-                    elif parameter_usage == "fit":
-                        param = QMFitParam(
-                            name=parameter_name,
-                            parent_system=subsystem,
-                            param_type=parameter_type,
-                            value=value,
-                            **range_dict,
-                        )
-                        parameterSet.addParameter(param)
-
-        #  add interaction strengths to the parameter set
-        if (
-            (included_parameter_type is not None)
-            and ("interaction_strength" not in included_parameter_type)
-        ) or (
-            (excluded_parameter_type is not None)
-            and ("interaction_strength" in excluded_parameter_type)
-        ):
-            pass
-        else:
-            interactions = self.hilbertspace.interaction_list
-            for interaction_term_index in range(len(interactions)):
-                value = interactions[interaction_term_index].g_strength
-
-                if isinstance(value, complex):
-                    raise ValueError(
-                        "The interaction strength is complex. "
-                        "The current implementation does not support complex interaction strength."
-                    )
-                    
-                if parameter_usage == "slider":
-                    param = QMSliderParam(
-                        name=f"g{interaction_term_index+1}",
-                        parent=self.hilbertspace,
-                        param_type="interaction_strength",
-                        value=value,
-                        **DEFAULT_PARAM_MINMAX["interaction_strength"],
-                    )
-                    parameterSet.addParameter(param)
-
-                elif parameter_usage == "sweep":
-                    param = QMSweepParam(
-                        name=f"g{interaction_term_index+1}", 
-                        parent=self.hilbertspace, 
-                        value=value, 
-                        param_type="interaction_strength",
-                    )
-                    parameterSet.addParameter(param)
-                    
-                elif parameter_usage == "fit":
-                    param = QMFitParam(
-                        name=f"g{interaction_term_index+1}",
-                        parent=self.hilbertspace,
-                        param_type="interaction_strength",
-                        value=value,
-                        **DEFAULT_PARAM_MINMAX["interaction_strength"],
-                    )
-                    parameterSet.addParameter(param)
-
     # TODO: in future implement this function (for multiple ng and flux case)
     # @staticmethod
     # def _map1D(x: float, coeffs, biases) -> Tuple[QuantumModelParameter, ...]:
@@ -326,53 +183,6 @@ class QuantumModel(QObject):
     #     the x axis of the transition plot. This funcition serves as a map between the two.
     #     """
     #     return
-
-    def _generateParamDictForCircuit(self, subsystem: Circuit) -> Dict[str, List[str]]:
-        """
-        generate parameter dict for a Circuit instance, conforming with those stored in
-        QSYS_PARAM_NAMES
-        """
-        parameters = {}
-        # loop over branches to search for symbolic EJ, EC, EL
-        branches = subsystem.symbolic_circuit.branches
-        EJ_list = []
-        EC_list = []
-        EL_list = []
-        for branch in branches:
-            if branch.type == "L":
-                # check if the EL parameter is a symbol
-                if type(branch.parameters["EL"]) is not float:
-                    # get the parameter string
-                    param_name = branch.parameters["EL"].name
-                    # if the parameter is not in the list, append to the EL list
-                    if param_name not in EL_list:
-                        EL_list.append(param_name)
-            elif branch.type == "C":
-                if type(branch.parameters["EC"]) is not float:
-                    param_name = branch.parameters["EC"].name
-                    if param_name not in EC_list:
-                        EC_list.append(param_name)
-            elif branch.type == "JJ":
-                if type(branch.parameters["ECJ"]) is not float:
-                    param_name = branch.parameters["ECJ"].name
-                    if param_name not in EC_list:
-                        EC_list.append(param_name)
-                if type(branch.parameters["EJ"]) is not float:
-                    param_name = branch.parameters["EJ"].name
-                    if param_name not in EJ_list:
-                        EJ_list.append(param_name)
-        parameters["EL"] = EL_list
-        parameters["EJ"] = EJ_list
-        parameters["EC"] = EC_list
-        parameters["flux"] = [
-            external_flux.name for external_flux in subsystem.external_fluxes
-        ]
-        parameters["ng"] = [
-            offset_charge.name for offset_charge in subsystem.offset_charges
-        ]
-        parameters["cutoff"] = subsystem.cutoff_names
-        parameters["truncated_dim"] = ["truncated_dim"]
-        return parameters
 
     def _generateXcoordinateListForMarkedPoints(
         self, extracted_data: AllExtractedData
@@ -426,7 +236,7 @@ class QuantumModel(QObject):
 
     @staticmethod
     def _setCalibrationFunction(
-        parameter: QuantumModelParameter, calibration_data: CalibrationData
+        parameter: ParamBase, calibration_data: CalibrationData
     ) -> None:
         """
         Set the calibration function for a parameter. By now, the calibration function is

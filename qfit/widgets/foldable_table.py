@@ -21,7 +21,7 @@ from qfit.widgets.foldable_widget import FoldPushButton
 from qfit.utils.helpers import modifyStyleSheet
 from qfit.widgets.validated_line_edits import FloatLineEdit
 
-from typing import List, Dict, Tuple, Union, Type
+from typing import List, Dict, Tuple, Union, Type, Generic, TypeVar
 
 
 class CenteredItem(QWidget):
@@ -274,7 +274,10 @@ class MinMaxItems(WidgetCollection):
             self.addWidget(key, value)
 
 
-class FoldableTable(QTableWidget):
+CollectionType = TypeVar("CollectionType", bound=WidgetCollection)
+
+
+class FoldableTable(QTableWidget, Generic[CollectionType]):
     """
     A table widget whose rows can be folded and unfolded when a "group row"
     is clicked. Support browsing the contents using the group names.
@@ -282,7 +285,7 @@ class FoldableTable(QTableWidget):
 
     def __init__(
         self,
-        paramType: Type[WidgetCollection],
+        paramType: Type[CollectionType],
         paramNumPerRow: int,
         groupNames: List[str],
     ):
@@ -308,7 +311,7 @@ class FoldableTable(QTableWidget):
 
         # store the items in the table
         self._groupButtons: Dict[str, FoldPushButton] = {}
-        self.params: Dict[str, Dict[str, WidgetCollection]] = {}
+        self.params: Dict[str, Dict[str, CollectionType]] = {}
 
         # initialize the table with just the groups
         self.setColumnCount(paramNumPerRow * self._paramType.columnCount)
@@ -337,6 +340,18 @@ class FoldableTable(QTableWidget):
         # TODO why the table has to be checkable?
         self.setCheckable(True)
         self.setChecked(True)
+
+    def keys(self):
+        return self.params.keys()
+    
+    def values(self):
+        return self.params.values()
+    
+    def items(self):
+        return self.params.items()
+    
+    def __getitem__(self, key: str) -> Dict[str, CollectionType]:
+        return self.params[key]
 
     @property
     def _columns(self) -> List[str]:
@@ -502,3 +517,36 @@ class FoldableTable(QTableWidget):
             self._unfold(group)
         else:
             self._fold(group)
+
+    # def insertGroupedRows(self, group, paramNames):
+    #     """
+    #     Insert the rows below a group.
+    #     """
+    #     # create a group
+    #     self._groupNames.append(group)
+    #     self._groupRows[group] = self.rowCount()
+    #     self._groupButtons[group] = FoldPushButton(group)
+    #     self.params[group] = {}
+
+    #     # insert the group row
+    #     self.insertRow(self.rowCount())
+    #     self.setSpan(self.rowCount() - 1, 0, 1, self.columnCount())
+    #     self.setCellWidget(self.rowCount() - 1, 0, self._groupButtons[group])
+
+    #     # insert the parameters
+    #     for name in paramNames:
+    #         self.insertParams(group, name)
+
+    #     # configure the appearance of the table
+    #     self._configure()
+
+    #     # connect the buttons to the fold/unfold function
+    #     self._groupButtons[group].clicked.connect(
+    #         lambda checked=False, group=group: self._onButtonClicked(group)
+    #     )
+
+    # def removeGroupedRows(self, group):
+    #     """
+    #     Remove the rows below a group.
+    #     """
+    #     pass

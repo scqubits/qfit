@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod, abstractproperty
-from typing import List, Tuple, Union, Dict, Any, Optional
+from abc import ABC, ABCMeta, abstractmethod, abstractproperty
+from typing import List, Tuple, Union, Dict, Any, Optional, overload, Literal
 
 import numpy as np
 from scqubits.core.storage import SpectrumData
@@ -369,6 +369,31 @@ class VLineElement(PlotElement):
 
 
 # Parameters ===========================================================
+class ParamAttr:
+    """
+    Raw data structure for passing parameter attributes from the View
+    directly. Note that the value may be raw and needed to be converted
+    to the proper type before being used.
+    """
+    def __init__(
+        self,
+        parantName: str,
+        name: str,
+        attr: str,
+        value: Any,
+    ):
+        self.parantName = parantName
+        self.name = name
+        self.attr = attr
+        self.value = value
+
+    def __repr__(self) -> str:
+        return f"{self.parantName}.{self.name}.{self.attr}: {self.value}"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+    
+
 class ParamBase(ABC):
     intergerParameterTypes = ["cutoff", "truncated_dim"]
 
@@ -394,7 +419,7 @@ class ParamBase(ABC):
         else:
             setattr(self.parent, self.name, self.value)
 
-    def _toInt(self, value: Union[int, float]) -> Union[int, float]:
+    def _toIntAsNeeded(self, value: Union[int, float]) -> Union[int, float]:
         """
         Convert the value to an integer if the parameter type is cutoff or truncated_dim.
         """
@@ -402,20 +427,13 @@ class ParamBase(ABC):
             return np.round(value).astype(int)
         else:
             return value
-
-    @abstractproperty
-    def value(self):
+        
+    def registerAll(self) -> Dict[str, "RegistryEntry"]:
         """
-        Get the value of the parameter
+        Register all the quantities in the class. This should be
+        implemented by the descendant class.
         """
-        pass
-
-    @value.setter
-    def value(self, value):
-        """
-        Set the value of the parameter
-        """
-        pass
+        raise NotImplementedError
 
 
 class DispParamBase(ParamBase):
@@ -429,7 +447,12 @@ class DispParamBase(ParamBase):
             return f"{value:.0f}"
         else:
             return f"{value:.{precision}f}".rstrip("0").rstrip(".")
+        
+    def exportAttr(self, *args, **kwargs):
+        pass
 
+    def storeAttr(self, *args, **kwargs):
+        pass
 
 class QMSweepParam(ParamBase):
     """
@@ -445,7 +468,7 @@ class QMSweepParam(ParamBase):
         The parent of the parameter
     value: Union[float, int]
         The value of the parameter
-    param_type: ParameterType
+    paramType: ParameterType
         The type of the parameter
     """
 
@@ -456,9 +479,9 @@ class QMSweepParam(ParamBase):
         name: str,
         parent: ParentType,
         value: Union[float, int],
-        param_type: ParameterType,
+        paramType: ParameterType,
     ):
-        super().__init__(name=name, parent=parent, paramType=param_type)
+        super().__init__(name=name, parent=parent, paramType=paramType)
 
         self._value = value
         self.calibration_func = None
@@ -482,7 +505,7 @@ class QMSweepParam(ParamBase):
         Set the value of the parameter. Will update the both the parameter stored and the
         parent object.
         """
-        self._value = self.value
+        self._value = self._toIntAsNeeded(value)
 
 
 class QMSliderParam(DispParamBase):
@@ -520,48 +543,16 @@ class QMSliderParam(DispParamBase):
         self,
         name: str,
         parent: ParentType,
-        param_type: ParameterType,
+        paramType: ParameterType,
         value: Union[int, float],
         min: Union[int, float],
         max: Union[int, float],
     ):
-        super().__init__(name=name, parent=parent, paramType=param_type)
+        super().__init__(name=name, parent=parent, paramType=paramType)
 
-        # a very bad temporary solution, when the model and the controller
-        # are more separated, this should be changed to:
-        # parameter object only stores the value, min, max, and the type
-        # of the parameter. The controller should be responsible for
-        # synchronizing the value of the parameter and the UI.
-        self._init_value = value
-        self._init_min = min
-        self._init_max = max
-
-    # def setupUICallbacks(
-    #     self,
-    #     sliderValueCallback,
-    #     sliderValueSetter,
-    #     boxValueCallback,
-    #     boxValueSetter,
-    #     minCallback,
-    #     minSetter,
-    #     maxCallback,
-    #     maxSetter,
-    # ):
-    #     self.sliderValueCallback = sliderValueCallback
-    #     self.sliderValueSetter = sliderValueSetter
-    #     self.boxValueCallback = boxValueCallback
-    #     self.boxValueSetter = boxValueSetter
-    #     self.minCallback = minCallback
-    #     self.minSetter = minSetter
-    #     self.maxCallback = maxCallback
-    #     self.maxSetter = maxSetter
-
-    #     # a very bad temporary solution, when the model and the controller
-    #     # are more separated, this should be in the controller.
-    #     # after connect everything, we should update the value of the UI
-    #     self.min = self._init_min
-    #     self.max = self._init_max
-    #     self.value = self._init_value
+        self.value: Union[int, float] = self._toIntAsNeeded(value)
+        self.min: Union[int, float] = self._toIntAsNeeded(min)
+        self.max: Union[int, float] = self._toIntAsNeeded(max)
 
     def _normalizeValue(self, value: Union[int, float]) -> int:
         """
@@ -576,132 +567,48 @@ class QMSliderParam(DispParamBase):
         """
         denormalizedValue = self.min + value / SLIDER_RANGE * (self.max - self.min)
 
-        return self._toInt(denormalizedValue)
+        return self._toIntAsNeeded(denormalizedValue)
+    
+    # setters from UI ==================================================
+    @overload
+    def storeAttr(self, attr: str, value: str, fromSlider: Literal[False] = False) -> None:
+        pass
 
-    def sliderValueToBox(self, *args, **kwargs):
+    @overload
+    def storeAttr(self, attr: str, value: int, fromSlider: Literal[True]) -> None:
+        pass
+
+    def storeAttr(self, attr: str, value: Union[str, int], fromSlider: bool = False):
         """
-        When the value of the slider is changed, update the value of the box
+        Store the value of the parameter. If the source is a slider, the 
+        value should be denormalized before being stored.
         """
-        sliderValue = self.sliderValueCallback()
+        if fromSlider:
+            value = self._denormalizeValue(value)
+        else:
+            value = self._toIntAsNeeded(float(value))
 
-        denormalizedValue = self._denormalizeValue(sliderValue)
+        setattr(self, attr, value)
 
-        self.boxValueSetter(self._toIntString(denormalizedValue))
+    # getters for UI ===================================================
+    @overload
+    def exportAttr(self, attr: str, toSlider: Literal[False] = False) -> str:
+        pass
 
-    def boxValueToSlider(self, *args, **kwargs):
+    @overload
+    def exportAttr(self, attr: str, toSlider: Literal[True]) -> int:
+        pass
+
+    def exportAttr(self, attr: str, toSlider: bool = False) -> Union[str, int]:
         """
-        When the value of the box is changed, update the value of the slider
+        Export the value of the parameter. If the destination is a slider, the
+        value should be normalized before being exported.
         """
-        try:
-            boxValue = float(self.boxValueCallback())
-        except ValueError:
-            # cannot convert the box value to float, do nothing
-            return
-
-        normalizedValue = self._normalizeValue(boxValue)
-
-        self.sliderValueSetter(normalizedValue)
-
-    def onBoxEditingFinished(self, *args, **kwargs):
-        """
-        When the user is done editing the box, update the value of the box and make the
-        value consistent with the parameter type.
-        """
-        try:
-            boxValue = float(self.boxValueCallback())
-        except ValueError:
-            # cannot convert the box value to float, do nothing
-            return
-
-        self.boxValueSetter(self._toIntString(boxValue))
-
-    @property
-    def value(self) -> Union[int, float]:
-        """
-        Special note: Will raise a ValueError if user input is not a number. Should be
-        taken care of by the UI/controller.
-        """
-        boxValue = float(
-            self.boxValueCallback()
-        )  # will raise a ValueError if user input is not a number
-
-        return self._toInt(boxValue)
-
-    @value.setter
-    def value(self, value: Union[int, float]):
-        """
-        Set the value of the parameter. Will update both value of the UI and the controller.
-        """
-        value = self._toInt(value)
-
-        self.boxValueSetter(self._toIntString(value))
-        self.sliderValueSetter(self._normalizeValue(value))
-
-    @property
-    def min(self) -> Union[int, float]:
-        """
-        Get the minimum value of the parameter from the UI
-        """
-        boxValue = float(self.minCallback())
-
-        return self._toInt(boxValue)
-
-    @min.setter
-    def min(self, value: Union[int, float]):
-        """
-        Set the minimum value of the parameter in the UI
-        """
-        self.minSetter(self._toIntString(value))
-
-    def onMinEditingFinished(self, *args, **kwargs):
-        """
-        When the user is done editing the min box, update the value of the box and make the
-        value consistent with the parameter type.
-        Besides, adjust the slider position.
-        """
-        try:
-            boxValue = float(self.minCallback())
-        except ValueError:
-            # cannot convert the box value to float, do nothing
-            return
-
-        self.minSetter(self._toIntString(boxValue))
-        self.boxValueToSlider()
-
-    @property
-    def max(self) -> Union[int, float]:
-        """
-        Get the maximum value of the parameter from the UI
-        """
-        boxValue = float(self.maxCallback())
-
-        return self._toInt(boxValue)
-
-    @max.setter
-    def max(self, value: Union[int, float]):
-        """
-        Set the maximum value of the parameter in the UI
-        """
-        self.maxSetter(self._toIntString(value))
-
-    def onMaxEditingFinished(self, *args, **kwargs):
-        """
-        When the user is done editing the max box, update the value of the box and make the
-        value consistent with the parameter type.
-        Besides, adjust the slider position.
-        """
-        try:
-            boxValue = float(self.maxCallback())
-        except ValueError:
-            # cannot convert the box value to float, do nothing
-            return
-
-        self.maxSetter(self._toIntString(boxValue))
-        self.boxValueToSlider()
-
-    # def initialize(self):
-    #     # for test only
-    #     self.value = (self.max + self.min) / 5 + self.min
+        value = getattr(self, attr)
+        if toSlider:
+            return self._normalizeValue(value)
+        else:
+            return self._toIntString(value)
 
 
 class QMFitParam(DispParamBase):
@@ -711,171 +618,41 @@ class QMFitParam(DispParamBase):
         self,
         name: str,
         parent: ParentType,
-        value: Union[int, float],
-        param_type: ParameterType,
+        paramType: ParameterType,
     ):
-        super().__init__(name=name, parent=parent, paramType=param_type)
-        self._initValue = value
-        self._value = value
+        super().__init__(name=name, parent=parent, paramType=paramType)
 
-    # def setupUICallbacks(
-    #     self,
-    #     initValueCallback,
-    #     initValueSetter,
-    #     valueCallback,
-    #     valueSetter,
-    #     minCallback,
-    #     minSetter,
-    #     maxCallback,
-    #     maxSetter,
-    #     fixCallback,
-    #     fixSetter,
-    # ):
-    #     self.initValueCallback = initValueCallback
-    #     self.initValueSetter = initValueSetter
-    #     self.valueCallback = valueCallback
-    #     self.valueSetter = valueSetter
-    #     self.minCallback = minCallback
-    #     self.minSetter = minSetter
-    #     self.maxCallback = maxCallback
-    #     self.maxSetter = maxSetter
-    #     self.fixCallback = fixCallback
-    #     self.fixSetter = fixSetter
-
-    @property
-    def min(self) -> Union[int, float]:
-        """
-        Get the minimum value of the parameter from the UI
-        """
-        return float(
-            self.minCallback()
-        )  # will raise a ValueError if user input is not a number
-
-    @min.setter
-    def min(self, value: Union[int, float]):
-        """
-        Set the minimum value of the parameter in the UI
-        """
-        self.minSetter(self._toIntString(value))
-
-    def onMinEditingFinished(self, *args, **kwargs):
-        """
-        When the user is done editing the min box, update the value of the box and make the
-        value consistent with the parameter type.
-
-        """
-        try:
-            boxValue = float(self.minCallback())
-        except ValueError:
-            # cannot convert the box value to float, do nothing
-            return
-
-        self.min = boxValue
-
-    @property
-    def max(self) -> Union[int, float]:
-        """
-        Get the maximum value of the parameter from the UI
-        """
-        return float(
-            self.maxCallback()
-        )  # will raise a ValueError if user input is not a number
-
-    @max.setter
-    def max(self, value: Union[int, float]):
-        """
-        Set the maximum value of the parameter in the UI
-        """
-        self.maxSetter(self._toIntString(value))
-
-    def onMaxEditingFinished(self, *args, **kwargs):
-        """
-        When the user is done editing the max box, update the value of the box and make the
-        value consistent with the parameter type.
-
-        """
-        try:
-            boxValue = float(self.maxCallback())
-        except ValueError:
-            # cannot convert the box value to float, do nothing
-            return
-
-        self.max = boxValue
-
-    @property
-    def initValue(self) -> Union[int, float]:
-        """
-        Get the initial value of the parameter from the UI
-        """
-        if self._initValue is None:
-            # self._initValue = float(self.initValueCallback())
-            raise ValueError("Initial value of fitting parameter is not set yet.")
-
-        return self._initValue
-
-    @initValue.setter
-    def initValue(self, value: Union[int, float]):
-        """
-        Set the initial value of the parameter in the UI
-        """
-        self._initValue = value
-        self.initValueSetter(self._toIntString(value))
-
-    def onInitValueEditingFinished(self, *args, **kwargs):
-        """
-        When the user is done editing the value box, update the value of the box and make the
-        value consistent with the parameter type.
-
-        """
-        try:
-            boxValue = float(self.initValueCallback())
-        except ValueError:
-            # cannot convert the box value to float, do nothing
-            return
-
-        self.initValue = boxValue
-
-    @property
-    def value(self) -> Union[int, float]:
-        """
-        Get the value of the parameter from the UI
-        """
-        if self._value is None:
-            # self._value = float(self.valueCallback())
-            raise ValueError("Initial value of fitting parameter is not set yet.")
-
-        return self._value
-
-    @value.setter
-    def value(self, value: Union[int, float]):
-        """
-        Set the value of the parameter in the UI
-        """
-        self._value = value
-        self.valueSetter(self._toIntString(value))
-
-    @property
-    def isFixed(self) -> bool:
-        """
-        Check if the parameter is fixed
-        """
-        return self.fixCallback()
-
-    @isFixed.setter
-    def isFixed(self, value: bool):
-        """
-        Set the parameter to be fixed or not
-        """
-        self.fixSetter(value)
-
-    def initialize(self):
         # for test only
-        self.min = 0
-        self.max = 1
-        self.initValue = self.min
-        self.value = self.initValue
-        self.isFixed = False
+        self.min: Union[int, float] = 0
+        self.max: Union[int, float] = 1
+        self.initValue: Union[int, float] = self.min
+        self.value: Union[int, float] = self.initValue
+        self.isFixed: bool = False
 
+    # setter for UI ====================================================
+    def storeAttr(self, attr: str, value: Union[str, bool]):
+        """
+        Store the value of the parameter
+        """
+        if isinstance(value, str):
+            value = self._toIntAsNeeded(float(value))
+
+        setattr(self, attr, value)
+
+    # getter for UI ====================================================
+    def exportAttr(self, attr: str) -> Union[str, bool]: 
+        """
+        Export the value of the parameter
+        """
+        value = getattr(self, attr)
+        if isinstance(value, int) or isinstance(value, float):
+            return self._toIntString(value)
+        elif isinstance(value, bool):
+            return value
+        else:
+            raise ValueError(f"Unknown type of value: {value}")
+
+    # ==================================================================
     def valueToInitial(self):
         """
         Set the value of the parameter to the initial value

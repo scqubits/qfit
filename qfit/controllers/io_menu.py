@@ -388,7 +388,7 @@ class IOCtrl:
         """
         Return the parameters as a dict.
         """
-        return self.mainWindow.fitParameterSet.exportAttrDict("value")
+        return self.mainWindow.fitParamModel.exportAttrDict("value")
     
     def exportHilbertSpace(self, deepcopy: bool = False) -> HilbertSpace:
         """

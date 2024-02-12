@@ -220,7 +220,6 @@ class ActiveExtractedData(QAbstractTableModel):
         """
         Emit signal to update the plot
         """
-        print("Active extracted data is ready to plot")
         self.readyToPlot.emit(self.generatePlotElement())
 
     def connects(self):
@@ -380,11 +379,9 @@ class AllExtractedData(
         self.distinctXUpdated.emit(self.distinctSortedXValues())
 
     def emitReadyToPlot(self, *args):
-        print("All extracted data is ready to plot")
         self.readyToPlot.emit(self.generatePlotElement())
 
     def emitReadyToPlotX(self, *args):
-        print("X is ready to plot")
         self.readyToPlotX.emit(self.generatePlotElementX())
 
     def connects(self):
@@ -509,7 +506,6 @@ class AllExtractedData(
 
     @Slot(int)
     def setCurrentRow(self, row: int):
-        print("Current row is set to", row)
         self._currentRow = row
         self.emitFocusChanged()
     
