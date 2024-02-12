@@ -955,8 +955,8 @@ class CaliTableRow:
         self,
         rawVec: Dict[str, float],
         mapVec: ParamSet["CaliTableParam"],
-        pointSource: Union[str, None],
+        pointPairSource: Union[str, None],
     ) -> None:
         self.rawVec = rawVec
         self.mapVec = mapVec
-        self.pointSource = pointSource
+        self.pointPairSource = pointPairSource

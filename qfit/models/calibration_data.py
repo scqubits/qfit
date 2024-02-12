@@ -9,7 +9,7 @@
 #    LICENSE file in the root directory of this source tree.
 ############################################################################
 
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Callable
 from typing_extensions import Literal
 
 import numpy as np
@@ -51,11 +51,32 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
         Store calibration data for x and y axes, and provide methods to transform between uncalibrated and calibrated
         data.
 
+        The transformation is either a complete one, where rawVecX is the experimental parameter (i.e. voltage)
+        and mapVecX is the calibrated parameter (i.e. flux or ng). If sufficient number of figures are provided, the
+        full relation between the two can be fully determined as follows:
+        mapVecX = MMat @ rawVecX + offsetVecX
+        assume mapVecX has N components, rawVecX has L components, then MMat is a N x L matrix and offsetVecX is a
+        N-component vector. MMat and offsetVecX are determined by providing L+1 pairs of (rawVecX, mapVecX) data points.
+
+        If insufficient number of figures are provided, the calibration is partial. In this case, the calibration
+        is done for each figure separately. Assume we have F figures, then for each figure, the relation between the
+        rawVecX and mapVecX is:
+        rawVecX = rawVecX1 + tX * (rawVecX2 - rawVecX1)
+        mapVecX = mapVecX1 + tX * (mapVecX2 - mapVecX1)
+        here the rawVecX is the voltage vector in a figure that one wants to calibrate, and mapVecX is the calibrated
+        vector. The tX is the parameter that determines the position of the rawVecX in the figure. The calibration
+        is done by providing 2 pairs of (rawVecX, mapVecX) data points for each figure.
+        When a rawVecX is provided, the tX is first determined by using polyfit, then the mapVecX is determined with the
+        formula above.
+
+        The calibration function is supposed to take in rawVecX (and figName if using partial calibration) and return 
+        mapVecX. rawVecX is a dictionary of {rawVecName: value} and mapVecX is a sweep parameter set.
+
         Parameters
         ----------
         rawVec1, rawVec2, mapVec1, mapVec2: ndarray
             Each of these is a two component vector (x,y) marking a point. The calibration maps rawVec1 -> mapVec1,
-            rawVec2 -> mapVec2 with an affine-linear transformation:   mapVecN = alphaMat . rawVecN + bVec.
+            rawVec2 -> mapVec2 with an affine-linear transformation:   mapVecN = MMat . rawVecN + bVec.
         """
         super().__init__()
         self.rawVecName = rawVecName
@@ -64,15 +85,24 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
         self.figNr = len(figName)
         self.sweepParamSet = sweepParamSet
         self.sweepParamNr = len(sweepParamSet)
+
+        # determine total calibration table row number and if the calibration is a complete one
         self.isFullCalibration: bool
         self.caliTableRowNr: int
         self._isSufficientForFullCalibration(self.rawVecDim, self.figNr)
 
-        self.caliTable: List[CaliTableRow] = []
+        self.caliTable: List[CaliTableRow]
+        self._initializeCaliTable()
 
         # only used for full calibration
-        self.MMat = None
-        self.offsetVec = None
+        self.MMat: Optional[np.ndarray] = None
+        self.offsetVec: Optional[np.ndarray]= None
+
+        # only used for partial calibration
+        self.rawVecX1Dict: Optional[Dict[str, Dict[str, float]]] = None # {figureName: {rawVecName: value}}
+        self.rawVecX2Dict: Optional[Dict[str, Dict[str, float]]] = None
+        self.mapVecX1Dict: Optional[Dict[str, Dict[str, float]]] = None # {figureName: {rawVecName: value}}
+        self.mapVecX2Dict: Optional[Dict[str, Dict[str, float]]] = None
 
         # self.rawVec1 = rawVec1
         # self.rawVec2 = rawVec2
@@ -168,18 +198,6 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
             **{"calibration_axis": calibration_axis},
         )
 
-    def inverseCalibrateDataset(
-        self,
-        array: np.ndarray,
-        inverse_calibration_axis: Literal["xy", "x", "y"] = "xy",
-    ):
-        return np.apply_along_axis(
-            self.inverseCalibrateDataPoint,
-            axis=0,
-            arr=array,
-            **{"inverse_calibration_axis": inverse_calibration_axis},
-        )
-
     def calibrateDataPoint(
         self,
         rawVec: Union[List[float], np.ndarray],
@@ -239,11 +257,6 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
             rawVec[..., 0] = mapVec[..., 0]
         return rawVec
 
-    def adaptiveConversionFunc(self) -> callable:
-        if not self.applyCalibration:
-            return lambda vec: vec
-        return self.calibrateDataPoint
-
     def registerAll(self) -> Dict[str, RegistryEntry]:
         def setter(initdata):
             # set calibration data
@@ -302,51 +315,93 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
                 )
             return self._partialXCalibration(rawVec, figName)
 
-    def _fullXCalibration(self, rawVec: np.ndarray) -> np.ndarray:
+    def _fullXCalibration(self, rawVec: Dict[str, float]) -> ParamSet[QMSweepParam]:
+        """
+        Apply the full calibration to the raw vector.
+        """
+
         return self.calibrateDataPoint(rawVec)
 
     def _partialXCalibration(self, rawVec: np.ndarray, figName: str) -> np.ndarray:
         pass
 
-    def _initializeCalibrationTable(self):
-        if self.isFullCalibration:
-            defaultMapVecList = self.defaultMapVec()
-            # for rowIdx in range(self.caliTableRowNr):
-            # caliTableRow = CaliTableRow(mapVec=defaultMapVecList,ParamSet,pointSource=)
-            # self.caliTable.append(caliTableRow)
+    def _initializeCaliTable(self):
+        self.caliTable = []
+        defaultMapVec = self.defaultMapVec()
+        defaultParamSet = self.defaultCaliTableRowParamSet()
+        for rowIdx in range(self.caliTableRowNr):
+            if self.isFullCalibration:
+                caliTableRow = CaliTableRow(
+                    rawVec=defaultMapVec,
+                    mapVec=defaultParamSet,
+                    pointPairSource=None,
+                )
+            else:
+                caliTableRow = CaliTableRow(
+                    rawVec=defaultMapVec,
+                    mapVec=defaultParamSet,
+                    pointPairSource=self.figName[rowIdx // 2],
+                )
+            self.caliTable.append(caliTableRow)
 
-    def defaultMapVec(self) -> List[Dict[str, float]]:
+    def defaultMapVec(self) -> Dict[str, float]:
         """
         Return the default mapped vector for the calibration table.
         """
-        defaultMapVecList = []
-        for rowIdx in range(self.caliTableRowNr):
-            defaultMapVecList.append({name: 0.0 for name in self.rawVecName})
-        return defaultMapVecList
+        defaultMapVec = {name: 0.0 for name in self.rawVecName}
+        return defaultMapVec
 
     def defaultCaliTableRowParamSet(self) -> List[ParamSet]:
         """
         Return the default parameter set for the calibration table.
         """
         # the idea: extract parameter set info from the sweep parameter set
-        self.sweepParamSet
-        defaultParamSetList = []
-        for rowIdx in range(self.caliTableRowNr):
-            defaultParamSetList.append(ParamSet())
-        return defaultParamSetList
+        defaultParamSet = ParamSet[CaliTableParam](name="caliTableParamSet")
+        for paramDictByParent in list(self.sweepParamSet.values()):
+            for param in list(paramDictByParent.values()):
+                defaultParamSet.addParameter(
+                    CaliTableParam(
+                        name=param.name,
+                        value=param.value,
+                        parent=param.parent,
+                        param_type=param.param_type,
+                    )
+                )
+        return defaultParamSet
 
     @Slot()
     def updateRawVec(
-        self, row: int, newValue: Dict[str, float], figName: Union[str, None]
+        self, row: int, newRawValue: Dict[str, float], figName: Union[str, None]
     ):
         """
         The function that updates raw vector for calibration
         """
-        pass
+        for name, value in newRawValue.items():
+            self.caliTable[row].rawVec[name] = value
 
     @Slot()
-    def updateMapVec(self):
+    def updateMapVec(self, row: int, newMapValue: Tuple[str, str, float]):
         """
         The function that updates mapped vector for calibration
+
+        Parameters
+        ----------
+        row: int
+            The row index of the calibration table.
+        newMapValue: Tuple[str, str, float]
+            [parent name, parameter name, value]
         """
-        pass
+        parentName, parameterName, value = newMapValue
+        self.caliTable[row].mapVec.setParameter(
+            parent_system=parentName, name=parameterName, value=value
+        )
+
+    @Slot()
+    def updateCaliFunc(self) -> Callable:
+        """
+        The function that updates the calibration function.
+        """
+        if self.isFullCalibration:
+            return self._fullXCalibration
+        else:
+            return self._partialXCalibration
