@@ -22,6 +22,8 @@ ParameterType = Literal[
     "cutoff",
     "interaction_strength",
     "truncated_dim",
+    "raw_vec_element",
+    "map_vec_element",
 ]
 
 # default ranges for different types of parameters

@@ -8,7 +8,7 @@ from scqubits.core.qubit_base import QuantumSystem
 from scqubits.core.circuit import Circuit
 
 from qfit.models.data_structures import (
-    ParamBase, QMSweepParam, DispParamBase, QMSliderParam, QMFitParam, ParamAttr
+    ParamBase, QMSweepParam, DispParamBase, QMSliderParam, QMFitParam, ParamAttr, CaliTableParam
 )
 from qfit.models.parameter_settings import ParameterType
 from qfit.models.registry import RegistryEntry, Registrable
@@ -578,6 +578,9 @@ class ParamModel(ParamSet[DispParamCls], Generic[DispParamCls]):
 
 
 class PrefitParamModel(ParamModel[QMSliderParam]):
+    """ 
+    Class to store the parameters for the prefit model.
+    """
     updateSlider = Signal(ParamAttr)
     attrs = QMSliderParam.attrToRegister
 
@@ -636,6 +639,8 @@ class PrefitParamModel(ParamModel[QMSliderParam]):
                 paramAttr.parantName, paramAttr.name
             )
 
+class CaliTableParamModel(ParamModel[CaliTableParam]):
+    pass
 
 class FitParamModel(ParamModel[QMFitParam]):
     pass

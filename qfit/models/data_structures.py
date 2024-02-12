@@ -682,7 +682,7 @@ class CaliTableParam(DispParamBase):
         self,
         name: str,
         value: Union[float, int],
-        parent: ParameterType,
+        parent: str,
         param_type: ParameterType,
     ):
         super().__init__(name=name, parent=parent, paramType=param_type)
