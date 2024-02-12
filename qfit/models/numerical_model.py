@@ -18,7 +18,7 @@ from typing_extensions import Literal
 from qfit.models.parameter_settings import ParameterType
 
 from qfit.models.quantum_model_parameters import (
-    ParamSet,
+    ParamSet, HSParamSet
 )
 from qfit.models.data_structures import (
     ParamBase, QMSliderParam, QMSweepParam, QMFitParam
@@ -89,7 +89,7 @@ class QuantumModel(QObject):
         # for test only
         # ------------------------------------------------------------------------------
         self.subsystem_names_to_plot = lambda: (
-            ParamSet.parentSystemIdstrByName(subsystemNameCallback())
+            HSParamSet.parentSystemIdstrByName(subsystemNameCallback())
         )
         self.initialStateCallback = initialStateCallback
         self.photonsCallback = photonsCallback
@@ -160,29 +160,6 @@ class QuantumModel(QObject):
 
     def photons(self):
         return self.photonsCallback()
-
-    # @overload
-    # def generateParameterSets(
-    #     self,
-    #     included_parameter_type: List[ParameterType],
-    # ) -> QuantumModelParameterSet:
-    #     ...
-
-    # @overload
-    # def generateParameterSets(
-    #     self,
-    #     excluded_parameter_type: List[ParameterType],
-    # ) -> QuantumModelParameterSet:
-    #     ...
-
-    # TODO: in future implement this function (for multiple ng and flux case)
-    # @staticmethod
-    # def _map1D(x: float, coeffs, biases) -> Tuple[QuantumModelParameter, ...]:
-    #     """
-    #     The actual swept parameters (flux, ng, ...) are linearly related to the value of
-    #     the x axis of the transition plot. This funcition serves as a map between the two.
-    #     """
-    #     return
 
     def _generateXcoordinateListForMarkedPoints(
         self, extracted_data: AllExtractedData

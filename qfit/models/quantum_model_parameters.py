@@ -24,28 +24,18 @@ ParentSystem = Union[QuantumSystem, HilbertSpace]
 ParamCls = TypeVar("ParamCls", bound="ParamBase")
 
 
-class CombinedMeta(type(QObject), type(Registrable)):
-    pass
-
-
-class ParamSet(QObject, Registrable, Generic[ParamCls], metaclass=CombinedMeta):
+class ParamSet(Registrable, Generic[ParamCls]):
     """
-    A class to store all the parameters of a quantum system
+    A class to store all the parameters of a general model
     """
 
-    def __init__(self, hilbertspace: HilbertSpace, paramCls: Type[ParamCls]):
-        QObject.__init__(self)
-
-        self.hilbertspace = hilbertspace
+    def __init__(self, paramCls: Type[ParamCls]):
         self.paramCls = paramCls
 
         self.parameters: Dict[
-            ParentSystem,
+            str,
             Dict[str, ParamCls],
         ] = {}
-
-        self.parentNameByObj: Dict[ParentSystem, str] = {}
-        self.parentObjByName: Dict[str, ParentSystem] = {}
 
     def keys(self):
         return self.parameters.keys()
@@ -56,47 +46,151 @@ class ParamSet(QObject, Registrable, Generic[ParamCls], metaclass=CombinedMeta):
     def items(self):
         return self.parameters.items()
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str):
         return self.parameters[key]
 
     def __len__(self):
         return sum([len(para_dict) for para_dict in self.parameters.values()])
-
-    @staticmethod
-    def parentSystemNames(
-        parent: ParentSystem,
-        with_type: bool = True,
-    ) -> str:
-        if isinstance(parent, HilbertSpace):
-            return "Interactions"
-        elif isinstance(parent, QuantumSystem):
-            parent_name = f"{parent.id_str}"
-            if with_type:
-                parent_name += f" ({parent.__class__.__name__})"
-            return parent_name
-        else:
-            raise ValueError(
-                f"Parent of parameter {parent} is not a QuantumSystem or HilbertSpace object."
-            )
-
-    @staticmethod
-    def parentSystemIdstrByName(name: str) -> str:
-        return ''.join(name.split(" ")[:-1])
-
-    def _updateNameMap(self, parent: ParentSystem, with_type: bool = True):
-        name = self.parentSystemNames(parent, with_type=with_type)
-        self.parentNameByObj[parent] = name
-        self.parentObjByName[name] = parent
 
     def paramNamesDict(self) -> Dict[str, List[str]]:
         """
         Get a dictionary of parameter names for each parent system.
         """
         return {
-            self.parentNameByObj[parent]: list(para_dict.keys()) 
-            for parent, para_dict in self.parameters.items()
+            parentName: list(para_dict.keys()) 
+            for parentName, para_dict in self.parameters.items()
         }
     
+    def clear(self):
+        """
+        Clean the parameter set.
+        """
+        self.parameters = {}
+
+    def getParameter(
+        self,
+        parentName: str,
+        name: str,
+        attr: str = "value",
+    ) -> Union[Dict[str, Any], Any]:
+        """
+        Get the value of the parameters of a parent system (either a QuantumSystem
+        object or a HilbertSpace object). If the name is of the parameter is not
+        provided, then return a dictionary of all the parameters of the parent system.
+
+        Parameters
+        ----------
+        parent_system: Union[QuantumSystem, HilbertSpace]
+            The quantum model
+        name: str
+            The name of the parameter
+
+        Returns
+        -------
+        The value of the parameter(s)
+        """
+
+        try:
+            para_dict = self[parentName]
+        except KeyError:
+            raise KeyError(
+                f"Cannot find parent system {parentName} in the parameter set."
+            )
+
+        return getattr(para_dict[name], attr)
+
+    def setParameter(
+        self,
+        parentName: str,
+        name: str,
+        attr: str,
+        value: Union[int, float],
+    ):
+        """
+        Set the value of the parameter of a parent system (either a QuantumSystem
+        object or a HilbertSpace object).
+
+        Parameters
+        ----------
+        parent_system: Union[QuantumSystem, HilbertSpace]
+            The quantum model
+        name: str
+            The name of the parameter
+        value: Union[float, int]
+            The value of the parameter
+        """
+
+        try:
+            para_dict = self[parentName]
+        except KeyError:
+            raise KeyError(
+                f"Cannot find parent system {parentName} in the parameter set."
+            )
+
+        try:
+            setattr(para_dict[name], attr, value)
+        except KeyError:
+            raise KeyError(f"Cannot find parameter {name} in the parameter set.")
+        
+    def toParamDict(self) -> Dict[str, ParamBase]:
+        """
+        Provide a way to iterate through the parameter set.
+
+        Return a dictionary of all the parameters in the parameter set. Keys are "<parent name>.<parameter name>"
+        """
+        param_dict = {}
+        for parent_name, para_dict in self.parameters.items():
+            for name, para in para_dict.items():
+                param_dict[f"{parent_name}.{name}"] = para
+
+        return param_dict
+
+    def exportAttrDict(
+        self, attribute: str = "value"
+    ) -> Union[Dict[str, float], Dict[str, int],]:
+        """
+        Convert the parameter set to a dictionary. Keys are "<parent name>.<parameter name>"
+        and values are the value of the parameter.
+
+        Parameters
+        ----------
+        attribute: str
+        """
+        paramval_dict = {}
+        for parent_name, para_dict in self.parameters.items():
+            for name, para in para_dict.items():
+                paramval_dict[f"{parent_name}.{name}"] = getattr(para, attribute)
+
+        return paramval_dict
+
+    def loadAttrDict(
+        self,
+        paramval_dict: Union[Dict[str, float], Dict[str, int]],
+        attribute: str = "value",
+    ):
+        """
+        Provide a way to iterate through the parameter set.
+
+        Update the parameter set from a dictionary. Keys are "<parent name>.<parameter name>"
+        and values are the value of the parameter.
+        """
+        for key, value in paramval_dict.items():
+            parent_name, name = key.split(".")
+            self.setParameter(parent_name, name, attribute, value)
+
+
+class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
+    """
+    A class to store all the parameters of a HilbertSpace object
+    """
+
+    def __init__(self, hilbertspace: HilbertSpace, paramCls: Type[ParamCls]):
+        super().__init__(paramCls)
+
+        self.hilbertspace = hilbertspace
+        self.parentNameByObj: Dict[ParentSystem, str] = {}
+        self.parentObjByName: Dict[str, ParentSystem] = {}
+
     def _generateParamDictForCircuit(self, subsystem: Circuit) -> Dict[str, List[str]]:
         """
         generate parameter dict for a Circuit instance, conforming with those stored in
@@ -237,6 +331,33 @@ class ParamSet(QObject, Registrable, Generic[ParamCls], metaclass=CombinedMeta):
                     value = value,
                     rangeDict = DEFAULT_PARAM_MINMAX["interaction_strength"],
                 )
+
+    @staticmethod
+    def parentSystemNames(
+        parent: ParentSystem,
+        with_type: bool = True,
+    ) -> str:
+        if isinstance(parent, HilbertSpace):
+            return "Interactions"
+        elif isinstance(parent, QuantumSystem):
+            parent_name = f"{parent.id_str}"
+            if with_type:
+                parent_name += f" ({parent.__class__.__name__})"
+            return parent_name
+        else:
+            raise ValueError(
+                f"Parent of parameter {parent} is not a QuantumSystem or HilbertSpace object."
+            )
+
+    @staticmethod
+    def parentSystemIdstrByName(name: str) -> str:
+        return ''.join(name.split(" ")[:-1])
+
+    def _updateNameMap(self, parent: ParentSystem, with_type: bool = True):
+        name = self.parentSystemNames(parent, with_type=with_type)
+        if name not in self.parentObjByName.keys():
+            self.parentNameByObj[parent] = name
+            self.parentObjByName[name] = parent
                     
     def _insertParamByArgs(
         self,
@@ -273,223 +394,72 @@ class ParamSet(QObject, Registrable, Generic[ParamCls], metaclass=CombinedMeta):
         # create the parameter object
         param = self.paramCls(**kwargs)
 
-        # insert the parameter object to the parameter set
-        if param.parent not in self.parameters:
-            self.parameters[param.parent] = {}
-            self._updateNameMap(param.parent)
+        # insert the parameter object to the parameter set        
+        self._updateNameMap(param.parent)
+        parentName = self.parentNameByObj[param.parent]
+        if parentName not in self.parameters:
+            self.parameters[parentName] = {}
 
         # add the parameter to the parameter set
-        self.parameters[param.parent][param.name] = param
+        self[parentName][param.name] = param
 
-    def clean(self):
+    def clear(self):
         """
         Clean the parameter set.
         """
-        self.parameters = {}
+        super().clear()
         self.parentNameByObj = {}
         self.parentObjByName = {}
 
-    @overload
-    def getParameter(self, parent_system) -> Dict[str, float]:
-        ...
 
-    @overload
-    def getParameter(self, parent_system, name: str) -> float:
-        ...
 
-    def getParameter(
+DispParamCls = TypeVar("DispParamCls", bound="DispParamBase")
+
+
+class ParamModelMixin(QObject, Generic[DispParamCls]):
+    attrs: List[str] = ["value"]
+
+    updateBox = Signal(ParamAttr)
+
+    def _registerAttr(
         self,
-        parent_system: Union[ParentSystem, str],
-        name: Union[str, None] = None,
-        attribute: str = "value",
-    ) -> Union[Dict[str, Any], Any]:
-        """
-        Get the value of the parameters of a parent system (either a QuantumSystem
-        object or a HilbertSpace object). If the name is of the parameter is not
-        provided, then return a dictionary of all the parameters of the parent system.
-
-        Parameters
-        ----------
-        parent_system: Union[QuantumSystem, HilbertSpace]
-            The quantum model
-        name: str
-            The name of the parameter
-
-        Returns
-        -------
-        The value of the parameter(s)
-        """
-
-        if isinstance(parent_system, str):
-            try:
-                parent_system = self.parentObjByName[parent_system]
-            except KeyError:
-                raise KeyError(
-                    f"Cannot find parent system {parent_system} in the parameter set."
-                )
-
-        try:
-            para_dict = self.parameters[parent_system]
-        except KeyError:
-            raise KeyError(
-                f"Cannot find parent system {parent_system} in the parameter set."
-            )
-
-        name_dict = {name: getattr(para, attribute) for name, para in para_dict.items()}
-
-        if name is None:
-            return name_dict
-        else:
-            return name_dict[name]
-
-    def setParameter(
-        self,
+        paramSet: ParamSet[DispParamCls],
         parentName: str,
-        name: str,
-        value: Union[int, float],
-        attr: str = "value",
-    ):
+        paramName: str,
+        attr: str,
+    ) -> RegistryEntry:
         """
-        Set the value of the parameter of a parent system (either a QuantumSystem
-        object or a HilbertSpace object).
-
-        Parameters
-        ----------
-        parent_system: Union[QuantumSystem, HilbertSpace]
-            The quantum model
-        name: str
-            The name of the parameter
-        value: Union[float, int]
-            The value of the parameter
+        This method set 
         """
+        entryName = ".".join([type(self).__name__, parentName, paramName, attr])
 
-        try:
-            parent = self.parentObjByName[parentName]
-        except KeyError:
-            raise KeyError(
-                f"Cannot find parent system {parentName} in the parameter set."
-            )
+        return RegistryEntry(
+            name=entryName,
+            quantity_type="r+",
+            getter=lambda: paramSet.getParameter(parentName, paramName, attr),
+            setter=lambda value: paramSet.setParameter(parentName, paramName, attr, value),
+        )
 
-        try:
-            para_dict = self.parameters[parent]
-        except KeyError:
-            raise KeyError(
-                f"Cannot find parent system {parent} in the parameter set."
-            )
-
-        try:
-            setattr(para_dict[name], attr, value)
-        except KeyError:
-            raise KeyError(f"Cannot find parameter {name} in the parameter set.")
-        
-    def toParamDict(self) -> Dict[str, ParamBase]:
-        """
-        Provide a way to iterate through the parameter set.
-
-        Return a dictionary of all the parameters in the parameter set. Keys are "<parent name>.<parameter name>"
-        """
-        param_dict = {}
-        for parent_system, para_dict in self.parameters.items():
-            parent_name = self.parentNameByObj[parent_system]
-            for name, para in para_dict.items():
-                param_dict[f"{parent_name}.{name}"] = para
-
-        return param_dict
-
-    def exportAttrDict(
-        self, attribute: str = "value"
-    ) -> Union[Dict[str, float], Dict[str, int],]:
-        """
-        Convert the parameter set to a dictionary. Keys are "<parent name>.<parameter name>"
-        and values are the value of the parameter.
-
-        Parameters
-        ----------
-        attribute: str
-        """
-        paramval_dict = {}
-        for parent_system, para_dict in self.parameters.items():
-            parent_name = self.parentNameByObj[parent_system]
-            for name, para in para_dict.items():
-                paramval_dict[f"{parent_name}.{name}"] = getattr(para, attribute)
-
-        return paramval_dict
-
-    def loadAttrDict(
+    def _registerAll(
         self,
-        paramval_dict: Union[Dict[str, float], Dict[str, int]],
-        attribute: str = "value",
-    ):
-        """
-        Provide a way to iterate through the parameter set.
-
-        Update the parameter set from a dictionary. Keys are "<parent name>.<parameter name>"
-        and values are the value of the parameter.
-        """
-        for key, value in paramval_dict.items():
-            parent_name, name = key.split(".")
-            self.setParameter(parent_name, name, value, attr=attribute)
-
-    def registerAll(
-        self,
+        paramSet: ParamSet[DispParamCls],
     ) -> Dict[str, RegistryEntry]:
         """
         Register all the parameters in the parameter set
         """
         # start from an empty registry
         registry = {}
-        for parent_system, para_dict in self.parameters.items():
-            for para_name, para in para_dict.items():
-                # loop over all parameters in parameter sets and create a registry entry
-                # notice that internally, the method _toRegistryEntry is called. However,
-                # the entry name is a string just like "EC", "EJ", "EL" etc. and very likely
-                # repeated in different parameter sets. Therefore, we must update names for
-                # each parameter.
-                entry_dict = para.registerAll()
-
-                # update the name of the parameter entry and the registry key to make it unique.
-                # notice that the entry_dict is not returned directly.
-                for attr_name, entry in entry_dict.items():
-                    new_name = (
-                        f"{self.name}"
-                        f".{self.parentNameByObj[parent_system]}"
-                        f".{para_name}"
-                        f".{attr_name}"
-                    )
-                    entry.name = new_name
-                    registry[new_name] = entry
-
+        for parentName, paraDict in paramSet.items():
+            for paraName, para in paraDict.items():
+                for attr in para.attrToRegister:
+                    entry = self._registerAttr(paramSet, parentName, paraName, attr)
+                    registry[entry.name] = entry
         return registry
-    
-
-DispParamCls = TypeVar("DispParamCls", bound="DispParamBase")
-    
-
-class ParamModel(ParamSet[DispParamCls], Generic[DispParamCls]):
-    attrs: List[str] = ["value"]
-
-    updateBox = Signal(ParamAttr)
-    hspaceUpdated = Signal(HilbertSpace)
-
-    def setParameter(
-        self, 
-        parentName: str,
-        name: str,
-        value: Union[int, float],
-        attr: str = "value",
-    ):
-        """
-        Not only set the parameter, but also emit the signal to update the view.
-
-        A key method in updating the model by the internal processes.
-        """
-        super().setParameter(parentName, name, value, attr)
-
-        self.emitUpdateBox(parentName, name, attr)
 
     # Signals ==========================================================
     def _emitAttrByName(
         self, 
+        paramSet: ParamSet[DispParamCls],
         signalToEmit: SignalInstance,
         parentName: Optional[str] = None, 
         paramName: Optional[str] = None,
@@ -501,12 +471,9 @@ class ParamModel(ParamSet[DispParamCls], Generic[DispParamCls]):
         """
         # select the parent system
         if parentName is None:
-            parentDict2Iter = {
-                self.parentNameByObj[prt]: prmDict for prt, prmDict in self.parameters.items()
-            }
+            parentDict2Iter = paramSet
         else:
-            parent = self.parentObjByName[parentName]
-            parentDict2Iter = {parentName: self.parameters[parent]}
+            parentDict2Iter = {parentName: paramSet[parentName]}
         
         # iterate through the parent systems
         for prtNm, prmDict in parentDict2Iter.items():
@@ -533,51 +500,110 @@ class ParamModel(ParamSet[DispParamCls], Generic[DispParamCls]):
                     ))
                     signalToEmit.emit(paramAttr)
 
-    def emitUpdateBox(
+    def _emitUpdateBox(
         self,
+        paramSet: ParamSet[DispParamCls],
         parentName: Optional[str] = None,
         paramName: Optional[str] = None,
         attr: Optional[str] = None,
     ):
         self._emitAttrByName(
+            paramSet,
             self.updateBox,
             parentName=parentName,
             paramName=paramName,
             attr=attr
         )
 
+    # Slots ============================================================
+    @Slot(ParamAttr)
+    def _storeParamAttr(
+        self, 
+        paramSet: ParamSet[DispParamCls],
+        paramAttr: ParamAttr,
+        **kwargs,
+    ):
+        param = paramSet[paramAttr.parantName][paramAttr.name]
+        param.storeAttr(paramAttr.attr, paramAttr.value, **kwargs)
+
+
+
+class CombinedMeta(type(ParamModelMixin), type(ParamSet)):
+    pass
+
+
+class HSParamModel(
+    HSParamSet[DispParamCls], 
+    ParamModelMixin[DispParamCls],   # ordering matters
+    Generic[DispParamCls], 
+    metaclass=CombinedMeta
+):
+    
+    hspaceUpdated = Signal(HilbertSpace)
+
+    def __init__(self, hilbertspace: HilbertSpace, paramCls: Type[DispParamCls]):
+        # ordering matters here
+        HSParamSet.__init__(self, hilbertspace, paramCls)
+        ParamModelMixin.__init__(self)
+
+    def setParameter(
+        self, 
+        parentName: str,
+        name: str,
+        attr: str,
+        value: Union[int, float],
+    ):
+        """
+        Not only set the parameter, but also emit the signal to update the view.
+
+        A key method in updating the model by the internal processes.
+        """
+        super().setParameter(parentName, name, attr, value)
+
+        self.emitUpdateBox(parentName, name, attr)
+
+    def registerAll(
+        self,
+    ) -> Dict[str, RegistryEntry]:
+        return self._registerAll(self)
+
+    # Signals ==========================================================
+    def emitUpdateBox(
+        self,
+        parentName: Optional[str] = None,
+        paramName: Optional[str] = None,
+        attr: Optional[str] = None,
+    ):
+        self._emitUpdateBox(
+            self,
+            parentName=parentName,
+            paramName=paramName,
+            attr=attr
+    )
+        
     def emitHspaceUpdated(self):
         self.hspaceUpdated.emit(self.hilbertspace)
 
     # Slots ============================================================
-    @Slot(ParamAttr)
     def storeParamAttr(
         self, 
         paramAttr: ParamAttr,
-        updateHspace: bool = False,
         **kwargs,
     ):
-        parent = self.parentObjByName[paramAttr.parantName]
-        param = self[parent][paramAttr.name]
-        param.storeAttr(paramAttr.attr, paramAttr.value, **kwargs)
-
-        if updateHspace:
-            param.setParameterForParent()
-            self.emitHspaceUpdated()
-
+        super()._storeParamAttr(self, paramAttr, **kwargs)
+        
     @Slot(str, str)
     def updateParent(
         self,
         parentName: str,
         paramName: str,
     ):
-        parent = self.parentObjByName[parentName]
-        param = self[parent][paramName]
+        param = self[parentName][paramName]
         param.setParameterForParent()
         self.emitHspaceUpdated()
 
 
-class PrefitParamModel(ParamModel[QMSliderParam]):
+class PrefitParamModel(HSParamModel[QMSliderParam]):
     updateSlider = Signal(ParamAttr)
     attrs = QMSliderParam.attrToRegister
 
@@ -585,13 +611,13 @@ class PrefitParamModel(ParamModel[QMSliderParam]):
         self, 
         parentName: str,
         name: str,
+        attr: str,
         value: Union[int, float],
-        attr: str = "value",
     ):
         """
         Set the parameter, emit the signal to update the box and sliders.
         """
-        super().setParameter(parentName, name, value, attr)
+        super().setParameter(parentName, name, attr, value)
 
         self.emitUpdateSlider(parentName, name)
 
@@ -601,6 +627,7 @@ class PrefitParamModel(ParamModel[QMSliderParam]):
         paramName: Optional[str] = None,
     ):
         self._emitAttrByName(
+            self,
             self.updateSlider,
             parentName=parentName,
             paramName=paramName,
@@ -637,5 +664,18 @@ class PrefitParamModel(ParamModel[QMSliderParam]):
             )
 
 
-class FitParamModel(ParamModel[QMFitParam]):
+class FitParamModel(HSParamModel[QMFitParam]):
     pass
+
+
+class CalibParamModel(
+    ParamSet[DispParamCls], 
+    ParamModelMixin[DispParamCls],   # ordering matters
+    Generic[DispParamCls], 
+    metaclass=CombinedMeta
+):
+
+    def __init__(self, paramCls: Type[DispParamCls]):
+        # ordering matters here
+        ParamSet.__init__(self, paramCls)
+        ParamModelMixin.__init__(self)
