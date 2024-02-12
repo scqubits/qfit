@@ -659,6 +659,54 @@ class QMFitParam(DispParamBase):
         """
         self.value = self.initValue
 
+class CaliTableRowParam(DispParamBase):
+    attrToRegister = ["initValue", "value", "min", "max", "isFixed"]
+
+    def __init__(
+        self,
+        name: str,
+        parent: ParentType,
+        paramType: ParameterType,
+    ):
+        super().__init__(name=name, parent=parent, paramType=paramType)
+
+        # for test only
+        self.min: Union[int, float] = 0
+        self.max: Union[int, float] = 1
+        self.initValue: Union[int, float] = self.min
+        self.value: Union[int, float] = self.initValue
+        self.isFixed: bool = False
+
+    # setter for UI ====================================================
+    def storeAttr(self, attr: str, value: Union[str, bool]):
+        """
+        Store the value of the parameter
+        """
+        if isinstance(value, str):
+            value = self._toIntAsNeeded(float(value))
+
+        setattr(self, attr, value)
+
+    # getter for UI ====================================================
+    def exportAttr(self, attr: str) -> Union[str, bool]: 
+        """
+        Export the value of the parameter
+        """
+        value = getattr(self, attr)
+        if isinstance(value, int) or isinstance(value, float):
+            return self._toIntString(value)
+        elif isinstance(value, bool):
+            return value
+        else:
+            raise ValueError(f"Unknown type of value: {value}")
+
+    # ==================================================================
+    def valueToInitial(self):
+        """
+        Set the value of the parameter to the initial value
+        """
+        self.value = self.initValue
+
 
 class CaliTableParam(DispParamBase):
     """
