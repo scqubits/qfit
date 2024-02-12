@@ -75,8 +75,14 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
         self.plotCaliOn.emit(label)
 
     def calibrationOff(self):
-        self.calibrationIsOn = False
-        self.plotCaliOff.emit()
+        if self.calibrationIsOn:
+            self.calibrationIsOn = False
+            self.plotCaliOff.emit()
+        else:
+            # if the calibration is not on, it's likely triggered by 
+            # other events like page change,
+            # we should not trigger the plotCaliOff signal in this case 
+            pass
 
     def acceptCalibration(self, label: Literal[
         "CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2"

@@ -92,9 +92,6 @@ class ExtractingCtrl(QObject):
         self.activeDataset.dataUpdated.connect(
             self.allDatasets.updateAssocData
         ) 
-        self.activeDataset.dataUpdated.connect(
-            lambda: print("activeDataset.dataUpdated")
-        ) 
 
         # whenever a row is inserted or removed, select the current row 
         # in the view VISUALLY. It comlete a loop from the view to model 

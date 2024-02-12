@@ -37,7 +37,6 @@ class PageView(QObject):
 
     @Slot()
     def _switchToPage(self, page: str):
-        print("switch to page", self.currentPage, page)
         if page == self.currentPage:
             return
         self.currentPage = page

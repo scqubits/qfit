@@ -375,7 +375,6 @@ class MplFigureCanvas(QFrame):
         """
         self.xlim = self.axes().get_xlim()
         self.ylim = self.axes().get_ylim()
-        print("Recording x and y limits, x: ", self.xlim, "y: ", self.ylim)
 
     def _keepXYLim(self):
         """
@@ -592,8 +591,6 @@ class MplFigureCanvas(QFrame):
 
         if draw:
             self.canvas.draw()
-
-        print(f"Updated element: {element.name}")
 
     @Slot()
     def updateElement(self, element: PlotElement, **kwargs):

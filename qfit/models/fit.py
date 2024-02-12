@@ -7,9 +7,9 @@ from qfit.utils.wrapped_optimizer import Optimization, OptTraj
 from qfit.models.extracted_data import AllExtractedData
 from qfit.models.calibration_data import CalibrationData
 from qfit.models.quantum_model_parameters import (
-    QuantumModelFittingParameter,
     ParamSet,
 )
+from qfit.models.data_structures import QMFitParam
 from qfit.models.status import StatusModel
 
 
@@ -88,7 +88,7 @@ class NumericalFitting(QRunnable):
         free_param_ranges = {}
         param_dict = parameterSet.toParamDict()
         for key, params in param_dict.items():
-            params: QuantumModelFittingParameter
+            params: QMFitParam
 
             if params.isFixed or params.min == params.max:
                 # min == max is actually not that rare, usually seen when
@@ -169,7 +169,7 @@ class NumericalFitting(QRunnable):
     def _paramHitBound(parameterSet: ParamSet) -> bool:
         for param_dict in parameterSet.parameters.values():
             for param in param_dict.values():
-                param: QuantumModelFittingParameter
+                param: QMFitParam
                 if param.isFixed:
                     continue
                 if (

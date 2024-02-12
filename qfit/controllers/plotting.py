@@ -243,7 +243,7 @@ class PlottingCtrl(QObject):
         self.pageView.pageChanged.connect(
             lambda curr: self.setDataDestAxisSnap("EXTRACT" if curr == "extract" else "NONE")
         )
-
+        
         # page switch --> plotting element property change (visibility)
         self.pageView.pageChanged.connect(self.mplCanvas.updateElemPropertyByPage)
 
@@ -321,12 +321,6 @@ class PlottingCtrl(QObject):
             # calibrate Y --> only horizontal crosshair
             horizOn, vertOn = True, False
 
-        print(
-            "updateCursor", 
-            self.axisSnap, self.xSnapTool, 
-            horizOn, vertOn
-        )
-
         self.mplCanvas.updateCursor(
             axisSnapMode = self.axisSnap,
             xSnapMode = self.xSnap,
@@ -337,7 +331,6 @@ class PlottingCtrl(QObject):
     @Slot()
     def canvasClickMonitoring(self, event):
         """Main loop for acting on mouse events occurring in the canvas area."""
-        print("clicked", self.dataDestination, self.clickResponse)
 
         if self.dataDestination == "NONE":
             return
