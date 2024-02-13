@@ -147,7 +147,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
     def exportAttrDict(
         self, attribute: str = "value"
-    ) -> Union[Dict[str, float], Dict[str, int],]:
+    ) -> Dict[str, Any]:
         """
         Convert the parameter set to a dictionary. Keys are "<parent name>.<parameter name>"
         and values are the value of the parameter.
@@ -259,6 +259,9 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         excluded_parameter_type: List[ParameterType]
             A list of parameter types that are excluded in the returned parameter set.
         """
+
+        if self.parameters != {}:   
+            self.clear()
 
         if included_parameter_type is not None and excluded_parameter_type is not None:
             raise ValueError(
@@ -538,13 +541,13 @@ class HSParamModel(
     Generic[DispParamCls], 
     metaclass=CombinedMeta
 ):
-    
     hspaceUpdated = Signal(HilbertSpace)
 
     def __init__(self, hilbertspace: HilbertSpace, paramCls: Type[DispParamCls]):
         # ordering matters here
         HSParamSet.__init__(self, hilbertspace, paramCls)
         ParamModelMixin.__init__(self)
+        attrs = self.paramCls.attrToRegister
 
     def setParameter(
         self, 
@@ -605,7 +608,6 @@ class HSParamModel(
 
 class PrefitParamModel(HSParamModel[QMSliderParam]):
     updateSlider = Signal(ParamAttr)
-    attrs = QMSliderParam.attrToRegister
 
     def setParameter(
         self, 
