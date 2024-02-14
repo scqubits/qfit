@@ -678,7 +678,7 @@ class CaliParamModel(
     calibrationIsOn: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2", False]
 
     def __init__(
-        self, rawVecName: str, figName: str, sweepParamSet: ParamSet[QMSweepParam]
+        self, rawVecName: str, figName: str, sweepParamSet: HSParamSet[QMSweepParam]
     ):
         # ordering matters here
         ParamSet.__init__(self, CaliTableRowParam)
@@ -787,7 +787,7 @@ class CaliParamModel(
                 )
             return self._partialXCalibration(rawVec, figName)
 
-    def _fullXCalibration(self) -> HSParamSet[QMSweepParam]:
+    def _fullXCalibration(self) -> Dict[str, HSParamSet[QMSweepParam]]:
         """
         Generate a function that applies the full calibration to the raw vector.
 
@@ -847,12 +847,16 @@ class CaliParamModel(
                 sweepParamSetForCali[param.parent][param.name].setCalibrationFunc(
                     fullCalibration
                 )
-        return sweepParamSetForCali
+        sweepParamSetByFig: Dict[str, HSParamSet[QMSweepParam]] = {}
+        for fig in self.figName:
+            sweepParamSetByFig[fig] = sweepParamSetForCali
+        return sweepParamSetByFig
 
-    def _partialXCalibration(self) -> HSParamSet[QMSweepParam]:
+    def _partialXCalibration(self) -> Dict[str, HSParamSet[QMSweepParam]]:
         """
         Generate a function that applies the partial calibration to the raw vector.
         """
+        sweepParamSetByFig: Dict[str, HSParamSet[QMSweepParam]] = {}
         # loop over all the figures
         for fig in self.figName:
             # get the row indices for the figure
@@ -914,7 +918,8 @@ class CaliParamModel(
                     sweepParamSetForCali[param.parent][param.name].setCalibrationFunc(
                         partialCalibration
                     )
-        return sweepParamSetForCali
+            sweepParamSetByFig[fig] = sweepParamSetForCali
+        return sweepParamSetByFig
 
     def _initializeCaliTable(self):
         # insert calibration table parameters for each row
