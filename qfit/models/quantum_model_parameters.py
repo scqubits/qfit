@@ -8,7 +8,13 @@ from scqubits.core.qubit_base import QuantumSystem
 from scqubits.core.circuit import Circuit
 
 from qfit.models.data_structures import (
-    ParamBase, QMSweepParam, DispParamBase, QMSliderParam, QMFitParam, ParamAttr, CaliTableParam
+    ParamBase,
+    QMSweepParam,
+    DispParamBase,
+    QMSliderParam,
+    QMFitParam,
+    ParamAttr,
+    CaliTableRowParam,
 )
 from qfit.models.parameter_settings import ParameterType
 from qfit.models.registry import RegistryEntry, Registrable
@@ -16,8 +22,18 @@ from qfit.widgets.grouped_sliders import SLIDER_RANGE
 from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
 
 from typing import (
-    Dict, List, Union, overload, Tuple, Callable, Literal, Any, 
-    TypeVar, Generic, Optional, Type
+    Dict,
+    List,
+    Union,
+    overload,
+    Tuple,
+    Callable,
+    Literal,
+    Any,
+    TypeVar,
+    Generic,
+    Optional,
+    Type,
 )
 
 ParentSystem = Union[QuantumSystem, HilbertSpace]
@@ -57,10 +73,10 @@ class ParamSet(Registrable, Generic[ParamCls]):
         Get a dictionary of parameter names for each parent system.
         """
         return {
-            parentName: list(para_dict.keys()) 
+            parentName: list(para_dict.keys())
             for parentName, para_dict in self.parameters.items()
         }
-    
+
     def clear(self):
         """
         Clean the parameter set.
@@ -107,13 +123,12 @@ class ParamSet(Registrable, Generic[ParamCls]):
         value: Union[int, float],
     ):
         """
-        Set the value of the parameter of a parent system (either a QuantumSystem
-        object or a HilbertSpace object).
+        Set the value of the parameter of a parent system.
 
         Parameters
         ----------
-        parent_system: Union[QuantumSystem, HilbertSpace]
-            The quantum model
+        parent_system: str
+            The parent
         name: str
             The name of the parameter
         value: Union[float, int]
@@ -131,7 +146,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
             setattr(para_dict[name], attr, value)
         except KeyError:
             raise KeyError(f"Cannot find parameter {name} in the parameter set.")
-        
+
     def toParamDict(self) -> Dict[str, ParamBase]:
         """
         Provide a way to iterate through the parameter set.
@@ -297,11 +312,11 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
                     value = getattr(subsystem, parameter_name)
 
                     self._insertParamByArgs(
-                        paramName = parameter_name,
-                        parent = subsystem,
-                        paramType = parameter_type,
-                        value = value,
-                        rangeDict = range_dict,
+                        paramName=parameter_name,
+                        parent=subsystem,
+                        paramType=parameter_type,
+                        value=value,
+                        rangeDict=range_dict,
                     )
 
         #  add interaction strengths to the parameter set
@@ -323,13 +338,13 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
                         "The interaction strength is complex. "
                         "The current implementation does not support complex interaction strength."
                     )
-                
+
                 self._insertParamByArgs(
-                    paramName = f"g{interaction_term_index+1}",
-                    parent = self.hilbertspace,
-                    paramType = "interaction_strength",
-                    value = value,
-                    rangeDict = DEFAULT_PARAM_MINMAX["interaction_strength"],
+                    paramName=f"g{interaction_term_index+1}",
+                    parent=self.hilbertspace,
+                    paramType="interaction_strength",
+                    value=value,
+                    rangeDict=DEFAULT_PARAM_MINMAX["interaction_strength"],
                 )
 
     @staticmethod
@@ -351,14 +366,14 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
 
     @staticmethod
     def parentSystemIdstrByName(name: str) -> str:
-        return ''.join(name.split(" ")[:-1])
+        return "".join(name.split(" ")[:-1])
 
     def _updateNameMap(self, parent: ParentSystem, with_type: bool = True):
         name = self.parentSystemNames(parent, with_type=with_type)
         if name not in self.parentObjByName.keys():
             self.parentNameByObj[parent] = name
             self.parentObjByName[name] = parent
-                    
+
     def _insertParamByArgs(
         self,
         paramName: str,
@@ -381,7 +396,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         if self.paramCls is QMSliderParam:
             kwargs["value"] = value
             kwargs.update(rangeDict)
-            
+
         elif self.paramCls is QMSweepParam:
             kwargs["value"] = value
 
@@ -390,11 +405,11 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
 
         else:
             raise ValueError("The parameter class is not supported.")
-        
+
         # create the parameter object
         param = self.paramCls(**kwargs)
 
-        # insert the parameter object to the parameter set        
+        # insert the parameter object to the parameter set
         self._updateNameMap(param.parent)
         parentName = self.parentNameByObj[param.parent]
         if parentName not in self.parameters:
@@ -410,7 +425,6 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         super().clear()
         self.parentNameByObj = {}
         self.parentObjByName = {}
-
 
 
 DispParamCls = TypeVar("DispParamCls", bound="DispParamBase")
@@ -429,7 +443,7 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
         attr: str,
     ) -> RegistryEntry:
         """
-        This method set 
+        This method set
         """
         entryName = ".".join([type(self).__name__, parentName, paramName, attr])
 
@@ -437,7 +451,9 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
             name=entryName,
             quantity_type="r+",
             getter=lambda: paramSet.getParameter(parentName, paramName, attr),
-            setter=lambda value: paramSet.setParameter(parentName, paramName, attr, value),
+            setter=lambda value: paramSet.setParameter(
+                parentName, paramName, attr, value
+            ),
         )
 
     def _registerAll(
@@ -458,23 +474,23 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
 
     # Signals ==========================================================
     def _emitAttrByName(
-        self, 
+        self,
         paramSet: ParamSet[DispParamCls],
         signalToEmit: SignalInstance,
-        parentName: Optional[str] = None, 
+        parentName: Optional[str] = None,
         paramName: Optional[str] = None,
         attr: Optional[str] = None,
         **kwargs,
     ):
         """
-        Emit the signals to update the view. 
+        Emit the signals to update the view.
         """
         # select the parent system
         if parentName is None:
             parentDict2Iter = paramSet
         else:
             parentDict2Iter = {parentName: paramSet[parentName]}
-        
+
         # iterate through the parent systems
         for prtNm, prmDict in parentDict2Iter.items():
             # select the parameter
@@ -485,7 +501,6 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
 
             # iterate through the parameters
             for prmNm, prm in paramDict2Iter.items():
-
                 # select the attribute
                 if attr is None:
                     attrs2Iter = self.attrs
@@ -495,15 +510,14 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
                 # iterate through the attributes
                 for at in attrs2Iter:
                     paramAttr = ParamAttr(
-                        prtNm, prmNm, at, prm.exportAttr(
-                        at, **kwargs
-                    ))
+                        prtNm, prmNm, at, prm.exportAttr(at, **kwargs)
+                    )
                     signalToEmit.emit(paramAttr)
 
     def _emitUpdateBox(
         self,
         paramSet: ParamSet[DispParamCls],
-        parentName: Optional[str] = None,
+        parentName: Optional[Union[str, int]] = None,
         paramName: Optional[str] = None,
         attr: Optional[str] = None,
     ):
@@ -512,13 +526,13 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
             self.updateBox,
             parentName=parentName,
             paramName=paramName,
-            attr=attr
+            attr=attr,
         )
 
     # Slots ============================================================
     @Slot(ParamAttr)
     def _storeParamAttr(
-        self, 
+        self,
         paramSet: ParamSet[DispParamCls],
         paramAttr: ParamAttr,
         **kwargs,
@@ -527,18 +541,16 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
         param.storeAttr(paramAttr.attr, paramAttr.value, **kwargs)
 
 
-
 class CombinedMeta(type(ParamModelMixin), type(ParamSet)):
     pass
 
 
 class HSParamModel(
-    HSParamSet[DispParamCls], 
-    ParamModelMixin[DispParamCls],   # ordering matters
-    Generic[DispParamCls], 
-    metaclass=CombinedMeta
+    HSParamSet[DispParamCls],
+    ParamModelMixin[DispParamCls],  # ordering matters
+    Generic[DispParamCls],
+    metaclass=CombinedMeta,
 ):
-    
     hspaceUpdated = Signal(HilbertSpace)
 
     def __init__(self, hilbertspace: HilbertSpace, paramCls: Type[DispParamCls]):
@@ -547,7 +559,7 @@ class HSParamModel(
         ParamModelMixin.__init__(self)
 
     def setParameter(
-        self, 
+        self,
         parentName: str,
         name: str,
         attr: str,
@@ -574,24 +586,19 @@ class HSParamModel(
         paramName: Optional[str] = None,
         attr: Optional[str] = None,
     ):
-        self._emitUpdateBox(
-            self,
-            parentName=parentName,
-            paramName=paramName,
-            attr=attr
-    )
-        
+        self._emitUpdateBox(self, parentName=parentName, paramName=paramName, attr=attr)
+
     def emitHspaceUpdated(self):
         self.hspaceUpdated.emit(self.hilbertspace)
 
     # Slots ============================================================
     def storeParamAttr(
-        self, 
+        self,
         paramAttr: ParamAttr,
         **kwargs,
     ):
         super()._storeParamAttr(self, paramAttr, **kwargs)
-        
+
     @Slot(str, str)
     def updateParent(
         self,
@@ -608,7 +615,7 @@ class PrefitParamModel(HSParamModel[QMSliderParam]):
     attrs = QMSliderParam.attrToRegister
 
     def setParameter(
-        self, 
+        self,
         parentName: str,
         name: str,
         attr: str,
@@ -622,7 +629,7 @@ class PrefitParamModel(HSParamModel[QMSliderParam]):
         self.emitUpdateSlider(parentName, name)
 
     def emitUpdateSlider(
-        self, 
+        self,
         parentName: Optional[str] = None,
         paramName: Optional[str] = None,
     ):
@@ -637,47 +644,357 @@ class PrefitParamModel(HSParamModel[QMSliderParam]):
 
     @Slot()
     def storeParamAttr(
-        self, 
+        self,
         paramAttr: ParamAttr,
         fromSlider: bool = False,
     ):
         """
         Store the data from the view
         """
-        super().storeParamAttr(
-            paramAttr, 
-            fromSlider=fromSlider
-        )
+        super().storeParamAttr(paramAttr, fromSlider=fromSlider)
 
         if paramAttr.attr == "value":
             if fromSlider:
-                self.emitUpdateBox(
-                    paramAttr.parantName, paramAttr.name, paramAttr.attr
-                )
+                self.emitUpdateBox(paramAttr.parantName, paramAttr.name, paramAttr.attr)
             elif not fromSlider:
-                self.emitUpdateSlider(
-                    paramAttr.parantName, paramAttr.name
-                )
+                self.emitUpdateSlider(paramAttr.parantName, paramAttr.name)
         elif paramAttr.attr in ["min", "max"]:
-            self.emitUpdateSlider(
-                paramAttr.parantName, paramAttr.name
-            )
+            self.emitUpdateSlider(paramAttr.parantName, paramAttr.name)
 
-class CaliTableParamModel(ParamModel[CaliTableParam]):
-    pass
 
 class FitParamModel(HSParamModel[QMFitParam]):
     pass
 
 
-class CalibParamModel(
-    ParamSet[DispParamCls], 
-    ParamModelMixin[DispParamCls],   # ordering matters
-    Generic[DispParamCls], 
-    metaclass=CombinedMeta
+class CaliParamModel(
+    ParamSet[CaliTableRowParam],
+    ParamModelMixin[DispParamCls],  # ordering matters
+    Generic[DispParamCls],
+    metaclass=CombinedMeta,
 ):
+    plotCaliOn = Signal(str)
+    plotCaliOff = Signal()
+    caliClicked = Signal(str, float)
+    calibrationIsOn: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2", False]
 
-    def __init__(self, paramCls: Type[DispParamCls]):
+    def __init__(
+        self, rawVecName: str, figName: str, sweepParamSet: ParamSet[QMSweepParam]
+    ):
         # ordering matters here
-        ParamSet.__init__(self, paramCls)
+        ParamSet.__init__(self, CaliTableRowParam)
         ParamModelMixin.__init__(self)
+        self.rawVecName = rawVecName
+        self.rawVecDim = len(rawVecName)
+        self.figName = figName
+        self.figNr = len(figName)
+        self.sweepParamSet = sweepParamSet
+        self.sweepParamNr = len(sweepParamSet)
+
+        # determine total calibration table row number and if the calibration is a complete one
+        self.isFullCalibration: bool
+        self.caliTableRowNr: int
+        self._isSufficientForFullCalibration(self.rawVecDim, self.figNr)
+
+        self._initializeCaliTable()
+
+        self.RowIdxBySourceDict: Dict[str, List[int]] = {}
+        self._updateRowIdxBySourceDict()
+        self.paramDict = self.toParamDict()
+
+    @Slot()
+    def _updateRowIdxBySourceDict(self):
+        """
+        Update the rowIdxSourceDict, which stores the row indices for each figure.
+        """
+        for fig in self.figName:
+            self.RowIdxBySourceDict[fig] = [
+                rowIdx
+                for rowIdx in range(self.caliTableRowNr)
+                if fig == self[rowIdx]["pointPairSource"].value
+            ]
+
+    def setParameter(
+        self,
+        parentName: str,
+        name: str,
+        attr: str,
+        value: Union[int, float],
+    ):
+        """
+        Not only set the parameter, but also emit the signal to update the view.
+
+        A key method in updating the model by the internal processes.
+        """
+        super().setParameter(parentName, name, attr, value)
+
+        self.emitUpdateBox(parentName, name, attr)
+
+    def registerAll(
+        self,
+    ) -> Dict[str, RegistryEntry]:
+        return self._registerAll(self)
+
+    # Signals ==========================================================
+    def emitUpdateBox(
+        self,
+        rowIdx: Optional[int] = None,
+        colName: Optional[str] = None,
+        attr: Optional[str] = None,
+    ):
+        self._emitUpdateBox(self, parentName=rowIdx, paramName=colName, attr=attr)
+
+    # Slots ============================================================
+    def storeParamAttr(
+        self,
+        paramAttr: ParamAttr,
+        **kwargs,
+    ):
+        super()._storeParamAttr(self, paramAttr, **kwargs)
+
+    def _isSufficientForFullCalibration(self, rawVecDim: int, figNr: int):
+        """
+        Determine if the calibration data is sufficient for a full calibration. For a full
+        calibration, the number of points required is equal to the number of voltages + 1.
+        If we restrict user to select max 2 points in each figure, the minimum number of
+        figures required is (voltageNumber+1)/2, round up. However this number does not check
+        for the case when the user provides scans for voltages along the same direction.
+
+        Parameters
+        ----------
+        rawVecDim: int
+            The raw vector dimension (number of voltages) used in the scan. Obtained from the two-tone data.
+        figNr: int
+            The number of figures imported.
+        """
+        pointsRequired = rawVecDim + 1
+        if pointsRequired > figNr * 2:
+            self.isFullCalibration = False
+            self.caliTableRowNr = figNr * 2
+        else:
+            self.isFullCalibration = True
+            self.caliTableRowNr = pointsRequired
+
+    def rawToMappedX(self, rawVec: np.ndarray, figName: Union[str, None]) -> np.ndarray:
+        """
+        Map the raw vector to the mapped vector using the calibration data.
+        """
+        if self.isFullCalibration:
+            return self._fullXCalibration(rawVec)
+        else:
+            if figName is None:
+                raise ValueError(
+                    "The figure name must be provided for partial calibration."
+                )
+            return self._partialXCalibration(rawVec, figName)
+
+    def _fullXCalibration(self) -> HSParamSet[QMSweepParam]:
+        """
+        Generate a function that applies the full calibration to the raw vector.
+
+        The full calibration takes form of
+        mapVecComp = alphaVec . [1, rawVec]^T
+        for each mapped vector component. To solve for alphaVec, we need to gather all the
+        point pair rawVec and construct the augmented rawMat ([rawMat]_ji = i-th
+        component of the j-th vector [1, rawVec]). For each mapped vector component, we
+        gather all the point pair mapVec and solve alphaVec by inversion.
+        """
+        # gather all the point pair rawVec and construct the augmented rawMat
+        augRawMat = np.zeros((self.caliTableRowNr, self.rawVecDim + 1))
+        for rowIdx in range(self.caliTableRowNr):
+            augRawMat[rowIdx, 0] = 1
+            for colIdx, rawVecCompName in enumerate(self.rawVecName):
+                augRawMat[rowIdx, colIdx + 1] = self[rowIdx][rawVecCompName].value
+        # loop over sweep parameters
+        # assemble sweep parameter set, add sweep parameters to the parameter set
+        sweepParamSetForCali = HSParamSet[QMSweepParam](QMSweepParam)
+        for paramDictByParent in list(self.sweepParamSet.values()):
+            for param in list(paramDictByParent.values()):
+                sweepParamSetForCali._insertParamByArgs(
+                    QMSweepParam(
+                        name=param.name,
+                        value=param.value,
+                        parent=param.parent,
+                        paramType=param.paramType,
+                    )
+                )
+                # gather all the point pair mapVec and solve alphaVec by inversion
+                mapCompVec = np.zeros(self.caliTableRowNr)
+                for rowIdx in range(self.caliTableRowNr):
+                    mapCompVec[rowIdx] = self[rowIdx][
+                        f"{param.parent}.{param.name}"
+                    ].value
+                alphaVec = np.linalg.solve(augRawMat, mapCompVec)
+                # generate the calibration function
+                # first get the order of the raw vector components
+                rawVecCompIdxDict = {
+                    Idx: rawVecCompName
+                    for Idx, rawVecCompName in enumerate(self.rawVecName)
+                }
+
+                def fullCalibration(rawVecDict: Dict[str, float]) -> float:
+                    """
+                    The full calibration function that maps the raw vector to the mapped vector.
+                    """
+                    rawVec = np.zeros(self.rawVecDim)
+                    for rawVecCompIdx in range(self.rawVecDim):
+                        rawVecCompName = rawVecCompIdxDict[rawVecCompIdx]
+                        rawVec[rawVecCompIdx] = rawVecDict[rawVecCompName]
+                    # mapVecComp = alphaVec . [1, rawVec]^T
+                    mapVecComp = np.dot(alphaVec, np.concatenate(([1], rawVec)))
+                    return mapVecComp
+
+                # set the calibration function
+                sweepParamSetForCali[param.parent][param.name].setCalibrationFunc(
+                    fullCalibration
+                )
+        return sweepParamSetForCali
+
+    def _partialXCalibration(self) -> HSParamSet[QMSweepParam]:
+        """
+        Generate a function that applies the partial calibration to the raw vector.
+        """
+        # loop over all the figures
+        for fig in self.figName:
+            # get the row indices for the figure
+            rowIdxList = self.RowIdxBySourceDict[fig]
+            # this row index list should have length 2; extract the two rows
+            rawVecPairValues = {}
+            for rawVecCompName in self.rawVecName:
+                rawVecCompValue1 = self[rowIdxList[0]][rawVecCompName].value
+                rawVecCompValue2 = self[rowIdxList[1]][rawVecCompName].value
+                rawVecPairValues[rawVecCompName] = [rawVecCompValue1, rawVecCompValue2]
+            # find the raw vector component that has the largest difference
+            maxDiffRawVecComp = max(
+                rawVecPairValues,
+                key=lambda k: abs(rawVecPairValues[k][0] - rawVecPairValues[k][1]),
+            )
+            # assemble sweep parameter set, add sweep parameters to the parameter set
+            sweepParamSetForCali = HSParamSet[QMSweepParam](QMSweepParam)
+            for paramDictByParent in list(self.sweepParamSet.values()):
+                for param in list(paramDictByParent.values()):
+                    # extract mapped vector pair values
+                    mapVecCompValue1 = self[rowIdxList[0]][
+                        f"{param.parent}.{param.name}"
+                    ].value
+                    mapVecCompValue2 = self[rowIdxList[1]][
+                        f"{param.parent}.{param.name}"
+                    ].value
+                    sweepParamSetForCali._insertParamByArgs(
+                        QMSweepParam(
+                            name=param.name,
+                            value=param.value,
+                            parent=param.parent,
+                            paramType=param.paramType,
+                        )
+                    )
+
+                    # generate the calibration function
+                    def partialCalibration(rawVecDict: Dict[str, float]) -> float:
+                        """
+                        The partial calibration function that maps the raw vector to the
+                        mapped vector.
+                        """
+                        # first find x which is defined as
+                        # rawVec = (rawVec2 - rawVec1)*x + rawVec1
+                        x = (
+                            rawVecDict[maxDiffRawVecComp]
+                            - rawVecPairValues[maxDiffRawVecComp][0]
+                        ) / (
+                            rawVecPairValues[maxDiffRawVecComp][1]
+                            - rawVecPairValues[maxDiffRawVecComp][0]
+                        )
+                        # then calculate the specific individual component of the mapped vector
+                        # mapVecComp = (mapVecComp2 - mapVecComp1)*x + mapVecComp1
+                        mapVecComp = (
+                            mapVecCompValue2 - mapVecCompValue1
+                        ) * x + mapVecCompValue1
+                        return mapVecComp
+
+                    # set the calibration function
+                    sweepParamSetForCali[param.parent][param.name].setCalibrationFunc(
+                        partialCalibration
+                    )
+        return sweepParamSetForCali
+
+    def _initializeCaliTable(self):
+        # insert calibration table parameters for each row
+        for rowIdx in range(self.caliTableRowNr):
+            # loop over the raw vector components
+            for rawVecCompName in self.rawVecName:
+                self._insertParamByArgs(
+                    colName=rawVecCompName,
+                    rowIdx=rowIdx,
+                    paramType="raw_vector_component",
+                    parentSystem=None,
+                    sweepParamName=None,
+                    value=0,
+                )
+            # loop over the mapped vector components (given by sweep parameters)
+            for paramDictByParent in list(self.sweepParamSet.values()):
+                for param in list(paramDictByParent.values()):
+                    self._insertParamByArgs(
+                        colName=f"{param.parent}.{param.name}",
+                        rowIdx=rowIdx,
+                        paramType=param.paramType,
+                        sweepParamName=param.name,
+                        value=0,
+                        parentSystem=param.parent,
+                    )
+            if self.isFullCalibration:
+                self._insertParamByArgs(
+                    colName="pointPairSource",
+                    rowIdx=rowIdx,
+                    paramType="point_pair_source",
+                    parentSystem=None,
+                    sweepParamName=None,
+                    value=None,
+                )
+            else:
+                self._insertParamByArgs(
+                    colName="pointPairSource",
+                    rowIdx=rowIdx,
+                    paramType="point_pair_source",
+                    parentSystem=None,
+                    sweepParamName=None,
+                    value=self.figName[rowIdx // 2],
+                )
+
+    @Slot()
+    def updateCaliFunc(self) -> Callable:
+        """
+        The function that updates the calibration function.
+        """
+        if self.isFullCalibration:
+            return self._fullXCalibration
+        else:
+            return self._partialXCalibration
+
+    def _insertParamByArgs(
+        self,
+        colName: str,
+        rowIdx: int,
+        paramType: str,
+        parentSystem: Optional[str],
+        sweepParamName: Optional[str],
+        value: Union[int, float],
+    ):
+        """
+        Create a Parameter object and add it to the parameter set. Notice that this method
+        has a dual version in the HSParamSet class.
+        """
+
+        # process the keyword arguments based on the needed arguments for the parameter class
+        kwargs = {
+            "colName": colName,
+            "rowIdx": rowIdx,
+            "paramType": paramType,
+            "parentSystem": parentSystem,
+            "sweepParamName": sweepParamName,
+            "value": value,
+        }
+
+        # create the parameter object
+        param = CaliTableRowParam(**kwargs)
+
+        # add the parameter to the parameter set
+        self[rowIdx][colName] = param

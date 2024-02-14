@@ -375,6 +375,7 @@ class ParamAttr:
     directly. Note that the value may be raw and needed to be converted
     to the proper type before being used.
     """
+
     def __init__(
         self,
         parantName: str,
@@ -392,7 +393,7 @@ class ParamAttr:
 
     def __str__(self) -> str:
         return self.__repr__()
-    
+
 
 class ParamBase(ABC):
     intergerParameterTypes = ["cutoff", "truncated_dim"]
@@ -440,12 +441,13 @@ class DispParamBase(ParamBase):
             return f"{value:.0f}"
         else:
             return f"{value:.{precision}f}".rstrip("0").rstrip(".")
-        
+
     def exportAttr(self, *args, **kwargs):
         pass
 
     def storeAttr(self, *args, **kwargs):
         pass
+
 
 class QMSweepParam(ParamBase):
     """
@@ -561,10 +563,12 @@ class QMSliderParam(DispParamBase):
         denormalizedValue = self.min + value / SLIDER_RANGE * (self.max - self.min)
 
         return self._toIntAsNeeded(denormalizedValue)
-    
+
     # setters from UI ==================================================
     @overload
-    def storeAttr(self, attr: str, value: str, fromSlider: Literal[False] = False) -> None:
+    def storeAttr(
+        self, attr: str, value: str, fromSlider: Literal[False] = False
+    ) -> None:
         pass
 
     @overload
@@ -573,7 +577,7 @@ class QMSliderParam(DispParamBase):
 
     def storeAttr(self, attr: str, value: Union[str, int], fromSlider: bool = False):
         """
-        Store the value of the parameter. If the source is a slider, the 
+        Store the value of the parameter. If the source is a slider, the
         value should be denormalized before being stored.
         """
         if fromSlider:
@@ -633,7 +637,7 @@ class QMFitParam(DispParamBase):
         setattr(self, attr, value)
 
     # getter for UI ====================================================
-    def exportAttr(self, attr: str) -> Union[str, bool]: 
+    def exportAttr(self, attr: str) -> Union[str, bool]:
         """
         Export the value of the parameter
         """
@@ -652,23 +656,33 @@ class QMFitParam(DispParamBase):
         """
         self.value = self.initValue
 
+
 class CaliTableRowParam(DispParamBase):
-    attrToRegister = ["initValue", "value", "min", "max", "isFixed"]
+    """ 
+    The updated class for calibration table parameters. 
+    """
+    attrToRegister = [
+        "value",
+        "min",
+        "max",
+        "isFixed",
+        "sweepParamName",
+        "parentSystem",
+    ]
 
     def __init__(
         self,
-        name: str,
-        parent: ParentType,
+        colName: str,
+        rowIdx: str,
         paramType: ParameterType,
+        parentSystem: Optional[str],
+        sweepParamName: Optional[str],
+        value: float,
     ):
-        super().__init__(name=name, parent=parent, paramType=paramType)
-
-        # for test only
-        self.min: Union[int, float] = 0
-        self.max: Union[int, float] = 1
-        self.initValue: Union[int, float] = self.min
-        self.value: Union[int, float] = self.initValue
-        self.isFixed: bool = False
+        super().__init__(name=colName, parent=rowIdx, paramType=paramType)
+        self.value: float = value
+        self.parentSystem: Optional[str] = parentSystem
+        self.sweepParamName: Optional[str] = sweepParamName
 
     # setter for UI ====================================================
     def storeAttr(self, attr: str, value: Union[str, bool]):
@@ -681,7 +695,7 @@ class CaliTableRowParam(DispParamBase):
         setattr(self, attr, value)
 
     # getter for UI ====================================================
-    def exportAttr(self, attr: str) -> Union[str, bool]: 
+    def exportAttr(self, attr: str) -> Union[str, bool]:
         """
         Export the value of the parameter
         """
