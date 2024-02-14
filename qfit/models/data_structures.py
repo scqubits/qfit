@@ -642,10 +642,12 @@ class QMFitParam(DispParamBase):
         Export the value of the parameter
         """
         value = getattr(self, attr)
-        if isinstance(value, int) or isinstance(value, float):
-            return self._toIntString(value)
-        elif isinstance(value, bool):
+        if isinstance(value, bool):
+            # should be put before the isinstance(value, int) condition
+            # as bool is a subclass of int
             return value
+        elif isinstance(value, int) or isinstance(value, float):
+            return self._toIntString(value)
         else:
             raise ValueError(f"Unknown type of value: {value}")
 

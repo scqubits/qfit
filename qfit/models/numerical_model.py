@@ -30,33 +30,16 @@ from qfit.models.extracted_data import AllExtractedData
 from qfit.models.data_structures import Tag, SpectrumElement
 
 def dummy_hilbert_space():
-    resonator = scq.Oscillator(
-        E_osc=6.0, l_osc=1.0, truncated_dim=4, id_str="resonator"
-    )
-
     fluxonium = scq.Fluxonium(
-        EJ=5.0, EC=1, EL=0.1, flux=0.0, cutoff=100, truncated_dim=5, id_str="fluxonium"
+        EJ=5.0, EC=1, EL=0.1, flux=0.0, cutoff=100, 
+        truncated_dim=5, id_str="fluxonium"
     )
-
-    hilbertspace = scq.HilbertSpace([resonator, fluxonium])
-
-    hilbertspace.add_interaction(
-        g=0.01,
-        op1=resonator.n_operator,
-        op2=fluxonium.n_operator,
-        add_hc=False,
-        id_str="res-qubit",
-    )
-
-    return hilbertspace
+    return scq.HilbertSpace([fluxonium])
 
 
 class QuantumModel(QObject):
     """
-    Class for handling the HilbertSpace object, including: (1) identifying parameters in each subsystem of the Hamiltonian
-    and coupling coefficients of the interaction terms, (2) receiving updated values of parameters and coupling coefficients
-    from the UI and reflect changes in the HilbertSpace object, (3) generating a ParameterSweep object, (4) compute the relevant
-    transition spectrum. Primarily designed for prefit.
+    Generate and manipulate a parameter sweep for a quantum model.
 
     Parameters
     ----------
