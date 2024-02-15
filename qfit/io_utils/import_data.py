@@ -15,11 +15,11 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from qfit.utils.helpers import StopExecution
 
-from qfit.io_utils.measurement_file_readers import (
+from qfit.models.measurement_data import (
     ImageMeasurementData,
     NumericalMeasurementData,
-    readMeasurementFile,
 )
+from qfit.io_utils.measurement_file_readers import readMeasurementFile
 from qfit.models.registry import Registry
 
 from typing import Union

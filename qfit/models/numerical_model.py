@@ -4,16 +4,15 @@ import numpy as np
 
 from numpy import ndarray
 
-from typing import overload
 import copy
 
 import scqubits as scq
+from scqubits.core.qubit_base import QuantumSystem
 from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.param_sweep import ParameterSweep
 from scqubits.core.storage import SpectrumData
 
-from typing import Dict, List, Tuple, Union, Callable
-from typing_extensions import Literal
+from typing import Dict, List, Tuple, Union, Callable, Any, Literal, Optional
 
 from qfit.models.parameter_settings import ParameterType
 
@@ -21,7 +20,8 @@ from qfit.models.quantum_model_parameters import (
     ParamSet, HSParamSet
 )
 from qfit.models.data_structures import (
-    ParamBase, QMSliderParam, QMSweepParam, QMFitParam
+    ParamBase, QMSliderParam, QMSweepParam, QMFitParam,
+    FullExtr, ExtrTransition
 )
 from qfit.models.status import StatusModel
 from qfit.models.numerical_spectrum_data import CalculatedSpecData
@@ -45,66 +45,192 @@ class QuantumModel(QObject):
     ----------
     hilbertspace: HilbertSpace
     """
+    _sweeps: Dict[str, ParameterSweep]
 
     readyToPlot = Signal(SpectrumElement)
+
+    # options
 
     def __init__(
         self,
         hilbertspace: HilbertSpace,
+        figNames: List[str],
     ):
         super().__init__()
-        self.hilbertspace: HilbertSpace = hilbertspace
 
-    def setupPlotUICallbacks(
+        self._hilbertspace = hilbertspace
+        self._figNames = figNames
+        self._currentFigName = self._figNames[0]
+
+        self._initializeSweepIngredients()
+
+    def _initializeSweepIngredients(self):
+        # extracted data
+        self._fullExtr = FullExtr()
+
+        # calibration
+        self._sweepParamSets: Dict[str, HSParamSet] = {
+            figName: HSParamSet(self._hilbertspace, QMSweepParam) for figName in self._figNames
+        }
+        self._yCaliFunc: Callable = lambda x: x
+        self._yInvCaliFunc: Callable = lambda x: x
+
+        # options when generating the parameter sweep
+        self._evalsCount: int = 1
+        self._pointsAdd: int = 0
+
+        # options when plotting the spectrum
+        self._subsysToPlot: QuantumSystem = self._hilbertspace.subsystem_list[0]
+        self._initialState: Union[int, Tuple[int, ...], None] = None
+        self._photons: int = 1
+        
+        # options when running
+        self._autoRun: bool = True
+
+    # Signals and Slots ========================================================
+    @Slot(str)
+    def switchFig(self, figName: str):
+        self._currentFigName = figName
+        self.prefitUpdateCalc()
+
+    @Slot(HilbertSpace)
+    def updateHilbertSpace(self, hilbertspace: HilbertSpace):
+        """
+        Update the HilbertSpace object.
+
+        Parameters
+        ----------
+        hilbertspace: HilbertSpace
+        """
+        self._hilbertspace = hilbertspace
+        self.prefitUpdateCalc()
+
+    @Slot(FullExtr)
+    def updateExtractedData(self, fullExtr: FullExtr):
+        """
+        Update the extracted data.
+
+        Parameters
+        ----------
+        dataNames: List[str]
+        data: List[ndarray]
+        tags: List[Tag]
+        """
+        self._fullExtr = fullExtr
+        # at the moment we don't update the calculation after the extracted data is updated
+
+    @Slot(Dict[str, HSParamSet])
+    def updateSweepParamSets(self, sweepParamSets: Dict[str, HSParamSet]):
+        """
+        Update the parameter sets for the sweeps.
+
+        Parameters
+        ----------
+        sweepParamSets: Dict[str, HSParamSet]
+        """
+        self._sweepParamSets = sweepParamSets
+        self.prefitUpdateCalc()
+
+    @Slot()   # can't use Callable here in the initialization
+    # because Argument of type "type[Callable]" cannot be assigned to parameter of type "type"
+    def updateYCaliFunc(self, yCaliFunc: Callable, yInvCaliFunc: Callable):
+        """
+        Update the y calibration function.
+
+        Parameters
+        ----------
+        yCaliFunc: Callable
+        """
+        self._yCaliFunc = yCaliFunc
+        self._yInvCaliFunc = yInvCaliFunc
+        self.prefitUpdateCalc()
+
+    @Slot(str, Any)
+    def updateSweepOption(
         self,
-        subsystemNameCallback: Callable,
-        initialStateCallback: Callable,
-        photonsCallback: Callable,
-        evalsCountCallback: Callable,
-        pointsAddCallback: Callable,
+        attrName: Literal[
+            "subsysToPlot",
+            "initialState",
+            "photons",
+            "evalsCount",
+            "pointsAdd",
+            "autoRun",
+        ],
+        value: Any,
     ):
         """
-        Obtain information from plot option UI including:
-        * plot options
-        * ...
-        """
+        Set the sweep options.
 
-        # for test only
-        # ------------------------------------------------------------------------------
-        self.subsystem_names_to_plot = lambda: (
-            HSParamSet.parentSystemIdstrByName(subsystemNameCallback())
+        Parameters
+        ----------
+        attrName: str
+            The name of the attribute to be set.
+        value: Any
+            The value to be set.
+        """
+        # process the raw value from UI
+        if attrName == "subsysToPlot":
+            id_str = HSParamSet.parentSystemIdstrByName(value)
+            value = self._hilbertspace.subsys_by_id_str(id_str)
+        elif attrName == "initialState":
+            value = self._stateStr2Label(value)
+        elif attrName == "photons":
+            value = int(value)
+        elif attrName == "evalsCount":
+            value = int(value)
+        elif attrName == "pointsAdd":
+            value = int(value)
+        elif attrName == "autoRun":
+            value = bool(value)
+
+        # set the value
+        setattr(self, attrName, value)
+
+        # update the calculation
+        if attrName in ["subsysToPlot", "initialState", "photons"]:
+            self.prefitSweep2SpecMSE()
+            pass
+        elif attrName in ["evalsCount", "pointsAdd", "autoRun"]:
+            self.prefitUpdateCalc()
+            pass
+    
+    # signals =================================================================
+    def emitReadyToPlot(self):
+        # spectrum data for highlighting
+        highlight_specdata = self._currentSweep.transitions(
+            as_specdata=True,
+            subsystems=self._subsysToPlot,
+            initial=self._initialState,
+            final=None,
+            sidebands=False,
+            photon_number=self._photons,
+            make_positive=False,
         )
-        self.initialStateCallback = initialStateCallback
-        self.photonsCallback = photonsCallback
-        self.evalCountCallback = evalsCountCallback
-        self.pointsAddCallback = pointsAddCallback
-        # ------------------------------------------------------------------------------
 
-    def setupAutorunCallbacks(
-        self,
-        autorun_callback: Callable,
-    ):
-        """
-        Obtain information from autorun UI including
-        """
-        # set autorun callback
-        self.autorun_callback = autorun_callback
+        # overall data
+        overall_specdata = copy.deepcopy(self._currentSweep[(slice(None),)].dressed_specdata)
+        overall_specdata.energy_table -= highlight_specdata.subtract
 
-    def subsystems_to_plot(self):
-        subsys_names = self.subsystem_names_to_plot()
+        # scale the spectrum data accordingly, based on the calibration
+        self._invCaliSpec(overall_specdata)
+        self._invCaliSpec(highlight_specdata)
 
-        if isinstance(subsys_names, str):
-            return self.hilbertspace.subsys_by_id_str(subsys_names)
+        # emit the spectrum data to the plot view
+        spectrum_element = SpectrumElement(
+            "spectrum",
+            overall_specdata,
+            highlight_specdata,
+        )
+        self.readyToPlot.emit(spectrum_element)
 
-        # elif isinstance(subsys_names, list):
-        #     return [self.hilbertspace.subsys_by_id_str(name) for name in subsys_names]
+        
+    # properties ==============================================================
+    @property
+    def _currentSweep(self) -> ParameterSweep:
+        return self._sweeps[self._currentFigName]
 
-        else:
-            raise TypeError(
-                f"subsystem_names_to_plot() should give a string, not {type(subsys_names)}."
-            )
-
-    def _state_str_2_label(self, state_str: str):
+    # tools ===================================================================
+    def _stateStr2Label(self, state_str: str):
         # convert string to state label
 
         # empty string means None
@@ -115,10 +241,10 @@ class QuantumModel(QObject):
         if "," in state_str:
             label_str = state_str.split(",")
 
-            if len(label_str) != self.hilbertspace.subsystem_count:
+            if len(label_str) != self._hilbertspace.subsystem_count:
                 raise ValueError(
                     f"The state label length {len(label_str)} does not match the subsystem "
-                    f"count {self.hilbertspace.subsystem_count}."
+                    f"count {self._hilbertspace.subsystem_count}."
                 )
 
             try:
@@ -137,90 +263,82 @@ class QuantumModel(QObject):
             raise ValueError(
                 f"Cannot convert {state_str} to a state label. Please check the format."
             )
-
-    def initial_state(self):
-        return self._state_str_2_label(self.initialStateCallback())
-
-    def photons(self):
-        return self.photonsCallback()
-
-    def _generateXcoordinateListForMarkedPoints(
-        self, extracted_data: AllExtractedData
-    ) -> np.ndarray:
+        
+    def _invCaliSpec(self, specData: SpectrumData):
         """
-        Generate a list of parameter values for parameter sweeps from the extracted data;
-        the extracted data contains the x coordinate of the two-tone spectroscopy plot.
-
-        Parameters
-        ----------
-        extracted_data: AllExtractedData
-            The extracted data from the two-tone spectroscopy experiment.
-
-        Returns
-        -------
-        np.ndarray
+        scale the spectrum data accordingly, based on the calibration
+        this step is carried out based on the inverse calibration function
+        in the calibration data
         """
-        # obtain the x-axis coordinate of the extracted data; since the x-coordinates of the
-        # sample points are fixed by the first set of the data, we extract the x-coordinates
-        # from the first set of the data
-        x_coordinates = extracted_data.distinctSortedXValues()
-        return x_coordinates
-
-    def _generateXcoordinateListForPrefit(
-        self, extracted_data: AllExtractedData
-    ) -> np.ndarray:
+        specData.energy_table[:, :] = self._yCaliFunc(specData.energy_table)
+        
+    # generate sweep ==========================================================
+    def _prefitSweptX(self, addPoints: bool = True) -> Dict[str, np.ndarray]:
         """
         Generate a list of x coordinates for the prefit. The x coordinates are
         currently made of (1) a uniformly distributed list of x coordinates in
         between the min and max of the x-coordinates of the extracted data, and
         (2) the x-coordinates of the extracted data.
         """
-        # obtain the x-axis coordinate of the extracted data; since the x-coordinates of the
-        # sample points are fixed by the first set of the data, we extract the x-coordinates
-        # from the first set of the data
-        x_coordinates_from_data = extracted_data.distinctSortedXValues()
-        # generate a list of x coordinates for the prefit
-        try:
-            points_add = np.round(float(self.pointsAddCallback())).astype(int)
-        except ValueError:
-            raise ValueError("Expect an integer for the number of points to add.")
+        sweptX = {}
+        for figName, extracted_data_set in self._fullExtr.items():
+            extrX = extracted_data_set.distinctSortedX()
 
-        x_coordinates_uniform = np.linspace(
-            min(x_coordinates_from_data), max(x_coordinates_from_data), points_add
-        )[1:-1]
-        x_coordinates_all = np.concatenate(
-            [x_coordinates_from_data, x_coordinates_uniform]
-        )
+            if figName == self._currentFigName and addPoints:
+                # add uniformly distributed x coordinates if current figure
+                # is being plotted
+                x_coordinates_uniform = np.linspace(
+                    extrX[0], extrX[-1], self._pointsAdd
+                )[1:-1]
+                x_coordinates_all = np.concatenate(
+                    [extrX, x_coordinates_uniform]
+                )
+                sweptX[figName] = np.sort(x_coordinates_all)
+            else:
+                # only calculate the spectrum for the extracted data x coordinates
+                sweptX[figName] = extrX
 
-        return np.sort(x_coordinates_all)
+        return sweptX
 
-    @staticmethod
-    def _setCalibrationFunction(
-        parameter: ParamBase, calibration_data: CalibrationData
-    ) -> None:
-        """
-        Set the calibration function for a parameter. By now, the calibration function is
-        obtained from the calibrateDataset function in the CalibrationData object. Only one
-        ng or flux is assumed in the model.
-
-        Parameters
-        ----------
-        parameter: QuantumModelParameter
-            The parameter to be calibrated.
-        calibration_func: Callable
-            The calibration function.
-        """
-        # TODO generalize this function to multiple ng and flux case in future
-        # notice that the `calibrateDataset` function below takes
-        parameter.calibration_func = lambda x: calibration_data.calibrateDataPoint(
-            [x, 0], calibration_axis="x"
-        )[0]
-
-    def _generateParameterSweep(
+    def _updateHSForSweep(
         self,
-        x_coordinate_list: ndarray,
-        sweep_parameter_set: HSParamSet,
-    ) -> ParameterSweep:
+    ) -> Dict[str, Callable[[float], None]]:
+        """
+        Update the HilbertSpace object with the values of parameters and coupling coefficients
+        received from the UI when the sweep is running. This method returns a callable for
+        `update_hilbertspace` that is passed to the ParameterSweep object.
+        """
+        updateHSDict = {}
+        for figName, sweepParamSet in self._sweepParamSets.items():
+            spectra = self._fullExtr[figName]
+            def updateHilbertspace(x: float) -> None:
+                # map x to the rawX (voltage vector)
+                rawX = spectra.rawXByX(x)
+                # map rawX to the parameter values
+                updatedSweepParam = sweepParamSet.......??
+                # update the HilbertSpace object
+                updatedSweepParam.setParameterForParent()
+
+            updateHSDict[figName] = updateHilbertspace
+
+        return updateHSDict
+    
+    def _subsysUpdateInfo(self) -> Dict[str, List]:
+        """
+        Return a dictionary that maps the figure names to the list of subsystems
+        that need to be updated when the x-coordinate is changed.
+        """
+        return {
+            figName: [sweepParamSet.parentObjByName[list(sweepParamSet.keys())[0]]]
+            for figName, sweepParamSet in self._sweepParamSets.items()
+        }
+
+    def _generateSweep(
+        self, 
+        sweptX: Dict[str, np.ndarray],
+        updateHS: Dict[str, Callable[[float], None]],
+        subsysUpdateInfo: Dict[str, List],
+    ) -> Dict[str, ParameterSweep]:
         """
         Generate a ParameterSweep object from the HilbertSpace object.
 
@@ -236,408 +354,136 @@ class QuantumModel(QObject):
         -------
         A ParameterSweep object.
         """
-        # set paramvals_by_name
-        paramvals_by_name = {"x-coordinate": x_coordinate_list}
-        # set subsys_update_info
-        subsys_update_info = {
-            "x-coordinate": [sweep_parameter_set.parentObjByName[list(sweep_parameter_set.keys())[0]]]
-        }
-        # set update_hilbertspace
-        update_hilbertspace = self._update_hilbertspace_for_ParameterSweep(
-            sweep_parameter_set
-        )
+        sweeps = {}
 
+        for figName, x_coordinate in sweptX.items():
+            paramvals_by_name = {"x": x_coordinate}
+            update_hilbertspace = updateHS[figName]
+            subsys_update_info = {"x": subsysUpdateInfo[figName]}
+
+            param_sweep = ParameterSweep(
+                hilbertspace=self._hilbertspace,
+                paramvals_by_name=paramvals_by_name,
+                update_hilbertspace=update_hilbertspace,
+                evals_count=self._evalsCount,  # change this later to connect to the number from the view
+                subsys_update_info=subsys_update_info,
+                autorun=False,
+                num_cpus=1,  # change this later to connect to the number from the view
+            )
+            sweeps[figName] = param_sweep
+
+        return sweeps
+
+    # public methods ==========================================================
+    def newSweep(self, addPoints: bool) -> None:
+        """
+        Create a new ParameterSweep object based on the stored data.
+        """
         try:
-            evals_count = np.round(float(self.evalCountCallback())).astype(int)
-        except ValueError:
-            raise ValueError("Expect an integer for the number of energy levels.")
-        # TODO: When evals_count is greater than the total dim, raise an error message
-
-        param_sweep = ParameterSweep(
-            hilbertspace=self.hilbertspace,
-            paramvals_by_name=paramvals_by_name,
-            update_hilbertspace=update_hilbertspace,
-            evals_count=evals_count,  # change this later to connect to the number from the view
-            subsys_update_info=subsys_update_info,
-            autorun=False,
-            num_cpus=1,  # change this later to connect to the number from the view
-        )
-        return param_sweep
-
-    def _updateQuantumModelParameter(
-        self, parameter: Union[QMSweepParam, QMSliderParam]
-    ) -> None:
-        """
-        Update HilbertSpace object with a parameter.
-
-        Parameters
-        ----------
-        parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
-        """
-        parameter.setParameterForParent()
-        # TODO: for future, phi grid min/max would need special care here
-
-    def _updateQuantumModelFromParameterSet(
-        self, parameter_set: ParamSet
-    ) -> None:
-        """
-        Update HilbertSpace object with a set of parameters in QuantumModelParameterSet.
-
-        Parameters
-        ----------
-        parameter: Union[QuantumModelParameter, QuantumModelSliderParameter]
-        """
-        for parameters in parameter_set.values():
-            for parameter in parameters.values():
-                self._updateQuantumModelParameter(parameter)
-
-    def newSweep(
-        self,
-        slider_or_fit_parameter_set: ParamSet,
-        sweep_parameter_set: HSParamSet,
-        calibration_data: CalibrationData,
-        extracted_data: AllExtractedData,
-        prefit_result: StatusModel,
-    ) -> None:
-        """
-        Create a new ParameterSweep object.
-
-        Parameters
-        ----------
-        slider_parameter_set: QuantumModelParameterSet
-            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
-            which are controlled by sliders.
-        sweep_parameter_set: QuantumModelParameterSet
-            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
-            which are subject to changes in the parameter sweep.
-        calibration_data: CalibrationData
-            The CalibrationData object that stores the calibration data.
-        extracted_data: AllExtractedData
-            The extracted data from the two-tone spectroscopy experiment.
-        """
-        # set calibration function for the parameters in the sweep parameter set
-        # TODO consider moving this part (update calibration function) to somewhere else
-        for parameters in sweep_parameter_set.values():
-            for parameter in parameters.values():
-                self._setCalibrationFunction(parameter, calibration_data)
-
-        # update the HilbertSpace object and generate parameter sweep
-        try:
-            self._updateQuantumModelFromParameterSet(slider_or_fit_parameter_set)
-            self.sweep = self._generateParameterSweep(
-                x_coordinate_list=self._generateXcoordinateListForPrefit(
-                    extracted_data
-                ),
-                sweep_parameter_set=sweep_parameter_set,
+            self._sweeps = self._generateSweep(
+                sweptX=self._prefitSweptX(addPoints),
+                updateHS=self._updateHSForSweep(),
+                subsysUpdateInfo=self._subsysUpdateInfo(),
             )
         except Exception as e:
-            prefit_result.status_type = "ERROR"
-            if str(e).startswith("min()"):
-                prefit_result.statusStrForView = (
-                    f"Please extract data before running the prefit."
-                )
-            else:
-                prefit_result.statusStrForView = (
-                    f"Fail to initialize the parameter sweep with "
-                    f"{type(e).__name__}: {e}."
-                )
-            return
-
-        prefit_result.status_type = "SUCCESS"
-        prefit_result.statusStrForView = f""
+            # TODO: emit error message
+            raise e
 
     @Slot()
-    def sweep2SpecNMSE(
-        self,
-        slider_or_fit_parameter_set: ParamSet,
-        sweep_parameter_set: ParamSet,
-        # spectrum_data: CalculatedSpecData,
-        calibration_data: CalibrationData,
-        extracted_data: AllExtractedData,
-        result: StatusModel,
-    ):
+    def prefitSweep2SpecMSE(self):
         """
         It is connected to the signal emitted by the UI when the user clicks the plot button
         for the prefit stage. It make use of the existing sweep object to
         get a spectrum data and MSE.
-
-        It's not allowed to use when the sweep is not generated.
         """
         # run sweep (generate a new sweep if not exist)
         try:
-            self.sweep
+            self._sweeps
         except AttributeError:
-            self.newSweep(
-                slider_or_fit_parameter_set=slider_or_fit_parameter_set,
-                sweep_parameter_set=sweep_parameter_set,
-                calibration_data=calibration_data,
-                extracted_data=extracted_data,
-                prefit_result=result,
-            )
+            try:
+                self.newSweep(addPoints=True)
+            except Exception as e:
+                return
 
-        result.status_type = "COMPUTING"
-        self.sweep.run()
+        # result.status_type = "COMPUTING"
+        for sweep in self._sweeps.values():
+            sweep.run()
 
-        # generate specdata --------------------------------------------
-        # for highlighting
-        specdata_for_highlighting = self.sweep.transitions(
-            subsystems=self.subsystems_to_plot(),
-            initial=self.initial_state(),
-            # sidebands=sidebands,
-            photon_number=self.photons(),
-            make_positive=False,
-            as_specdata=True,
-        )
-
-        # overall data
-        overall_specdata = copy.deepcopy(self.sweep[(slice(None),)].dressed_specdata)
-        overall_specdata.energy_table -= specdata_for_highlighting.subtract
-
-        # scale the spectrum data accordingly, based on the calibration
-        self._scaleYByInverseCalibration(calibration_data, overall_specdata)
-        self._scaleYByInverseCalibration(calibration_data, specdata_for_highlighting)
-
-        # emit the spectrum data to the plot view
-        spectrum_element = SpectrumElement(
-            "spectrum",
-            overall_specdata,
-            specdata_for_highlighting,
-        )
-        self.readyToPlot.emit(spectrum_element)
+        self.emitReadyToPlot()
 
         # --------------------------------------------------------------
 
         # mse calculation
-        mse, status_type, status_text = self.calculateMSE(extracted_data=extracted_data)
+        mse = self.calculateMSE()
 
-        # pass MSE and status messages to the model
-        result.oldMseForComputingDelta = result.newMseForComputingDelta
-        result.newMseForComputingDelta = mse
-        result.status_type = status_type
-        result.statusStrForView = status_text
+        # # pass MSE and status messages to the model
+        # result.oldMseForComputingDelta = result.newMseForComputingDelta
+        # result.newMseForComputingDelta = mse
+        # result.status_type = status_type
+        # result.statusStrForView = status_text
 
     @Slot()
-    def updateCalculation(
-        self,
-        slider_or_fit_parameter_set: ParamSet,
-        sweep_parameter_set: ParamSet,
-        # spectrum_data: CalculatedSpecData,
-        calibration_data: CalibrationData,
-        extracted_data: AllExtractedData,
-        prefit_result: StatusModel,
-    ) -> None:
+    def prefitUpdateCalc(self) -> None:
         """
+        newSweep + prefitSweep2SpecMSE
+
         It is connected to the signal emitted by the UI when the user changes the slider
         of a parameter. It receives a QuantumModelParameterSet object and updates the
         the HilbertSpace object. If auto run is on, it will also compute the spectrum
         and MSE.
-
-        Parameters
-        ----------
-        slider_parameter_set: QuantumModelParameterSet
-            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
-            which are controlled by sliders.
-        sweep_parameter_set: QuantumModelParameterSet
-            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object,
-            which are subject to changes in the parameter sweep.
-        spectrum_data: CalculatedSpecData
-            The CalculatedSpecData object that stores the spectrum data.
-        calibration_data: CalibrationData
-            The CalibrationData object that stores the calibration data.
-        extracted_data: AllExtractedData
-            The extracted data from the two-tone spectroscopy experiment.
         """
-        self.newSweep(
-            slider_or_fit_parameter_set=slider_or_fit_parameter_set,
-            sweep_parameter_set=sweep_parameter_set,
-            calibration_data=calibration_data,
-            extracted_data=extracted_data,
-            prefit_result=prefit_result,
-        )
+        self.newSweep(addPoints=True)
 
-        # if autorun, perform the rest of the steps (compute spectrum, plot, calculate MSE)
-        if self.autorun_callback():
-            self.sweep2SpecNMSE(
-                slider_or_fit_parameter_set=slider_or_fit_parameter_set,
-                sweep_parameter_set=sweep_parameter_set,
-                # spectrum_data=spectrum_data,
-                extracted_data=extracted_data,
-                calibration_data=calibration_data,
-                result=prefit_result,
-            )
+        if self._autoRun:
+            self.prefitSweep2SpecMSE()
 
-    def _scaleYByInverseCalibration(
-        self,
-        calibration_data: CalibrationData,
-        specdata: SpectrumData,
-    ):
+    # calculate MSE ===========================================================
+    @staticmethod
+    def _closestTransFreq(
+        dataFreq: float,
+        evals: ndarray,
+        initial: Optional[int] = None,
+        final: Optional[int] = None,
+    ) -> float: 
         """
-        scale the spectrum data accordingly, based on the calibration
-        this step is carried out based on the inverse calibration function
-        in the calibration data
+        Given a list of eigenenergies, find the closest transition frequency.
         """
-        for param_idx in range(len(specdata.energy_table)):
-            for energy_idx in range(len(specdata.energy_table[param_idx])):
-                specdata.energy_table[param_idx][
-                    energy_idx
-                ] = calibration_data.inverseCalibrateDataPoint(
-                    [0, specdata.energy_table[param_idx][energy_idx]],
-                    inverse_calibration_axis="y",
-                )[
-                    1
-                ]
+        if initial is not None and final is not None:
+            assert initial < final
+            return evals[final] - evals[initial]
+        
+        elif initial is not None and final is None:
+            possible_transitions = evals[initial + 1:] - evals[initial]
 
-    def _update_hilbertspace_for_ParameterSweep(
-        self,
-        sweptParameterSet: ParamSet,
-    ) -> None:
-        """
-        Update the HilbertSpace object with the values of parameters and coupling coefficients
-        received from the UI when the sweep is running. This method returns a callable for
-        `update_hilbertspace` that is passed to the ParameterSweep object.
-        """
+        elif initial is None and final is not None:
+            possible_transitions = evals[final] - evals[:final]
 
-        # update parameters according to the x-coordinate
-        # TODO consider adding hilbertspace regeneration here
-        def update_hilbertspace(x) -> None:
-            # print("Sweep on x =", x)
-            for parameters in sweptParameterSet.values():
-                for parameter in parameters.values():
-                    parameter.value = parameter.calibration_func(x)
-                    parameter.setParameterForParent()
+        else:
+            # enumerate all possible transitions starting from all different states
+            possible_transitions = np.array([
+                evals[final] - evals[initial]
+                for initial in range(len(evals))
+                for final in range(initial + 1, len(evals))
+            ])
 
-                    # print(f"\t {parameter.name} = {parameter.value}")
-                    # print(f"\t parent.flux = {parameter.parent.flux}")
-                    # print(f"\t sweep.parent.flux = {self.sweep.hilbertspace['fluxonium'].flux}")
+        closest_idx = (
+            np.abs(possible_transitions - dataFreq)
+        ).argmin()
 
-        return update_hilbertspace
+        return possible_transitions[closest_idx]
 
-    def calculateMSE(
-        self, extracted_data: AllExtractedData
-    ) -> Tuple[Union[float, None], str, str]:
-        """
-        Calculate the mean square error between the extracted data and the simulated data
-        from the parameter sweep. Currently, the MSE is calculated from the transition
-        spectrum of the self.sweep attribute (i.e. the ParameterSweep object is stored in
-        the controller). This method is supposed to be called after running the parameter
-        sweep.
-
-        Parameters
-        ----------
-        extracted_data: AllExtractedData
-            The extracted data from the two-tone spectroscopy experiment.
-
-        Returns
-        -------
-        mse: Union[float, None]
-            The mean square error between the extracted data and the simulated data from
-            the parameter sweep.
-        status_type: str
-            The status type of the result.
-        status_text: str
-            The status text of the result.
-        """
-        # Steps:
-        # 1. obtain tags from the extracted data for each data point
-        # 2. according to the tags, fetch the corresponding frequency from the transition data
-        # 3. if no transition can be found with the tag, find out the closest transition from the
-        #    transition calculation
-        # 4. calculate the MSE
-
-        mse = 0
-        status_type = ""
-        status_text = ""
-        # dataNames_without_tag = []
-        dataNames_with_unidentifiable_tag = []
-        # calibrate the data in the following way: keep the x-coordinate unchanged, but calibrate
-        # the y-coordinate
-        extracted_data_y_calibrated = extracted_data.allDataSorted(
-            applyCalibration=True, calibration_axis="y"
-        )
-        # for all the extracted data, identify any NO_TAG or CROSSING tagged sets
-        # for dataName, tag in zip(extracted_data.dataNames, extracted_data.assocTagList):
-        #     if tag.tagType is NO_TAG or tag.tagType is CROSSING:
-        #         dataNames_without_tag.append(dataName)
-        # # if there is any NO_TAG or CROSSING tagged sets, add a warning message and set status type to WARNING
-        # if dataNames_without_tag != []:
-        #     status_text += (
-        #         f"Data sets {dataNames_without_tag} are not tagged."
-        #         "Selected transition frequencies are matched to the closest ones in the model, "
-        #         "starting from the ground state.\n"
-        #     )
-        #     status_type = "WARNING"
-        # loop over extracted data sets and the corresponding tags
-        for dataName, extracted_data_set, tag in zip(
-            extracted_data.dataNames,
-            extracted_data_y_calibrated,
-            extracted_data.assocTagList,
-        ):
-            for data_point in extracted_data_set:
-                # obtain the transition frequency from the transition data
-                (
-                    transition_freq,
-                    get_transition_freq_status,
-                ) = self._getTransitionFrequencyFromParamSweep(
-                    x_coord=data_point[0],
-                    sweep=self.sweep,
-                    tag=tag,
-                    data_freq=data_point[1],
-                )
-                # if the transition_freq is None, return directly with a mse of None
-                if transition_freq is None:
-                    mse = None
-                    status_type = "ERROR"
-                    status_text = (
-                        f"The {tag.tagType} tag {tag.initial}->{tag.final} includes"
-                        " state label(s) that exceed evals count."
-                    )
-                    return mse, status_type, status_text
-                # if the return status is not SUCCESS, add a warning message and set status type to WARNING
-                if get_transition_freq_status != "SUCCESS":
-                    status_type = "WARNING"
-                    # append the dataName to the list of dataNames_with_unidentifiable_tag
-                    # only if the name is not already in the list
-                    if dataName not in dataNames_with_unidentifiable_tag:
-                        dataNames_with_unidentifiable_tag.append(dataName)
-
-                if tag.photons is None:
-                    photons = 1  # NO_TAG
-                else:
-                    photons = tag.photons
-                transition_freq /= photons
-
-                # add to the MSE
-                mse += (data_point[1] - transition_freq) ** 2
-        # normalize the MSE
-        mse /= sum(
-            [
-                len(extracted_data_set)
-                for extracted_data_set in extracted_data_y_calibrated
-            ]
-        )
-        # add to the status text if there is any unidentifiable tag
-        if dataNames_with_unidentifiable_tag != []:
-            status_text += (
-                f"Data sets {dataNames_with_unidentifiable_tag} have unidentifiable state "
-                "labels or are untagged. "
-                "Selected transition frequencies are matched to the closest ones in the model, "
-                "starting from the ground state.\n"
-            )
-        if status_type == "":
-            status_type = "SUCCESS"
-        return mse, status_type, status_text
-
-    def _getTransitionFrequencyFromParamSweep(
+    def _spectrumByTag(
         self,
         x_coord: float,
         sweep: ParameterSweep,
         tag: Tag,
-        data_freq: Union[float, None] = None,
+        dataFreq: float,
     ) -> Tuple[
-        Union[float, None],
+        float,
         Literal[
             "SUCCESS",
             "DRESSED_OUT_OF_RANGE",
+            "NO_TAG",
             "NO_MATCHED_BARE_INITIAL",
             "NO_MATCHED_BARE_FINAL",
             "NO_MATCHED_BARE_INITIAL_AND_FINAL",
@@ -647,131 +493,158 @@ class QuantumModel(QObject):
         Obtain the cooresponding transition frequency provided by the tag from a ParameterSweep
         instance. If the tag is not provided or can not identify states,
         the closest transition frequency is returned.
-
-        Parameters
-        ----------
-        x_coord: float
-            The x coordinate of the transition plot.
-        sweep: ParameterSweep
-            The ParameterSweep instance. The sweep must be performed and is swept over the x coordinate.
         """
-        # raise error if no tag is provided
-        # TODO need to think about what happens if NO_TAG is provided, by now NO_TAG is treated as if we
-        # specify CROSSING
-        simulation_freq = None
-        status = None
-
         # if provided dressed label
-        if (
-            tag.tagType
-            == "DISPERSIVE_DRESSED"
-            # or tag.tagType is CROSSING_DRESSED
-        ):
+        if tag.tagType == "NO_TAG":
+            status = "NO_TAG"
+            availableLabels = {}
+
+        elif tag.tagType == "DISPERSIVE_DRESSED":
             # if the state is above evals_count, terminate the computation and return error status
             if sweep.dressed_evals_count() < max(tag.initial, tag.final):
-                status = "ERROR"
-                return simulation_freq, status
+                status = "DRESSED_OUT_OF_RANGE"
+                return np.nan, status
             else:
-                initial_energy = sweep["evals"]["x-coordinate":x_coord][tag.initial]
-                final_energy = sweep["evals"]["x-coordinate":x_coord][tag.final]
-                simulation_freq = final_energy - initial_energy
                 status = "SUCCESS"
-                return simulation_freq, status
+                availableLabels = {"initial": tag.initial, "final": tag.final}
 
         # if provided bare label
         elif tag.tagType == "DISPERSIVE_BARE":
-            initial_energy = sweep["x-coordinate":x_coord].energy_by_bare_index(
+            eigenenergies = sweep["evals"]["x": x_coord]
+            initial_energy = sweep["x": x_coord].energy_by_bare_index(
                 tag.initial
             )
-            final_energy = sweep["x-coordinate":x_coord].energy_by_bare_index(tag.final)
-            # if either initial or final state cannot be identified, change the status and find out
-            # the closest transition
+            final_energy = sweep["x": x_coord].energy_by_bare_index(tag.final)
+
+            # when we can identify both initial and final states
             if initial_energy is not np.nan and final_energy is not np.nan:
                 simulation_freq = final_energy - initial_energy
                 status = "SUCCESS"
                 return simulation_freq, status
+            
+            # when some of the states are not identifiable
             elif initial_energy is np.nan and final_energy is not np.nan:
                 status = "NO_MATCHED_BARE_INITIAL"
-                eigenenergies = sweep["evals"]["x-coordinate":x_coord]
-                # find out the position of the final state energy
-                final_energy_dressed_label = sweep[
-                    "x-coordinate":x_coord
-                ].dressed_index(tag.final)
-                possible_transitions = np.array(
-                    [
-                        eigenenergies[final_energy_dressed_label] - eigenenergy
-                        for eigenenergy in eigenenergies[:final_energy_dressed_label]
-                    ]
-                )
-                # find the closest transition
-                closest_traansition_index = (
-                    np.abs(possible_transitions - data_freq)
-                ).argmin()
-                simulation_freq = possible_transitions[closest_traansition_index]
-                return simulation_freq, status
+                final_energy_dressed_label = sweep["x": x_coord].dressed_index(tag.final)
+                availableLabels = {"final": final_energy_dressed_label}
 
             elif final_energy is np.nan and initial_energy is not np.nan:
                 status = "NO_MATCHED_BARE_FINAL"
-                eigenenergies = sweep["evals"]["x-coordinate":x_coord]
-                # find out the position of the final state energy
-                initial_energy_dressed_label = sweep[
-                    "x-coordinate":x_coord
-                ].dressed_index(tag.initial)
-                possible_transitions = np.array(
-                    [
-                        eigenenergy - eigenenergies[initial_energy_dressed_label]
-                        for eigenenergy in eigenenergies[initial_energy_dressed_label:]
-                    ]
-                )
-                # find the closest transition
-                closest_traansition_index = (
-                    np.abs(possible_transitions - data_freq)
-                ).argmin()
-                simulation_freq = possible_transitions[closest_traansition_index]
-                return simulation_freq, status
-            # if both initial and final states cannot be identified, change the status and pass the
-            # case to the CROSSING or NO_TAG case
+                initial_energy_dressed_label = sweep["x": x_coord].dressed_index(tag.initial)
+                availableLabels = {"initial": initial_energy_dressed_label}
             else:
                 status = "NO_MATCHED_BARE_INITIAL_AND_FINAL"
+                availableLabels = {}
 
-        # if provided no label, or the label is not recognized, or the label is CROSSING
-        # calculate all the possible (positive) transitions and find the closest one
-        eigenenergies = sweep["evals"]["x-coordinate":x_coord]
-        # currently only consider the case where the initial state is the ground state
-        # TODO: generalize this to the case where the initial state is not the ground state
-        possible_transitions = np.array(
-            [eigenenergy - eigenenergies[0] for eigenenergy in eigenenergies[1:]]
+        simulation_freq = self._closestTransFreq(
+            dataFreq=dataFreq,
+            evals=eigenenergies,
+            **availableLabels,
         )
-        # find the closest transition
-        closest_traansition_index = (np.abs(possible_transitions - data_freq)).argmin()
-        simulation_freq = possible_transitions[closest_traansition_index]
         return simulation_freq, status
 
-    def MSEByParameters(
-        self,
-        parameterSet: ParamSet,
-        sweep_parameter_set: ParamSet,
-        calibration_data: CalibrationData,
-        extracted_data: AllExtractedData,
-    ):
+    def _MSEByTransition(
+        self, 
+        sweep: ParameterSweep, 
+        transition: ExtrTransition,
+        dataNameWOlabel: List[str],
+    ) -> float:
         """
-        For parameter fitting purpose, calculate the MSE with just the
-        parameters
+        Calculate the mean square error between the extracted data and the simulated data.
         """
-        # set calibration functions for the parameters in the sweep parameter set
-        for parameters in sweep_parameter_set.values():
-            for parameter in parameters.values():
-                self._setCalibrationFunction(parameter, calibration_data)
-        # update the HilbertSpace object and generate parameter sweep
-        # this step is after the setup of calibration functions because the update_hilbertspace in ParameterSweep need the calibration information
-        self._updateQuantumModelFromParameterSet(parameterSet)
-        # generate parameter sweep
-        self.sweep = self._generateParameterSweep(
-            x_coordinate_list=self._generateXcoordinateListForMarkedPoints(
-                extracted_data
-            ),
-            sweep_parameter_set=sweep_parameter_set,
-        )
-        # run sweep
-        self.sweep.run()
-        return self.calculateMSE(extracted_data)[0]
+        mse = 0.0
+
+        tag = transition.tag
+
+        for xData, yData in transition.data.T:
+            # obtain the transition frequency from the transition data
+            yData = self._yCaliFunc(yData)
+            (
+                transition_freq,
+                get_transition_freq_status,
+            ) = self._spectrumByTag(
+                x_coord = xData,
+                sweep = sweep,
+                tag = tag,
+                dataFreq = yData,
+            )
+
+            # process the status
+            # if the transition_freq is None, return directly with a mse of None
+            if get_transition_freq_status == "DRESSED_OUT_OF_RANGE":
+                status_type = "ERROR"
+                status_text = (
+                    f"The {tag.tagType} tag {tag.initial}->{tag.final} includes"
+                    " state label(s) that exceed evals count."
+                )
+                return np.nan
+            # if the return status is not SUCCESS, add a warning message and set status type to WARNING
+            if get_transition_freq_status != "SUCCESS":
+                if transition.name not in dataNameWOlabel:
+                    dataNameWOlabel.append(transition.name)
+
+            # finish the calculation
+            photons = 1 if tag.photons is None else tag.photons
+            transition_freq /= photons
+            mse += (yData - transition_freq) ** 2
+
+        return mse
+
+    def calculateMSE(self) -> float:
+        """
+        Calculate the mean square error between the extracted data and the simulated data
+        from the parameter sweep. Currently, the MSE is calculated from the transition
+        spectrum of the self.sweep attribute (i.e. the ParameterSweep object is stored in
+        the controller). This method is supposed to be called after running the parameter
+        sweep.
+
+        """
+        mse = 0
+        dataNameWOlabel = []
+
+        for figName, extrSpec in self._fullExtr.items():
+            sweep = self._sweeps[figName]
+            for transition in extrSpec:
+                mse += self._MSEByTransition(sweep, transition, dataNameWOlabel)
+
+        # normalize the MSE
+        mse /= self._fullExtr.count()
+
+        # add to the status text if there is any unidentifiable tag
+        if dataNameWOlabel != []:
+            status_type = "WARNING"
+            status_text = (
+                f"Data sets {dataNameWOlabel} have unidentifiable state "
+                "labels or are untagged. "
+                "Selected transition frequencies are matched to the closest ones in the model, "
+                "starting from the ground state.\n"
+            )
+
+        return mse
+
+    # def MSEByParameters(
+    #     self,
+    #     parameterSet: ParamSet,
+    #     sweep_parameter_set: ParamSet,
+    #     calibration_data: CalibrationData,
+    #     extracted_data: AllExtractedData,
+    # ):
+    #     """
+    #     For parameter fitting purpose, calculate the MSE with just the
+    #     parameters
+    #     """
+    #     # set calibration functions for the parameters in the sweep parameter set
+    #     for parameters in sweep_parameter_set.values():
+    #         for parameter in parameters.values():
+    #             self._setCalibrationFunction(parameter, calibration_data)
+    #     # update the HilbertSpace object and generate parameter sweep
+    #     # this step is after the setup of calibration functions because the update_hilbertspace in ParameterSweep need the calibration information
+    #     self._updateQuantumModelFromParameterSet(parameterSet)
+    #     # generate parameter sweep
+    #     self._sweeps = self._generateSweep(
+    #         x_coordinate_list=self.extrX,
+    #         sweep_parameter_set=sweep_parameter_set,
+    #     )
+    #     # run sweep
+    #     self._sweeps.run()
+    #     return self.calculateMSE(extracted_data)[0]

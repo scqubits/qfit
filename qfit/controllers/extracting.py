@@ -64,6 +64,7 @@ class ExtractingCtrl(QObject):
         self.allDatasets.removeAll()        # move to load from registry
         self.allDatasets.blockSignals(False)
 
+    # Connections ======================================================
     def _uiExtractedDataControlConnects(self):
         """Connect buttons for inserting and deleting a data set, or clearing all data sets"""
         # update the backend model
@@ -90,7 +91,7 @@ class ExtractingCtrl(QObject):
         # the 'dataChanged' signal will be emitted. The following connects the signal
         # to an update in th data stored in the AllExtractedData
         self.activeDataset.dataUpdated.connect(
-            self.allDatasets.updateAssocData
+            self.allDatasets.updateCurrentTransition
         ) 
 
         # whenever a row is inserted or removed, select the current row 
@@ -103,7 +104,6 @@ class ExtractingCtrl(QObject):
             lambda: self.extractingView.extractionList.selectItem(self.allDatasets.currentRow, blockSignals=True)
         )
 
-    # Connections ======================================================
     def _viewUpdatedConnects(self):
         """
         Connect the signals for user changes through UI in the tagging section to the corresponding
@@ -118,5 +118,5 @@ class ExtractingCtrl(QObject):
         correspondingly
         """
         self.activeDataset.dataSwitched.connect(
-            lambda data, tag: self.extractingView.replaceTag(tag)
+            lambda transition: self.extractingView.replaceTag(transition.tag)
         )

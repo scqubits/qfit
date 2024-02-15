@@ -21,6 +21,7 @@ from scqubits.core.qubit_base import QuantumSystem
 ParentType = Union[QuantumSystem, HilbertSpace]
 
 
+# Status ===============================================================
 class Status:
     """
     Store the status of the application.
@@ -50,7 +51,7 @@ class Status:
     def __repr__(self):
         return self.__str__()
 
-
+# Extracted Data =======================================================
 class Tag:
     """
     Store a single dataset tag. The tag can be of different types:
@@ -74,10 +75,39 @@ class Tag:
         - For NO_TAG, no photon number is specified.
         - For all other tag types, this int specifies the photon number rank of the transition.
     """
+    @overload
+    def __init__(
+        self,
+        tagType: Literal["NO_TAG"] = "NO_TAG",
+        initial: None = None,
+        final: None = None,
+        photons: None = None,
+    ):
+        ...
+
+    @overload
+    def __init__(
+        self,
+        tagType: Literal["DISPERSIVE_DRESSED"],
+        initial: int,
+        final: int,
+        photons: Optional[int] = None,
+    ):
+        ...
+
+    @overload
+    def __init__(
+        self,
+        tagType: Literal["DISPERSIVE_BARE"],
+        initial: Tuple[int, ...],
+        final: Tuple[int, ...],
+        photons: Optional[int] = None,
+    ):
+        ...
 
     def __init__(
         self,
-        tagType: str = "NO_TAG",
+        tagType: Literal["NO_TAG", "DISPERSIVE_DRESSED", "DISPERSIVE_BARE"] = "NO_TAG",
         initial: Optional[Union[Tuple[int, ...], int]] = None,
         final: Optional[Union[Tuple[int, ...], int]] = None,
         photons: Optional[int] = None,
@@ -97,6 +127,162 @@ class Tag:
 
     def __repr__(self):
         return self.__str__()
+    
+
+class ExtrTransition:
+    """
+    A class for storing a transition extracted from the spectrum.
+
+    Attributes
+    ----------
+    name: str
+        The name of the transition
+    data: np.ndarray
+        The transition data, shape (2, N), where N is the number of data points
+    rawX: List[np.ndarray]
+        The raw control voltages data, shape (N, n), where n is the dimention of control voltages
+    tag: Tag
+        The tag of the transition 
+    """
+    def __init__(
+        self, 
+        name: str = "",
+        data: np.ndarray = np.empty(shape=(2, 0), dtype=np.float_),   
+        rawX: List[np.ndarray] = [],
+        tag: Tag = Tag(),
+    ) -> None:
+        self.name = name
+        self.data = data 
+        self.rawX = rawX 
+        self.tag = tag
+
+    def count(self) -> int:
+        return self.data.shape[1]
+    
+    def appendSorted(self, data: np.ndarray, rawX: np.ndarray):
+        """
+        It always keeps the data sorted by the x value.
+        """
+        if self.count() == 0:
+            self.data = np.insert(self.data, 0, data, axis=1)
+            self.rawX.append(rawX)
+            return
+
+        idx = np.searchsorted(self.data[0], data[0])
+        self.data = np.insert(self.data, idx, data, axis=1)
+        self.rawX.insert(idx, rawX)
+
+    def remove(self, index: int):
+        self.data = np.delete(self.data, index, axis=1)
+        self.rawX.pop(index)
+
+    def swapXY(self):
+        """
+        It happens only when rawX has shape (N, 1), where there is a chance
+        for confusion between x and y.
+        """
+        if len(self.rawX) > 0:
+            if self.rawX[0].shape[0] != 1:
+                raise ValueError(
+                    "The rawX data has more than one dimension, "
+                    "meaning that there should be no chance for confusion."
+                    "X and Y should be already distinguished."
+                )
+
+        self.data = self.data[[1, 0], :]
+        self.rawX = list(self.data[0, :])
+        
+
+class ExtrSpectra(list[ExtrTransition]):
+    """
+    A bunch of transitions extracted from the same parameter sweep.
+    """
+    def __init__(
+        self,
+        *args: ExtrTransition,
+    ) -> None:
+        super().__init__(*args)
+
+    def count(self) -> int:
+        return sum([transition.count() for transition in self])
+
+    def isEmpty(self) -> bool:
+        for transition in self:
+            if transition.count() > 0:
+                return False
+        return True
+
+    def allNames(self) -> List[str]:
+        return [transition.name for transition in self]
+    
+    def allData(self) -> List[np.ndarray]:
+        """
+        Return all data sorted by the transition name. 
+        """
+        return [transition.data for transition in self]
+        
+    def allDataConcated(self) -> np.ndarray:
+        """
+        Return all data concated
+        """
+        return np.concatenate(self.allData(), axis=1)
+    
+    def allRawX(self) -> List[List[np.ndarray]]:
+        return [transition.rawX for transition in self]
+    
+    def allRawXConcated(self) -> List[np.ndarray]:
+        return [rawX for rawXList in self.allRawX() for rawX in rawXList]
+            
+    def distinctSortedX(self) -> np.ndarray:
+        """
+        Return the distinct sorted x values of all transitions
+        """
+        allX = self.allDataConcated()[0]
+        return np.sort(np.unique(allX))
+    
+    def swapXY(self):
+        for transition in self:
+            transition.swapXY()
+
+    def rawXByX(self, x: float) -> np.ndarray:
+        """
+        Return the rawX data corresponding to the x value. Their relationship
+        is linear. 
+        """
+        allData = self.allDataConcated()
+        allRawX = self.allRawXConcated()
+
+        if self.count() < 2:
+            # try to find the exact x value
+            for idx, x_ in enumerate(allData[0]):
+                if x_ == x:
+                    return allRawX[idx]
+            raise ValueError("No data found for the x value")
+            
+        # calculate a linear mapping between the x values and the rawX data
+        x1, x2 = allData[0, 0], allData[0, -1]
+        rawX1, rawX2 = allRawX[0], allRawX[-1]
+
+        return rawX1 + (rawX2 - rawX1) / (x2 - x1) * (x - x1)
+
+
+class FullExtr(dict[str, ExtrSpectra]):
+    """
+    A class for storing all the extracted data from the experiment. 
+    """
+
+    def __init__(
+        self,
+        **kwargs: ExtrSpectra,
+    ) -> None:
+        super().__init__(**kwargs)
+
+    def count(self) -> int:
+        return sum([spectra.count() for spectra in self.values()])
+
+    def swapXY(self):
+        for value in self.values():
+            value.swapXY()
 
 
 # ######################################################################
@@ -629,3 +815,4 @@ class QMFitParam(DispParamBase):
         Set the value of the parameter to the initial value
         """
         self.value = self.initValue
+

@@ -355,7 +355,7 @@ class PlottingCtrl(QObject):
 
         # select mode
         if self.dataDestination == "EXTRACT":
-            current_data = self.activeDataset.allTransitions()
+            current_data = self.activeDataset.allPoints()
 
             if self.xSnap:
                 x1y1 = np.asarray([self.mplCanvas.cursor.closest_line(event.xdata), event.ydata])
