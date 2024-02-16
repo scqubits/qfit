@@ -56,7 +56,7 @@ from qfit.utils.helpers import (
     executed_in_ipython,
     StopExecution,
 )
-from qfit.models.measurement_data import MeasurementDataType
+from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
 from qfit.controllers.help_tooltip import HelpButtonCtrl
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
@@ -82,11 +82,6 @@ from qfit.models.quantum_model_parameters import (
     ParamSet, HSParamSet, PrefitParamModel, FitParamModel
 )
 from qfit.models.numerical_model import QuantumModel
-from qfit.widgets.foldable_table import (
-    FoldableTable,
-    MinMaxItems,
-    FittingParameterItems,
-)
 
 # fit
 from qfit.models.data_structures import QMFitParam
@@ -156,7 +151,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.fitDynamicalElementsBuild(hilbertspace)
 
         # plot, mpl canvas
-        self.measurementData = measurementData
+        self.measurementData = MeasDataSet([measurementData])
         self.plottingMVCInits()
         self.plottingCtrl.dynamicalInit(
             self.measurementData, self.quantumModel
@@ -976,7 +971,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     ):
         # here, the measurementData is a instance of MeasurementData, which is
         # regenerated from the data file
-        self.measurementData = measurementData
+        self.measurementData = MeasDataSet([measurementData])
         self.calibrationData.resetCalibration()
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 

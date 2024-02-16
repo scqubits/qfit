@@ -24,8 +24,6 @@ from qfit.utils.helpers import (
 from qfit.models.measurement_data import (
     ImageMeasurementData, NumericalMeasurementData, MeasurementDataType)
 
-from typing import Union, Dict
-
 
 def readMeasurementFile(fileName) -> MeasurementDataType:
     """

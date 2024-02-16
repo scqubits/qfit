@@ -183,6 +183,13 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
 class MeasurementData(Registrable):
     """Abstract basis class to enforce implementation of a data type specific plot method"""
 
+    # even if the ImageMeasurementData class does not use these, they are still required
+    # for setting up the UI
+    _zCandidates: OrderedDictMod[str, np.ndarray] = OrderedDictMod()     # dict of 2d ndarrays
+    _xyCandidates: OrderedDictMod[str, np.ndarray] = OrderedDictMod()    # dict of 1d ndarrays
+    _currentXCompatibles: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
+    _currentYCompatibles: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
+
     def __init__(self, name, rawData):
         super().__init__()
         
@@ -243,11 +250,6 @@ class NumericalMeasurementData(MeasurementData):
         each dict entry records the name associated with the dataset, and the dataset element, which is a 2d ndarray
         of floats representing a possible set of measurement data (zData)
     """
-
-    _zCandidates: OrderedDictMod[str, np.ndarray]     # dict of 2d ndarrays
-    _xyCandidates: OrderedDictMod[str, np.ndarray]    # dict of 1d ndarrays
-    _currentXCompatibles: OrderedDictMod[str, np.ndarray]
-    _currentYCompatibles: OrderedDictMod[str, np.ndarray]
 
     def __init__(
         self, 

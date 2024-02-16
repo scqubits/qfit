@@ -100,9 +100,9 @@ class IOCtrl:
 
     # load ####################################################################
     @staticmethod
-    def measurementDataFromFile(
+    def _measurementDataFromFile(
         fileName: str,
-    ):
+    ) -> MeasurementDataType:
         """
         Read the measurement data from the given file.
 
@@ -112,7 +112,7 @@ class IOCtrl:
         return readMeasurementFile(fileName)
 
     @staticmethod
-    def registryDictFromFile(
+    def _registryDictFromFile(
         fileName: str,
     ) -> Union[Dict[str, Any], None]:
         """
@@ -146,7 +146,7 @@ class IOCtrl:
                 else:
                     return None
 
-            measurementData = self.measurementDataFromFile(fileName)
+            measurementData = self._measurementDataFromFile(fileName)
 
             if measurementData is None:
                 msg = QMessageBox()
@@ -189,7 +189,7 @@ class IOCtrl:
                 else:
                     return None
 
-            registryDict = self.registryDictFromFile(fileName)
+            registryDict = self._registryDictFromFile(fileName)
 
             if registryDict is None:
                 msg = QMessageBox()
@@ -301,7 +301,7 @@ class IOCtrl:
         if self.mainWindow.projectFile is not None:
             registryDict = copy.deepcopy(self.registry.exportDict())
             registryDictFromFile = copy.deepcopy(
-                self.registryDictFromFile(self.mainWindow.projectFile)
+                self._registryDictFromFile(self.mainWindow.projectFile)
             )
             # remove HilbertSpace and file name from these dicts
             registryDict.pop("HilbertSpace")

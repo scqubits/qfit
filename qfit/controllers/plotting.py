@@ -5,11 +5,13 @@ from qfit.widgets.mpl_canvas import MplFigureCanvas
 import numpy as np
 import matplotlib as mpl
 from qfit.utils.helpers import y_snap
+from qfit.models.measurement_data import NumericalMeasurementData, ImageMeasurementData
 
 from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal
 
 if TYPE_CHECKING:
-    from qfit.models.measurement_data import MeasurementDataType
+    from qfit.models.measurement_data import (
+        MeasDataSet)
     from qfit.models.calibration_data import CalibrationData
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
     from qfit.models.quantum_model_parameters import ParamSet
@@ -41,7 +43,7 @@ class PlottingCtrl(QObject):
         self,
         mplCanvas: "MplFigureCanvas",
         models: Tuple[
-            "MeasurementDataType", "CalibrationData",
+            "MeasDataSet", "CalibrationData",
             "AllExtractedData", "ActiveExtractedData",
             "QuantumModel", "ParamSet",
         ],
@@ -84,7 +86,7 @@ class PlottingCtrl(QObject):
     
     def dynamicalInit(
         self, 
-        measurementData: "MeasurementDataType",
+        measurementData: "MeasDataSet",
         quantumModel: "QuantumModel",
     ):
         self.measurementData = measurementData
@@ -92,7 +94,7 @@ class PlottingCtrl(QObject):
         
         self.measPlotSettingConnects()
         self.measDataComboBoxesInit()
-        self.uiXYZComboBoxesConnects()
+        # self.uiXYZComboBoxesConnects()
         self.dynamicalPlotElementsConnects()
 
         # plot everything available
@@ -106,7 +108,7 @@ class PlottingCtrl(QObject):
         """
         Load the available data into the combo boxes for the x, y, and z axes.
         """
-        zDataNames = list(self.measurementData._zCandidates.keys())
+        zDataNames = list(self.measurementData._currentMeasData._zCandidates.keys())
         self.measComboBoxes["z"].clear()
         self.measComboBoxes["z"].addItems(zDataNames)
         self.measComboBoxes["z"].setCurrentText(self.measurementData.currentZ.name)
@@ -131,15 +133,18 @@ class PlottingCtrl(QObject):
     #     self.measComboBoxes["y"].activated.connect(self.yAxisUpdate)
     
     def setupXYDataBoxes(self):
+        if isinstance(self.measurementData._currentMeasData, ImageMeasurementData):
+            return
+
         self.measComboBoxes["x"].clear()
-        xDataNames = list(self.measurementData._currentXCompatibles.keys())
+        xDataNames = list(self.measurementData._currentMeasData._currentXCompatibles.keys())
         self.measComboBoxes["x"].addItems(xDataNames)
-        self.measComboBoxes["x"].setCurrentText(self.measurementData.currentX.name)
+        self.measComboBoxes["x"].setCurrentText(self.measurementData._currentMeasData.currentX.name)
 
         self.measComboBoxes["y"].clear()
-        yDataNames = list(self.measurementData._currentYCompatibles.keys())
+        yDataNames = list(self.measurementData._currentMeasData._currentYCompatibles.keys())
         self.measComboBoxes["y"].addItems(yDataNames)
-        self.measComboBoxes["y"].setCurrentText(self.measurementData.currentY.name)
+        self.measComboBoxes["y"].setCurrentText(self.measurementData._currentMeasData.currentY.name)
 
     # @Slot(int)
     # def zDataUpdate(self, itemIndex: int):
@@ -369,10 +374,10 @@ class PlottingCtrl(QObject):
                     self.activeDataset.remove(index)
                     return
                 
-            if self.canvasTools["snapY"].isChecked():
-                x_list = self.measurementData.currentX.data
-                y_list = self.measurementData.currentY.data
-                z_data = self.measurementData.currentZ.data
+            if self.canvasTools["snapY"].isChecked() and isinstance(self.measurementData._currentMeasData, NumericalMeasurementData):
+                x_list = self.measurementData._currentMeasData.currentX.data
+                y_list = self.measurementData._currentMeasData.currentY.data
+                z_data = self.measurementData._currentMeasData.currentZ.data
                 # calculate half index range as 5x linewidth
                 linewidth = 0.02  # GHz
                 half_y_range = linewidth * 5
@@ -456,8 +461,12 @@ class PlottingCtrl(QObject):
             self.axes.xaxis.set_major_locator(mpl.ticker.AutoLocator())
             self.axes.xaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
 
-            self.axes.set_xlabel(self.measurementData.currentX.name)
-            self.axes.set_ylabel(self.measurementData.currentY.name)
+            if isinstance(self.measurementData._currentMeasData, ImageMeasurementData):
+                self.axes.set_xlabel("x")
+                self.axes.set_ylabel("y")
+            else:
+                self.axes.set_xlabel(self.measurementData._currentMeasData.currentX.name)
+                self.axes.set_ylabel(self.measurementData._currentMeasData.currentY.name)
 
         self.axes.figure.canvas.draw()
 
