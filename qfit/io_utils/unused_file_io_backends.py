@@ -26,7 +26,7 @@ except ImportError:
 else:
     _HAS_H5PY = True
 
-import qfit.io_utils.file_io as io
+import qfit.io_utils.unused_file_io as io
 
 
 class IOWriter(ABC):

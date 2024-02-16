@@ -106,7 +106,7 @@ class PlottingCtrl(QObject):
         """
         Load the available data into the combo boxes for the x, y, and z axes.
         """
-        zDataNames = list(self.measurementData.zCandidates.keys())
+        zDataNames = list(self.measurementData._zCandidates.keys())
         self.measComboBoxes["z"].clear()
         self.measComboBoxes["z"].addItems(zDataNames)
         self.measComboBoxes["z"].setCurrentText(self.measurementData.currentZ.name)
@@ -125,34 +125,34 @@ class PlottingCtrl(QObject):
 
         self.measPlotSettings["color"].currentTextChanged.connect(self.mplCanvas.updateColorMap)
 
-    def uiXYZComboBoxesConnects(self):
-        self.measComboBoxes["z"].activated.connect(self.zDataUpdate)
-        self.measComboBoxes["x"].activated.connect(self.xAxisUpdate)
-        self.measComboBoxes["y"].activated.connect(self.yAxisUpdate)
+    # def uiXYZComboBoxesConnects(self):
+    #     self.measComboBoxes["z"].activated.connect(self.zDataUpdate)
+    #     self.measComboBoxes["x"].activated.connect(self.xAxisUpdate)
+    #     self.measComboBoxes["y"].activated.connect(self.yAxisUpdate)
     
     def setupXYDataBoxes(self):
         self.measComboBoxes["x"].clear()
-        xDataNames = list(self.measurementData.currentXCompatibles.keys())
+        xDataNames = list(self.measurementData._currentXCompatibles.keys())
         self.measComboBoxes["x"].addItems(xDataNames)
         self.measComboBoxes["x"].setCurrentText(self.measurementData.currentX.name)
 
         self.measComboBoxes["y"].clear()
-        yDataNames = list(self.measurementData.currentYCompatibles.keys())
+        yDataNames = list(self.measurementData._currentYCompatibles.keys())
         self.measComboBoxes["y"].addItems(yDataNames)
         self.measComboBoxes["y"].setCurrentText(self.measurementData.currentY.name)
 
-    @Slot(int)
-    def zDataUpdate(self, itemIndex: int):
-        self.measurementData.setCurrentZ(itemIndex)
-        self.setupXYDataBoxes()
+    # @Slot(int)
+    # def zDataUpdate(self, itemIndex: int):
+    #     self.measurementData.setCurrentZ(itemIndex)
+    #     self.setupXYDataBoxes()
 
-    @Slot(int)
-    def xAxisUpdate(self, itemIndex: int):
-        self.measurementData.setCurrentX(itemIndex)
+    # @Slot(int)
+    # def xAxisUpdate(self, itemIndex: int):
+    #     self.measurementData.setCurrentX(itemIndex)
 
-    @Slot(int)
-    def yAxisUpdate(self, itemIndex: int):
-        self.measurementData.setCurrentY(itemIndex)
+    # @Slot(int)
+    # def yAxisUpdate(self, itemIndex: int):
+    #     self.measurementData.setCurrentY(itemIndex)
 
     @Slot()
     def swapXY(self):

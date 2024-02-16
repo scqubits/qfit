@@ -38,9 +38,19 @@ def importMeasurementData(
             parent.closeApp()
             raise StopExecution
 
-        fileData = readMeasurementFile(fileName)
-
-        if fileData is None:
+        try:
+            fileData = readMeasurementFile(fileName)
+        except NotImplementedError as e:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Warning)
+            msg.setText("Error opening file.")
+            msg.setInformativeText(
+                "The selected file format is not supported. Because: " + str(e)
+            )
+            msg.setWindowTitle("Error")
+            _ = msg.exec_()
+            continue
+        except (ValueError, OSError, Exception) as e:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Warning)
             msg.setText("Error opening file.")
@@ -53,9 +63,7 @@ def importMeasurementData(
         else:
             break
 
-    measurementData = fileData
-
-    return measurementData
+    return fileData
 
 def importProject(
     parent,
@@ -86,44 +94,3 @@ def importProject(
             break
 
     return registry
-
-
-# maybe broken, and not needed anymore
-
-# def importFile(parent=None):
-#     """
-#     Opens a standard file dialog box for the user to select a file to be opened. Supported files types are
-#     - .h5 / .hdf5  (generic h5, Labber, qfit)
-#     - .mat (Matlab file)
-#     - .csv
-#     - .jpg, .png
-
-#     Data is inspected and categorized as data specifying the two axes (xData, yData) and spectroscopy measurement data
-#     (zData). In the case of a qfit .h5 file, additional data containing the extracted fit data points as well as
-#     calibration data is obtained and returned alongside.
-
-#     Returns
-#     -------
-#     MeasurementData, QfitData
-#     """
-#     fileData = importMeasurementData(parent=parent, home=None)
-
-#     if isinstance(fileData, fit.QfitData):
-#         extractedData = fileData
-#         if fileData.image_data is not None:
-#             measurementData = ImageMeasurementData("image_data", fileData.image_data)
-
-#         else:
-#             measurementData = NumericalMeasurementData(
-#                 {
-#                     "xData": fileData.x_data,
-#                     "yData": fileData.y_data,
-#                     "zData": fileData.z_data,
-#                 },
-#                 {"zData": fileData.z_data},
-#             )
-#     else:
-#         measurementData = fileData
-#         extractedData = None
-
-#     return measurementData, extractedData

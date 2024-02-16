@@ -226,6 +226,14 @@ class AllExtractedData(
 
     # Properties =======================================================
     @property
+    def currentFigName(self):
+        return self._currentFigName
+
+    @property
+    def currentRow(self):
+        return self._currentRow
+    
+    @property
     def _currentSpectrum(self) -> ExtrSpectra:
         return self._fullSpectra[self.currentFigName]
 
@@ -255,9 +263,6 @@ class AllExtractedData(
         
     def rowCount(self, *args) -> int:
         return len(self._fullSpectra[self.currentFigName])
-    
-    def currentItem(self):
-        return self.data(self.index(self.currentRow, 0), role=Qt.EditRole)
 
     def currentTransition(self) -> ExtrTransition:
         return self._currentSpectrum[self.currentRow]
@@ -349,14 +354,6 @@ class AllExtractedData(
         self._fullSpectra.swapXY()  
         self.emitXUpdated()
         self.emitReadyToPlot()
-
-    @property
-    def currentFigName(self):
-        return self._currentFigName
-
-    @property
-    def currentRow(self):
-        return self._currentRow
     
     @Slot(str)
     def switchFig(self, figName: str):

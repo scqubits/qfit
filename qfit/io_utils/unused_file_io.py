@@ -14,7 +14,7 @@ Helper routines for writing data to files.
 
 import os
 
-import qfit.io_utils.file_io_serializers as io_serializers
+import qfit.io_utils.unused_file_io_serializers as io_serializers
 
 FILE_TYPES = [".h5 | .hdf5", ".csv"]
 
@@ -129,7 +129,7 @@ class FileIOFactory:
         -------
         IOWriter
         """
-        import qfit.io_utils.file_io_backends as io_backends
+        import qfit.io_utils.unused_file_io_backends as io_backends
 
         _, suffix = os.path.splitext(file_name)
         if suffix == ".csv":
@@ -158,7 +158,7 @@ class FileIOFactory:
         if get_external_reader:
             return get_external_reader(file_name, file_handle=file_handle)
 
-        import qfit.io_utils.file_io_backends as io_backends
+        import qfit.io_utils.unused_file_io_backends as io_backends
 
         _, suffix = os.path.splitext(file_name)
         if suffix in (".h5", ".hdf5"):

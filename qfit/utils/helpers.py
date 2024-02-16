@@ -28,6 +28,7 @@ from PySide6.QtGui import QDoubleValidator
 from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate, QWidget
 
 from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import TypeVar, Generic
 
 
 class EditDelegate(QStyledItemDelegate):
@@ -56,26 +57,31 @@ class DoubleValidator(QDoubleValidator):
         self.setLocale(localeSetting)
 
 
-class OrderedDictMod(OrderedDict):
-    @property
-    def valList(self):
-        return list(self.values())
 
-    @property
-    def keyList(self):
-        return list(self.keys())
+Key = TypeVar('Key')
+Value = TypeVar('Value')
 
-    def itemByIndex(self, itemIndex):
-        return DataItem(self.keyList[itemIndex], self.valList[itemIndex])
-
-    def itemList(self):
-        return [DataItem(key, val) for key, val in self.items()]
-
-
-class DataItem:
+class DictItem(Generic[Key, Value]):
     def __init__(self, name, data):
         self.name = name
         self.data = data
+
+
+class OrderedDictMod(OrderedDict[Key, Value], Generic[Key, Value]):
+    @property
+    def valList(self) -> List[Value]:
+        return list(self.values())
+
+    @property
+    def keyList(self) -> List[Key]:
+        return list(self.keys())
+
+    def itemByIndex(self, itemIndex: int) -> DictItem[Key, Value]:
+        return DictItem(self.keyList[itemIndex], self.valList[itemIndex])
+
+    def itemList(self) -> List[DictItem[Key, Value]]:
+        return [DictItem(key, val) for key, val in self.items()]
+
 
 
 def isValid2dArray(array):
