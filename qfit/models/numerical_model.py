@@ -69,8 +69,8 @@ class QuantumModel(QObject):
         self._fullExtr = FullExtr()
 
         # calibration
-        self._sweepParamSets: Dict[str, HSParamSet] = {
-            figName: HSParamSet(self._hilbertspace, QMSweepParam) for figName in self._figNames
+        self._sweepParamSets: Dict[str, HSParamSet[QMSweepParam]] = {
+            figName: HSParamSet[QMSweepParam](self._hilbertspace, QMSweepParam) for figName in self._figNames
         }
         self._yCaliFunc: Callable = lambda x: x
         self._yInvCaliFunc: Callable = lambda x: x
@@ -314,10 +314,12 @@ class QuantumModel(QObject):
             def updateHilbertspace(x: float) -> None:
                 # map x to the rawX (voltage vector)
                 rawX = spectra.rawXByX(x)
-                # map rawX to the parameter values
-                updatedSweepParam = sweepParamSet.......??
-                # update the HilbertSpace object
-                updatedSweepParam.setParameterForParent()
+                for _, paramDictByParent in sweepParamSet.items():
+                    for _, param in paramDictByParent.items():
+                        # map rawX to the parameter values
+                        param.setValueWithCali(rawX)
+                        # update the HilbertSpace object
+                        param.setParameterForParent()
 
             updateHSDict[figName] = updateHilbertspace
 

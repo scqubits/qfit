@@ -4,7 +4,7 @@ from qfit.widgets.mpl_canvas import MplFigureCanvas
 
 import numpy as np
 import matplotlib as mpl
-from qfit.utils.helpers import y_snap
+from qfit.utils.helpers import y_snap, OrderedDictMod
 from qfit.models.measurement_data import NumericalMeasurementData, ImageMeasurementData
 
 from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal
@@ -344,6 +344,12 @@ class PlottingCtrl(QObject):
         if event.xdata is None or event.ydata is None:
             return
         
+        xName = self.measurementData.currentMeasData.currentX.name
+        yName = self.measurementData.currentMeasData.currentY.name
+        xyDict = OrderedDictMod({
+            xName: event.xdata,
+            yName: event.ydata,
+        })
         rawX = self.measurementData.currentMeasData.rawXByCurrentX(event.xdata)
         
         # calibration mode
@@ -364,28 +370,27 @@ class PlottingCtrl(QObject):
         if self.dataDestination == "EXTRACT":
             current_data = self.activeDataset.allPoints()
 
-
             # x snap
             if self.xSnap:
                 snappedX = self.mplCanvas.cursor.closest_line(event.xdata)
                 rawX = self.measurementData.currentMeasData.rawXByCurrentX(snappedX)
-                x1y1 = np.asarray([snappedX, event.ydata])
+                xyDict[xName] = snappedX
             else:
-                x1y1 = np.asarray([event.xdata, event.ydata])
                 # turn on the horizontal snap automatically, if the user turned it off
                 self.canvasTools["snapX"].setChecked(True)
 
-
             # remove the point if it is close to another point
             for index, x2y2 in enumerate(current_data.transpose()):
-                if self.isRelativelyClose(x1y1, x2y2):
+                if self.isRelativelyClose(np.array(xyDict.valList), x2y2):
                     self.activeDataset.remove(index)
                     return
                 
+            # y snap
             if self.canvasTools["snapY"].isChecked() and isinstance(self.measurementData.currentMeasData, NumericalMeasurementData):
                 x_list = self.measurementData.currentMeasData.currentX.data
                 y_list = self.measurementData.currentMeasData.currentY.data
                 z_data = self.measurementData.currentMeasData.currentZ.data
+
                 # calculate half index range as 5x linewidth
                 linewidth = 0.02  # GHz
                 half_y_range = linewidth * 5
@@ -394,16 +399,16 @@ class PlottingCtrl(QObject):
                         x_list=x_list,
                         y_list=y_list,
                         z_data=z_data,
-                        user_selected_xy=x1y1,
+                        user_selected_xy=xyDict.valList,
                         half_y_range=half_y_range,
                         mode="lorentzian",
                     )
-                    x1y1_snapped = np.asarray([x1y1[0], snapped_y1])
-                    self.activeDataset.append(x1y1_snapped, rawX.valList)
+                    xyDict[yName] = snapped_y1
+                    
                 except RuntimeError:
-                    self.activeDataset.append(x1y1, rawX.valList)
-            else:
-                self.activeDataset.append(x1y1, rawX.valList)
+                    pass
+
+            self.activeDataset.append(xyDict, rawX)
 
     @Slot()
     def canvasMouseMonitoring(self, event):

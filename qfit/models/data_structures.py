@@ -1,9 +1,11 @@
 from abc import ABC, ABCMeta, abstractmethod, abstractproperty
-from typing import List, Tuple, Union, Dict, Any, Optional, overload, Literal
+from typing import List, Tuple, Union, Dict, Any, Optional, overload, Literal, Callable
 
 import numpy as np
 from scqubits.core.storage import SpectrumData
 import warnings
+from datetime import datetime
+from copy import deepcopy
 
 from matplotlib.axes import Axes
 from matplotlib.collections import PathCollection, QuadMesh
@@ -11,7 +13,6 @@ from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
 from matplotlib.artist import Artist
 
-from datetime import datetime
 
 from qfit.models.parameter_settings import ParameterType
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
@@ -148,50 +149,66 @@ class ExtrTransition:
     def __init__(
         self, 
         name: str = "",
-        data: np.ndarray = np.empty(shape=(2, 0), dtype=np.float_),   
-        rawX: List[np.ndarray] = [],
-        tag: Tag = Tag(),
     ) -> None:
         self.name = name
-        self.data = data 
-        self._rawX = rawX 
-        self.tag = tag
+
+        self._data: OrderedDictMod[str, np.ndarray] = OrderedDictMod() 
+        self.rawX: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
+        self.tag = Tag()
+
+    @property
+    def data(self) -> np.ndarray:
+        return np.array(self._data.valList)
 
     def count(self) -> int:
         return self.data.shape[1]
     
-    def appendSorted(self, data: np.ndarray, rawX: np.ndarray):
+    def append(self, data: OrderedDictMod[str, float], rawX: OrderedDictMod[str, float]):
         """
         It always keeps the data sorted by the x value.
         """
         if self.count() == 0:
-            self.data = np.insert(self.data, 0, data, axis=1)
-            self._rawX.append(rawX)
+            assert len(data) == 2, "The data should have two elements: x & y"
+            for key, value in data.items():
+                self._data[key] = np.array([value])
+            for key, value in rawX.items():
+                self.rawX[key] = np.array([value])
             return
+        
+        assert len(data) == 2, "The data should have two elements: x & y"
+        assert len(rawX) == len(self.rawX), "The rawX should have the same length as the existing rawX"
 
-        idx = np.searchsorted(self.data[0], data[0])
-        self.data = np.insert(self.data, idx, data, axis=1)
-        self._rawX.insert(idx, rawX)
+        for key, value in data.items():
+            self._data[key] = np.append(self._data[key], value)
+        for key, value in rawX.items():
+            self.rawX[key] = np.append(self.rawX[key], value)
 
     def remove(self, index: int):
-        self.data = np.delete(self.data, index, axis=1)
-        self._rawX.pop(index)
+        for key in self._data.keys():
+            self._data[key] = np.delete(self._data[key], index)
+        for key in self.rawX.keys():
+            self.rawX[key] = np.delete(self.rawX[key], index)
 
     def swapXY(self):
         """
         It happens only when rawX has shape (N, 1), where there is a chance
         for confusion between x and y.
         """
-        if len(self._rawX) > 0:
-            if self._rawX[0].shape[0] != 1:
+        if self.count() > 0:
+            if len(self.rawX.keys()) > 1:
                 raise ValueError(
                     "The rawX data has more than one dimension, "
                     "meaning that there should be no chance for confusion."
                     "X and Y should be already distinguished."
                 )
 
-        self.data = self.data[[1, 0], :]
-        self._rawX = list(self.data[0, :])
+        # only when raw x only has one dimension
+        self._data = OrderedDictMod(
+            list(self._data.items())[::-1]
+        )
+        self.rawX = OrderedDictMod(
+            list(self._data.items())[0:1]
+        )       # raw x is x
         
 
 class ExtrSpectra(list[ExtrTransition]):
@@ -228,11 +245,14 @@ class ExtrSpectra(list[ExtrTransition]):
         """
         return np.concatenate(self.allData(), axis=1)
     
-    def allRawX(self) -> List[List[np.ndarray]]:
-        return [transition._rawX for transition in self]
-    
-    def allRawXConcated(self) -> List[np.ndarray]:
-        return [rawX for rawXList in self.allRawX() for rawX in rawXList]
+    def allRawXConcated(self) -> OrderedDictMod[str, np.ndarray]:
+        concatedRawX = deepcopy(self[0].rawX)
+
+        for transition in self[1:]:
+            for key, value in transition.rawX.items():
+                concatedRawX[key] = np.concatenate([concatedRawX[key], value])
+
+        return concatedRawX
             
     def distinctSortedX(self) -> np.ndarray:
         """
@@ -245,26 +265,37 @@ class ExtrSpectra(list[ExtrTransition]):
         for transition in self:
             transition.swapXY()
 
-    def rawXByX(self, x: float) -> np.ndarray:
+    def rawXByX(self, x: float) -> OrderedDictMod[str, float]:
         """
         Return the rawX data corresponding to the x value. Their relationship
         is linear. 
         """
-        allData = self.allDataConcated()
+        allX = self.allDataConcated()[0]
         allRawX = self.allRawXConcated()
 
         if self.count() < 2:
             # try to find the exact x value
-            for idx, x_ in enumerate(allData[0]):
+            for idx, x_ in enumerate(allX):
                 if x_ == x:
-                    return allRawX[idx]
+                    return OrderedDictMod(
+                        {key: value[idx] for key, value in allRawX.items()}
+                    )
             raise ValueError("No data found for the x value")
             
         # calculate a linear mapping between the x values and the rawX data
-        x1, x2 = allData[0, 0], allData[0, -1]
-        rawX1, rawX2 = allRawX[0], allRawX[-1]
+        # with the smallest and largest x values
+        minIdx = np.argmin(allX)
+        maxIdx = np.argmax(allX)
+        minX = allX[minIdx]
+        maxX = allX[maxIdx]
 
-        return rawX1 + (rawX2 - rawX1) / (x2 - x1) * (x - x1)
+        rawX = OrderedDictMod()
+        for key, value in allRawX.items():
+            minRawX = value[minIdx]
+            maxRawX = value[maxIdx]
+            rawX[key] = minRawX + (maxRawX - minRawX) / (maxX - minX) * (x - minX)
+
+        return rawX
 
 
 class FullExtr(dict[str, ExtrSpectra]):
@@ -626,6 +657,7 @@ class QMSweepParam(ParamBase):
     paramType: ParameterType
         The type of the parameter
     """
+    calibration_func: Callable[[Dict[str, float]], float]
 
     attrToRegister = ["value"]
 
@@ -639,7 +671,6 @@ class QMSweepParam(ParamBase):
         super().__init__(name=name, parent=parent, paramType=paramType)
 
         self._value = value
-        self.calibration_func = None
 
     def setCalibrationFunc(self, func):
         """
@@ -662,6 +693,11 @@ class QMSweepParam(ParamBase):
         """
         self._value = self._toIntAsNeeded(value)
 
+    def setValueWithCali(self, value: Union[int, float]):
+        """
+        Set the value of the parameter with the calibration function
+        """
+        self.value = self.calibration_func(value)
 
 class QMSliderParam(DispParamBase):
     """

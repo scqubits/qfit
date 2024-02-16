@@ -10,7 +10,7 @@
 ############################################################################
 
 
-from typing import Union, Literal, List, Callable, Tuple, overload
+from typing import Union, Literal, List, Callable, Tuple, overload, TYPE_CHECKING
 
 import numpy as np
 from PySide6 import QtGui
@@ -32,6 +32,10 @@ from qfit.models.data_structures import (
 from qfit.models.registry import Registrable, RegistryEntry
 
 from copy import deepcopy, copy
+
+if TYPE_CHECKING:
+    from qfit.utils.helpers import OrderedDictMod
+
 
 class ActiveExtractedData(QAbstractTableModel):
     """This class holds one data set, as extracted by markers on the canvas. """
@@ -120,11 +124,11 @@ class ActiveExtractedData(QAbstractTableModel):
         self._transition.remove(index)
         self.emitDataUpdated()
 
-    def append(self, xy: np.ndarray, rawX: Union[np.ndarray, List]):
+    def append(self, xy: OrderedDictMod[str, float], rawX: OrderedDictMod[str, float]):
         """
         Public method to append a new point to the data set.
         """
-        self._transition.appendSorted(xy, np.asarray(rawX))
+        self._transition.append(xy, rawX)
         self.emitDataUpdated()
     
     @Slot(ExtrTransition)
