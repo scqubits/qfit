@@ -15,6 +15,7 @@ from datetime import datetime
 
 from qfit.models.parameter_settings import ParameterType
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
+from qfit.utils.helpers import OrderedDictMod
 
 from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.qubit_base import QuantumSystem
@@ -153,7 +154,7 @@ class ExtrTransition:
     ) -> None:
         self.name = name
         self.data = data 
-        self.rawX = rawX 
+        self._rawX = rawX 
         self.tag = tag
 
     def count(self) -> int:
@@ -165,24 +166,24 @@ class ExtrTransition:
         """
         if self.count() == 0:
             self.data = np.insert(self.data, 0, data, axis=1)
-            self.rawX.append(rawX)
+            self._rawX.append(rawX)
             return
 
         idx = np.searchsorted(self.data[0], data[0])
         self.data = np.insert(self.data, idx, data, axis=1)
-        self.rawX.insert(idx, rawX)
+        self._rawX.insert(idx, rawX)
 
     def remove(self, index: int):
         self.data = np.delete(self.data, index, axis=1)
-        self.rawX.pop(index)
+        self._rawX.pop(index)
 
     def swapXY(self):
         """
         It happens only when rawX has shape (N, 1), where there is a chance
         for confusion between x and y.
         """
-        if len(self.rawX) > 0:
-            if self.rawX[0].shape[0] != 1:
+        if len(self._rawX) > 0:
+            if self._rawX[0].shape[0] != 1:
                 raise ValueError(
                     "The rawX data has more than one dimension, "
                     "meaning that there should be no chance for confusion."
@@ -190,7 +191,7 @@ class ExtrTransition:
                 )
 
         self.data = self.data[[1, 0], :]
-        self.rawX = list(self.data[0, :])
+        self._rawX = list(self.data[0, :])
         
 
 class ExtrSpectra(list[ExtrTransition]):
@@ -228,7 +229,7 @@ class ExtrSpectra(list[ExtrTransition]):
         return np.concatenate(self.allData(), axis=1)
     
     def allRawX(self) -> List[List[np.ndarray]]:
-        return [transition.rawX for transition in self]
+        return [transition._rawX for transition in self]
     
     def allRawXConcated(self) -> List[np.ndarray]:
         return [rawX for rawXList in self.allRawX() for rawX in rawXList]

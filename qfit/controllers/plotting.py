@@ -108,11 +108,11 @@ class PlottingCtrl(QObject):
         """
         Load the available data into the combo boxes for the x, y, and z axes.
         """
-        zDataNames = list(self.measurementData._currentMeasData._zCandidates.keys())
+        zDataNames = list(self.measurementData.currentMeasData._zCandidates.keys())
         self.measComboBoxes["z"].clear()
         self.measComboBoxes["z"].addItems(zDataNames)
         self.measComboBoxes["z"].setCurrentText(self.measurementData.currentZ.name)
-        self.setupXYDataBoxes()
+        # self.setupXYDataBoxes()
 
     def measPlotSettingConnects(self):
         """Connect the UI elements related to display of data"""
@@ -127,29 +127,29 @@ class PlottingCtrl(QObject):
 
         self.measPlotSettings["color"].currentTextChanged.connect(self.mplCanvas.updateColorMap)
 
-    # def uiXYZComboBoxesConnects(self):
-    #     self.measComboBoxes["z"].activated.connect(self.zDataUpdate)
-    #     self.measComboBoxes["x"].activated.connect(self.xAxisUpdate)
-    #     self.measComboBoxes["y"].activated.connect(self.yAxisUpdate)
+    def uiXYZComboBoxesConnects(self):
+        self.measComboBoxes["z"].activated.connect(self.zDataUpdate)
+        # self.measComboBoxes["x"].activated.connect(self.xAxisUpdate)
+        # self.measComboBoxes["y"].activated.connect(self.yAxisUpdate)
     
-    def setupXYDataBoxes(self):
-        if isinstance(self.measurementData._currentMeasData, ImageMeasurementData):
-            return
+    # def setupXYDataBoxes(self):
+    #     if isinstance(self.measurementData._currentMeasData, ImageMeasurementData):
+    #         return
 
-        self.measComboBoxes["x"].clear()
-        xDataNames = list(self.measurementData._currentMeasData._currentXCompatibles.keys())
-        self.measComboBoxes["x"].addItems(xDataNames)
-        self.measComboBoxes["x"].setCurrentText(self.measurementData._currentMeasData.currentX.name)
+    #     self.measComboBoxes["x"].clear()
+    #     xDataNames = list(self.measurementData._currentMeasData._currentXCompatibles.keys())
+    #     self.measComboBoxes["x"].addItems(xDataNames)
+    #     self.measComboBoxes["x"].setCurrentText(self.measurementData._currentMeasData.currentX.name)
 
-        self.measComboBoxes["y"].clear()
-        yDataNames = list(self.measurementData._currentMeasData._currentYCompatibles.keys())
-        self.measComboBoxes["y"].addItems(yDataNames)
-        self.measComboBoxes["y"].setCurrentText(self.measurementData._currentMeasData.currentY.name)
+    #     self.measComboBoxes["y"].clear()
+    #     yDataNames = list(self.measurementData._currentMeasData._currentYCompatibles.keys())
+    #     self.measComboBoxes["y"].addItems(yDataNames)
+    #     self.measComboBoxes["y"].setCurrentText(self.measurementData._currentMeasData.currentY.name)
 
-    # @Slot(int)
-    # def zDataUpdate(self, itemIndex: int):
-    #     self.measurementData.setCurrentZ(itemIndex)
-    #     self.setupXYDataBoxes()
+    @Slot(int)
+    def zDataUpdate(self, itemIndex: int):
+        self.measurementData.setCurrentZ(itemIndex)
+        # self.setupXYDataBoxes()
 
     # @Slot(int)
     # def xAxisUpdate(self, itemIndex: int):
@@ -171,7 +171,7 @@ class PlottingCtrl(QObject):
         # maybe: self.calibrationData.swapXY()
 
         self.measurementData.swapXY()
-        self.setupXYDataBoxes()
+        # self.setupXYDataBoxes()
 
         self.allDatasets.swapXY()
 
@@ -343,7 +343,9 @@ class PlottingCtrl(QObject):
             return
         if event.xdata is None or event.ydata is None:
             return
-
+        
+        rawX = self.measurementData.currentMeasData.rawXByCurrentX(event.xdata)
+        
         # calibration mode
         if self.dataDestination in ["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2"]:
             data = event.xdata if (self.dataDestination[-2] == "X") else event.ydata
@@ -362,22 +364,28 @@ class PlottingCtrl(QObject):
         if self.dataDestination == "EXTRACT":
             current_data = self.activeDataset.allPoints()
 
+
+            # x snap
             if self.xSnap:
-                x1y1 = np.asarray([self.mplCanvas.cursor.closest_line(event.xdata), event.ydata])
+                snappedX = self.mplCanvas.cursor.closest_line(event.xdata)
+                rawX = self.measurementData.currentMeasData.rawXByCurrentX(snappedX)
+                x1y1 = np.asarray([snappedX, event.ydata])
             else:
                 x1y1 = np.asarray([event.xdata, event.ydata])
                 # turn on the horizontal snap automatically, if the user turned it off
                 self.canvasTools["snapX"].setChecked(True)
 
+
+            # remove the point if it is close to another point
             for index, x2y2 in enumerate(current_data.transpose()):
                 if self.isRelativelyClose(x1y1, x2y2):
                     self.activeDataset.remove(index)
                     return
                 
-            if self.canvasTools["snapY"].isChecked() and isinstance(self.measurementData._currentMeasData, NumericalMeasurementData):
-                x_list = self.measurementData._currentMeasData.currentX.data
-                y_list = self.measurementData._currentMeasData.currentY.data
-                z_data = self.measurementData._currentMeasData.currentZ.data
+            if self.canvasTools["snapY"].isChecked() and isinstance(self.measurementData.currentMeasData, NumericalMeasurementData):
+                x_list = self.measurementData.currentMeasData.currentX.data
+                y_list = self.measurementData.currentMeasData.currentY.data
+                z_data = self.measurementData.currentMeasData.currentZ.data
                 # calculate half index range as 5x linewidth
                 linewidth = 0.02  # GHz
                 half_y_range = linewidth * 5
@@ -391,11 +399,11 @@ class PlottingCtrl(QObject):
                         mode="lorentzian",
                     )
                     x1y1_snapped = np.asarray([x1y1[0], snapped_y1])
-                    self.activeDataset.append(*x1y1_snapped)
+                    self.activeDataset.append(x1y1_snapped, rawX.valList)
                 except RuntimeError:
-                    self.activeDataset.append(*x1y1)
+                    self.activeDataset.append(x1y1, rawX.valList)
             else:
-                self.activeDataset.append(*x1y1)
+                self.activeDataset.append(x1y1, rawX.valList)
 
     @Slot()
     def canvasMouseMonitoring(self, event):
@@ -461,12 +469,12 @@ class PlottingCtrl(QObject):
             self.axes.xaxis.set_major_locator(mpl.ticker.AutoLocator())
             self.axes.xaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
 
-            if isinstance(self.measurementData._currentMeasData, ImageMeasurementData):
+            if isinstance(self.measurementData.currentMeasData, ImageMeasurementData):
                 self.axes.set_xlabel("x")
                 self.axes.set_ylabel("y")
             else:
-                self.axes.set_xlabel(self.measurementData._currentMeasData.currentX.name)
-                self.axes.set_ylabel(self.measurementData._currentMeasData.currentY.name)
+                self.axes.set_xlabel(self.measurementData.currentMeasData.currentX.name)
+                self.axes.set_ylabel(self.measurementData.currentMeasData.currentY.name)
 
         self.axes.figure.canvas.draw()
 

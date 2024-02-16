@@ -51,10 +51,7 @@ from PySide6.QtWidgets import (
 from qfit.models.calibration_data import CalibrationData
 from qfit.widgets.calibration import CalibrationView
 from qfit.utils.helpers import (
-    transposeEach,
-    clearChildren,
     executed_in_ipython,
-    StopExecution,
 )
 from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
 from qfit.controllers.help_tooltip import HelpButtonCtrl

@@ -120,11 +120,11 @@ class ActiveExtractedData(QAbstractTableModel):
         self._transition.remove(index)
         self.emitDataUpdated()
 
-    def append(self, xy: np.ndarray, rawX: np.ndarray):
+    def append(self, xy: np.ndarray, rawX: Union[np.ndarray, List]):
         """
         Public method to append a new point to the data set.
         """
-        self._transition.appendSorted(xy, rawX)
+        self._transition.appendSorted(xy, np.asarray(rawX))
         self.emitDataUpdated()
     
     @Slot(ExtrTransition)

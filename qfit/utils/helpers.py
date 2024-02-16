@@ -62,9 +62,9 @@ Key = TypeVar('Key')
 Value = TypeVar('Value')
 
 class DictItem(Generic[Key, Value]):
-    def __init__(self, name, data):
-        self.name = name
-        self.data = data
+    def __init__(self, name: Key, data: Value):
+        self.name: Key = name
+        self.data: Value = data
 
 
 class OrderedDictMod(OrderedDict[Key, Value], Generic[Key, Value]):
