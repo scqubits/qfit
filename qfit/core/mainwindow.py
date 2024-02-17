@@ -252,7 +252,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.ui.mplFigureCanvas,
             (
                 self.measurementData,
-                self.calibrationData,
+                self.caliParamModel,
                 self.allDatasets,
                 self.activeDataset,
                 self.quantumModel,
@@ -338,73 +338,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # self.calibrationData = CalibrationData()
         # self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
 
-    # def uiCalibrationConnects(self):
-    #     """
-    #     CONTROLLER
-    #     Connect UI elements for data calibration."""
-    #     for label in self.calibrationButtons.keys():
-    #         self.calibrationButtons[label].clicked.connect(
-    #             partial(self.onCalibrationButtonClicked, label)
-    #         )
 
-    #     for button in self.pageButtons.values():
-    #         button.clicked.connect(self.turnOffCalibration)
 
-    #     for lineEdit in list(self.rawLineEdits.values()) + list(
-    #         self.mapLineEdits.values()
-    #     ):
-    #         lineEdit.editingFinished.connect(self.updateCalibration)
 
-    #     self.ui.swapXYButton.clicked.connect(self.swapXY)
 
-    #     self.calibrationData.caliClicked.connect(self.postCaliPointSelectedOnCanvas)
 
-    # @Slot()
-    # def turnOffCalibration(self):
-    #     """
-    #     CALIBRATION VIEW
-    #     Turn off calibration when the calibration check box is unchecked manually.
-    #     """
-    #     # model off and plot stuff off
-    #     if self.calibrationData.calibrationIsOn:
-    #         self.calibrationData.calibrationOff()
 
-    #     # cali view off
-    #     self._resetHighlightButtons()
-
-    # @Slot()
-    # def postCaliPointSelectedOnCanvas(self, label: str, data: float):
-    #     """
-    #     CALIBRATION VIEW
-    #     """
-    #     self._highlightCaliButton(self.calibrationButtons[label], reset=True)
-    #     # update the raw line edits by the value of the clicked point
-    #     self.rawLineEdits[label].setText(str(data))
-    #     self.rawLineEdits[label].home(False)
-    #     # highlight the map line edit
-    #     self.mapLineEdits[label].selectAll()
-    #     self.mapLineEdits[label].setFocus()
-
-    # def calibrationButtonIsChecked(self):
-    #     """
-    #     CALIBRATION VIEW?
-    #     Check if any of the calibration buttons is checked
-    #     """
-    #     for label in self.calibrationButtons:
-    #         if self.calibrationButtons[label].isChecked():
-    #             return True
-    #     return False
-
-    # def line_select_callback(self, eclick, erelease):
-    #     """
-    #     Callback for line selection.
-
-    #     *eclick* and *erelease* are the press and release events.
-    #     """
-    #     x1, y1 = eclick.xdata, eclick.ydata
-    #     x2, y2 = erelease.xdata, erelease.ydata
-    # print(f"({x1:3.2f}, {y1:3.2f}) --> ({x2:3.2f}, {y2:3.2f})")
-    # print(f" The buttons you used were: {eclick.button} {erelease.button}")
 
     # def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
     #     """
@@ -455,7 +394,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.activeDataset = ActiveExtractedData()
         self.allDatasets = AllExtractedData(figNames=["Figure"])
-        self.allDatasets.setCalibrationFunc(self.calibrationData.calibrateDataset)
+        # self.allDatasets.setCalibrationFunc(self.calibrationData.calibrateDataset)
 
         self.extractingView = ExtractingView(
             [subsys.id_str for subsys in hilbertspace.subsystem_list],
@@ -574,7 +513,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             slider_or_fit_parameter_set=slider_or_fit_parameter_set,
             sweep_parameter_set=self.sweepParameterSet,
             # spectrum_data=self.spectrumData,
-            calibration_data=self.calibrationData,
+            calibration_data=self.caliParamModel,
             extracted_data=self.allDatasets,
             # prefit_result=self.prefitResult,
         )
@@ -767,7 +706,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.quantumModel.MSEByParameters,
             self.allDatasets,
             self.sweepParameterSet,
-            self.calibrationData,
+            self.caliParamModel,
             self.fitResult,
         )
 
@@ -958,8 +897,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # here, the measurementData is a instance of MeasurementData, which is
         # regenerated from the data file
         self.measurementData = MeasDataSet([measurementData])
-        self.calibrationData.resetCalibration()
-        self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
+        # self.calibrationData.resetCalibration()
+        # self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
         self.extractingCtrl.dynamicalInit()
         self.prefitDynamicalElementsBuild(hilbertspace)

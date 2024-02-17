@@ -371,7 +371,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         """
         An inverse function of parentSystemNames
         """
-        return ''.join(name.split(" ")[:-1])
+        return "".join(name.split(" ")[:-1])
 
     def _updateNameMap(self, parent: ParentSystem, with_type: bool = True):
         name = self.parentSystemNames(parent, with_type=with_type)
@@ -680,7 +680,9 @@ class CaliParamModel(
     plotCaliPtExtractStart = Signal(str)
     plotCaliPtExtractFinished = Signal()
     plotCaliPtExtractInterrupted = Signal()
-    caliClicked = Signal(str)
+    issueNewXCaliFunc = Signal(Callable)
+    issueNewYCaliFunc = Signal(Callable)
+    issueNewInvYCaliFunc = Signal(Callable)
     # calibrationIsOn: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2", False]
 
     def __init__(
@@ -1000,16 +1002,7 @@ class CaliParamModel(
         """
         Generate a function that applies the calibration to the raw Y value.
         """
-        # gather all the point pair raw value and construct the augmented rawMat
-        augRawYMat = np.zeros((2, 2))
-        for YRowIdx in range(2):
-            augRawYMat[YRowIdx, 0] = 1
-            augRawYMat[YRowIdx, 1] = self[f"Y{YRowIdx}"][self.rawYName].value
-        # gather all the point pair mapped value and solve alphaVec by inversion
-        mapCompVec = np.zeros(2)
-        for YRowIdx in range(2):
-            mapCompVec[YRowIdx] = self[f"Y{YRowIdx}"]["mappedY"].value
-        alphaVec = np.linalg.solve(augRawYMat, mapCompVec)
+        alphaVec = self._getAlphaVec()
 
         def YCalibration(rawY: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
             """
@@ -1029,6 +1022,44 @@ class CaliParamModel(
             return mapY
 
         return YCalibration
+
+    def _invYCalibration(self) -> Callable:
+        """
+        Generate a function that applies the inverse calibration to the mapped Y value.
+        """
+        alphaVec = self._getAlphaVec()
+
+        def invYCalibration(mapY: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+            """
+            The full calibration function that maps the raw vector to the mapped vector.
+
+            Parameters
+            ----------
+            mapY: Union[float, np.ndarray]
+                The mapped Y value, can either be an array of Y, or a single Y value.
+
+            Returns
+            -------
+            The raw Y value.
+            """
+            # rawY = (mapY - alphaVec[0])/alphaVec[1]
+            rawY = (mapY - alphaVec[0]) / alphaVec[1]
+            return rawY
+
+        return invYCalibration
+
+    def _getAlphaVec(self) -> np.ndarray:
+        # gather all the point pair raw value and construct the augmented rawMat
+        augRawYMat = np.zeros((2, 2))
+        for YRowIdx in range(2):
+            augRawYMat[YRowIdx, 0] = 1
+            augRawYMat[YRowIdx, 1] = self[f"Y{YRowIdx}"][self.rawYName].value
+        # gather all the point pair mapped value and solve alphaVec by inversion
+        mapCompVec = np.zeros(2)
+        for YRowIdx in range(2):
+            mapCompVec[YRowIdx] = self[f"Y{YRowIdx}"]["mappedY"].value
+        alphaVec = np.linalg.solve(augRawYMat, mapCompVec)
+        return alphaVec
 
     def _fullXCalibration(self) -> Dict[str, HSParamSet[QMSweepParam]]:
         """
@@ -1168,15 +1199,25 @@ class CaliParamModel(
         return sweepParamSetByFig
 
     @Slot()
-    def updateCaliFunc(self) -> Callable:
+    def sendXCaliFunc(self):
         """
         The function that updates the calibration function.
         """
         if self.isFullCalibration:
-            return self._fullXCalibration
+            self.issueNewXCaliFunc.emit(self._fullXCalibration)
         else:
-            return self._partialXCalibration
+            self.issueNewXCaliFunc.emit(self._partialXCalibration)
 
-    @Slot(Union[str, int, None])
-    def toggleCaliLabel(self, label: Union[str, int, None] = None):
-        self.caliStatus = label
+    @Slot()
+    def sendYCaliFunc(self):
+        """
+        The function that updates the calibration function.
+        """
+        self.issueNewYCaliFunc.emit(self._YCalibration)
+
+    @Slot()
+    def sendInvYCaliFunc(self):
+        """
+        The function that updates the calibration function.
+        """
+        self.issueNewInvYCaliFunc.emit(self._invYCalibration)

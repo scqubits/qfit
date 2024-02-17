@@ -46,6 +46,7 @@ class CalibrationCtrl(QObject):
         self.caliParamModel = caliParamModel
         self.calibrationView = calibrationView
         self.pageButtons = pageButtons
+        self.uiCalibrationConnects()
 
     def uiCalibrationConnects(self):
         """
