@@ -1,7 +1,4 @@
-from typing import List, Optional, Tuple, Union, Callable
-from typing_extensions import Literal
-
-import qfit.io_utils.file_io_serializers as serializers
+from typing import List, Optional, Tuple, Union, Callable, Literal
 
 from PySide6.QtCore import QObject, Signal, Slot
 

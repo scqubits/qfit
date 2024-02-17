@@ -49,12 +49,9 @@ from PySide6.QtWidgets import (
 )
 
 from qfit.utils.helpers import (
-    transposeEach,
-    clearChildren,
     executed_in_ipython,
-    StopExecution,
 )
-from qfit.models.measurement_data import MeasurementDataType
+from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
 from qfit.controllers.help_tooltip import HelpButtonCtrl
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
@@ -89,11 +86,6 @@ from qfit.models.quantum_model_parameters import (
     FitParamModel,
 )
 from qfit.models.numerical_model import QuantumModel
-from qfit.widgets.foldable_table import (
-    FoldableTable,
-    MinMaxItems,
-    FittingParameterItems,
-)
 
 # fit
 from qfit.models.data_structures import QMFitParam
@@ -163,7 +155,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.fitDynamicalElementsBuild(hilbertspace)
 
         # plot, mpl canvas
-        self.measurementData = measurementData
+        self.measurementData = MeasDataSet([measurementData])
         self.plottingMVCInits()
         self.plottingCtrl.dynamicalInit(self.measurementData, self.quantumModel)
 
@@ -462,7 +454,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         }
 
         self.activeDataset = ActiveExtractedData()
-        self.allDatasets = AllExtractedData()
+        self.allDatasets = AllExtractedData(figNames=["Figure"])
+        self.allDatasets.setCalibrationFunc(self.calibrationData.calibrateDataset)
 
         self.extractingView = ExtractingView(
             [subsys.id_str for subsys in hilbertspace.subsystem_list],
@@ -485,7 +478,17 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     # Pre-fit ##########################################################
     # ##################################################################
     def prefitMVCInits(self, hilbertspace: HilbertSpace):
-        self.quantumModel = QuantumModel(hilbertspace)
+        # UI grouping
+        self.prefitOptions = {
+            "subsysToPlot": self.ui.subsysComboBox,
+            "initialState": self.ui.initStateLineEdit,
+            "photons": self.ui.prefitPhotonSpinBox,
+            "evalsCount": self.ui.evalsCountLineEdit,
+            "pointsAdd": self.ui.pointsAddLineEdit,
+            "autoRun": self.ui.autoRunCheckBox, 
+        }
+
+        self.quantumModel = QuantumModel(hilbertspace, ["Figure"])
         self.sweepParameterSet = HSParamSet(hilbertspace, QMSweepParam)
 
         self.prefitParamModel = PrefitParamModel(hilbertspace, QMSliderParam)
@@ -493,28 +496,26 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.ui.prefitScrollAreaWidget,
             self.ui.prefitMinmaxScrollAreaWidget,
         )
-        self.prefitView = PrefitView()
+        self.prefitView = PrefitView(
+            options = self.prefitOptions,
+            subsysNames = [HSParamSet.parentSystemNames(subsys)
+                for subsys in hilbertspace.subsystem_list[::-1]],
+            hilbertDim = hilbertspace.dimension,
+        )
 
         self.prefitResult = StatusModel()
         self.prefitStaticElementsBuild(hilbertspace)
 
     def prefitDynamicalElementsBuild(self, hilbertspace: HilbertSpace):
-        self.quantumModel.hilbertspace = hilbertspace
+        self.quantumModel._hilbertspace = hilbertspace
         self.prefitIdentifySweepParameters(hilbertspace)
-        self.prefitViewInserts()
-        self.prefitSubsystemComboBoxLoads(
-            [
-                HSParamSet.parentSystemNames(subsys)
-                for subsys in hilbertspace.subsystem_list[::-1]
-            ]
-        )
-
+        self.prefitViewUpdates(hilbertspace)
+        
     def prefitStaticElementsBuild(self, hilbertspace: HilbertSpace):
         # self.setUpPrefitResultConnects()
         self.prefitParamModelConnects()
         self.prefitButtonConnects(hilbertspace)
         self.prefitSliderParamConnects()
-        self.prefitQuantumModelOptionsConnects(hilbertspace)
         self.setUpPrefitRunConnects()
 
     def prefitIdentifySweepParameters(self, hilbertspace: HilbertSpace):
@@ -569,13 +570,13 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         Model & View updates
         """
-        self.quantumModel.updateCalculation(
+        self.quantumModel.prefitUpdateCalc(
             slider_or_fit_parameter_set=slider_or_fit_parameter_set,
             sweep_parameter_set=self.sweepParameterSet,
             # spectrum_data=self.spectrumData,
             calibration_data=self.calibrationData,
             extracted_data=self.allDatasets,
-            prefit_result=self.prefitResult,
+            # prefit_result=self.prefitResult,
         )
 
     @Slot()
@@ -583,16 +584,16 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         Model & View updates
         """
-        self.quantumModel.sweep2SpecNMSE(
+        self.quantumModel.prefitSweep2SpecMSE(
             slider_or_fit_parameter_set=self.prefitParamModel,
             sweep_parameter_set=self.sweepParameterSet,
             # spectrum_data=self.spectrumData,
             extracted_data=self.allDatasets,
             calibration_data=self.calibrationData,
-            result=self.prefitResult,
+            # result=self.prefitResult,
         )
 
-    def prefitViewInserts(self):
+    def prefitViewUpdates(self, hilbertspace: HilbertSpace):
         """
         THIS METHOS BELONGS TO THE PREFIT PARAMETER CONTROLLER
 
@@ -602,12 +603,18 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         (only the elements in the view will be changed, but the view itself
         will not be changed)
         """
+        # initialize the sliders, boxes and minmax
         paramNamesDict = self.prefitParamModel.paramNamesDict()
         self.prefitParamView.insertSliderMinMax(paramNamesDict, removeExisting=True)
-
-        # initialize the sliders, boxes and minmax
         self.prefitParamModel.emitUpdateBox()
         self.prefitParamModel.emitUpdateSlider()
+
+        # initialize the options
+        self.prefitView.initializeOptions(
+            subsysNames = [HSParamSet.parentSystemNames(subsys)
+                for subsys in hilbertspace.subsystem_list[::-1]],
+            hilbertDim = hilbertspace.dimension,
+        )
 
     def prefitSliderParamConnects(self):
         """
@@ -654,27 +661,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         It complete a flow of information from the slider to the model.
         """
-        self.prefitParamModel.hspaceUpdated.connect(
-            lambda: self.onParameterChange(self.prefitParamModel)
-        )
-        self.prefitParamModel.hspaceUpdated.connect(lambda: print("hspace updated"))
-
-    def prefitSubsystemComboBoxLoads(self, subsysNames: List[str]):
-        """
-        It should belong to PREFIT VIEW
-
-        View init: pre-fit subsystem combo box
-        loading the subsystem names to the combo box (drop down menu)
-        """
-        # clear the existing items and temporarily disable the signal
-        self.ui.subsysComboBox.blockSignals(True)
-        self.ui.subsysComboBox.clear()
-
-        for subsys_name in subsysNames:
-            self.ui.subsysComboBox.insertItem(0, subsys_name)
-
-        # enable the signal
-        self.ui.subsysComboBox.blockSignals(False)
+        self.prefitParamModel.hspaceUpdated.connect(self.quantumModel.updateHilbertSpace)
+        self.allDatasets.dataUpdated.connect(self.quantumModel.updateExtractedData)
 
     # def setUpPrefitResultConnects(self):
     #     """
@@ -698,26 +686,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     #         mseChangeUISetter=mse_change_ui_setter,
     #     )
 
-    def prefitQuantumModelOptionsConnects(self, hilbertspace: HilbertSpace):
-        """
-        View --> model: pre-fit options
-
-        TODO: Should be able to combine with prefitGeneralOptionsConnects
-        """
-        # connect the prefit options to the controller
-        self.quantumModel.setupPlotUICallbacks(
-            subsystemNameCallback=self.ui.subsysComboBox.currentText,
-            initialStateCallback=self.ui.initStateLineEdit.text,
-            photonsCallback=self.ui.prefitPhotonSpinBox.value,
-            evalsCountCallback=self.ui.evalsCountLineEdit.text,
-            pointsAddCallback=self.ui.pointsAddLineEdit.text,
-        )
-
-        dim = hilbertspace.dimension
-        if dim > 20:
-            dim = 20
-        self.ui.evalsCountLineEdit.setText(str(dim))
-
     def prefitButtonConnects(self, hilbertspace: HilbertSpace):
         """
         View --> model: numerical model options
@@ -733,30 +701,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         5. points add line edit
         """
 
-        # set line edit property:
-        self.ui.initStateLineEdit.setTupleLength(hilbertspace.subsystem_count)
+        self.prefitView.optionUpdated.connect(self.quantumModel.updateSweepOption)
 
-        # when change those numbers, update the spectrum data using the
-        # existing sweep
-        self.ui.subsysComboBox.currentIndexChanged.connect(self.onPrefitPlotClicked)
-        self.ui.initStateLineEdit.editingFinished.connect(self.onPrefitPlotClicked)
-        self.ui.prefitPhotonSpinBox.valueChanged.connect(self.onPrefitPlotClicked)
-
-        # when change those numbers, update the sweep and then update the spectrum
-        self.ui.evalsCountLineEdit.editingFinished.connect(
-            lambda: self.onParameterChange(self.prefitParamModel)
-        )
-        self.ui.pointsAddLineEdit.editingFinished.connect(
-            lambda: self.onParameterChange(self.prefitParamModel)
-        )
-
-        # connect the run button callback to the generation and run of parameter sweep
-        # notice that parameter update is done in the slider connects
-        # TODO: here is a bug, since the parameter update is done in the slider connects,
-        # if parameters are updated due to the fitting step, and the fitting result parameters
-        # are not imported to the prefit parameters, then the HilbertSpace is still using the
-        # fit parameters; if user want to plot with prefit parameters, clicking the plot button
-        # in the prefit will not update the parameters based on the sliders.
         self.ui.plotButton.clicked.connect(self.onPrefitPlotClicked)
 
     def setUpPrefitRunConnects(self):
@@ -770,10 +716,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         2. run (or "plot") button
         """
         # connect the autorun checkbox callback
-        self.quantumModel.setupAutorunCallbacks(
-            autorun_callback=self.ui.autoRunCheckBox.isChecked,
-        )
-        self.ui.autoRunCheckBox.setChecked(True)
+        # self.quantumModel.setupAutorunCallbacks(
+        #     autorun_callback=self.ui.autoRunCheckBox.isChecked,
+        # )
 
     # Fit ##############################################################
     # ##################################################################
@@ -992,7 +937,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.registry.clear()
 
         # special registry
-        self.registry.register(self.quantumModel.hilbertspace)
+        self.registry.register(self.quantumModel._hilbertspace)
         self.registry.register(self.measurementData)
         self.registry.register(self.calibrationData)
         self.registry.register(self.allDatasets)
@@ -1012,7 +957,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     ):
         # here, the measurementData is a instance of MeasurementData, which is
         # regenerated from the data file
-        self.measurementData = measurementData
+        self.measurementData = MeasDataSet([measurementData])
         self.calibrationData.resetCalibration()
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
@@ -1022,7 +967,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.plottingCtrl.dynamicalInit(self.measurementData, self.quantumModel)
 
-        self.allDatasets.loadedFromRegistry.connect(self.extractedDataSetup)
+        # self.allDatasets.loadedFromRegistry.connect(self.extractedDataSetup)
 
         self.register()
 
@@ -1045,28 +990,28 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             # the GUI is partially initialized and don't have the ioMenuCtrl
             event.accept()
 
-    @Slot()
-    def extractedDataSetup(self, initdata):
-        """
-        Recover extracted data from initdata, and emit changes to the view
-        """
-        # recover the allDatasets model
-        datanames = initdata["datanames"]
-        datalist = initdata["datalist"]
-        tag_data = initdata["taglist"]
-        self.allDatasets.dataNames = datanames
-        self.allDatasets.assocDataList = transposeEach(datalist)
-        self.allDatasets.assocTagList = tag_data
-        # set calibration
-        # this might worth a separate signal/slot, because the initialDynamicalElements only
-        # initialize the calibration data, and it does not recover the progress on the previous
-        # calibration.
-        self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
+    # @Slot()
+    # def extractedDataSetup(self, initdata):
+    #     """
+    #     Recover extracted data from initdata, and emit changes to the view
+    #     """
+    #     # recover the allDatasets model
+    #     datanames = initdata["datanames"]
+    #     datalist = initdata["datalist"]
+    #     tag_data = initdata["taglist"]
+    #     self.allDatasets.dataNames = datanames
+    #     self.allDatasets.assocDataList = transposeEach(datalist)
+    #     self.allDatasets.assocTagList = tag_data
+    #     # set calibration
+    #     # this might worth a separate signal/slot, because the initialDynamicalElements only
+    #     # initialize the calibration data, and it does not recover the progress on the previous
+    #     # calibration.
+    #     self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
-        # set dataset
-        self.allDatasets.layoutChanged.emit()  # update the list view to show the new data
-        self.allDatasets.emitFocusChanged()
-        self.allDatasets.emitXUpdated()
+    #     # set dataset
+    #     self.allDatasets.layoutChanged.emit()  # update the list view to show the new data
+    #     self.allDatasets.emitFocusChanged()
+    #     self.allDatasets.emitXUpdated()
 
     def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)

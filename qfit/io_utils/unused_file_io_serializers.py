@@ -88,7 +88,7 @@ class Serializable(ABC):
         ----------
         filename: str
         """
-        import qfit.io_utils.file_io as io
+        import qfit.io_utils.unused_file_io as io
 
         io.write(self, filename)
 
@@ -105,7 +105,7 @@ class Serializable(ABC):
         SpectrumData
             new SpectrumData object, initialized with data read from file
         """
-        import qfit.io_utils.file_io as io
+        import qfit.io_utils.unused_file_io as io
 
         return io.read(filename)
 
@@ -165,7 +165,7 @@ def dict_serialize(dict_instance):
     -------
     IOData
     """
-    import qfit.io_utils.file_io as io
+    import qfit.io_utils.unused_file_io as io
 
     dict_instance = helpers.remove_nones(dict_instance)
     attributes = {}

@@ -10,7 +10,7 @@
 ############################################################################
 
 
-from typing import Union, Literal, List, Callable, Tuple
+from typing import Union, Literal, List, Callable, Tuple, overload, TYPE_CHECKING
 
 import numpy as np
 from PySide6 import QtGui
@@ -24,22 +24,27 @@ from PySide6.QtCore import (
     Signal,
 )
 
-from qfit.models.data_structures import Tag, ScatterElement, VLineElement
+from qfit.models.data_structures import (
+    Tag, ExtrTransition, ExtrSpectra, FullExtr,
+    ScatterElement, VLineElement
+)
 
 from qfit.models.registry import Registrable, RegistryEntry
 
 from copy import deepcopy, copy
 
-class ActiveExtractedData(QAbstractTableModel):
-    """This class holds one data set, as extracted by markers on the canvas. In
-    addition, it references calibration data to expose either the raw selected data,
-    or their calibrated counterparts."""
+if TYPE_CHECKING:
+    from qfit.utils.helpers import OrderedDictMod
 
-    dataUpdated = Signal(np.ndarray, Tag)
-    dataSwitched = Signal(np.ndarray, Tag)
+
+class ActiveExtractedData(QAbstractTableModel):
+    """This class holds one data set, as extracted by markers on the canvas. """
+
+    dataUpdated = Signal(ExtrTransition)
+    dataSwitched = Signal(ExtrTransition)
     readyToPlot = Signal(ScatterElement)  # the above two signals are connected to this signal
 
-    def __init__(self, data: Union[np.ndarray, None] = None):
+    def __init__(self):
         """
         Parameters
         ----------
@@ -47,8 +52,9 @@ class ActiveExtractedData(QAbstractTableModel):
             numpy array of floats, shape=(2, N)
         """
         super().__init__()
-        self._data: np.ndarray = data or np.empty(shape=(2, 0), dtype=np.float_)
-        self._tag: Tag = Tag()
+
+        self._transition = ExtrTransition()
+
         self.connects()
 
     # Properties =======================================================
@@ -60,7 +66,7 @@ class ActiveExtractedData(QAbstractTableModel):
         -------
         int
         """
-        return self._data.shape[0]
+        return 2
 
     def columnCount(self, *args):
         """
@@ -70,10 +76,10 @@ class ActiveExtractedData(QAbstractTableModel):
         -------
         int
         """
-        return self._data.shape[1]
+        return self._transition.count()
 
     @Slot()
-    def allTransitions(self) -> np.ndarray:
+    def allPoints(self) -> np.ndarray:
         """
         Return the raw data as a numpy array.
 
@@ -81,10 +87,10 @@ class ActiveExtractedData(QAbstractTableModel):
         -------
         ndarray
         """
-        return self._data
+        return self._transition.data
 
     def isEmpty(self) -> bool:
-        return self._data.size == 0
+        return self._transition.count() == 0
     
     def headerData(
         self, section: int, orientation: Qt.Orientation, role=Qt.DisplayRole
@@ -109,65 +115,24 @@ class ActiveExtractedData(QAbstractTableModel):
                 return str(["x", "y"][section])
             elif orientation == Qt.Horizontal:
                 return str(section)
-        
-    # Internal data manipulation methods================================
-    def insertColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
-        # it will not emit custom signals 
-        self.beginInsertColumns(parent, column, column)
-        self._data = np.insert(self._data, column, np.asarray([0.0, 0.0]), axis=1)
-        self.endInsertColumns()
-        return True
-
-    def removeColumn(self, column: QModelIndex, parent=QModelIndex(), *args, **kwargs):
-        # it will not emit custom signals 
-        self.beginRemoveColumns(parent, column, column)
-        self._data = np.delete(self._data, column, axis=1)
-        self.endRemoveColumns()
-        return True
-
-    def _updateData(self, index: QModelIndex, value: float, role=Qt.EditRole) -> bool:
-        """
-
-        Parameters
-        ----------
-        index: QModelIndex
-            index of element to be set to `value`
-        value: float
-        role: int
-
-        Returns
-        -------
-        bool
-            True if assignment successful
-        """
-        if not (index.isValid() and role == Qt.EditRole):
-            return False
-        try:
-            self._data[index.row(), index.column()] = value
-        except (ValueError, IndexError):
-            return False
-        return True
 
     # Data manipulation ================================================
     def remove(self, index: int):
         """
         Public method to remove a point
         """
-        self.removeColumn(index)
+        self._transition.remove(index)
         self.emitDataUpdated()
 
-    def append(self, xval: float, yval: float):
+    def append(self, xy: OrderedDictMod[str, float], rawX: OrderedDictMod[str, float]):
         """
         Public method to append a new point to the data set.
         """
-        max_col = self.columnCount()
-        self.insertColumn(max_col)
-        self._updateData(self.index(0, max_col), xval, role=Qt.EditRole)
-        self._updateData(self.index(1, max_col), yval, role=Qt.EditRole)
+        self._transition.append(xy, rawX)
         self.emitDataUpdated()
     
-    @Slot()
-    def replaceAllData(self, newData: np.ndarray, newTag: Tag):
+    @Slot(ExtrTransition)
+    def replaceAllData(self, newTransition: ExtrTransition):
         """
         Replaces the current table of extracted data points with a new dataset of points
 
@@ -176,8 +141,7 @@ class ActiveExtractedData(QAbstractTableModel):
         newData: np.ndarray of float
             float array of data points to substitute the current data set
         """
-        self._data = newData
-        self._tag = newTag
+        self._transition = newTransition
         self.emitDataSwitched()
 
     def updateTag(self, tag: Tag):
@@ -188,15 +152,15 @@ class ActiveExtractedData(QAbstractTableModel):
         ----------
         tag: Tag
         """
-        self._tag = tag
+        self._transition.tag = tag
         self.emitDataUpdated()
 
     def generatePlotElement(self) -> ScatterElement:
         # tag mode
         scat_active = ScatterElement(
             "active_extractions",
-            self._data[0],
-            self._data[1],
+            self._transition.data[0],
+            self._transition.data[1],
             marker=r"$\odot$",
             s=130,
             alpha=0.3,
@@ -208,13 +172,13 @@ class ActiveExtractedData(QAbstractTableModel):
         """
         view updated the model
         """
-        self.dataUpdated.emit(self._data, self._tag)
+        self.dataUpdated.emit(self._transition)
 
     def emitDataSwitched(self):
         """
         model (allDatasets) switched it to a new data set
         """
-        self.dataSwitched.emit(self._data, self._tag)
+        self.dataSwitched.emit(self._transition)
 
     def emitReadyToPlot(self):
         """
@@ -234,118 +198,60 @@ class ListModelMeta(type(QAbstractListModel), type(Registrable)):
 class AllExtractedData(
     QAbstractListModel, Registrable, metaclass=ListModelMeta
 ):
-    focusChanged = Signal(np.ndarray, Tag) # when user select and focus on a new row
+    dataUpdated = Signal(FullExtr)
+
+    focusChanged = Signal(ExtrTransition) # when user select and focus on a new row
     readyToPlot = Signal(ScatterElement)    # connected to the above signal
 
     distinctXUpdated = Signal(np.ndarray) # when user extract (remove) data points
     readyToPlotX = Signal(VLineElement)  # connected to the above signal
 
-    loadedFromRegistry = Signal(dict) # when user load a project file
-
-    def __init__(self):
+    def __init__(self, figNames: List[str]):
         super().__init__()
-        self.dataNames = ["Transition 1"]
-        self.assocDataList: List[np.ndarray] = [np.empty(shape=(2, 0), dtype=np.float_)]
-        self.assocTagList: List[Tag] = [Tag()]
-        self._calibrationFunc = None
+
+        self._figNames = figNames
+        self._fullSpectra = FullExtr()
+        self._initFullSpectra()
+
+        self._currentFigName = self._figNames[0]
         self._currentRow = 0
         
         self.connects()
 
+    def _initSpectra(self, figName: str):
+        transition = ExtrTransition()
+        transition.name = "Transition 1"
+        spectra = ExtrSpectra(transition)
+        self._fullSpectra[figName] = spectra
+
+    def _initFullSpectra(self):
+        for name in self._figNames:
+            self._initSpectra(name)
+
     # Properties =======================================================
-    def rowCount(self, *args) -> int:
-        return len(self.dataNames)
+    @property
+    def currentFigName(self):
+        return self._currentFigName
 
-    def currentItem(self):
-        return self.data(self.index(self.currentRow, 0), role=Qt.EditRole)
-
-    def currentAssocItem(self) -> np.ndarray:
-        return self.assocDataList[self.currentRow]
+    @property
+    def currentRow(self):
+        return self._currentRow
     
-    def allDataSorted(
-        self, 
-        removeCurrentRow: bool = False,
-        applyCalibration: bool = True, 
-        calibration_axis: Literal["xy", "x", "y"] = "xy",
-        concat_data: bool = False,
-    ) -> Union[List[np.ndarray], np.ndarray]:
-        """
-        Return all data points sorted by x value.
-
-        Parameters
-        ----------
-        applyCalibration: bool, by default, True
-            If True, apply the calibration function to the data points.
-        calibration_axis: str, by default, "xy"
-            If "xy", apply the calibration function to both x and y values.
-            If "x", apply the calibration function to x values only.
-            If "y", apply the calibration function to y values only.
-        concat_data: bool, by default, False
-            If True, concatenate all data points from different transitions 
-            into a single array.
-
-        Returns
-        -------
-        list of ndarray
-            list of numpy arrays of length M, where M is the number
-            of transitions. Each array may have shape (N, 2), where N is the 
-            number of data points for each transition. If `concat_data` is True,
-            then the output is a single numpy array of shape (~M*N, 2).
-        """
-        assocDataList = copy(self.assocDataList)
-        if removeCurrentRow:
-            assocDataList.pop(self.currentRow)
-
-        if applyCalibration:
-            data = [
-                self._calibrationFunc(dataSet, calibration_axis=calibration_axis)
-                for dataSet in assocDataList
-            ]
-        else:
-            data = assocDataList
-
-        allData = []
-        for x, y in data:
-            sorted_indices = np.argsort(x)
-            allData.append(np.asarray([x[sorted_indices], y[sorted_indices]]).transpose())
-
-        if allData == []:
-            allData = [np.empty(shape=(0, 2), dtype=np.float_)]
-
-        if concat_data:
-            return np.concatenate(allData, axis=0)
-        else:
-            return allData
-
-    def distinctSortedXValues(self):
-        all_x_list = np.array([])
-        for dataset in self.assocDataList:
-            all_x_list = np.concatenate((all_x_list, dataset[0]))
-        return np.sort(np.unique(all_x_list))
-
-    def currentTagItem(self) -> Tag:
-        return self.assocTagList[self.currentRow]
-    
-    def currentDataName(self) -> str:
-        return self.dataNames[self.currentRow]
-    
-    def isEmpty(self) -> bool:
-        for data in self.assocDataList:
-            if data.size > 0:
-                return False
-        return True
+    @property
+    def _currentSpectrum(self) -> ExtrSpectra:
+        return self._fullSpectra[self.currentFigName]
 
     def data(self, index: QModelIndex, role):
         """
         The NAME & Icon of the transition!
         """
         if role == Qt.DisplayRole:
-            str_value = self.dataNames[index.row()]
+            str_value = self._currentSpectrum[index.row()].name
             return str_value
 
         if role == Qt.DecorationRole:
             icon1 = QtGui.QIcon()
-            if self.assocTagList[index.row()].tagType != "NO_TAG":
+            if self._currentSpectrum[index.row()].tag.tagType != "NO_TAG":
                 icon1.addPixmap(
                     QtGui.QPixmap(":/icons/svg/cil-list.svg"),
                     QtGui.QIcon.Normal,
@@ -358,6 +264,15 @@ class AllExtractedData(
                     QtGui.QIcon.Off,
                 )
             return icon1
+        
+    def rowCount(self, *args) -> int:
+        return len(self._fullSpectra[self.currentFigName])
+
+    def currentTransition(self) -> ExtrTransition:
+        return self._currentSpectrum[self.currentRow]
+    
+    def isEmpty(self) -> bool:
+        return self._currentSpectrum.isEmpty()
 
     def flags(self, index):
         flags = super(self.__class__, self).flags(index)
@@ -368,15 +283,13 @@ class AllExtractedData(
     
     # Signal processing ================================================
     def emitFocusChanged(self, *args):
-        self.focusChanged.emit(
-            self.currentAssocItem(), self.currentTagItem()
-        )
+        self.focusChanged.emit(self.currentTransition())
 
     def emitXUpdated(self, *args):
         """
         Update the distinct x values and send out plot data
         """
-        self.distinctXUpdated.emit(self.distinctSortedXValues())
+        self.distinctXUpdated.emit(self._currentSpectrum.distinctSortedX())
 
     def emitReadyToPlot(self, *args):
         self.readyToPlot.emit(self.generatePlotElement())
@@ -391,15 +304,11 @@ class AllExtractedData(
         # distinct x values updated --> update plot
         self.distinctXUpdated.connect(self.emitReadyToPlotX)
 
-    def setCalibrationFunc(self, calibrationDataCallback):
-        self._calibrationFunc = calibrationDataCallback
-
     # Internal data manipulation methods ===============================
     def insertRow(self, row, parent=QModelIndex(), *args, **kwargs):
         self.beginInsertRows(parent, row, row)
-        self.dataNames.insert(row, "")
-        self.assocDataList.insert(row, np.empty(shape=(2, 0), dtype=np.float_))
-        self.assocTagList.insert(row, Tag())
+        transition = ExtrTransition()
+        self._currentSpectrum.insert(row, transition)
 
         # update the current row before emitting the rowsRemoved signal 
         # (which will be emitted by endRemoveRows)
@@ -411,15 +320,14 @@ class AllExtractedData(
 
     def removeRow(self, row, parent=QModelIndex(), *args, **kwargs):
         if self.rowCount() == 1:
-            self.assocDataList[0] = np.empty(shape=(2, 0), dtype=np.float_)
-            self.assocTagList[0] = Tag()
+            transition = ExtrTransition()
+            transition.name = "Transition 1"
+            self._currentSpectrum[0] = transition
             self.setCurrentRow(0)
             return True
 
         self.beginRemoveRows(parent, row, row)
-        self.dataNames.pop(row)
-        self.assocDataList.pop(row)
-        self.assocTagList.pop(row)
+        self._currentSpectrum.pop(row)
 
         # update the current row before emitting the rowsRemoved signal 
         # (which will be emitted by endRemoveRows)
@@ -432,7 +340,7 @@ class AllExtractedData(
 
         return True
 
-    # Data manipulation ================================================
+    # Public data manipulation =========================================
     def updateName(self, index: QModelIndex, data, role=None):
         """
         Set the data at index `index` to `data`. Note that right now 
@@ -441,20 +349,22 @@ class AllExtractedData(
         if not (index.isValid() and role == Qt.EditRole):
             return False
         try:
-            self.dataNames[index.row()] = data
+            self._currentSpectrum[index.row()].name = data
         except (ValueError, IndexError):
             return False
         return True
 
     def swapXY(self):
-        swappedAssocDataList = [array[[1, 0]] for array in self.assocDataList]
-        self.assocDataList = swappedAssocDataList    
+        self._fullSpectra.swapXY()  
         self.emitXUpdated()
         self.emitReadyToPlot()
-
-    @property
-    def currentRow(self):
-        return self._currentRow
+    
+    @Slot(str)
+    def switchFig(self, figName: str):
+        self._currentFigName = figName
+        self.emitXUpdated()
+        self.emitFocusChanged()
+        self.layoutChanged.emit()
     
     @Slot()
     def removeAll(self):
@@ -462,9 +372,7 @@ class AllExtractedData(
         Remove all rows of dataset
         """
         self.beginRemoveRows(QModelIndex(), 0, self.rowCount() - 1)
-        self.dataNames = ["Transition 1"]
-        self.assocDataList = [np.empty(shape=(2, 0), dtype=np.float_)]
-        self.assocTagList = [Tag()]
+        self._initSpectra(self.currentFigName)
 
         # update the current row before emitting the rowsRemoved signal
         # (which will be emitted by endRemoveRows)
@@ -483,7 +391,7 @@ class AllExtractedData(
         # find a unique name for the new row
         str_value = str_value or "Transition " + str(rowCount + 1)
         counter = 1
-        while str_value in self.dataNames:
+        while str_value in self._currentSpectrum.allNames():
             str_value = "Transition " + str(rowCount + 1 + counter)
             counter += 1
         
@@ -495,13 +403,13 @@ class AllExtractedData(
         self.removeRow(self.currentRow)
         self.emitXUpdated()
 
-    @Slot(np.ndarray, Tag)
-    def updateAssocData(self, newData: np.ndarray, newTag: Tag):
+    @Slot(ExtrTransition)
+    def updateCurrentTransition(self, transition: ExtrTransition):
         """
+        TODO
         Associted extracted data and tag updated from the active extracted data
         """
-        self.assocDataList[self.currentRow] = newData
-        self.assocTagList[self.currentRow] = newTag
+        self._currentSpectrum[self.currentRow] = transition
         self.emitXUpdated()
 
     @Slot(int)
@@ -510,11 +418,10 @@ class AllExtractedData(
         self.emitFocusChanged()
     
     def generatePlotElement(self) -> ScatterElement:
-        all_data = self.allDataSorted(
-            applyCalibration=False,
-            removeCurrentRow=True, 
-            concat_data=True,
-        )
+        spectra = copy(self._currentSpectrum)
+        spectra.pop(self.currentRow)
+        all_data = spectra.allDataConcated()
+        
         scat_all = ScatterElement(
             "all_extractions",
             all_data[:, 0],
@@ -527,8 +434,7 @@ class AllExtractedData(
         return scat_all
     
     def generatePlotElementX(self) -> VLineElement:
-
-        vline_data = self.distinctSortedXValues()
+        vline_data = self._currentSpectrum.distinctSortedX()
         vline = VLineElement("extraction_vlines", vline_data, alpha=0.5)
 
         return vline
@@ -538,33 +444,18 @@ class AllExtractedData(
         Register necessary data for extracted data; these data are used to reconstruct the
         extracted data when loading a project file.
         """
-
-        # info to be registered:
-        # - dataNames
-        # - assocDataList
-        # - assocTagList
-        def getter():
-            # extracted_data = self.serialize()
-            processedData = self.allDataSorted(applyCalibration=False)
-            initdata = {
-                "datanames": self.dataNames,
-                "datalist": processedData,
-                "taglist": self.assocTagList,
-            }
-            return deepcopy(initdata)
-
         def setter(initdata):
-            # emit the signal to the controller to register the data through controller
-            # the reason for such special setter is that merely recovering the attributes
-            # does not update the view correctly; additional steps are needed to update
-            # the viewe accordingly through mainwindow
-            self.loadedFromRegistry.emit(initdata)
+            self._fullSpectra = initdata
+            self.layoutChanged.emit()  # update the list view to show the new data
+            self.emitFocusChanged()
+            self.emitXUpdated()
 
         registry_entry = RegistryEntry(
             name="allExtractedData",
             quantity_type="r+",
-            getter=getter,
+            getter=lambda: self._fullSpectra,
             setter=setter,
         )
         registry = {"allExtractedData": registry_entry}
+
         return registry

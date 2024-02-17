@@ -104,7 +104,7 @@ class Fit:
 
         if measurementFileName is not None:
             # load measurement data from the given file
-            measurementData = IOCtrl.measurementDataFromFile(measurementFileName)
+            measurementData = IOCtrl._measurementDataFromFile(measurementFileName)
             if measurementData is None:
                 raise FileNotFoundError(f"Can't load file '{measurementFileName}'.")
             self.window.ioMenuCtrl.newProjectWithMeasurementData(measurementData)
@@ -152,7 +152,7 @@ class Fit:
 
         # load measurement data
         if measurementFileName is not None:
-            measurementData = IOCtrl.measurementDataFromFile(measurementFileName)
+            measurementData = IOCtrl._measurementDataFromFile(measurementFileName)
             if measurementData is None:
                 raise FileNotFoundError(f"Can't load file '{measurementFileName}'.")
             instance.window.ioMenuCtrl.newProjectWithMeasurementData(measurementData)
@@ -193,7 +193,7 @@ class Fit:
         if fileName is None:
             fileName = instance.window.ioMenuCtrl.openFile(from_menu=False)
         else:
-            registryDict = IOCtrl.registryDictFromFile(fileName)
+            registryDict = IOCtrl._registryDictFromFile(fileName)
             if registryDict is None:
                 raise FileNotFoundError(f"Can't load file '{fileName}'.")
 

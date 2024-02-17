@@ -18,24 +18,14 @@ import numpy as np
 from matplotlib.image import imread
 from scipy.io import loadmat
 
-import qfit.io_utils.file_io as io
-import qfit.io_utils.file_io_backends as io_backends
-
-from qfit.models.registry import Registry
-
 from qfit.utils.helpers import (
     OrderedDictMod,
-    hasIdenticalCols,
-    hasIdenticalRows,
-    isValid2dArray,
 )
 from qfit.models.measurement_data import (
     ImageMeasurementData, NumericalMeasurementData, MeasurementDataType)
 
-from typing import Union
 
-
-def readMeasurementFile(fileName) -> Union[MeasurementDataType, None]:
+def readMeasurementFile(fileName) -> MeasurementDataType:
     """
     Read experimental data from file.
 
@@ -57,38 +47,50 @@ def readMeasurementFile(fileName) -> Union[MeasurementDataType, None]:
         reader = ImageFileReader()
     elif suffix.lower() == ".mat":
         reader = MatlabReader()
-    elif suffix.lower() == ".csv":
-        reader = CSVReader()
+    # elif suffix.lower() == ".csv":
+    #     reader = CSVReader()
     else:
         raise Exception("IOError: The requested file type is not supported.")
     data = reader.fromFile(fileName)
     return data
 
 
-class ImageFileReader:
+class MeasFileReader:
+    def fromFile(self, fileName):
+        pass
+
+    @staticmethod
+    def isLikelyLabberFile(h5File):
+        # Heuristic inspection to determine whether the h5 file might be from Labber
+        if {"Data", "Instrument config", "Settings", "Step config"}.issubset(set(h5File)):
+            return True
+        return False
+
+    # @staticmethod
+    # def isLikelyDatapycFile(h5File):
+    #     # Heuristic inspection to determine whether the h5 file might be from qfit
+    #     if "__type" in h5File.attrs.keys() and h5File.attrs["__type"] == "QfitData":
+    #         return True
+    #     return False
+
+
+class ImageFileReader(MeasFileReader):
     def fromFile(self, fileName):
         _, fileStr = os.path.split(fileName)
-        try:
-            imageData = imread(fileName)
-        except OSError:
-            return None
+        imageData = imread(fileName)
+        
         return ImageMeasurementData(fileStr, imageData)
 
 
-class GenericH5Reader:
-    def fromFile(self, fileName):
+class GenericH5Reader(MeasFileReader):
+    def fromFile(self, fileName) -> NumericalMeasurementData:
         with h5py.File(fileName, "r") as h5File:
-            if isLikelyLabberFile(h5File):
+            if self.isLikelyLabberFile(h5File):
                 labberReader = LabberH5Reader()
                 return labberReader.fromFile(fileName)
-
-            if isLikelyDatapycFile(h5File):
-                qfitReader = io_backends.H5Reader(fileName)
-                iodata = qfitReader.from_file(fileName)
-                return io.deserialize(iodata)
-
+            
             # generic h5 file, attempt to read
-            dataCollection = {}
+            dataCollection = OrderedDictMod()
 
             def visitor_func(name, data):
                 if isinstance(data, h5py.Dataset) and data[:].dtype in [
@@ -99,21 +101,20 @@ class GenericH5Reader:
 
             h5File.visititems(visitor_func)
 
-        zCandidates = findZData(dataCollection)
-        if not zCandidates:
-            return None
-        return NumericalMeasurementData(dataCollection, zCandidates)
+        _, fileStr = os.path.split(fileName)
+
+        return NumericalMeasurementData(fileStr, dataCollection)
 
 
-class LabberH5Reader:
-    def fromFile(self, fileName):
+class LabberH5Reader(MeasFileReader):
+    def fromFile(self, fileName) -> NumericalMeasurementData:
         with h5py.File(fileName, "r") as h5File:
             dataEntries = ["Data"]
             dataEntries += [name + "/Data" for name in h5File if name[0:4] == "Log_"]
 
             dataNames = []
             dataArrays = []
-            dataCollection = {}
+            dataCollection = OrderedDictMod()
 
             for entry in dataEntries:
                 array = h5File[entry + "/Data"][:]
@@ -145,44 +146,19 @@ class LabberH5Reader:
                 if len(names) == 4:
                     dataCollection[names[3] + " " + entry] = array[:, 3, :]
 
-        zCandidates = findZData(dataCollection)
-        if not zCandidates:
-            return None
-        return NumericalMeasurementData(dataCollection, zCandidates)
+        _, fileStr = os.path.split(fileName)
+        return NumericalMeasurementData(fileStr, dataCollection)
 
 
-class MatlabReader:
-    def fromFile(self, fileName):
+class MatlabReader(MeasFileReader):
+    def fromFile(self, fileName) -> NumericalMeasurementData:
         dataCollection = loadmat(fileName)
-        zCandidates = findZData(dataCollection)
-        if not zCandidates:
-            return None
-        return NumericalMeasurementData(dataCollection, zCandidates)
+        
+        _, fileStr = os.path.split(fileName)
+        return NumericalMeasurementData(fileStr, dataCollection)
 
 
-class CSVReader:
-    def fromFile(self, fileName):
-        return NumericalMeasurementData({fileName: np.loadtxt(fileName)})
+# class CSVReader:
+#     def fromFile(self, fileName):
 
-
-def isLikelyLabberFile(h5File):
-    # Heuristic inspection to determine whether the h5 file might be from Labber
-    if {"Data", "Instrument config", "Settings", "Step config"}.issubset(set(h5File)):
-        return True
-    return False
-
-
-def isLikelyDatapycFile(h5File):
-    # Heuristic inspection to determine whether the h5 file might be from qfit
-    if "__type" in h5File.attrs.keys() and h5File.attrs["__type"] == "QfitData":
-        return True
-    return False
-
-
-def findZData(rawData):
-    zCandidates = OrderedDictMod()
-    for name, theObject in rawData.items():
-        if isinstance(theObject, np.ndarray) and isValid2dArray(theObject):
-            if not (hasIdenticalCols(theObject) or hasIdenticalRows(theObject)):
-                zCandidates[name] = theObject
-    return zCandidates
+#         return NumericalMeasurementData({fileName: np.loadtxt(fileName)})

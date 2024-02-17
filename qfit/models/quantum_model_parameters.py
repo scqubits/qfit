@@ -368,7 +368,10 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
 
     @staticmethod
     def parentSystemIdstrByName(name: str) -> str:
-        return "".join(name.split(" ")[:-1])
+        """
+        An inverse function of parentSystemNames
+        """
+        return ''.join(name.split(" ")[:-1])
 
     def _updateNameMap(self, parent: ParentSystem, with_type: bool = True):
         name = self.parentSystemNames(parent, with_type=with_type)

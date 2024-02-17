@@ -3,9 +3,12 @@ from PySide6.QtCore import (
     Signal,
     Slot,
 )
+from PySide6.QtWidgets import QWidget, QLabel, QRadioButton, QSpinBox
 from typing import Tuple, Dict, Any, List
 
 from qfit.models.data_structures import Tag
+from qfit.widgets.data_extracting import ListView
+from qfit.widgets.validated_line_edits import IntTupleLineEdit, IntLineEdit
     
 
 class ExtractingView(QObject):
@@ -14,7 +17,12 @@ class ExtractingView(QObject):
     def __init__(
         self,
         subsysNames: List[str],
-        uiGroups: Tuple,
+        uiGroups: Tuple[
+            Dict[str, QWidget], Dict[str, QRadioButton],
+            Dict[str, IntTupleLineEdit], Dict[str, IntLineEdit],
+            Dict[str, QSpinBox], ListView,
+            QLabel
+        ],
     ):
         """
         All widgets related to tagging.
@@ -30,7 +38,7 @@ class ExtractingView(QObject):
             self.extractionList,
             self.bareLabelOrder,
         ) = uiGroups
-
+    
         self._initializeUI()
         self._modeSwitchSignalsConnects()
         self._tagChangedSignalConnects()
