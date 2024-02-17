@@ -282,5 +282,4 @@ class FitParamView(QObject):
         elif paramAttr.attr == "isFixed":
             item.fixCheckbox.setChecked(paramAttr.value)
         else:
-            raise ValueError(f"Invalid attribute {paramAttr.attr}")
-        
+            raise ValueError(f"Invalid attribute {paramAttr.attr}")        

@@ -18,11 +18,6 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 from qfit.models.registry import Registrable, RegistryEntry
 
-from qfit.models.data_structures import (
-    CalibrationRawMapPair,
-    CaliTableParam,
-    CaliTableRow,
-)
 from qfit.models.quantum_model_parameters import ParamSet, QMSweepParam
 
 
@@ -69,7 +64,7 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
         When a rawVecX is provided, the tX is first determined by using polyfit, then the mapVecX is determined with the
         formula above.
 
-        The calibration function is supposed to take in rawVecX (and figName if using partial calibration) and return 
+        The calibration function is supposed to take in rawVecX (and figName if using partial calibration) and return
         mapVecX. rawVecX is a dictionary of {rawVecName: value} and mapVecX is a sweep parameter set.
 
         Parameters
@@ -96,12 +91,16 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
 
         # only used for full calibration
         self.MMat: Optional[np.ndarray] = None
-        self.offsetVec: Optional[np.ndarray]= None
+        self.offsetVec: Optional[np.ndarray] = None
 
         # only used for partial calibration
-        self.rawVecX1Dict: Optional[Dict[str, Dict[str, float]]] = None # {figureName: {rawVecName: value}}
+        self.rawVecX1Dict: Optional[
+            Dict[str, Dict[str, float]]
+        ] = None  # {figureName: {rawVecName: value}}
         self.rawVecX2Dict: Optional[Dict[str, Dict[str, float]]] = None
-        self.mapVecX1Dict: Optional[Dict[str, Dict[str, float]]] = None # {figureName: {rawVecName: value}}
+        self.mapVecX1Dict: Optional[
+            Dict[str, Dict[str, float]]
+        ] = None  # {figureName: {rawVecName: value}}
         self.mapVecX2Dict: Optional[Dict[str, Dict[str, float]]] = None
 
         # self.rawVec1 = rawVec1
@@ -128,16 +127,16 @@ class CalibrationData(QObject, Registrable, metaclass=CombinedMeta):
 
     def calibrationOn(self, label):
         self.calibrationIsOn = label
-        self.plotCaliOn.emit(label)
+        self.plotCaliOn.emit()
 
     def calibrationOff(self):
         if self.calibrationIsOn:
             self.calibrationIsOn = False
             self.plotCaliOff.emit()
         else:
-            # if the calibration is not on, it's likely triggered by 
+            # if the calibration is not on, it's likely triggered by
             # other events like page change,
-            # we should not trigger the plotCaliOff signal in this case 
+            # we should not trigger the plotCaliOff signal in this case
             pass
 
     def acceptCalibration(

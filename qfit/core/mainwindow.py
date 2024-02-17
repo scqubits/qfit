@@ -48,8 +48,6 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
-from qfit.models.calibration_data import CalibrationData
-from qfit.widgets.calibration import CalibrationView
 from qfit.utils.helpers import (
     transposeEach,
     clearChildren,
@@ -63,6 +61,12 @@ from qfit.widgets.menu import MenuWidget
 
 # paging:
 from qfit.views.paging import PageView
+
+# calibration:
+from qfit.models.calibration_data import CalibrationData
+from qfit.models.quantum_model_parameters import CaliParamModel
+from qfit.views.calibration import CalibrationView
+from qfit.controllers.calibration import CalibrationCtrl
 
 # extract
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
@@ -79,7 +83,10 @@ from qfit.views.parameters import PrefitParamView
 from qfit.views.prefit import PrefitView
 from qfit.models.data_structures import QMSliderParam, QMSweepParam
 from qfit.models.quantum_model_parameters import (
-    ParamSet, HSParamSet, PrefitParamModel, FitParamModel
+    ParamSet,
+    HSParamSet,
+    PrefitParamModel,
+    FitParamModel,
 )
 from qfit.models.numerical_model import QuantumModel
 from qfit.widgets.foldable_table import (
@@ -158,9 +165,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # plot, mpl canvas
         self.measurementData = measurementData
         self.plottingMVCInits()
-        self.plottingCtrl.dynamicalInit(
-            self.measurementData, self.quantumModel
-        )
+        self.plottingCtrl.dynamicalInit(self.measurementData, self.quantumModel)
 
         # help button
         self.helpButtonConnects()
@@ -223,7 +228,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.helpButtonCtrl = HelpButtonCtrl(self.helpButtons)
 
     # plot #############################################################
-    ####################################################################  
+    ####################################################################
     def plottingMVCInits(self):
         # ui grouping
         self.measComboBoxes = {
@@ -254,15 +259,23 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.plottingCtrl = PlottingCtrl(
             self.ui.mplFigureCanvas,
             (
-                self.measurementData, self.calibrationData,
-                self.allDatasets, self.activeDataset,
-                self.quantumModel, self.sweepParameterSet,
-            ), (
-                self.measComboBoxes, self.measPlotSettings, self.ui.swapXYButton,
-                self.canvasTools, self.calibrationButtons, self.ui.calibratedCheckBox, 
-                self.pageView
+                self.measurementData,
+                self.calibrationData,
+                self.allDatasets,
+                self.activeDataset,
+                self.quantumModel,
+                self.sweepParameterSet,
             ),
-        )  
+            (
+                self.measComboBoxes,
+                self.measPlotSettings,
+                self.ui.swapXYButton,
+                self.canvasTools,
+                self.calibrationButtons,
+                self.ui.calibratedCheckBox,
+                self.pageView,
+            ),
+        )
 
     # menu #############################################################
     ####################################################################
@@ -289,7 +302,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.pageButtons, self.dataExportButtons, self.pageStackedWidgets
         )
 
-
     # calibration ####################################
     ####################################################################
     def calibrationMVCInits(self):
@@ -298,154 +310,124 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         # ui grouping
         self.rawLineEdits = {
-            "CALI_X1": self.ui.rawX1LineEdit,
-            "CALI_X2": self.ui.rawX2LineEdit,
-            "CALI_Y1": self.ui.rawY1LineEdit,
-            "CALI_Y2": self.ui.rawY2LineEdit,
+            0: self.ui.rawX1LineEdit,
+            1: self.ui.rawX2LineEdit,
+            "Y0": self.ui.rawY1LineEdit,
+            "Y1": self.ui.rawY2LineEdit,
         }
         self.mapLineEdits = {
-            "CALI_X1": self.ui.mapX1LineEdit,
-            "CALI_X2": self.ui.mapX2LineEdit,
-            "CALI_Y1": self.ui.mapY1LineEdit,
-            "CALI_Y2": self.ui.mapY2LineEdit,
+            0: self.ui.mapX1LineEdit,
+            1: self.ui.mapX2LineEdit,
+            "Y0": self.ui.mapY1LineEdit,
+            "Y1": self.ui.mapY2LineEdit,
         }
         self.calibrationButtons = {
-            "CALI_X1": self.ui.calibrateX1Button,
-            "CALI_X2": self.ui.calibrateX2Button,
-            "CALI_Y1": self.ui.calibrateY1Button,
-            "CALI_Y2": self.ui.calibrateY2Button,
+            0: self.ui.calibrateX1Button,
+            1: self.ui.calibrateX2Button,
+            "Y0": self.ui.calibrateY1Button,
+            "Y1": self.ui.calibrateY2Button,
         }
 
-        self.calibrationView = CalibrationView(self.rawLineEdits, self.mapLineEdits)
-        self.calibrationData = CalibrationData()
-        self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
-
-    def uiCalibrationConnects(self):
-        """Connect UI elements for data calibration."""
-        for label in self.calibrationButtons.keys():
-            self.calibrationButtons[label].clicked.connect(
-                partial(self.calibrate, label)
-            )
-
-        for button in self.pageButtons.values():
-            button.clicked.connect(self.turnOffCalibration)
-
-        for lineEdit in (
-            list(self.rawLineEdits.values()) 
-            + list(self.mapLineEdits.values())
-        ):
-            lineEdit.editingFinished.connect(self.updateCalibration)
-
-        self.ui.swapXYButton.clicked.connect(self.swapXY)
-
-        self.calibrationData.caliClicked.connect(self.postCalibrationClicked)
-
-    @Slot()
-    def turnOffCalibration(self):
-        """
-        Turn off calibration when the calibration check box is unchecked manually.
-        """
-        # model off and plot stuff off
-        if self.calibrationData.calibrationIsOn:
-            self.calibrationData.calibrationOff()
-
-        # cali view off
-        self._resetHighlightButtons()
-
-    @Slot()
-    def postCalibrationClicked(self, label: str, data: float):
-        self._highlightCaliButton(
-            self.calibrationButtons[label], reset=True
+        self.calibrationView = CalibrationView(
+            rawXVecCompNameList=self.rawLineEdits,
+            mapLineEdits=self.mapLineEdits,
+            calibrationButtons=self.calibrationButtons,
+            sweepParamSet=self.sweepParameterSet,
         )
-        # update the raw line edits by the value of the clicked point
-        self.rawLineEdits[label].setText(str(data))
-        self.rawLineEdits[label].home(False)
-        # highlight the map line edit
-        self.mapLineEdits[label].selectAll()
-        self.mapLineEdits[label].setFocus()
+        self.caliParamModel = CaliParamModel(
+            rawXVecNameList=["dummy"],
+            rawYName="dummy",
+            figName="dummy",
+            sweepParamSet=self.sweepParameterSet,
+        )
+        self.calibrationCtrl = CalibrationCtrl(
+            self.caliParamModel, self.calibrationView, self.pageButtons
+        )
+        # self.calibrationData = CalibrationData()
+        # self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
 
-    def calibrationButtonIsChecked(self):
-        """
-        Check if any of the calibration buttons is checked
-        """
-        for label in self.calibrationButtons:
-            if self.calibrationButtons[label].isChecked():
-                return True
-        return False
+    # def uiCalibrationConnects(self):
+    #     """
+    #     CONTROLLER
+    #     Connect UI elements for data calibration."""
+    #     for label in self.calibrationButtons.keys():
+    #         self.calibrationButtons[label].clicked.connect(
+    #             partial(self.onCalibrationButtonClicked, label)
+    #         )
 
-    def line_select_callback(self, eclick, erelease):
-        """
-        Callback for line selection.
+    #     for button in self.pageButtons.values():
+    #         button.clicked.connect(self.turnOffCalibration)
 
-        *eclick* and *erelease* are the press and release events.
-        """
-        x1, y1 = eclick.xdata, eclick.ydata
-        x2, y2 = erelease.xdata, erelease.ydata
-        # print(f"({x1:3.2f}, {y1:3.2f}) --> ({x2:3.2f}, {y2:3.2f})")
-        # print(f" The buttons you used were: {eclick.button} {erelease.button}")
+    #     for lineEdit in list(self.rawLineEdits.values()) + list(
+    #         self.mapLineEdits.values()
+    #     ):
+    #         lineEdit.editingFinished.connect(self.updateCalibration)
 
-    def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
-        """Highlight the button by changing its color."""
-        if reset:
-            button.setStyleSheet("")
-        else:
-            button.setStyleSheet("QPushButton {background-color: #BE82FA}")
+    #     self.ui.swapXYButton.clicked.connect(self.swapXY)
 
-    def _resetHighlightButtons(self):
-        """Reset the highlighting of all calibration buttons."""
-        for label in self.calibrationButtons:
-            self._highlightCaliButton(self.calibrationButtons[label], reset=True)
+    #     self.calibrationData.caliClicked.connect(self.postCaliPointSelectedOnCanvas)
 
-    @Slot()
-    def swapXY(self):
-        """Swap the x and y axis of the calibration data."""
-        rawx1 = self.rawLineEdits["CALI_X1"].value()
-        rawx2 = self.rawLineEdits["CALI_X2"].value()
-        rawy1 = self.rawLineEdits["CALI_Y1"].value()
-        rawy2 = self.rawLineEdits["CALI_Y2"].value()
-        mapx1 = self.mapLineEdits["CALI_X1"].value()
-        mapx2 = self.mapLineEdits["CALI_X2"].value()
-        mapy1 = self.mapLineEdits["CALI_Y1"].value()
-        mapy2 = self.mapLineEdits["CALI_Y2"].value()
-        self.rawLineEdits["CALI_X1"].setText(str(rawy1))
-        self.rawLineEdits["CALI_Y1"].setText(str(rawx1))
-        self.rawLineEdits["CALI_X2"].setText(str(rawy2))
-        self.rawLineEdits["CALI_Y2"].setText(str(rawx2))
-        self.mapLineEdits["CALI_X1"].setText(str(mapy1))
-        self.mapLineEdits["CALI_Y1"].setText(str(mapx1))
-        self.mapLineEdits["CALI_X2"].setText(str(mapy2))
-        self.mapLineEdits["CALI_Y2"].setText(str(mapx2))
-        self.updateCalibration()
+    # @Slot()
+    # def turnOffCalibration(self):
+    #     """
+    #     CALIBRATION VIEW
+    #     Turn off calibration when the calibration check box is unchecked manually.
+    #     """
+    #     # model off and plot stuff off
+    #     if self.calibrationData.calibrationIsOn:
+    #         self.calibrationData.calibrationOff()
 
-    @Slot()
-    def calibrate(self, calibrationLabel: str):
-        """
-        Mouse click on one of the calibration buttons prompts switching to
-        calibration mode. Mouse cursor crosshair is adjusted and canvas waits for
-        click setting calibration point x or y component.
-        Besides, the button is highlighted.
-        """
-        if self.calibrationData.calibrationIsOn == calibrationLabel:
-            # already turned on, then turn it off
-            self.turnOffCalibration()
-            return 
+    #     # cali view off
+    #     self._resetHighlightButtons()
 
-        # button highlighting
-        self._resetHighlightButtons()
-        self._highlightCaliButton(self.calibrationButtons[calibrationLabel])
+    # @Slot()
+    # def postCaliPointSelectedOnCanvas(self, label: str, data: float):
+    #     """
+    #     CALIBRATION VIEW
+    #     """
+    #     self._highlightCaliButton(self.calibrationButtons[label], reset=True)
+    #     # update the raw line edits by the value of the clicked point
+    #     self.rawLineEdits[label].setText(str(data))
+    #     self.rawLineEdits[label].home(False)
+    #     # highlight the map line edit
+    #     self.mapLineEdits[label].selectAll()
+    #     self.mapLineEdits[label].setFocus()
 
-        # let the plotting know that calibration is on
-        self.calibrationData.calibrationOn(calibrationLabel)
+    # def calibrationButtonIsChecked(self):
+    #     """
+    #     CALIBRATION VIEW?
+    #     Check if any of the calibration buttons is checked
+    #     """
+    #     for label in self.calibrationButtons:
+    #         if self.calibrationButtons[label].isChecked():
+    #             return True
+    #     return False
 
-    @Slot()
-    def updateCalibration(self):
-        """Transfer new calibration data from CalibrationView over to calibrationData
-        instance. If the model is currently applying the calibration, then emit
-        signal to rewrite the table."""
-        self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
-        if self.calibrationData.applyCalibration:
-            self.activeDataset.emitDataSwitched()
-    
+    # def line_select_callback(self, eclick, erelease):
+    #     """
+    #     Callback for line selection.
+
+    #     *eclick* and *erelease* are the press and release events.
+    #     """
+    #     x1, y1 = eclick.xdata, eclick.ydata
+    #     x2, y2 = erelease.xdata, erelease.ydata
+    # print(f"({x1:3.2f}, {y1:3.2f}) --> ({x2:3.2f}, {y2:3.2f})")
+    # print(f" The buttons you used were: {eclick.button} {erelease.button}")
+
+    # def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
+    #     """
+    #     SHOULD GO TO CALIBRATION VIEW
+    #     Highlight the button by changing its color."""
+    #     if reset:
+    #         button.setStyleSheet("")
+    #     else:
+    #         button.setStyleSheet("QPushButton {background-color: #BE82FA}")
+
+    # def _resetHighlightButtons(self):
+    #     """Reset the highlighting of all calibration buttons."""
+    #     for label in self.calibrationButtons:
+    #         self._highlightCaliButton(self.calibrationButtons[label], reset=True)
+
     # extract and tag ##################################################
     # ##################################################################
     def extractingMVCInits(self, hilbertspace: HilbertSpace):
@@ -481,17 +463,18 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.activeDataset = ActiveExtractedData()
         self.allDatasets = AllExtractedData()
-        self.allDatasets.setCalibrationFunc(self.calibrationData.calibrateDataset)
 
         self.extractingView = ExtractingView(
             [subsys.id_str for subsys in hilbertspace.subsystem_list],
             (
-                self.uiLabelBoxes, self.uiLabelRadioButtons, 
-                self.uiBareLabelInputs, self.uiDressedLabelInputs,
-                self.uiExtractedDataManagements, 
+                self.uiLabelBoxes,
+                self.uiLabelRadioButtons,
+                self.uiBareLabelInputs,
+                self.uiDressedLabelInputs,
+                self.uiExtractedDataManagements,
                 self.ui.datasetListView,
                 self.ui.bareLabelOrder,
-            )
+            ),
         )
 
         self.extractingCtrl = ExtractingCtrl(
@@ -504,7 +487,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def prefitMVCInits(self, hilbertspace: HilbertSpace):
         self.quantumModel = QuantumModel(hilbertspace)
         self.sweepParameterSet = HSParamSet(hilbertspace, QMSweepParam)
-        
+
         self.prefitParamModel = PrefitParamModel(hilbertspace, QMSliderParam)
         self.prefitParamView = PrefitParamView(
             self.ui.prefitScrollAreaWidget,
@@ -519,11 +502,13 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.quantumModel.hilbertspace = hilbertspace
         self.prefitIdentifySweepParameters(hilbertspace)
         self.prefitViewInserts()
-        self.prefitSubsystemComboBoxLoads([
-            HSParamSet.parentSystemNames(subsys)
-            for subsys in hilbertspace.subsystem_list[::-1]
-        ])
-        
+        self.prefitSubsystemComboBoxLoads(
+            [
+                HSParamSet.parentSystemNames(subsys)
+                for subsys in hilbertspace.subsystem_list[::-1]
+            ]
+        )
+
     def prefitStaticElementsBuild(self, hilbertspace: HilbertSpace):
         # self.setUpPrefitResultConnects()
         self.prefitParamModelConnects()
@@ -628,12 +613,14 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         View --> model: slider --> parameter
 
-        Note that in the current implementation, main window is both the 
+        Note that in the current implementation, main window is both the
         controller and the model (hosting the parameterset)
         """
         # update the value
         self.prefitParamView.sliderValueChanged.connect(
-            lambda paramAttr: self.prefitParamModel.storeParamAttr(paramAttr, fromSlider=True)   
+            lambda paramAttr: self.prefitParamModel.storeParamAttr(
+                paramAttr, fromSlider=True
+            )
         )
         self.prefitParamView.textValueChanged.connect(
             lambda paramAttr: self.prefitParamModel.storeParamAttr(paramAttr)
@@ -647,10 +634,14 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # synchronize slider and box
         self.prefitParamModel.updateSlider.connect(
-            lambda paramAttr: self.prefitParamView.setByParamAttr(paramAttr, toSlider=True)
+            lambda paramAttr: self.prefitParamView.setByParamAttr(
+                paramAttr, toSlider=True
+            )
         )
         self.prefitParamModel.updateBox.connect(
-            lambda paramAttr: self.prefitParamView.setByParamAttr(paramAttr, toSlider=False)
+            lambda paramAttr: self.prefitParamView.setByParamAttr(
+                paramAttr, toSlider=False
+            )
         )
 
     def prefitParamModelConnects(self):
@@ -666,11 +657,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitParamModel.hspaceUpdated.connect(
             lambda: self.onParameterChange(self.prefitParamModel)
         )
-        self.prefitParamModel.hspaceUpdated.connect(
-            lambda: print("hspace updated")
-        )
+        self.prefitParamModel.hspaceUpdated.connect(lambda: print("hspace updated"))
 
-    def prefitSubsystemComboBoxLoads(self, subsysNames: List[str] ):
+    def prefitSubsystemComboBoxLoads(self, subsysNames: List[str]):
         """
         It should belong to PREFIT VIEW
 
@@ -724,7 +713,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             pointsAddCallback=self.ui.pointsAddLineEdit.text,
         )
 
-        dim = hilbertspace.dimension 
+        dim = hilbertspace.dimension
         if dim > 20:
             dim = 20
         self.ui.evalsCountLineEdit.setText(str(dim))
@@ -745,9 +734,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
 
         # set line edit property:
-        self.ui.initStateLineEdit.setTupleLength(
-            hilbertspace.subsystem_count
-        )
+        self.ui.initStateLineEdit.setTupleLength(hilbertspace.subsystem_count)
 
         # when change those numbers, update the spectrum data using the
         # existing sweep
@@ -804,8 +791,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
         )
         self.fitView.fitTableInserts(
-            self.fitParamModel.paramNamesDict(), 
-            removeExisting=True
+            self.fitParamModel.paramNamesDict(), removeExisting=True
         )
 
     def fitStaticElementsBuild(self):
@@ -939,7 +925,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         table --> parameter
 
-        Note that in the current implementation, main window is both the 
+        Note that in the current implementation, main window is both the
         controller and the model (hosting the parameterset)
         """
         # update the value
@@ -1034,9 +1020,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitDynamicalElementsBuild(hilbertspace)
         self.fitDynamicalElementsBuild(hilbertspace)
 
-        self.plottingCtrl.dynamicalInit(
-            self.measurementData, self.quantumModel
-        )
+        self.plottingCtrl.dynamicalInit(self.measurementData, self.quantumModel)
 
         self.allDatasets.loadedFromRegistry.connect(self.extractedDataSetup)
 
@@ -1097,8 +1081,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.status = StatusModel()
         self.statusBarView = StatusBarView(self.ui.statusBar)
         self.statusCtrl = StatusCtrl(
-            (self.allDatasets, self.activeDataset), 
-            self.status, 
+            (self.allDatasets, self.activeDataset),
+            self.status,
             self.statusBarView,
         )
 

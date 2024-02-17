@@ -14,36 +14,12 @@ from matplotlib.artist import Artist
 from datetime import datetime
 
 from qfit.models.parameter_settings import ParameterType
-from qfit.models.quantum_model_parameters import ParamSet
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
 
 from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.qubit_base import QuantumSystem
 
 ParentType = Union[QuantumSystem, HilbertSpace]
-
-
-class CalibrationRawMapPair:
-    """
-    Store a pair of raw and mapped vectors for calibration.
-    """
-
-    def __init__(
-        self,
-        rawVec: Tuple[float],
-        mapVec: Tuple[float],
-        source: Union[str, None] = None,
-    ):
-        self.rawVec = rawVec
-        self.mapVec = mapVec
-        self.source = source
-
-    def __str__(self):
-        return f"Raw: {self.rawVec}, Mapped: {self.mapVec}, Source: {self.source}"
-
-    def __repr__(self):
-        return self.__str__()
-
 
 class Status:
     """
@@ -660,9 +636,10 @@ class QMFitParam(DispParamBase):
 
 
 class CaliTableRowParam(DispParamBase):
-    """ 
-    The updated class for calibration table parameters. 
     """
+    The updated class for calibration table parameters.
+    """
+
     attrToRegister = [
         "value",
         "min",
@@ -675,7 +652,7 @@ class CaliTableRowParam(DispParamBase):
     def __init__(
         self,
         colName: str,
-        rowIdx: str,
+        rowIdx: Union[str, int],
         paramType: ParameterType,
         parentSystem: Optional[str],
         sweepParamName: Optional[str],
@@ -715,82 +692,3 @@ class CaliTableRowParam(DispParamBase):
         Set the value of the parameter to the initial value
         """
         self.value = self.initValue
-
-
-class CaliTableParam(DispParamBase):
-    """
-    A class for quantum model parameters that stores individual sweep parameter (out of all
-    ng and flux in the model) for each (rawVec, mapVec) pair, i.e. it stores an element of
-    mapVec for one such pair.
-
-    Parameters
-    ----------
-    name: str
-        The name of the parameter
-    value: Union[float, int]
-        The value of the parameter
-    param_type: ParameterType
-        The type of the parameter
-    """
-
-    attrToRegister = ["value"]
-
-    def __init__(
-        self,
-        name: str,
-        value: Union[float, int],
-        parent: str,
-        param_type: ParameterType,
-    ):
-        super().__init__(name=name, parent=parent, paramType=param_type)
-
-        self._value = value
-        self.calibration_func = None
-
-    @property
-    def value(self) -> Union[int, float]:
-        """
-        Get the value of the parameter
-        """
-        return self._value
-
-    @value.setter
-    def value(self, value: Union[int, float]):
-        """
-        Set the value of the parameter. Will update the both the parameter stored and the
-        parent object.
-        """
-        self._value = self.value
-
-    def setParameterForParent(self):
-        """
-        Disable this method for CaliTableParam
-        """
-        raise NotImplementedError("CaliTableParam should not set parameter for parent.")
-
-
-class CaliTableRow:
-    """
-    A class that gathers all information for a single calibration table entry.
-
-    Parameters
-    ----------
-    rawVec: Dict[str, float]
-        The raw vector of the calibration table entry
-    mapVec: ParamSet
-        The mapped vector of the calibration table entry, which is a set of parameters
-        for CaliTableParam
-    pointSource: Union[str, None]
-        The source of the calibration table entry, if user did not specify rawVec from
-        any of the figure, it will be None.
-    """
-
-    def __init__(
-        self,
-        rawVec: Dict[str, float],
-        mapVec: ParamSet["CaliTableParam"],
-        pointPairSource: Union[str, None],
-    ) -> None:
-        self.rawVec = rawVec
-        self.mapVec = mapVec
-        self.pointPairSource = pointPairSource

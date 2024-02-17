@@ -22,8 +22,9 @@ ParameterType = Literal[
     "cutoff",
     "interaction_strength",
     "truncated_dim",
-    "raw_vec_element",
-    "point_pair_source"
+    "raw_X_vec_component",
+    "raw_Y",
+    "point_pair_source",
 ]
 
 # default ranges for different types of parameters
@@ -115,5 +116,5 @@ QSYS_PARAM_NAMES = {
     },
     GenericQubit: {
         "E": ["E"],
-    }
+    },
 }
