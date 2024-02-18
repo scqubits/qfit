@@ -696,7 +696,7 @@ class QMSweepParam(ParamBase):
         """
         self._value = self._toIntAsNeeded(value)
 
-    def setValueWithCali(self, value: Union[int, float]):
+    def setValueWithCali(self, value: Dict[str, float]):
         """
         Set the value of the parameter with the calibration function
         """

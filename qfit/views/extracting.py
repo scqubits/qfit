@@ -3,7 +3,7 @@ from PySide6.QtCore import (
     Signal,
     Slot,
 )
-from PySide6.QtWidgets import QWidget, QLabel, QRadioButton, QSpinBox
+from PySide6.QtWidgets import QWidget, QLabel, QRadioButton, QSpinBox, QGroupBox, QPushButton
 from typing import Tuple, Dict, Any, List
 
 from qfit.models.data_structures import Tag
@@ -18,9 +18,9 @@ class ExtractingView(QObject):
         self,
         subsysNames: List[str],
         uiGroups: Tuple[
-            Dict[str, QWidget], Dict[str, QRadioButton],
-            Dict[str, IntTupleLineEdit], Dict[str, IntLineEdit],
-            Dict[str, QSpinBox], ListView,
+            Dict[str, QGroupBox], Dict[str, QRadioButton],
+            Dict[str, IntTupleLineEdit], Dict[str, QSpinBox],
+            Dict[str, QPushButton], ListView,
             QLabel
         ],
     ):
