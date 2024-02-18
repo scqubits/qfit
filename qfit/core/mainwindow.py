@@ -83,7 +83,7 @@ from qfit.models.numerical_model import QuantumModel
 # fit
 from qfit.models.data_structures import QMFitParam
 from qfit.views.parameters import FitParamView
-from qfit.models.fit import NumericalFitting
+from qfit.models.fit import FitParamModel
 
 # plot
 from qfit.controllers.plotting import PlottingCtrl
@@ -528,7 +528,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitViewUpdates(hilbertspace)
         
     def prefitStaticElementsBuild(self, hilbertspace: HilbertSpace):
-        # self.setUpPrefitResultConnects()
         self.prefitParamModelConnects()
         self.prefitButtonConnects(hilbertspace)
         self.prefitSliderParamConnects()
@@ -738,7 +737,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
         self.fitParamModel = FitParamModel(hilbertspace, QMFitParam)
 
-        self.fitStaticElementsBuild()
+        self.fitStaticElementsBuild(hilbertspace)
 
     def fitDynamicalElementsBuild(self, hilbertspace: HilbertSpace):
         self.fitParamModel.hilbertspace = hilbertspace
@@ -750,75 +749,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             removeExisting=True
         )
 
-    def fitStaticElementsBuild(self):
-        self.threadpool = QThreadPool()
-        self.numericalFitting = NumericalFitting()
-
+    def fitStaticElementsBuild(self, hilbertspace: HilbertSpace):
+        self.numericalFitting = FitParamModel(hilbertspace, QMFitParam)
+            
         self.fitTableParamConnects()
-        self.setupFitConnects()
         self.fittingCallbackConnects()
         self.fitPushButtonConnects()
-
-        self.fitResult = StatusModel()
-        self.setUpFitResultConnects()
-
-    def setupFitConnects(self):
-        self.numericalFitting.setupUICallbacks(
-            self.ui.optimizerComboBox.currentText,
-            self.ui.tolLineEdit.text,
-        )
-
-    @Slot()
-    def _setupOptimization(self):
-        """
-        Run optimization step 1: setup the optimization using various parameters
-        """
-        self.optInitialized = self.numericalFitting.setupOptimization(
-            self.fitParamModel,
-            self.quantumModel.MSEByParameters,
-            self.allDatasets,
-            self.sweepParameterSet,
-            self.calibrationData,
-            self.fitResult,
-        )
-
-    @Slot()
-    def _backgroundOptimization(self):
-        """
-        Run optimization step 2: run the optimization in the background
-        """
-        if not self.optInitialized:
-            return
-
-        self.ui.fitButton.setEnabled(False)
-        self.prefitParamView.sliderSet.setEnabled(False)
-
-        # start the optimization
-        self.threadpool.start(self.numericalFitting)
-
-    @Slot()
-    def _onOptFinished(self):
-        print("Optimization finished")
-
-        self.ui.fitButton.setEnabled(True)
-        self.prefitParamView.sliderSet.setEnabled(True)
-
-        # the numericalFitting object will be deleted after background running
-        # so we need to create a new one and connect the signals again
-        self.numericalFitting = NumericalFitting()
-        self.setupFitConnects()
-        self.fittingCallbackConnects()
-
-        # should be used after re-create the numericalFitting object
-        # (for the optimization failing case)
-        self.onParameterChange(self.fitParamModel)
-
-    def fittingCallbackConnects(self):
-        """
-        when the optimization is finished, send a signal that triggers
-        the `_onOptFinished` function
-        """
-        self.numericalFitting.signals.optFinished.connect(self._onOptFinished)
 
     @Slot()
     def fittingParameterLoad(self, source: Literal["prefit", "fit"]):
@@ -848,6 +784,19 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         value_dict = self.fitParamModel.exportAttrDict("value")
         self.prefitParamModel.loadAttrDict(value_dict, "value")
 
+    @Slot()
+    def optimizeParams(self):
+        self.numericalFitting.setupOptimization()
+
+        self.ui.fitButton.setEnabled(False)
+        self.prefitParamView.sliderSet.setEnabled(False)
+
+        # self.numericalFitting.run()
+
+        self.ui.fitButton.setEnabled(True)
+        self.prefitParamView.sliderSet.setEnabled(True)
+
+
     def fitPushButtonConnects(self):
         """
         Connect the buttons for
@@ -856,11 +805,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         3. parameters transfer: fit to prefit
         4. parameters transfer: fit result to fit
         """
-        # setup the optimization
-        self.ui.fitButton.clicked.connect(self._setupOptimization)
-
-        # connect the fit button to the fitting function
-        self.ui.fitButton.clicked.connect(self._backgroundOptimization)
+        # run optimization
+        self.ui.fitButton.clicked.connect(self.optimizeParams)
 
         # the prefit parameter export
         self.dataExportButtons["fit"].clicked.connect(
@@ -887,27 +833,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # update the value
         self.fitView.dataEditingFinished.connect(self.fitParamModel._storeParamAttr)
         self.fitParamModel.updateBox.connect(self.fitView.setBoxValue)
-
-    def setUpFitResultConnects(self):
-        """
-        connect the prefit result to the relevant UI textboxes;
-        whenever there is a change in the UI, reflect in the UI text change
-        """
-        status_type_ui_setter = lambda: self.ui.label_49.setText(
-            self.fitResult.displayed_status_type
-        )
-        status_text_ui_setter = lambda: self.ui.statusTextLabel_2.setText(
-            self.fitResult.statusStrForView
-        )
-        mse_change_ui_setter = lambda: self.ui.mseLabel_2.setText(
-            self.fitResult.displayed_MSE
-        )
-
-        self.fitResult.setupUISetters(
-            status_type_ui_setter=status_type_ui_setter,
-            status_text_ui_setter=status_text_ui_setter,
-            mseChangeUISetter=mse_change_ui_setter,
-        )
 
     # Save Location & Window Title #####################################
     # ##################################################################
@@ -1002,29 +927,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         except AttributeError:
             # the GUI is partially initialized and don't have the ioMenuCtrl
             event.accept()
-
-    # @Slot()
-    # def extractedDataSetup(self, initdata):
-    #     """
-    #     Recover extracted data from initdata, and emit changes to the view
-    #     """
-    #     # recover the allDatasets model
-    #     datanames = initdata["datanames"]
-    #     datalist = initdata["datalist"]
-    #     tag_data = initdata["taglist"]
-    #     self.allDatasets.dataNames = datanames
-    #     self.allDatasets.assocDataList = transposeEach(datalist)
-    #     self.allDatasets.assocTagList = tag_data
-    #     # set calibration
-    #     # this might worth a separate signal/slot, because the initialDynamicalElements only
-    #     # initialize the calibration data, and it does not recover the progress on the previous
-    #     # calibration.
-    #     self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
-
-    #     # set dataset
-    #     self.allDatasets.layoutChanged.emit()  # update the list view to show the new data
-    #     self.allDatasets.emitFocusChanged()
-    #     self.allDatasets.emitXUpdated()
 
     def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)
