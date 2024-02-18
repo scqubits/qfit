@@ -147,7 +147,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
             setattr(para_dict[name], attr, value)
         except KeyError:
             raise KeyError(f"Cannot find parameter {name} in the parameter set.")
-        
+
     def toParamDict(self) -> Dict[str, ParamCls]:
         """
         Provide a way to iterate through the parameter set.
@@ -849,7 +849,7 @@ class CaliParamModel(
         # add the parameter to the parameter set
         self[rowIdx][colName] = param
 
-    @Slot(Union[str, int, False])
+    @Slot()
     def updateStatusFromCaliView(self, status: Union[str, int, False]):
         self.caliStatus = status
         if status != False:

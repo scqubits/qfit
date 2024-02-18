@@ -124,7 +124,7 @@ class QuantumModel(QObject):
         self._fullExtr = fullExtr
         # at the moment we don't update the calculation after the extracted data is updated
 
-    @Slot(Dict[str, HSParamSet])
+    @Slot(dict)
     def updateSweepParamSets(self, sweepParamSets: Dict[str, HSParamSet]):
         """
         Update the parameter sets for the sweeps.

@@ -1,4 +1,3 @@
-
 import sys
 import os
 import numpy as np
@@ -67,11 +66,11 @@ class IOCtrl:
         self,
         ui_Menu: MenuWidget,
         registry: Registry,
-        mainWindow: "MainWindow",   # it's not a good idea to use the entire
-                                    # main window here, but this IO controller
-                                    # really needs great power - initialize
-                                    # the dynamical elements, save the project,
-                                    # close the app, etc.
+        mainWindow: "MainWindow",  # it's not a good idea to use the entire
+        # main window here, but this IO controller
+        # really needs great power - initialize
+        # the dynamical elements, save the project,
+        # close the app, etc.
     ):
         self.menu = ui_Menu
         self.registry = registry
@@ -102,7 +101,7 @@ class IOCtrl:
     @staticmethod
     def _measurementDataFromFile(
         fileName: str,
-    ) -> MeasurementDataType:
+    ) -> "MeasurementDataType":
         """
         Read the measurement data from the given file.
 
@@ -389,7 +388,7 @@ class IOCtrl:
         Return the parameters as a dict.
         """
         return self.mainWindow.fitParamModel.exportAttrDict("value")
-    
+
     def exportHilbertSpace(self, deepcopy: bool = False) -> HilbertSpace:
         """
         Return the hilbert space object.
@@ -447,4 +446,3 @@ class IOCtrl:
         if not success:
             return
         self._quit()
-

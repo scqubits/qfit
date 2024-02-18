@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 class CalibrationCtrl(QObject):
     def __init__(
         self,
-        caliParamModel: CaliParamModel,
-        calibrationView: CalibrationView,
+        caliParamModel: "CaliParamModel",
+        calibrationView: "CalibrationView",
         pageButtons: Dict[str, QPushButton],
         *args,
         **kwargs,

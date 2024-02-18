@@ -160,7 +160,7 @@ class CalibrationView(QObject):
                 return calibrationLabel
         return False
 
-    @Slot(str, Dict[str, float])
+    @Slot(str, dict)
     def postCaliPointSelectedOnCanvas(self, rowIdx: str, data: Dict[str, float]):
         """
         CALIBRATION VIEW
