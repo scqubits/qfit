@@ -5,10 +5,9 @@ from PySide6.QtCore import QRunnable, QThreadPool, Signal, QObject
 
 from qfit.utils.wrapped_optimizer import Optimization, OptTraj
 from qfit.models.extracted_data import AllExtractedData
-from qfit.models.calibration_data import CalibrationData
-from qfit.models.quantum_model_parameters import (
-    ParamSet,
-)
+
+# from qfit.models.calibration_data import CalibrationData
+from qfit.models.quantum_model_parameters import ParamSet, CaliParamModel
 from qfit.models.data_structures import QMFitParam
 from qfit.models.status import StatusModel
 
@@ -48,7 +47,7 @@ class NumericalFitting(QRunnable):
         MSE: Callable,
         extractedData: AllExtractedData,
         sweepParameterSet: ParamSet,
-        calibrationData: CalibrationData,
+        calibrationData: CaliParamModel,
     ):
         """
         A wrapper for the target function, which takes a dictionary of parameters and
@@ -70,7 +69,7 @@ class NumericalFitting(QRunnable):
         MSE: Callable,
         extractedData: AllExtractedData,
         sweepParameterSet: ParamSet,
-        calibrationData: CalibrationData,
+        calibrationData: CaliParamModel,
         result: StatusModel,
     ) -> bool:
         """
@@ -137,7 +136,7 @@ class NumericalFitting(QRunnable):
                     "MSE": MSE,
                     "extractedData": extractedData,
                     "sweepParameterSet": sweepParameterSet,
-                    "calibrationData": calibrationData,
+                    "calibrationData": CaliParamModel,
                 },
                 optimizer=self.optimizer(),
                 opt_options={

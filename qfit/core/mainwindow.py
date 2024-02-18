@@ -60,7 +60,7 @@ from qfit.widgets.menu import MenuWidget
 from qfit.views.paging import PageView
 
 # calibration:
-from qfit.models.calibration_data import CalibrationData
+# from qfit.models.calibration_data import CalibrationData
 from qfit.models.quantum_model_parameters import CaliParamModel
 from qfit.views.calibration import CalibrationView
 from qfit.controllers.calibration import CalibrationCtrl
@@ -528,7 +528,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             sweep_parameter_set=self.sweepParameterSet,
             # spectrum_data=self.spectrumData,
             extracted_data=self.allDatasets,
-            calibration_data=self.calibrationData,
+            calibration_data=self.caliParamModel,
             # result=self.prefitResult,
         )
 
@@ -878,7 +878,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # special registry
         self.registry.register(self.quantumModel._hilbertspace)
         self.registry.register(self.measurementData)
-        self.registry.register(self.calibrationData)
+        self.registry.register(self.caliParamModel)
         self.registry.register(self.allDatasets)
 
         # parameters

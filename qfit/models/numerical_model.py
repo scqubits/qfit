@@ -27,7 +27,8 @@ from qfit.models.data_structures import (
 )
 from qfit.models.status import StatusModel
 from qfit.models.numerical_spectrum_data import CalculatedSpecData
-from qfit.models.calibration_data import CalibrationData
+# from qfit.models.calibration_data import CalibrationData
+from qfit.models.quantum_model_parameters import CaliParamModel
 from qfit.models.extracted_data import AllExtractedData
 from qfit.models.data_structures import Tag, SpectrumElement
 
