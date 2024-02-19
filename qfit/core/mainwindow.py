@@ -522,7 +522,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         Model & View updates
         """
-        self.quantumModel.prefitSweep2SpecMSE(
+        self.quantumModel.sweep2SpecMSE(
             slider_or_fit_parameter_set=self.prefitParamModel,
             sweep_parameter_set=self.sweepParameterSet,
             # spectrum_data=self.spectrumData,
@@ -661,7 +661,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     # Fit ##############################################################
     # ##################################################################
     def fitMVCInits(self, hilbertspace: HilbertSpace):
-        self.fitView = FitParamView(
+        self.fitParamView = FitParamView(
             self.ui.fitScrollAreaWidget,
         )
         self.fitParamModel = FitParamModel(hilbertspace, QMFitParam)
@@ -673,13 +673,13 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.fitParamModel.insertParamToSet(
             excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
         )
-        self.fitView.fitTableInserts(
-            self.fitParamModel.paramNamesDict(), removeExisting=True
+        self.fitParamView.fitTableInserts(
+            self.fitParamModel.paramNamesDict(), 
+            removeExisting=True
         )
 
     def fitStaticElementsBuild(self, hilbertspace: HilbertSpace):
-        self.numericalFitting = FitParamModel(hilbertspace, QMFitParam)
-            
+        self.fitOptionConnects()
         self.fitTableParamConnects()
         self.fittingCallbackConnects()
         self.fitPushButtonConnects()
@@ -714,16 +714,25 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     @Slot()
     def optimizeParams(self):
-        self.numericalFitting.setupOptimization()
+        self.quantumModel.sweepUsage = "fit"
+        self.fitParamModel.setupOptimization()
 
         self.ui.fitButton.setEnabled(False)
         self.prefitParamView.sliderSet.setEnabled(False)
 
-        # self.numericalFitting.run()
+        self.fitParamModel.run()
 
         self.ui.fitButton.setEnabled(True)
         self.prefitParamView.sliderSet.setEnabled(True)
+        self.quantumModel.sweepUsage = "prefit"
 
+    def fitOptionConnects(self):
+        self.ui.tolLineEdit.editingFinished.connect(
+            lambda: self.fitParamModel.updateTol(self.ui.tolLineEdit.value())
+        )
+        self.ui.optimizerComboBox.currentIndexChanged.connect(
+            lambda: self.fitParamModel.updateOptimizer(self.ui.optimizerComboBox.currentText())
+        )
 
     def fitPushButtonConnects(self):
         """
@@ -759,8 +768,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         controller and the model (hosting the parameterset)
         """
         # update the value
-        self.fitView.dataEditingFinished.connect(self.fitParamModel._storeParamAttr)
-        self.fitParamModel.updateBox.connect(self.fitView.setBoxValue)
+        self.fitParamView.dataEditingFinished.connect(self.fitParamModel._storeParamAttr)
+        self.fitParamModel.updateBox.connect(self.fitParamView.setBoxValue)
 
     # Save Location & Window Title #####################################
     # ##################################################################

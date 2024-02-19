@@ -52,6 +52,9 @@ class QuantumModel(QObject):
     _sweeps: Dict[str, ParameterSweep]
 
     readyToPlot = Signal(SpectrumElement)
+    mseReadyToFit = Signal(float)
+
+    sweepUsage: Literal["prefit", "fit"] = "prefit"
 
     # options
 
@@ -193,7 +196,7 @@ class QuantumModel(QObject):
 
         # update the calculation
         if attrName in ["subsysToPlot", "initialState", "photons"]:
-            self.prefitSweep2SpecMSE()
+            self.sweep2SpecMSE()
             pass
         elif attrName in ["evalsCount", "pointsAdd", "autoRun"]:
             self.prefitUpdateCalc()
@@ -382,13 +385,15 @@ class QuantumModel(QObject):
         return sweeps
 
     # public methods ==========================================================
-    def newSweep(self, addPoints: bool) -> None:
+    def newSweep(self) -> None:
         """
         Create a new ParameterSweep object based on the stored data.
         """
         try:
             self._sweeps = self._generateSweep(
-                sweptX=self._prefitSweptX(addPoints),
+                sweptX=self._prefitSweptX(
+                    addPoints = (self.sweepUsage == "prefit")
+                ),
                 updateHS=self._updateHSForSweep(),
                 subsysUpdateInfo=self._subsysUpdateInfo(),
             )
@@ -397,7 +402,7 @@ class QuantumModel(QObject):
             raise e
 
     @Slot()
-    def prefitSweep2SpecMSE(self):
+    def sweep2SpecMSE(self):
         """
         It is connected to the signal emitted by the UI when the user clicks the plot button
         for the prefit stage. It make use of the existing sweep object to
@@ -408,7 +413,7 @@ class QuantumModel(QObject):
             self._sweeps
         except AttributeError:
             try:
-                self.newSweep(addPoints=True)
+                self.newSweep()
             except Exception as e:
                 return
 
@@ -422,6 +427,13 @@ class QuantumModel(QObject):
 
         # mse calculation
         mse = self.calculateMSE()
+
+        if self.sweepUsage == "prefit":
+            # update mse
+            pass
+        else:
+            # let the fit model handle the mse
+            self.mseReadyToFit.emit(mse)
 
         # # pass MSE and status messages to the model
         # result.oldMseForComputingDelta = result.newMseForComputingDelta
@@ -439,10 +451,10 @@ class QuantumModel(QObject):
         the HilbertSpace object. If auto run is on, it will also compute the spectrum
         and MSE.
         """
-        self.newSweep(addPoints=True)
+        self.newSweep()
 
-        if self._autoRun:
-            self.prefitSweep2SpecMSE()
+        if self._autoRun or self.sweepUsage == "fit":
+            self.sweep2SpecMSE()
 
     # calculate MSE ===========================================================
     @staticmethod

@@ -443,9 +443,9 @@ class NumericalMeasurementData(MeasurementData):
         From the raw data, find the zData, xData, and yData candidates and their compatibles.
         """
         self._zCandidates = self._findZCandidates(self.rawData)
-        self._findXYCompatibles()
-
         self._currentZ = self._zCandidates.itemByIndex(0)
+        
+        self._findXYCompatibles()
         self._currentX = self._currentXCompatibles.itemByIndex(0)
         self._currentY = self._currentYCompatibles.itemByIndex(0)
 
