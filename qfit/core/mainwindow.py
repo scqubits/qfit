@@ -122,11 +122,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     _projectFile: Union[str, None] = None
 
     def __init__(
-        self, measurementData: MeasurementDataType, hilbertspace: HilbertSpace
+        self, measurementData: List[MeasurementDataType], hilbertspace: HilbertSpace
     ):
         QMainWindow.__init__(self)
         self.openFromIPython = executed_in_ipython()
         self.setFocusPolicy(Qt.StrongFocus)
+        self.measurementData = MeasDataSet([measurementData])
 
         # ui
         self.ui = Ui_MainWindow()
@@ -147,7 +148,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitDynamicalElementsBuild(hilbertspace)
 
         # calibration - should be inited after prefit, as it requires the sweep parameter set
-        self.calibrationMVCInits()
+        self.calibrationMVCInits(measurementData)
         # self.uiCalibrationConnects()
 
         # fit
@@ -155,7 +156,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.fitDynamicalElementsBuild(hilbertspace)
 
         # plot, mpl canvas
-        self.measurementData = MeasDataSet([measurementData])
         self.plottingMVCInits()
         self.plottingCtrl.dynamicalInit(self.measurementData, self.quantumModel)
 
@@ -296,7 +296,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # calibration ####################################
     ####################################################################
-    def calibrationMVCInits(self):
+    def calibrationMVCInits(self, measurementData: List[MeasurementDataType]):
         """
         Set up an instance of CalibrationData and CalibrationView.
         """
@@ -322,14 +322,17 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.calibrationView = CalibrationView(
             rawXVecCompNameList=self.rawLineEdits,
+            rawYName=measurementData[0].rawYNames[0],
+            rawLineEdits=self.rawLineEdits,
             mapLineEdits=self.mapLineEdits,
+            caliTableXRowNr=len(measurementData[0].rawXNames),
             calibrationButtons=self.calibrationButtons,
             sweepParamSet=self.sweepParameterSet,
         )
         self.caliParamModel = CaliParamModel(
-            rawXVecNameList=["dummy"],
-            rawYName="dummy",
-            figName="dummy",
+            rawXVecNameList=measurementData[0].rawXNames,
+            rawYName=measurementData[0].rawYNames[0],
+            figName=[measurementData[0].name],
             sweepParamSet=self.sweepParameterSet,
         )
         self.calibrationCtrl = CalibrationCtrl(
@@ -337,7 +340,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
         # self.calibrationData = CalibrationData()
         # self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
-
 
     # def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
     #     """
@@ -418,7 +420,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "photons": self.ui.prefitPhotonSpinBox,
             "evalsCount": self.ui.evalsCountLineEdit,
             "pointsAdded": self.ui.pointsAddLineEdit,
-            "autoRun": self.ui.autoRunCheckBox, 
+            "autoRun": self.ui.autoRunCheckBox,
         }
 
         self.quantumModel = QuantumModel(hilbertspace, ["Figure"])
@@ -430,10 +432,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.ui.prefitMinmaxScrollAreaWidget,
         )
         self.prefitView = PrefitView(
-            options = self.prefitOptions,
-            subsysNames = [HSParamSet.parentSystemNames(subsys)
-                for subsys in hilbertspace.subsystem_list[::-1]],
-            hilbertDim = hilbertspace.dimension,
+            options=self.prefitOptions,
+            subsysNames=[
+                HSParamSet.parentSystemNames(subsys)
+                for subsys in hilbertspace.subsystem_list[::-1]
+            ],
+            hilbertDim=hilbertspace.dimension,
         )
 
         self.prefitResult = StatusModel()
@@ -443,7 +447,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.quantumModel._hilbertspace = hilbertspace
         self.prefitIdentifySweepParameters(hilbertspace)
         self.prefitViewUpdates(hilbertspace)
-        
+
     def prefitStaticElementsBuild(self, hilbertspace: HilbertSpace):
         self.prefitParamModelConnects()
         self.prefitButtonConnects(hilbertspace)
@@ -543,9 +547,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # initialize the options
         self.prefitView.initializeOptions(
-            subsysNames = [HSParamSet.parentSystemNames(subsys)
-                for subsys in hilbertspace.subsystem_list[::-1]],
-            hilbertDim = hilbertspace.dimension,
+            subsysNames=[
+                HSParamSet.parentSystemNames(subsys)
+                for subsys in hilbertspace.subsystem_list[::-1]
+            ],
+            hilbertDim=hilbertspace.dimension,
         )
 
     def prefitSliderParamConnects(self):
@@ -593,7 +599,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         It complete a flow of information from the slider to the model.
         """
-        self.prefitParamModel.hspaceUpdated.connect(self.quantumModel.updateHilbertSpace)
+        self.prefitParamModel.hspaceUpdated.connect(
+            self.quantumModel.updateHilbertSpace
+        )
         self.allDatasets.dataUpdated.connect(self.quantumModel.updateExtractedData)
 
     # def setUpPrefitResultConnects(self):
@@ -668,8 +676,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
         )
         self.fitParamView.fitTableInserts(
-            self.fitParamModel.paramNamesDict(), 
-            removeExisting=True
+            self.fitParamModel.paramNamesDict(), removeExisting=True
         )
 
     def fitStaticElementsBuild(self, hilbertspace: HilbertSpace):
@@ -725,7 +732,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             lambda: self.fitParamModel.updateTol(self.ui.tolLineEdit.value())
         )
         self.ui.optimizerComboBox.currentIndexChanged.connect(
-            lambda: self.fitParamModel.updateOptimizer(self.ui.optimizerComboBox.currentText())
+            lambda: self.fitParamModel.updateOptimizer(
+                self.ui.optimizerComboBox.currentText()
+            )
         )
 
     def fitPushButtonConnects(self):
@@ -762,7 +771,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         controller and the model (hosting the parameterset)
         """
         # update the value
-        self.fitParamView.dataEditingFinished.connect(self.fitParamModel._storeParamAttr)
+        self.fitParamView.dataEditingFinished.connect(
+            self.fitParamModel._storeParamAttr
+        )
         self.fitParamModel.updateBox.connect(self.fitParamView.setBoxValue)
 
     # Save Location & Window Title #####################################
