@@ -14,11 +14,8 @@ from qfit.models.quantum_model_parameters import HSParamModel
 from qfit.models.data_structures import QMFitParam
 from qfit.models.status import StatusModel
 
-
 class FitParamModel(HSParamModel[QMFitParam]):
     
-    optFinished = Signal()
-    statusChanged = Signal()
     waitingForMSE = QEventLoop()
     fitThreadPool = QThreadPool()
 
@@ -33,8 +30,8 @@ class FitParamModel(HSParamModel[QMFitParam]):
         self.optimizer = optimizer
 
     @Slot()
-    def updateTol(self, tol: float):
-        self.tol = tol
+    def updateTol(self, tol: str):
+        self.tol = float(tol)
 
     @Slot()
     def MSECalculated(self, mse: float):
