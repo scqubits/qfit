@@ -1,5 +1,19 @@
 <RCC>
   <qresource prefix="/">
+    <file>icons/svg/extract-on.svg</file>
+    <file>icons/svg/extract.svg</file>
+    <file>icons/svg/move-on.svg</file>
+    <file>icons/svg/move.svg</file>
+    <file>icons/svg/reset-on.svg</file>
+    <file>icons/svg/reset.svg</file>
+    <file>icons/svg/settings-on.svg</file>
+    <file>icons/svg/settings.svg</file>
+    <file>icons/svg/x-snap-on.svg</file>
+    <file>icons/svg/x-snap.svg</file>
+    <file>icons/svg/y-snap-on.svg</file>
+    <file>icons/svg/y-snap.svg</file>
+    <file>icons/svg/zoom-on.svg</file>
+    <file>icons/svg/zoom.svg</file>
     <file>icons/svg/updown-pressed.svg</file>
     <file>icons/svg/copy-pressed.svg</file>
     <file>icons/svg/eye-pressed.svg</file>
