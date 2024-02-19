@@ -28,7 +28,11 @@ import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_laplace
 
 from PySide6.QtCore import (
-    Signal, Slot, QObject, QAbstractListModel, Qt,
+    Signal,
+    Slot,
+    QObject,
+    QAbstractListModel,
+    Qt,
     QAbstractListModel,
     QModelIndex,
 )
@@ -53,7 +57,6 @@ class ListModelMeta(type(QAbstractListModel), type(Registrable)):
 
 
 class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
-
     readyToPlot = Signal(PlotElement)
     relimCanvas = Signal()
 
@@ -74,16 +77,16 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         for data in self._data:
             if data.rawXNames != xNames or data.rawYNames != yNames:
                 raise ValueError("All data must have the same x and y axis names")
-        
+
     # Properties =======================================================
-    @property 
+    @property
     def figNames(self) -> List[str]:
         return [data.name for data in self._data]
-    
+
     @property
     def rawXNames(self) -> List[str]:
         return self._data[0].rawXNames
-    
+
     @property
     def rawYNames(self) -> List[str]:
         return self._data[0].rawYNames
@@ -106,16 +109,16 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
 
         # if role == Qt.DecorationRole:
         #     icon1 = QtGui.QIcon()
-            # icon1.addPixmap(
-            #     QtGui.QPixmap(":/icons/svg/cil-list.svg"),
-            #     QtGui.QIcon.Normal,
-            #     QtGui.QIcon.Off,
-            # )
+        # icon1.addPixmap(
+        #     QtGui.QPixmap(":/icons/svg/cil-list.svg"),
+        #     QtGui.QIcon.Normal,
+        #     QtGui.QIcon.Off,
+        # )
         #     return icon1
-        
+
     def rowCount(self, *args) -> int:
         return len(self._data)
-    
+
     def isEmpty(self) -> bool:
         return self._data == []
 
@@ -125,12 +128,12 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         flags |= Qt.ItemIsSelectable
         flags |= Qt.ItemIsEnabled
         return flags
-    
+
     # Signal & Slots ===================================================
     def emitReadyToPlot(self):
         self.readyToPlot.emit(self.currentMeasData.generatePlotElement())
 
-    @Slot(bool)    
+    @Slot(bool)
     def toggleBgndSubtractX(self, value: bool):
         self.currentMeasData.bgndSubtractX = value
         self.emitReadyToPlot()
@@ -141,17 +144,17 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.emitReadyToPlot()
 
     @Slot(bool)
-    def toggleTopHatFilter(self, value: bool):  
+    def toggleTopHatFilter(self, value: bool):
         self.currentMeasData.topHatFilter = value
         self.emitReadyToPlot()
 
     @Slot(bool)
-    def toggleWaveletFilter(self, value: bool): 
+    def toggleWaveletFilter(self, value: bool):
         self.currentMeasData.waveletFilter = value
         self.emitReadyToPlot()
 
     @Slot(bool)
-    def toggleEdgeFilter(self, value: bool):    
+    def toggleEdgeFilter(self, value: bool):
         self.currentMeasData.edgeFilter = value
         self.emitReadyToPlot()
 
@@ -215,7 +218,9 @@ class MeasurementData(Registrable):
 
     # even if the ImageMeasurementData class does not use these, they are still required
     # for setting up the UI
-    _zCandidates: OrderedDictMod[str, np.ndarray] = OrderedDictMod()     # dict of 2d ndarrays
+    _zCandidates: OrderedDictMod[
+        str, np.ndarray
+    ] = OrderedDictMod()  # dict of 2d ndarrays
     _currentXCompatibles: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
     _currentYCompatibles: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
 
@@ -223,10 +228,10 @@ class MeasurementData(Registrable):
     _currentX: DictItem
     _currentY: DictItem
 
-    def __init__(self, name, rawData):
+    def __init__(self, name: str, rawData):
         super().__init__()
-        
-        self.name = name
+
+        self.name: str = name
         self.rawData = rawData
 
         self._initializeDataOptions()
@@ -240,7 +245,7 @@ class MeasurementData(Registrable):
         DataItem
         """
         return self._currentZ
-    
+
     @property
     def currentX(self) -> DictItem:
         """
@@ -262,14 +267,14 @@ class MeasurementData(Registrable):
         ndarray, ndim=1
         """
         return self._currentY
-    
+
     def setCurrentZ(self, itemIndex):
         self._currentZ = self._zCandidates.itemByIndex(itemIndex)
 
     @property
     def rawXNames(self) -> List[str]:
         return self._currentXCompatibles.keyList
-    
+
     @property
     def rawYNames(self) -> List[str]:
         return self._currentYCompatibles.keyList
@@ -288,7 +293,9 @@ class MeasurementData(Registrable):
 
     def swapXY(self):
         if len(self._currentXCompatibles) > 1:
-            raise ValueError("Cannot swap x and y axes if there are multiple x-axis candidates")
+            raise ValueError(
+                "Cannot swap x and y axes if there are multiple x-axis candidates"
+            )
 
         swappedZCandidates = {
             key: array.transpose(0, 1) for key, array in self._zCandidates.items()
@@ -339,8 +346,7 @@ class MeasurementData(Registrable):
         min_val = min(self.zMin, self.zMax)
         max_val = max(self.zMin, self.zMax)
         return (min_val, max_val)
-    
-    
+
 
 class NumericalMeasurementData(MeasurementData):
     """
@@ -358,9 +364,9 @@ class NumericalMeasurementData(MeasurementData):
     """
 
     def __init__(
-        self, 
-        name, 
-        rawData, 
+        self,
+        name,
+        rawData,
     ):
         """
 
@@ -389,13 +395,13 @@ class NumericalMeasurementData(MeasurementData):
             raise ValueError("zCandidates must have the same shape")
 
         return zCandidates
-    
+
     def _findXYCompatibles(self):
         """
         By trying to match the dimensions of the zData with the x and y axis candidates,
         find the x and y axis candidates that are compatible with the zData.
         """
-        # find xy candidates 
+        # find xy candidates
         xyCandidates = OrderedDictMod()
         for name, theObject in self.rawData.items():
             if isinstance(theObject, np.ndarray):
@@ -422,14 +428,10 @@ class NumericalMeasurementData(MeasurementData):
             if len(data) == ydim:
                 self._currentYCompatibles[name] = data
         if not self._currentXCompatibles:
-            self._currentXCompatibles = OrderedDictMod(
-                no_axis = np.arange(xdim)
-            )
+            self._currentXCompatibles = OrderedDictMod(no_axis=np.arange(xdim))
         if not self._currentYCompatibles:
-            self._currentYCompatibles = OrderedDictMod(
-                no_axis = np.arange(ydim)
-            )
-        
+            self._currentYCompatibles = OrderedDictMod(no_axis=np.arange(ydim))
+
         # based on the number of the compatible x and y axis candidates
         # determine the tuning axis and freq axis. Freq axis is the one
         # with only one compatible candidate.
@@ -442,12 +444,15 @@ class NumericalMeasurementData(MeasurementData):
             raise NotImplementedError(
                 "Multiple compatible x or y-axis data found and currently not supported"
             )
-        
+
         # finally, determine the principal x axis - largest change in the data
         if len(self._currentXCompatibles) > 1:
-            idx = np.argmax([
-                np.abs(data[-1] - data[0]) for data in self._currentXCompatibles.values()
-            ])
+            idx = np.argmax(
+                [
+                    np.abs(data[-1] - data[0])
+                    for data in self._currentXCompatibles.values()
+                ]
+            )
             self._currentX = self._currentXCompatibles.itemByIndex(idx)
 
     def _initXYZ(self):
@@ -456,7 +461,7 @@ class NumericalMeasurementData(MeasurementData):
         """
         self._zCandidates = self._findZCandidates(self.rawData)
         self._currentZ = self._zCandidates.itemByIndex(0)
-        
+
         self._findXYCompatibles()
         self._currentX = self._currentXCompatibles.itemByIndex(0)
         self._currentY = self._currentYCompatibles.itemByIndex(0)
@@ -473,7 +478,7 @@ class NumericalMeasurementData(MeasurementData):
     #     self._currentY = self.currentYCompatibles.itemByIndex(itemIndex)
     #     self.emitReadyToPlot()
     #     self.relimCanvas.emit()
-    
+
     # properties =======================================================
     @property
     def currentZ(self) -> DictItem:
@@ -498,7 +503,7 @@ class NumericalMeasurementData(MeasurementData):
             zData.data = gaussian_laplace(zData.data, 1.0)
 
         return zData
-    
+
     @property
     def currentX(self) -> DictItem:
         """
@@ -594,21 +599,16 @@ class NumericalMeasurementData(MeasurementData):
 
 class ImageMeasurementData(MeasurementData):
     def __init__(self, name: str, image: np.ndarray):
-
         super().__init__(name, image)
         self._initXYZ()
-    
+
     def _initXYZ(self):
         self._zCandidates = OrderedDictMod({self.name: self.rawData})
 
         xdim, ydim = self._currentZ.data.shape
 
-        self._currentXCompatibles = OrderedDictMod(
-            no_axis = np.arange(xdim)
-        )
-        self._currentYCompatibles = OrderedDictMod(
-            no_axis = np.arange(ydim)
-        )
+        self._currentXCompatibles = OrderedDictMod(no_axis=np.arange(xdim))
+        self._currentYCompatibles = OrderedDictMod(no_axis=np.arange(ydim))
 
         self._currentZ = self._zCandidates.itemByIndex(0)
         self._currentX = self._currentXCompatibles.itemByIndex(0)
@@ -687,7 +687,7 @@ def dummy_measurement_data() -> NumericalMeasurementData:
     xData = np.linspace(0.0, 1.0, 50)
     yData = np.linspace(3.0, 9.0, 100)
     zData = np.zeros((50, 100))
-    zData[0, 0] = 1.0   # to make zData inhomogeneous and can be recognized as 2d ndarray
+    zData[0, 0] = 1.0  # to make zData inhomogeneous and can be recognized as 2d ndarray
     return NumericalMeasurementData(
         "dummy data",
         {"param": xData, "frequency": yData, "S21": zData},
