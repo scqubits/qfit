@@ -76,6 +76,18 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
                 raise ValueError("All data must have the same x and y axis names")
         
     # Properties =======================================================
+    @property 
+    def figNames(self) -> List[str]:
+        return [data.name for data in self._data]
+    
+    @property
+    def rawXNames(self) -> List[str]:
+        return self._data[0].rawXNames
+    
+    @property
+    def rawYNames(self) -> List[str]:
+        return self._data[0].rawYNames
+
     @property
     def currentRow(self) -> int:
         return self._currentRow
