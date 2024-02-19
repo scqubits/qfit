@@ -138,10 +138,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui_menu = MenuWidget(parent=self)
         self.pagingMVCInits()
 
-        # calibration
-        self.calibrationMVCInits()
-        self.uiCalibrationConnects()
-
         # extract
         self.extractingMVCInits(hilbertspace)
         self.extractingCtrl.dynamicalInit()
@@ -149,6 +145,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # prefit: controller, two models and their connection to view (sliders)
         self.prefitMVCInits(hilbertspace)
         self.prefitDynamicalElementsBuild(hilbertspace)
+
+        # calibration - should be inited after prefit, as it requires the sweep parameter set
+        self.calibrationMVCInits()
+        # self.uiCalibrationConnects()
 
         # fit
         self.fitMVCInits(hilbertspace)
@@ -339,12 +339,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
 
 
-
-
-
-
-
-
     # def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
     #     """
     #     SHOULD GO TO CALIBRATION VIEW
@@ -423,7 +417,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "initialState": self.ui.initStateLineEdit,
             "photons": self.ui.prefitPhotonSpinBox,
             "evalsCount": self.ui.evalsCountLineEdit,
-            "pointsAdd": self.ui.pointsAddLineEdit,
+            "pointsAdded": self.ui.pointsAddLineEdit,
             "autoRun": self.ui.autoRunCheckBox, 
         }
 

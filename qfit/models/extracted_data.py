@@ -227,7 +227,7 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
     def _initSpectra(self, figName: str):
         transition = ExtrTransition()
         transition.name = "Transition 1"
-        spectra = ExtrSpectra(transition)
+        spectra = ExtrSpectra(transition,)
         self._fullSpectra[figName] = spectra
 
     def _initFullSpectra(self):

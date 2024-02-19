@@ -141,10 +141,10 @@ class ExtrTransition:
         The name of the transition
     data: np.ndarray
         The transition data, shape (2, N), where N is the number of data points
-    rawX: List[np.ndarray]
-        The raw control voltages data, shape (N, n), where n is the dimention of control voltages
+    rawX: OrderedDictMod[str, np.ndarray]
+        The raw x data, where the key is the name of the raw x data
     tag: Tag
-        The tag of the transition 
+        The tag of the transition
     """
     def __init__(
         self, 
@@ -158,16 +158,25 @@ class ExtrTransition:
 
     @property
     def data(self) -> np.ndarray:
+        """
+        Return the transition data, shape (2, N), where N is the number of data points
+        """
+        if self.count() == 0:
+            return np.empty((2, 0), dtype=float)
         return np.array(self._data.valList)
 
     def count(self) -> int:
-        return self.data.shape[1]
+        if len(self._data) == 0:
+            return 0
+        else:
+            return len(self._data.valList[0])
     
     def append(self, data: OrderedDictMod[str, float], rawX: OrderedDictMod[str, float]):
         """
         It always keeps the data sorted by the x value.
         """
         if self.count() == 0:
+            # the first data
             assert len(data) == 2, "The data should have two elements: x & y"
             for key, value in data.items():
                 self._data[key] = np.array([value])
@@ -219,7 +228,7 @@ class ExtrSpectra(list[ExtrTransition]):
         self,
         *args: ExtrTransition,
     ) -> None:
-        super().__init__(*args)
+        super().__init__(args)
 
     def count(self) -> int:
         return sum([transition.count() for transition in self])

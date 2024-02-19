@@ -672,11 +672,13 @@ class ImageMeasurementData(MeasurementData):
 
 
 def dummy_measurement_data() -> NumericalMeasurementData:
-    xData = np.linspace(0.0, 1.0, 100)
+    xData = np.linspace(0.0, 1.0, 50)
     yData = np.linspace(3.0, 9.0, 100)
-    zData = np.zeros((100, 100))
+    zData = np.zeros((50, 100))
+    zData[0, 0] = 1.0   # to make zData inhomogeneous and can be recognized as 2d ndarray
     return NumericalMeasurementData(
-        {"param": xData, "frequency": yData, "S21": zData}, {"S21": zData}
+        "dummy data",
+        {"param": xData, "frequency": yData, "S21": zData},
     )
 
 
