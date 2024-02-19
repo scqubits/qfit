@@ -148,7 +148,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitDynamicalElementsBuild(hilbertspace)
 
         # calibration - should be inited after prefit, as it requires the sweep parameter set
-        self.calibrationMVCInits(measurementData)
+        self.calibrationMVCInits(hilbertspace, measurementData)
         # self.uiCalibrationConnects()
 
         # fit
@@ -296,7 +296,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # calibration ####################################
     ####################################################################
-    def calibrationMVCInits(self, measurementData: List[MeasurementDataType]):
+    def calibrationMVCInits(self, hilbertSpace, measurementData: List[MeasurementDataType]):
         """
         Set up an instance of CalibrationData and CalibrationView.
         """
@@ -320,6 +320,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "Y1": self.ui.calibrateY2Button,
         }
         self.caliParamModel = CaliParamModel(
+            hilbertSpace=hilberSpace,
             rawXVecNameList=measurementData[0].rawXNames,
             rawYName=measurementData[0].rawYNames[0],
             figName=[data.name for data in measurementData],

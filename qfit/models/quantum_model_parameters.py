@@ -689,6 +689,7 @@ class CaliParamModel(
 
     def __init__(
         self,
+        hilbertSpace: HilbertSpace,
         rawXVecNameList: List[str],
         rawYName: str,
         figName: List[str],
@@ -728,6 +729,7 @@ class CaliParamModel(
         # ordering matters here
         ParamSet.__init__(self, CaliTableRowParam)
         ParamModelMixin.__init__(self)
+        self.hilbertSpace = hilbertSpace
         self.rawXVecNameList = rawXVecNameList
         self.rawYName = rawYName
         self.rawXVecDim = len(rawXVecNameList)
@@ -1084,7 +1086,8 @@ class CaliParamModel(
                 augRawXMat[XRowIdx, colIdx + 1] = self[XRowIdx][rawXVecCompName].value
         # loop over sweep parameters
         # assemble sweep parameter set, add sweep parameters to the parameter set
-        sweepParamSetFromCali = HSParamSet[QMSweepParam](QMSweepParam)
+        
+        sweepParamSetFromCali = HSParamSet[QMSweepParam](self.hilbertSpace,QMSweepParam)
         for paramDictByParent in list(self.sweepParamSet.values()):
             for param in list(paramDictByParent.values()):
                 sweepParamSetFromCali._insertParamByArgs(
