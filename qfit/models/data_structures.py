@@ -252,6 +252,9 @@ class ExtrSpectra(list[ExtrTransition]):
         """
         Return all data concated
         """
+        if self.count() == 0:
+            return np.empty((2, 0), dtype=float)
+        
         return np.concatenate(self.allData(), axis=1)
     
     def allRawXConcated(self) -> OrderedDictMod[str, np.ndarray]:

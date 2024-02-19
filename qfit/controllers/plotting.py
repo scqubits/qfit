@@ -96,10 +96,10 @@ class PlottingCtrl(QObject):
     def dynamicalInit(
         self, 
         measurementData: "MeasDataSet",
-        quantumModel: "QuantumModel",
+        # quantumModel: "QuantumModel",
     ):
         self.measurementData = measurementData
-        self.quantumModel = quantumModel
+        # self.quantumModel = quantumModel
 
         self.measPlotSettingConnects()
         self.measDataComboBoxesInit()
@@ -120,7 +120,7 @@ class PlottingCtrl(QObject):
         zDataNames = list(self.measurementData.currentMeasData._zCandidates.keys())
         self.measComboBoxes["z"].clear()
         self.measComboBoxes["z"].addItems(zDataNames)
-        self.measComboBoxes["z"].setCurrentText(self.measurementData.currentZ.name)
+        self.measComboBoxes["z"].setCurrentText(self.measurementData.currentMeasData.currentZ.name)
         # self.setupXYDataBoxes()
 
     def measPlotSettingConnects(self):

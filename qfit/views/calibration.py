@@ -20,14 +20,14 @@ from PySide6.QtCore import (
     Signal,
     Slot,
 )
-from typing import Tuple, Dict, Any, List, Union
+from typing import Tuple, Dict, Any, List, Union, Literal
 
 from qfit.models.quantum_model_parameters import HSParamSet
 from qfit.models.data_structures import QMSweepParam, ParamAttr
 
 
 class CalibrationView(QObject):
-    caliStatusChangedByButtonClicked = Signal(Union[str, False])
+    caliStatusChangedByButtonClicked = Signal(object)
     dataEditingFinished = Signal(ParamAttr)
 
     def __init__(
@@ -36,10 +36,12 @@ class CalibrationView(QObject):
         rawYName: str,
         caliTableXRowNr: int,
         sweepParamSet: HSParamSet[QMSweepParam],
-        rawLineEdits: Dict[str, "CalibrationLineEdit"],
-        mapLineEdits: Dict[str, "CalibrationLineEdit"],
-        calibrationButtons: Dict[str, QPushButton],
+        rawLineEdits: Dict[Union[int, str], "CalibrationLineEdit"],
+        mapLineEdits: Dict[Union[int, str], "CalibrationLineEdit"],
+        calibrationButtons: Dict[Union[int, str], QPushButton],
     ):
+        super().__init__()
+        
         self.sweepParamSet = sweepParamSet
         self.firstSweepParam = list(list(sweepParamSet.values())[0].values())[0]
         self.caliTableXRowNr = caliTableXRowNr
@@ -83,11 +85,14 @@ class CalibrationView(QObject):
         self.caliTableSet[0][self.rawXVecCompNameList[0]].setSibling(
             self.caliTableSet[1][self.rawXVecCompNameList[0]]
         )
-        self.caliTableSet["Y0"][self.rawXVecCompNameList[0]].setSibling(
-            self.caliTableSet["Y1"][self.rawXVecCompNameList[0]]
+        self.caliTableSet["Y0"][self.rawYName].setSibling(
+            self.caliTableSet["Y1"][self.rawYName]
         )
 
     def _generateRowIdxToButtonGroupIdDict(self):
+        """
+        Generate the dictionary to translate the row index to the button group id.
+        """
         translation_dict = {}
         for rowIdx in range(self.caliTableXRowNr):
             translation_dict[rowIdx] = rowIdx

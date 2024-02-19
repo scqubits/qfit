@@ -255,7 +255,7 @@ class IOCtrl:
         """
         self.mainWindow.initializeDynamicalElements(
             hilbertspace=self.mainWindow.quantumModel._hilbertspace,
-            measurementData=measurementData,
+            measurementData=[measurementData],
         )
 
     # open ####################################################################
@@ -277,7 +277,7 @@ class IOCtrl:
         # the r entries)
         self.mainWindow.initializeDynamicalElements(
             hilbertspace=hilbertspace,
-            measurementData=measurementData,
+            measurementData=[measurementData],
         )
 
         # update the rest of the registry (i.e. those entries with r+)

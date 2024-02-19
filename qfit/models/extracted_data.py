@@ -430,8 +430,8 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
 
         scat_all = ScatterElement(
             "all_extractions",
-            all_data[:, 0],
-            all_data[:, 1],
+            all_data[0, :],
+            all_data[1, :],
             marker=r"$\times$",
             s=70,
             alpha=0.23,

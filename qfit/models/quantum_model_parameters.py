@@ -417,7 +417,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         # insert the parameter object to the parameter set
         self._updateNameMap(param.parent)
         parentName = self.parentNameByObj[param.parent]
-        if parentName not in self.parameters:
+        if parentName not in self.parameters.keys():
             self.parameters[parentName] = {}
 
         # add the parameter to the parameter set
@@ -685,6 +685,8 @@ class CaliParamModel(
     issueNewInvYCaliFunc = Signal(Callable)
     # calibrationIsOn: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2", False]
 
+    parameters: Dict[Union[str, int], Dict[str, ParamCls]]
+
     def __init__(
         self,
         rawXVecNameList: List[str],
@@ -733,7 +735,7 @@ class CaliParamModel(
         self.figNr = len(figName)
         self.sweepParamSet = sweepParamSet
         self.sweepParamNr = len(sweepParamSet)
-        self.caliStatus: Union[int, str, False] = False
+        self.caliStatus: Union[int, str, Literal[False]] = False
 
         # determine total calibration table row number and if the calibration is a complete one
         self.isFullCalibration: bool
@@ -847,10 +849,12 @@ class CaliParamModel(
         param = CaliTableRowParam(**kwargs)
 
         # add the parameter to the parameter set
-        self[rowIdx][colName] = param
+        if rowIdx not in self.parameters.keys():
+            self.parameters[rowIdx] = {}
+        self.parameters[rowIdx][colName] = param
 
     @Slot()
-    def updateStatusFromCaliView(self, status: Union[str, int, False]):
+    def updateStatusFromCaliView(self, status: Union[str, int, Literal[False]]):
         self.caliStatus = status
         if status != False:
             if type(status) is int:

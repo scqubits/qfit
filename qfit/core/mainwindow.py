@@ -127,7 +127,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         QMainWindow.__init__(self)
         self.openFromIPython = executed_in_ipython()
         self.setFocusPolicy(Qt.StrongFocus)
-        self.measurementData = MeasDataSet([measurementData])
+        self.measurementData = MeasDataSet(measurementData)
 
         # ui
         self.ui = Ui_MainWindow()
@@ -157,7 +157,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # plot, mpl canvas
         self.plottingMVCInits()
-        self.plottingCtrl.dynamicalInit(self.measurementData, self.quantumModel)
+        self.plottingCtrl.dynamicalInit(self.measurementData)
 
         # help button
         self.helpButtonConnects()
@@ -319,22 +319,22 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "Y0": self.ui.calibrateY1Button,
             "Y1": self.ui.calibrateY2Button,
         }
-
-        self.calibrationView = CalibrationView(
-            rawXVecCompNameList=self.rawLineEdits,
-            rawYName=measurementData[0].rawYNames[0],
-            rawLineEdits=self.rawLineEdits,
-            mapLineEdits=self.mapLineEdits,
-            caliTableXRowNr=len(measurementData[0].rawXNames),
-            calibrationButtons=self.calibrationButtons,
-            sweepParamSet=self.sweepParameterSet,
-        )
         self.caliParamModel = CaliParamModel(
             rawXVecNameList=measurementData[0].rawXNames,
             rawYName=measurementData[0].rawYNames[0],
-            figName=[measurementData[0].name],
+            figName=[data.name for data in measurementData],
             sweepParamSet=self.sweepParameterSet,
         )
+        self.calibrationView = CalibrationView(
+            rawXVecCompNameList=measurementData[0].rawXNames,
+            rawYName=measurementData[0].rawYNames[0],
+            rawLineEdits=self.rawLineEdits,
+            mapLineEdits=self.mapLineEdits,
+            caliTableXRowNr=self.caliParamModel.caliTableXRowNr,
+            calibrationButtons=self.calibrationButtons,
+            sweepParamSet=self.sweepParameterSet,
+        )
+        
         self.calibrationCtrl = CalibrationCtrl(
             self.caliParamModel, self.calibrationView, self.pageButtons
         )
@@ -830,11 +830,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def initializeDynamicalElements(
         self,
         hilbertspace: HilbertSpace,
-        measurementData: MeasurementDataType,
+        measurementData: List[MeasurementDataType],
     ):
         # here, the measurementData is a instance of MeasurementData, which is
         # regenerated from the data file
-        self.measurementData = MeasDataSet([measurementData])
+        self.measurementData = MeasDataSet(measurementData)
         # self.calibrationData.resetCalibration()
         # self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
@@ -842,7 +842,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitDynamicalElementsBuild(hilbertspace)
         self.fitDynamicalElementsBuild(hilbertspace)
 
-        self.plottingCtrl.dynamicalInit(self.measurementData, self.quantumModel)
+        self.plottingCtrl.dynamicalInit(self.measurementData)
 
         # self.allDatasets.loadedFromRegistry.connect(self.extractedDataSetup)
 
