@@ -675,7 +675,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def fitStaticElementsBuild(self, hilbertspace: HilbertSpace):
         self.fitOptionConnects()
         self.fitTableParamConnects()
-        self.fittingCallbackConnects()
         self.fitPushButtonConnects()
 
     @Slot()
