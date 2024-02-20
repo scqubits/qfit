@@ -528,7 +528,7 @@ ListView::item:selected {
           <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="calibrationPage">
           <property name="sizePolicy">
@@ -3000,7 +3000,7 @@ color: rgb(30, 30, 30);</string>
           <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="DataExtractingWidget" name="extractPointsWidget">
           <property name="sizePolicy">
@@ -5527,8 +5527,8 @@ QPushButton: pressed{
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>381</width>
-                   <height>427</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -5851,7 +5851,7 @@ background-color: #9163BF;
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>386</width>
+                   <width>100</width>
                    <height>250</height>
                   </rect>
                  </property>
@@ -6188,8 +6188,8 @@ icon: url(:/icons/svg/copy-pressed.svg);
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>381</width>
-                   <height>555</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -6488,7 +6488,7 @@ background-color: #9163BF;
   <customwidget>
    <class>CalibrationLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>qfit/widgets/calibration.h</header>
+   <header>qfit/views/calibration.h</header>
   </customwidget>
   <customwidget>
    <class>IntTupleLineEdit</class>
