@@ -140,11 +140,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.pagingMVCInits()
 
         # extract
-        self.extractingMVCInits(hilbertspace)
+        self.extractingMVCInits(hilbertspace, measurementData)
         self.extractingCtrl.dynamicalInit()
 
         # prefit: controller, two models and their connection to view (sliders)
-        self.prefitMVCInits(hilbertspace)
+        self.prefitMVCInits(hilbertspace, measurementData)
         self.prefitDynamicalElementsBuild(hilbertspace)
 
         # calibration - should be inited after prefit, as it requires the sweep parameter set
@@ -342,6 +342,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # self.calibrationData = CalibrationData()
         # self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
 
+
     # def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
     #     """
     #     SHOULD GO TO CALIBRATION VIEW
@@ -358,7 +359,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # extract and tag ##################################################
     # ##################################################################
-    def extractingMVCInits(self, hilbertspace: HilbertSpace):
+    def extractingMVCInits(self, hilbertspace: HilbertSpace, measurementData: List[MeasurementDataType]):
         """Set up the main class instances holding the data extracted from placing
         markers on the canvas. The AllExtractedData instance holds all data, whereas the
         ActiveExtractedData instance holds data of the currently selected data set."""
@@ -390,7 +391,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         }
 
         self.activeDataset = ActiveExtractedData()
-        self.allDatasets = AllExtractedData(figNames=["Figure"])
+        self.allDatasets = AllExtractedData(figNames=[data.name for data in measurementData])
         # self.allDatasets.setCalibrationFunc(self.calibrationData.calibrateDataset)
 
         self.extractingView = ExtractingView(
@@ -413,7 +414,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # Pre-fit ##########################################################
     # ##################################################################
-    def prefitMVCInits(self, hilbertspace: HilbertSpace):
+    def prefitMVCInits(self, hilbertspace: HilbertSpace, measurementData: List[MeasurementDataType]):
         # UI grouping
         self.prefitOptions = {
             "subsysToPlot": self.ui.subsysComboBox,
@@ -424,7 +425,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "autoRun": self.ui.autoRunCheckBox,
         }
 
-        self.quantumModel = QuantumModel(hilbertspace, ["Figure"])
+        self.quantumModel = QuantumModel(hilbertspace, [data.name for data in measurementData])
         self.sweepParameterSet = HSParamSet(hilbertspace, QMSweepParam)
 
         self.prefitParamModel = PrefitParamModel(hilbertspace, QMSliderParam)

@@ -673,8 +673,7 @@ class FitParamModel(HSParamModel[QMFitParam]):
 
 class CaliParamModel(
     ParamSet[CaliTableRowParam],
-    ParamModelMixin[DispParamCls],  # ordering matters
-    Generic[DispParamCls],
+    ParamModelMixin[CaliTableRowParam],  # ordering matters
     metaclass=CombinedMeta,
 ):
     plotCaliPtExtractStart = Signal(str)
@@ -685,7 +684,7 @@ class CaliParamModel(
     issueNewInvYCaliFunc = Signal(object)
     # calibrationIsOn: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2", False]
 
-    parameters: Dict[str, Dict[str, ParamCls]]
+    parameters: Dict[str, Dict[str, CaliTableRowParam]]
 
     def __init__(
         self,
@@ -729,7 +728,8 @@ class CaliParamModel(
         # ordering matters here
         ParamSet.__init__(self, CaliTableRowParam)
         ParamModelMixin.__init__(self)
-        self.hilbertSpace = hilbertSpace
+
+        self._hilbertSpace = hilbertSpace
         self.rawXVecNameList = rawXVecNameList
         self.rawYName = rawYName
         self.rawXVecDim = len(rawXVecNameList)
@@ -747,15 +747,45 @@ class CaliParamModel(
         self._isSufficientForFullCalibration(self.rawXVecDim, self.figNr)
 
         # initialize calibration table entries
-        self._initializeCaliTable()
+        self.insertParamToSet()
 
         self.XRowIdxBySourceDict: Dict[str, List[str]] = {}
         self._updateXRowIdxBySourceDict()
-        self.paramDict = self.toParamDict()
+        # self.paramDict = self.toParamDict()
 
         self.applyCaliToAxis = False
 
-    def _initializeCaliTable(self):
+    # initialize =======================================================
+    def _isSufficientForFullCalibration(self, rawVecDim: int, figNr: int):
+        """
+        Determine if the calibration data is sufficient for a full calibration. For a full
+        calibration, the number of points required is equal to the number of voltages + 1.
+        If we restrict user to select max 2 points in each figure, the minimum number of
+        figures required is (voltageNumber+1)/2, round up. However this number does not check
+        for the case when the user provides scans for voltages along the same direction.
+
+        Parameters
+        ----------
+        rawVecDim: int
+            The raw vector dimension (number of voltages) used in the scan. Obtained from the two-tone data.
+        figNr: int
+            The number of figures imported.
+        """
+        pointsRequired = rawVecDim + 1
+        if pointsRequired > figNr * 2:
+            self.isFullCalibration = False
+            self.caliTableXRowNr = figNr * 2
+        else:
+            self.isFullCalibration = True
+            self.caliTableXRowNr = pointsRequired
+        self.caliTableXRowIdxList = [
+            f"X{XRowIdx}" for XRowIdx in range(self.caliTableXRowNr)
+        ]
+
+    def insertParamToSet(self):
+        if self.parameters != {}:
+            self.clear()
+
         # insert calibration table parameters for each row for X
         for XRowIdx in self.caliTableXRowIdxList:
             # loop over the raw vector components
@@ -790,6 +820,7 @@ class CaliParamModel(
                     value=None,
                 )
             else:
+                # value is the figure name
                 self._insertParamByArgs(
                     colName="pointPairSource",
                     rowIdx=XRowIdx,
@@ -857,8 +888,213 @@ class CaliParamModel(
             self.parameters[rowIdx] = {}
         self.parameters[rowIdx][colName] = param
 
+    # calibrate the raw vector to the mapped vector ====================
+    def _YCalibration(self) -> Callable:
+        """
+        Generate a function that applies the calibration to the raw Y value.
+        """
+        alphaVec = self._getAlphaVec()
+
+        def YCalibration(rawY: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+            """
+            The full calibration function that maps the raw vector to the mapped vector.
+
+            Parameters
+            ----------
+            rawY: Union[float, np.ndarray]
+                The raw Y value, can either be an array of Y, or a single Y value.
+
+            Returns
+            -------
+            The mapped Y value.
+            """
+            # mapY = alphaVec[0] + alphaVec[1]*rawY
+            mapY = alphaVec[0] + alphaVec[1] * rawY
+            return mapY
+
+        return YCalibration
+
+    def _invYCalibration(self) -> Callable:
+        """
+        Generate a function that applies the inverse calibration to the mapped Y value.
+        """
+        alphaVec = self._getAlphaVec()
+
+        def invYCalibration(mapY: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+            """
+            The full calibration function that maps the raw vector to the mapped vector.
+
+            Parameters
+            ----------
+            mapY: Union[float, np.ndarray]
+                The mapped Y value, can either be an array of Y, or a single Y value.
+
+            Returns
+            -------
+            The raw Y value.
+            """
+            # rawY = (mapY - alphaVec[0])/alphaVec[1]
+            rawY = (mapY - alphaVec[0]) / alphaVec[1]
+            return rawY
+
+        return invYCalibration
+
+    def _getAlphaVec(self) -> np.ndarray:
+        # gather all the point pair raw value and construct the augmented rawMat
+        augRawYMat = np.zeros((2, 2))
+        for YRowIdx in range(2):
+            augRawYMat[YRowIdx, 0] = 1
+            augRawYMat[YRowIdx, 1] = self[f"Y{YRowIdx}"][self.rawYName].value
+        # gather all the point pair mapped value and solve alphaVec by inversion
+        mapCompVec = np.zeros(2)
+        for YRowIdx in range(2):
+            mapCompVec[YRowIdx] = self[f"Y{YRowIdx}"]["mappedY"].value
+        alphaVec = np.linalg.solve(augRawYMat, mapCompVec)
+        return alphaVec
+
+    def _fullXCalibration(self) -> Dict[str, HSParamSet[QMSweepParam]]:
+        """
+        Generate a function that applies the full calibration to the raw X vector.
+
+        The full calibration takes form of
+        mapVecComp = alphaVec . [1, rawVec]^T
+        for each mapped vector component. To solve for alphaVec, we need to gather all the
+        point pair rawVec and construct the augmented rawMat ([rawMat]_ji = i-th
+        component of the j-th vector [1, rawVec]). For each mapped vector component, we
+        gather all the point pair mapVec and solve alphaVec by inversion.
+        """
+        # gather all the point pair rawVec and construct the augmented rawMat
+        augRawXMat = np.zeros((self.caliTableXRowNr, self.rawXVecDim + 1))
+        for XRowIdx in self.caliTableXRowIdxList:
+            augRawXMat[XRowIdx, 0] = 1
+            for colIdx, rawXVecCompName in enumerate(self.rawXVecNameList):
+                augRawXMat[XRowIdx, colIdx + 1] = self[XRowIdx][rawXVecCompName].value
+        # loop over sweep parameters
+        # assemble sweep parameter set, add sweep parameters to the parameter set
+
+        sweepParamSetFromCali = HSParamSet[QMSweepParam](
+            self._hilbertSpace, QMSweepParam
+        )
+        for paramDictByParent in list(self.sweepParamSet.values()):
+            for parentName, param in paramDictByParent.items():
+                sweepParamSetFromCali._insertParamByArgs(
+                    paramName=param.name,
+                    parent=param.parent,
+                    value=param.value,
+                    paramType=param.paramType,
+                    rangeDict={},  # not used
+                )
+                # gather all the point pair mapVec and solve alphaVec by inversion
+                mapCompVec = np.zeros(self.caliTableXRowNr)
+                for XRowIdx in self.caliTableXRowIdxList:
+                    mapCompVec[XRowIdx] = self[XRowIdx][
+                        f"{param.parent}.{param.name}"
+                    ].value
+                alphaVec = np.linalg.solve(augRawXMat, mapCompVec)
+                # generate the calibration function
+                # first get the order of the raw vector components
+                rawVecCompIdxDict = {
+                    Idx: rawVecCompName
+                    for Idx, rawVecCompName in enumerate(self.rawXVecNameList)
+                }
+
+                def fullCalibration(rawXVecDict: Dict[str, float]) -> float:
+                    """
+                    The full calibration function that maps the raw vector to the mapped vector.
+                    """
+                    rawXVec = np.zeros(self.rawXVecDim)
+                    for rawXVecCompIdx in range(self.rawXVecDim):
+                        rawVecCompName = rawVecCompIdxDict[rawXVecCompIdx]
+                        rawXVec[rawXVecCompIdx] = rawXVecDict[rawVecCompName]
+                    # mapVecComp = alphaVec . [1, rawVec]^T
+                    mapXVecComp = np.dot(alphaVec, np.concatenate(([1], rawXVec)))
+                    return mapXVecComp
+
+                # set the calibration function
+                sweepParamSetFromCali[parentName][param.name].setCalibrationFunc(
+                    fullCalibration
+                )
+        sweepParamSetByFig: Dict[str, HSParamSet[QMSweepParam]] = {}
+        for fig in self.figName:
+            sweepParamSetByFig[fig] = sweepParamSetFromCali
+        return sweepParamSetByFig
+
+    def _partialXCalibration(self) -> Dict[str, HSParamSet[QMSweepParam]]:
+        """
+        Generate a function that applies the partial calibration to the raw vector.
+        """
+        sweepParamSetByFig: Dict[str, HSParamSet[QMSweepParam]] = {}
+        # loop over all the figures
+        for fig in self.figName:
+            # get the row indices for the figure
+            XRowIdxList = self.XRowIdxBySourceDict[fig]
+            # this row index list should have length 2; extract the two rows
+            rawXVecPairValues = {}
+            for rawXVecCompName in self.rawXVecNameList:
+                rawXVecCompValue1 = self[XRowIdxList[0]][rawXVecCompName].value
+                rawXVecCompValue2 = self[XRowIdxList[1]][rawXVecCompName].value
+                rawXVecPairValues[rawXVecCompName] = [
+                    rawXVecCompValue1,
+                    rawXVecCompValue2,
+                ]
+            # find the raw vector component that has the largest difference
+            maxDiffRawVecComp = max(
+                rawXVecPairValues,
+                key=lambda k: abs(rawXVecPairValues[k][0] - rawXVecPairValues[k][1]),
+            )
+            # assemble sweep parameter set, add sweep parameters to the parameter set
+            sweepParamSetFromCali = HSParamSet[QMSweepParam](
+                self._hilbertSpace, QMSweepParam
+            )
+            for paramDictByParent in list(self.sweepParamSet.values()):
+                for parentName, param in paramDictByParent.items():
+                    # extract mapped vector pair values
+                    mapXVecCompValue1 = self[XRowIdxList[0]][
+                        f"{param.parent}.{param.name}"
+                    ].value
+                    mapXVecCompValue2 = self[XRowIdxList[1]][
+                        f"{param.parent}.{param.name}"
+                    ].value
+                    sweepParamSetFromCali._insertParamByArgs(
+                        paramName=param.name,
+                        parent=param.parent,
+                        value=param.value,
+                        paramType=param.paramType,
+                        rangeDict={},  # not used
+                    )
+
+                    # generate the calibration function
+                    def partialCalibration(rawXVecDict: Dict[str, float]) -> float:
+                        """
+                        The partial calibration function that maps the raw vector to the
+                        mapped vector.
+                        """
+                        # first find x which is defined as
+                        # rawVec = (rawVec2 - rawVec1)*x + rawVec1
+                        x = (
+                            rawXVecDict[maxDiffRawVecComp]
+                            - rawXVecPairValues[maxDiffRawVecComp][0]
+                        ) / (
+                            rawXVecPairValues[maxDiffRawVecComp][1]
+                            - rawXVecPairValues[maxDiffRawVecComp][0]
+                        )
+                        # then calculate the specific individual component of the mapped vector
+                        # mapVecComp = (mapVecComp2 - mapVecComp1)*x + mapVecComp1
+                        mapXVecComp = (
+                            mapXVecCompValue2 - mapXVecCompValue1
+                        ) * x + mapXVecCompValue1
+                        return mapXVecComp
+
+                    # set the calibration function
+                    sweepParamSetFromCali[parentName][param.name].setCalibrationFunc(
+                        partialCalibration
+                    )
+            sweepParamSetByFig[fig] = sweepParamSetFromCali
+        return sweepParamSetByFig
+    
+    # slots & public interface ================================================
     @Slot()
-    def updateStatusFromCaliView(self, status: Union[str, int, Literal[False]]):
+    def updateStatusFromCaliView(self, status: Union[str, Literal[False]]):
         self.caliStatus = status
         if status != False:
             if type(status) is int:
@@ -953,7 +1189,16 @@ class CaliParamModel(
     ) -> Dict[str, RegistryEntry]:
         return self._registerAll(self)
 
-    # Signals ==========================================================
+    @Slot()
+    def storeParamAttr(
+        self,
+        paramAttr: ParamAttr,
+        **kwargs,
+    ):
+        super()._storeParamAttr(self, paramAttr, **kwargs)
+    
+    # signals ==========================================================
+    
     def emitUpdateBox(
         self,
         rowIdx: Optional[str] = None,
@@ -962,245 +1207,6 @@ class CaliParamModel(
     ):
         self._emitUpdateBox(self, parentName=rowIdx, paramName=colName, attr=attr)
 
-    # Slots ============================================================
-    @Slot()
-    def storeParamAttr(
-        self,
-        paramAttr: ParamAttr,
-        **kwargs,
-    ):
-        super()._storeParamAttr(self, paramAttr, **kwargs)
-
-    def _isSufficientForFullCalibration(self, rawVecDim: int, figNr: int):
-        """
-        Determine if the calibration data is sufficient for a full calibration. For a full
-        calibration, the number of points required is equal to the number of voltages + 1.
-        If we restrict user to select max 2 points in each figure, the minimum number of
-        figures required is (voltageNumber+1)/2, round up. However this number does not check
-        for the case when the user provides scans for voltages along the same direction.
-
-        Parameters
-        ----------
-        rawVecDim: int
-            The raw vector dimension (number of voltages) used in the scan. Obtained from the two-tone data.
-        figNr: int
-            The number of figures imported.
-        """
-        pointsRequired = rawVecDim + 1
-        if pointsRequired > figNr * 2:
-            self.isFullCalibration = False
-            self.caliTableXRowNr = figNr * 2
-        else:
-            self.isFullCalibration = True
-            self.caliTableXRowNr = pointsRequired
-        self.caliTableXRowIdxList = [
-            f"X{XRowIdx}" for XRowIdx in range(self.caliTableXRowNr)
-        ]
-
-    def _YCalibration(self) -> Callable:
-        """
-        Generate a function that applies the calibration to the raw Y value.
-        """
-        alphaVec = self._getAlphaVec()
-
-        def YCalibration(rawY: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
-            """
-            The full calibration function that maps the raw vector to the mapped vector.
-
-            Parameters
-            ----------
-            rawY: Union[float, np.ndarray]
-                The raw Y value, can either be an array of Y, or a single Y value.
-
-            Returns
-            -------
-            The mapped Y value.
-            """
-            # mapY = alphaVec[0] + alphaVec[1]*rawY
-            mapY = alphaVec[0] + alphaVec[1] * rawY
-            return mapY
-
-        return YCalibration
-
-    def _invYCalibration(self) -> Callable:
-        """
-        Generate a function that applies the inverse calibration to the mapped Y value.
-        """
-        alphaVec = self._getAlphaVec()
-
-        def invYCalibration(mapY: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
-            """
-            The full calibration function that maps the raw vector to the mapped vector.
-
-            Parameters
-            ----------
-            mapY: Union[float, np.ndarray]
-                The mapped Y value, can either be an array of Y, or a single Y value.
-
-            Returns
-            -------
-            The raw Y value.
-            """
-            # rawY = (mapY - alphaVec[0])/alphaVec[1]
-            rawY = (mapY - alphaVec[0]) / alphaVec[1]
-            return rawY
-
-        return invYCalibration
-
-    def _getAlphaVec(self) -> np.ndarray:
-        # gather all the point pair raw value and construct the augmented rawMat
-        augRawYMat = np.zeros((2, 2))
-        for YRowIdx in range(2):
-            augRawYMat[YRowIdx, 0] = 1
-            augRawYMat[YRowIdx, 1] = self[f"Y{YRowIdx}"][self.rawYName].value
-        # gather all the point pair mapped value and solve alphaVec by inversion
-        mapCompVec = np.zeros(2)
-        for YRowIdx in range(2):
-            mapCompVec[YRowIdx] = self[f"Y{YRowIdx}"]["mappedY"].value
-        alphaVec = np.linalg.solve(augRawYMat, mapCompVec)
-        return alphaVec
-
-    def _fullXCalibration(self) -> Dict[str, HSParamSet[QMSweepParam]]:
-        """
-        Generate a function that applies the full calibration to the raw X vector.
-
-        The full calibration takes form of
-        mapVecComp = alphaVec . [1, rawVec]^T
-        for each mapped vector component. To solve for alphaVec, we need to gather all the
-        point pair rawVec and construct the augmented rawMat ([rawMat]_ji = i-th
-        component of the j-th vector [1, rawVec]). For each mapped vector component, we
-        gather all the point pair mapVec and solve alphaVec by inversion.
-        """
-        # gather all the point pair rawVec and construct the augmented rawMat
-        augRawXMat = np.zeros((self.caliTableXRowNr, self.rawXVecDim + 1))
-        for XRowIdx in self.caliTableXRowIdxList:
-            augRawXMat[XRowIdx, 0] = 1
-            for colIdx, rawXVecCompName in enumerate(self.rawXVecNameList):
-                augRawXMat[XRowIdx, colIdx + 1] = self[XRowIdx][rawXVecCompName].value
-        # loop over sweep parameters
-        # assemble sweep parameter set, add sweep parameters to the parameter set
-
-        sweepParamSetFromCali = HSParamSet[QMSweepParam](
-            self.hilbertSpace, QMSweepParam
-        )
-        for paramDictByParent in list(self.sweepParamSet.values()):
-            for parentName, param in paramDictByParent.items():
-                sweepParamSetFromCali._insertParamByArgs(
-                    paramName=param.name,
-                    parent=param.parent,
-                    value=param.value,
-                    paramType=param.paramType,
-                    rangeDict={},  # not used
-                )
-                # gather all the point pair mapVec and solve alphaVec by inversion
-                mapCompVec = np.zeros(self.caliTableXRowNr)
-                for XRowIdx in self.caliTableXRowIdxList:
-                    mapCompVec[XRowIdx] = self[XRowIdx][
-                        f"{param.parent}.{param.name}"
-                    ].value
-                alphaVec = np.linalg.solve(augRawXMat, mapCompVec)
-                # generate the calibration function
-                # first get the order of the raw vector components
-                rawVecCompIdxDict = {
-                    Idx: rawVecCompName
-                    for Idx, rawVecCompName in enumerate(self.rawXVecNameList)
-                }
-
-                def fullCalibration(rawXVecDict: Dict[str, float]) -> float:
-                    """
-                    The full calibration function that maps the raw vector to the mapped vector.
-                    """
-                    rawXVec = np.zeros(self.rawXVecDim)
-                    for rawXVecCompIdx in range(self.rawXVecDim):
-                        rawVecCompName = rawVecCompIdxDict[rawXVecCompIdx]
-                        rawXVec[rawXVecCompIdx] = rawXVecDict[rawVecCompName]
-                    # mapVecComp = alphaVec . [1, rawVec]^T
-                    mapXVecComp = np.dot(alphaVec, np.concatenate(([1], rawXVec)))
-                    return mapXVecComp
-
-                # set the calibration function
-                sweepParamSetFromCali[parentName][param.name].setCalibrationFunc(
-                    fullCalibration
-                )
-        sweepParamSetByFig: Dict[str, HSParamSet[QMSweepParam]] = {}
-        for fig in self.figName:
-            sweepParamSetByFig[fig] = sweepParamSetFromCali
-        return sweepParamSetByFig
-
-    def _partialXCalibration(self) -> Dict[str, HSParamSet[QMSweepParam]]:
-        """
-        Generate a function that applies the partial calibration to the raw vector.
-        """
-        sweepParamSetByFig: Dict[str, HSParamSet[QMSweepParam]] = {}
-        # loop over all the figures
-        for fig in self.figName:
-            # get the row indices for the figure
-            XRowIdxList = self.XRowIdxBySourceDict[fig]
-            # this row index list should have length 2; extract the two rows
-            rawXVecPairValues = {}
-            for rawXVecCompName in self.rawXVecNameList:
-                rawXVecCompValue1 = self[XRowIdxList[0]][rawXVecCompName].value
-                rawXVecCompValue2 = self[XRowIdxList[1]][rawXVecCompName].value
-                rawXVecPairValues[rawXVecCompName] = [
-                    rawXVecCompValue1,
-                    rawXVecCompValue2,
-                ]
-            # find the raw vector component that has the largest difference
-            maxDiffRawVecComp = max(
-                rawXVecPairValues,
-                key=lambda k: abs(rawXVecPairValues[k][0] - rawXVecPairValues[k][1]),
-            )
-            # assemble sweep parameter set, add sweep parameters to the parameter set
-            sweepParamSetFromCali = HSParamSet[QMSweepParam](
-                self.hilbertSpace, QMSweepParam
-            )
-            for paramDictByParent in list(self.sweepParamSet.values()):
-                for parentName, param in paramDictByParent.items():
-                    # extract mapped vector pair values
-                    mapXVecCompValue1 = self[XRowIdxList[0]][
-                        f"{param.parent}.{param.name}"
-                    ].value
-                    mapXVecCompValue2 = self[XRowIdxList[1]][
-                        f"{param.parent}.{param.name}"
-                    ].value
-                    sweepParamSetFromCali._insertParamByArgs(
-                        paramName=param.name,
-                        parent=param.parent,
-                        value=param.value,
-                        paramType=param.paramType,
-                        rangeDict={},  # not used
-                    )
-
-                    # generate the calibration function
-                    def partialCalibration(rawXVecDict: Dict[str, float]) -> float:
-                        """
-                        The partial calibration function that maps the raw vector to the
-                        mapped vector.
-                        """
-                        # first find x which is defined as
-                        # rawVec = (rawVec2 - rawVec1)*x + rawVec1
-                        x = (
-                            rawXVecDict[maxDiffRawVecComp]
-                            - rawXVecPairValues[maxDiffRawVecComp][0]
-                        ) / (
-                            rawXVecPairValues[maxDiffRawVecComp][1]
-                            - rawXVecPairValues[maxDiffRawVecComp][0]
-                        )
-                        # then calculate the specific individual component of the mapped vector
-                        # mapVecComp = (mapVecComp2 - mapVecComp1)*x + mapVecComp1
-                        mapXVecComp = (
-                            mapXVecCompValue2 - mapXVecCompValue1
-                        ) * x + mapXVecCompValue1
-                        return mapXVecComp
-
-                    # set the calibration function
-                    sweepParamSetFromCali[parentName][param.name].setCalibrationFunc(
-                        partialCalibration
-                    )
-            sweepParamSetByFig[fig] = sweepParamSetFromCali
-        return sweepParamSetByFig
-
-    @Slot()
     def sendXCaliFunc(self):
         """
         The function that updates the calibration function.
@@ -1210,14 +1216,12 @@ class CaliParamModel(
         else:
             self.issueNewXCaliFunc.emit(self._partialXCalibration)
 
-    @Slot()
     def sendYCaliFunc(self):
         """
         The function that updates the calibration function.
         """
         self.issueNewYCaliFunc.emit(self._YCalibration)
 
-    @Slot()
     def sendInvYCaliFunc(self):
         """
         The function that updates the calibration function.

@@ -920,10 +920,3 @@ class CaliTableRowParam(DispParamBase):
             return value
         else:
             raise ValueError(f"Unknown type of value: {value}")
-
-    # ==================================================================
-    def valueToInitial(self):
-        """
-        Set the value of the parameter to the initial value
-        """
-        self.value = self.initValue
