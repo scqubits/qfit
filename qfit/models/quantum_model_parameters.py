@@ -11,6 +11,7 @@ from qfit.models.parameter_settings import ParameterType
 from qfit.models.registry import RegistryEntry, Registrable
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
 from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
+from qfit.utils.helpers import sweepParamByHS
 
 from typing import (
     Dict,
@@ -684,15 +685,16 @@ class CaliParamModel(
     issueNewInvYCaliFunc = Signal(object)
     # calibrationIsOn: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2", False]
 
+    isFullCalibration: bool
+    caliTableXRowNr: int
+    caliTableXRowIdxList: List[str]
+    caliTableYRowIdxList: List[str] = ["Y0", "Y1"]
+    xRowIdxBySourceDict: Dict[str, List[str]] = {}
+
     parameters: Dict[str, Dict[str, CaliTableRowParam]]
 
     def __init__(
         self,
-        hilbertSpace: HilbertSpace,
-        rawXVecNameList: List[str],
-        rawYName: str,
-        figName: List[str],
-        sweepParamSet: HSParamSet[QMSweepParam],
     ):
         """
         Store calibration data for x and y axes, and provide methods to transform between uncalibrated and calibrated
@@ -729,33 +731,42 @@ class CaliParamModel(
         ParamSet.__init__(self, CaliTableRowParam)
         ParamModelMixin.__init__(self)
 
+        self.applyCaliToAxis = False
+        self.caliStatus = False
+
+        # the following will be called separately outside of the class
+        # self.dynamicalInit(
+        #     hilbertSpace,
+        #     rawXVecNameList,
+        #     rawYName,
+        #     figName,
+        #     sweepParamSet,
+        # ) 
+
+    # initialize =======================================================
+    def dynamicalInit(
+        self,
+        hilbertSpace: HilbertSpace,
+        rawXVecNameList: List[str],
+        rawYName: str,
+        figName: List[str],
+    ):
         self._hilbertSpace = hilbertSpace
         self.rawXVecNameList = rawXVecNameList
         self.rawYName = rawYName
-        self.rawXVecDim = len(rawXVecNameList)
         self.figName = figName
-        self.figNr = len(figName)
-        self.sweepParamSet = sweepParamSet
-        self.sweepParamNr = len(sweepParamSet)
-        self.caliStatus: Union[str, Literal[False]] = False
+        self.sweepParamSet = sweepParamByHS(hilbertSpace)
 
         # determine total calibration table row number and if the calibration is a complete one
-        self.isFullCalibration: bool
-        self.caliTableXRowNr: int
-        self.caliTableXRowIdxList: List[str]
-        self.caliTableYRowIdxList: List[str] = ["Y0", "Y1"]
+        
         self._isSufficientForFullCalibration(self.rawXVecDim, self.figNr)
 
         # initialize calibration table entries
         self.insertParamToSet()
 
-        self.XRowIdxBySourceDict: Dict[str, List[str]] = {}
         self._updateXRowIdxBySourceDict()
         # self.paramDict = self.toParamDict()
 
-        self.applyCaliToAxis = False
-
-    # initialize =======================================================
     def _isSufficientForFullCalibration(self, rawVecDim: int, figNr: int):
         """
         Determine if the calibration data is sufficient for a full calibration. For a full
@@ -887,6 +898,20 @@ class CaliParamModel(
         if rowIdx not in self.parameters.keys():
             self.parameters[rowIdx] = {}
         self.parameters[rowIdx][colName] = param
+
+    # property =========================================================
+    @property
+    def rawXVecDim(self) -> int:
+        return len(self.rawXVecNameList)
+    
+    @property
+    def figNr(self) -> int:
+        return len(self.figName)
+    
+    @property
+    def sweepParamNr(self) -> int:
+        return len(self.sweepParamSet)
+
 
     # calibrate the raw vector to the mapped vector ====================
     def _YCalibration(self) -> Callable:
@@ -1027,7 +1052,7 @@ class CaliParamModel(
         # loop over all the figures
         for fig in self.figName:
             # get the row indices for the figure
-            XRowIdxList = self.XRowIdxBySourceDict[fig]
+            XRowIdxList = self.xRowIdxBySourceDict[fig]
             # this row index list should have length 2; extract the two rows
             rawXVecPairValues = {}
             for rawXVecCompName in self.rawXVecNameList:
@@ -1110,8 +1135,10 @@ class CaliParamModel(
         """
         Update the rowIdxSourceDict, which stores the row indices for each figure.
         """
+        self.xRowIdxBySourceDict = {}
+
         for fig in self.figName:
-            self.XRowIdxBySourceDict[fig] = [
+            self.xRowIdxBySourceDict[fig] = [
                 XRowIdx
                 for XRowIdx in self.caliTableXRowIdxList
                 if fig == self[XRowIdx]["pointPairSource"].value

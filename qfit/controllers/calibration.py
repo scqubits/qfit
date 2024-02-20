@@ -5,10 +5,13 @@ from PySide6.QtCore import (
 )
 from PySide6.QtWidgets import QPushButton
 
-from typing import TYPE_CHECKING, Tuple, Dict, Any
+from typing import TYPE_CHECKING, Tuple, Dict, Any, List
 
 if TYPE_CHECKING:
-    from qfit.models.quantum_model_parameters import CaliParamModel
+    from scqubits.core.hilbert_space import HilbertSpace
+    from qfit.models.quantum_model_parameters import CaliParamModel, HSParamSet
+    from qfit.models.data_structures import QMSweepParam
+    from qfit.models.measurement_data import MeasurementDataType
     from qfit.views.calibration import CalibrationView
 
 
@@ -47,6 +50,19 @@ class CalibrationCtrl(QObject):
         self.calibrationView = calibrationView
         self.pageButtons = pageButtons
         self.uiCalibrationConnects()
+
+    def dynamicalInit(
+        self,
+        hilbertspace: HilbertSpace,
+        measurementData: List[MeasurementDataType],
+    ):
+        self.caliParamModel.dynamicalInit(
+            hilbertSpace=hilbertspace,
+            rawXVecNameList=measurementData[0].rawXNames,
+            rawYName=measurementData[0].rawYNames[0],
+            figName=[data.name for data in measurementData],
+        )
+
 
     def uiCalibrationConnects(self):
         """

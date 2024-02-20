@@ -49,7 +49,7 @@ from PySide6.QtWidgets import (
 )
 
 from qfit.utils.helpers import (
-    executed_in_ipython,
+    executed_in_ipython, sweepParamByHS
 )
 from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
 from qfit.controllers.help_tooltip import HelpButtonCtrl
@@ -147,16 +147,16 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitMVCInits(hilbertspace, measurementData)
         self.prefitDynamicalElementsBuild(hilbertspace)
 
-        # calibration - should be inited after prefit, as it requires the sweep parameter set
+        # calibration - should be inited after prefit, as it requires a sweep parameter set
         self.calibrationMVCInits(hilbertspace, measurementData)
-        # self.uiCalibrationConnects()
+        self.calibrationCtrl.dynamicalInit(hilbertspace, measurementData)
 
         # fit
         self.fitMVCInits(hilbertspace)
         self.fitDynamicalElementsBuild(hilbertspace)
 
         # plot, mpl canvas
-        self.plottingMVCInits()
+        self.plottingMVCInits(hilbertspace)
         self.plottingCtrl.dynamicalInit(self.measurementData)
 
         # help button
@@ -221,7 +221,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # plot #############################################################
     ####################################################################
-    def plottingMVCInits(self):
+    def plottingMVCInits(self, hilbertspace: HilbertSpace):
         # ui grouping
         self.measComboBoxes = {
             "x": self.ui.xComboBox,
@@ -256,7 +256,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 self.allDatasets,
                 self.activeDataset,
                 self.quantumModel,
-                self.sweepParameterSet,
+                sweepParamByHS(hilbertspace),
             ),
             (
                 self.measComboBoxes,
@@ -319,13 +319,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "Y0": self.ui.calibrateY1Button,
             "Y1": self.ui.calibrateY2Button,
         }
-        self.caliParamModel = CaliParamModel(
-            hilbertSpace=hilbertSpace,
-            rawXVecNameList=measurementData[0].rawXNames,
-            rawYName=measurementData[0].rawYNames[0],
-            figName=[data.name for data in measurementData],
-            sweepParamSet=self.sweepParameterSet,
-        )
+
+        sweepParameterSet = sweepParamByHS(hilbertSpace)
+        
+        self.caliParamModel = CaliParamModel()
         self.calibrationView = CalibrationView(
             rawXVecCompNameList=measurementData[0].rawXNames,
             rawYName=measurementData[0].rawYNames[0],
@@ -333,7 +330,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             mapLineEdits=self.mapLineEdits,
             caliTableXRowNr=self.caliParamModel.caliTableXRowNr,
             calibrationButtons=self.calibrationButtons,
-            sweepParamSet=self.sweepParameterSet,
+            sweepParamSet=sweepParameterSet,
         )
         
         self.calibrationCtrl = CalibrationCtrl(
@@ -426,7 +423,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         }
 
         self.quantumModel = QuantumModel(hilbertspace, [data.name for data in measurementData])
-        self.sweepParameterSet = HSParamSet(hilbertspace, QMSweepParam)
 
         self.prefitParamModel = PrefitParamModel(hilbertspace, QMSliderParam)
         self.prefitParamView = PrefitParamView(
@@ -464,23 +460,21 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         sweepParameterSet -init-> sliderParameterSet
         """
+
         # check how many sweep parameters are found and create sliders
         # for the remaining parameters
-        self.sweepParameterSet.hilbertspace = hilbertspace
+        sweepParameterSet = sweepParamByHS(hilbertspace)
+        
         self.prefitParamModel.hilbertspace = hilbertspace
 
-        self.sweepParameterSet.insertParamToSet(
-            included_parameter_type=["ng", "flux"],
-        )
-
-        param_types = set(self.sweepParameterSet.exportAttrDict("paramType").values())
-        if len(self.sweepParameterSet) == 0:
+        param_types = set(sweepParameterSet.exportAttrDict("paramType").values())
+        if len(sweepParameterSet) == 0:
             print(
                 "No sweep parameter (ng / flux) is found in the HilbertSpace "
                 "object. Please check your quantum model."
             )
             self.close()
-        elif len(self.sweepParameterSet) == 1:
+        elif len(sweepParameterSet) == 1:
             # only one sweep parameter is found, so we can create sliders
             # for the remaining parameters
             self.prefitParamModel.insertParamToSet(
@@ -489,7 +483,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                     + [list(param_types)[0]]  # exclude the sweep parameter
                 ),
             )
-        elif len(self.sweepParameterSet) == 2 and param_types == set(["flux", "ng"]):
+        elif len(sweepParameterSet) == 2 and param_types == set(["flux", "ng"]):
             # a flux and ng are detected in the HilbertSpace object
             # right now, we assume that the flux is always swept in this case
             self.prefitParamModel.insertParamToSet(
@@ -502,34 +496,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 "available in the next release."
             )
             self.close()
-
-    @Slot()
-    def onParameterChange(self, slider_or_fit_parameter_set: ParamSet):
-        """
-        Model & View updates
-        """
-        self.quantumModel.prefitUpdateCalc(
-            slider_or_fit_parameter_set=slider_or_fit_parameter_set,
-            sweep_parameter_set=self.sweepParameterSet,
-            # spectrum_data=self.spectrumData,
-            calibration_data=self.caliParamModel,
-            extracted_data=self.allDatasets,
-            # prefit_result=self.prefitResult,
-        )
-
-    @Slot()
-    def onPrefitPlotClicked(self):
-        """
-        Model & View updates
-        """
-        self.quantumModel.sweep2SpecMSE(
-            slider_or_fit_parameter_set=self.prefitParamModel,
-            sweep_parameter_set=self.sweepParameterSet,
-            # spectrum_data=self.spectrumData,
-            extracted_data=self.allDatasets,
-            calibration_data=self.caliParamModel,
-            # result=self.prefitResult,
-        )
 
     def prefitViewUpdates(self, hilbertspace: HilbertSpace):
         """
@@ -645,7 +611,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.prefitView.optionUpdated.connect(self.quantumModel.updateSweepOption)
 
-        self.ui.plotButton.clicked.connect(self.onPrefitPlotClicked)
+        self.ui.plotButton.clicked.connect(self.quantumModel.sweep2SpecMSE)
 
     def setUpPrefitRunConnects(self):
         """
@@ -824,7 +790,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # parameters
         self.registry.register(self.prefitParamModel)
         self.registry.register(self.fitParamModel)
-        # self.registry.register(self.sweepParameterSet)
 
         # main window
         self.registry.register(self)
