@@ -320,7 +320,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "Y1": self.ui.calibrateY2Button,
         }
         self.caliParamModel = CaliParamModel(
-            hilbertSpace=hilberSpace,
+            hilbertSpace=hilbertSpace,
             rawXVecNameList=measurementData[0].rawXNames,
             rawYName=measurementData[0].rawYNames[0],
             figName=[data.name for data in measurementData],
