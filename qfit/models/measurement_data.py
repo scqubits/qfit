@@ -66,8 +66,6 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self._data = measDatas
         self._currentRow: int = 0
 
-        self.checkValidity()
-
     # inits ============================================================
     def dynamicalInit(self, measDatas: List["MeasurementDataType"]):
         self._data = measDatas

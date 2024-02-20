@@ -198,12 +198,25 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
     A class to store all the parameters of a HilbertSpace object
     """
 
-    def __init__(self, hilbertspace: HilbertSpace, paramCls: Type[ParamCls]):
+    hilbertspace: HilbertSpace
+
+    def __init__(self, paramCls: Type[ParamCls]):
         super().__init__(paramCls)
 
-        self.hilbertspace = hilbertspace
         self.parentNameByObj: Dict[ParentType, str] = {}
         self.parentObjByName: Dict[str, ParentType] = {}
+
+    def dynamicalInit(
+        self, 
+        hilbertspace: HilbertSpace,
+        included_parameter_type: Union[List[ParameterType], None] = None,
+        excluded_parameter_type: Union[List[ParameterType], None] = None,
+    ):
+        self.hilbertspace = hilbertspace
+        self.insertParamToSet(
+            included_parameter_type=included_parameter_type,
+            excluded_parameter_type=excluded_parameter_type,
+        )
 
     def _generateParamDictForCircuit(self, subsystem: Circuit) -> Dict[str, List[str]]:
         """
@@ -433,8 +446,9 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
 
     @classmethod
     def sweepSetByHS(cls, hilbertSpace: HilbertSpace):
-        sweepParameterSet = cls(hilbertSpace, QMSweepParam)
-        sweepParameterSet.insertParamToSet(
+        sweepParameterSet = cls(QMSweepParam)
+        sweepParameterSet.dynamicalInit(
+            hilbertSpace,
             included_parameter_type=["ng", "flux"],
         )
         return sweepParameterSet
@@ -566,9 +580,9 @@ class HSParamModel(
 ):
     hspaceUpdated = Signal(HilbertSpace)
 
-    def __init__(self, hilbertspace: HilbertSpace, paramCls: Type[DispParamCls]):
+    def __init__(self, paramCls: Type[DispParamCls]):
         # ordering matters here
-        HSParamSet.__init__(self, hilbertspace, paramCls)
+        HSParamSet.__init__(self, paramCls)
         ParamModelMixin.__init__(self)
         attrs = self.paramCls.attrToRegister
 

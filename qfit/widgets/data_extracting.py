@@ -55,15 +55,15 @@ class ListView(QListView):
 
     def setModel(self, model):
         result = super().setModel(model)
-        self.setCurrentToLast()
+        # self.setCurrentToLast()
         return result
 
-    def setCurrentToLast(self):
-        """
-        Set the current index to the last row of the list.
-        """
-        maxRowIndex = self.model().rowCount() - 1
-        self.setCurrentIndex(self.model().index(maxRowIndex, 0))
+    # def setCurrentToLast(self):
+    #     """
+    #     Set the current index to the last row of the list.
+    #     """
+    #     maxRowIndex = self.model().rowCount() - 1
+    #     self.setCurrentIndex(self.model().index(maxRowIndex, 0))
 
     def currentChanged(self, current, previous):
         result = super().currentChanged(current, previous)

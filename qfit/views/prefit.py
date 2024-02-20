@@ -10,8 +10,6 @@ class PrefitView(QObject):
     def __init__(
         self,
         options: Dict[str, Any],
-        subsysNames: List[str],
-        hilbertDim: int,
     ):
         super().__init__()
 
@@ -22,14 +20,14 @@ class PrefitView(QObject):
         self.photons: QSpinBox = self.options["photons"]
         self.pointsAdded: IntLineEdit = self.options["pointsAdded"]
         self.autoRun: QCheckBox = self.options["autoRun"]
+        self.optionsConnects()
 
+    def dynamicalInit(
+        self,
+        subsysNames: List[str],
+        hilbertDim: int,
+    ):
         self.initializeOptions(subsysNames, hilbertDim)
-
-    def blockAllSignals(self, b: bool):
-        super().blockSignals(b)
-
-        for option in self.options.values():
-            option.blockSignals(b)
 
     def initializeOptions(self, subsysNames: List[str], hilbertDim: int):
         """
@@ -64,6 +62,12 @@ class PrefitView(QObject):
         self.blockAllSignals(False)
 
     # Signal processing ======================================================
+    def blockAllSignals(self, b: bool):
+        super().blockSignals(b)
+
+        for option in self.options.values():
+            option.blockSignals(b)
+
     def optionsConnects(self):
         self.subsysToPlot.currentIndexChanged.connect(
             lambda: self.optionUpdated.emit("subsysToPlot", self.subsysToPlot.currentText())

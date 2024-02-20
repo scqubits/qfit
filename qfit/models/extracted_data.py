@@ -212,17 +212,26 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
     distinctXUpdated = Signal(np.ndarray)  # when user extract (remove) data points
     readyToPlotX = Signal(VLineElement)  # connected to the above signal
 
-    def __init__(self, figNames: List[str]):
+    _figNames: List[str]
+    _currentFigName: str
+    _currentRow: int
+
+    def __init__(self):
         super().__init__()
 
-        self._figNames = figNames
         self._fullSpectra = FullExtr()
+
+        self.connects()
+
+    def dynamicalInit(
+        self,
+        figNames: List[str],
+    ):
+        self._figNames = figNames
         self._initFullSpectra()
 
         self._currentFigName = self._figNames[0]
         self._currentRow = 0
-
-        self.connects()
 
     def _initSpectra(self, figName: str):
         transition = ExtrTransition()
@@ -303,12 +312,20 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
     def emitReadyToPlotX(self, *args):
         self.readyToPlotX.emit(self.generatePlotElementX())
 
+    def emitDataUpdated(self):
+        self.dataUpdated.emit(self._fullSpectra)
+
     def connects(self):
         # focus changed --> update plot
         self.focusChanged.connect(self.emitReadyToPlot)
 
         # distinct x values updated --> update plot
         self.distinctXUpdated.connect(self.emitReadyToPlotX)
+
+        # data updated:
+        self.rowsInserted.connect(self.emitDataUpdated)
+        self.rowsRemoved.connect(self.emitDataUpdated)
+
 
     # Internal data manipulation methods ===============================
     def insertRow(self, row, parent=QModelIndex(), *args, **kwargs):
@@ -416,6 +433,7 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         Associted extracted data and tag updated from the active extracted data
         """
         self._currentSpectrum[self.currentRow] = transition
+        self.emitDataUpdated()
         self.emitXUpdated()
 
     @Slot(int)

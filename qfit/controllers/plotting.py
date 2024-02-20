@@ -5,9 +5,12 @@ from qfit.widgets.mpl_canvas import MplFigureCanvas
 import numpy as np
 import matplotlib as mpl
 from qfit.utils.helpers import y_snap, OrderedDictMod
-from qfit.models.measurement_data import NumericalMeasurementData, ImageMeasurementData
+from qfit.models.measurement_data import (
+    NumericalMeasurementData, ImageMeasurementData,
+    MeasurementDataType
+)
 
-from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal
+from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal, List
 
 if TYPE_CHECKING:
     from qfit.models.quantum_model_parameters import CaliParamModel
@@ -47,7 +50,8 @@ class PlottingCtrl(QObject):
         models: Tuple[
             "MeasDataSet", "CaliParamModel",
             "AllExtractedData", "ActiveExtractedData",
-            "QuantumModel", "ParamSet",
+            "QuantumModel", 
+            # "ParamSet",
         ],
         views: Tuple[Any, ...],
         # calibrationStates: Dict[str, Literal['CALIBRATE_X1', 'CALIBRATE_X2', 'CALIBRATE_Y1', 'CALIBRATE_Y2']],
@@ -59,7 +63,7 @@ class PlottingCtrl(QObject):
             self.allDatasets,
             self.activeDataset,
             self.quantumModel,
-            self.sweepParameterSet,
+            # self.sweepParameterSet,
         ) = models
         (
             self.measComboBoxes,
@@ -95,20 +99,20 @@ class PlottingCtrl(QObject):
 
         # previously in dynamicalInit
         self.measPlotSettingConnects()
-        self.measDataComboBoxesInit()
         # self.uiXYZComboBoxesConnects()
         self.dynamicalPlotElementsConnects()
+    
+    def dynamicalInit(
+        self, 
+        measurementData: List["MeasurementDataType"],
+    ):
+        self.measurementData.dynamicalInit(measurementData)
+        self.measDataComboBoxesInit()
+        
         # plot everything available
         self.allDatasets.emitReadyToPlot()
-    
-    # def dynamicalInit(
-    #     self, 
-    # ):
-    #     # self.measurementData = measurementData
-    #     # self.quantumModel = quantumModel
-    
-    #     self.mplCanvas.plotAllElements(resetXYLim=True)
-    #     self.updateCursor()
+        self.mplCanvas.plotAllElements(resetXYLim=True)
+        self.updateCursor()
 
     # measurement ======================================================
     def measDataComboBoxesInit(self):
@@ -451,13 +455,14 @@ class PlottingCtrl(QObject):
         if checked:
             # xlabel = <swept_parameter> (<sysstem id string>)
             xlabel = (
-                list(list(self.sweepParameterSet.values())[0].keys())[0]
+                "param name"
+                # list(list(self.sweepParameterSet.values())[0].keys())[0]
                 + " "
                 + "("
-                + list(list(self.sweepParameterSet.values())[0].values())[
-                    0
-                ].parent.id_str
+                + "parent id str"
+                # + list(list(self.sweepParameterSet.values())[0].values())[0].parent.id_str
                 + ")"
+                + " (to be implemented)"
             )
             self.axes.set_xlabel(xlabel)
             self.axes.set_ylabel("energy [GHz]")

@@ -16,7 +16,6 @@ class ExtractingView(QObject):
 
     def __init__(
         self,
-        subsysNames: List[str],
         uiGroups: Tuple[
             Dict[str, QGroupBox], Dict[str, QRadioButton],
             Dict[str, IntTupleLineEdit], Dict[str, QSpinBox],
@@ -29,8 +28,7 @@ class ExtractingView(QObject):
         """
         super().__init__()
 
-        self.subsysNames = subsysNames
-        self.subsysCount = len(subsysNames)
+        
         (
             self.groupBox, self.radioButtons, 
             self.bareLabels, self.dressedLabels,
@@ -39,11 +37,14 @@ class ExtractingView(QObject):
             self.bareLabelOrder,
         ) = uiGroups
     
-        self._initializeUI()
         self._modeSwitchSignalsConnects()
         self._tagChangedSignalConnects()
 
     # Initialization ===================================================
+    def dynamicalInit(self, subsysNames: List[str]):
+        self.subsysNames = subsysNames
+        self._initializeUI()
+
     def _initializeUI(self):
         """
         Set up the UI for the tagging panel:
@@ -62,6 +63,11 @@ class ExtractingView(QObject):
             "Labels ordered by: <br>"  # Three space to align with the label title
             + ", ".join(self.subsysNames)
         )
+
+    # properties =======================================================
+    @property
+    def subsysCount(self) -> int:
+        return len(self.subsysNames)
 
     # signal processing ================================================
     @Slot()

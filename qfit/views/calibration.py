@@ -30,6 +30,16 @@ class CalibrationView(QObject):
     caliStatusChangedByButtonClicked = Signal(object)
     dataEditingFinished = Signal(ParamAttr)
 
+    sweepParamSet: HSParamSet[QMSweepParam]
+    caliTableXRowNr: int
+    sweepParamParentName: str
+    sweepParamName: str
+    rawXVecNameList: List[str]
+    rawYName: str
+    caliTableSet: Dict[str, Dict[str, "CalibrationLineEdit"]]
+    rowIdxToButtonGroupId: Dict[str, int]
+    buttonGroupIdToRowIdx: Dict[int, Union[str, int]]
+
     def __init__(
         self,
         rawLineEdits: Dict[str, "CalibrationLineEdit"],
