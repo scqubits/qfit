@@ -858,7 +858,7 @@ class CaliParamModel(
         self.parameters[rowIdx][colName] = param
 
     @Slot()
-    def updateStatusFromCaliView(self, status: Union[str, int, Literal[False]]):
+    def updateStatusFromCaliView(self, status: Union[str, Literal[False]]):
         self.caliStatus = status
         if status != False:
             if type(status) is int:

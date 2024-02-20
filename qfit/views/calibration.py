@@ -36,9 +36,9 @@ class CalibrationView(QObject):
         rawYName: str,
         caliTableXRowNr: int,
         sweepParamSet: HSParamSet[QMSweepParam],
-        rawLineEdits: Dict[Union[int, str], "CalibrationLineEdit"],
-        mapLineEdits: Dict[Union[int, str], "CalibrationLineEdit"],
-        calibrationButtons: Dict[Union[int, str], QPushButton],
+        rawLineEdits: Dict[str, "CalibrationLineEdit"],
+        mapLineEdits: Dict[str, "CalibrationLineEdit"],
+        calibrationButtons: Dict[str, QPushButton],
     ):
         super().__init__()
 
@@ -52,12 +52,16 @@ class CalibrationView(QObject):
         self.rawYName = rawYName
         self.caliTableSet: Dict[str, Dict[str, "CalibrationLineEdit"]] = {
             "X0": {
-                self.rawXVecCompNameList[0]: rawLineEdits[0],
-                f"{self.sweepParamParentName}.{self.sweepParamName}": mapLineEdits[0],
+                self.rawXVecCompNameList[0]: rawLineEdits["X0"],
+                f"{self.sweepParamParentName}.{self.sweepParamName}": mapLineEdits[
+                    "X0"
+                ],
             },
             "X1": {
-                self.rawXVecCompNameList[0]: rawLineEdits[1],
-                f"{self.sweepParamParentName}.{self.sweepParamName}": mapLineEdits[1],
+                self.rawXVecCompNameList[0]: rawLineEdits["X1"],
+                f"{self.sweepParamParentName}.{self.sweepParamName}": mapLineEdits[
+                    "X1"
+                ],
             },
             "Y0": {
                 self.rawYName: rawLineEdits["Y0"],
@@ -97,7 +101,7 @@ class CalibrationView(QObject):
         """
         translation_dict = {}
         for rowIdx in range(self.caliTableXRowNr):
-            translation_dict[rowIdx] = rowIdx
+            translation_dict[f"X{rowIdx}"] = rowIdx
         translation_dict["Y0"] = self.caliTableXRowNr
         translation_dict["Y1"] = self.caliTableXRowNr + 1
         return translation_dict
