@@ -94,7 +94,13 @@ class QuantumModel(QObject):
     @Slot(str)
     def switchFig(self, figName: str):
         self._currentFigName = figName
-        self.prefitUpdateCalc()
+        self.updateCalc()
+
+    def updateHSWoCalc(self, hilbertspace: HilbertSpace):
+        """
+        It's used for manually update hilbertspace without running the calculation.
+        """
+        self._hilbertspace = hilbertspace
 
     @Slot(HilbertSpace)
     def updateHilbertSpace(self, hilbertspace: HilbertSpace):
@@ -105,8 +111,8 @@ class QuantumModel(QObject):
         ----------
         hilbertspace: HilbertSpace
         """
-        self._hilbertspace = hilbertspace
-        self.prefitUpdateCalc()
+        self.updateHSWoCalc(hilbertspace)
+        self.updateCalc()
 
     @Slot(FullExtr)
     def updateExtractedData(self, fullExtr: FullExtr):
@@ -132,7 +138,7 @@ class QuantumModel(QObject):
         sweepParamSets: Dict[str, HSParamSet]
         """
         self._sweepParamSets = sweepParamSets
-        self.prefitUpdateCalc()
+        self.updateCalc()
 
     @Slot()   # can't use Callable here in the initialization
     # because Argument of type "type[Callable]" cannot be assigned to parameter of type "type"
@@ -146,7 +152,7 @@ class QuantumModel(QObject):
         """
         self._yCaliFunc = yCaliFunc
         self._yInvCaliFunc = yInvCaliFunc
-        self.prefitUpdateCalc()
+        self.updateCalc()
 
     @Slot(str, Any)
     def updateSweepOption(
@@ -194,7 +200,7 @@ class QuantumModel(QObject):
             self.sweep2SpecMSE()
             pass
         elif attrName in ["evalsCount", "pointsAdd", "autoRun"]:
-            self.prefitUpdateCalc()
+            self.updateCalc()
             pass
     
     # signals =================================================================
@@ -397,7 +403,7 @@ class QuantumModel(QObject):
             raise e
 
     @Slot()
-    def sweep2SpecMSE(self):
+    def sweep2SpecMSE(self) -> float:
         """
         It is connected to the signal emitted by the UI when the user clicks the plot button
         for the prefit stage. It make use of the existing sweep object to
@@ -421,14 +427,7 @@ class QuantumModel(QObject):
         # --------------------------------------------------------------
 
         # mse calculation
-        mse = self.calculateMSE()
-
-        if self.sweepUsage == "prefit":
-            # update mse
-            pass
-        else:
-            # let the fit model handle the mse
-            self.mseReadyToFit.emit(mse)
+        return self._calculateMSE()
 
         # # pass MSE and status messages to the model
         # result.oldMseForComputingDelta = result.newMseForComputingDelta
@@ -437,7 +436,7 @@ class QuantumModel(QObject):
         # result.statusStrForView = status_text
 
     @Slot()
-    def prefitUpdateCalc(self) -> None:
+    def updateCalc(self) -> Union[None, float]:
         """
         newSweep + prefitSweep2SpecMSE
 
@@ -449,7 +448,7 @@ class QuantumModel(QObject):
         self.newSweep()
 
         if self._autoRun or self.sweepUsage == "fit":
-            self.sweep2SpecMSE()
+            return self.sweep2SpecMSE()
 
     # calculate MSE ===========================================================
     @staticmethod
@@ -604,7 +603,7 @@ class QuantumModel(QObject):
 
         return mse
 
-    def calculateMSE(self) -> float:
+    def _calculateMSE(self) -> float:
         """
         Calculate the mean square error between the extracted data and the simulated data
         from the parameter sweep. Currently, the MSE is calculated from the transition

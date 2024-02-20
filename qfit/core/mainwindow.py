@@ -76,14 +76,14 @@ from qfit.views.parameters import PrefitParamView
 from qfit.views.prefit import PrefitView
 from qfit.models.data_structures import QMSliderParam, QMSweepParam
 from qfit.models.quantum_model_parameters import (
-    ParamSet, HSParamSet, PrefitParamModel, FitParamModel
+    ParamSet, HSParamSet, PrefitParamModel
 )
 from qfit.models.numerical_model import QuantumModel
 
 # fit
 from qfit.models.data_structures import QMFitParam
 from qfit.views.parameters import FitParamView
-from qfit.models.fit import FitParamModel
+from qfit.models.fit import FitParamModel, FitModel
 
 # plot
 from qfit.controllers.plotting import PlottingCtrl
@@ -585,7 +585,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         Model & View updates
         """
-        self.quantumModel.prefitUpdateCalc(
+        self.quantumModel.updateCalc(
             slider_or_fit_parameter_set=slider_or_fit_parameter_set,
             sweep_parameter_set=self.sweepParameterSet,
             # spectrum_data=self.spectrumData,
@@ -736,6 +736,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.ui.fitScrollAreaWidget,
         )
         self.fitParamModel = FitParamModel(hilbertspace, QMFitParam)
+        self.fitModel = FitModel()
 
         self.fitStaticElementsBuild(hilbertspace)
 
@@ -752,7 +753,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def fitStaticElementsBuild(self, hilbertspace: HilbertSpace):
         self.fitOptionConnects()
         self.fitTableParamConnects()
-        self.fittingCallbackConnects()
         self.fitPushButtonConnects()
 
     @Slot()
@@ -783,19 +783,49 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         value_dict = self.fitParamModel.exportAttrDict("value")
         self.prefitParamModel.loadAttrDict(value_dict, "value")
 
+    def _costFunction(self, paramDict: Dict[str, float]) -> float:
+        """
+        Cook up a cost function for the optimization
+        """
+        self.fitParamModel.loadAttrDict(paramDict, "value")
+        for params in self.fitParamModel.values():
+            for p in params.values():
+                p.setParameterForParent()
+                
+        self.quantumModel.updateHSWoCalc(
+            self.fitParamModel.hilbertspace
+        )
+        
+        return self.quantumModel.updateCalc()
+
     @Slot()
     def optimizeParams(self):
+        if not self.fitParamModel.isValid:
+            return
+        
+        # configure other models & views
         self.quantumModel.sweepUsage = "fit"
-        self.fitParamModel.setupOptimization()
-
         self.ui.fitButton.setEnabled(False)
         self.prefitParamView.sliderSet.setEnabled(False)
 
-        self.fitParamModel.run()
+        # setup the optimization
+        self.fitModel.setupOptimization(
+            fixedParams = self.fitParamModel.fixedParams,
+            freeParamRanges = self.fitParamModel.freeParamRanges,
+            costFunction = self._costFunction,
+        )
 
+        # cook up a cost function
+        self.fitModel.runOptimization(
+            initParam = self.fitParamModel.initParams,
+        )
+        
+    @Slot()
+    def postOptimization(self):
         self.ui.fitButton.setEnabled(True)
         self.prefitParamView.sliderSet.setEnabled(True)
         self.quantumModel.sweepUsage = "prefit"
+
 
     def fitOptionConnects(self):
         self.ui.tolLineEdit.editingFinished.connect(
@@ -841,6 +871,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # update the value
         self.fitParamView.dataEditingFinished.connect(self.fitParamModel._storeParamAttr)
         self.fitParamModel.updateBox.connect(self.fitParamView.setBoxValue)
+
+    def fitConnects(self):
+        self.fitModel.optFinished.connect(self.postOptimization)
 
     # Save Location & Window Title #####################################
     # ##################################################################

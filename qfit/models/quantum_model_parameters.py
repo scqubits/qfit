@@ -669,10 +669,6 @@ class PrefitParamModel(HSParamModel[QMSliderParam]):
             )
 
 
-class FitParamModel(HSParamModel[QMFitParam]):
-    pass
-
-
 class CalibParamModel(
     ParamSet[DispParamCls], 
     ParamModelMixin[DispParamCls],   # ordering matters
