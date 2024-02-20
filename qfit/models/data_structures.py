@@ -607,7 +607,7 @@ class ParamBase(ABC):
     def __init__(
         self,
         name: str,
-        parent: ParentType,
+        parent: Union[ParentType, str],
         paramType: ParameterType,
     ):
         self.name = name
@@ -792,11 +792,11 @@ class QMSliderParam(DispParamBase):
         value should be denormalized before being stored.
         """
         if fromSlider:
-            value = self._denormalizeValue(value)
+            convertedValue = self._denormalizeValue(value)
         else:
-            value = self._toIntAsNeeded(float(value))
+            convertedValue = self._toIntAsNeeded(float(value))
 
-        setattr(self, attr, value)
+        setattr(self, attr, convertedValue)
 
     # getters for UI ===================================================
     @overload
@@ -843,9 +843,9 @@ class QMFitParam(DispParamBase):
         Store the value of the parameter
         """
         if isinstance(value, str):
-            value = self._toIntAsNeeded(float(value))
+            convertedValue = self._toIntAsNeeded(float(value))
 
-        setattr(self, attr, value)
+        setattr(self, attr, convertedValue)
 
     # getter for UI ====================================================
     def exportAttr(self, attr: str) -> Union[str, bool]:
@@ -877,25 +877,22 @@ class CaliTableRowParam(DispParamBase):
 
     attrToRegister = [
         "value",
-        "min",
-        "max",
-        "isFixed",
         "sweepParamName",
-        "parentSystem",
+        "parentSystemName",
     ]
 
     def __init__(
         self,
         colName: str,
-        rowIdx: Union[str, int],
+        rowIdx: str,
         paramType: ParameterType,
-        parentSystem: Optional[str],
+        parentSystemName: Optional[str],
         sweepParamName: Optional[str],
         value: float,
     ):
         super().__init__(name=colName, parent=rowIdx, paramType=paramType)
         self.value: float = value
-        self.parentSystem: Optional[str] = parentSystem
+        self.parentSystemName: Optional[str] = parentSystemName
         self.sweepParamName: Optional[str] = sweepParamName
 
     # setter for UI ====================================================
@@ -904,9 +901,9 @@ class CaliTableRowParam(DispParamBase):
         Store the value of the parameter
         """
         if isinstance(value, str):
-            value = self._toIntAsNeeded(float(value))
+            convertedValue = self._toIntAsNeeded(float(value))
 
-        setattr(self, attr, value)
+        setattr(self, attr, convertedValue)
 
     # getter for UI ====================================================
     def exportAttr(self, attr: str) -> Union[str, bool]:

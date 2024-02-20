@@ -302,20 +302,20 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         # ui grouping
         self.rawLineEdits = {
-            0: self.ui.rawX1LineEdit,
-            1: self.ui.rawX2LineEdit,
+            "X0": self.ui.rawX1LineEdit,
+            "X1": self.ui.rawX2LineEdit,
             "Y0": self.ui.rawY1LineEdit,
             "Y1": self.ui.rawY2LineEdit,
         }
         self.mapLineEdits = {
-            0: self.ui.mapX1LineEdit,
-            1: self.ui.mapX2LineEdit,
+            "X0": self.ui.mapX1LineEdit,
+            "X1": self.ui.mapX2LineEdit,
             "Y0": self.ui.mapY1LineEdit,
             "Y1": self.ui.mapY2LineEdit,
         }
         self.calibrationButtons = {
-            0: self.ui.calibrateX1Button,
-            1: self.ui.calibrateX2Button,
+            "X0": self.ui.calibrateX1Button,
+            "X1": self.ui.calibrateX2Button,
             "Y0": self.ui.calibrateY1Button,
             "Y1": self.ui.calibrateY2Button,
         }
