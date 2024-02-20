@@ -35,9 +35,9 @@ from qfit.models.data_structures import (
     QMFitParam,
     ParamAttr,
     CaliTableRowParam,
+    ParentType,
 )
 
-ParentSystem = Union[QuantumSystem, HilbertSpace]
 ParamCls = TypeVar("ParamCls", bound="ParamBase")
 
 
@@ -202,8 +202,8 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         super().__init__(paramCls)
 
         self.hilbertspace = hilbertspace
-        self.parentNameByObj: Dict[ParentSystem, str] = {}
-        self.parentObjByName: Dict[str, ParentSystem] = {}
+        self.parentNameByObj: Dict[ParentType, str] = {}
+        self.parentObjByName: Dict[str, ParentType] = {}
 
     def _generateParamDictForCircuit(self, subsystem: Circuit) -> Dict[str, List[str]]:
         """
@@ -351,7 +351,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
 
     @staticmethod
     def parentSystemNames(
-        parent: ParentSystem,
+        parent: ParentType,
         with_type: bool = True,
     ) -> str:
         if isinstance(parent, HilbertSpace):
@@ -373,7 +373,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         """
         return "".join(name.split(" ")[:-1])
 
-    def _updateNameMap(self, parent: ParentSystem, with_type: bool = True):
+    def _updateNameMap(self, parent: ParentType, with_type: bool = True):
         name = self.parentSystemNames(parent, with_type=with_type)
         if name not in self.parentObjByName.keys():
             self.parentNameByObj[parent] = name
@@ -382,7 +382,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
     def _insertParamByArgs(
         self,
         paramName: str,
-        parent: ParentSystem,
+        parent: ParentType,
         paramType: str,
         value: Union[int, float],
         rangeDict: Dict,
@@ -764,20 +764,20 @@ class CaliParamModel(
                     colName=rawVecCompName,
                     rowIdx=XRowIdx,
                     paramType="raw_X_vec_component",
-                    parentSystem=None,
+                    parentSystemName=None,
                     sweepParamName=None,
                     value=0,
                 )
             # loop over the mapped vector components (given by sweep parameters)
-            for paramDictByParent in list(self.sweepParamSet.values()):
-                for parentName, param in list(paramDictByParent.items()):
+            for parentName, paramDictByParent in self.sweepParamSet.items():
+                for paramName, param in paramDictByParent.items():
                     self._insertParamByArgs(
-                        colName=f"{parentName}.{param.name}",
+                        colName=f"{parentName}.{paramName}",
                         rowIdx=XRowIdx,
                         paramType=param.paramType,
-                        sweepParamName=param.name,
+                        sweepParamName=paramName,
                         value=0,
-                        parentSystem=parentName,
+                        parentSystemName=parentName,
                     )
             # insert the point pair source
             if self.isFullCalibration:
@@ -785,7 +785,7 @@ class CaliParamModel(
                     colName="pointPairSource",
                     rowIdx=XRowIdx,
                     paramType="point_pair_source",
-                    parentSystem=None,
+                    parentSystemName=None,
                     sweepParamName=None,
                     value=None,
                 )
@@ -794,7 +794,7 @@ class CaliParamModel(
                     colName="pointPairSource",
                     rowIdx=XRowIdx,
                     paramType="point_pair_source",
-                    parentSystem=None,
+                    parentSystemName=None,
                     sweepParamName=None,
                     value=self.figName[int(XRowIdx[1:]) // 2],
                 )
@@ -804,7 +804,7 @@ class CaliParamModel(
                 colName=self.rawYName,
                 rowIdx=YRowIdx,
                 paramType="raw_Y",
-                parentSystem=None,
+                parentSystemName=None,
                 sweepParamName=None,
                 value=0,
             )
@@ -814,7 +814,7 @@ class CaliParamModel(
                 paramType="mapped_Y",
                 sweepParamName=None,
                 value=0,
-                parentSystem=None,
+                parentSystemName=None,
             )
             self._insertParamByArgs(
                 colName="pointPairSource",
@@ -822,7 +822,7 @@ class CaliParamModel(
                 paramType="point_pair_source",
                 sweepParamName=None,
                 value=None,
-                parentSystem=None,
+                parentSystemName=None,
             )
 
     def _insertParamByArgs(
@@ -830,7 +830,7 @@ class CaliParamModel(
         colName: str,
         rowIdx: str,
         paramType: str,
-        parentSystem: Optional[str],
+        parentSystemName: Optional[str],
         sweepParamName: Optional[str],
         value: Optional[Union[int, float, str]],
     ):
@@ -844,7 +844,7 @@ class CaliParamModel(
             "colName": colName,
             "rowIdx": rowIdx,
             "paramType": paramType,
-            "parentSystem": parentSystem,
+            "parentSystemName": parentSystemName,
             "sweepParamName": sweepParamName,
             "value": value,
         }
@@ -1083,10 +1083,10 @@ class CaliParamModel(
         sweepParamSetFromCali = HSParamSet[QMSweepParam](
             self.hilbertSpace, QMSweepParam
         )
-        for paramDictByParent in list(self.sweepParamSet.values()):
-            for parentName, param in paramDictByParent.items():
+        for parentName, paramDictByParent in self.sweepParamSet.items():
+            for paramName, param in paramDictByParent.items():
                 sweepParamSetFromCali._insertParamByArgs(
-                    paramName=param.name,
+                    paramName=paramName,
                     parent=param.parent,
                     value=param.value,
                     paramType=param.paramType,
@@ -1154,8 +1154,8 @@ class CaliParamModel(
             sweepParamSetFromCali = HSParamSet[QMSweepParam](
                 self.hilbertSpace, QMSweepParam
             )
-            for paramDictByParent in list(self.sweepParamSet.values()):
-                for parentName, param in paramDictByParent.items():
+            for parentName, paramDictByParent in self.sweepParamSet.items():
+                for paramName, param in paramDictByParent.items():
                     # extract mapped vector pair values
                     mapXVecCompValue1 = self[XRowIdxList[0]][
                         f"{param.parent}.{param.name}"
@@ -1164,7 +1164,7 @@ class CaliParamModel(
                         f"{param.parent}.{param.name}"
                     ].value
                     sweepParamSetFromCali._insertParamByArgs(
-                        paramName=param.name,
+                        paramName=paramName,
                         parent=param.parent,
                         value=param.value,
                         paramType=param.paramType,

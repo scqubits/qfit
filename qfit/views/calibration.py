@@ -41,21 +41,23 @@ class CalibrationView(QObject):
         calibrationButtons: Dict[Union[int, str], QPushButton],
     ):
         super().__init__()
-        
+
         self.sweepParamSet = sweepParamSet
-        self.firstSweepParam = list(list(sweepParamSet.values())[0].values())[0]
         self.caliTableXRowNr = caliTableXRowNr
-        sweepParam = self.firstSweepParam
+        self.sweepParamParentName = list(self.sweepParamSet.keys())[0]
+        self.sweepParamName = list(
+            self.sweepParamSet[self.sweepParamParentName].keys()
+        )[0]
         self.rawXVecCompNameList = rawXVecCompNameList
         self.rawYName = rawYName
-        self.caliTableSet: Dict[Union[str, int], Dict[str, "CalibrationLineEdit"]] = {
-            0: {
+        self.caliTableSet: Dict[str, Dict[str, "CalibrationLineEdit"]] = {
+            "X0": {
                 self.rawXVecCompNameList[0]: rawLineEdits[0],
-                f"{sweepParam.parent}.{sweepParam.name}": mapLineEdits[0],
+                f"{self.sweepParamParentName}.{self.sweepParamName}": mapLineEdits[0],
             },
-            1: {
+            "X1": {
                 self.rawXVecCompNameList[0]: rawLineEdits[1],
-                f"{sweepParam.parent}.{sweepParam.name}": mapLineEdits[1],
+                f"{self.sweepParamParentName}.{self.sweepParamName}": mapLineEdits[1],
             },
             "Y0": {
                 self.rawYName: rawLineEdits["Y0"],
@@ -72,9 +74,9 @@ class CalibrationView(QObject):
         self.caliButtonGroup.setExclusive(True)
 
         # generalize to functions in the future
-        self.rowIdxToButtonGroupId: Dict[
-            Union[str, int], int
-        ] = self._generateRowIdxToButtonGroupIdDict()
+        self.rowIdxToButtonGroupId: Dict[Union[str, int], int] = (
+            self._generateRowIdxToButtonGroupIdDict()
+        )
         # generate the inverse dictionary
         self.buttonGroupIdToRowIdx: Dict[int, Union[str, int]] = {
             v: k for k, v in self.rowIdxToButtonGroupId.items()
@@ -82,8 +84,8 @@ class CalibrationView(QObject):
         self._addButtonsToGroup()
 
         # need to be removed in the future
-        self.caliTableSet[0][self.rawXVecCompNameList[0]].setSibling(
-            self.caliTableSet[1][self.rawXVecCompNameList[0]]
+        self.caliTableSet["X0"][self.rawXVecCompNameList[0]].setSibling(
+            self.caliTableSet["X1"][self.rawXVecCompNameList[0]]
         )
         self.caliTableSet["Y0"][self.rawYName].setSibling(
             self.caliTableSet["Y1"][self.rawYName]
@@ -113,10 +115,10 @@ class CalibrationView(QObject):
     #     else:
     #         button.setStyleSheet("QPushButton {background-color: #BE82FA}")
 
-    def _resetHighlightButtons(self):
-        """Reset the highlighting of all calibration buttons."""
-        for label in self.calibrationButtons:
-            self._highlightCaliButton(self.calibrationButtons[label], reset=True)
+    # def _resetHighlightButtons(self):
+    #     """Reset the highlighting of all calibration buttons."""
+    #     for label in self.calibrationButtons:
+    #         self._highlightCaliButton(self.calibrationButtons[label], reset=True)
 
     def setupEditingFinishedSignalEmit(self):
         """
@@ -178,10 +180,10 @@ class CalibrationView(QObject):
             self.caliTableSet[rowIdx][rawXVecCompName].home(False)
         # highlight the map line edit
         self.caliTableSet[rowIdx][
-            f"{self.firstSweepParam.parent}.{self.firstSweepParam.name}"
+            f"{self.sweepParamParentName}.{self.sweepParamName}"
         ].selectAll()
         self.caliTableSet[rowIdx][
-            f"{self.firstSweepParam.parent}.{self.firstSweepParam.name}"
+            f"{self.sweepParamName}.{self.sweepParamName}"
         ].setFocus()
         self.uncheckAllCaliButtons()
 
