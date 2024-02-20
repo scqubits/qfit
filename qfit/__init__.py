@@ -79,7 +79,7 @@ class Fit:
             measurementData = dummy_measurement_data()
 
         instance.window = MainWindow(
-            measurementData=measurementData,
+            measurementData=[measurementData],
             hilbertspace=instance._hilbertSpace,
         )
 

@@ -10,9 +10,11 @@ from qfit.models.measurement_data import NumericalMeasurementData, ImageMeasurem
 from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal
 
 if TYPE_CHECKING:
+    from qfit.models.quantum_model_parameters import CaliParamModel
+
+    # from qfit.models.calibration_data import CalibrationData
     from qfit.models.measurement_data import (
         MeasDataSet)
-    from qfit.models.calibration_data import CalibrationData
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
     from qfit.models.quantum_model_parameters import ParamSet
     from qfit.models.numerical_model import QuantumModel
@@ -24,17 +26,17 @@ class PlottingCtrl(QObject):
     Establishes the connection among the mpl canvas, the mpl toolbar, and the
     other user interfaces.
     """
+
     disconnectCanvas: bool
     xSnapTool: bool
     trans0Focused: bool
     axisSnap: Literal["X", "Y", "OFF"]
     clickResponse: Literal[
-        "ZOOM", "PAN", "EXTRACT",
+        "ZOOM",
+        "PAN",
+        "EXTRACT",
     ]
-    dataDestination: Literal[
-        "CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2",
-        "EXTRACT", "NONE"
-    ]
+    dataDestination: Literal["CALI_X", "CALI_Y", "EXTRACT", "NONE"]
 
     # other annotations
     pageView: "PageView"
@@ -43,7 +45,7 @@ class PlottingCtrl(QObject):
         self,
         mplCanvas: "MplFigureCanvas",
         models: Tuple[
-            "MeasDataSet", "CalibrationData",
+            "MeasDataSet", "CaliParamModel",
             "AllExtractedData", "ActiveExtractedData",
             "QuantumModel", "ParamSet",
         ],
@@ -52,27 +54,34 @@ class PlottingCtrl(QObject):
     ):
         super().__init__()
         (
-            self.measurementData, self.calibrationData,
-            self.allDatasets, self.activeDataset,
-            self.quantumModel, self.sweepParameterSet
+            self.measurementData,
+            self.calibrationModel,
+            self.allDatasets,
+            self.activeDataset,
+            self.quantumModel,
+            self.sweepParameterSet,
         ) = models
         (
-            self.measComboBoxes, self.measPlotSettings, self.swapXYButton,
-            self.canvasTools, self.calibrationButtons, self.calibratedCheckBox, 
-            self.pageView
+            self.measComboBoxes,
+            self.measPlotSettings,
+            self.swapXYButton,
+            self.canvasTools,
+            self.calibrationButtons,
+            self.calibratedCheckBox,
+            self.pageView,
         ) = views
         self.mplCanvas = mplCanvas
         self.axes = mplCanvas.axes()
         self._staticInit()
 
     def _staticInit(self):
-        self.disconnectCanvas = False   # used to temporarily switch off canvas updates
-        self.xSnapTool = True        # whether the horizontal snap is on
-        self.trans0Focused = True   # whether the first transition is focused
-        self.axisSnap = "OFF"   # the axis snap mode, override xSnap when not "OFF"
-        self.clickResponse = "EXTRACT"   # the response to a mouse click
-        self.dataDestination = "NONE"   # the destination of the data after a click
-    
+        self.disconnectCanvas = False  # used to temporarily switch off canvas updates
+        self.xSnapTool = True  # whether the horizontal snap is on
+        self.trans0Focused = True  # whether the first transition is focused
+        self.axisSnap = "OFF"  # the axis snap mode, override xSnap when not "OFF"
+        self.clickResponse = "EXTRACT"  # the response to a mouse click
+        self.dataDestination = "NONE"  # the destination of the data after a click
+
         self.canvasToolConnects()
         self.staticPlotElementsConnects()
         self.mouseClickConnects()
@@ -109,21 +118,35 @@ class PlottingCtrl(QObject):
         zDataNames = list(self.measurementData.currentMeasData._zCandidates.keys())
         self.measComboBoxes["z"].clear()
         self.measComboBoxes["z"].addItems(zDataNames)
-        self.measComboBoxes["z"].setCurrentText(self.measurementData.currentZ.name)
+        self.measComboBoxes["z"].setCurrentText(self.measurementData.currentMeasData.currentZ.name)
         # self.setupXYDataBoxes()
 
     def measPlotSettingConnects(self):
         """Connect the UI elements related to display of data"""
-        self.measPlotSettings["topHat"].toggled.connect(self.measurementData.toggleTopHatFilter)
-        self.measPlotSettings["wavelet"].toggled.connect(self.measurementData.toggleWaveletFilter)
-        self.measPlotSettings["edge"].toggled.connect(self.measurementData.toggleEdgeFilter)
-        self.measPlotSettings["bgndX"].toggled.connect(self.measurementData.toggleBgndSubtractX)
-        self.measPlotSettings["bgndY"].toggled.connect(self.measurementData.toggleBgndSubtractY)
-        self.measPlotSettings["log"].toggled.connect(self.measurementData.toggleLogColoring)
+        self.measPlotSettings["topHat"].toggled.connect(
+            self.measurementData.toggleTopHatFilter
+        )
+        self.measPlotSettings["wavelet"].toggled.connect(
+            self.measurementData.toggleWaveletFilter
+        )
+        self.measPlotSettings["edge"].toggled.connect(
+            self.measurementData.toggleEdgeFilter
+        )
+        self.measPlotSettings["bgndX"].toggled.connect(
+            self.measurementData.toggleBgndSubtractX
+        )
+        self.measPlotSettings["bgndY"].toggled.connect(
+            self.measurementData.toggleBgndSubtractY
+        )
+        self.measPlotSettings["log"].toggled.connect(
+            self.measurementData.toggleLogColoring
+        )
         self.measPlotSettings["min"].valueChanged.connect(self.measurementData.setZMin)
         self.measPlotSettings["max"].valueChanged.connect(self.measurementData.setZMax)
 
-        self.measPlotSettings["color"].currentTextChanged.connect(self.mplCanvas.updateColorMap)
+        self.measPlotSettings["color"].currentTextChanged.connect(
+            self.mplCanvas.updateColorMap
+        )
 
     def uiXYZComboBoxesConnects(self):
         self.measComboBoxes["z"].activated.connect(self.zDataUpdate)
@@ -160,7 +183,7 @@ class PlottingCtrl(QObject):
     @Slot()
     def swapXY(self):
         """
-        Swap the x and y axes of the measurement data. It should be called 
+        Swap the x and y axes of the measurement data. It should be called
         at the end when the swapXY button is clicked as it updates the
         plot.
         """
@@ -191,7 +214,7 @@ class PlottingCtrl(QObject):
         """If calibration check box is changed, toggle the calibration status of the
         calibrationData. Also induce change at the level of the displayed data of
         selected points."""
-        self.calibrationData.toggleCalibration()
+        self.calibrationModel.toggleAxisCaliRep()
         # update the plot to reflect the change in calibration label
         self.toggleCanvasLabels(checked)
         # self.activeDataset.emitDataUpdated()
@@ -237,16 +260,18 @@ class PlottingCtrl(QObject):
 
     def plottingModeConnects(self):
         # calibration --> data destination
-        self.calibrationData.plotCaliOn.connect(self.setDataDestAxisSnap)
-        self.calibrationData.plotCaliOff.connect(
+        self.calibrationModel.plotCaliPtExtractStart.connect(self.setDataDestAxisSnap)
+        self.calibrationModel.plotCaliPtExtractFinished.connect(
             lambda: self.setDataDestAxisSnap("NONE")
         )
 
         # page switch --> data destination
         self.pageView.pageChanged.connect(
-            lambda curr: self.setDataDestAxisSnap("EXTRACT" if curr == "extract" else "NONE")
+            lambda curr: self.setDataDestAxisSnap(
+                "EXTRACT" if curr == "extract" else "NONE"
+            )
         )
-        
+
         # page switch --> plotting element property change (visibility)
         self.pageView.pageChanged.connect(self.mplCanvas.updateElemPropertyByPage)
 
@@ -273,21 +298,21 @@ class PlottingCtrl(QObject):
         self.clickResponse = response
 
     @Slot()
-    def setDataDestAxisSnap(self, destination: Literal[
-        "CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2",
-        "EXTRACT", "NONE"
-    ]):
+    def setDataDestAxisSnap(
+        self,
+        destination: Literal["CALI_X", "CALI_Y", "EXTRACT", "NONE"],
+    ):
         self.dataDestination = destination
 
-        if destination in ["CALI_X1", "CALI_X2"]:
+        if destination == "CALI_X":
             self.axisSnap = "X"
-        elif destination in ["CALI_Y1", "CALI_Y2"]:
+        elif destination == "CALI_Y":
             self.axisSnap = "Y"
         else:
             self.axisSnap = "OFF"
-            
+
         self.updateCursor()
-    
+
     @Slot()
     def toggleSelect(self):
         self.setClickResponse("EXTRACT")
@@ -305,7 +330,7 @@ class PlottingCtrl(QObject):
 
     def updateCursor(self):
         """
-        Callback for updating the matching mode and the cursor. 
+        Callback for updating the matching mode and the cursor.
 
         When will this method be called?
         1. Page switch --> Calibration & Selecting page have different crosshair
@@ -313,22 +338,22 @@ class PlottingCtrl(QObject):
         3. X Snap on / off --> Crosshair updated
         """
         # crosshair
-        horizOn, vertOn = False, False      # destination: NONE
+        horizOn, vertOn = False, False  # destination: NONE
         if self.dataDestination == "EXTRACT":
             # selection in selection page --> full xy crosshair
             horizOn, vertOn = True, True
-        elif self.dataDestination in ["CALI_X1", "CALI_X2"]:
+        elif self.dataDestination == "CALI_X":
             # calibrate X --> only vertical crosshair
             horizOn, vertOn = False, True
-        elif self.dataDestination in ["CALI_Y1", "CALI_Y2"]:
+        elif self.dataDestination == "CALI_Y":
             # calibrate Y --> only horizontal crosshair
             horizOn, vertOn = True, False
 
         self.mplCanvas.updateCursor(
-            axisSnapMode = self.axisSnap,
-            xSnapMode = self.xSnap,
-            horizOn = horizOn,
-            vertOn = vertOn,
+            axisSnapMode=self.axisSnap,
+            xSnapMode=self.xSnap,
+            horizOn=horizOn,
+            vertOn=vertOn,
         )
 
     @Slot()
@@ -351,13 +376,13 @@ class PlottingCtrl(QObject):
         rawX = self.measurementData.currentMeasData.rawXByCurrentX(event.xdata)
         
         # calibration mode
-        if self.dataDestination in ["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2"]:
+        if self.dataDestination in ["CALI_X", "CALI_Y"]:
             data = event.xdata if (self.dataDestination[-2] == "X") else event.ydata
 
             # model: update the calibration data
-            self.calibrationData.acceptCalibration(self.dataDestination, data)
+            self.calibrationModel.processSelectedPtFromPlot(data=data, figName="dummy")
 
-            # the above will then trigger the update the view: 
+            # the above will then trigger the update the view:
             # turn off highlighting, set value, etc
 
             # controller: update the status
@@ -419,7 +444,10 @@ class PlottingCtrl(QObject):
 
     @Slot(bool)
     def toggleCanvasLabels(self, checked: bool):
-        """Toggle the labels on the canvas."""
+        """
+        TO BE REFACTORED (moving part to the calibration)
+        Toggle the labels on the canvas.
+        """
         if checked:
             # xlabel = <swept_parameter> (<sysstem id string>)
             xlabel = (
@@ -442,7 +470,7 @@ class PlottingCtrl(QObject):
             # are text objects.
             # results are rounded to 2 decimals
             xticklabels = np.round(
-                self.calibrationData.calibrateDataset(
+                self.calibrationModel.calibrateDataset(
                     array=np.array(
                         [
                             [float(xticklabel.get_position()[0]), 0]
@@ -454,7 +482,7 @@ class PlottingCtrl(QObject):
                 decimals=2,
             )
             yticklabels = np.round(
-                self.calibrationData.calibrateDataset(
+                self.calibrationModel.calibrateDataset(
                     array=np.array(
                         [
                             [0, float(yticklabel.get_position()[1])]
@@ -497,5 +525,5 @@ class PlottingCtrl(QObject):
         distance = np.linalg.norm(x1y1 - x2y2)
         if distance < 0.025:
             return True
-        
+
         return False

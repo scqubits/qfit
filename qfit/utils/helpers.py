@@ -27,6 +27,10 @@ from PySide6.QtCore import QLocale
 from PySide6.QtGui import QDoubleValidator
 from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate, QWidget
 
+from qfit.models.quantum_model_parameters import HSParamSet
+from qfit.models.data_structures import QMSweepParam
+from scqubits.core.hilbert_space import HilbertSpace
+
 from typing import Dict, List, Literal, Optional, Tuple, Union
 from typing import TypeVar, Generic
 
@@ -372,3 +376,11 @@ def y_snap(
 
     return y_list[peak_idx + y_min_idx]
 
+# parameters ###########################################################
+def sweepParamByHS(hilbertSpace: HilbertSpace):
+    sweepParameterSet = HSParamSet(hilbertSpace, QMSweepParam)
+    sweepParameterSet.hilbertspace = hilbertSpace
+    sweepParameterSet.insertParamToSet(
+        included_parameter_type=["ng", "flux"],
+    )
+    return sweepParameterSet

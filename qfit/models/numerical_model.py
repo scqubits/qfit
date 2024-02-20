@@ -16,23 +16,26 @@ from typing import Dict, List, Tuple, Union, Callable, Any, Literal, Optional
 
 from qfit.models.parameter_settings import ParameterType
 
-from qfit.models.quantum_model_parameters import (
-    ParamSet, HSParamSet
-)
+from qfit.models.quantum_model_parameters import ParamSet, HSParamSet
 from qfit.models.data_structures import (
-    ParamBase, QMSliderParam, QMSweepParam, QMFitParam,
-    FullExtr, ExtrTransition
+    ParamBase,
+    QMSliderParam,
+    QMSweepParam,
+    QMFitParam,
+    FullExtr,
+    ExtrTransition,
 )
 from qfit.models.status import StatusModel
 from qfit.models.numerical_spectrum_data import CalculatedSpecData
-from qfit.models.calibration_data import CalibrationData
+# from qfit.models.calibration_data import CalibrationData
+from qfit.models.quantum_model_parameters import CaliParamModel
 from qfit.models.extracted_data import AllExtractedData
 from qfit.models.data_structures import Tag, SpectrumElement
 
+
 def dummy_hilbert_space():
     fluxonium = scq.Fluxonium(
-        EJ=5.0, EC=1, EL=0.1, flux=0.0, cutoff=100, 
-        truncated_dim=5, id_str="fluxonium"
+        EJ=5.0, EC=1, EL=0.1, flux=0.0, cutoff=100, truncated_dim=5, id_str="fluxonium"
     )
     return scq.HilbertSpace([fluxonium])
 
@@ -45,6 +48,7 @@ class QuantumModel(QObject):
     ----------
     hilbertspace: HilbertSpace
     """
+
     _sweeps: Dict[str, ParameterSweep]
 
     readyToPlot = Signal(SpectrumElement)
@@ -73,7 +77,8 @@ class QuantumModel(QObject):
 
         # calibration
         self._sweepParamSets: Dict[str, HSParamSet[QMSweepParam]] = {
-            figName: HSParamSet[QMSweepParam](self._hilbertspace, QMSweepParam) for figName in self._figNames
+            figName: HSParamSet[QMSweepParam](self._hilbertspace, QMSweepParam)
+            for figName in self._figNames
         }
         self._yCaliFunc: Callable = lambda x: x
         self._yInvCaliFunc: Callable = lambda x: x
@@ -86,7 +91,7 @@ class QuantumModel(QObject):
         self._subsysToPlot: QuantumSystem = self._hilbertspace.subsystem_list[0]
         self._initialState: Union[int, Tuple[int, ...], None] = None
         self._photons: int = 1
-        
+
         # options when running
         self._autoRun: bool = True
 
@@ -128,7 +133,7 @@ class QuantumModel(QObject):
         self._fullExtr = fullExtr
         # at the moment we don't update the calculation after the extracted data is updated
 
-    @Slot(Dict[str, HSParamSet])
+    @Slot(dict)
     def updateSweepParamSets(self, sweepParamSets: Dict[str, HSParamSet]):
         """
         Update the parameter sets for the sweeps.
@@ -140,7 +145,7 @@ class QuantumModel(QObject):
         self._sweepParamSets = sweepParamSets
         self.updateCalc()
 
-    @Slot()   # can't use Callable here in the initialization
+    @Slot()  # can't use Callable here in the initialization
     # because Argument of type "type[Callable]" cannot be assigned to parameter of type "type"
     def updateYCaliFunc(self, yCaliFunc: Callable, yInvCaliFunc: Callable):
         """
@@ -202,7 +207,7 @@ class QuantumModel(QObject):
         elif attrName in ["evalsCount", "pointsAdd", "autoRun"]:
             self.updateCalc()
             pass
-    
+
     # signals =================================================================
     def emitReadyToPlot(self):
         # spectrum data for highlighting
@@ -217,7 +222,9 @@ class QuantumModel(QObject):
         )
 
         # overall data
-        overall_specdata = copy.deepcopy(self._currentSweep[(slice(None),)].dressed_specdata)
+        overall_specdata = copy.deepcopy(
+            self._currentSweep[(slice(None),)].dressed_specdata
+        )
         overall_specdata.energy_table -= highlight_specdata.subtract
 
         # scale the spectrum data accordingly, based on the calibration
@@ -232,7 +239,6 @@ class QuantumModel(QObject):
         )
         self.readyToPlot.emit(spectrum_element)
 
-        
     # properties ==============================================================
     @property
     def _currentSweep(self) -> ParameterSweep:
@@ -272,7 +278,7 @@ class QuantumModel(QObject):
             raise ValueError(
                 f"Cannot convert {state_str} to a state label. Please check the format."
             )
-        
+
     def _invCaliSpec(self, specData: SpectrumData):
         """
         scale the spectrum data accordingly, based on the calibration
@@ -280,7 +286,7 @@ class QuantumModel(QObject):
         in the calibration data
         """
         specData.energy_table[:, :] = self._yCaliFunc(specData.energy_table)
-        
+
     # generate sweep ==========================================================
     def _prefitSweptX(self, addPoints: bool = True) -> Dict[str, np.ndarray]:
         """
@@ -299,9 +305,7 @@ class QuantumModel(QObject):
                 x_coordinates_uniform = np.linspace(
                     extrX[0], extrX[-1], self._pointsAdd
                 )[1:-1]
-                x_coordinates_all = np.concatenate(
-                    [extrX, x_coordinates_uniform]
-                )
+                x_coordinates_all = np.concatenate([extrX, x_coordinates_uniform])
                 sweptX[figName] = np.sort(x_coordinates_all)
             else:
                 # only calculate the spectrum for the extracted data x coordinates
@@ -320,6 +324,7 @@ class QuantumModel(QObject):
         updateHSDict = {}
         for figName, sweepParamSet in self._sweepParamSets.items():
             spectra = self._fullExtr[figName]
+
             def updateHilbertspace(x: float) -> None:
                 # map x to the rawX (voltage vector)
                 rawX = spectra.rawXByX(x)
@@ -333,7 +338,7 @@ class QuantumModel(QObject):
             updateHSDict[figName] = updateHilbertspace
 
         return updateHSDict
-    
+
     def _subsysUpdateInfo(self) -> Dict[str, List]:
         """
         Return a dictionary that maps the figure names to the list of subsystems
@@ -345,7 +350,7 @@ class QuantumModel(QObject):
         }
 
     def _generateSweep(
-        self, 
+        self,
         sweptX: Dict[str, np.ndarray],
         updateHS: Dict[str, Callable[[float], None]],
         subsysUpdateInfo: Dict[str, List],
@@ -457,31 +462,31 @@ class QuantumModel(QObject):
         evals: ndarray,
         initial: Optional[int] = None,
         final: Optional[int] = None,
-    ) -> float: 
+    ) -> float:
         """
         Given a list of eigenenergies, find the closest transition frequency.
         """
         if initial is not None and final is not None:
             assert initial < final
             return evals[final] - evals[initial]
-        
+
         elif initial is not None and final is None:
-            possible_transitions = evals[initial + 1:] - evals[initial]
+            possible_transitions = evals[initial + 1 :] - evals[initial]
 
         elif initial is None and final is not None:
             possible_transitions = evals[final] - evals[:final]
 
         else:
             # enumerate all possible transitions starting from all different states
-            possible_transitions = np.array([
-                evals[final] - evals[initial]
-                for initial in range(len(evals))
-                for final in range(initial + 1, len(evals))
-            ])
+            possible_transitions = np.array(
+                [
+                    evals[final] - evals[initial]
+                    for initial in range(len(evals))
+                    for final in range(initial + 1, len(evals))
+                ]
+            )
 
-        closest_idx = (
-            np.abs(possible_transitions - dataFreq)
-        ).argmin()
+        closest_idx = (np.abs(possible_transitions - dataFreq)).argmin()
 
         return possible_transitions[closest_idx]
 
@@ -523,27 +528,27 @@ class QuantumModel(QObject):
 
         # if provided bare label
         elif tag.tagType == "DISPERSIVE_BARE":
-            eigenenergies = sweep["evals"]["x": x_coord]
-            initial_energy = sweep["x": x_coord].energy_by_bare_index(
-                tag.initial
-            )
-            final_energy = sweep["x": x_coord].energy_by_bare_index(tag.final)
+            eigenenergies = sweep["evals"]["x":x_coord]
+            initial_energy = sweep["x":x_coord].energy_by_bare_index(tag.initial)
+            final_energy = sweep["x":x_coord].energy_by_bare_index(tag.final)
 
             # when we can identify both initial and final states
             if initial_energy is not np.nan and final_energy is not np.nan:
                 simulation_freq = final_energy - initial_energy
                 status = "SUCCESS"
                 return simulation_freq, status
-            
+
             # when some of the states are not identifiable
             elif initial_energy is np.nan and final_energy is not np.nan:
                 status = "NO_MATCHED_BARE_INITIAL"
-                final_energy_dressed_label = sweep["x": x_coord].dressed_index(tag.final)
+                final_energy_dressed_label = sweep["x":x_coord].dressed_index(tag.final)
                 availableLabels = {"final": final_energy_dressed_label}
 
             elif final_energy is np.nan and initial_energy is not np.nan:
                 status = "NO_MATCHED_BARE_FINAL"
-                initial_energy_dressed_label = sweep["x": x_coord].dressed_index(tag.initial)
+                initial_energy_dressed_label = sweep["x":x_coord].dressed_index(
+                    tag.initial
+                )
                 availableLabels = {"initial": initial_energy_dressed_label}
             else:
                 status = "NO_MATCHED_BARE_INITIAL_AND_FINAL"
@@ -557,8 +562,8 @@ class QuantumModel(QObject):
         return simulation_freq, status
 
     def _MSEByTransition(
-        self, 
-        sweep: ParameterSweep, 
+        self,
+        sweep: ParameterSweep,
         transition: ExtrTransition,
         dataNameWOlabel: List[str],
     ) -> float:
@@ -576,10 +581,10 @@ class QuantumModel(QObject):
                 transition_freq,
                 get_transition_freq_status,
             ) = self._spectrumByTag(
-                x_coord = xData,
-                sweep = sweep,
-                tag = tag,
-                dataFreq = yData,
+                x_coord=xData,
+                sweep=sweep,
+                tag=tag,
+                dataFreq=yData,
             )
 
             # process the status

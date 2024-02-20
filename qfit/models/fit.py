@@ -9,8 +9,7 @@ from PySide6.QtCore import (
 
 from qfit.utils.wrapped_optimizer import Optimization, OptTraj
 from qfit.models.extracted_data import AllExtractedData
-from qfit.models.calibration_data import CalibrationData
-from qfit.models.quantum_model_parameters import HSParamModel
+from qfit.models.quantum_model_parameters import HSParamModel, CaliParamModel
 from qfit.models.data_structures import QMFitParam
 from qfit.models.status import StatusModel
 

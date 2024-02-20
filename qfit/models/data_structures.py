@@ -20,8 +20,8 @@ from qfit.utils.helpers import OrderedDictMod
 
 from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.qubit_base import QuantumSystem
-ParentType = Union[QuantumSystem, HilbertSpace]
 
+ParentType = Union[QuantumSystem, HilbertSpace]
 
 # Status ===============================================================
 class Status:
@@ -141,10 +141,10 @@ class ExtrTransition:
         The name of the transition
     data: np.ndarray
         The transition data, shape (2, N), where N is the number of data points
-    rawX: List[np.ndarray]
-        The raw control voltages data, shape (N, n), where n is the dimention of control voltages
+    rawX: OrderedDictMod[str, np.ndarray]
+        The raw x data, where the key is the name of the raw x data
     tag: Tag
-        The tag of the transition 
+        The tag of the transition
     """
     def __init__(
         self, 
@@ -158,16 +158,25 @@ class ExtrTransition:
 
     @property
     def data(self) -> np.ndarray:
+        """
+        Return the transition data, shape (2, N), where N is the number of data points
+        """
+        if self.count() == 0:
+            return np.empty((2, 0), dtype=float)
         return np.array(self._data.valList)
 
     def count(self) -> int:
-        return self.data.shape[1]
+        if len(self._data) == 0:
+            return 0
+        else:
+            return len(self._data.valList[0])
     
     def append(self, data: OrderedDictMod[str, float], rawX: OrderedDictMod[str, float]):
         """
         It always keeps the data sorted by the x value.
         """
         if self.count() == 0:
+            # the first data
             assert len(data) == 2, "The data should have two elements: x & y"
             for key, value in data.items():
                 self._data[key] = np.array([value])
@@ -219,7 +228,7 @@ class ExtrSpectra(list[ExtrTransition]):
         self,
         *args: ExtrTransition,
     ) -> None:
-        super().__init__(*args)
+        super().__init__(args)
 
     def count(self) -> int:
         return sum([transition.count() for transition in self])
@@ -243,6 +252,9 @@ class ExtrSpectra(list[ExtrTransition]):
         """
         Return all data concated
         """
+        if self.count() == 0:
+            return np.empty((2, 0), dtype=float)
+        
         return np.concatenate(self.allData(), axis=1)
     
     def allRawXConcated(self) -> OrderedDictMod[str, np.ndarray]:
@@ -320,8 +332,9 @@ class FullExtr(dict[str, ExtrSpectra]):
 # ######################################################################
 class PlotElement:
     """
-    A data structure for passing and plotting elements on the canvas. 
+    A data structure for passing and plotting elements on the canvas.
     """
+
     name: str
     artists: Union[None, Artist, List[Artist]] = None
     _visible: bool = True
@@ -568,6 +581,7 @@ class ParamAttr:
     directly. Note that the value may be raw and needed to be converted
     to the proper type before being used.
     """
+
     def __init__(
         self,
         parantName: str,
@@ -585,7 +599,7 @@ class ParamAttr:
 
     def __str__(self) -> str:
         return self.__repr__()
-    
+
 
 class ParamBase(ABC):
     intergerParameterTypes = ["cutoff", "truncated_dim"]
@@ -593,7 +607,7 @@ class ParamBase(ABC):
     def __init__(
         self,
         name: str,
-        parent: ParentType,
+        parent: Union[ParentType, str],
         paramType: ParameterType,
     ):
         self.name = name
@@ -633,16 +647,17 @@ class DispParamBase(ParamBase):
             return f"{value:.0f}"
         else:
             return f"{value:.{precision}f}".rstrip("0").rstrip(".")
-        
+
     def exportAttr(self, *args, **kwargs):
         pass
 
     def storeAttr(self, *args, **kwargs):
         pass
 
+
 class QMSweepParam(ParamBase):
     """
-    A class for quantum model parameters that will be swept in experiments. 
+    A class for quantum model parameters that will be swept in experiments.
     For example, ng and flux parameters in qubits. It stores a calibration_function
     for map the parameter value to the actual value (voltage) used in the experiment.
 
@@ -701,7 +716,7 @@ class QMSweepParam(ParamBase):
 
 class QMSliderParam(DispParamBase):
     """
-    A class for parameters that are adjusted by a slider. 
+    A class for parameters that are adjusted by a slider.
 
     Parameters
     ----------
@@ -759,10 +774,12 @@ class QMSliderParam(DispParamBase):
         denormalizedValue = self.min + value / SLIDER_RANGE * (self.max - self.min)
 
         return self._toIntAsNeeded(denormalizedValue)
-    
+
     # setters from UI ==================================================
     @overload
-    def storeAttr(self, attr: str, value: str, fromSlider: Literal[False] = False) -> None:
+    def storeAttr(
+        self, attr: str, value: str, fromSlider: Literal[False] = False
+    ) -> None:
         pass
 
     @overload
@@ -771,15 +788,15 @@ class QMSliderParam(DispParamBase):
 
     def storeAttr(self, attr: str, value: Union[str, int], fromSlider: bool = False):
         """
-        Store the value of the parameter. If the source is a slider, the 
+        Store the value of the parameter. If the source is a slider, the
         value should be denormalized before being stored.
         """
         if fromSlider:
-            value = self._denormalizeValue(value)
+            convertedValue = self._denormalizeValue(value)
         else:
-            value = self._toIntAsNeeded(float(value))
+            convertedValue = self._toIntAsNeeded(float(value))
 
-        setattr(self, attr, value)
+        setattr(self, attr, convertedValue)
 
     # getters for UI ===================================================
     @overload
@@ -803,7 +820,6 @@ class QMSliderParam(DispParamBase):
 
 
 class QMFitParam(DispParamBase):
-
     attrToRegister = ["initValue", "value", "min", "max", "isFixed"]
 
     def __init__(
@@ -827,12 +843,12 @@ class QMFitParam(DispParamBase):
         Store the value of the parameter
         """
         if isinstance(value, str):
-            value = self._toIntAsNeeded(float(value))
+            convertedValue = self._toIntAsNeeded(float(value))
 
-        setattr(self, attr, value)
+        setattr(self, attr, convertedValue)
 
     # getter for UI ====================================================
-    def exportAttr(self, attr: str) -> Union[str, bool]: 
+    def exportAttr(self, attr: str) -> Union[str, bool]:
         """
         Export the value of the parameter
         """
@@ -853,3 +869,51 @@ class QMFitParam(DispParamBase):
         """
         self.value = self.initValue
 
+
+class CaliTableRowParam(DispParamBase):
+    """
+    The updated class for calibration table parameters.
+    """
+
+    attrToRegister = [
+        "value",
+        "sweepParamName",
+        "parentSystemName",
+    ]
+
+    def __init__(
+        self,
+        colName: str,
+        rowIdx: str,
+        paramType: ParameterType,
+        parentSystemName: Optional[str],
+        sweepParamName: Optional[str],
+        value: float,
+    ):
+        super().__init__(name=colName, parent=rowIdx, paramType=paramType)
+        self.value: float = value
+        self.parentSystemName: Optional[str] = parentSystemName
+        self.sweepParamName: Optional[str] = sweepParamName
+
+    # setter for UI ====================================================
+    def storeAttr(self, attr: str, value: Union[str, bool]):
+        """
+        Store the value of the parameter
+        """
+        if isinstance(value, str):
+            convertedValue = self._toIntAsNeeded(float(value))
+
+        setattr(self, attr, convertedValue)
+
+    # getter for UI ====================================================
+    def exportAttr(self, attr: str) -> Union[str, bool]:
+        """
+        Export the value of the parameter
+        """
+        value = getattr(self, attr)
+        if isinstance(value, int) or isinstance(value, float):
+            return self._toIntString(value)
+        elif isinstance(value, bool):
+            return value
+        else:
+            raise ValueError(f"Unknown type of value: {value}")
