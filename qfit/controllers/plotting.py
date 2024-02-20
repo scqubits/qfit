@@ -83,25 +83,23 @@ class PlottingCtrl(QObject):
         # but swapXY only involves the "pointer" of measurement data,
         # so it only need to be connected once.
         self.swapXYButton.clicked.connect(self.swapXY)
-    
-    def dynamicalInit(
-        self, 
-        measurementData: "MeasDataSet",
-        quantumModel: "QuantumModel",
-    ):
-        self.measurementData = measurementData
-        self.quantumModel = quantumModel
-        
+
+        # previously in dynamicalInit
         self.measPlotSettingConnects()
         self.measDataComboBoxesInit()
         # self.uiXYZComboBoxesConnects()
         self.dynamicalPlotElementsConnects()
-
         # plot everything available
-        self.measurementData.emitReadyToPlot()
         self.allDatasets.emitReadyToPlot()
-        self.mplCanvas.plotAllElements(resetXYLim=True)
-        self.updateCursor()
+    
+    # def dynamicalInit(
+    #     self, 
+    # ):
+    #     # self.measurementData = measurementData
+    #     # self.quantumModel = quantumModel
+    
+    #     self.mplCanvas.plotAllElements(resetXYLim=True)
+    #     self.updateCursor()
 
     # measurement ======================================================
     def measDataComboBoxesInit(self):

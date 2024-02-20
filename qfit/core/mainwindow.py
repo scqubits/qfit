@@ -137,7 +137,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # extract
         self.extractingMVCInits(hilbertspace)
-        self.extractingCtrl.dynamicalInit()
 
         # prefit: controller, two models and their connection to view (sliders)
         self.prefitMVCInits(hilbertspace)
@@ -150,9 +149,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # plot, mpl canvas
         self.measurementData = MeasDataSet([measurementData])
         self.plottingMVCInits()
-        self.plottingCtrl.dynamicalInit(
-            self.measurementData, self.quantumModel
-        )
+        self.plottingCtrl.dynamicalInit()
 
         # help button
         self.helpButtonConnects()
@@ -930,21 +927,18 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def initializeDynamicalElements(
         self,
         hilbertspace: HilbertSpace,
-        measurementData: MeasurementDataType,
+        measurementData: List[MeasurementDataType],
     ):
         # here, the measurementData is a instance of MeasurementData, which is
         # regenerated from the data file
-        self.measurementData = MeasDataSet([measurementData])
         self.calibrationData.resetCalibration()
         self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
 
-        self.extractingCtrl.dynamicalInit()
+        # self.extractingCtrl.dynamicalInit()
         self.prefitDynamicalElementsBuild(hilbertspace)
         self.fitDynamicalElementsBuild(hilbertspace)
 
-        self.plottingCtrl.dynamicalInit(
-            self.measurementData, self.quantumModel
-        )
+        # self.plottingCtrl.dynamicalInit()
 
         # self.allDatasets.loadedFromRegistry.connect(self.extractedDataSetup)
 
