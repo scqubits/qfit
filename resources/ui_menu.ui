@@ -14,7 +14,7 @@
    <string/>
   </property>
   <property name="autoFillBackground">
-   <bool>true</bool>
+   <bool>false</bool>
   </property>
   <property name="styleSheet">
    <string notr="true">QWidget {
@@ -82,11 +82,11 @@ QPushButton:checked {
        <family>Roboto Medium</family>
        <pointsize>11</pointsize>
        <italic>false</italic>
-       <bold>false</bold>
+       <fontweight></fontweight>
       </font>
      </property>
      <property name="text">
-      <string>NEW</string>
+      <string>CREATE NEW FIT FILE</string>
      </property>
     </widget>
    </item>
@@ -115,11 +115,11 @@ QPushButton:checked {
        <family>Roboto Medium</family>
        <pointsize>11</pointsize>
        <italic>false</italic>
-       <bold>false</bold>
+       <fontweight></fontweight>
       </font>
      </property>
      <property name="text">
-      <string>OPEN</string>
+      <string>IMPORT FIT FILE</string>
      </property>
     </widget>
    </item>
@@ -148,7 +148,7 @@ QPushButton:checked {
        <family>Roboto Medium</family>
        <pointsize>11</pointsize>
        <italic>false</italic>
-       <bold>false</bold>
+       <fontweight></fontweight>
       </font>
      </property>
      <property name="text">
@@ -181,7 +181,7 @@ QPushButton:checked {
        <family>Roboto Medium</family>
        <pointsize>11</pointsize>
        <italic>false</italic>
-       <bold>false</bold>
+       <fontweight></fontweight>
       </font>
      </property>
      <property name="text">
@@ -214,7 +214,7 @@ QPushButton:checked {
        <family>Roboto Medium</family>
        <pointsize>11</pointsize>
        <italic>false</italic>
-       <bold>false</bold>
+       <fontweight></fontweight>
       </font>
      </property>
      <property name="text">

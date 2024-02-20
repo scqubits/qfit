@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="/">
+    <file>images/spin_box_bg_171717.svg</file>
+    <file>icons/svg/cross.svg</file>
     <file>icons/svg/extract-on.svg</file>
     <file>icons/svg/extract.svg</file>
     <file>icons/svg/move-on.svg</file>
