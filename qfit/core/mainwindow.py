@@ -49,7 +49,7 @@ from PySide6.QtWidgets import (
 )
 
 from qfit.utils.helpers import (
-    executed_in_ipython, sweepParamByHS
+    executed_in_ipython
 )
 from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
 from qfit.controllers.help_tooltip import HelpButtonCtrl
@@ -156,7 +156,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # plot, mpl canvas
         self.plottingMVCInits(hilbertspace)
-        self.plottingCtrl.dynamicalInit(self.measurementData)
+        # self.plottingCtrl.dynamicalInit(self.measurementData)
 
         # help button
         self.helpButtonConnects()
@@ -255,7 +255,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 self.allDatasets,
                 self.activeDataset,
                 self.quantumModel,
-                sweepParamByHS(hilbertspace),
+                HSParamSet.sweepSetByHS(hilbertspace),
             ),
             (
                 self.measComboBoxes,
@@ -319,17 +319,13 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "Y1": self.ui.calibrateY2Button,
         }
 
-        sweepParameterSet = sweepParamByHS(hilbertSpace)
+        sweepParameterSet = HSParamSet.sweepSetByHS(hilbertSpace)
         
         self.caliParamModel = CaliParamModel()
         self.calibrationView = CalibrationView(
-            rawXVecCompNameList=measurementData[0].rawXNames,
-            rawYName=measurementData[0].rawYNames[0],
             rawLineEdits=self.rawLineEdits,
             mapLineEdits=self.mapLineEdits,
-            caliTableXRowNr=self.caliParamModel.caliTableXRowNr,
             calibrationButtons=self.calibrationButtons,
-            sweepParamSet=sweepParameterSet,
         )
         
         self.calibrationCtrl = CalibrationCtrl(
@@ -462,7 +458,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # check how many sweep parameters are found and create sliders
         # for the remaining parameters
-        sweepParameterSet = sweepParamByHS(hilbertspace)
+        sweepParameterSet = HSParamSet.sweepSetByHS(hilbertspace)
         
         self.prefitParamModel.hilbertspace = hilbertspace
 
@@ -832,19 +828,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         hilbertspace: HilbertSpace,
         measurementData: List[MeasurementDataType],
     ):
-        # here, the measurementData is a instance of MeasurementData, which is
-        # regenerated from the data file
-        # self.measurementData = MeasDataSet(measurementData)
-        # self.calibrationData.resetCalibration()
-        # self.calibrationView.setView(*self.calibrationData.allCalibrationVecs())
-
-        # self.extractingCtrl.dynamicalInit()
+        self.measurementData.dynamicalInit(measurementData)
+        self.calibrationCtrl.dynamicalInit(hilbertspace, measurementData)
         self.prefitDynamicalElementsBuild(hilbertspace)
         self.fitDynamicalElementsBuild(hilbertspace)
-
-        # self.plottingCtrl.dynamicalInit(self.measurementData)
-
-        # self.allDatasets.loadedFromRegistry.connect(self.extractedDataSetup)
 
         self.register()
 

@@ -69,6 +69,12 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.checkValidity()
 
     # inits ============================================================
+    def dynamicalInit(self, measDatas: List["MeasurementDataType"]):
+        self._data = measDatas
+        self.checkValidity()
+        self.emitReadyToPlot()
+        self.relimCanvas.emit()
+        
     def checkValidity(self):
         # all of the data must have the same x and y axis names
         xNames = self._data[0].rawXNames
@@ -77,6 +83,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         for data in self._data:
             if data.rawXNames != xNames or data.rawYNames != yNames:
                 raise ValueError("All data must have the same x and y axis names")
+            
 
     # Properties =======================================================
     @property
@@ -196,6 +203,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         def dataSetter(value):
             self._data = value
             self.emitReadyToPlot()
+            self.relimCanvas.emit()
 
         return {
             "measDataSet.currentRow": RegistryEntry(

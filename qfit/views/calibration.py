@@ -32,15 +32,27 @@ class CalibrationView(QObject):
 
     def __init__(
         self,
-        rawXVecCompNameList: List[str],
-        rawYName: str,
-        caliTableXRowNr: int,
-        sweepParamSet: HSParamSet[QMSweepParam],
         rawLineEdits: Dict[str, "CalibrationLineEdit"],
         mapLineEdits: Dict[str, "CalibrationLineEdit"],
         calibrationButtons: Dict[str, QPushButton],
     ):
+        """
+        In the future, all the line edits and buttons should be generated 
+        dynamically based on the number of calibration rows.
+        """
         super().__init__()
+
+        self.rawLineEdits = rawLineEdits
+        self.mapLineEdits = mapLineEdits
+        self.calibrationButtons = calibrationButtons
+
+    def dynamicalInit(
+        self,
+        rawXVecNameList: List[str],
+        rawYName: str,
+        caliTableXRowNr: int,
+        sweepParamSet: HSParamSet[QMSweepParam],
+    ):
 
         self.sweepParamSet = sweepParamSet
         self.caliTableXRowNr = caliTableXRowNr
@@ -48,63 +60,70 @@ class CalibrationView(QObject):
         self.sweepParamName = list(
             self.sweepParamSet[self.sweepParamParentName].keys()
         )[0]
-        self.rawXVecCompNameList = rawXVecCompNameList
+        self.rawXVecNameList = rawXVecNameList
         self.rawYName = rawYName
-        self.caliTableSet: Dict[str, Dict[str, "CalibrationLineEdit"]] = {
-            "X0": {
-                self.rawXVecCompNameList[0]: rawLineEdits["X0"],
-                f"{self.sweepParamParentName}.{self.sweepParamName}": mapLineEdits[
-                    "X0"
-                ],
-            },
-            "X1": {
-                self.rawXVecCompNameList[0]: rawLineEdits["X1"],
-                f"{self.sweepParamParentName}.{self.sweepParamName}": mapLineEdits[
-                    "X1"
-                ],
-            },
-            "Y0": {
-                self.rawYName: rawLineEdits["Y0"],
-                "mappedY": mapLineEdits["Y0"],
-            },
-            "Y1": {
-                self.rawYName: rawLineEdits["Y1"],
-                "mappedY": mapLineEdits["Y1"],
-            },
-        }
 
-        self.calibrationButtons = calibrationButtons
+        # generate the calibration table set
+        self._generateCaliTableSet()
+        
+        # insert buttons into a button group
         self.caliButtonGroup = QButtonGroup()
         self.caliButtonGroup.setExclusive(True)
 
-        # generalize to functions in the future
-        self.rowIdxToButtonGroupId: Dict[Union[str, int], int] = (
-            self._generateRowIdxToButtonGroupIdDict()
-        )
-        # generate the inverse dictionary
-        self.buttonGroupIdToRowIdx: Dict[int, Union[str, int]] = {
-            v: k for k, v in self.rowIdxToButtonGroupId.items()
-        }
+        self._generateRowIdxToButtonGroupIdDict()
         self._addButtonsToGroup()
 
         # need to be removed in the future
-        self.caliTableSet["X0"][self.rawXVecCompNameList[0]].setSibling(
-            self.caliTableSet["X1"][self.rawXVecCompNameList[0]]
+        self.caliTableSet["X0"][self.rawXVecNameList[0]].setSibling(
+            self.caliTableSet["X1"][self.rawXVecNameList[0]]
         )
         self.caliTableSet["Y0"][self.rawYName].setSibling(
             self.caliTableSet["Y1"][self.rawYName]
         )
 
+        # connects
+        self.setupEditingFinishedSignalEmit()
+
+    def _generateCaliTableSet(self):
+        self.caliTableSet: Dict[str, Dict[str, "CalibrationLineEdit"]] = {
+            "X0": {
+                self.rawXVecNameList[0]: self.rawLineEdits["X0"],
+                f"{self.sweepParamParentName}.{self.sweepParamName}": self.mapLineEdits[
+                    "X0"
+                ],
+            },
+            "X1": {
+                self.rawXVecNameList[0]: self.rawLineEdits["X1"],
+                f"{self.sweepParamParentName}.{self.sweepParamName}": self.mapLineEdits[
+                    "X1"
+                ],
+            },
+            "Y0": {
+                self.rawYName: self.rawLineEdits["Y0"],
+                "mappedY": self.mapLineEdits["Y0"],
+            },
+            "Y1": {
+                self.rawYName: self.rawLineEdits["Y1"],
+                "mappedY": self.mapLineEdits["Y1"],
+            },
+        }
+
     def _generateRowIdxToButtonGroupIdDict(self):
         """
-        Generate the dictionary to translate the row index to the button group id.
+        Maintain a dictionary to translate the row index to the button group id.
+
+        generalize to functions in the future
+
         """
-        translation_dict = {}
+        self.rowIdxToButtonGroupId: Dict[str, int] = {}
         for rowIdx in range(self.caliTableXRowNr):
-            translation_dict[f"X{rowIdx}"] = rowIdx
-        translation_dict["Y0"] = self.caliTableXRowNr
-        translation_dict["Y1"] = self.caliTableXRowNr + 1
-        return translation_dict
+            self.rowIdxToButtonGroupId[f"X{rowIdx}"] = rowIdx
+        self.rowIdxToButtonGroupId["Y0"] = self.caliTableXRowNr
+        self.rowIdxToButtonGroupId["Y1"] = self.caliTableXRowNr + 1
+
+        self.buttonGroupIdToRowIdx: Dict[int, Union[str, int]] = {
+            v: k for k, v in self.rowIdxToButtonGroupId.items()
+        }
 
     def _addButtonsToGroup(self):
         for rowIdx, button in self.calibrationButtons.items():
@@ -177,7 +196,7 @@ class CalibrationView(QObject):
         CALIBRATION VIEW
         """
         # update the raw line edits by the value of the clicked point
-        for rawXVecCompName in self.rawXVecCompNameList:
+        for rawXVecCompName in self.rawXVecNameList:
             self.caliTableSet[rowIdx][rawXVecCompName].setText(
                 str(data[rawXVecCompName])
             )

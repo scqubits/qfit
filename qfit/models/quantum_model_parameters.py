@@ -11,7 +11,6 @@ from qfit.models.parameter_settings import ParameterType
 from qfit.models.registry import RegistryEntry, Registrable
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
 from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
-from qfit.utils.helpers import sweepParamByHS
 
 from typing import (
     Dict,
@@ -432,6 +431,14 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         self.parentNameByObj = {}
         self.parentObjByName = {}
 
+    @classmethod
+    def sweepSetByHS(cls, hilbertSpace: HilbertSpace):
+        sweepParameterSet = cls(hilbertSpace, QMSweepParam)
+        sweepParameterSet.insertParamToSet(
+            included_parameter_type=["ng", "flux"],
+        )
+        return sweepParameterSet
+
 
 DispParamCls = TypeVar("DispParamCls", bound="DispParamBase")
 
@@ -751,7 +758,7 @@ class CaliParamModel(
         self.rawXVecNameList = rawXVecNameList
         self.rawYName = rawYName
         self.figName = figName
-        self.sweepParamSet = sweepParamByHS(hilbertSpace)
+        self.sweepParamSet = HSParamSet.sweepSetByHS(hilbertSpace)
 
         # determine total calibration table row number and if the calibration is a complete one
         
@@ -907,7 +914,6 @@ class CaliParamModel(
     @property
     def sweepParamNr(self) -> int:
         return len(self.sweepParamSet)
-
 
     # calibrate the raw vector to the mapped vector ====================
     def _YCalibration(self) -> Callable:
