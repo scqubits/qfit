@@ -578,7 +578,7 @@ class HSParamModel(
     Generic[DispParamCls],
     metaclass=CombinedMeta,
 ):
-    hspaceUpdated = Signal(HilbertSpace)
+    hilbertSpaceUpdated = Signal(HilbertSpace)
 
     def __init__(self, paramCls: Type[DispParamCls]):
         # ordering matters here
@@ -616,8 +616,8 @@ class HSParamModel(
     ):
         self._emitUpdateBox(self, parentName=parentName, paramName=paramName, attr=attr)
 
-    def emitHspaceUpdated(self):
-        self.hspaceUpdated.emit(self.hilbertspace)
+    def emitHSUpdated(self):
+        self.hilbertSpaceUpdated.emit(self.hilbertspace)
 
     # Slots ============================================================
     def storeParamAttr(
@@ -635,7 +635,7 @@ class HSParamModel(
     ):
         param = self[parentName][paramName]
         param.setParameterForParent()
-        self.emitHspaceUpdated()
+        self.emitHSUpdated()
 
 
 class PrefitParamModel(HSParamModel[QMSliderParam]):
