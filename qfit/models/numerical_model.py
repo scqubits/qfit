@@ -86,6 +86,7 @@ class QuantumModel(QObject):
 
         # options when running
         self._autoRun: bool = True
+        self.disableSweep: bool = True    # always off, used for backend operations
 
     def dynamicalInit(self, hilbertspace: HilbertSpace, figNames: List[str]):
         self.hilbertspace = hilbertspace
@@ -144,9 +145,9 @@ class QuantumModel(QObject):
         self._sweepParamSets = sweepParamSets
         self.updateCalc()
 
-    @Slot()  # can't use Callable here in the initialization
+    @Slot(object)  # can't use Callable here in the initialization
     # because Argument of type "type[Callable]" cannot be assigned to parameter of type "type"
-    def updateYCaliFunc(self, yCaliFunc: Callable, yInvCaliFunc: Callable):
+    def updateYCaliFunc(self, yCaliFunc: Callable):
         """
         Update the y calibration function.
 
@@ -155,6 +156,17 @@ class QuantumModel(QObject):
         yCaliFunc: Callable
         """
         self._yCaliFunc = yCaliFunc
+        self.updateCalc()
+
+    @Slot(object)  # can't use Callable here in the initialization
+    def updateInvYCaliFunc(self, yInvCaliFunc: Callable):
+        """
+        Update the inverse y calibration function.
+
+        Parameters
+        ----------
+        yInvCaliFunc: Callable
+        """
         self._yInvCaliFunc = yInvCaliFunc
         self.updateCalc()
 
@@ -170,6 +182,7 @@ class QuantumModel(QObject):
             "autoRun",
         ],
         value: Any,
+        
     ):
         """
         Set the sweep options.
@@ -449,6 +462,11 @@ class QuantumModel(QObject):
         the HilbertSpace object. If auto run is on, it will also compute the spectrum
         and MSE.
         """
+        if self.disableSweep:
+            # when manually update the quantumModel, we will turn this on
+            # and the sweep will not be generated
+            return
+
         self.newSweep()
 
         if self._autoRun or self.sweepUsage == "fit":

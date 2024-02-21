@@ -110,8 +110,11 @@ class PlottingCtrl(QObject):
         self.measDataComboBoxesInit()
         
         # plot everything available
+        self.measurementData.emitReadyToPlot()
+        self.measurementData.relimCanvas.emit()
+        self.activeDataset.emitReadyToPlot()
         self.allDatasets.emitReadyToPlot()
-        self.mplCanvas.plotAllElements(resetXYLim=True)
+        self.allDatasets.emitFocusChanged() # update the snapX
         self.updateCursor()
 
     # measurement ======================================================

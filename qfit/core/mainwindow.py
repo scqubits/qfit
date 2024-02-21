@@ -140,14 +140,14 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui_menu = MenuWidget(parent=self)
         self.pagingMVCInits()
 
+        # calibration - should be inited after prefit, as it requires a sweep parameter set
+        self.calibrationMVCInits()
+
         # extract
         self.extractingMVCInits()
 
         # prefit: controller, two models and their connection to view (sliders)
         self.prefitMVCInits()
-
-        # calibration - should be inited after prefit, as it requires a sweep parameter set
-        self.calibrationMVCInits()
 
         # fit
         self.fitMVCInits()
@@ -433,6 +433,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.ui.prefitMinmaxScrollAreaWidget,
         )
         self.prefitView = PrefitView(
+            runSweep = self.ui.plotButton,
             options=self.prefitOptions,
         )
 
@@ -456,12 +457,20 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.quantumModel.dynamicalInit(
             hilbertspace, [data.name for data in measurementData]
         )
+
+        # update everything in the quantumModel
+        self.quantumModel.disableSweep = True    # disable the auto sweep
+        self.prefitParamModel.emitHSUpdated()
+        self.allDatasets.emitDataUpdated()
+        self.caliParamModel.sendXCaliFunc()
+        self.caliParamModel.sendYCaliFunc()
+        self.prefitView.emitAllOptions()    # auto run sync to the view
+        self.quantumModel.disableSweep = False
         
     def prefitStaticElementsBuild(self):
-        self.prefitParamModelConnects()
+        self.quantumModelConnects()
         self.prefitButtonConnects()
         self.prefitSliderParamConnects()
-        self.setUpPrefitRunConnects()
 
     def prefitBuildParamSet(self, hilbertspace: HilbertSpace):
         """
@@ -563,42 +572,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             )
         )
 
-    def prefitParamModelConnects(self):
-        """
-        View --> model: slider --> parameter
-        TODO: This should be param --> model rather than slider --> model.
-        model --> model: parameter --> numerical model
-        model --> view: numerical model --> prefit plot
-        TODO: should be able to seprate the connection
-
-        It complete a flow of information from the slider to the model.
-        """
-        self.prefitParamModel.hspaceUpdated.connect(
+    def quantumModelConnects(self):
+        self.prefitParamModel.hilbertSpaceUpdated.connect(
             self.quantumModel.updateHilbertSpace
         )
         self.allDatasets.dataUpdated.connect(self.quantumModel.updateExtractedData)
-
-    # def setUpPrefitResultConnects(self):
-    #     """
-    #     Model --> View: pre-fit result
-    #     connect the prefit result to the relevant UI textboxes; whenever there is
-    #     a change in the UI, reflect in the UI text change
-    #     """
-    #     status_type_ui_setter = lambda: self.ui.label_46.setText(
-    #         self.prefitResult.displayed_status_type
-    #     )
-    #     status_text_ui_setter = lambda: self.ui.statusTextLabel.setText(
-    #         self.prefitResult.statusStrForView
-    #     )
-    #     mse_change_ui_setter = lambda: self.ui.mseLabel.setText(
-    #         self.prefitResult.displayed_MSE
-    #     )
-
-    #     self.prefitResult.setupUISetters(
-    #         status_type_ui_setter=status_type_ui_setter,
-    #         status_text_ui_setter=status_text_ui_setter,
-    #         mseChangeUISetter=mse_change_ui_setter,
-    #     )
+        self.caliParamModel.issueNewXCaliFunc.connect(self.quantumModel.updateSweepParamSets)
+        self.caliParamModel.issueNewYCaliFunc.connect(self.quantumModel.updateYCaliFunc)
+        self.caliParamModel.issueNewInvYCaliFunc.connect(
+            self.quantumModel.updateInvYCaliFunc)
 
     def prefitButtonConnects(self):
         """
@@ -617,22 +599,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.prefitView.optionUpdated.connect(self.quantumModel.updateSweepOption)
 
-        self.ui.plotButton.clicked.connect(self.quantumModel.sweep2SpecMSE)
-
-    def setUpPrefitRunConnects(self):
-        """
-        View --> model: run sweep
-        model --> view: pre-fit plot
-        TODO: should be able to seprate the connection
-
-        Set up the connects for the prefit run for UI:
-        1. autorun checkbox
-        2. run (or "plot") button
-        """
-        # connect the autorun checkbox callback
-        # self.quantumModel.setupAutorunCallbacks(
-        #     autorun_callback=self.ui.autoRunCheckBox.isChecked,
-        # )
+        self.prefitView.runSweep.clicked.connect(self.quantumModel.sweep2SpecMSE)
 
     # Fit ##############################################################
     # ##################################################################

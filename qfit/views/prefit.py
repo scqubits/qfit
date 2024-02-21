@@ -1,5 +1,5 @@
 from PySide6.QtCore import QObject, Signal, Slot
-from PySide6.QtWidgets import QLineEdit, QComboBox, QCheckBox, QSpinBox
+from PySide6.QtWidgets import QLineEdit, QComboBox, QCheckBox, QSpinBox, QPushButton
 from qfit.widgets.validated_line_edits import IntTupleLineEdit, IntLineEdit, StateLineEdit
 
 from typing import List, Dict, Any, Literal
@@ -9,9 +9,12 @@ class PrefitView(QObject):
 
     def __init__(
         self,
+        runSweep: QPushButton,
         options: Dict[str, Any],
     ):
         super().__init__()
+
+        self.runSweep = runSweep
 
         self.options = options
         self.evalsCount: IntLineEdit = self.options["evalsCount"]
@@ -20,6 +23,7 @@ class PrefitView(QObject):
         self.photons: QSpinBox = self.options["photons"]
         self.pointsAdded: IntLineEdit = self.options["pointsAdded"]
         self.autoRun: QCheckBox = self.options["autoRun"]
+
         self.optionsConnects()
 
     def dynamicalInit(
@@ -68,19 +72,38 @@ class PrefitView(QObject):
         for option in self.options.values():
             option.blockSignals(b)
 
+    def emitOption(self, option: str):
+        if option == "subsysToPlot":
+            self.optionUpdated.emit(option, self.subsysToPlot.currentText())
+        elif option == "initialState":
+            self.optionUpdated.emit(option, self.initialState.text())
+        elif option == "photons":
+            self.optionUpdated.emit(option, self.photons.value())
+        elif option == "pointsAdded":
+            self.optionUpdated.emit(option, self.pointsAdded.text())
+        elif option == "autoRun":
+            self.optionUpdated.emit(option, self.autoRun.isChecked())
+
+    def emitAllOptions(self):
+        self.emitOption("subsysToPlot")
+        self.emitOption("initialState")
+        self.emitOption("photons")
+        self.emitOption("pointsAdded")
+        self.emitOption("autoRun")
+
     def optionsConnects(self):
         self.subsysToPlot.currentIndexChanged.connect(
-            lambda: self.optionUpdated.emit("subsysToPlot", self.subsysToPlot.currentText())
+            lambda: self.emitOption("subsysToPlot")
         )
         self.initialState.editingFinished.connect(
-            lambda: self.optionUpdated.emit("initialState", self.initialState.text())
+            lambda: self.emitOption("initialState")
         )
         self.photons.valueChanged.connect(
-            lambda: self.optionUpdated.emit("photons", self.photons.value())
+            lambda: self.emitOption("photons")
         )
         self.pointsAdded.editingFinished.connect(
-            lambda: self.optionUpdated.emit("pointsAdded", self.pointsAdded.text())
+            lambda: self.emitOption("pointsAdded")
         )
         self.autoRun.stateChanged.connect(
-            lambda: self.optionUpdated.emit("autoRun", self.autoRun.isChecked())
+            lambda: self.emitOption("autoRun")
         )
