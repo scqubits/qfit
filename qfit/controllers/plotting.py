@@ -6,8 +6,9 @@ import numpy as np
 import matplotlib as mpl
 from qfit.utils.helpers import y_snap, OrderedDictMod
 from qfit.models.measurement_data import (
-    NumericalMeasurementData, ImageMeasurementData,
-    MeasurementDataType
+    NumericalMeasurementData,
+    ImageMeasurementData,
+    MeasurementDataType,
 )
 
 from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal, List
@@ -16,8 +17,7 @@ if TYPE_CHECKING:
     from qfit.models.quantum_model_parameters import CaliParamModel
 
     # from qfit.models.calibration_data import CalibrationData
-    from qfit.models.measurement_data import (
-        MeasDataSet)
+    from qfit.models.measurement_data import MeasDataSet
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
     from qfit.models.quantum_model_parameters import ParamSet
     from qfit.models.numerical_model import QuantumModel
@@ -48,9 +48,11 @@ class PlottingCtrl(QObject):
         self,
         mplCanvas: "MplFigureCanvas",
         models: Tuple[
-            "MeasDataSet", "CaliParamModel",
-            "AllExtractedData", "ActiveExtractedData",
-            "QuantumModel", 
+            "MeasDataSet",
+            "CaliParamModel",
+            "AllExtractedData",
+            "ActiveExtractedData",
+            "QuantumModel",
             # "ParamSet",
         ],
         views: Tuple[Any, ...],
@@ -101,20 +103,20 @@ class PlottingCtrl(QObject):
         self.measPlotSettingConnects()
         # self.uiXYZComboBoxesConnects()
         self.dynamicalPlotElementsConnects()
-    
+
     def dynamicalInit(
-        self, 
+        self,
         measurementData: List["MeasurementDataType"],
     ):
         self.measurementData.dynamicalInit(measurementData)
         self.measDataComboBoxesInit()
-        
+
         # plot everything available
         self.measurementData.emitReadyToPlot()
         self.measurementData.relimCanvas.emit()
         self.activeDataset.emitReadyToPlot()
         self.allDatasets.emitReadyToPlot()
-        self.allDatasets.emitFocusChanged() # update the snapX
+        self.allDatasets.emitFocusChanged()  # update the snapX
         self.updateCursor()
 
     # measurement ======================================================
@@ -125,7 +127,9 @@ class PlottingCtrl(QObject):
         zDataNames = list(self.measurementData.currentMeasData._zCandidates.keys())
         self.measComboBoxes["z"].clear()
         self.measComboBoxes["z"].addItems(zDataNames)
-        self.measComboBoxes["z"].setCurrentText(self.measurementData.currentMeasData.currentZ.name)
+        self.measComboBoxes["z"].setCurrentText(
+            self.measurementData.currentMeasData.currentZ.name
+        )
         # self.setupXYDataBoxes()
 
     def measPlotSettingConnects(self):
@@ -159,7 +163,7 @@ class PlottingCtrl(QObject):
         self.measComboBoxes["z"].activated.connect(self.zDataUpdate)
         # self.measComboBoxes["x"].activated.connect(self.xAxisUpdate)
         # self.measComboBoxes["y"].activated.connect(self.yAxisUpdate)
-    
+
     # def setupXYDataBoxes(self):
     #     if isinstance(self.measurementData._currentMeasData, ImageMeasurementData):
     #         return
@@ -373,21 +377,28 @@ class PlottingCtrl(QObject):
             return
         if event.xdata is None or event.ydata is None:
             return
-        
+
         xName = self.measurementData.currentMeasData.currentX.name
         yName = self.measurementData.currentMeasData.currentY.name
-        xyDict = OrderedDictMod({
-            xName: event.xdata,
-            yName: event.ydata,
-        })
+        xyDict = OrderedDictMod(
+            {
+                xName: event.xdata,
+                yName: event.ydata,
+            }
+        )
         rawX = self.measurementData.currentMeasData.rawXByCurrentX(event.xdata)
-        
+
         # calibration mode
         if self.dataDestination in ["CALI_X", "CALI_Y"]:
-            data = event.xdata if (self.dataDestination[-2] == "X") else event.ydata
+            if self.dataDestination[-1] == "X":
+                data = rawX
+            else:
+                data = {self.measurementData.currentMeasData.currentY.name: event.ydata}
 
             # model: update the calibration data
-            self.calibrationModel.processSelectedPtFromPlot(data=data, figName="dummy")
+            self.calibrationModel.processSelectedPtFromPlot(
+                data=data, figName=self.measurementData.currentMeasData.name
+            )
 
             # the above will then trigger the update the view:
             # turn off highlighting, set value, etc
@@ -414,9 +425,11 @@ class PlottingCtrl(QObject):
                 if self.isRelativelyClose(np.array(xyDict.valList), x2y2):
                     self.activeDataset.remove(index)
                     return
-                
+
             # y snap
-            if self.canvasTools["snapY"].isChecked() and isinstance(self.measurementData.currentMeasData, NumericalMeasurementData):
+            if self.canvasTools["snapY"].isChecked() and isinstance(
+                self.measurementData.currentMeasData, NumericalMeasurementData
+            ):
                 x_list = self.measurementData.currentMeasData.currentX.data
                 y_list = self.measurementData.currentMeasData.currentY.data
                 z_data = self.measurementData.currentMeasData.currentZ.data
@@ -434,7 +447,7 @@ class PlottingCtrl(QObject):
                         mode="lorentzian",
                     )
                     xyDict[yName] = snapped_y1
-                    
+
                 except RuntimeError:
                     pass
 

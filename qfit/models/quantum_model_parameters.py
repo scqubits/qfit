@@ -207,7 +207,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         self.parentObjByName: Dict[str, ParentType] = {}
 
     def dynamicalInit(
-        self, 
+        self,
         hilbertspace: HilbertSpace,
         included_parameter_type: Union[List[ParameterType], None] = None,
         excluded_parameter_type: Union[List[ParameterType], None] = None,
@@ -695,7 +695,7 @@ class CaliParamModel(
     metaclass=CombinedMeta,
 ):
     plotCaliPtExtractStart = Signal(str)
-    plotCaliPtExtractFinished = Signal()
+    plotCaliPtExtractFinished = Signal(str, dict)
     plotCaliPtExtractInterrupted = Signal()
     issueNewXCaliFunc = Signal(object)
     issueNewYCaliFunc = Signal(object)
@@ -758,7 +758,7 @@ class CaliParamModel(
         #     rawYName,
         #     figName,
         #     sweepParamSet,
-        # ) 
+        # )
 
     # initialize =======================================================
     def dynamicalInit(
@@ -775,7 +775,7 @@ class CaliParamModel(
         self.sweepParamSet = HSParamSet.sweepSetByHS(hilbertSpace)
 
         # determine total calibration table row number and if the calibration is a complete one
-        
+
         self._isSufficientForFullCalibration(self.rawXVecDim, self.figNr)
 
         # initialize calibration table entries
@@ -920,11 +920,11 @@ class CaliParamModel(
     @property
     def rawXVecDim(self) -> int:
         return len(self.rawXVecNameList)
-    
+
     @property
     def figNr(self) -> int:
         return len(self.figName)
-    
+
     @property
     def sweepParamNr(self) -> int:
         return len(self.sweepParamSet)
@@ -1132,15 +1132,15 @@ class CaliParamModel(
                     )
             sweepParamSetByFig[fig] = sweepParamSetFromCali
         return sweepParamSetByFig
-    
+
     # slots & public interface ================================================
     @Slot()
     def updateStatusFromCaliView(self, status: Union[str, Literal[False]]):
         self.caliStatus = status
-        if status != False:
-            if type(status) is int:
+        if type(status) is str:
+            if status[0] == "X":
                 destination = "CALI_X"
-            else:
+            elif status[0] == "Y":
                 destination = "CALI_Y"
             self.plotCaliPtExtractStart.emit(destination)
         else:
@@ -1185,7 +1185,7 @@ class CaliParamModel(
         # based on the current label, we know the row index to store the data
         # store the calibration data
         # if the current label is int, then it is for X
-        if caliLabel is not False:
+        if type(caliLabel) is str:
             if caliLabel[0] == "X":
                 for rawXVecCompName in self.rawXVecNameList:
                     # this contains updatebox
@@ -1239,7 +1239,7 @@ class CaliParamModel(
         **kwargs,
     ):
         super()._storeParamAttr(self, paramAttr, **kwargs)
-    
+
     # signals ==========================================================
     def emitUpdateBox(
         self,

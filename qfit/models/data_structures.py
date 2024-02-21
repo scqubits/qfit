@@ -23,6 +23,7 @@ from scqubits.core.qubit_base import QuantumSystem
 
 ParentType = Union[QuantumSystem, HilbertSpace]
 
+
 # Status ===============================================================
 class Status:
     """
@@ -53,6 +54,7 @@ class Status:
     def __repr__(self):
         return self.__str__()
 
+
 # Extracted Data =======================================================
 class Tag:
     """
@@ -77,6 +79,7 @@ class Tag:
         - For NO_TAG, no photon number is specified.
         - For all other tag types, this int specifies the photon number rank of the transition.
     """
+
     @overload
     def __init__(
         self,
@@ -84,8 +87,7 @@ class Tag:
         initial: None = None,
         final: None = None,
         photons: None = None,
-    ):
-        ...
+    ): ...
 
     @overload
     def __init__(
@@ -94,8 +96,7 @@ class Tag:
         initial: int,
         final: int,
         photons: Optional[int] = None,
-    ):
-        ...
+    ): ...
 
     @overload
     def __init__(
@@ -104,8 +105,7 @@ class Tag:
         initial: Tuple[int, ...],
         final: Tuple[int, ...],
         photons: Optional[int] = None,
-    ):
-        ...
+    ): ...
 
     def __init__(
         self,
@@ -129,7 +129,7 @@ class Tag:
 
     def __repr__(self):
         return self.__str__()
-    
+
 
 class ExtrTransition:
     """
@@ -146,13 +146,14 @@ class ExtrTransition:
     tag: Tag
         The tag of the transition
     """
+
     def __init__(
-        self, 
+        self,
         name: str = "",
     ) -> None:
         self.name = name
 
-        self._data: OrderedDictMod[str, np.ndarray] = OrderedDictMod() 
+        self._data: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
         self.rawX: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
         self.tag = Tag()
 
@@ -170,8 +171,10 @@ class ExtrTransition:
             return 0
         else:
             return len(self._data.valList[0])
-    
-    def append(self, data: OrderedDictMod[str, float], rawX: OrderedDictMod[str, float]):
+
+    def append(
+        self, data: OrderedDictMod[str, float], rawX: OrderedDictMod[str, float]
+    ):
         """
         It always keeps the data sorted by the x value.
         """
@@ -183,9 +186,11 @@ class ExtrTransition:
             for key, value in rawX.items():
                 self.rawX[key] = np.array([value])
             return
-        
+
         assert len(data) == 2, "The data should have two elements: x & y"
-        assert len(rawX) == len(self.rawX), "The rawX should have the same length as the existing rawX"
+        assert len(rawX) == len(
+            self.rawX
+        ), "The rawX should have the same length as the existing rawX"
 
         for key, value in data.items():
             self._data[key] = np.append(self._data[key], value)
@@ -212,18 +217,15 @@ class ExtrTransition:
                 )
 
         # only when raw x only has one dimension
-        self._data = OrderedDictMod(
-            list(self._data.items())[::-1]
-        )
-        self.rawX = OrderedDictMod(
-            list(self._data.items())[0:1]
-        )       # raw x is x
-        
+        self._data = OrderedDictMod(list(self._data.items())[::-1])
+        self.rawX = OrderedDictMod(list(self._data.items())[0:1])  # raw x is x
+
 
 class ExtrSpectra(list[ExtrTransition]):
     """
     A bunch of transitions extracted from the same parameter sweep.
     """
+
     def __init__(
         self,
         *args: ExtrTransition,
@@ -241,22 +243,22 @@ class ExtrSpectra(list[ExtrTransition]):
 
     def allNames(self) -> List[str]:
         return [transition.name for transition in self]
-    
+
     def allData(self) -> List[np.ndarray]:
         """
-        Return all data sorted by the transition name. 
+        Return all data sorted by the transition name.
         """
         return [transition.data for transition in self]
-        
+
     def allDataConcated(self) -> np.ndarray:
         """
         Return all data concated
         """
         if self.count() == 0:
             return np.empty((2, 0), dtype=float)
-        
+
         return np.concatenate(self.allData(), axis=1)
-    
+
     def allRawXConcated(self) -> OrderedDictMod[str, np.ndarray]:
         concatedRawX = deepcopy(self[0].rawX)
 
@@ -265,14 +267,14 @@ class ExtrSpectra(list[ExtrTransition]):
                 concatedRawX[key] = np.concatenate([concatedRawX[key], value])
 
         return concatedRawX
-            
+
     def distinctSortedX(self) -> np.ndarray:
         """
         Return the distinct sorted x values of all transitions
         """
         allX = self.allDataConcated()[0]
         return np.sort(np.unique(allX))
-    
+
     def swapXY(self):
         for transition in self:
             transition.swapXY()
@@ -280,7 +282,7 @@ class ExtrSpectra(list[ExtrTransition]):
     def rawXByX(self, x: float) -> OrderedDictMod[str, float]:
         """
         Return the rawX data corresponding to the x value. Their relationship
-        is linear. 
+        is linear.
         """
         allX = self.allDataConcated()[0]
         allRawX = self.allRawXConcated()
@@ -293,7 +295,7 @@ class ExtrSpectra(list[ExtrTransition]):
                         {key: value[idx] for key, value in allRawX.items()}
                     )
             raise ValueError("No data found for the x value")
-            
+
         # calculate a linear mapping between the x values and the rawX data
         # with the smallest and largest x values
         minIdx = np.argmin(allX)
@@ -312,7 +314,7 @@ class ExtrSpectra(list[ExtrTransition]):
 
 class FullExtr(dict[str, ExtrSpectra]):
     """
-    A class for storing all the extracted data from the experiment. 
+    A class for storing all the extracted data from the experiment.
     """
 
     def __init__(
@@ -672,6 +674,7 @@ class QMSweepParam(ParamBase):
     paramType: ParameterType
         The type of the parameter
     """
+
     calibration_func: Callable[[Dict[str, float]], float]
 
     attrToRegister = ["value"]
@@ -713,6 +716,7 @@ class QMSweepParam(ParamBase):
         Set the value of the parameter with the calibration function
         """
         self.value = self.calibration_func(value)
+
 
 class QMSliderParam(DispParamBase):
     """
@@ -911,9 +915,11 @@ class CaliTableRowParam(DispParamBase):
         Export the value of the parameter
         """
         value = getattr(self, attr)
-        if isinstance(value, int) or isinstance(value, float):
+        if isinstance(value, bool):
+            return value
+        elif isinstance(value, int) or isinstance(value, float):
             return self._toIntString(value)
-        elif isinstance(value, bool):
+        elif isinstance(value, str):
             return value
         else:
             raise ValueError(f"Unknown type of value: {value}")

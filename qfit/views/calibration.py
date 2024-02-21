@@ -164,10 +164,13 @@ class CalibrationView(QObject):
 
     @Slot(ParamAttr)
     def setBoxValue(self, paramAttr: ParamAttr):
+        # if pointPairSource, no such view available currently
+        if paramAttr.name == "pointPairSource":
+            return
         rowIdx = paramAttr.parantName
         colName = paramAttr.name
-        lineEdit: "CalibrationLineEdit" = self.caliTableSet[rowIdx][colName]
-        lineEdit.setText(paramAttr.value)
+        widget: QObject = self.caliTableSet[rowIdx][colName]
+        widget.setText(paramAttr.value)
 
     @Slot(int)
     def onCaliButtonClicked(self, buttonGroupIdx: int):
@@ -210,19 +213,22 @@ class CalibrationView(QObject):
         """
         CALIBRATION VIEW
         """
-        # update the raw line edits by the value of the clicked point
-        for rawXVecCompName in self.rawXVecNameList:
-            self.caliTableSet[rowIdx][rawXVecCompName].setText(
-                str(data[rawXVecCompName])
-            )
-            self.caliTableSet[rowIdx][rawXVecCompName].home(False)
+        # if x axis is calibrated, update the raw line edits by the value of the clicked point
+        if rowIdx[0] == "X":
+            for rawXVecCompName in self.rawXVecNameList:
+                self.caliTableSet[rowIdx][rawXVecCompName].setText(
+                    str(data[rawXVecCompName])
+                )
+                self.caliTableSet[rowIdx][rawXVecCompName].home(False)
+            colName = f"{self.sweepParamParentName}.{self.sweepParamName}"
+        # if y axis is calibrated, update the raw line edits by the value of the clicked point
+        elif rowIdx[0] == "Y":
+            self.caliTableSet[rowIdx][self.rawYName].setText(str(data[self.rawYName]))
+            self.caliTableSet[rowIdx][self.rawYName].home(False)
+            colName = "mappedY"
         # highlight the map line edit
-        self.caliTableSet[rowIdx][
-            f"{self.sweepParamParentName}.{self.sweepParamName}"
-        ].selectAll()
-        self.caliTableSet[rowIdx][
-            f"{self.sweepParamName}.{self.sweepParamName}"
-        ].setFocus()
+        self.caliTableSet[rowIdx][colName].selectAll()
+        self.caliTableSet[rowIdx][colName].setFocus()
         self.uncheckAllCaliButtons()
 
     #     self.msg = None
