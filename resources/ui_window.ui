@@ -3308,6 +3308,9 @@ color: rgb(30, 30, 30);</string>
 QPushButton:pressed {
     background-color: #363636;
     icon: url(:/icons/svg/target-pressed.svg)
+}
+QPushButton:checked{
+	background-color: rgb(196, 150, 250);
 }</string>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_10">
@@ -3776,6 +3779,9 @@ QPushButton:pressed {
 QPushButton:pressed {
     background-color: #363636;
     icon: url(:/icons/svg/target-pressed.svg)
+}
+QPushButton:checked{
+	background-color: rgb(196, 150, 250);
 }</string>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_11">
