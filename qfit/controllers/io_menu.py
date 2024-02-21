@@ -22,7 +22,7 @@ from qfit.models.measurement_data import (
     NumericalMeasurementData,
 )
 
-from typing import TYPE_CHECKING, Union, Dict, Any
+from typing import TYPE_CHECKING, Union, Dict, Any, Optional, List
 
 if TYPE_CHECKING:
     from qfit.core.mainwindow import MainWindow
@@ -77,7 +77,6 @@ class IOCtrl:
         self.mainWindow = mainWindow
 
         self.setConnects()
-        self.mainWindow.register()
 
     def setConnects(self):
         """
@@ -248,14 +247,18 @@ class IOCtrl:
         self.registry.exportPkl(fileName)
 
     # new #####################################################################
-    def newProjectWithMeasurementData(self, measurementData: "MeasurementDataType"):
+    def newProjectWithMeasurementData(
+        self, 
+        hilbertspace: HilbertSpace,
+        measurementData: List["MeasurementDataType"]
+    ):
         """
         New project with measurement data (keep hilbertspace the same)
         To load a measurementData from file, use ioMenuCtrl.measurementDataFromFile
         """
         self.mainWindow.initializeDynamicalElements(
-            hilbertspace=self.mainWindow.quantumModel._hilbertspace,
-            measurementData=[measurementData],
+            hilbertspace=hilbertspace,
+            measurementData=measurementData,
         )
 
     # open ####################################################################
@@ -270,14 +273,13 @@ class IOCtrl:
         """
         # load the hilbertspace and measurementData
         hilbertspace = registryDict["HilbertSpace"]
-        dateType = globals()[registryDict["measurementData.type"]]
-        measurementData = dateType(*registryDict["measurementData.args"])
+        measurementData = registryDict["measDataSet.data"]
 
         # update the dynamical elements in the main window (i.e. load from the registry
         # the r entries)
         self.mainWindow.initializeDynamicalElements(
             hilbertspace=hilbertspace,
-            measurementData=[measurementData],
+            measurementData=measurementData,
         )
 
         # update the rest of the registry (i.e. those entries with r+)
@@ -302,6 +304,7 @@ class IOCtrl:
             registryDictFromFile = copy.deepcopy(
                 self._registryDictFromFile(self.mainWindow.projectFile)
             )
+            assert registryDictFromFile is not None, "File not found"
             # remove HilbertSpace and file name from these dicts
             registryDict.pop("HilbertSpace")
             registryDictFromFile.pop("HilbertSpace")
@@ -394,35 +397,44 @@ class IOCtrl:
         Return the hilbert space object.
         """
         if deepcopy:
-            return copy.deepcopy(self.mainWindow.quantumModel._hilbertspace)
-        return self.mainWindow.quantumModel._hilbertspace
+            return copy.deepcopy(self.mainWindow.quantumModel.hilbertspace)
+        return self.mainWindow.quantumModel.hilbertspace
 
     # slots ###################################################################
     @Slot()
-    def newProject(self, __value=None, from_menu: bool = True):
+    def newProject(
+        self, 
+        __value=None, 
+        from_menu: bool = True, 
+        hilbertSpace: Optional[HilbertSpace] = None
+    ):
         """
         Open a dialog to select a measurement file, then create a new project
         """
-        measurementData = self._measurementDataFromDialog(window_initialized=from_menu)
-
-        if measurementData is not None:
-            self.newProjectWithMeasurementData(measurementData)
-
         if from_menu:
             self.menu.toggle()
+
+        measurementData = self._measurementDataFromDialog(window_initialized=from_menu)
+        if measurementData is None:
+            return
+
+        if hilbertSpace is None:
+            hilbertSpace = self.mainWindow.quantumModel.hilbertspace
+
+        self.newProjectWithMeasurementData(hilbertSpace, [measurementData])
 
     @Slot()
     def openFile(self, __value=None, from_menu: bool = True):
         """
         Open a dialog to select a project file, then open the project
         """
+        if from_menu:
+            self.menu.toggle()
+
         registryDict = self._registryDictFromDialog(window_initialized=from_menu)
 
         if registryDict is not None:
             self.openProjectWithRegistryDict(registryDict)
-
-        if from_menu:
-            self.menu.toggle()
 
     @Slot()
     def saveFile(self):

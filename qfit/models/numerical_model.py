@@ -60,16 +60,8 @@ class QuantumModel(QObject):
 
     def __init__(
         self,
-        hilbertspace: HilbertSpace,
-        figNames: List[str],
     ):
         super().__init__()
-
-        self._hilbertspace = hilbertspace
-        self._figNames = figNames
-        self._currentFigName = self._figNames[0]
-
-        self._initializeSweepIngredients()
 
     def _initializeSweepIngredients(self):
         # extracted data
@@ -77,7 +69,7 @@ class QuantumModel(QObject):
 
         # calibration
         self._sweepParamSets: Dict[str, HSParamSet[QMSweepParam]] = {
-            figName: HSParamSet[QMSweepParam](self._hilbertspace, QMSweepParam)
+            figName: HSParamSet[QMSweepParam](QMSweepParam)
             for figName in self._figNames
         }
         self._yCaliFunc: Callable = lambda x: x
@@ -88,12 +80,19 @@ class QuantumModel(QObject):
         self._pointsAdd: int = 0
 
         # options when plotting the spectrum
-        self._subsysToPlot: QuantumSystem = self._hilbertspace.subsystem_list[0]
+        self._subsysToPlot: QuantumSystem = self.hilbertspace.subsystem_list[0]
         self._initialState: Union[int, Tuple[int, ...], None] = None
         self._photons: int = 1
 
         # options when running
         self._autoRun: bool = True
+
+    def dynamicalInit(self, hilbertspace: HilbertSpace, figNames: List[str]):
+        self.hilbertspace = hilbertspace
+        self._figNames = figNames
+        self._currentFigName = self._figNames[0]
+
+        self._initializeSweepIngredients()
 
     # Signals and Slots ========================================================
     @Slot(str)
@@ -105,7 +104,7 @@ class QuantumModel(QObject):
         """
         It's used for manually update hilbertspace without running the calculation.
         """
-        self._hilbertspace = hilbertspace
+        self.hilbertspace = hilbertspace
 
     @Slot(HilbertSpace)
     def updateHilbertSpace(self, hilbertspace: HilbertSpace):
@@ -185,7 +184,7 @@ class QuantumModel(QObject):
         # process the raw value from UI
         if attrName == "subsysToPlot":
             id_str = HSParamSet.parentSystemIdstrByName(value)
-            value = self._hilbertspace.subsys_by_id_str(id_str)
+            value = self.hilbertspace.subsys_by_id_str(id_str)
         elif attrName == "initialState":
             value = self._stateStr2Label(value)
         elif attrName == "photons":
@@ -256,10 +255,10 @@ class QuantumModel(QObject):
         if "," in state_str:
             label_str = state_str.split(",")
 
-            if len(label_str) != self._hilbertspace.subsystem_count:
+            if len(label_str) != self.hilbertspace.subsystem_count:
                 raise ValueError(
                     f"The state label length {len(label_str)} does not match the subsystem "
-                    f"count {self._hilbertspace.subsystem_count}."
+                    f"count {self.hilbertspace.subsystem_count}."
                 )
 
             try:
@@ -378,7 +377,7 @@ class QuantumModel(QObject):
             subsys_update_info = {"x": subsysUpdateInfo[figName]}
 
             param_sweep = ParameterSweep(
-                hilbertspace=self._hilbertspace,
+                hilbertspace=self.hilbertspace,
                 paramvals_by_name=paramvals_by_name,
                 update_hilbertspace=update_hilbertspace,
                 evals_count=self._evalsCount,  # change this later to connect to the number from the view

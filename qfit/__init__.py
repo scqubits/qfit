@@ -22,13 +22,7 @@ import matplotlib
 matplotlib.use("qtagg")
 
 from qfit.core.mainwindow import MainWindow
-from qfit.models.measurement_data import (
-    dummy_measurement_data,
-    MeasurementDataType,
-)
-from qfit.models.numerical_model import dummy_hilbert_space
 from qfit.utils.helpers import executed_in_ipython
-from qfit.io_utils.measurement_file_readers import readMeasurementFile
 from qfit.controllers.io_menu import IOCtrl
 
 from typing import Union, Dict, Any
@@ -47,16 +41,9 @@ if executed_in_ipython():
 class Fit:
     app: Union[QApplication, None] = None
     window: MainWindow
-    _hilbertSpace: HilbertSpace
 
     # IOs ####################################################################
-
-    @classmethod
-    def _newProject(
-        cls,
-        hilbertSpace: HilbertSpace,
-        measurementData: Union[MeasurementDataType, None] = None,
-    ) -> "Fit":
+    def __new__(cls, *args, **kwargs) -> "Fit":
         # Create a new instance
         instance = object.__new__(cls)
 
@@ -74,23 +61,8 @@ class Fit:
             # TODO
             pass
 
-        instance._hilbertSpace = deepcopy(hilbertSpace)
-        if measurementData is None:
-            measurementData = dummy_measurement_data()
-
-        instance.window = MainWindow(
-            measurementData=[measurementData],
-            hilbertspace=instance._hilbertSpace,
-        )
-
+        instance.window = MainWindow()
         instance.window.show()
-
-        return instance
-
-    def __new__(
-        cls, hilbertSpace: HilbertSpace, measurementData: Union[str, None] = None
-    ) -> "Fit":
-        instance = cls._newProject(hilbertSpace, None)
 
         return instance
 
@@ -101,23 +73,20 @@ class Fit:
         if measurementFileName is not None:
             if not os.path.isfile(measurementFileName):
                 raise FileNotFoundError(f"File '{measurementFileName}' does not exist.")
-
-        if measurementFileName is not None:
+            
+        # load measurement data
+        if measurementFileName is None:
+            # open a dialog to ask for a file
+            self.window.ioMenuCtrl.newProject(from_menu=False, hilbertSpace=hilbertSpace)
+        else:
             # load measurement data from the given file
             measurementData = IOCtrl._measurementDataFromFile(measurementFileName)
             if measurementData is None:
                 raise FileNotFoundError(f"Can't load file '{measurementFileName}'.")
-            self.window.ioMenuCtrl.newProjectWithMeasurementData(measurementData)
-        else:
-            # open a window to ask for a file
-            self.window.ioMenuCtrl.newProject(from_menu=False)
+            self.window.ioMenuCtrl.newProjectWithMeasurementData(hilbertSpace, [measurementData])
 
         if not executed_in_ipython():
             self.app.exec_()
-
-    @property
-    def hilbertSpace(self) -> HilbertSpace:
-        return self._hilbertSpace
 
     # methods to create a new project #########################################
     @classmethod
@@ -142,25 +111,8 @@ class Fit:
         -------
         qfit project
         """
-
-        # check if file exists
-        if measurementFileName is not None:
-            if not os.path.isfile(measurementFileName):
-                raise FileNotFoundError(f"File '{measurementFileName}' does not exist.")
-
-        instance = cls._newProject(hilbertSpace, dummy_measurement_data())
-
-        # load measurement data
-        if measurementFileName is not None:
-            measurementData = IOCtrl._measurementDataFromFile(measurementFileName)
-            if measurementData is None:
-                raise FileNotFoundError(f"Can't load file '{measurementFileName}'.")
-            instance.window.ioMenuCtrl.newProjectWithMeasurementData(measurementData)
-        else:
-            instance.window.ioMenuCtrl.newProject(from_menu=False)
-
-        if not executed_in_ipython():
-            instance.app.exec_()
+        instance = cls.__new__(cls)
+        instance.__init__(hilbertSpace, measurementFileName)
 
         return instance
 
@@ -187,12 +139,14 @@ class Fit:
             if not os.path.isfile(fileName):
                 raise FileNotFoundError(f"File '{fileName}' does not exist.")
 
-        instance = cls._newProject(dummy_hilbert_space(), dummy_measurement_data())
+        instance = cls.__new__(cls)
 
         # load registry
         if fileName is None:
+            # open a dialog to ask for a file
             fileName = instance.window.ioMenuCtrl.openFile(from_menu=False)
         else:
+            # load registry from the given file
             registryDict = IOCtrl._registryDictFromFile(fileName)
             if registryDict is None:
                 raise FileNotFoundError(f"Can't load file '{fileName}'.")

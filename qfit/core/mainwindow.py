@@ -100,6 +100,9 @@ from qfit.models.registry import Registry, RegistryEntry, Registrable
 # menu controller
 from qfit.controllers.io_menu import IOCtrl
 
+if TYPE_CHECKING:
+    from qfit.models.parameter_settings import ParameterType
+
 
 mpl.rcParams["toolbar"] = "None"
 
@@ -120,13 +123,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     registry: Registry
     _projectFile: Union[str, None] = None
 
-    def __init__(
-        self, measurementData: List[MeasurementDataType], hilbertspace: HilbertSpace
-    ):
+    def __init__(self):
         QMainWindow.__init__(self)
         self.openFromIPython = executed_in_ipython()
         self.setFocusPolicy(Qt.StrongFocus)
-        self.measurementData = MeasDataSet(measurementData)
+        
+        self.measurementData = MeasDataSet([])
 
         # ui
         self.ui = Ui_MainWindow()
@@ -139,24 +141,19 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.pagingMVCInits()
 
         # extract
-        self.extractingMVCInits(hilbertspace, measurementData)
-        # self.extractingCtrl.dynamicalInit()
+        self.extractingMVCInits()
 
         # prefit: controller, two models and their connection to view (sliders)
-        self.prefitMVCInits(hilbertspace, measurementData)
-        self.prefitDynamicalElementsBuild(hilbertspace)
+        self.prefitMVCInits()
 
         # calibration - should be inited after prefit, as it requires a sweep parameter set
-        self.calibrationMVCInits(hilbertspace, measurementData)
-        self.calibrationCtrl.dynamicalInit(hilbertspace, measurementData)
+        self.calibrationMVCInits()
 
         # fit
-        self.fitMVCInits(hilbertspace)
-        self.fitDynamicalElementsBuild(hilbertspace)
+        self.fitMVCInits()
 
         # plot, mpl canvas
-        self.plottingMVCInits(hilbertspace)
-        # self.plottingCtrl.dynamicalInit(self.measurementData)
+        self.plottingMVCInits()
 
         # help button
         self.helpButtonConnects()
@@ -173,6 +170,21 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # status bar
         self.statusMVCInits()
+
+    def initializeDynamicalElements(
+        self,
+        hilbertspace: HilbertSpace,
+        measurementData: List[MeasurementDataType],
+    ):
+        self.calibrationCtrl.dynamicalInit(hilbertspace, measurementData)
+        self.extractingCtrl.dynamicalInit(hilbertspace, measurementData)
+        self.prefitDynamicalElementsBuild(hilbertspace, measurementData)
+        self.fitDynamicalElementsBuild(hilbertspace)
+        self.plottingCtrl.dynamicalInit(measurementData)
+
+        self.register()
+
+        self.raise_()
 
     # ui setup #########################################################
     def setShadows(self):
@@ -220,7 +232,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # plot #############################################################
     ####################################################################
-    def plottingMVCInits(self, hilbertspace: HilbertSpace):
+    def plottingMVCInits(self):
         # ui grouping
         self.measComboBoxes = {
             "x": self.ui.xComboBox,
@@ -255,7 +267,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 self.allDatasets,
                 self.activeDataset,
                 self.quantumModel,
-                HSParamSet.sweepSetByHS(hilbertspace),
             ),
             (
                 self.measComboBoxes,
@@ -295,7 +306,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # calibration ####################################
     ####################################################################
-    def calibrationMVCInits(self, hilbertSpace, measurementData: List[MeasurementDataType]):
+    def calibrationMVCInits(self):
         """
         Set up an instance of CalibrationData and CalibrationView.
         """
@@ -319,8 +330,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "Y1": self.ui.calibrateY2Button,
         }
 
-        sweepParameterSet = HSParamSet.sweepSetByHS(hilbertSpace)
-        
         self.caliParamModel = CaliParamModel()
         self.calibrationView = CalibrationView(
             rawLineEdits=self.rawLineEdits,
@@ -351,7 +360,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # extract and tag ##################################################
     # ##################################################################
-    def extractingMVCInits(self, hilbertspace: HilbertSpace, measurementData: List[MeasurementDataType]):
+    def extractingMVCInits(self):
         """Set up the main class instances holding the data extracted from placing
         markers on the canvas. The AllExtractedData instance holds all data, whereas the
         ActiveExtractedData instance holds data of the currently selected data set."""
@@ -383,11 +392,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         }
 
         self.activeDataset = ActiveExtractedData()
-        self.allDatasets = AllExtractedData(figNames=[data.name for data in measurementData])
+        self.allDatasets = AllExtractedData()
         # self.allDatasets.setCalibrationFunc(self.calibrationData.calibrateDataset)
 
         self.extractingView = ExtractingView(
-            [subsys.id_str for subsys in hilbertspace.subsystem_list],
             (
                 self.uiLabelBoxes,
                 self.uiLabelRadioButtons,
@@ -406,7 +414,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # Pre-fit ##########################################################
     # ##################################################################
-    def prefitMVCInits(self, hilbertspace: HilbertSpace, measurementData: List[MeasurementDataType]):
+    def prefitMVCInits(self):
         # UI grouping
         self.prefitOptions = {
             "subsysToPlot": self.ui.subsysComboBox,
@@ -417,37 +425,45 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "autoRun": self.ui.autoRunCheckBox,
         }
 
-        self.quantumModel = QuantumModel(hilbertspace, [data.name for data in measurementData])
+        self.quantumModel = QuantumModel()
 
-        self.prefitParamModel = PrefitParamModel(hilbertspace, QMSliderParam)
+        self.prefitParamModel = PrefitParamModel(QMSliderParam)
         self.prefitParamView = PrefitParamView(
             self.ui.prefitScrollAreaWidget,
             self.ui.prefitMinmaxScrollAreaWidget,
         )
         self.prefitView = PrefitView(
             options=self.prefitOptions,
+        )
+
+        self.prefitResult = StatusModel()
+        self.prefitStaticElementsBuild()
+
+    def prefitDynamicalElementsBuild(
+        self, 
+        hilbertspace: HilbertSpace, 
+        measurementData: List[MeasurementDataType]
+    ):
+        self.prefitBuildParamSet(hilbertspace)
+        self.prefitViewInsertParams()
+        self.prefitView.dynamicalInit(
             subsysNames=[
                 HSParamSet.parentSystemNames(subsys)
                 for subsys in hilbertspace.subsystem_list[::-1]
             ],
             hilbertDim=hilbertspace.dimension,
         )
-
-        self.prefitResult = StatusModel()
-        self.prefitStaticElementsBuild(hilbertspace)
-
-    def prefitDynamicalElementsBuild(self, hilbertspace: HilbertSpace):
-        self.quantumModel._hilbertspace = hilbertspace
-        self.prefitIdentifySweepParameters(hilbertspace)
-        self.prefitViewUpdates(hilbertspace)
-
-    def prefitStaticElementsBuild(self, hilbertspace: HilbertSpace):
+        self.quantumModel.dynamicalInit(
+            hilbertspace, [data.name for data in measurementData]
+        )
+        
+    def prefitStaticElementsBuild(self):
         self.prefitParamModelConnects()
-        self.prefitButtonConnects(hilbertspace)
+        self.prefitButtonConnects()
         self.prefitSliderParamConnects()
         self.setUpPrefitRunConnects()
 
-    def prefitIdentifySweepParameters(self, hilbertspace: HilbertSpace):
+    def prefitBuildParamSet(self, hilbertspace: HilbertSpace):
         """
         Should belong to PREFIT PARAMETER CONTROLLER
 
@@ -459,31 +475,35 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # check how many sweep parameters are found and create sliders
         # for the remaining parameters
         sweepParameterSet = HSParamSet.sweepSetByHS(hilbertspace)
-        
-        self.prefitParamModel.hilbertspace = hilbertspace
+        param_types: set["ParameterType"] = set(sweepParameterSet.exportAttrDict("paramType").values())
 
-        param_types = set(sweepParameterSet.exportAttrDict("paramType").values())
         if len(sweepParameterSet) == 0:
             print(
                 "No sweep parameter (ng / flux) is found in the HilbertSpace "
                 "object. Please check your quantum model."
             )
             self.close()
+
         elif len(sweepParameterSet) == 1:
             # only one sweep parameter is found, so we can create sliders
             # for the remaining parameters
-            self.prefitParamModel.insertParamToSet(
+            excluded: List[ParameterType] = ["cutoff", "truncated_dim", "l_osc"]
+            self.prefitParamModel.dynamicalInit(
+                hilbertspace=hilbertspace,
                 excluded_parameter_type=(
-                    ["cutoff", "truncated_dim", "l_osc"]
+                    excluded
                     + [list(param_types)[0]]  # exclude the sweep parameter
                 ),
             )
+
         elif len(sweepParameterSet) == 2 and param_types == set(["flux", "ng"]):
             # a flux and ng are detected in the HilbertSpace object
             # right now, we assume that the flux is always swept in this case
-            self.prefitParamModel.insertParamToSet(
+            self.prefitParamModel.dynamicalInit(
+                hilbertspace=hilbertspace,
                 excluded_parameter_type=["flux", "cutoff", "truncated_dim", "l_osc"],
             )
+
         else:
             print(
                 "Unfortunately, the current version of qfit does not support "
@@ -492,7 +512,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             )
             self.close()
 
-    def prefitViewUpdates(self, hilbertspace: HilbertSpace):
+    def prefitViewInsertParams(self):
         """
         THIS METHOS BELONGS TO THE PREFIT PARAMETER CONTROLLER
 
@@ -507,15 +527,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitParamView.insertSliderMinMax(paramNamesDict, removeExisting=True)
         self.prefitParamModel.emitUpdateBox()
         self.prefitParamModel.emitUpdateSlider()
-
-        # initialize the options
-        self.prefitView.initializeOptions(
-            subsysNames=[
-                HSParamSet.parentSystemNames(subsys)
-                for subsys in hilbertspace.subsystem_list[::-1]
-            ],
-            hilbertDim=hilbertspace.dimension,
-        )
 
     def prefitSliderParamConnects(self):
         """
@@ -589,7 +600,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     #         mseChangeUISetter=mse_change_ui_setter,
     #     )
 
-    def prefitButtonConnects(self, hilbertspace: HilbertSpace):
+    def prefitButtonConnects(self):
         """
         View --> model: numerical model options
         model --> view: numerical model --> prefit plot
@@ -625,25 +636,25 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # Fit ##############################################################
     # ##################################################################
-    def fitMVCInits(self, hilbertspace: HilbertSpace):
+    def fitMVCInits(self):
         self.fitParamView = FitParamView(
             self.ui.fitScrollAreaWidget,
         )
-        self.fitParamModel = FitParamModel(hilbertspace, QMFitParam)
+        self.fitParamModel = FitParamModel(QMFitParam)
         self.fitModel = FitModel()
 
-        self.fitStaticElementsBuild(hilbertspace)
+        self.fitStaticElementsBuild()
 
     def fitDynamicalElementsBuild(self, hilbertspace: HilbertSpace):
-        self.fitParamModel.hilbertspace = hilbertspace
-        self.fitParamModel.insertParamToSet(
+        self.fitParamModel.dynamicalInit(
+            hilbertspace=hilbertspace,
             excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
         )
         self.fitParamView.fitTableInserts(
             self.fitParamModel.paramNamesDict(), removeExisting=True
         )
 
-    def fitStaticElementsBuild(self, hilbertspace: HilbertSpace):
+    def fitStaticElementsBuild(self):
         self.fitOptionConnects()
         self.fitTableParamConnects()
         self.fitPushButtonConnects()
@@ -811,7 +822,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.registry.clear()
 
         # special registry
-        self.registry.register(self.quantumModel._hilbertspace)
+        self.registry.register(self.quantumModel.hilbertspace)
         self.registry.register(self.measurementData)
         self.registry.register(self.caliParamModel)
         self.registry.register(self.allDatasets)
@@ -822,20 +833,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # main window
         self.registry.register(self)
-
-    def initializeDynamicalElements(
-        self,
-        hilbertspace: HilbertSpace,
-        measurementData: List[MeasurementDataType],
-    ):
-        self.measurementData.dynamicalInit(measurementData)
-        self.calibrationCtrl.dynamicalInit(hilbertspace, measurementData)
-        self.prefitDynamicalElementsBuild(hilbertspace)
-        self.fitDynamicalElementsBuild(hilbertspace)
-
-        self.register()
-
-        self.raise_()
 
     def closeEvent(self, event):
         """

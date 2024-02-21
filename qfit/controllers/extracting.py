@@ -4,12 +4,14 @@ from PySide6.QtCore import (
     Slot,
 )
 
-from typing import TYPE_CHECKING, Tuple, Dict, Any
+from typing import TYPE_CHECKING, Tuple, Dict, Any, List
 
 if TYPE_CHECKING:
+    from scqubits.core.hilbert_space import HilbertSpace
     from qfit.ui_designer.ui_window import Ui_MainWindow
     from qfit.core.mainwindow import MainWindow
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
+    from qfit.models.measurement_data import MeasurementDataType
     from qfit.views.extracting import ExtractingView
     from qfit.models.data_structures import Tag
 
@@ -59,10 +61,19 @@ class ExtractingCtrl(QObject):
         self._uiExtractedDataControlConnects()
 
     # # initialization ===================================================
-    # def dynamicalInit(self):
-    #     self.allDatasets.blockSignals(True)
-    #     self.allDatasets.removeAll()        # move to load from registry
-    #     self.allDatasets.blockSignals(False)
+    def dynamicalInit(
+        self, 
+        hilbertspace: "HilbertSpace",
+        measurementData: List["MeasurementDataType"]
+    ):
+        self.allDatasets.dynamicalInit([data.name for data in measurementData])
+        self.extractingView.dynamicalInit(
+            [subsys.id_str for subsys in hilbertspace.subsystem_list],
+        )
+
+        # mainly for cync the transition list with the model
+        self.extractingView.extractionList.setModel(self.allDatasets)
+        self.extractingView.extractionList.selectItem(0, blockSignals=True) # select the first row
 
     # Connections ======================================================
     def _uiExtractedDataControlConnects(self):
@@ -74,8 +85,6 @@ class ExtractingCtrl(QObject):
 
     def _uiExtractedDataConnects(self):
         """Make connections for changes in extracted data."""
-        self.extractingView.extractionList.setModel(self.allDatasets)
-        self.extractingView.extractionList.selectItem(self.allDatasets.currentRow) # select the first row
 
         # UI selection --> Model selection
         self.extractingView.extractionList.focusChanged.connect(
