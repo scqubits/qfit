@@ -39,7 +39,7 @@ class CalibrationView(QObject):
     rawYName: str
     caliTableSet: Dict[str, Dict[str, "CalibrationLineEdit"]]
     rowIdxToButtonGroupId: Dict[str, int]
-    buttonGroupIdToRowIdx: Dict[int, Union[str, int]]
+    buttonGroupIdToRowIdx: Dict[int, str]
 
     def __init__(
         self,
@@ -56,7 +56,7 @@ class CalibrationView(QObject):
         self.rawLineEdits = rawLineEdits
         self.mapLineEdits = mapLineEdits
         self.calibrationButtons = calibrationButtons
-        self._previousCheckedButton = None
+        self._previousCheckedButtonIdx = None
 
     def dynamicalInit(
         self,
@@ -75,6 +75,12 @@ class CalibrationView(QObject):
         self.rawXVecNameList = rawXVecNameList
         self.rawYName = rawYName
 
+        self.caliButtonGroup = QButtonGroup()
+        self._generateRowIdxToButtonGroupIdDict()
+        for Idx, button in self.calibrationButtons.items():
+            self.caliButtonGroup.addButton(button, self.rowIdxToButtonGroupId[Idx])
+        self.caliButtonGroup.setExclusive(False)
+
         # generate the calibration table set
         self._generateCaliTableSet()
 
@@ -88,9 +94,7 @@ class CalibrationView(QObject):
 
         # connects
         self.setupEditingFinishedSignalEmit()
-        for Idx, button in self.calibrationButtons.items():
-            button.clicked.connect(lambda Idx=Idx: self.onCaliButtonClicked(Idx))
-            print(f"connect button {Idx} to onCaliButtonClicked")
+        self.caliButtonGroup.idClicked.connect(self.onCaliButtonClicked)
 
     def _generateCaliTableSet(self):
         self.caliTableSet: Dict[str, Dict[str, "CalibrationLineEdit"]] = {
@@ -129,7 +133,7 @@ class CalibrationView(QObject):
         self.rowIdxToButtonGroupId["Y0"] = self.caliTableXRowNr
         self.rowIdxToButtonGroupId["Y1"] = self.caliTableXRowNr + 1
 
-        self.buttonGroupIdToRowIdx: Dict[int, Union[str, int]] = {
+        self.buttonGroupIdToRowIdx: Dict[int, str] = {
             v: k for k, v in self.rowIdxToButtonGroupId.items()
         }
 
@@ -165,8 +169,8 @@ class CalibrationView(QObject):
         lineEdit: "CalibrationLineEdit" = self.caliTableSet[rowIdx][colName]
         lineEdit.setText(paramAttr.value)
 
-    @Slot(str)
-    def onCaliButtonClicked(self, buttonIdx: str):
+    @Slot(int)
+    def onCaliButtonClicked(self, buttonGroupIdx: int):
         """
         Internally determine the current calibration status, update the view and
         emit the signal for which calibration button is clicked to the controller.
@@ -175,28 +179,25 @@ class CalibrationView(QObject):
         # set the exclusive mode off and uncheck the button, then turn on the exclusive
         # mode again
         print("function called")
-        clickedButton = self.sender()
-        if clickedButton is self._previousCheckedButton:
-            if clickedButton is not None:
-                clickedButton.setChecked(False)
-                self._previousCheckedButton = None
-                self.caliStatusChangedByButtonClicked.emit(False)
-                return
-            else:
-                return
+        buttonIdx = self.buttonGroupIdToRowIdx[buttonGroupIdx]
+        if buttonIdx is self._previousCheckedButtonIdx:
+            self.calibrationButtons[buttonIdx].setChecked(False)
+            self._previousCheckedButtonIdx = None
+            self.caliStatusChangedByButtonClicked.emit(False)
+            return
         else:
             for button in self.calibrationButtons.values():
                 button.setChecked(False)
-            clickedButton.setChecked(True)
-            self._previousCheckedButton = clickedButton
-            print(f"{self._previousCheckedButton}")
+            self.calibrationButtons[buttonIdx].setChecked(True)
+            self._previousCheckedButtonIdx = buttonIdx
+            print(f"{self._previousCheckedButtonIdx}")
             self.caliStatusChangedByButtonClicked.emit(buttonIdx)
 
     @Slot()
     def uncheckAllCaliButtons(self):
         for button in self.calibrationButtons.values():
             button.setChecked(False)
-        self._previousCheckedButton = None
+        self._previousCheckedButtonIdx = None
 
     def calibrationStatus(self):
         for calibrationLabel, button in self.calibrationButtons.items():
