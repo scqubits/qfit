@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod, abstractproperty
 import numpy as np
+from copy import deepcopy
 
 from PySide6.QtCore import QObject, Signal, Slot, SignalInstance
 
@@ -207,7 +208,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         self.parentObjByName: Dict[str, ParentType] = {}
 
     def dynamicalInit(
-        self, 
+        self,
         hilbertspace: HilbertSpace,
         included_parameter_type: Union[List[ParameterType], None] = None,
         excluded_parameter_type: Union[List[ParameterType], None] = None,
@@ -695,11 +696,12 @@ class CaliParamModel(
     metaclass=CombinedMeta,
 ):
     plotCaliPtExtractStart = Signal(str)
-    plotCaliPtExtractFinished = Signal()
+    plotCaliPtExtractFinished = Signal(str, dict)
     plotCaliPtExtractInterrupted = Signal()
     issueNewXCaliFunc = Signal(object)
     issueNewYCaliFunc = Signal(object)
     issueNewInvYCaliFunc = Signal(object)
+    caliModelFinishedSwapXY = Signal()
     # calibrationIsOn: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2", False]
 
     isFullCalibration: bool
@@ -758,7 +760,7 @@ class CaliParamModel(
         #     rawYName,
         #     figName,
         #     sweepParamSet,
-        # ) 
+        # )
 
     # initialize =======================================================
     def dynamicalInit(
@@ -775,7 +777,7 @@ class CaliParamModel(
         self.sweepParamSet = HSParamSet.sweepSetByHS(hilbertSpace)
 
         # determine total calibration table row number and if the calibration is a complete one
-        
+
         self._isSufficientForFullCalibration(self.rawXVecDim, self.figNr)
 
         # initialize calibration table entries
@@ -920,11 +922,11 @@ class CaliParamModel(
     @property
     def rawXVecDim(self) -> int:
         return len(self.rawXVecNameList)
-    
+
     @property
     def figNr(self) -> int:
         return len(self.figName)
-    
+
     @property
     def sweepParamNr(self) -> int:
         return len(self.sweepParamSet)
@@ -1029,7 +1031,7 @@ class CaliParamModel(
                 mapCompVec = np.zeros(self.caliTableXRowNr)
                 for XRowIdx in self.caliTableXRowIdxList:
                     mapCompVec[XRowIdx] = self[XRowIdx][
-                        f"{param.parent}.{param.name}"
+                        f"{parentName}.{paramName}"
                     ].value
                 alphaVec = np.linalg.solve(augRawXMat, mapCompVec)
                 # generate the calibration function
@@ -1091,10 +1093,10 @@ class CaliParamModel(
                 for paramName, param in paramDictByParent.items():
                     # extract mapped vector pair values
                     mapXVecCompValue1 = self[XRowIdxList[0]][
-                        f"{param.parent}.{param.name}"
+                        f"{parentName}.{paramName}"
                     ].value
                     mapXVecCompValue2 = self[XRowIdxList[1]][
-                        f"{param.parent}.{param.name}"
+                        f"{parentName}.{paramName}"
                     ].value
                     sweepParamSetFromCali._insertParamByArgs(
                         paramName=paramName,
@@ -1132,15 +1134,15 @@ class CaliParamModel(
                     )
             sweepParamSetByFig[fig] = sweepParamSetFromCali
         return sweepParamSetByFig
-    
+
     # slots & public interface ================================================
     @Slot()
     def updateStatusFromCaliView(self, status: Union[str, Literal[False]]):
         self.caliStatus = status
-        if status != False:
-            if type(status) is int:
+        if type(status) is str:
+            if status[0] == "X":
                 destination = "CALI_X"
-            else:
+            elif status[0] == "Y":
                 destination = "CALI_Y"
             self.plotCaliPtExtractStart.emit(destination)
         else:
@@ -1185,7 +1187,7 @@ class CaliParamModel(
         # based on the current label, we know the row index to store the data
         # store the calibration data
         # if the current label is int, then it is for X
-        if caliLabel is not False:
+        if type(caliLabel) is str:
             if caliLabel[0] == "X":
                 for rawXVecCompName in self.rawXVecNameList:
                     # this contains updatebox
@@ -1239,7 +1241,47 @@ class CaliParamModel(
         **kwargs,
     ):
         super()._storeParamAttr(self, paramAttr, **kwargs)
-    
+
+    def swapXY(self):
+        self.rawYName, self.rawXVecNameList = self.rawXVecNameList[0], [self.rawYName]
+        self.insertParamToSet()
+        self._updateXRowIdxBySourceDict()
+
+        # parametersCopy: Dict[str, Dict[str, CaliTableRowParam]] = deepcopy(
+        #     self.parameters
+        # )
+        # sweepParamParentName = list(self.sweepParamSet.keys())[0]
+        # sweepParamName = list(self.sweepParamSet[sweepParamParentName].keys())[0]
+        # mappedXName = f"{sweepParamParentName}.{sweepParamName}"
+        # for Idx in range(2):
+        #     # first round: use setParameter to swap the raw and mapped vector values
+        #     self.setParameter(
+        #         rowIdx=f"X{Idx}",
+        #         colName=self.rawXVecNameList[0],
+        #         attr="value",
+        #         value=parametersCopy[f"Y{Idx}"][self.rawYName].value,
+        #     )
+        #     self.setParameter(
+        #         rowIdx=f"X{Idx}",
+        #         colName=mappedXName,
+        #         attr="value",
+        #         value=parametersCopy[f"Y{Idx}"]["mappedY"].value,
+        #     )
+        #     self.setParameter(
+        #         rowIdx=f"Y{Idx}",
+        #         colName=self.rawYName,
+        #         attr="value",
+        #         value=parametersCopy[f"X{Idx}"][self.rawXVecNameList[0]].value,
+        #     )
+        #     self.setParameter(
+        #         rowIdx=f"Y{Idx}",
+        #         colName="mappedY",
+        #         attr="value",
+        #         value=parametersCopy[f"X{Idx}"][mappedXName].value,
+        #     )
+
+        self.caliModelFinishedSwapXY.emit()
+
     # signals ==========================================================
     def emitUpdateBox(
         self,

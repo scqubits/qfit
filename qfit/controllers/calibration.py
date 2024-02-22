@@ -71,7 +71,6 @@ class CalibrationCtrl(QObject):
             sweepParamSet=HSParamSet.sweepSetByHS(hilbertspace),
         )
 
-
     def uiCalibrationConnects(self):
         """
         Connect UI elements for data calibration.
@@ -108,6 +107,7 @@ class CalibrationCtrl(QObject):
             self.calibrationView.uncheckAllCaliButtons
         )
 
-        # self.ui.swapXYButton.clicked.connect(self.swapXY)
-
-        # self.calibrationData.caliClicked.connect(self.postCaliPointSelectedOnCanvas)
+        # calibration model --> calibration view (update table signal when XY is swapped)
+        self.caliParamModel.caliModelFinishedSwapXY.connect(
+            self.calibrationView.swapXYAfterModelChanges
+        )

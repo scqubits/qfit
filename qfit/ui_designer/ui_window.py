@@ -1682,6 +1682,9 @@ class Ui_MainWindow(object):
 "QPushButton:pressed {\n"
 "    background-color: #363636;\n"
 "    icon: url(:/icons/svg/target-pressed.svg)\n"
+"}\n"
+"QPushButton:checked{\n"
+"	background-color: rgb(196, 150, 250);\n"
 "}")
         self.gridLayout_10 = QGridLayout(self.calibrateXGridFrame)
         self.gridLayout_10.setObjectName(u"gridLayout_10")
@@ -1890,6 +1893,9 @@ class Ui_MainWindow(object):
 "QPushButton:pressed {\n"
 "    background-color: #363636;\n"
 "    icon: url(:/icons/svg/target-pressed.svg)\n"
+"}\n"
+"QPushButton:checked{\n"
+"	background-color: rgb(196, 150, 250);\n"
 "}")
         self.gridLayout_11 = QGridLayout(self.calibrateYGridFrame)
         self.gridLayout_11.setObjectName(u"gridLayout_11")
