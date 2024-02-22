@@ -75,7 +75,7 @@ class PlottingCtrl(QObject):
             self.pageView,
         ) = views
         self.mplCanvas = mplCanvas
-        self.axes = mplCanvas.axes()
+        self.axes = mplCanvas.axes
         self._staticInit()
 
     def _staticInit(self):
@@ -402,7 +402,7 @@ class PlottingCtrl(QObject):
 
             # x snap
             if self.xSnap:
-                snappedX = self.mplCanvas.cursor.closest_line(event.xdata)
+                snappedX = self.mplCanvas.specialCursor.closest_line(event.xdata)
                 rawX = self.measurementData.currentMeasData.rawXByCurrentX(snappedX)
                 xyDict[xName] = snappedX
             else:

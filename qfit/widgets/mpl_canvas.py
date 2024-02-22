@@ -253,6 +253,10 @@ class SpecialCursor(Cursor):
             point_y_coordinate = self.xyMin[1]
         else:
             point_y_coordinate = event.ydata
+
+        # remove the old cursor
+        if hasattr(self, 'cross'):
+            self.cross.remove()
         
         # Draw the cursor (a scatter plot) at the calculated coordinates
         self.cross = self.ax.scatter(
@@ -304,10 +308,16 @@ class SpecialCursor(Cursor):
     def line_blit_off(self):
         self.line_blit = False
 
+    def remove(self):
+        self.linev.remove()
+        self.lineh.remove()
+        if hasattr(self, 'cross'):
+            self.cross.remove()
+
 
 class MplFigureCanvas(QFrame):
 
-    cursor: SpecialCursor
+    specialCursor: SpecialCursor
 
     def __init__(self, parent=None):
         QFrame.__init__(self, parent)
@@ -328,7 +338,7 @@ class MplFigureCanvas(QFrame):
 
     def initializeProperties(self):
         self.canvas.figure.subplots()
-        self.axes().autoscale(enable=False)
+        self.axes.autoscale(enable=False)
 
         self.plottingDisabled: bool = False
 
@@ -347,6 +357,7 @@ class MplFigureCanvas(QFrame):
         # coloring
 
     # Properties =======================================================
+    @property
     def axes(self):
         return self.canvas.figure.axes[0]
     
@@ -373,8 +384,8 @@ class MplFigureCanvas(QFrame):
             when the measurement data is loaded / transposed
         2. the view's x and y limits are zoomed/panned/reset externally
         """
-        self.xlim = self.axes().get_xlim()
-        self.ylim = self.axes().get_ylim()
+        self.xlim = self.axes.get_xlim()
+        self.ylim = self.axes.get_ylim()
 
     def _keepXYLim(self):
         """
@@ -382,8 +393,8 @@ class MplFigureCanvas(QFrame):
         It will be called when the plot elements are updated and the x and y limits
         are automatically changed by matplotlib.
         """
-        self.axes().set_xlim(self.xlim)
-        self.axes().set_ylim(self.ylim)
+        self.axes.set_xlim(self.xlim)
+        self.axes.set_ylim(self.ylim)
 
     # View Manipulation: Cursor ========================================
     def updateCursor(
@@ -418,11 +429,15 @@ class MplFigureCanvas(QFrame):
             self.crosshairVertOn = vertOn
         self.axisSnapMode = axisSnapMode
 
-        self.cursor = SpecialCursor(
-            self.axes(),
+        # remove the old cursor
+        if hasattr(self, "specialCursor"):
+            self.specialCursor.remove()
+
+        self.specialCursor = SpecialCursor(
+            self.axes,
             xSnapMode = self.xSnapMode,
             xSnapValues = self.cursorXSnapValues,
-            xyMin = (self.axes().get_xlim()[0], self.axes().get_ylim()[0]),
+            xyMin = (self.axes.get_xlim()[0], self.axes.get_ylim()[0]),
             axisSnapMode = self.axisSnapMode,
             useblit = True,
             horizOn = self.crosshairHorizOn,
@@ -431,7 +446,7 @@ class MplFigureCanvas(QFrame):
             alpha = 0.5,
         )
         self.canvas.draw()
-        self.cursor.line_blit_on()
+        self.specialCursor.line_blit_on()
 
     def zoomOn(self):
         self.toolbar.setZoomMode(
@@ -533,8 +548,8 @@ class MplFigureCanvas(QFrame):
             # measurement data not loaded
             return 
         
-        self.axes().set_xlim(self._plottingElements["measurement"].xLim)
-        self.axes().set_ylim(self._plottingElements["measurement"].yLim)
+        self.axes.set_xlim(self._plottingElements["measurement"].xLim)
+        self.axes.set_ylim(self._plottingElements["measurement"].yLim)
         self._recordXYLim()
 
     # manipulate plotting elements        
@@ -565,7 +580,7 @@ class MplFigureCanvas(QFrame):
             self._setVisible("all_extractions", True)
             self._setVisible("spectrum", True)
 
-        self.plotAllElements()
+        self.canvas.draw()
         
     def _plotElement(
         self, 
@@ -583,7 +598,7 @@ class MplFigureCanvas(QFrame):
             element = self._plottingElements[element]
 
         element.canvasPlot(
-            self.axes(), 
+            self.axes, 
             **self._coloringKwargs(element.name),
             **kwargs
         )
