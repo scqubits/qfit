@@ -55,6 +55,7 @@ class ListView(QListView):
 
     def setModel(self, model):
         result = super().setModel(model)
+        self.setCurrentIndex(model.index(0, 0))
         # self.setCurrentToLast()
         return result
 

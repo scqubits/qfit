@@ -380,6 +380,7 @@ class PlottingCtrl(QObject):
         if event.xdata is None or event.ydata is None:
             return
 
+        # process the data
         xName = self.measurementData.currentMeasData.currentX.name
         yName = self.measurementData.currentMeasData.currentY.name
         xyDict = OrderedDictMod(
@@ -387,19 +388,15 @@ class PlottingCtrl(QObject):
                 xName: event.xdata,
                 yName: event.ydata,
             }
-        )
+        )  # needed by extracted data
         rawX = self.measurementData.currentMeasData.rawXByCurrentX(event.xdata)
+        rawXYDict = rawX | xyDict  # needed by calibration data
 
         # calibration mode
         if self.dataDestination in ["CALI_X", "CALI_Y"]:
-            if self.dataDestination[-1] == "X":
-                data = rawX
-            else:
-                data = {self.measurementData.currentMeasData.currentY.name: event.ydata}
-
             # model: update the calibration data
             self.calibrationModel.processSelectedPtFromPlot(
-                data=data, figName=self.measurementData.currentMeasData.name
+                data=rawXYDict, figName=self.measurementData.currentMeasData.name
             )
 
             # the above will then trigger the update the view:
