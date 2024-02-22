@@ -651,10 +651,10 @@ class DispParamBase(ParamBase):
         else:
             return f"{value:.{precision}f}".rstrip("0").rstrip(".")
 
-    def exportAttr(self, *args, **kwargs):
+    def exportAttr(self, *args, **kwargs) -> Any:
         pass
 
-    def storeAttr(self, *args, **kwargs):
+    def storeAttr(self, attr: str, value: Any, *args, **kwargs):
         pass
 
 

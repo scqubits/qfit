@@ -82,8 +82,8 @@ from qfit.models.data_structures import QMSliderParam, QMSweepParam
 from qfit.models.quantum_model_parameters import (
     ParamSet,
     HSParamSet,
-    PrefitParamModel,
 )
+from qfit.models.prefit import PrefitParamModel, PrefitCaliModel
 from qfit.models.numerical_model import QuantumModel
 
 # fit
@@ -427,7 +427,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.quantumModel = QuantumModel()
 
-        self.prefitParamModel = PrefitParamModel(QMSliderParam)
+        self.prefitParamModel = PrefitParamModel()
+        self.prefitCaliModel = PrefitCaliModel()
         self.prefitParamView = PrefitParamView(
             self.ui.prefitScrollAreaWidget,
             self.ui.prefitMinmaxScrollAreaWidget,
@@ -439,6 +440,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.prefitResult = StatusModel()
         self.prefitStaticElementsBuild()
+
+    def prefitStaticElementsBuild(self):
+        self.quantumModelConnects()
+        self.prefitButtonConnects()
+        self.prefitSliderParamConnects()
 
     def prefitDynamicalElementsBuild(
         self, 
@@ -458,6 +464,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             hilbertspace, [data.name for data in measurementData]
         )
 
+        # update everything in the view
+        self.prefitParamModel.emitUpdateBox()
+        self.prefitParamModel.emitUpdateSlider()
+
         # update everything in the quantumModel
         self.quantumModel.disableSweep = True    # disable the auto sweep
         self.prefitParamModel.emitHSUpdated()
@@ -466,25 +476,18 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.caliParamModel.sendYCaliFunc()
         self.prefitView.emitAllOptions()    # auto run sync to the view
         self.quantumModel.disableSweep = False
-        
-    def prefitStaticElementsBuild(self):
-        self.quantumModelConnects()
-        self.prefitButtonConnects()
-        self.prefitSliderParamConnects()
 
     def prefitBuildParamSet(self, hilbertspace: HilbertSpace):
         """
         Should belong to PREFIT PARAMETER CONTROLLER
 
-        Model init: identify sweep parameters
-
-        sweepParameterSet -init-> sliderParameterSet
+        identify prefit slider parameters
         """
 
         # check how many sweep parameters are found and create sliders
         # for the remaining parameters
         sweepParameterSet = HSParamSet.sweepSetByHS(hilbertspace)
-        param_types: set["ParameterType"] = set(sweepParameterSet.exportAttrDict("paramType").values())
+        param_types: set["ParameterType"] = set(sweepParameterSet.getAttrDict("paramType").values())
 
         if len(sweepParameterSet) == 0:
             print(
@@ -521,6 +524,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             )
             self.close()
 
+        # initialize calibration sliders
+        self.prefitCaliModel.setAttrByParamDict(
+            self.caliParamModel.prefitParams(),
+            insertMissing=True,
+        )
+            
     def prefitViewInsertParams(self):
         """
         THIS METHOS BELONGS TO THE PREFIT PARAMETER CONTROLLER
@@ -534,8 +543,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # initialize the sliders, boxes and minmax
         paramNamesDict = self.prefitParamModel.paramNamesDict()
         self.prefitParamView.insertSliderMinMax(paramNamesDict, removeExisting=True)
-        self.prefitParamModel.emitUpdateBox()
-        self.prefitParamModel.emitUpdateSlider()
+        
 
     def prefitSliderParamConnects(self):
         """
@@ -632,33 +640,33 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         Load the initial value, min, and max from the source parameter set
         """
         if source == "prefit":
-            init_value_dict = self.prefitParamModel.exportAttrDict("value")
+            init_value_dict = self.prefitParamModel.getAttrDict("value")
         elif source == "fit":
-            init_value_dict = self.fitParamModel.exportAttrDict("value")
+            init_value_dict = self.fitParamModel.getAttrDict("value")
 
-        self.fitParamModel.loadAttrDict(init_value_dict, "initValue")
-        self.fitParamModel.loadAttrDict(init_value_dict, "value")
+        self.fitParamModel.setAttrByAttrDict(init_value_dict, "initValue")
+        self.fitParamModel.setAttrByAttrDict(init_value_dict, "value")
         max_value_dict = {
             key: (value * 1.2 if value > 0 else value * 0.8)
             for key, value in init_value_dict.items()
         }
-        self.fitParamModel.loadAttrDict(max_value_dict, "max")
+        self.fitParamModel.setAttrByAttrDict(max_value_dict, "max")
         min_value_dict = {
             key: (value * 0.8 if value > 0 else value * 1.2)
             for key, value in init_value_dict.items()
         }
-        self.fitParamModel.loadAttrDict(min_value_dict, "min")
+        self.fitParamModel.setAttrByAttrDict(min_value_dict, "min")
 
     @Slot()
     def prefitParamLoad(self):
-        value_dict = self.fitParamModel.exportAttrDict("value")
-        self.prefitParamModel.loadAttrDict(value_dict, "value")
+        value_dict = self.fitParamModel.getAttrDict("value")
+        self.prefitParamModel.setAttrByAttrDict(value_dict, "value")
 
     def _costFunction(self, paramDict: Dict[str, float]) -> float:
         """
         Cook up a cost function for the optimization
         """
-        self.fitParamModel.loadAttrDict(paramDict, "value")
+        self.fitParamModel.setAttrByAttrDict(paramDict, "value")
         for params in self.fitParamModel.values():
             for p in params.values():
                 p.setParameterForParent()
