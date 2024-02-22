@@ -770,7 +770,7 @@ class CaliParamModel(
         rawYName: str,
         figName: List[str],
     ):
-        self._hilbertSpace = hilbertSpace
+        self.hilbertSpace = hilbertSpace
         self.rawXVecNameList = rawXVecNameList
         self.rawYName = rawYName
         self.figName = figName
@@ -1008,10 +1008,13 @@ class CaliParamModel(
         """
         # gather all the point pair rawVec and construct the augmented rawMat
         augRawXMat = np.zeros((self.caliTableXRowNr, self.rawXVecDim + 1))
-        for XRowIdx in self.caliTableXRowIdxList:
+        for XRowIdxName in self.caliTableXRowIdxList:
+            XRowIdx = int(XRowIdxName[1:])
             augRawXMat[XRowIdx, 0] = 1
             for colIdx, rawXVecCompName in enumerate(self.rawXVecNameList):
-                augRawXMat[XRowIdx, colIdx + 1] = self[XRowIdx][rawXVecCompName].value
+                augRawXMat[XRowIdx, colIdx + 1] = self[XRowIdxName][
+                    rawXVecCompName
+                ].value
         # loop over sweep parameters
         # assemble sweep parameter set, add sweep parameters to the parameter set
 
@@ -1029,8 +1032,9 @@ class CaliParamModel(
                 )
                 # gather all the point pair mapVec and solve alphaVec by inversion
                 mapCompVec = np.zeros(self.caliTableXRowNr)
-                for XRowIdx in self.caliTableXRowIdxList:
-                    mapCompVec[XRowIdx] = self[XRowIdx][
+                for XRowIdxName in self.caliTableXRowIdxList:
+                    XRowIdx = int(XRowIdxName[1:])
+                    mapCompVec[XRowIdx] = self[XRowIdxName][
                         f"{parentName}.{paramName}"
                     ].value
                 alphaVec = np.linalg.solve(augRawXMat, mapCompVec)
