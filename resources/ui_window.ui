@@ -3640,8 +3640,8 @@ QPushButton: pressed{
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>441</width>
-                   <height>556</height>
+                   <width>71</width>
+                   <height>16</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -3733,7 +3733,7 @@ border-bottom-right-radius: 6px;	</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>446</width>
+                   <width>76</width>
                    <height>60</height>
                   </rect>
                  </property>
@@ -5690,7 +5690,7 @@ QPushButton:checked {
             <widget class="QPushButton" name="calibratedCheckBox">
              <property name="geometry">
               <rect>
-               <x>390</x>
+               <x>520</x>
                <y>10</y>
                <width>200</width>
                <height>40</height>

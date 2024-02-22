@@ -65,6 +65,17 @@ from qfit.settings import color_dict
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
 
+from qfit.widgets.settings import (
+    FitSettingsWidget,
+    VisualSettingsWidget,
+    NumericalSpectrumSettingsWidget,
+)
+from qfit.ui_designer.settings_fit import Ui_fitSettingsWidget
+from qfit.ui_designer.settings_numerical_spectrum import (
+    Ui_numericalSpectrumSettingsWidget,
+)
+from qfit.ui_designer.settings_visual import Ui_visualSettingsWidget
+
 # extract
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.controllers.tagging import TaggingCtrl
@@ -162,6 +173,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # self.ui.filterQFrame.setVisible(False)
 
         self.ui_menu = MenuWidget(parent=self)
+        self.ui_settings_fit = FitSettingsWidget(parent=self)
+        self.ui_settings_numerical_spectrum = NumericalSpectrumSettingsWidget(
+            parent=self
+        )
+        self.ui_settings_visual = VisualSettingsWidget(parent=self)
 
         self.setShadows()
         self.ui.verticalSnapButton.setAutoExclusive(False)
@@ -246,7 +262,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "photons": self.ui.phNumberDressedSpinBox,
         }
 
-        return 
+        return
 
     # help button and gif tooltip ######################################
     ####################################################################
@@ -254,9 +270,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.helpButtons = {
             "calibration": self.ui.calibrationHelpPushButton,
             "fit": self.ui.fitHelpPushButton,
-            "fitResult": self.ui.fitResultHelpPushButton,
-            "prefitResult": self.ui.prefitResultHelpPushButton,
-            "numericalSpectrumSettings": self.ui.numericalSpectrumSettingsHelpPushButton,
+            "fitResult": self.ui_settings_fit.ui.fitResultHelpPushButton,
+            "prefitResult": self.ui_settings_numerical_spectrum.ui.prefitResultHelpPushButton,
+            "numericalSpectrumSettings": self.ui_settings_numerical_spectrum.ui.numericalSpectrumSettingsHelpPushButton,
         }
         self.helpButtonCtrl = HelpButtonCtrl(self.helpButtons)
 
@@ -375,17 +391,17 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     def setupUIPlotOptions(self):
         self.dataCheckBoxCallbacks = {
-            "topHatFilter": self.ui.topHatCheckBox.isChecked,
-            "waveletFilter": self.ui.waveletCheckBox.isChecked,
-            "edgeFilter": self.ui.edgeFilterCheckBox.isChecked,
-            "bgndSubtractX": self.ui.bgndSubtractXCheckBox.isChecked,
-            "bgndSubtractY": self.ui.bgndSubtractYCheckBox.isChecked,
-            "logColoring": self.ui.logScaleCheckBox.isChecked,
+            "topHatFilter": self.ui_settings_visual.ui.topHatCheckBox.isChecked,
+            "waveletFilter": self.ui_settings_visual.ui.waveletCheckBox.isChecked,
+            "edgeFilter": self.ui_settings_visual.ui.edgeFilterCheckBox.isChecked,
+            "bgndSubtractX": self.ui_settings_visual.ui.bgndSubtractXCheckBox.isChecked,
+            "bgndSubtractY": self.ui_settings_visual.ui.bgndSubtractYCheckBox.isChecked,
+            "logColoring": self.ui_settings_visual.ui.logScaleCheckBox.isChecked,
         }
 
     def plotRangeCallback(self):
-        val1 = self.ui.rangeSliderMin.value() / 100.0
-        val2 = self.ui.rangeSliderMax.value() / 100.0
+        val1 = self.ui_settings_visual.ui.rangeSliderMin.value() / 100.0
+        val2 = self.ui_settings_visual.ui.rangeSliderMax.value() / 100.0
         min_val = min(val1, val2)
         max_val = max(val1, val2)
         return [min_val, max_val]
@@ -417,9 +433,13 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def _switchToPage(self, page: int):
         # update MSE when switching between fit / pre-fit page
         if self.ui.pagesStackedWidget.currentIndex() == 2 and page == 3:
-            self.ui.mseLabel_2.setText(self.ui.mseLabel.text())
+            self.ui_settings_fit.ui.mseLabel_2.setText(
+                self.ui_settings_numerical_spectrum.ui.mseLabel.text()
+            )
         elif self.ui.pagesStackedWidget.currentIndex() == 3 and page == 2:
-            self.ui.mseLabel.setText(self.ui.mseLabel_2.text())
+            self.ui_settings_numerical_spectrum.ui.mseLabel.setText(
+                self.ui_settings_fit.ui.mseLabel_2.text()
+            )
 
         # switch to the desired page
         self.ui.pagesStackedWidget.setCurrentIndex(page)
@@ -444,23 +464,41 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     def uiMeasurementDataOptionsConnects(self):
         """Connect the UI elements related to display of data"""
-        self.ui.topHatCheckBox.toggled.connect(lambda x: self.updatePlot())
-        self.ui.waveletCheckBox.toggled.connect(lambda x: self.updatePlot())
-        self.ui.edgeFilterCheckBox.toggled.connect(lambda x: self.updatePlot())
-        self.ui.bgndSubtractXCheckBox.toggled.connect(lambda x: self.updatePlot())
-        self.ui.bgndSubtractYCheckBox.toggled.connect(lambda x: self.updatePlot())
+        self.ui_settings_visual.ui.topHatCheckBox.toggled.connect(
+            lambda x: self.updatePlot()
+        )
+        self.ui_settings_visual.ui.waveletCheckBox.toggled.connect(
+            lambda x: self.updatePlot()
+        )
+        self.ui_settings_visual.ui.edgeFilterCheckBox.toggled.connect(
+            lambda x: self.updatePlot()
+        )
+        self.ui_settings_visual.ui.bgndSubtractXCheckBox.toggled.connect(
+            lambda x: self.updatePlot()
+        )
+        self.ui_settings_visual.ui.bgndSubtractYCheckBox.toggled.connect(
+            lambda x: self.updatePlot()
+        )
 
     def uiColorScaleConnects(self):
         """Connect the color scale related UI elements."""
         # Toggling the loc scale check box prompts replotting.
-        self.ui.logScaleCheckBox.toggled.connect(lambda x: self.updatePlot())
+        self.ui_settings_visual.ui.logScaleCheckBox.toggled.connect(
+            lambda x: self.updatePlot()
+        )
 
         # Changes in the color map dropdown menu prompt replotting.
-        self.ui.colorComboBox.activated.connect(lambda x: self.updatePlot())
+        self.ui_settings_visual.ui.colorComboBox.activated.connect(
+            lambda x: self.updatePlot()
+        )
 
         # Ensure that a change in the range slider positions cause an update of the plot.
-        self.ui.rangeSliderMin.valueChanged.connect(lambda x: self.updatePlot())
-        self.ui.rangeSliderMax.valueChanged.connect(lambda x: self.updatePlot())
+        self.ui_settings_visual.ui.rangeSliderMin.valueChanged.connect(
+            lambda x: self.updatePlot()
+        )
+        self.ui_settings_visual.ui.rangeSliderMax.valueChanged.connect(
+            lambda x: self.updatePlot()
+        )
 
     def uiCalibrationConnects(self):
         """Connect UI elements for data calibration."""
@@ -700,7 +738,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.axes.clear()
 
         # Set the matplotlib colormap according to the selection in the dropdown menu.
-        colorStr = self.ui.colorComboBox.currentText()
+        colorStr = self.ui_settings_visual.ui.colorComboBox.currentText()
         cross_color = color_dict[colorStr]["Cross"]
         line_color = color_dict[colorStr]["line"]
         scatter_color = color_dict[colorStr]["Scatter"]
@@ -908,11 +946,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.allDatasets.swapXY()
         self.allDatasets.layoutChanged.emit()
 
-        xBgndSub = self.ui.bgndSubtractXCheckBox.checkState()
-        yBgndSub = self.ui.bgndSubtractYCheckBox.checkState()
+        xBgndSub = self.ui_settings_visual.ui.bgndSubtractXCheckBox.checkState()
+        yBgndSub = self.ui_settings_visual.ui.bgndSubtractYCheckBox.checkState()
 
-        self.ui.bgndSubtractXCheckBox.setCheckState(yBgndSub)
-        self.ui.bgndSubtractYCheckBox.setCheckState(xBgndSub)
+        self.ui_settings_visual.ui.bgndSubtractXCheckBox.setCheckState(yBgndSub)
+        self.ui_settings_visual.ui.bgndSubtractYCheckBox.setCheckState(xBgndSub)
 
         rawx1 = self.rawLineEdits["X1"].value()
         rawx2 = self.rawLineEdits["X2"].value()
@@ -955,7 +993,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         all_x_list = self.allDatasets.distinctSortedXValues()
         allxdiff = {np.abs(xdat - i): i for i in all_x_list}
         return allxdiff[min(allxdiff.keys())]
-    
+
     # extract and tag ##################################################
     # ##################################################################
     def initializeExtractedData(self, hilbertspace: HilbertSpace):
@@ -974,7 +1012,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.taggingView = TaggingView(
             hilbertspace.subsystem_count,
-            (self.uiLabelBoxes, self.uiLabelRadioButtons, self.uiBareLabelInputs, self.uiDressedLabelInputs)
+            (
+                self.uiLabelBoxes,
+                self.uiLabelRadioButtons,
+                self.uiBareLabelInputs,
+                self.uiDressedLabelInputs,
+            ),
         )
 
         self.taggingCtrl = TaggingCtrl(
@@ -1028,7 +1071,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.allDatasets.layoutChanged.connect(
             lambda: print("allDatasets.layoutChanged")
         )
-        
+
         # Whenever data sets are added or removed from the ListView, this ensures
         # that the canvas display is updated.
         self.allDatasets.layoutChanged.connect(self.updatePlot)
@@ -1056,7 +1099,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     # @Slot()
     # def _switchDataset
-
 
     # Pre-fit ##########################################################
     # ##################################################################
@@ -1296,18 +1338,20 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         loading the subsystem names to the combo box (drop down menu)
         """
         # clear the existing items and temporarily disable the signal
-        self.ui.subsysComboBox.blockSignals(True)
-        self.ui.subsysComboBox.clear()
+        self.ui_settings_numerical_spectrum.ui.subsysComboBox.blockSignals(True)
+        self.ui_settings_numerical_spectrum.ui.subsysComboBox.clear()
 
         subsys_name_list = [
             QuantumModelParameterSet.parentSystemNames(subsys)
             for subsys in self.quantumModel.hilbertspace.subsystem_list[::-1]
         ]
         for subsys_name in subsys_name_list:
-            self.ui.subsysComboBox.insertItem(0, subsys_name)
+            self.ui_settings_numerical_spectrum.ui.subsysComboBox.insertItem(
+                0, subsys_name
+            )
 
         # enable the signal
-        self.ui.subsysComboBox.blockSignals(False)
+        self.ui_settings_numerical_spectrum.ui.subsysComboBox.blockSignals(False)
 
     def setUpPrefitResultConnects(self):
         """
@@ -1315,14 +1359,20 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         connect the prefit result to the relevant UI textboxes; whenever there is
         a change in the UI, reflect in the UI text change
         """
-        status_type_ui_setter = lambda: self.ui.label_46.setText(
-            self.prefitResult.displayed_status_type
+        status_type_ui_setter = (
+            lambda: self.ui_settings_numerical_spectrum.ui.label_46.setText(
+                self.prefitResult.displayed_status_type
+            )
         )
-        status_text_ui_setter = lambda: self.ui.statusTextLabel.setText(
-            self.prefitResult.status_text
+        status_text_ui_setter = (
+            lambda: self.ui_settings_numerical_spectrum.ui.statusTextLabel.setText(
+                self.prefitResult.status_text
+            )
         )
-        mse_change_ui_setter = lambda: self.ui.mseLabel.setText(
-            self.prefitResult.displayed_MSE
+        mse_change_ui_setter = (
+            lambda: self.ui_settings_numerical_spectrum.ui.mseLabel.setText(
+                self.prefitResult.displayed_MSE
+            )
         )
 
         self.prefitResult.setupUISetters(
@@ -1339,11 +1389,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         # connect the prefit options to the controller
         self.quantumModel.setupPlotUICallbacks(
-            subsystemNameCallback=self.ui.subsysComboBox.currentText,
-            initialStateCallback=self.ui.initStateLineEdit.text,
-            photonsCallback=self.ui.prefitPhotonSpinBox.value,
-            evalsCountCallback=self.ui.evalsCountLineEdit.text,
-            pointsAddCallback=self.ui.pointsAddLineEdit.text,
+            subsystemNameCallback=self.ui_settings_numerical_spectrum.ui.subsysComboBox.currentText,
+            initialStateCallback=self.ui_settings_numerical_spectrum.ui.initStateLineEdit.text,
+            photonsCallback=self.ui_settings_numerical_spectrum.ui.prefitPhotonSpinBox.value,
+            evalsCountCallback=self.ui_settings_numerical_spectrum.ui.evalsCountLineEdit.text,
+            pointsAddCallback=self.ui_settings_numerical_spectrum.ui.pointsAddLineEdit.text,
         )
 
     def prefitConnects(self):
@@ -1362,24 +1412,33 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
 
         # set line edit property:
-        self.ui.initStateLineEdit.setTupleLength(
+        self.ui_settings_numerical_spectrum.ui.initStateLineEdit.setTupleLength(
             self.quantumModel.hilbertspace.subsystem_count
         )
 
         # when change those numbers, update the spectrum data using the
         # existing sweep
-        self.ui.subsysComboBox.currentIndexChanged.connect(self.onPrefitPlotClicked)
-        self.ui.initStateLineEdit.editingFinished.connect(self.onPrefitPlotClicked)
-        self.ui.prefitPhotonSpinBox.valueChanged.connect(
-            lambda: print("current photons: ", self.ui.prefitPhotonSpinBox.value())
+        self.ui_settings_numerical_spectrum.ui.subsysComboBox.currentIndexChanged.connect(
+            self.onPrefitPlotClicked
         )
-        self.ui.prefitPhotonSpinBox.valueChanged.connect(self.onPrefitPlotClicked)
+        self.ui_settings_numerical_spectrum.ui.initStateLineEdit.editingFinished.connect(
+            self.onPrefitPlotClicked
+        )
+        self.ui_settings_numerical_spectrum.ui.prefitPhotonSpinBox.valueChanged.connect(
+            lambda: print(
+                "current photons: ",
+                self.ui_settings_numerical_spectrum.ui.prefitPhotonSpinBox.value(),
+            )
+        )
+        self.ui_settings_numerical_spectrum.ui.prefitPhotonSpinBox.valueChanged.connect(
+            self.onPrefitPlotClicked
+        )
 
         # when change those numbers, update the sweep and then update the spectrum
-        self.ui.evalsCountLineEdit.editingFinished.connect(
+        self.ui_settings_numerical_spectrum.ui.evalsCountLineEdit.editingFinished.connect(
             lambda: self.onParameterChange(self.sliderParameterSet)
         )
-        self.ui.pointsAddLineEdit.editingFinished.connect(
+        self.ui_settings_numerical_spectrum.ui.pointsAddLineEdit.editingFinished.connect(
             lambda: self.onParameterChange(self.sliderParameterSet)
         )
 
@@ -1433,8 +1492,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     def setupFitConnects(self):
         self.numericalFitting.setupUICallbacks(
-            self.ui.optimizerComboBox.currentText,
-            self.ui.tolLineEdit.text,
+            self.ui_settings_fit.ui.optimizerComboBox.currentText,
+            self.ui_settings_fit.ui.tolLineEdit.text,
         )
 
     def fitTableInserts(self):
@@ -1619,13 +1678,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         connect the prefit result to the relevant UI textboxes;
         whenever there is a change in the UI, reflect in the UI text change
         """
-        status_type_ui_setter = lambda: self.ui.label_49.setText(
+        status_type_ui_setter = lambda: self.ui_settings_fit.ui.label_49.setText(
             self.fitResult.displayed_status_type
         )
-        status_text_ui_setter = lambda: self.ui.statusTextLabel_2.setText(
-            self.fitResult.status_text
+        status_text_ui_setter = (
+            lambda: self.ui_settings_fit.ui.statusTextLabel_2.setText(
+                self.fitResult.status_text
+            )
         )
-        mse_change_ui_setter = lambda: self.ui.mseLabel_2.setText(
+        mse_change_ui_setter = lambda: self.ui_settings_fit.ui.mseLabel_2.setText(
             self.fitResult.displayed_MSE
         )
 
