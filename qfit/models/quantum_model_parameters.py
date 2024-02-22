@@ -698,8 +698,8 @@ class CaliParamModel(
     plotCaliPtExtractStart = Signal(str)
     plotCaliPtExtractFinished = Signal(str, dict)
     plotCaliPtExtractInterrupted = Signal()
-    issueNewXCaliFunc = Signal(object)
-    issueNewYCaliFunc = Signal(object)
+    issueNewXCaliFunc = Signal(Dict[str, HSParamSet])
+    issueNewYCaliFunc = Signal(Dict[str, HSParamSet])
     issueNewInvYCaliFunc = Signal(object)
     caliModelFinishedSwapXY = Signal()
     # calibrationIsOn: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2", False]
@@ -1008,16 +1008,15 @@ class CaliParamModel(
         """
         # gather all the point pair rawVec and construct the augmented rawMat
         augRawXMat = np.zeros((self.caliTableXRowNr, self.rawXVecDim + 1))
-        for XRowIdx in self.caliTableXRowIdxList:
+        for XRowIdx, xRowName in enumerate(self.caliTableXRowIdxList):
+
             augRawXMat[XRowIdx, 0] = 1
             for colIdx, rawXVecCompName in enumerate(self.rawXVecNameList):
-                augRawXMat[XRowIdx, colIdx + 1] = self[XRowIdx][rawXVecCompName].value
+                augRawXMat[XRowIdx, colIdx + 1] = self[xRowName][rawXVecCompName].value
         # loop over sweep parameters
         # assemble sweep parameter set, add sweep parameters to the parameter set
 
-        sweepParamSetFromCali = HSParamSet[QMSweepParam](
-            self.hilbertSpace, QMSweepParam
-        )
+        sweepParamSetFromCali = HSParamSet[QMSweepParam](QMSweepParam)
         for parentName, paramDictByParent in self.sweepParamSet.items():
             for paramName, param in paramDictByParent.items():
                 sweepParamSetFromCali._insertParamByArgs(
@@ -1029,8 +1028,8 @@ class CaliParamModel(
                 )
                 # gather all the point pair mapVec and solve alphaVec by inversion
                 mapCompVec = np.zeros(self.caliTableXRowNr)
-                for XRowIdx in self.caliTableXRowIdxList:
-                    mapCompVec[XRowIdx] = self[XRowIdx][
+                for XRowIdx, xRowName in enumerate(self.caliTableXRowIdxList):
+                    mapCompVec[XRowIdx] = self[xRowName][
                         f"{parentName}.{paramName}"
                     ].value
                 alphaVec = np.linalg.solve(augRawXMat, mapCompVec)
@@ -1086,9 +1085,7 @@ class CaliParamModel(
                 key=lambda k: abs(rawXVecPairValues[k][0] - rawXVecPairValues[k][1]),
             )
             # assemble sweep parameter set, add sweep parameters to the parameter set
-            sweepParamSetFromCali = HSParamSet[QMSweepParam](
-                self.hilbertSpace, QMSweepParam
-            )
+            sweepParamSetFromCali = HSParamSet[QMSweepParam](QMSweepParam)
             for parentName, paramDictByParent in self.sweepParamSet.items():
                 for paramName, param in paramDictByParent.items():
                     # extract mapped vector pair values
@@ -1296,9 +1293,9 @@ class CaliParamModel(
         The function that updates the calibration function.
         """
         if self.isFullCalibration:
-            self.issueNewXCaliFunc.emit(self._fullXCalibration)
+            self.issueNewXCaliFunc.emit(self._fullXCalibration())
         else:
-            self.issueNewXCaliFunc.emit(self._partialXCalibration)
+            self.issueNewXCaliFunc.emit(self._partialXCalibration())
 
     def sendYCaliFunc(self):
         """
