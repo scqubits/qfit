@@ -1301,10 +1301,10 @@ class CaliParamModel(
         """
         The function that updates the calibration function.
         """
-        self.issueNewYCaliFunc.emit(self._YCalibration)
+        self.issueNewYCaliFunc.emit(self._YCalibration())
 
     def sendInvYCaliFunc(self):
         """
         The function that updates the calibration function.
         """
-        self.issueNewInvYCaliFunc.emit(self._invYCalibration)
+        self.issueNewInvYCaliFunc.emit(self._invYCalibration())
