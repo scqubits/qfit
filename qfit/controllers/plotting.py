@@ -207,6 +207,8 @@ class PlottingCtrl(QObject):
 
         self.allDatasets.swapXY()
 
+        self.calibrationModel.swapXY()
+
         xBgndSub = self.measPlotSettings["bgndX"].checkState()
         yBgndSub = self.measPlotSettings["bgndY"].checkState()
 

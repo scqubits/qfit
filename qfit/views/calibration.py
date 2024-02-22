@@ -56,6 +56,7 @@ class CalibrationView(QObject):
         self.rawLineEdits = rawLineEdits
         self.mapLineEdits = mapLineEdits
         self.calibrationButtons = calibrationButtons
+        self.caliTableSet = {}
         self._previousCheckedButtonIdx = None
 
     def dynamicalInit(
@@ -65,7 +66,6 @@ class CalibrationView(QObject):
         caliTableXRowNr: int,
         sweepParamSet: HSParamSet[QMSweepParam],
     ):
-        print("dynamical init called for calibration view")
         self.sweepParamSet = sweepParamSet
         self.caliTableXRowNr = caliTableXRowNr
         self.sweepParamParentName = list(self.sweepParamSet.keys())[0]
@@ -97,6 +97,8 @@ class CalibrationView(QObject):
         self.caliButtonGroup.idClicked.connect(self.onCaliButtonClicked)
 
     def _generateCaliTableSet(self):
+        if self.caliTableSet != {}:
+            self.caliTableSet.clear()
         self.caliTableSet: Dict[str, Dict[str, "CalibrationLineEdit"]] = {
             "X0": {
                 self.rawXVecNameList[0]: self.rawLineEdits["X0"],
@@ -156,8 +158,19 @@ class CalibrationView(QObject):
         """
         for rowIdx in self.caliTableSet:
             for compName, lineEdit in self.caliTableSet[rowIdx].items():
+                # disconnect first if there is any connection
+                try:
+                    lineEdit.editingFinished.disconnect()
+                except RuntimeError:
+                    # if the line edit is not connected to any signal, then it will raise
+                    # a RuntimeError, and we can just pass it.
+                    pass
+                # note: inclusion of lineEdit in the lambda function is necessary, otherwise
+                # the last lineEdit will be used for all the lambda functions
+                # The lambda function in the code doesn't capture the value of rowIdx and
+                # compName at the time it's defined, but rather when it's called.
                 lineEdit.editingFinished.connect(
-                    lambda rowIdx=rowIdx, compName=compName: self.dataEditingFinished.emit(
+                    lambda rowIdx=rowIdx, compName=compName, lineEdit=lineEdit: self.dataEditingFinished.emit(
                         ParamAttr(rowIdx, compName, "value", lineEdit.text())
                     )
                 )
@@ -181,7 +194,6 @@ class CalibrationView(QObject):
         # if the pressed button is the one that is already checked, then temporarily
         # set the exclusive mode off and uncheck the button, then turn on the exclusive
         # mode again
-        print("function called")
         buttonIdx = self.buttonGroupIdToRowIdx[buttonGroupIdx]
         if buttonIdx is self._previousCheckedButtonIdx:
             self.calibrationButtons[buttonIdx].setChecked(False)
@@ -193,7 +205,6 @@ class CalibrationView(QObject):
                 button.setChecked(False)
             self.calibrationButtons[buttonIdx].setChecked(True)
             self._previousCheckedButtonIdx = buttonIdx
-            print(f"{self._previousCheckedButtonIdx}")
             self.caliStatusChangedByButtonClicked.emit(buttonIdx)
 
     @Slot()
@@ -231,6 +242,53 @@ class CalibrationView(QObject):
         self.caliTableSet[rowIdx][colName].setFocus()
         self.uncheckAllCaliButtons()
 
+    @Slot()
+    def swapXYAfterModelChanges(self):
+        """
+        To be phased out in the future; not the best code design
+        """
+        self.rawXVecNameList, self.rawYName = [self.rawYName], self.rawXVecNameList[0]
+        self._generateCaliTableSet()
+        self.setupEditingFinishedSignalEmit()
+        # manually swap the numbers in the line edits and trigger the signal
+        # for line editing finished
+        oldX0RawText = self.caliTableSet["X0"][self.rawXVecNameList[0]].text()
+        oldX1RawText = self.caliTableSet["X1"][self.rawXVecNameList[0]].text()
+        oldX0MapText = self.caliTableSet["X0"][
+            f"{self.sweepParamParentName}.{self.sweepParamName}"
+        ].text()
+        oldX1MapText = self.caliTableSet["X1"][
+            f"{self.sweepParamParentName}.{self.sweepParamName}"
+        ].text()
+        oldY0RawText = self.caliTableSet["Y0"][self.rawYName].text()
+        oldY1RawText = self.caliTableSet["Y1"][self.rawYName].text()
+        oldY0MapText = self.caliTableSet["Y0"]["mappedY"].text()
+        oldY1MapText = self.caliTableSet["Y1"]["mappedY"].text()
+        self.caliTableSet["X0"][self.rawXVecNameList[0]].setText(oldY0RawText)
+        self.caliTableSet["X1"][self.rawXVecNameList[0]].setText(oldY1RawText)
+        self.caliTableSet["X0"][
+            f"{self.sweepParamParentName}.{self.sweepParamName}"
+        ].setText(oldY0MapText)
+        self.caliTableSet["X1"][
+            f"{self.sweepParamParentName}.{self.sweepParamName}"
+        ].setText(oldY1MapText)
+        self.caliTableSet["X0"][self.rawXVecNameList[0]].editingFinished.emit()
+        self.caliTableSet["X1"][self.rawXVecNameList[0]].editingFinished.emit()
+        self.caliTableSet["X0"][
+            f"{self.sweepParamParentName}.{self.sweepParamName}"
+        ].editingFinished.emit()
+        self.caliTableSet["X1"][
+            f"{self.sweepParamParentName}.{self.sweepParamName}"
+        ].editingFinished.emit()
+        self.caliTableSet["Y0"][self.rawYName].setText(oldX0RawText)
+        self.caliTableSet["Y1"][self.rawYName].setText(oldX1RawText)
+        self.caliTableSet["Y0"]["mappedY"].setText(oldX0MapText)
+        self.caliTableSet["Y1"]["mappedY"].setText(oldX1MapText)
+        self.caliTableSet["Y0"][self.rawYName].editingFinished.emit()
+        self.caliTableSet["Y1"][self.rawYName].editingFinished.emit()
+        self.caliTableSet["Y0"]["mappedY"].editingFinished.emit()
+        self.caliTableSet["Y1"]["mappedY"].editingFinished.emit()
+
     #     self.msg = None
 
     # def calibrationErrorMsg(self):
@@ -244,37 +302,6 @@ class CalibrationView(QObject):
     #         self.msg.setWindowTitle("Error")
     #         self.msg.exec_()
     #         self.msg = None
-
-    # obsolete
-    # def calibrationPoints(self):
-    #     rVec1 = (
-    #         self.rawLineEdits["CALI_X1"].value(),
-    #         self.rawLineEdits["CALI_Y1"].value(),
-    #     )
-    #     rVec2 = (
-    #         self.rawLineEdits["CALI_X2"].value(),
-    #         self.rawLineEdits["CALI_Y2"].value(),
-    #     )
-    #     mVec1 = (
-    #         self.mapLineEdits["CALI_X1"].value(),
-    #         self.mapLineEdits["CALI_Y1"].value(),
-    #     )
-    #     mVec2 = (
-    #         self.mapLineEdits["CALI_X2"].value(),
-    #         self.mapLineEdits["CALI_Y2"].value(),
-    #     )
-    #     return rVec1, rVec2, mVec1, mVec2
-
-    # obsolete
-    # def setView(self, rawVec1, rawVec2, mapVec1, mapVec2):
-    #     self.rawLineEdits["CALI_X1"].setText(str(rawVec1[0]))
-    #     self.rawLineEdits["CALI_X2"].setText(str(rawVec2[0]))
-    #     self.rawLineEdits["CALI_Y1"].setText(str(rawVec1[1]))
-    #     self.rawLineEdits["CALI_Y2"].setText(str(rawVec2[1]))
-    #     self.mapLineEdits["CALI_X1"].setText(str(mapVec1[0]))
-    #     self.mapLineEdits["CALI_X2"].setText(str(mapVec2[0]))
-    #     self.mapLineEdits["CALI_Y1"].setText(str(mapVec1[1]))
-    #     self.mapLineEdits["CALI_Y2"].setText(str(mapVec2[1]))
 
 
 class CalibrationLineEdit(FloatLineEdit):

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod, abstractproperty
 import numpy as np
+from copy import deepcopy
 
 from PySide6.QtCore import QObject, Signal, Slot, SignalInstance
 
@@ -700,6 +701,7 @@ class CaliParamModel(
     issueNewXCaliFunc = Signal(object)
     issueNewYCaliFunc = Signal(object)
     issueNewInvYCaliFunc = Signal(object)
+    caliModelFinishedSwapXY = Signal()
     # calibrationIsOn: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2", False]
 
     isFullCalibration: bool
@@ -1029,7 +1031,7 @@ class CaliParamModel(
                 mapCompVec = np.zeros(self.caliTableXRowNr)
                 for XRowIdx in self.caliTableXRowIdxList:
                     mapCompVec[XRowIdx] = self[XRowIdx][
-                        f"{param.parent}.{param.name}"
+                        f"{parentName}.{paramName}"
                     ].value
                 alphaVec = np.linalg.solve(augRawXMat, mapCompVec)
                 # generate the calibration function
@@ -1091,10 +1093,10 @@ class CaliParamModel(
                 for paramName, param in paramDictByParent.items():
                     # extract mapped vector pair values
                     mapXVecCompValue1 = self[XRowIdxList[0]][
-                        f"{param.parent}.{param.name}"
+                        f"{parentName}.{paramName}"
                     ].value
                     mapXVecCompValue2 = self[XRowIdxList[1]][
-                        f"{param.parent}.{param.name}"
+                        f"{parentName}.{paramName}"
                     ].value
                     sweepParamSetFromCali._insertParamByArgs(
                         paramName=paramName,
@@ -1239,6 +1241,46 @@ class CaliParamModel(
         **kwargs,
     ):
         super()._storeParamAttr(self, paramAttr, **kwargs)
+
+    def swapXY(self):
+        self.rawYName, self.rawXVecNameList = self.rawXVecNameList[0], [self.rawYName]
+        self.insertParamToSet()
+        self._updateXRowIdxBySourceDict()
+
+        # parametersCopy: Dict[str, Dict[str, CaliTableRowParam]] = deepcopy(
+        #     self.parameters
+        # )
+        # sweepParamParentName = list(self.sweepParamSet.keys())[0]
+        # sweepParamName = list(self.sweepParamSet[sweepParamParentName].keys())[0]
+        # mappedXName = f"{sweepParamParentName}.{sweepParamName}"
+        # for Idx in range(2):
+        #     # first round: use setParameter to swap the raw and mapped vector values
+        #     self.setParameter(
+        #         rowIdx=f"X{Idx}",
+        #         colName=self.rawXVecNameList[0],
+        #         attr="value",
+        #         value=parametersCopy[f"Y{Idx}"][self.rawYName].value,
+        #     )
+        #     self.setParameter(
+        #         rowIdx=f"X{Idx}",
+        #         colName=mappedXName,
+        #         attr="value",
+        #         value=parametersCopy[f"Y{Idx}"]["mappedY"].value,
+        #     )
+        #     self.setParameter(
+        #         rowIdx=f"Y{Idx}",
+        #         colName=self.rawYName,
+        #         attr="value",
+        #         value=parametersCopy[f"X{Idx}"][self.rawXVecNameList[0]].value,
+        #     )
+        #     self.setParameter(
+        #         rowIdx=f"Y{Idx}",
+        #         colName="mappedY",
+        #         attr="value",
+        #         value=parametersCopy[f"X{Idx}"][mappedXName].value,
+        #     )
+
+        self.caliModelFinishedSwapXY.emit()
 
     # signals ==========================================================
     def emitUpdateBox(
