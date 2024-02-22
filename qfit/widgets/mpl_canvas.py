@@ -41,7 +41,7 @@ class NavigationHidden(NavigationToolbar2QT):
     """
     Helper class to realize a MPL navigation toolbar without the buttons.
     """
-    
+
     # only connect to external buttons
     toolitems = [
         t for t in NavigationToolbar2QT.toolitems if t[0] in ("Home", "Pan", "Zoom")

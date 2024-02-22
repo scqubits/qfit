@@ -41,6 +41,7 @@ class LoadFromRegistrySignal(QObject):
 class DataSwitchSignal(QObject):
     signal = Signal()
 
+
 class ActiveExtractedData(QAbstractTableModel):
     """This class holds one data set, as extracted by markers on the canvas. In
     addition, it references calibration data to expose either the raw selected data,
@@ -244,21 +245,21 @@ class AllExtractedData(
             str_value = self.dataNames[index.row()]
             return str_value
 
-        if role == Qt.DecorationRole:
-            icon1 = QtGui.QIcon()
-            if self.assocTagList[index.row()].tagType != "NO_TAG":
-                icon1.addPixmap(
-                    QtGui.QPixmap(":/icons/svg/cil-list.svg"),
-                    QtGui.QIcon.Normal,
-                    QtGui.QIcon.Off,
-                )
-            else:
-                icon1.addPixmap(
-                    QtGui.QPixmap(":/icons/svg/cil-link-broken.svg"),
-                    QtGui.QIcon.Normal,
-                    QtGui.QIcon.Off,
-                )
-            return icon1
+        # if role == Qt.DecorationRole:
+        #     icon1 = QtGui.QIcon()
+        #     if self.assocTagList[index.row()].tagType != "NO_TAG":
+        #         icon1.addPixmap(
+        #             QtGui.QPixmap(":/icons/svg/cil-list.svg"),
+        #             QtGui.QIcon.Normal,
+        #             QtGui.QIcon.Off,
+        #         )
+        #     else:
+        #         icon1.addPixmap(
+        #             QtGui.QPixmap(":/icons/svg/cil-link-broken.svg"),
+        #             QtGui.QIcon.Normal,
+        #             QtGui.QIcon.Off,
+        #         )
+        #     return icon1
 
     def setData(self, index: QModelIndex, value, role=None):
         """
@@ -286,7 +287,7 @@ class AllExtractedData(
         self.assocDataList.insert(row, np.empty(shape=(2, 0), dtype=np.float_))
         self.assocTagList.insert(row, Tag())
 
-        # update the current row before emitting the rowsRemoved signal 
+        # update the current row before emitting the rowsRemoved signal
         # (which will be emitted by endRemoveRows)
         self._currentRow = row
 
@@ -308,7 +309,7 @@ class AllExtractedData(
         self.assocDataList.pop(row)
         self.assocTagList.pop(row)
 
-        # update the current row before emitting the rowsRemoved signal 
+        # update the current row before emitting the rowsRemoved signal
         # (which will be emitted by endRemoveRows)
         if row == self.rowCount():  # now row count is 1 less than before
             self._currentRow = row - 1
@@ -382,7 +383,7 @@ class AllExtractedData(
 
     def currentTagItem(self) -> Tag:
         return self.assocTagList[self.currentRow]
-    
+
     def currentDataName(self) -> str:
         return self.dataNames[self.currentRow]
 
@@ -399,8 +400,8 @@ class AllExtractedData(
         self._calibrationFunc = calibrationDataCallback
 
     def allDataSorted(
-        self, 
-        applyCalibration: bool = True, 
+        self,
+        applyCalibration: bool = True,
         calibration_axis: Literal["xy", "x", "y"] = "xy",
         concat_data: bool = False,
     ) -> Union[List[np.ndarray], np.ndarray]:
@@ -416,14 +417,14 @@ class AllExtractedData(
             If "x", apply the calibration function to x values only.
             If "y", apply the calibration function to y values only.
         concat_data: bool, by default, False
-            If True, concatenate all data points from different transitions 
+            If True, concatenate all data points from different transitions
             into a single array.
 
         Returns
         -------
         list of ndarray
             list of numpy arrays of length M, where M is the number
-            of transitions. Each array may have shape (N, 2), where N is the 
+            of transitions. Each array may have shape (N, 2), where N is the
             number of data points for each transition. If `concat_data` is True,
             then the output is a single numpy array of shape (~M*N, 2).
         """
@@ -458,7 +459,7 @@ class AllExtractedData(
         for dataset in self.assocDataList:
             all_x_list = np.concatenate((all_x_list, dataset[0]))
         return np.sort(np.unique(all_x_list))
-    
+
     def isEmpty(self) -> bool:
         for data in self.assocDataList:
             if data.size > 0:

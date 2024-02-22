@@ -167,12 +167,12 @@ class FittingParameterItems(WidgetCollection):
     }
     # column widths
     columnWidths = {
-        "NAME": 55,
-        "FIX": 30,
-        "INITIAL": 73,
-        "MIN": 73,
-        "MAX": 73,
-        "RESULT": 73,
+        "NAME": 60,
+        "FIX": 35,
+        "INITIAL": 80,
+        "MIN": 80,
+        "MAX": 80,
+        "RESULT": 80,
     }
     columnCount = len(columns)
 
@@ -233,9 +233,9 @@ class MinMaxItems(WidgetCollection):
     }
     # column widths
     columnWidths = {
-        "NAME": 100,
-        "MIN": 120,
-        "MAX": 120,
+        "NAME": 110,
+        "MIN": 140,
+        "MAX": 140,
     }
     columnCount = len(columns)
 

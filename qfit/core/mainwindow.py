@@ -727,6 +727,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def updatePlot(self, initialize: bool = False, **kwargs):
         """Update the current plot of measurement data and markers of selected data
         points."""
+        self.ui.mplFigureCanvas.canvas.figure.patch.set_facecolor("#B8B8B8")
         if self.disconnectCanvas:
             return
 
