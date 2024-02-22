@@ -701,7 +701,7 @@ class CaliParamModel(
     issueNewXCaliFunc = Signal(dict)
     issueNewYCaliFunc = Signal(object)
     issueNewInvYCaliFunc = Signal(object)
-    caliModelFinishedSwapXY = Signal()
+    caliModelRawVecUpdatedForSwapXY = Signal()
     # calibrationIsOn: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2", False]
 
     isFullCalibration: bool
@@ -775,6 +775,10 @@ class CaliParamModel(
         self.rawYName = rawYName
         self.figName = figName
         self.sweepParamSet = HSParamSet.sweepSetByHS(hilbertSpace)
+        self.sweepParamParentName = list(self.sweepParamSet.keys())[0]
+        self.sweepParamName = list(
+            self.sweepParamSet[self.sweepParamParentName].keys()
+        )[0]
 
         # determine total calibration table row number and if the calibration is a complete one
 
@@ -1198,6 +1202,7 @@ class CaliParamModel(
                         attr="value",
                         value=data[rawXVecCompName],
                     )
+                self.sendXCaliFunc()
             elif caliLabel[0] == "Y":
                 # this contains updatebox
                 self.setParameter(
@@ -1206,6 +1211,8 @@ class CaliParamModel(
                     attr="value",
                     value=data[self.rawYName],
                 )
+                self.sendYCaliFunc()
+                self.sendInvYCaliFunc()
             # update source for the point pair
             self.setParameter(
                 rowIdx=caliLabel, colName="pointPairSource", attr="value", value=figName
@@ -1242,12 +1249,83 @@ class CaliParamModel(
         **kwargs,
     ):
         super()._storeParamAttr(self, paramAttr, **kwargs)
+        rowIdx = paramAttr.parantName
+        colName = paramAttr.name
+        if paramAttr.attr == "value":
+            if self.parameters[rowIdx][colName].paramType in [
+                "raw_X_vec_component",
+                "ng",
+                "flux",
+            ]:
+                self.sendXCaliFunc()
+            elif self.parameters[rowIdx][colName].paramType in ["raw_Y", "mapped_Y"]:
+                self.sendYCaliFunc()
+                self.sendInvYCaliFunc()
 
-    def swapXY(self):
+    def updateCaliModelRawVecNameListForSwapXY(self):
         self.rawYName, self.rawXVecNameList = self.rawXVecNameList[0], [self.rawYName]
         self.insertParamToSet()
         self._updateXRowIdxBySourceDict()
-        self.caliModelFinishedSwapXY.emit()
+        self.caliModelRawVecUpdatedForSwapXY.emit()
+
+    @Slot()
+    def swapXYData(self):
+        """
+        Finalize the XY swap: swap the value of the X and Y data for both raw and
+        mapped vectors, and update calibration functions.
+        """
+        oldX0RawValue = self.parameters["X0"][self.rawXVecNameList[0]].value
+        oldX1RawValue = self.parameters["X1"][self.rawXVecNameList[0]].value
+        oldX0MapValue = self.parameters["X0"][
+            f"{self.sweepParamParentName}.{self.sweepParamName}"
+        ].value
+        oldX1MapValue = self.parameters["X1"][
+            f"{self.sweepParamParentName}.{self.sweepParamName}"
+        ].value
+        oldY0RawValue = self.parameters["Y0"][self.rawYName].value
+        oldY1RawValue = self.parameters["Y1"][self.rawYName].value
+        oldY0MapValue = self.parameters["Y0"]["mappedY"].value
+        oldY1MapValue = self.parameters["Y1"]["mappedY"].value
+        self.setParameter(
+            rowIdx="X0",
+            colName=self.rawXVecNameList[0],
+            attr="value",
+            value=oldY0RawValue,
+        )
+        self.setParameter(
+            rowIdx="X1",
+            colName=self.rawXVecNameList[0],
+            attr="value",
+            value=oldY1RawValue,
+        )
+        self.setParameter(
+            rowIdx="X0",
+            colName=f"{self.sweepParamParentName}.{self.sweepParamName}",
+            attr="value",
+            value=oldY0MapValue,
+        )
+        self.setParameter(
+            rowIdx="X1",
+            colName=f"{self.sweepParamParentName}.{self.sweepParamName}",
+            attr="value",
+            value=oldY1MapValue,
+        )
+        self.setParameter(
+            rowIdx="Y0", colName=self.rawYName, attr="value", value=oldX0RawValue
+        )
+        self.setParameter(
+            rowIdx="Y1", colName=self.rawYName, attr="value", value=oldX1RawValue
+        )
+        self.setParameter(
+            rowIdx="Y0", colName="mappedY", attr="value", value=oldX0MapValue
+        )
+        self.setParameter(
+            rowIdx="Y1", colName="mappedY", attr="value", value=oldX1MapValue
+        )
+
+        self.sendXCaliFunc()
+        self.sendYCaliFunc()
+        self.sendInvYCaliFunc()
 
     def updateAllBoxes(self):
         """
@@ -1270,7 +1348,10 @@ class CaliParamModel(
 
     def sendXCaliFunc(self):
         """
-        The function that updates the calibration function.
+        The function that updates the calibration function. Triggers when:
+        * line editing acction triggers storeParamAttr
+        * XY swap triggers swapXYData
+        * entering raw X by clicking on the plot triggers processSelectedPtFromPlot
         """
         if self.isFullCalibration:
             self.issueNewXCaliFunc.emit(self._fullXCalibration())
@@ -1279,12 +1360,18 @@ class CaliParamModel(
 
     def sendYCaliFunc(self):
         """
-        The function that updates the calibration function.
+        The function that updates the calibration function. Triggers when:
+        * line editing acction triggers storeParamAttr
+        * XY swap triggers swapXYData
+        * entering raw Y by clicking on the plot triggers processSelectedPtFromPlot
         """
         self.issueNewYCaliFunc.emit(self._YCalibration())
 
     def sendInvYCaliFunc(self):
         """
-        The function that updates the calibration function.
+        The function that updates the calibration function. Triggers when:
+        * line editing acction triggers storeParamAttr
+        * XY swap triggers swapXYData
+        * entering raw Y by clicking on the plot triggers processSelectedPtFromPlot
         """
         self.issueNewInvYCaliFunc.emit(self._invYCalibration())

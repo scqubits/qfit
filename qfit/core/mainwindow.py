@@ -48,9 +48,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
-from qfit.utils.helpers import (
-    executed_in_ipython
-)
+from qfit.utils.helpers import executed_in_ipython
 from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
 from qfit.controllers.help_tooltip import HelpButtonCtrl
 from qfit.ui_designer.ui_window import Ui_MainWindow
@@ -127,7 +125,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         QMainWindow.__init__(self)
         self.openFromIPython = executed_in_ipython()
         self.setFocusPolicy(Qt.StrongFocus)
-        
+
         self.measurementData = MeasDataSet([])
 
         # ui
@@ -336,13 +334,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             mapLineEdits=self.mapLineEdits,
             calibrationButtons=self.calibrationButtons,
         )
-        
+
         self.calibrationCtrl = CalibrationCtrl(
             self.caliParamModel, self.calibrationView, self.pageButtons
         )
         # self.calibrationData = CalibrationData()
         # self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
-
 
     # def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
     #     """
@@ -433,7 +430,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.ui.prefitMinmaxScrollAreaWidget,
         )
         self.prefitView = PrefitView(
-            runSweep = self.ui.plotButton,
+            runSweep=self.ui.plotButton,
             options=self.prefitOptions,
         )
 
@@ -441,9 +438,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitStaticElementsBuild()
 
     def prefitDynamicalElementsBuild(
-        self, 
-        hilbertspace: HilbertSpace, 
-        measurementData: List[MeasurementDataType]
+        self, hilbertspace: HilbertSpace, measurementData: List[MeasurementDataType]
     ):
         self.prefitBuildParamSet(hilbertspace)
         self.prefitViewInsertParams()
@@ -459,14 +454,14 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
 
         # update everything in the quantumModel
-        self.quantumModel.disableSweep = True    # disable the auto sweep
+        self.quantumModel.disableSweep = True  # disable the auto sweep
         self.prefitParamModel.emitHSUpdated()
         self.allDatasets.emitDataUpdated()
         self.caliParamModel.sendXCaliFunc()
         self.caliParamModel.sendYCaliFunc()
-        self.prefitView.emitAllOptions()    # auto run sync to the view
-        self.quantumModel.disableSweep = False
-        
+        self.prefitView.emitAllOptions()  # auto run sync to the view
+        # self.quantumModel.disableSweep = False
+
     def prefitStaticElementsBuild(self):
         self.quantumModelConnects()
         self.prefitButtonConnects()
@@ -484,7 +479,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # check how many sweep parameters are found and create sliders
         # for the remaining parameters
         sweepParameterSet = HSParamSet.sweepSetByHS(hilbertspace)
-        param_types: set["ParameterType"] = set(sweepParameterSet.exportAttrDict("paramType").values())
+        param_types: set["ParameterType"] = set(
+            sweepParameterSet.exportAttrDict("paramType").values()
+        )
 
         if len(sweepParameterSet) == 0:
             print(
@@ -500,8 +497,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.prefitParamModel.dynamicalInit(
                 hilbertspace=hilbertspace,
                 excluded_parameter_type=(
-                    excluded
-                    + [list(param_types)[0]]  # exclude the sweep parameter
+                    excluded + [list(param_types)[0]]  # exclude the sweep parameter
                 ),
             )
 
@@ -577,10 +573,17 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.quantumModel.updateHilbertSpace
         )
         self.allDatasets.dataUpdated.connect(self.quantumModel.updateExtractedData)
-        self.caliParamModel.issueNewXCaliFunc.connect(self.quantumModel.updateSweepParamSets)
+        self.caliParamModel.issueNewXCaliFunc.connect(
+            self.quantumModel.updateSweepParamSets
+        )
         self.caliParamModel.issueNewYCaliFunc.connect(self.quantumModel.updateYCaliFunc)
         self.caliParamModel.issueNewInvYCaliFunc.connect(
-            self.quantumModel.updateInvYCaliFunc)
+            self.quantumModel.updateInvYCaliFunc
+        )
+        # connect the page change to the disable sweep
+        self.pageView.pageChanged.connect(
+            self.quantumModel.updateDisableSweepOnPageChange
+        )
 
     def prefitButtonConnects(self):
         """
@@ -662,18 +665,16 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         for params in self.fitParamModel.values():
             for p in params.values():
                 p.setParameterForParent()
-                
-        self.quantumModel.updateHSWoCalc(
-            self.fitParamModel.hilbertspace
-        )
-        
+
+        self.quantumModel.updateHSWoCalc(self.fitParamModel.hilbertspace)
+
         return self.quantumModel.updateCalc()
 
     @Slot()
     def optimizeParams(self):
         if not self.fitParamModel.isValid:
             return
-        
+
         # configure other models & views
         self.quantumModel.sweepUsage = "fit"
         self.ui.fitButton.setEnabled(False)
@@ -681,22 +682,21 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # setup the optimization
         self.fitModel.setupOptimization(
-            fixedParams = self.fitParamModel.fixedParams,
-            freeParamRanges = self.fitParamModel.freeParamRanges,
-            costFunction = self._costFunction,
+            fixedParams=self.fitParamModel.fixedParams,
+            freeParamRanges=self.fitParamModel.freeParamRanges,
+            costFunction=self._costFunction,
         )
 
         # cook up a cost function
         self.fitModel.runOptimization(
-            initParam = self.fitParamModel.initParams,
+            initParam=self.fitParamModel.initParams,
         )
-        
+
     @Slot()
     def postOptimization(self):
         self.ui.fitButton.setEnabled(True)
         self.prefitParamView.sliderSet.setEnabled(True)
         self.quantumModel.sweepUsage = "prefit"
-
 
     def fitOptionConnects(self):
         self.ui.tolLineEdit.editingFinished.connect(
