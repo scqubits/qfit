@@ -70,6 +70,7 @@ class CalibrationCtrl(QObject):
             caliTableXRowNr=self.caliParamModel.caliTableXRowNr,
             sweepParamSet=HSParamSet.sweepSetByHS(hilbertspace),
         )
+        self.caliParamModel.updateAllBoxes()
 
     def uiCalibrationConnects(self):
         """

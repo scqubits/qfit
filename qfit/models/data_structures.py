@@ -369,7 +369,8 @@ class PlotElement:
         """
         try:
             artist.remove()
-        except ValueError:
+        except ValueError as e:
+            print(e)
             pass
 
     def remove(self) -> None:
