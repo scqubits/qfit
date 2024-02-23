@@ -1,10 +1,12 @@
 from typing import Union
+import numpy as np
 from PySide6.QtCore import Signal, Slot
 from qfit.models.quantum_model_parameters import (
     HSParamSet, ParamSet,
-    SliderModelMixin
+    SliderModelMixin,
 )
-from qfit.models.data_structures import ParamAttr, QMSliderParam
+from qfit.models.data_structures import ParamAttr, QMSliderParam, QMFitParam
+from qfit.models.parameter_settings import DEFAULT_PARAM_MINMAX
 from scqubits.core.hilbert_space import HilbertSpace
 
 
@@ -86,6 +88,35 @@ class PrefitParamModel(
         param.setParameterForParent()
         self.emitHSUpdated()
 
+    # general model methods ============================================
+    def toFitParams(self) -> ParamSet[QMFitParam]:
+        paramSet = ParamSet[QMFitParam](QMFitParam)
+        for parentName, parent in self.items():
+            for paramName, param in parent.items():
+                value = param.value
+
+                # determine the min and max for fitting: the larger one 
+                # between 20% of the default range and 40% of the 
+                # current value
+                defaultRange = DEFAULT_PARAM_MINMAX[param.paramType]
+                range1 = (defaultRange["max"] - defaultRange["max"]) * 0.2
+                range2 = np.abs(value) * 0.4
+                valRange = np.max([range1, range2])
+
+                fitParam = QMFitParam(
+                    name = paramName,
+                    parent = param.parent,
+                    paramType = param.paramType,
+                    value = value,
+                    min = value - valRange/2,
+                    max = value + valRange/2,
+                    initValue = value,
+                    isFixed = False,
+                )
+                paramSet.insertParam(parentName, paramName, fitParam)
+
+        return paramSet
+
 
 class PrefitCaliModel(
     ParamSet[QMSliderParam],
@@ -95,6 +126,7 @@ class PrefitCaliModel(
     attrs = QMSliderParam.attrToRegister
 
     updateSlider = Signal(ParamAttr)
+    updateCaliModel = Signal(ParamAttr)
 
     # mixin methods ====================================================
     def __init__(self):
@@ -143,6 +175,14 @@ class PrefitCaliModel(
         """
         super()._storeParamAttr(self, paramAttr, fromSlider=fromSlider)
 
+        # send the calibration model the updated parameters
+        self.updateCaliModel.emit(ParamAttr(
+            paramAttr.parentName, 
+            paramAttr.name, 
+            paramAttr.attr, 
+            self[paramAttr.parentName][paramAttr.name].value
+        ))
+
     # Cailibration related methods =====================================
     caliParamUpdated = Signal(ParamAttr)
 
@@ -166,3 +206,25 @@ class PrefitCaliModel(
     ):
         paramAttr = self[parentName][paramName].exportAttr(attr="value")
         self.caliParamUpdated.emit(paramAttr)
+
+    # general model methods ============================================
+    def toFitParams(self) -> ParamSet[QMFitParam]:
+        paramSet = ParamSet[QMFitParam](QMFitParam)
+        for parentName, parent in self.items():
+            for paramName, param in parent.items():
+                value = param.value
+
+                fitParam = QMFitParam(
+                    name = paramName,
+                    parent = param.parent,
+                    paramType = param.paramType,
+                    value = value,
+                    min = param.min,
+                    max = param.max,
+                    initValue = value,
+                    isFixed = False,
+                )
+                paramSet.insertParam(parentName, paramName, fitParam)
+
+        return paramSet
+    

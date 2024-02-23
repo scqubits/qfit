@@ -11,9 +11,9 @@ from scqubits.core.hilbert_space import HilbertSpace
 from qfit.utils.wrapped_optimizer import Optimization, OptTraj
 from qfit.models.extracted_data import AllExtractedData
 from qfit.models.quantum_model_parameters import (
-    HSParamSet, ParamModelMixin, 
+    HSParamSet, ParamModelMixin, ParamSet,
 )
-from qfit.models.data_structures import QMFitParam, ParamAttr
+from qfit.models.data_structures import QMFitParam, ParamAttr, QMSliderParam
 from qfit.models.registry import RegistryEntry
 from qfit.models.status import StatusModel
 
@@ -121,6 +121,38 @@ class FitParamModel(
             key: params.initValue
             for key, params in self.toParamDict().items()
         }
+    
+    def toInitParams(self) -> ParamSet[QMFitParam]:
+        paramSet = ParamSet[QMFitParam](QMFitParam)
+        for parentName, parent in self.items():
+            for paramName, param in parent.items():
+                fitParam = QMFitParam(
+                    name = paramName,           # useless
+                    parent = param.parent,      # useless
+                    paramType = param.paramType,# useless
+                    initValue = param.value,     
+                )
+                paramSet.insertParam(parentName, paramName, fitParam)
+
+        return paramSet
+    
+    def toPrefitParams(self) -> ParamSet[QMSliderParam]:
+        paramSet = ParamSet[QMSliderParam](QMSliderParam)
+        for parentName, parent in self.items():
+            for paramName, param in parent.items():
+                sliderParam = QMSliderParam(
+                    name = paramName,           # useless
+                    parent = param.parent,      # useless
+                    paramType = param.paramType,# useless
+                    value = param.value,
+                    min = -1,                   # useless
+                    max = -1,                   # useless
+                )
+                paramSet.insertParam(parentName, paramName, sliderParam)
+
+        return paramSet
+
+    
 
 
 class FitModel(QObject):

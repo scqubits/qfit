@@ -161,10 +161,22 @@ class ParamSet(Registrable, Generic[ParamCls]):
             setattr(para_dict[name], attr, value)
         except KeyError:
             raise KeyError(f"Cannot find parameter {name} in the parameter set.")
+        
+    def setParamByPA(
+        self,
+        paramAttr: ParamAttr,
+    ):
+        self.setParameter(
+            paramAttr.parentName,
+            paramAttr.name,
+            paramAttr.attr,
+            paramAttr.value,
+        )
 
     def toParamDict(self) -> Dict[str, ParamCls]:
         """
-        Provide a way to iterate through the parameter set.
+        Provide a way to iterate through the parameter set. Used for fitting purposes 
+        - as we need to provide a single-layer dictionary.
 
         Return a dictionary of all the parameters in the parameter set. Keys are "<parent name>.<parameter name>"
         """
@@ -177,6 +189,9 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
     def getAttrDict(self, attribute: str = "value") -> Dict[str, Any]:
         """
+        Provide a way to iterate through the parameter set. Used for fitting purposes 
+        - as we need to provide a single-layer dictionary.
+
         Convert the parameter set to a dictionary. Keys are "<parent name>.<parameter name>"
         and values are the value of the parameter.
 
@@ -197,7 +212,8 @@ class ParamSet(Registrable, Generic[ParamCls]):
         attribute: str = "value",
     ):
         """
-        Provide a way to iterate through the parameter set.
+        Provide a way to iterate through the parameter set. Used for fitting purposes 
+        - as we need to provide a single-layer dictionary.
 
         Update the parameter set from a dictionary. Keys are "<parent name>.<parameter name>"
         and values are the value of the parameter.
@@ -213,7 +229,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
         insertMissing: bool = False,
     ):
         """
-        Set the parameter set by a dictionary of parameters. The dictionary should
+        Set the whole parameter set by a dictionary of parameters. The dictionary should
         have the same structure as the parameters attribute of the ParamSet object.
         setParameter/insertParam is called to update the parameter set.
         """
@@ -629,7 +645,7 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
         paramAttr: ParamAttr,
         **kwargs,
     ):
-        param = paramSet[paramAttr.parantName][paramAttr.name]
+        param = paramSet[paramAttr.parentName][paramAttr.name]
         param.storeAttr(paramAttr.attr, paramAttr.value, **kwargs)
 
 
@@ -662,11 +678,11 @@ class SliderModelMixin(ParamModelMixin[QMSliderParam]):
 
         if paramAttr.attr == "value":
             if fromSlider:
-                self._emitUpdateBox(paramSet, paramAttr.parantName, paramAttr.name, paramAttr.attr)
+                self._emitUpdateBox(paramSet, paramAttr.parentName, paramAttr.name, paramAttr.attr)
             elif not fromSlider:
-                self._emitUpdateSlider(paramSet, paramAttr.parantName, paramAttr.name)
+                self._emitUpdateSlider(paramSet, paramAttr.parentName, paramAttr.name)
         elif paramAttr.attr in ["min", "max"]:
-            self._emitUpdateSlider(paramSet, paramAttr.parantName, paramAttr.name)
+            self._emitUpdateSlider(paramSet, paramAttr.parentName, paramAttr.name)
 
 
 class CombinedMeta(type(ParamModelMixin), type(ParamSet)):
@@ -681,10 +697,11 @@ class CaliParamModel(
     plotCaliPtExtractStart = Signal(str)
     plotCaliPtExtractFinished = Signal(str, dict)
     plotCaliPtExtractInterrupted = Signal()
-    issueNewXCaliFunc = Signal(Dict[str, HSParamSet])
-    issueNewYCaliFunc = Signal(object)
-    issueNewInvYCaliFunc = Signal(object)
+    xCaliUpdated = Signal(Dict[str, HSParamSet])
+    yCaliUpdated = Signal(object)
+    invYCaliUpdated = Signal(object)
     caliModelFinishedSwapXY = Signal()
+    updatePrefitModel = Signal(ParamAttr)
     # calibrationIsOn: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2", False]
 
     isFullCalibration: bool
@@ -914,14 +931,21 @@ class CaliParamModel(
     def sweepParamNr(self) -> int:
         return len(self.sweepParamSet)
     
-    def prefitParams(self) -> ParamSet[QMSliderParam]:
+    def prefitHas(self, rowName: str, colName: str) -> bool:
+        """
+        Check if the prefit parameter is in the prefit parameter set.
+        """
+        param = self.parameters[rowName][colName]
+        return param.paramType in ["flux", "ng", "mapped_Y"]
+    
+    def toPrefitParams(self) -> ParamSet[QMSliderParam]:
         # obtain the range of the parameters, which is helpful to determine 
         # the range of the prefit parameters
         existedValue = {}
         for rowName, paramDictByParent in self.items():
             for colName, param in paramDictByParent.items():
                 # filter out the parameters that are not updated by the slider
-                if param.paramType not in ["flux", "ng", "mapped_Y"]:
+                if not self.prefitHas(rowName, colName):
                     continue 
 
                 if colName not in existedValue.keys():
@@ -942,26 +966,14 @@ class CaliParamModel(
                     continue
 
                 value = param.value
-                valRange = rangeDict[colName]
-
-                if valRange > 0:
-                    # if the range of the mapped value is not zero, then
-                    # the prefit slider will be set to +- 10% of the range
-                    minValue = value - valRange * 0.1
-                    maxValue = value + valRange * 0.1
-                elif value > 0:
-                    # if the range is zero, but the value is not zero, then
-                    # the prefit slider will be set to 20% of the value
-                    minValue = value * 0.8
-                    maxValue = value * 1.2
-                elif value < 0:
-                    # if the range is zero, but the value is not zero, then
-                    # the prefit slider will be set to 20% of the value
-                    minValue = value * 1.2
-                    maxValue = value * 0.8
+                valRange = rangeDict[colName] * 0.2
+                if valRange > 0:   
+                    # accept the range if it is not zero
+                    pass
+                elif value != 0:
+                    valRange = np.abs(value) * 0.4
                 else:
-                    minValue = -1
-                    maxValue = 1
+                    valRange = 2
 
                 # insert a prefit parameter
                 prefitParam = QMSliderParam(
@@ -969,14 +981,10 @@ class CaliParamModel(
                     parent = param.parent,
                     paramType = param.paramType,
                     value = value,
-                    min = minValue,
-                    max = maxValue,
+                    min = value - valRange/2,
+                    max = value + valRange/2,
                 )
-                paramSet.insertParam(
-                    parentName = rowName,
-                    paramName = colName,
-                    param = prefitParam,
-                )
+                paramSet.insertParam(rowName, colName, prefitParam)
 
         return paramSet
 
@@ -1288,6 +1296,15 @@ class CaliParamModel(
     ):
         super()._storeParamAttr(self, paramAttr, **kwargs)
 
+        if self.prefitHas(paramAttr.parentName, paramAttr.name):
+            self.updatePrefitModel.emit(ParamAttr(
+                paramAttr.parentName, 
+                paramAttr.name, 
+                paramAttr.attr, 
+                self[paramAttr.parentName][paramAttr.name].value
+            ))
+            self.send
+
     def swapXY(self):
         self.rawYName, self.rawXVecNameList = self.rawXVecNameList[0], [self.rawYName]
         self.insertAllParams()
@@ -1342,18 +1359,18 @@ class CaliParamModel(
         The function that updates the calibration function.
         """
         if self.isFullCalibration:
-            self.issueNewXCaliFunc.emit(self._fullXCalibration())
+            self.xCaliUpdated.emit(self._fullXCalibration())
         else:
-            self.issueNewXCaliFunc.emit(self._partialXCalibration())
+            self.xCaliUpdated.emit(self._partialXCalibration())
 
     def sendYCaliFunc(self):
         """
         The function that updates the calibration function.
         """
-        self.issueNewYCaliFunc.emit(self._YCalibration())
+        self.yCaliUpdated.emit(self._YCalibration())
 
     def sendInvYCaliFunc(self):
         """
         The function that updates the calibration function.
         """
-        self.issueNewInvYCaliFunc.emit(self._invYCalibration())
+        self.invYCaliUpdated.emit(self._invYCalibration())

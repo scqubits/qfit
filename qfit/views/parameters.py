@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject, Signal, Slot, Qt
+from PySide6.QtCore import QObject, Signal, Slot, Qt, SignalInstance
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
 
 from qfit.widgets.grouped_sliders import (
@@ -20,13 +20,17 @@ from typing import Dict, List, Optional, Union, overload, Literal
 
 
 class PrefitParamView(QObject):
-    sliderValueChanged = Signal(ParamAttr)
-    textValueChanged = Signal(ParamAttr)
-    valueEditingFihished = Signal(str, str)
-    rangeEditingFinished = Signal(ParamAttr)
+    HSSliderChanged = Signal(ParamAttr)
+    HSTextChanged = Signal(ParamAttr)
+    HSEditingFihished = Signal(str, str)
+    HSRangeEditingFinished = Signal(ParamAttr)
+    
+    caliSliderChanged = Signal(ParamAttr)
+    caliTextChanged = Signal(ParamAttr)
+    caliEditingFihished = Signal(str, str)
+    caliRangeEditingFinished = Signal(ParamAttr)
 
     # Initialization ===================================================
-
     def __init__(
         self, 
         prefitScrollAreaWidget: QWidget,
@@ -38,6 +42,24 @@ class PrefitParamView(QObject):
 
         self.prefitScrollAreaWidget = prefitScrollAreaWidget
         self.prefitMinmaxScrollAreaWidget = prefitMinmaxScrollAreaWidget    
+
+        # A list to tell whether the parameter belongs to a hilbertspace
+        # or a calibration model.
+        self.HSNames: List[str] = []  
+        # Group the signals for easier connection (avoid code repetition)
+        self.HSSignals = {
+            "sliderChanged": self.HSSliderChanged,
+            "textChanged": self.HSTextChanged,
+            "editingFinished": self.HSEditingFihished,
+            "rangeEditingFinished": self.HSRangeEditingFinished,
+        }
+        self.caliSignals = {
+            "sliderChanged": self.caliSliderChanged,
+            "textChanged": self.caliTextChanged,
+            "editingFinished": self.caliEditingFihished,
+            "rangeEditingFinished": self.caliRangeEditingFinished,
+        }
+
 
     def _insertSliders(
         self,
@@ -128,9 +150,13 @@ class PrefitParamView(QObject):
         
     def insertSliderMinMax(
         self,
-        paramNameDict: Dict[str, List[str]],
+        HSParamNames: Dict[str, List[str]],
+        caliParamNames: Dict[str, List[str]],
         removeExisting: bool = True
     ):
+        self.HSNames = list(HSParamNames.keys())
+        
+        paramNameDict = HSParamNames | caliParamNames 
         self._insertSliders(paramNameDict, removeExisting)
         self._insertMinMax(paramNameDict, removeExisting)
         self._signalProcessing()
@@ -145,30 +171,37 @@ class PrefitParamView(QObject):
         for groupName, group in self.sliderSet.items():
             for name, slider in group.items():
                 slider: LabeledSlider
+
+                if groupName in self.HSNames:
+                    signalSet = self.HSSignals
+                else:
+                    signalSet = self.caliSignals
+
+
                 slider.sliderValueChangedConnect(
-                    lambda value, name=name, groupName=groupName: self.sliderValueChanged.emit(
+                    lambda value, name=name, groupName=groupName: signalSet["sliderChanged"].emit(
                         ParamAttr(groupName, name, "value", value)
                     )
                 )
                 slider.textValueChangedConnect(
-                    lambda text, name=name, groupName=groupName: self.textValueChanged.emit(
+                    lambda text, name=name, groupName=groupName: signalSet["textChanged"].emit(
                         ParamAttr(groupName, name, "value", text)
                     )
                 )
                 slider.editingFinishedConnect(
-                    lambda name=name, groupName=groupName: self.valueEditingFihished.emit(groupName, name)
+                    lambda name=name, groupName=groupName: signalSet["editingFinished"].emit(groupName, name)
                 )
         
         for groupName, group in self.minMaxTable.items():
             for name, item in group.items():
                 item: MinMaxItems
                 item.minValue.editingFinished.connect(
-                    lambda item=item, name=name, groupName=groupName: self.rangeEditingFinished.emit(
+                    lambda item=item, name=name, groupName=groupName: signalSet["rangeEditingFinished"].emit(
                         ParamAttr(groupName, name, "min", item.minValue.text())
                     )
                 )
                 item.maxValue.editingFinished.connect(
-                    lambda item=item, name=name, groupName=groupName: self.rangeEditingFinished.emit(
+                    lambda item=item, name=name, groupName=groupName: signalSet["rangeEditingFinished"].emit(
                         ParamAttr(groupName, name, "max", item.maxValue.text())
                     )
                 )
@@ -177,15 +210,15 @@ class PrefitParamView(QObject):
     @Slot(ParamAttr)
     def setByParamAttr(self, paramAttr: ParamAttr, toSlider: bool = True):
         if paramAttr.attr == "value":
-            labeledSlider: LabeledSlider = self.sliderSet[paramAttr.parantName][paramAttr.name]
+            labeledSlider: LabeledSlider = self.sliderSet[paramAttr.parentName][paramAttr.name]
             labeledSlider.setValue(paramAttr.value, toSlider=toSlider)
         elif paramAttr.attr == "min":
             assert toSlider == False
-            item: MinMaxItems = self.minMaxTable[paramAttr.parantName][paramAttr.name]
+            item: MinMaxItems = self.minMaxTable[paramAttr.parentName][paramAttr.name]
             item.minValue.setText(paramAttr.value)
         elif paramAttr.attr == "max":
             assert toSlider == False
-            item: MinMaxItems = self.minMaxTable[paramAttr.parantName][paramAttr.name]
+            item: MinMaxItems = self.minMaxTable[paramAttr.parentName][paramAttr.name]
             item.maxValue.setText(paramAttr.value)
         else:
             raise ValueError(f"Invalid attribute {paramAttr.attr}")
@@ -270,7 +303,7 @@ class FitParamView(QObject):
     # Setters ==========================================================
     @Slot(ParamAttr)
     def setBoxValue(self, paramAttr: ParamAttr):
-        item: FittingParameterItems = self.fitTableSet[paramAttr.parantName][paramAttr.name]
+        item: FittingParameterItems = self.fitTableSet[paramAttr.parentName][paramAttr.name]
         if paramAttr.attr == "min":
             item.minValue.setText(paramAttr.value)
         elif paramAttr.attr == "max":
