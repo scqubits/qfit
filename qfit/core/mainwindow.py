@@ -53,6 +53,16 @@ from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
 from qfit.controllers.help_tooltip import HelpButtonCtrl
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
+from qfit.widgets.settings import (
+    VisualSettingsWidget,
+    FitSettingsWidget,
+    NumericalSpectrumSettingsWidget,
+)
+from qfit.ui_designer.settings_fit import Ui_fitSettingsWidget
+from qfit.ui_designer.settings_numerical_spectrum import (
+    Ui_numericalSpectrumSettingsWidget,
+)
+from qfit.ui_designer.settings_visual import Ui_visualSettingsWidget
 
 # paging:
 from qfit.views.paging import PageView
@@ -138,6 +148,13 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui_menu = MenuWidget(parent=self)
         self.pagingMVCInits()
 
+        # settings
+        self.ui_settings = {
+            "fit": FitSettingsWidget(self),
+            "numericalSpectrum": NumericalSpectrumSettingsWidget(self),
+            "visual": VisualSettingsWidget(self),
+        }
+
         # calibration - should be inited after prefit, as it requires a sweep parameter set
         self.calibrationMVCInits()
 
@@ -222,7 +239,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.helpButtons = {
             "calibration": self.ui.calibrationHelpPushButton,
             "fit": self.ui.fitHelpPushButton,
-            "fitResult": self.ui.fitResultHelpPushButton,
+            "fitResult": self.ui_settings["fit"].ui.fitResultHelpPushButton,
             "prefitResult": self.ui.prefitResultHelpPushButton,
             "numericalSpectrumSettings": self.ui.numericalSpectrumSettingsHelpPushButton,
         }
@@ -238,15 +255,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "z": self.ui.zComboBox,
         }
         self.measPlotSettings = {
-            "topHat": self.ui.topHatCheckBox,
-            "wavelet": self.ui.waveletCheckBox,
-            "edge": self.ui.edgeFilterCheckBox,
-            "bgndX": self.ui.bgndSubtractXCheckBox,
-            "bgndY": self.ui.bgndSubtractYCheckBox,
-            "log": self.ui.logScaleCheckBox,
-            "min": self.ui.rangeSliderMin,
-            "max": self.ui.rangeSliderMax,
-            "color": self.ui.colorComboBox,
+            "topHat": self.ui_settings["visual"].ui.topHatCheckBox,
+            "wavelet": self.ui_settings["visual"].ui.waveletCheckBox,
+            "edge": self.ui_settings["visual"].ui.edgeFilterCheckBox,
+            "bgndX": self.ui_settings["visual"].ui.bgndSubtractXCheckBox,
+            "bgndY": self.ui_settings["visual"].ui.bgndSubtractYCheckBox,
+            "log": self.ui_settings["visual"].ui.logScaleCheckBox,
+            "min": self.ui_settings["visual"].ui.rangeSliderMin,
+            "max": self.ui_settings["visual"].ui.rangeSliderMax,
+            "color": self.ui_settings["visual"].ui.colorComboBox,
         }
         self.canvasTools = {
             "reset": self.ui.resetViewButton,
