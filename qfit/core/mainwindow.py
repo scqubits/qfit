@@ -60,7 +60,7 @@ from qfit.views.paging_view import PageView
 
 # calibration:
 # from qfit.models.calibration_data import CalibrationData
-from qfit.models.quantum_model_parameters import CaliParamModel
+from qfit.models.calibration import CaliParamModel
 from qfit.views.calibration_view import CalibrationView
 from qfit.controllers.calibration_ctrl import CalibrationCtrl
 
@@ -76,7 +76,7 @@ from qfit.views.status_bar import StatusBarView
 
 # pre-fit
 from qfit.views.prefit_view import PrefitParamView, PrefitView
-from qfit.models.quantum_model_parameters import HSParamSet
+from qfit.models.parameter_set import HSParamSet
 from qfit.models.prefit import PrefitParamModel, PrefitCaliModel
 from qfit.models.numerical_model import QuantumModel
 

@@ -22,7 +22,7 @@ from PySide6.QtCore import (
 )
 from typing import Tuple, Dict, Any, List, Union, Literal
 
-from qfit.models.quantum_model_parameters import HSParamSet
+from qfit.models.parameter_set import HSParamSet
 from qfit.models.data_structures import QMSweepParam, ParamAttr
 
 

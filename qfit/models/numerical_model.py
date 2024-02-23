@@ -16,7 +16,7 @@ from typing import Dict, List, Tuple, Union, Callable, Any, Literal, Optional
 
 from qfit.models.parameter_settings import ParameterType
 
-from qfit.models.quantum_model_parameters import ParamSet, HSParamSet
+from qfit.models.parameter_set import ParamSet, HSParamSet
 from qfit.models.data_structures import (
     ParamBase,
     QMSliderParam,
@@ -28,7 +28,7 @@ from qfit.models.data_structures import (
 from qfit.models.status import StatusModel
 from qfit.models.numerical_spectrum_data import CalculatedSpecData
 # from qfit.models.calibration_data import CalibrationData
-from qfit.models.quantum_model_parameters import CaliParamModel
+from qfit.models.parameter_set import CaliParamModel
 from qfit.models.extracted_data import AllExtractedData
 from qfit.models.data_structures import Tag, SpectrumElement
 

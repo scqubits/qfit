@@ -18,7 +18,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 from qfit.models.registry import Registrable, RegistryEntry
 
-from qfit.models.quantum_model_parameters import ParamSet, QMSweepParam
+from qfit.models.parameter_set import ParamSet, QMSweepParam
 
 
 class CombinedMeta(type(QObject), type(Registrable)):

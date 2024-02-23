@@ -10,7 +10,7 @@ from PySide6.QtCore import (
 from scqubits.core.hilbert_space import HilbertSpace
 from qfit.utils.wrapped_optimizer import Optimization, OptTraj
 from qfit.models.extracted_data import AllExtractedData
-from qfit.models.quantum_model_parameters import (
+from qfit.models.parameter_set import (
     HSParamSet, ParamModelMixin, ParamSet,
 )
 from qfit.models.data_structures import QMFitParam, ParamAttr, QMSliderParam

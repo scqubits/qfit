@@ -14,12 +14,12 @@ from qfit.models.measurement_data import (
 from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal, List
 
 if TYPE_CHECKING:
-    from qfit.models.quantum_model_parameters import CaliParamModel
+    from qfit.models.parameter_set import CaliParamModel
 
     # from qfit.models.calibration_data import CalibrationData
     from qfit.models.measurement_data import MeasDataSet
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
-    from qfit.models.quantum_model_parameters import ParamSet
+    from qfit.models.parameter_set import ParamSet
     from qfit.models.numerical_model import QuantumModel
     from qfit.views.paging_view import PageView
 

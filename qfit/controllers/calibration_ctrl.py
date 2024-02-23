@@ -5,13 +5,13 @@ from PySide6.QtCore import (
 )
 from PySide6.QtWidgets import QPushButton
 
-from qfit.models.quantum_model_parameters import HSParamSet
+from qfit.models.parameter_set import HSParamSet
 
 from typing import TYPE_CHECKING, Tuple, Dict, Any, List
 
 if TYPE_CHECKING:
     from scqubits.core.hilbert_space import HilbertSpace
-    from qfit.models.quantum_model_parameters import CaliParamModel
+    from qfit.models.parameter_set import CaliParamModel
     from qfit.models.data_structures import QMSweepParam
     from qfit.models.measurement_data import MeasurementDataType
     from qfit.views.calibration_view import CalibrationView

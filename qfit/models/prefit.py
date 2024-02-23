@@ -1,7 +1,7 @@
 from typing import Union, Dict
 import numpy as np
 from PySide6.QtCore import Signal, Slot
-from qfit.models.quantum_model_parameters import (
+from qfit.models.parameter_set import (
     HSParamSet, ParamSet,
     SliderModelMixin,
 )
