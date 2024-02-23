@@ -181,7 +181,7 @@ class CalibrationView(QObject):
         # if pointPairSource, no such view available currently
         if paramAttr.name == "pointPairSource":
             return
-        rowIdx = paramAttr.parantName
+        rowIdx = paramAttr.parentName
         colName = paramAttr.name
         widget: QObject = self.caliTableSet[rowIdx][colName]
         widget.setText(paramAttr.value)

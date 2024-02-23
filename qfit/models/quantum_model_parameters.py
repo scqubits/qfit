@@ -70,6 +70,20 @@ class ParamSet(Registrable, Generic[ParamCls]):
     def __len__(self):
         return sum([len(para_dict) for para_dict in self.parameters.values()])
 
+    def insertParam(
+        self,
+        parentName: str,
+        paramName: str,
+        param: ParamCls,
+    ):
+        """
+        Insert a parameter to the parameter set. When the parent system is
+        not in the parameter set, create a new entry for the parent system.
+        """
+        if parentName not in self.parameters.keys():
+            self.parameters[parentName] = {}
+        self.parameters[parentName][paramName] = param
+
     def paramNamesDict(self) -> Dict[str, List[str]]:
         """
         Get a dictionary of parameter names for each parent system.
@@ -136,7 +150,6 @@ class ParamSet(Registrable, Generic[ParamCls]):
         value: Union[float, int]
             The value of the parameter
         """
-
         try:
             para_dict = self[parentName]
         except KeyError:
@@ -149,9 +162,21 @@ class ParamSet(Registrable, Generic[ParamCls]):
         except KeyError:
             raise KeyError(f"Cannot find parameter {name} in the parameter set.")
 
+    def setParamByPA(
+        self,
+        paramAttr: ParamAttr,
+    ):
+        self.setParameter(
+            paramAttr.parentName,
+            paramAttr.name,
+            paramAttr.attr,
+            paramAttr.value,
+        )
+
     def toParamDict(self) -> Dict[str, ParamCls]:
         """
-        Provide a way to iterate through the parameter set.
+        Provide a way to iterate through the parameter set. Used for fitting purposes
+        - as we need to provide a single-layer dictionary.
 
         Return a dictionary of all the parameters in the parameter set. Keys are "<parent name>.<parameter name>"
         """
@@ -162,8 +187,11 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
         return param_dict
 
-    def exportAttrDict(self, attribute: str = "value") -> Dict[str, Any]:
+    def getAttrDict(self, attribute: str = "value") -> Dict[str, Any]:
         """
+        Provide a way to iterate through the parameter set. Used for fitting purposes
+        - as we need to provide a single-layer dictionary.
+
         Convert the parameter set to a dictionary. Keys are "<parent name>.<parameter name>"
         and values are the value of the parameter.
 
@@ -178,13 +206,14 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
         return paramval_dict
 
-    def loadAttrDict(
+    def setAttrByAttrDict(
         self,
         paramval_dict: Union[Dict[str, float], Dict[str, int]],
         attribute: str = "value",
     ):
         """
-        Provide a way to iterate through the parameter set.
+        Provide a way to iterate through the parameter set. Used for fitting purposes
+        - as we need to provide a single-layer dictionary.
 
         Update the parameter set from a dictionary. Keys are "<parent name>.<parameter name>"
         and values are the value of the parameter.
@@ -192,6 +221,58 @@ class ParamSet(Registrable, Generic[ParamCls]):
         for key, value in paramval_dict.items():
             parent_name, name = key.split(".")
             self.setParameter(parent_name, name, attribute, value)
+
+    def setAttrByParamDict(
+        self,
+        paramSet: "ParamSet[ParamCls]",
+        attrsToUpdate: Optional[List[str]] = None,
+        insertMissing: bool = False,
+    ):
+        """
+        Set the whole parameter set by a dictionary of parameters. The dictionary should
+        have the same structure as the parameters attribute of the ParamSet object.
+        setParameter/insertParam is called to update the parameter set.
+        """
+        if attrsToUpdate is not None and insertMissing:
+            raise ValueError(
+                "When insertMissing is True, attrsToUpdate should be None. "
+                "Meaning that all of the attibutes of the parameters will "
+                "be inserted for the missing parameter."
+            )
+
+        for parentName, paraDict in paramSet.items():
+            # check if the parent system is in the parameter set
+            if parentName not in self.parameters.keys():
+                if insertMissing:
+                    self.parameters[parentName] = {}
+                else:
+                    raise ValueError(
+                        f"Parent system {parentName} is not in the parameter set."
+                    )
+
+            for paramName, param in paraDict.items():
+                # check if the parameter is in the parameter set
+                if paramName not in self.parameters[parentName].keys():
+                    if insertMissing:
+                        self.insertParam(parentName, paramName, param)
+                        continue
+                    else:
+                        raise ValueError(
+                            f"Parameter {paramName} is not in the parameter set."
+                        )
+
+                # check if the parameter is of the same type
+                assert (
+                    type(param) is self.paramCls
+                ), f"Parameter {paramName} is not of type {self.paramCls}."
+
+                # update the parameter for all the attributes
+                if attrsToUpdate is None:
+                    attrsToUpdate = dir(param)
+                for attr in attrsToUpdate:
+                    if attr.startswith("_"):
+                        continue
+                    self.setParameter(parentName, paramName, attr, getattr(param, attr))
 
 
 class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
@@ -214,7 +295,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         excluded_parameter_type: Union[List[ParameterType], None] = None,
     ):
         self.hilbertspace = hilbertspace
-        self.insertParamToSet(
+        self.insertAllParams(
             included_parameter_type=included_parameter_type,
             excluded_parameter_type=excluded_parameter_type,
         )
@@ -266,7 +347,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         parameters["truncated_dim"] = ["truncated_dim"]
         return parameters
 
-    def insertParamToSet(
+    def insertAllParams(
         self,
         included_parameter_type: Union[List[ParameterType], None] = None,
         excluded_parameter_type: Union[List[ParameterType], None] = None,
@@ -431,11 +512,8 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         # insert the parameter object to the parameter set
         self._updateNameMap(param.parent)
         parentName = self.parentNameByObj[param.parent]
-        if parentName not in self.parameters.keys():
-            self.parameters[parentName] = {}
 
-        # add the parameter to the parameter set
-        self[parentName][param.name] = param
+        self.insertParam(parentName, paramName, param)
 
     def clear(self):
         """
@@ -446,8 +524,8 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         self.parentObjByName = {}
 
     @classmethod
-    def sweepSetByHS(cls, hilbertSpace: HilbertSpace):
-        sweepParameterSet = cls(QMSweepParam)
+    def sweepSetByHS(cls, hilbertSpace: HilbertSpace) -> "HSParamSet[QMSweepParam]":
+        sweepParameterSet = HSParamSet(QMSweepParam)
         sweepParameterSet.dynamicalInit(
             hilbertSpace,
             included_parameter_type=["ng", "flux"],
@@ -511,7 +589,10 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
         **kwargs,
     ):
         """
-        Emit the signals to update the view.
+        Emit the signals to update the view. When the parentName, paramName,
+        and attr are not provided, emit the signals for all the parameters.
+        Especially, when the attr is not provided, emit the signals for all the
+        attributes (usually attr_to_register) of the parameter.
         """
         # select the parent system
         if parentName is None:
@@ -565,104 +646,21 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
         paramAttr: ParamAttr,
         **kwargs,
     ):
-        param = paramSet[paramAttr.parantName][paramAttr.name]
+        param = paramSet[paramAttr.parentName][paramAttr.name]
         param.storeAttr(paramAttr.attr, paramAttr.value, **kwargs)
 
 
-class CombinedMeta(type(ParamModelMixin), type(ParamSet)):
-    pass
-
-
-class HSParamModel(
-    HSParamSet[DispParamCls],
-    ParamModelMixin[DispParamCls],  # ordering matters
-    Generic[DispParamCls],
-    metaclass=CombinedMeta,
-):
-    hilbertSpaceUpdated = Signal(HilbertSpace)
-
-    def __init__(self, paramCls: Type[DispParamCls]):
-        # ordering matters here
-        HSParamSet.__init__(self, paramCls)
-        ParamModelMixin.__init__(self)
-        attrs = self.paramCls.attrToRegister
-
-    def setParameter(
-        self,
-        parentName: str,
-        name: str,
-        attr: str,
-        value: Union[int, float],
-    ):
-        """
-        Not only set the parameter, but also emit the signal to update the view.
-
-        A key method in updating the model by the internal processes.
-        """
-        super().setParameter(parentName, name, attr, value)
-
-        self.emitUpdateBox(parentName, name, attr)
-
-    def registerAll(
-        self,
-    ) -> Dict[str, RegistryEntry]:
-        return self._registerAll(self)
-
-    # Signals ==========================================================
-    def emitUpdateBox(
-        self,
-        parentName: Optional[str] = None,
-        paramName: Optional[str] = None,
-        attr: Optional[str] = None,
-    ):
-        self._emitUpdateBox(self, parentName=parentName, paramName=paramName, attr=attr)
-
-    def emitHSUpdated(self):
-        self.hilbertSpaceUpdated.emit(self.hilbertspace)
-
-    # Slots ============================================================
-    def storeParamAttr(
-        self,
-        paramAttr: ParamAttr,
-        **kwargs,
-    ):
-        super()._storeParamAttr(self, paramAttr, **kwargs)
-
-    @Slot(str, str)
-    def updateParent(
-        self,
-        parentName: str,
-        paramName: str,
-    ):
-        param = self[parentName][paramName]
-        param.setParameterForParent()
-        self.emitHSUpdated()
-
-
-class PrefitParamModel(HSParamModel[QMSliderParam]):
+class SliderModelMixin(ParamModelMixin[QMSliderParam]):
     updateSlider = Signal(ParamAttr)
 
-    def setParameter(
+    def _emitUpdateSlider(
         self,
-        parentName: str,
-        name: str,
-        attr: str,
-        value: Union[int, float],
-    ):
-        """
-        Set the parameter, emit the signal to update the box and sliders.
-        """
-        super().setParameter(parentName, name, attr, value)
-
-        self.emitUpdateSlider(parentName, name)
-
-    def emitUpdateSlider(
-        self,
+        paramSet: ParamSet[QMSliderParam],
         parentName: Optional[str] = None,
         paramName: Optional[str] = None,
     ):
         self._emitAttrByName(
-            self,
+            paramSet,
             self.updateSlider,
             parentName=parentName,
             paramName=paramName,
@@ -670,24 +668,28 @@ class PrefitParamModel(HSParamModel[QMSliderParam]):
             toSlider=True,
         )
 
-    @Slot()
-    def storeParamAttr(
+    @Slot(ParamAttr)
+    def _storeParamAttr(
         self,
+        paramSet: ParamSet[QMSliderParam],
         paramAttr: ParamAttr,
         fromSlider: bool = False,
     ):
-        """
-        Store the data from the view
-        """
-        super().storeParamAttr(paramAttr, fromSlider=fromSlider)
+        super()._storeParamAttr(paramSet, paramAttr, fromSlider=fromSlider)
 
         if paramAttr.attr == "value":
             if fromSlider:
-                self.emitUpdateBox(paramAttr.parantName, paramAttr.name, paramAttr.attr)
+                self._emitUpdateBox(
+                    paramSet, paramAttr.parentName, paramAttr.name, paramAttr.attr
+                )
             elif not fromSlider:
-                self.emitUpdateSlider(paramAttr.parantName, paramAttr.name)
+                self._emitUpdateSlider(paramSet, paramAttr.parentName, paramAttr.name)
         elif paramAttr.attr in ["min", "max"]:
-            self.emitUpdateSlider(paramAttr.parantName, paramAttr.name)
+            self._emitUpdateSlider(paramSet, paramAttr.parentName, paramAttr.name)
+
+
+class CombinedMeta(type(ParamModelMixin), type(ParamSet)):
+    pass
 
 
 class CaliParamModel(
@@ -698,9 +700,10 @@ class CaliParamModel(
     plotCaliPtExtractStart = Signal(str)
     plotCaliPtExtractFinished = Signal(str, dict)
     plotCaliPtExtractInterrupted = Signal()
-    issueNewXCaliFunc = Signal(dict)
-    issueNewYCaliFunc = Signal(object)
-    issueNewInvYCaliFunc = Signal(object)
+    xCaliUpdated = Signal(dict)
+    yCaliUpdated = Signal(object)
+    invYCaliUpdated = Signal(object)
+    updatePrefitModel = Signal(ParamAttr)
     caliModelRawVecUpdatedForSwapXY = Signal()
     # calibrationIsOn: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2", False]
 
@@ -785,7 +788,7 @@ class CaliParamModel(
         self._isSufficientForFullCalibration(self.rawXVecDim, self.figNr)
 
         # initialize calibration table entries
-        self.insertParamToSet()
+        self.insertAllParams()
 
         self._updateXRowIdxBySourceDict()
         # self.paramDict = self.toParamDict()
@@ -816,7 +819,7 @@ class CaliParamModel(
             f"X{XRowIdx}" for XRowIdx in range(self.caliTableXRowNr)
         ]
 
-    def insertParamToSet(self):
+    def insertAllParams(self):
         if self.parameters != {}:
             self.clear()
 
@@ -827,28 +830,31 @@ class CaliParamModel(
                 rawXValue = 1.0 if rawVecCompIdx == (XRowIdx - 1) else 0.0
                 self._insertParamByArgs(
                     colName=rawVecCompName,
-                    rowIdx=XRowIdxName,
+                    rowName=XRowIdxName,
                     paramType="raw_X_vec_component",
                     parentSystemName=None,
                     sweepParamName=None,
                     value=rawXValue,
                 )
             # loop over the mapped vector components (given by sweep parameters)
+            mapXVecIdx = 0
             for parentName, paramDictByParent in self.sweepParamSet.items():
                 for paramName, param in paramDictByParent.items():
+                    mapXValue = 1.0 if mapXVecIdx == (XRowIdx - 1) else 0.0
                     self._insertParamByArgs(
                         colName=f"{parentName}.{paramName}",
-                        rowIdx=XRowIdxName,
+                        rowName=XRowIdxName,
                         paramType=param.paramType,
                         sweepParamName=paramName,
-                        value=0,
+                        value=mapXValue,
                         parentSystemName=parentName,
                     )
+                    mapXVecIdx += 1
             # insert the point pair source
             if self.isFullCalibration:
                 self._insertParamByArgs(
                     colName="pointPairSource",
-                    rowIdx=XRowIdxName,
+                    rowName=XRowIdxName,
                     paramType="point_pair_source",
                     parentSystemName=None,
                     sweepParamName=None,
@@ -858,7 +864,7 @@ class CaliParamModel(
                 # value is the figure name
                 self._insertParamByArgs(
                     colName="pointPairSource",
-                    rowIdx=XRowIdxName,
+                    rowName=XRowIdxName,
                     paramType="point_pair_source",
                     parentSystemName=None,
                     sweepParamName=None,
@@ -871,7 +877,7 @@ class CaliParamModel(
             mapYValue = rawYValue
             self._insertParamByArgs(
                 colName=self.rawYName,
-                rowIdx=YRowIdxName,
+                rowName=YRowIdxName,
                 paramType="raw_Y",
                 parentSystemName=None,
                 sweepParamName=None,
@@ -879,7 +885,7 @@ class CaliParamModel(
             )
             self._insertParamByArgs(
                 colName="mappedY",
-                rowIdx=YRowIdxName,
+                rowName=YRowIdxName,
                 paramType="mapped_Y",
                 sweepParamName=None,
                 value=mapYValue,
@@ -887,7 +893,7 @@ class CaliParamModel(
             )
             self._insertParamByArgs(
                 colName="pointPairSource",
-                rowIdx=YRowIdxName,
+                rowName=YRowIdxName,
                 paramType="point_pair_source",
                 sweepParamName=None,
                 value=None,
@@ -897,7 +903,7 @@ class CaliParamModel(
     def _insertParamByArgs(
         self,
         colName: str,
-        rowIdx: str,
+        rowName: str,
         paramType: str,
         parentSystemName: Optional[str],
         sweepParamName: Optional[str],
@@ -908,10 +914,10 @@ class CaliParamModel(
         has a dual version in the HSParamSet class.
         """
 
-        # process the keyword arguments based on the needed arguments for the parameter class
+        # process the keyword arguments (if needed)
         kwargs = {
             "colName": colName,
-            "rowIdx": rowIdx,
+            "rowIdx": rowName,
             "paramType": paramType,
             "parentSystemName": parentSystemName,
             "sweepParamName": sweepParamName,
@@ -922,9 +928,9 @@ class CaliParamModel(
         param = CaliTableRowParam(**kwargs)
 
         # add the parameter to the parameter set
-        if rowIdx not in self.parameters.keys():
-            self.parameters[rowIdx] = {}
-        self.parameters[rowIdx][colName] = param
+        if rowName not in self.parameters.keys():
+            self.parameters[rowName] = {}
+        self.parameters[rowName][colName] = param
 
     # property =========================================================
     @property
@@ -938,6 +944,77 @@ class CaliParamModel(
     @property
     def sweepParamNr(self) -> int:
         return len(self.sweepParamSet)
+
+    def _prefitHas(self, rowName: str, colName: str) -> bool:
+        """
+        Check if the prefit parameter is in the prefit parameter set.
+        """
+        param = self.parameters[rowName][colName]
+        return param.paramType in ["flux", "ng", "mapped_Y"]
+
+    def _xCaliDependOn(self, rowName: str, colName: str) -> bool:
+        """
+        Check if the mapped X value depends on the raw X value.
+        """
+        param = self.parameters[rowName][colName]
+        return param.paramType in ["raw_X_vec_component", "ng", "flux"]
+
+    def _yCaliDependOn(self, rowName: str, colName: str) -> bool:
+        """
+        Check if the mapped Y value depends on the raw Y value.
+        """
+        param = self.parameters[rowName][colName]
+        return param.paramType in ["raw_Y", "mapped_Y"]
+
+    def toPrefitParams(self) -> ParamSet[QMSliderParam]:
+        # obtain the range of the parameters, which is helpful to determine
+        # the range of the prefit parameters
+        existedValue = {}
+        for rowName, paramDictByParent in self.items():
+            for colName, param in paramDictByParent.items():
+                # filter out the parameters that are not updated by the slider
+                if not self._prefitHas(rowName, colName):
+                    continue
+
+                if colName not in existedValue.keys():
+                    existedValue[colName] = []
+                existedValue[colName].append(param.value)
+
+        # compute the range of the existed mapped values
+        rangeDict = {}
+        for key, valueList in existedValue.items():
+            rangeDict[key] = np.max(valueList) - np.min(valueList)
+
+        # create the prefit parameters
+        paramSet = ParamSet[QMSliderParam](QMSliderParam)
+        for rowName, paramDictByParent in self.items():
+            for colName, param in paramDictByParent.items():
+                # filter out the parameters that are not updated by the slider
+                if param.paramType not in ["flux", "ng", "mapped_Y"]:
+                    continue
+
+                value = param.value
+                valRange = rangeDict[colName] * 0.2
+                if valRange > 0:
+                    # accept the range if it is not zero
+                    pass
+                elif value != 0:
+                    valRange = np.abs(value) * 0.4
+                else:
+                    valRange = 2
+
+                # insert a prefit parameter
+                prefitParam = QMSliderParam(
+                    name=colName,
+                    parent=param.parent,
+                    paramType=param.paramType,
+                    value=value,
+                    min=value - valRange / 2,
+                    max=value + valRange / 2,
+                )
+                paramSet.insertParam(rowName, colName, prefitParam)
+
+        return paramSet
 
     # calibrate the raw vector to the mapped vector ====================
     def _YCalibration(self) -> Callable:
@@ -1249,22 +1326,29 @@ class CaliParamModel(
         **kwargs,
     ):
         super()._storeParamAttr(self, paramAttr, **kwargs)
-        rowIdx = paramAttr.parantName
+        rowIdx = paramAttr.parentName
         colName = paramAttr.name
+
         if paramAttr.attr == "value":
-            if self.parameters[rowIdx][colName].paramType in [
-                "raw_X_vec_component",
-                "ng",
-                "flux",
-            ]:
+            if self._xCaliDependOn(rowIdx, colName):
                 self.sendXCaliFunc()
-            elif self.parameters[rowIdx][colName].paramType in ["raw_Y", "mapped_Y"]:
+            elif self._yCaliDependOn(rowIdx, colName):
                 self.sendYCaliFunc()
                 self.sendInvYCaliFunc()
 
+            if self._prefitHas(rowIdx, colName):
+                self.updatePrefitModel.emit(
+                    ParamAttr(
+                        paramAttr.parentName,
+                        paramAttr.name,
+                        paramAttr.attr,
+                        self[paramAttr.parentName][paramAttr.name].value,
+                    )
+                )
+
     def updateCaliModelRawVecNameListForSwapXY(self):
         self.rawYName, self.rawXVecNameList = self.rawXVecNameList[0], [self.rawYName]
-        self.insertParamToSet()
+        self.insertAllParams()
         self._updateXRowIdxBySourceDict()
         self.caliModelRawVecUpdatedForSwapXY.emit()
 
@@ -1354,9 +1438,9 @@ class CaliParamModel(
         * entering raw X by clicking on the plot triggers processSelectedPtFromPlot
         """
         if self.isFullCalibration:
-            self.issueNewXCaliFunc.emit(self._fullXCalibration())
+            self.xCaliUpdated.emit(self._fullXCalibration())
         else:
-            self.issueNewXCaliFunc.emit(self._partialXCalibration())
+            self.xCaliUpdated.emit(self._partialXCalibration())
 
     def sendYCaliFunc(self):
         """
@@ -1365,7 +1449,7 @@ class CaliParamModel(
         * XY swap triggers swapXYData
         * entering raw Y by clicking on the plot triggers processSelectedPtFromPlot
         """
-        self.issueNewYCaliFunc.emit(self._YCalibration())
+        self.yCaliUpdated.emit(self._YCalibration())
 
     def sendInvYCaliFunc(self):
         """
@@ -1374,4 +1458,4 @@ class CaliParamModel(
         * XY swap triggers swapXYData
         * entering raw Y by clicking on the plot triggers processSelectedPtFromPlot
         """
-        self.issueNewInvYCaliFunc.emit(self._invYCalibration())
+        self.invYCaliUpdated.emit(self._invYCalibration())

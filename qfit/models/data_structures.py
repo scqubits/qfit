@@ -587,18 +587,18 @@ class ParamAttr:
 
     def __init__(
         self,
-        parantName: str,
+        parentName: str,
         name: str,
         attr: str,
         value: Any,
     ):
-        self.parantName = parantName
+        self.parentName = parentName
         self.name = name
         self.attr = attr
         self.value = value
 
     def __repr__(self) -> str:
-        return f"{self.parantName}.{self.name}.{self.attr}: {self.value}"
+        return f"{self.parentName}.{self.name}.{self.attr}: {self.value}"
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -651,10 +651,10 @@ class DispParamBase(ParamBase):
         else:
             return f"{value:.{precision}f}".rstrip("0").rstrip(".")
 
-    def exportAttr(self, *args, **kwargs):
+    def exportAttr(self, *args, **kwargs) -> Any:
         pass
 
-    def storeAttr(self, *args, **kwargs):
+    def storeAttr(self, attr: str, value: Any, *args, **kwargs):
         pass
 
 
@@ -783,12 +783,14 @@ class QMSliderParam(DispParamBase):
     # setters from UI ==================================================
     @overload
     def storeAttr(
-        self, attr: str, value: str, fromSlider: Literal[False] = False
+        self, attr: str, value: str, fromSlider: Literal[False]
     ) -> None:
         pass
 
     @overload
-    def storeAttr(self, attr: str, value: int, fromSlider: Literal[True]) -> None:
+    def storeAttr(
+        self, attr: str, value: int, fromSlider: Literal[True]
+    ) -> None:
         pass
 
     def storeAttr(self, attr: str, value: Union[str, int], fromSlider: bool = False):
@@ -832,16 +834,20 @@ class QMFitParam(DispParamBase):
         name: str,
         parent: ParentType,
         paramType: ParameterType,
+        value: Union[int, float] = 0,
+        min: Union[int, float] = 0,
+        max: Union[int, float] = 1,
+        initValue: Union[int, float] = 0,
+        isFixed: bool = False,
     ):
         super().__init__(name=name, parent=parent, paramType=paramType)
+        self.value = self._toIntAsNeeded(value)
+        self.min = self._toIntAsNeeded(min)
+        self.max = self._toIntAsNeeded(max)
+        self.initValue = self._toIntAsNeeded(initValue)
+        self.isFixed = isFixed
 
-        # for test only
-        self.min: Union[int, float] = 0
-        self.max: Union[int, float] = 1
-        self.initValue: Union[int, float] = self.min
-        self.value: Union[int, float] = self.initValue
-        self.isFixed: bool = False
-
+        
     # setter for UI ====================================================
     def storeAttr(self, attr: str, value: Union[str, bool]):
         """

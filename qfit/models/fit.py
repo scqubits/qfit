@@ -7,14 +7,81 @@ from PySide6.QtCore import (
     QObject, QEventLoop, Slot
 )
 
+from scqubits.core.hilbert_space import HilbertSpace
 from qfit.utils.wrapped_optimizer import Optimization, OptTraj
 from qfit.models.extracted_data import AllExtractedData
-from qfit.models.quantum_model_parameters import HSParamModel, CaliParamModel
-from qfit.models.data_structures import QMFitParam
+from qfit.models.quantum_model_parameters import (
+    HSParamSet, ParamModelMixin, ParamSet,
+)
+from qfit.models.data_structures import QMFitParam, ParamAttr, QMSliderParam
+from qfit.models.registry import RegistryEntry
 from qfit.models.status import StatusModel
 
-class FitParamModel(HSParamModel[QMFitParam]):
 
+class CombinedMeta(type(ParamModelMixin), type(HSParamSet)):
+    pass
+
+
+class FitParamModel(
+    HSParamSet[QMFitParam],
+    ParamModelMixin[QMFitParam],  # ordering matters
+    metaclass=CombinedMeta,
+):
+    attrs = QMFitParam.attrToRegister
+
+    # mixin methods ====================================================
+    def __init__(self):
+        # ordering matters here
+        HSParamSet.__init__(self, QMFitParam)
+        ParamModelMixin.__init__(self)
+
+    def setParameter(
+        self,
+        parentName: str,
+        name: str,
+        attr: str,
+        value: Union[int, float],
+    ):
+        """
+        Not only set the parameter, but also emit the signal to update the view.
+
+        A key method in updating the model by the internal processes.
+        """
+        super().setParameter(parentName, name, attr, value)
+
+        self._emitUpdateBox(self, parentName=parentName, paramName=name, attr=attr)
+
+    def registerAll(
+        self,
+    ) -> Dict[str, RegistryEntry]:
+        return self._registerAll(self)
+
+    def storeParamAttr(
+        self,
+        paramAttr: ParamAttr,
+        **kwargs,
+    ):
+        super()._storeParamAttr(self, paramAttr, **kwargs)
+
+    # HilbertSpace related methods, could be a mixin class =============
+    hilbertSpaceUpdated = Signal(HilbertSpace)
+
+    # Signals 
+    def emitHSUpdated(self):
+        self.hilbertSpaceUpdated.emit(self.hilbertspace)
+
+    # Slots 
+    @Slot(str, str)
+    def updateParent(
+        self,
+        parentName: str,
+        paramName: str,
+    ):
+        param = self[parentName][paramName]
+        param.setParameterForParent()
+        self.emitHSUpdated()
+
+    # fit properties ===================================================
     @property
     def isValid(self) -> bool:
         for key, params in self.toParamDict().items():
@@ -32,7 +99,6 @@ class FitParamModel(HSParamModel[QMFitParam]):
                 return False
         return True
             
-
     @property
     def fixedParams(self) -> Dict[str, float]:
         return {
@@ -55,6 +121,38 @@ class FitParamModel(HSParamModel[QMFitParam]):
             key: params.initValue
             for key, params in self.toParamDict().items()
         }
+    
+    def toInitParams(self) -> ParamSet[QMFitParam]:
+        paramSet = ParamSet[QMFitParam](QMFitParam)
+        for parentName, parent in self.items():
+            for paramName, param in parent.items():
+                fitParam = QMFitParam(
+                    name = paramName,           # useless
+                    parent = param.parent,      # useless
+                    paramType = param.paramType,# useless
+                    initValue = param.value,     
+                )
+                paramSet.insertParam(parentName, paramName, fitParam)
+
+        return paramSet
+    
+    def toPrefitParams(self) -> ParamSet[QMSliderParam]:
+        paramSet = ParamSet[QMSliderParam](QMSliderParam)
+        for parentName, parent in self.items():
+            for paramName, param in parent.items():
+                sliderParam = QMSliderParam(
+                    name = paramName,           # useless
+                    parent = param.parent,      # useless
+                    paramType = param.paramType,# useless
+                    value = param.value,
+                    min = -1,                   # useless
+                    max = -1,                   # useless
+                )
+                paramSet.insertParam(parentName, paramName, sliderParam)
+
+        return paramSet
+
+    
 
 
 class FitModel(QObject):
