@@ -640,8 +640,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.allDatasets.dataUpdated.connect(self.quantumModel.updateExtractedData)
         self.caliParamModel.xCaliUpdated.connect(self.quantumModel.updateSweepParamSets)
         self.caliParamModel.yCaliUpdated.connect(self.quantumModel.updateYCaliFunc)
-        self.caliParamModel.invYCaliUpdated.connect(
-            self.quantumModel.updateInvYCaliFunc)
+        # self.caliParamModel.invYCaliUpdated.connect(
+        #     self.quantumModel.updateInvYCaliFunc)
         
         # connect the page change to the disable sweep
         self.pageView.pageChanged.connect(
@@ -665,7 +665,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.prefitView.optionUpdated.connect(self.quantumModel.storeSweepOption)
 
-        self.prefitView.runSweep.clicked.connect(self.quantumModel.sweep2SpecMSE)
+        self.prefitView.runSweep.clicked.connect(
+            lambda: self.quantumModel.updateCalc(callByPlotButton=True)
+        )
 
     # Fit ##############################################################
     # ##################################################################

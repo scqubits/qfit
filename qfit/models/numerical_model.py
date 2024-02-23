@@ -85,7 +85,7 @@ class QuantumModel(QObject):
 
         # options when generating the parameter sweep
         self._evalsCount: int = np.min([10, self.hilbertspace.dimension])
-        self._pointsAdd: int = 10
+        self._pointsAdded: int = 10
 
         # options when plotting the spectrum
         self._subsysToPlot: QuantumSystem = self.hilbertspace.subsystem_list[0]
@@ -95,7 +95,6 @@ class QuantumModel(QObject):
         # options when running
         self._autoRun: bool = True
         self.disableSweep: bool = True    # always off, used for backend operations
-
 
     # Signals and Slots ========================================================
     @Slot(str)
@@ -147,9 +146,9 @@ class QuantumModel(QObject):
         self._sweepParamSets = sweepParamSets
         self.updateCalc()
 
-    @Slot(object)  # can't use Callable here in the initialization
+    @Slot(object, object)  # can't use Callable here in the initialization
     # because Argument of type "type[Callable]" cannot be assigned to parameter of type "type"
-    def updateYCaliFunc(self, yCaliFunc: Callable):
+    def updateYCaliFunc(self, yCaliFunc: Callable, invYCaliFunc: Callable):
         """
         Update the y calibration function.
 
@@ -158,19 +157,8 @@ class QuantumModel(QObject):
         yCaliFunc: Callable
         """
         self._yCaliFunc = yCaliFunc
-        self.updateCalc()
-
-    @Slot(object)  # can't use Callable here in the initialization
-    def updateInvYCaliFunc(self, yInvCaliFunc: Callable):
-        """
-        Update the inverse y calibration function.
-
-        Parameters
-        ----------
-        yInvCaliFunc: Callable
-        """
-        self._yInvCaliFunc = yInvCaliFunc
-        self.updateCalc()
+        self._yInvCaliFunc = invYCaliFunc
+        self.sweep2SpecMSE()
 
     @Slot(str, Any)
     def storeSweepOption(
@@ -180,7 +168,7 @@ class QuantumModel(QObject):
             "initialState",
             "photons",
             "evalsCount",
-            "pointsAdd",
+            "pointsAdded",
             "autoRun",
         ],
         value: Any,
@@ -206,19 +194,19 @@ class QuantumModel(QObject):
             value = int(value)
         elif attrName == "evalsCount":
             value = int(value)
-        elif attrName == "pointsAdd":
+        elif attrName == "pointsAdded":
             value = int(value)
         elif attrName == "autoRun":
             value = bool(value)
 
         # set the value
-        setattr(self, attrName, value)
+        setattr(self, "_" + attrName, value)
 
         # update the calculation
         if attrName in ["subsysToPlot", "initialState", "photons"]:
             self.sweep2SpecMSE()
             pass
-        elif attrName in ["evalsCount", "pointsAdd", "autoRun"]:
+        elif attrName in ["evalsCount", "pointsAdded", "autoRun"]:
             self.updateCalc()
             pass
 
@@ -242,17 +230,24 @@ class QuantumModel(QObject):
             "initialState": initStateStr,
             "photons": self._photons,
             "evalsCount": str(self._evalsCount),
-            "pointsAdd": str(self._pointsAdd),
+            "pointsAdded": str(self._pointsAdded),
             "autoRun": self._autoRun,
         }
     
     # signals =================================================================
     def emitReadyToPlot(self):
+        # since we always specify the subsystems to plot, we need change the 
+        # default setting for initial state: None means (0, 0, ...)
+        if self._initialState is None:
+            initialState = (0,) * self.hilbertspace.subsystem_count
+        else:
+            initialState = self._initialState
+
         # spectrum data for highlighting
         highlight_specdata = self._currentSweep.transitions(
             as_specdata=True,
             subsystems=self._subsysToPlot,
-            initial=self._initialState,
+            initial=initialState,
             final=None,
             sidebands=False,
             photon_number=self._photons,
@@ -341,7 +336,7 @@ class QuantumModel(QObject):
                 # add uniformly distributed x coordinates if current figure
                 # is being plotted
                 x_coordinates_uniform = np.linspace(
-                    extrX[0], extrX[-1], self._pointsAdd
+                    extrX[0], extrX[-1], self._pointsAdded
                 )[1:-1]
                 x_coordinates_all = np.concatenate([extrX, x_coordinates_uniform])
                 sweptX[figName] = np.sort(x_coordinates_all)
@@ -427,8 +422,7 @@ class QuantumModel(QObject):
             sweeps[figName] = param_sweep
 
         return sweeps
-
-    # public methods ==========================================================
+    
     def newSweep(self) -> None:
         """
         Create a new ParameterSweep object based on the stored data.
@@ -444,7 +438,14 @@ class QuantumModel(QObject):
         except Exception as e:
             # TODO: emit error message
             raise e
+        
+        # result.status_type = "COMPUTING"
+        for sweep in self._sweeps.values():
+            # manually turn off the warning message
+            sweep._out_of_sync_warning_issued = True
+            sweep.run()
 
+    # public methods ==========================================================
     @Slot()
     def sweep2SpecMSE(self) -> float:
         """
@@ -452,6 +453,11 @@ class QuantumModel(QObject):
         for the prefit stage. It make use of the existing sweep object to
         get a spectrum data and MSE.
         """
+        if self.disableSweep:
+            # when manually update the quantumModel, we will turn this on
+            # and the sweep will not be generated
+            return
+        
         # run sweep (generate a new sweep if not exist)
         try:
             self._sweeps
@@ -461,10 +467,6 @@ class QuantumModel(QObject):
             except Exception as e:
                 # TODO: emit error message
                 raise e
-
-        # result.status_type = "COMPUTING"
-        for sweep in self._sweeps.values():
-            sweep.run()
 
         self.emitReadyToPlot()
 
@@ -482,9 +484,12 @@ class QuantumModel(QObject):
         # result.statusStrForView = status_text
 
     @Slot()
-    def updateCalc(self) -> Union[None, float]:
+    def updateCalc(
+        self, 
+        callByPlotButton: bool = False
+    ) -> Union[None, float]:
         """
-        newSweep + prefitSweep2SpecMSE
+        newSweep + sweep2SpecMSE (when autoRun is on / fit / called by plot button)
 
         It is connected to the signal emitted by the UI when the user changes the slider
         of a parameter. It receives a QuantumModelParameterSet object and updates the
@@ -498,7 +503,7 @@ class QuantumModel(QObject):
 
         self.newSweep()
 
-        if self._autoRun or self.sweepUsage == "fit":
+        if self._autoRun or self.sweepUsage == "fit" or callByPlotButton:
             return self.sweep2SpecMSE()
     
     @Slot(str)

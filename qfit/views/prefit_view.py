@@ -70,6 +70,8 @@ class PrefitView(QObject):
         self.blockAllSignals(True)
         if option == "subsysToPlot":
             self.subsysToPlot.setCurrentText(value)
+        elif option == "evalsCount":
+            self.evalsCount.setText(value)
         elif option == "initialState":
             self.initialState.setText(value)
         elif option == "photons":

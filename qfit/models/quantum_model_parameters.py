@@ -701,8 +701,7 @@ class CaliParamModel(
     plotCaliPtExtractFinished = Signal(str, dict)
     plotCaliPtExtractInterrupted = Signal()
     xCaliUpdated = Signal(dict)
-    yCaliUpdated = Signal(object)
-    invYCaliUpdated = Signal(object)
+    yCaliUpdated = Signal(object, object)
     updatePrefitModel = Signal(ParamAttr)
     caliModelRawVecUpdatedForSwapXY = Signal()
     # calibrationIsOn: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2", False]
@@ -1275,7 +1274,7 @@ class CaliParamModel(
             self.sendXCaliFunc()
         elif self._yCaliDependOn(rowIdx, colName):
             self.sendYCaliFunc()
-            self.sendInvYCaliFunc()
+            # self.sendInvYCaliFunc()
 
     def processSelectedPtFromPlot(self, data: Dict[str, float], figName: str):
         """
@@ -1353,7 +1352,7 @@ class CaliParamModel(
                 self.sendXCaliFunc()
             elif self._yCaliDependOn(rowIdx, colName):
                 self.sendYCaliFunc()
-                self.sendInvYCaliFunc()
+                # self.sendInvYCaliFunc()
 
             if self._prefitHas(rowIdx, colName):
                 # update min, max, value for the prefit model
@@ -1445,9 +1444,9 @@ class CaliParamModel(
 
         self.blockSignals(False)
 
+        self.emitUpdateBox()
         self.sendXCaliFunc()
         self.sendYCaliFunc()
-        self.sendInvYCaliFunc()
 
     def updateAllBoxes(self):
         """
@@ -1487,13 +1486,5 @@ class CaliParamModel(
         * XY swap triggers swapXYData
         * entering raw Y by clicking on the plot triggers processSelectedPtFromPlot
         """
-        self.yCaliUpdated.emit(self._YCalibration())
+        self.yCaliUpdated.emit(self._YCalibration(), self._invYCalibration())
 
-    def sendInvYCaliFunc(self):
-        """
-        The function that updates the calibration function. Triggers when:
-        * line editing acction triggers storeParamAttr
-        * XY swap triggers swapXYData
-        * entering raw Y by clicking on the plot triggers processSelectedPtFromPlot
-        """
-        self.invYCaliUpdated.emit(self._invYCalibration())
