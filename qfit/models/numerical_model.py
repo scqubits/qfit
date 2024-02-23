@@ -471,6 +471,16 @@ class QuantumModel(QObject):
 
         if self._autoRun or self.sweepUsage == "fit":
             return self.sweep2SpecMSE()
+    
+    @Slot(str)
+    def updateDisableSweepOnPageChange(self, currentPage: str):
+        """
+        Update the disableSweep attribute when the page changes.
+        """
+        if currentPage in ["prefit", "fit"]:
+            self.disableSweep = False
+        else:
+            self.disableSweep = True
 
     # calculate MSE ===========================================================
     @staticmethod

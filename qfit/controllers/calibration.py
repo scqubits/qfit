@@ -70,6 +70,7 @@ class CalibrationCtrl(QObject):
             caliTableXRowNr=self.caliParamModel.caliTableXRowNr,
             sweepParamSet=HSParamSet.sweepSetByHS(hilbertspace),
         )
+        self.caliParamModel.updateAllBoxes()
 
     def uiCalibrationConnects(self):
         """
@@ -108,6 +109,10 @@ class CalibrationCtrl(QObject):
         )
 
         # calibration model --> calibration view (update table signal when XY is swapped)
-        self.caliParamModel.caliModelFinishedSwapXY.connect(
+        # Notice that the swapXY is done in the plotting controller instead of here
+        self.caliParamModel.caliModelRawVecUpdatedForSwapXY.connect(
             self.calibrationView.swapXYAfterModelChanges
+        )
+        self.calibrationView.caliViewRawVecUpdatedForSwapXY.connect(
+            self.caliParamModel.swapXYData
         )

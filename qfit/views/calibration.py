@@ -29,6 +29,7 @@ from qfit.models.data_structures import QMSweepParam, ParamAttr
 class CalibrationView(QObject):
     caliStatusChangedByButtonClicked = Signal(object)
     dataEditingFinished = Signal(ParamAttr)
+    caliViewRawVecUpdatedForSwapXY = Signal()
     _virtualButton: QPushButton
 
     sweepParamSet: HSParamSet[QMSweepParam]
@@ -248,46 +249,11 @@ class CalibrationView(QObject):
         To be phased out in the future; not the best code design
         """
         self.rawXVecNameList, self.rawYName = [self.rawYName], self.rawXVecNameList[0]
+        # regenerate calibration table set
         self._generateCaliTableSet()
+        # re setup the signal emitting
         self.setupEditingFinishedSignalEmit()
-        # manually swap the numbers in the line edits and trigger the signal
-        # for line editing finished
-        oldX0RawText = self.caliTableSet["X0"][self.rawXVecNameList[0]].text()
-        oldX1RawText = self.caliTableSet["X1"][self.rawXVecNameList[0]].text()
-        oldX0MapText = self.caliTableSet["X0"][
-            f"{self.sweepParamParentName}.{self.sweepParamName}"
-        ].text()
-        oldX1MapText = self.caliTableSet["X1"][
-            f"{self.sweepParamParentName}.{self.sweepParamName}"
-        ].text()
-        oldY0RawText = self.caliTableSet["Y0"][self.rawYName].text()
-        oldY1RawText = self.caliTableSet["Y1"][self.rawYName].text()
-        oldY0MapText = self.caliTableSet["Y0"]["mappedY"].text()
-        oldY1MapText = self.caliTableSet["Y1"]["mappedY"].text()
-        self.caliTableSet["X0"][self.rawXVecNameList[0]].setText(oldY0RawText)
-        self.caliTableSet["X1"][self.rawXVecNameList[0]].setText(oldY1RawText)
-        self.caliTableSet["X0"][
-            f"{self.sweepParamParentName}.{self.sweepParamName}"
-        ].setText(oldY0MapText)
-        self.caliTableSet["X1"][
-            f"{self.sweepParamParentName}.{self.sweepParamName}"
-        ].setText(oldY1MapText)
-        self.caliTableSet["X0"][self.rawXVecNameList[0]].editingFinished.emit()
-        self.caliTableSet["X1"][self.rawXVecNameList[0]].editingFinished.emit()
-        self.caliTableSet["X0"][
-            f"{self.sweepParamParentName}.{self.sweepParamName}"
-        ].editingFinished.emit()
-        self.caliTableSet["X1"][
-            f"{self.sweepParamParentName}.{self.sweepParamName}"
-        ].editingFinished.emit()
-        self.caliTableSet["Y0"][self.rawYName].setText(oldX0RawText)
-        self.caliTableSet["Y1"][self.rawYName].setText(oldX1RawText)
-        self.caliTableSet["Y0"]["mappedY"].setText(oldX0MapText)
-        self.caliTableSet["Y1"]["mappedY"].setText(oldX1MapText)
-        self.caliTableSet["Y0"][self.rawYName].editingFinished.emit()
-        self.caliTableSet["Y1"][self.rawYName].editingFinished.emit()
-        self.caliTableSet["Y0"]["mappedY"].editingFinished.emit()
-        self.caliTableSet["Y1"]["mappedY"].editingFinished.emit()
+        self.caliViewRawVecUpdatedForSwapXY.emit()
 
     #     self.msg = None
 
