@@ -76,7 +76,7 @@ from qfit.views.status_bar import StatusBarView
 
 # pre-fit
 from qfit.views.parameters import PrefitParamView
-from qfit.views.prefit import PrefitView
+from qfit.views.prefit_view import PrefitView
 from qfit.models.data_structures import QMSliderParam, QMSweepParam
 from qfit.models.quantum_model_parameters import (
     ParamSet,
@@ -455,7 +455,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 HSParamSet.parentSystemNames(subsys)
                 for subsys in hilbertspace.subsystem_list[::-1]
             ],
-            hilbertDim=hilbertspace.dimension,
         )
         self.quantumModel.dynamicalInit(
             hilbertspace, [data.name for data in measurementData]
@@ -466,6 +465,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitParamModel.emitUpdateSlider()
         self.prefitCaliModel.emitUpdateBox()
         self.prefitCaliModel.emitUpdateSlider()
+        for option, value in self.quantumModel.exportSweepOption().items():
+            self.prefitView.setOptions(option, value)
 
         # update everything in the quantumModel
         self.quantumModel.disableSweep = True  # disable the auto sweep
@@ -473,7 +474,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.allDatasets.emitDataUpdated()
         self.caliParamModel.sendXCaliFunc()
         self.caliParamModel.sendYCaliFunc()
-        self.prefitView.emitAllOptions()  # auto run sync to the view
+        # self.prefitView.emitAllOptions()  # auto run sync to the view
         # self.quantumModel.disableSweep = False
 
 
@@ -662,7 +663,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         5. points add line edit
         """
 
-        self.prefitView.optionUpdated.connect(self.quantumModel.updateSweepOption)
+        self.prefitView.optionUpdated.connect(self.quantumModel.storeSweepOption)
 
         self.prefitView.runSweep.clicked.connect(self.quantumModel.sweep2SpecMSE)
 

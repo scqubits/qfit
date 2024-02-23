@@ -63,6 +63,14 @@ class QuantumModel(QObject):
     ):
         super().__init__()
 
+
+    def dynamicalInit(self, hilbertspace: HilbertSpace, figNames: List[str]):
+        self.hilbertspace = hilbertspace
+        self._figNames = figNames
+        self._currentFigName = self._figNames[0]
+
+        self._initializeSweepIngredients()
+
     def _initializeSweepIngredients(self):
         # extracted data
         self._fullExtr = FullExtr()
@@ -76,8 +84,8 @@ class QuantumModel(QObject):
         self._yInvCaliFunc: Callable = lambda x: x
 
         # options when generating the parameter sweep
-        self._evalsCount: int = 1
-        self._pointsAdd: int = 0
+        self._evalsCount: int = np.min([10, self.hilbertspace.dimension])
+        self._pointsAdd: int = 10
 
         # options when plotting the spectrum
         self._subsysToPlot: QuantumSystem = self.hilbertspace.subsystem_list[0]
@@ -88,12 +96,6 @@ class QuantumModel(QObject):
         self._autoRun: bool = True
         self.disableSweep: bool = True    # always off, used for backend operations
 
-    def dynamicalInit(self, hilbertspace: HilbertSpace, figNames: List[str]):
-        self.hilbertspace = hilbertspace
-        self._figNames = figNames
-        self._currentFigName = self._figNames[0]
-
-        self._initializeSweepIngredients()
 
     # Signals and Slots ========================================================
     @Slot(str)
@@ -171,7 +173,7 @@ class QuantumModel(QObject):
         self.updateCalc()
 
     @Slot(str, Any)
-    def updateSweepOption(
+    def storeSweepOption(
         self,
         attrName: Literal[
             "subsysToPlot",
@@ -220,6 +222,30 @@ class QuantumModel(QObject):
             self.updateCalc()
             pass
 
+    def exportSweepOption(self) -> Dict[str, Any]:
+        """
+        Export the sweep options to view
+
+        Returns
+        -------
+        A tuple of the attribute name and the value.
+        """
+        if isinstance(self._initialState, tuple):
+            initStateStr = str(self._initialState)[1:-1]    # remove the parentheses
+        elif isinstance(self._initialState, int):
+            initStateStr = str(self._initialState)
+        else:
+            initStateStr = ""
+    
+        return {
+            "subsysToPlot": HSParamSet.parentSystemNames(self._subsysToPlot),
+            "initialState": initStateStr,
+            "photons": self._photons,
+            "evalsCount": str(self._evalsCount),
+            "pointsAdd": str(self._pointsAdd),
+            "autoRun": self._autoRun,
+        }
+    
     # signals =================================================================
     def emitReadyToPlot(self):
         # spectrum data for highlighting
@@ -297,7 +323,7 @@ class QuantumModel(QObject):
         this step is carried out based on the inverse calibration function
         in the calibration data
         """
-        specData.energy_table[:, :] = self._yCaliFunc(specData.energy_table)
+        specData.energy_table = self._yInvCaliFunc(specData.energy_table)
 
     # generate sweep ==========================================================
     def _prefitSweptX(self, addPoints: bool = True) -> Dict[str, np.ndarray]:
@@ -433,7 +459,8 @@ class QuantumModel(QObject):
             try:
                 self.newSweep()
             except Exception as e:
-                return
+                # TODO: emit error message
+                raise e
 
         # result.status_type = "COMPUTING"
         for sweep in self._sweeps.values():
@@ -444,7 +471,9 @@ class QuantumModel(QObject):
         # --------------------------------------------------------------
 
         # mse calculation
-        return self._calculateMSE()
+        mse = self._calculateMSE()
+        print(mse)
+        return mse
 
         # # pass MSE and status messages to the model
         # result.oldMseForComputingDelta = result.newMseForComputingDelta
@@ -517,7 +546,7 @@ class QuantumModel(QObject):
 
         return possible_transitions[closest_idx]
 
-    def _spectrumByTag(
+    def _numericalSpecByTag(
         self,
         x_coord: float,
         sweep: ParameterSweep,
@@ -539,6 +568,8 @@ class QuantumModel(QObject):
         instance. If the tag is not provided or can not identify states,
         the closest transition frequency is returned.
         """
+        eigenenergies = sweep["evals"]["x":x_coord]
+
         # if provided dressed label
         if tag.tagType == "NO_TAG":
             status = "NO_TAG"
@@ -555,7 +586,6 @@ class QuantumModel(QObject):
 
         # if provided bare label
         elif tag.tagType == "DISPERSIVE_BARE":
-            eigenenergies = sweep["evals"]["x":x_coord]
             initial_energy = sweep["x":x_coord].energy_by_bare_index(tag.initial)
             final_energy = sweep["x":x_coord].energy_by_bare_index(tag.final)
 
@@ -607,7 +637,7 @@ class QuantumModel(QObject):
             (
                 transition_freq,
                 get_transition_freq_status,
-            ) = self._spectrumByTag(
+            ) = self._numericalSpecByTag(
                 x_coord=xData,
                 sweep=sweep,
                 tag=tag,

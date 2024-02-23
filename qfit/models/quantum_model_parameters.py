@@ -962,25 +962,40 @@ class CaliParamModel(
         param = self.parameters[rowName][colName]
         return param.paramType in ["raw_Y", "mapped_Y"]
     
-    def toPrefitParams(self) -> ParamSet[QMSliderParam]:
-        # obtain the range of the parameters, which is helpful to determine 
-        # the range of the prefit parameters
-        existedValue = {}
-        for rowName, paramDictByParent in self.items():
-            for colName, param in paramDictByParent.items():
+    def _prefitMinMaxByColName(self, rowName: str, colName: str) -> Tuple[float, float]:
+        """
+        Prefit parameters' min and max are determined by the range of the 
+        existed mapped values, for fine-tuning the cali parameters.
+        """
+        # obtain a list of values that has the same column name
+        existedValue = []
+        for rowNameIter, paramDictByParent in self.items():
+            for colNameIter, param in paramDictByParent.items():
+                if colNameIter != colName:
+                    continue
+
                 # filter out the parameters that are not updated by the slider
-                if not self._prefitHas(rowName, colName):
-                    continue 
+                if not self._prefitHas(rowNameIter, colName):
+                    raise ValueError(
+                        "This method should be only used for prefit parameters."
+                    )
+                
+                existedValue.append(param.value)
 
-                if colName not in existedValue.keys():
-                    existedValue[colName] = []
-                existedValue[colName].append(param.value)
-        
-        # compute the range of the existed mapped values
-        rangeDict = {} 
-        for key, valueList in existedValue.items():
-            rangeDict[key] = np.max(valueList) - np.min(valueList)
+        # using the min & max of the list, determine the range
+        valRange = (np.max(existedValue) - np.min(existedValue)) * 0.2
+        value = self[rowName][colName].value
+        if valRange > 0:   
+            # accept the range if it is not zero
+            pass
+        elif value != 0:
+            valRange = np.abs(value) * 0.4
+        else:
+            valRange = 1
 
+        return (value - valRange/2, value + valRange/2)
+    
+    def toPrefitParams(self) -> ParamSet[QMSliderParam]:
         # create the prefit parameters
         paramSet = ParamSet[QMSliderParam](QMSliderParam)
         for rowName, paramDictByParent in self.items():
@@ -988,16 +1003,9 @@ class CaliParamModel(
                 # filter out the parameters that are not updated by the slider
                 if param.paramType not in ["flux", "ng", "mapped_Y"]:
                     continue
-
+                
                 value = param.value
-                valRange = rangeDict[colName] * 0.2
-                if valRange > 0:   
-                    # accept the range if it is not zero
-                    pass
-                elif value != 0:
-                    valRange = np.abs(value) * 0.4
-                else:
-                    valRange = 2
+                min, max = self._prefitMinMaxByColName(rowName, colName)
 
                 # insert a prefit parameter
                 prefitParam = QMSliderParam(
@@ -1005,8 +1013,8 @@ class CaliParamModel(
                     parent = param.parent,
                     paramType = param.paramType,
                     value = value,
-                    min = value - valRange/2,
-                    max = value + valRange/2,
+                    min = min,
+                    max = max,
                 )
                 paramSet.insertParam(rowName, colName, prefitParam)
 
@@ -1017,7 +1025,7 @@ class CaliParamModel(
         """
         Generate a function that applies the calibration to the raw Y value.
         """
-        alphaVec = self._getAlphaVec()
+        alphaVec = self._getYAlphaVec()
 
         def YCalibration(rawY: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
             """
@@ -1042,7 +1050,7 @@ class CaliParamModel(
         """
         Generate a function that applies the inverse calibration to the mapped Y value.
         """
-        alphaVec = self._getAlphaVec()
+        alphaVec = self._getYAlphaVec()
 
         def invYCalibration(mapY: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
             """
@@ -1063,7 +1071,10 @@ class CaliParamModel(
 
         return invYCalibration
 
-    def _getAlphaVec(self) -> np.ndarray:
+    def _getYAlphaVec(self) -> np.ndarray:
+        """
+        Solve the alpha vector for the Y calibration.
+        """
         # gather all the point pair raw value and construct the augmented rawMat
         augRawYMat = np.zeros((2, 2))
         for YRowIdx in range(2):
@@ -1256,6 +1267,12 @@ class CaliParamModel(
 
         self.emitUpdateBox(rowIdx, colName, attr)
 
+        if self._xCaliDependOn(rowIdx, colName):
+            self.sendXCaliFunc()
+        elif self._yCaliDependOn(rowIdx, colName):
+            self.sendYCaliFunc()
+            self.sendInvYCaliFunc()
+
     def processSelectedPtFromPlot(self, data: Dict[str, float], figName: str):
         """
         Called by the canvas click event. Process and store the calibration data.
@@ -1275,7 +1292,6 @@ class CaliParamModel(
                         attr="value",
                         value=data[rawXVecCompName],
                     )
-                self.sendXCaliFunc()
             elif caliLabel[0] == "Y":
                 # this contains updatebox
                 self.setParameter(
@@ -1284,8 +1300,6 @@ class CaliParamModel(
                     attr="value",
                     value=data[self.rawYName],
                 )
-                self.sendYCaliFunc()
-                self.sendInvYCaliFunc()
             # update source for the point pair
             self.setParameter(
                 rowIdx=caliLabel, colName="pointPairSource", attr="value", value=figName
@@ -1321,6 +1335,11 @@ class CaliParamModel(
         paramAttr: ParamAttr,
         **kwargs,
     ):
+        """
+        Store attr from view. 
+
+        It also updates the prefit model if the parameter is a prefit parameter.
+        """
         super()._storeParamAttr(self, paramAttr, **kwargs)
         rowIdx = paramAttr.parentName
         colName = paramAttr.name
@@ -1333,6 +1352,20 @@ class CaliParamModel(
                 self.sendInvYCaliFunc()
 
             if self._prefitHas(rowIdx, colName):
+                # update min, max, value for the prefit model
+                min, max = self._prefitMinMaxByColName(rowIdx, colName)
+                self.updatePrefitModel.emit(ParamAttr(
+                    paramAttr.parentName, 
+                    paramAttr.name, 
+                    "min", 
+                    min
+                ))
+                self.updatePrefitModel.emit(ParamAttr(
+                    paramAttr.parentName, 
+                    paramAttr.name, 
+                    "max", 
+                    max
+                ))
                 self.updatePrefitModel.emit(ParamAttr(
                     paramAttr.parentName, 
                     paramAttr.name, 
@@ -1352,6 +1385,11 @@ class CaliParamModel(
         Finalize the XY swap: swap the value of the X and Y data for both raw and
         mapped vectors, and update calibration functions.
         """
+        # signals will be sent by these setParameter methods
+        # if we don't block the signals, the signals will be sent multiple times
+        # will send the signals after the swap is done
+        self.blockSignals(True)
+
         oldX0RawValue = self.parameters["X0"][self.rawXVecNameList[0]].value
         oldX1RawValue = self.parameters["X1"][self.rawXVecNameList[0]].value
         oldX0MapValue = self.parameters["X0"][
@@ -1400,6 +1438,8 @@ class CaliParamModel(
         self.setParameter(
             rowIdx="Y1", colName="mappedY", attr="value", value=oldX1MapValue
         )
+
+        self.blockSignals(False)
 
         self.sendXCaliFunc()
         self.sendYCaliFunc()

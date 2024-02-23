@@ -29,22 +29,16 @@ class PrefitView(QObject):
     def dynamicalInit(
         self,
         subsysNames: List[str],
-        hilbertDim: int,
     ):
-        self.initializeOptions(subsysNames, hilbertDim)
+        self.initializeOptions(subsysNames)
 
-    def initializeOptions(self, subsysNames: List[str], hilbertDim: int):
+    def initializeOptions(self, subsysNames: List[str]):
         """
         Should be re-iniitalized when hilbert space changes
         """
         self.blockAllSignals(True)
 
-        # evals count
-        if hilbertDim > 20:
-            dim = 20
-        else:
-            dim = hilbertDim
-        self.evalsCount.setText(str(dim))
+        self.evalsCount.setText("1")
 
         # load subsystems
         self.subsysToPlot.clear()
@@ -72,6 +66,20 @@ class PrefitView(QObject):
         for option in self.options.values():
             option.blockSignals(b)
 
+    def setOptions(self, option: str, value: Any):
+        self.blockAllSignals(True)
+        if option == "subsysToPlot":
+            self.subsysToPlot.setCurrentText(value)
+        elif option == "initialState":
+            self.initialState.setText(value)
+        elif option == "photons":
+            self.photons.setValue(value)
+        elif option == "pointsAdded":
+            self.pointsAdded.setText(value)
+        elif option == "autoRun":
+            self.autoRun.setChecked(value)
+        self.blockAllSignals(False)
+
     def emitOption(self, option: str):
         if option == "subsysToPlot":
             self.optionUpdated.emit(option, self.subsysToPlot.currentText())
@@ -84,12 +92,12 @@ class PrefitView(QObject):
         elif option == "autoRun":
             self.optionUpdated.emit(option, self.autoRun.isChecked())
 
-    def emitAllOptions(self):
-        self.emitOption("subsysToPlot")
-        self.emitOption("initialState")
-        self.emitOption("photons")
-        self.emitOption("pointsAdded")
-        self.emitOption("autoRun")
+    # def emitAllOptions(self):
+    #     self.emitOption("subsysToPlot")
+    #     self.emitOption("initialState")
+    #     self.emitOption("photons")
+    #     self.emitOption("pointsAdded")
+    #     self.emitOption("autoRun")
 
     def optionsConnects(self):
         self.subsysToPlot.currentIndexChanged.connect(
