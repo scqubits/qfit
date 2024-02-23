@@ -56,18 +56,18 @@ from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
 
 # paging:
-from qfit.views.paging import PageView
+from qfit.views.paging_view import PageView
 
 # calibration:
 # from qfit.models.calibration_data import CalibrationData
 from qfit.models.quantum_model_parameters import CaliParamModel
-from qfit.views.calibration import CalibrationView
-from qfit.controllers.calibration import CalibrationCtrl
+from qfit.views.calibration_view import CalibrationView
+from qfit.controllers.calibration_ctrl import CalibrationCtrl
 
 # extract
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
-from qfit.controllers.extracting import ExtractingCtrl
-from qfit.views.extracting import ExtractingView
+from qfit.controllers.extracting_ctrl import ExtractingCtrl
+from qfit.views.extracting_view import ExtractingView
 
 # status bar
 from qfit.models.status import StatusModel
@@ -75,29 +75,23 @@ from qfit.controllers.status import StatusCtrl
 from qfit.views.status_bar import StatusBarView
 
 # pre-fit
-from qfit.views.parameters import PrefitParamView
-from qfit.views.prefit_view import PrefitView
-from qfit.models.data_structures import QMSliderParam, QMSweepParam
-from qfit.models.quantum_model_parameters import (
-    ParamSet,
-    HSParamSet,
-)
+from qfit.views.prefit_view import PrefitParamView, PrefitView
+from qfit.models.quantum_model_parameters import HSParamSet
 from qfit.models.prefit import PrefitParamModel, PrefitCaliModel
 from qfit.models.numerical_model import QuantumModel
 
 # fit
-from qfit.models.data_structures import QMFitParam
-from qfit.views.parameters import FitParamView
+from qfit.views.fit_view import FitParamView
 from qfit.models.fit import FitParamModel, FitModel
 
 # plot
-from qfit.controllers.plotting import PlottingCtrl
+from qfit.controllers.plotting_ctrl import PlottingCtrl
 
 # registry
 from qfit.models.registry import Registry, RegistryEntry, Registrable
 
 # menu controller
-from qfit.controllers.io_menu import IOCtrl
+from qfit.controllers.io_menu_ctrl import IOCtrl
 
 if TYPE_CHECKING:
     from qfit.models.parameter_settings import ParameterType

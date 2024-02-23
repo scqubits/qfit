@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
     from qfit.models.quantum_model_parameters import ParamSet
     from qfit.models.numerical_model import QuantumModel
-    from qfit.views.paging import PageView
+    from qfit.views.paging_view import PageView
 
 
 class PlottingCtrl(QObject):

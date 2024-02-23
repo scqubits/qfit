@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from qfit.models.quantum_model_parameters import CaliParamModel
     from qfit.models.data_structures import QMSweepParam
     from qfit.models.measurement_data import MeasurementDataType
-    from qfit.views.calibration import CalibrationView
+    from qfit.views.calibration_view import CalibrationView
 
 
 class CalibrationCtrl(QObject):
