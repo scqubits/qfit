@@ -324,7 +324,7 @@ class CaliParamModel(
         else:
             valRange = 1
 
-        return (value - valRange/2, value + valRange/2)
+        return (value + valRange/2, value - valRange/2)
     
     def toPrefitParams(self) -> ParamSet[QMSliderParam]:
         # create the prefit parameters

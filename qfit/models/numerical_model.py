@@ -1,7 +1,6 @@
 from PySide6.QtCore import Slot, Signal, QObject
 
 import numpy as np
-
 from numpy import ndarray
 
 import copy
@@ -12,32 +11,17 @@ from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.param_sweep import ParameterSweep
 from scqubits.core.storage import SpectrumData
 
-from typing import Dict, List, Tuple, Union, Callable, Any, Literal, Optional
 
-from qfit.models.parameter_settings import ParameterType
-
-from qfit.models.parameter_set import ParamSet, HSParamSet
+from qfit.models.parameter_set import HSParamSet
 from qfit.models.data_structures import (
-    ParamBase,
-    QMSliderParam,
     QMSweepParam,
-    QMFitParam,
     FullExtr,
     ExtrTransition,
 )
-from qfit.models.status import StatusModel
-from qfit.models.numerical_spectrum_data import CalculatedSpecData
-# from qfit.models.calibration_data import CalibrationData
-from qfit.models.parameter_set import CaliParamModel
-from qfit.models.extracted_data import AllExtractedData
 from qfit.models.data_structures import Tag, SpectrumElement
 
+from typing import Dict, List, Tuple, Union, Callable, Any, Literal, Optional
 
-def dummy_hilbert_space():
-    fluxonium = scq.Fluxonium(
-        EJ=5.0, EC=1, EL=0.1, flux=0.0, cutoff=100, truncated_dim=5, id_str="fluxonium"
-    )
-    return scq.HilbertSpace([fluxonium])
 
 
 class QuantumModel(QObject):

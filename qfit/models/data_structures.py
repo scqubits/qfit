@@ -928,5 +928,7 @@ class CaliTableRowParam(DispParamBase):
             return self._toIntString(value)
         elif isinstance(value, str):
             return value
+        elif value is None:
+            return ""
         else:
             raise ValueError(f"Unknown type of value: {value}")
