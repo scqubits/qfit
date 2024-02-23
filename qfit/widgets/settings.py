@@ -13,6 +13,8 @@ from PySide6.QtCore import Qt, QPoint
 from PySide6.QtWidgets import QWidget
 from typing import Union, Type
 
+from dataclasses import dataclass
+
 from qfit.ui_designer.settings_fit import Ui_fitSettingsWidget
 from qfit.ui_designer.settings_numerical_spectrum import (
     Ui_numericalSpectrumSettingsWidget,
@@ -67,3 +69,20 @@ class NumericalSpectrumSettingsWidget(SettingsWidgetBase):
         super(NumericalSpectrumSettingsWidget, self).__init__(parent=parent)
         self.ui = Ui_numericalSpectrumSettingsWidget()
         self.ui.setupUi(self)
+
+
+@dataclass
+class SettingsWidgetSet:
+    visual: "VisualSettingsWidget"
+    fit: "FitSettingsWidget"
+    numericalSpectrum: "NumericalSpectrumSettingsWidget"
+
+    def __init__(
+        self,
+        visual: "VisualSettingsWidget",
+        fit: "FitSettingsWidget",
+        numericalSpectrum: "NumericalSpectrumSettingsWidget",
+    ):
+        self.visual = visual
+        self.fit = fit
+        self.numericalSpectrum = numericalSpectrum

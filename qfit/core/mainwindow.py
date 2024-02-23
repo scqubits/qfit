@@ -57,6 +57,7 @@ from qfit.widgets.settings import (
     VisualSettingsWidget,
     FitSettingsWidget,
     NumericalSpectrumSettingsWidget,
+    SettingsWidgetSet,
 )
 from qfit.ui_designer.settings_fit import Ui_fitSettingsWidget
 from qfit.ui_designer.settings_numerical_spectrum import (
@@ -149,11 +150,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.pagingMVCInits()
 
         # settings
-        self.ui_settings = {
-            "fit": FitSettingsWidget(self),
-            "numericalSpectrum": NumericalSpectrumSettingsWidget(self),
-            "visual": VisualSettingsWidget(self),
-        }
+        self.ui_settings = SettingsWidgetSet(
+            visual=VisualSettingsWidget(self),
+            fit=FitSettingsWidget(self),
+            numericalSpectrum=NumericalSpectrumSettingsWidget(self),
+        )
 
         # calibration - should be inited after prefit, as it requires a sweep parameter set
         self.calibrationMVCInits()
@@ -239,9 +240,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.helpButtons = {
             "calibration": self.ui.calibrationHelpPushButton,
             "fit": self.ui.fitHelpPushButton,
-            "fitResult": self.ui_settings["fit"].ui.fitResultHelpPushButton,
-            "prefitResult": self.ui.prefitResultHelpPushButton,
-            "numericalSpectrumSettings": self.ui.numericalSpectrumSettingsHelpPushButton,
+            "fitResult": self.ui_settings.fit.ui.fitResultHelpPushButton,
+            "prefitResult": self.ui_settings.numericalSpectrum.ui.prefitResultHelpPushButton,
+            "numericalSpectrumSettings": self.ui_settings.numericalSpectrum.ui.numericalSpectrumSettingsHelpPushButton,
         }
         self.helpButtonCtrl = HelpButtonCtrl(self.helpButtons)
 
@@ -255,15 +256,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "z": self.ui.zComboBox,
         }
         self.measPlotSettings = {
-            "topHat": self.ui_settings["visual"].ui.topHatCheckBox,
-            "wavelet": self.ui_settings["visual"].ui.waveletCheckBox,
-            "edge": self.ui_settings["visual"].ui.edgeFilterCheckBox,
-            "bgndX": self.ui_settings["visual"].ui.bgndSubtractXCheckBox,
-            "bgndY": self.ui_settings["visual"].ui.bgndSubtractYCheckBox,
-            "log": self.ui_settings["visual"].ui.logScaleCheckBox,
-            "min": self.ui_settings["visual"].ui.rangeSliderMin,
-            "max": self.ui_settings["visual"].ui.rangeSliderMax,
-            "color": self.ui_settings["visual"].ui.colorComboBox,
+            "topHat": self.ui_settings.visual.ui.topHatCheckBox,
+            "wavelet": self.ui_settings.visual.ui.waveletCheckBox,
+            "edge": self.ui_settings.visual.ui.edgeFilterCheckBox,
+            "bgndX": self.ui_settings.visual.ui.bgndSubtractXCheckBox,
+            "bgndY": self.ui_settings.visual.ui.bgndSubtractYCheckBox,
+            "log": self.ui_settings.visual.ui.logScaleCheckBox,
+            "min": self.ui_settings.visual.ui.rangeSliderMin,
+            "max": self.ui_settings.visual.ui.rangeSliderMax,
+            "color": self.ui_settings.visual.ui.colorComboBox,
         }
         self.canvasTools = {
             "reset": self.ui.resetViewButton,
@@ -431,11 +432,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def prefitMVCInits(self):
         # UI grouping
         self.prefitOptions = {
-            "subsysToPlot": self.ui.subsysComboBox,
-            "initialState": self.ui.initStateLineEdit,
-            "photons": self.ui.prefitPhotonSpinBox,
-            "evalsCount": self.ui.evalsCountLineEdit,
-            "pointsAdded": self.ui.pointsAddLineEdit,
+            "subsysToPlot": self.ui_settings.numericalSpectrum.ui.subsysComboBox,
+            "initialState": self.ui_settings.numericalSpectrum.ui.initStateLineEdit,
+            "photons": self.ui_settings.numericalSpectrum.ui.prefitPhotonSpinBox,
+            "evalsCount": self.ui_settings.numericalSpectrum.ui.evalsCountLineEdit,
+            "pointsAdded": self.ui_settings.numericalSpectrum.ui.pointsAddLineEdit,
             "autoRun": self.ui.autoRunCheckBox,
         }
 
@@ -716,12 +717,14 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.quantumModel.sweepUsage = "prefit"
 
     def fitOptionConnects(self):
-        self.ui.tolLineEdit.editingFinished.connect(
-            lambda: self.fitParamModel.updateTol(self.ui.tolLineEdit.value())
+        self.ui_settings.fit.ui.tolLineEdit.editingFinished.connect(
+            lambda: self.fitParamModel.updateTol(
+                self.ui_settings.fit.ui.tolLineEdit.value()
+            )
         )
-        self.ui.optimizerComboBox.currentIndexChanged.connect(
+        self.ui_settings.fit.ui.optimizerComboBox.currentIndexChanged.connect(
             lambda: self.fitParamModel.updateOptimizer(
-                self.ui.optimizerComboBox.currentText()
+                self.ui_settings.fit.ui.optimizerComboBox.currentText()
             )
         )
 

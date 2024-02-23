@@ -3652,8 +3652,8 @@ QPushButton: pressed{
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>441</width>
-                   <height>556</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -3745,7 +3745,7 @@ border-bottom-right-radius: 6px;	</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>446</width>
+                   <width>100</width>
                    <height>60</height>
                   </rect>
                  </property>
@@ -4384,8 +4384,8 @@ icon: url(:/icons/svg/copy-pressed.svg);
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>441</width>
-                   <height>594</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -5831,7 +5831,7 @@ color: #AAAAAA;
   <customwidget>
    <class>CalibrationLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>qfit/widgets/calibration.h</header>
+   <header>qfit/views/calibration.h</header>
   </customwidget>
   <customwidget>
    <class>IntTupleLineEdit</class>

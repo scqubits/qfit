@@ -7,12 +7,13 @@ from PySide6.QtCore import Slot
 from PySide6.QtWidgets import (
     QMessageBox,
     QFileDialog,
+    QPushButton,
 )
 
 from scqubits.core.hilbert_space import HilbertSpace
 
 from qfit.models.registry import Registry
-from qfit.widgets.settings import VisualSettingsWidget, FitSettingsWidget, NumericalSpectrumSettingsWidget
+from qfit.widgets.settings import SettingsWidgetSet
 from qfit.utils.helpers import StopExecution
 from qfit.io_utils.measurement_file_readers import readMeasurementFile
 
@@ -30,10 +31,16 @@ if TYPE_CHECKING:
         MeasurementDataType,
     )
 
+
 class SettingsCtrl:
-    """ 
-    This controller handles the settings widget. Specifically its connections and 
+    """
+    This controller handles the settings widget. Specifically its connections and
     logics for the settings widget.
     """
-    def __init__(self, settingsWidget: SettingsWidget, settingsButton: Dict[str, ] ):
+
+    def __init__(
+        self,
+        settingsWidgetSet: SettingsWidgetSet,
+        settingsButton: Dict[str, QPushButton],
+    ):
         pass

@@ -314,38 +314,6 @@ class Ui_numericalSpectrumSettingsWidget(object):
 
         self.gridLayout.addWidget(self.label_33, 10, 1, 1, 1)
 
-        self.mseLabel = QLabel(numericalSpectrumSettingsWidget)
-        self.mseLabel.setObjectName(u"mseLabel")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
-        sizePolicy2.setHorizontalStretch(0)
-        sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.mseLabel.sizePolicy().hasHeightForWidth())
-        self.mseLabel.setSizePolicy(sizePolicy2)
-        self.mseLabel.setMinimumSize(QSize(200, 0))
-        font = QFont()
-        font.setFamilies([u"Roboto Medium"])
-        font.setBold(True)
-        self.mseLabel.setFont(font)
-        self.mseLabel.setStyleSheet(u"font-size: 13px")
-
-        self.gridLayout.addWidget(self.mseLabel, 11, 1, 1, 1)
-
-        self.label_44 = QLabel(numericalSpectrumSettingsWidget)
-        self.label_44.setObjectName(u"label_44")
-        sizePolicy.setHeightForWidth(self.label_44.sizePolicy().hasHeightForWidth())
-        self.label_44.setSizePolicy(sizePolicy)
-        self.label_44.setStyleSheet(u"font-size: 13px")
-
-        self.gridLayout.addWidget(self.label_44, 4, 1, 1, 1)
-
-        self.label = QLabel(numericalSpectrumSettingsWidget)
-        self.label.setObjectName(u"label")
-        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy)
-        self.label.setStyleSheet(u"font-size: 13px")
-
-        self.gridLayout.addWidget(self.label, 7, 1, 1, 1)
-
         self.prefitPhotonSpinBox = QSpinBox(numericalSpectrumSettingsWidget)
         self.prefitPhotonSpinBox.setObjectName(u"prefitPhotonSpinBox")
         sizePolicy.setHeightForWidth(self.prefitPhotonSpinBox.sizePolicy().hasHeightForWidth())
@@ -517,37 +485,29 @@ class Ui_numericalSpectrumSettingsWidget(object):
 
         self.numericalSpectrumSettingsLabel = QLabel(numericalSpectrumSettingsWidget)
         self.numericalSpectrumSettingsLabel.setObjectName(u"numericalSpectrumSettingsLabel")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.numericalSpectrumSettingsLabel.sizePolicy().hasHeightForWidth())
-        self.numericalSpectrumSettingsLabel.setSizePolicy(sizePolicy3)
-        font1 = QFont()
-        font1.setFamilies([u"Roboto Medium"])
-        font1.setWeight(QFont.Light)
-        font1.setItalic(False)
-        self.numericalSpectrumSettingsLabel.setFont(font1)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.numericalSpectrumSettingsLabel.sizePolicy().hasHeightForWidth())
+        self.numericalSpectrumSettingsLabel.setSizePolicy(sizePolicy2)
+        font = QFont()
+        font.setFamilies([u"Roboto Medium"])
+        font.setWeight(QFont.Light)
+        font.setItalic(False)
+        self.numericalSpectrumSettingsLabel.setFont(font)
         self.numericalSpectrumSettingsLabel.setStyleSheet(u"color: rgb(190, 130, 250);\n"
 " font-size: 16px;")
         self.numericalSpectrumSettingsLabel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
 
         self.gridLayout.addWidget(self.numericalSpectrumSettingsLabel, 1, 1, 1, 3)
 
-        self.statusTextLabel = QLabel(numericalSpectrumSettingsWidget)
-        self.statusTextLabel.setObjectName(u"statusTextLabel")
-        self.statusTextLabel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
-        self.statusTextLabel.setWordWrap(True)
-        self.statusTextLabel.setMargin(5)
-
-        self.gridLayout.addWidget(self.statusTextLabel, 13, 1, 1, 1)
-
         self.prefitResultHelpPushButton = QPushButton(numericalSpectrumSettingsWidget)
         self.prefitResultHelpPushButton.setObjectName(u"prefitResultHelpPushButton")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.prefitResultHelpPushButton.sizePolicy().hasHeightForWidth())
-        self.prefitResultHelpPushButton.setSizePolicy(sizePolicy4)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.prefitResultHelpPushButton.sizePolicy().hasHeightForWidth())
+        self.prefitResultHelpPushButton.setSizePolicy(sizePolicy3)
         self.prefitResultHelpPushButton.setStyleSheet(u"QPushButton {\n"
 "    border: none;\n"
 "    background: none;\n"
@@ -556,6 +516,46 @@ class Ui_numericalSpectrumSettingsWidget(object):
         self.prefitResultHelpPushButton.setIconSize(QSize(23, 23))
 
         self.gridLayout.addWidget(self.prefitResultHelpPushButton, 11, 4, 1, 1)
+
+        self.label = QLabel(numericalSpectrumSettingsWidget)
+        self.label.setObjectName(u"label")
+        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy)
+        self.label.setStyleSheet(u"font-size: 13px")
+
+        self.gridLayout.addWidget(self.label, 6, 1, 2, 1)
+
+        self.label_44 = QLabel(numericalSpectrumSettingsWidget)
+        self.label_44.setObjectName(u"label_44")
+        sizePolicy.setHeightForWidth(self.label_44.sizePolicy().hasHeightForWidth())
+        self.label_44.setSizePolicy(sizePolicy)
+        self.label_44.setStyleSheet(u"font-size: 13px")
+
+        self.gridLayout.addWidget(self.label_44, 3, 1, 2, 1)
+
+        self.mseLabel = QLabel(numericalSpectrumSettingsWidget)
+        self.mseLabel.setObjectName(u"mseLabel")
+        sizePolicy4 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.mseLabel.sizePolicy().hasHeightForWidth())
+        self.mseLabel.setSizePolicy(sizePolicy4)
+        self.mseLabel.setMinimumSize(QSize(200, 0))
+        font1 = QFont()
+        font1.setFamilies([u"Roboto Medium"])
+        font1.setBold(True)
+        self.mseLabel.setFont(font1)
+        self.mseLabel.setStyleSheet(u"font-size: 13px")
+
+        self.gridLayout.addWidget(self.mseLabel, 11, 1, 1, 1)
+
+        self.statusTextLabel = QLabel(numericalSpectrumSettingsWidget)
+        self.statusTextLabel.setObjectName(u"statusTextLabel")
+        self.statusTextLabel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
+        self.statusTextLabel.setWordWrap(True)
+        self.statusTextLabel.setMargin(5)
+
+        self.gridLayout.addWidget(self.statusTextLabel, 13, 1, 1, 5)
 
 
         self.retranslateUi(numericalSpectrumSettingsWidget)
@@ -567,9 +567,6 @@ class Ui_numericalSpectrumSettingsWidget(object):
         numericalSpectrumSettingsWidget.setWindowTitle(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"Form", None))
         self.label_46.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"STATUS:", None))
         self.label_33.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"PHOTONS", None))
-        self.mseLabel.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"MSE:  - GHz\u00b2   (+0.00%)", None))
-        self.label_44.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"TRANSITIONS", None))
-        self.label.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"INITIAL STATE", None))
         self.label_43.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"POINTS ADDED", None))
         self.numericalSpectrumSettingsHelpPushButton.setText("")
         self.numSpecSettingsCloseButton.setText("")
@@ -579,7 +576,10 @@ class Ui_numericalSpectrumSettingsWidget(object):
         self.pointsAddLineEdit.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"10", None))
         self.pointsAddLineEdit.setPlaceholderText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"# of x value for spectrum sweep", None))
         self.numericalSpectrumSettingsLabel.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"SETTINGS: NUMERICAL SPECTRUM", None))
-        self.statusTextLabel.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"-", None))
         self.prefitResultHelpPushButton.setText("")
+        self.label.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"INITIAL STATE", None))
+        self.label_44.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"TRANSITIONS", None))
+        self.mseLabel.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"MSE:  - GHz\u00b2   (+0.00%)", None))
+        self.statusTextLabel.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"-", None))
     # retranslateUi
 

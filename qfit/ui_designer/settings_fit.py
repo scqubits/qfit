@@ -403,6 +403,15 @@ class Ui_fitSettingsWidget(object):
 
         self.gridLayout.addWidget(self.label_47, 2, 1, 1, 1)
 
+        self.tolLineEdit = PositiveFloatLineEdit(fitSettingsWidget)
+        self.tolLineEdit.setObjectName(u"tolLineEdit")
+        sizePolicy.setHeightForWidth(self.tolLineEdit.sizePolicy().hasHeightForWidth())
+        self.tolLineEdit.setSizePolicy(sizePolicy)
+        self.tolLineEdit.setMinimumSize(QSize(170, 30))
+        self.tolLineEdit.setMaximumSize(QSize(16777215, 30))
+
+        self.gridLayout.addWidget(self.tolLineEdit, 3, 2, 1, 1)
+
         self.statusTextLabel_2 = QLabel(fitSettingsWidget)
         self.statusTextLabel_2.setObjectName(u"statusTextLabel_2")
         sizePolicy2 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -414,16 +423,7 @@ class Ui_fitSettingsWidget(object):
         self.statusTextLabel_2.setWordWrap(True)
         self.statusTextLabel_2.setMargin(5)
 
-        self.gridLayout.addWidget(self.statusTextLabel_2, 6, 1, 1, 1)
-
-        self.tolLineEdit = PositiveFloatLineEdit(fitSettingsWidget)
-        self.tolLineEdit.setObjectName(u"tolLineEdit")
-        sizePolicy.setHeightForWidth(self.tolLineEdit.sizePolicy().hasHeightForWidth())
-        self.tolLineEdit.setSizePolicy(sizePolicy)
-        self.tolLineEdit.setMinimumSize(QSize(170, 30))
-        self.tolLineEdit.setMaximumSize(QSize(16777215, 30))
-
-        self.gridLayout.addWidget(self.tolLineEdit, 3, 2, 1, 1)
+        self.gridLayout.addWidget(self.statusTextLabel_2, 6, 1, 1, 4)
 
 
         self.retranslateUi(fitSettingsWidget)
@@ -447,8 +447,8 @@ class Ui_fitSettingsWidget(object):
         self.fitResultHelpPushButton.setText("")
         self.fitSettingsCloseButton.setText("")
         self.label_47.setText(QCoreApplication.translate("fitSettingsWidget", u"OPTIMIZER", None))
-        self.statusTextLabel_2.setText(QCoreApplication.translate("fitSettingsWidget", u"-", None))
         self.tolLineEdit.setStyleSheet(QCoreApplication.translate("fitSettingsWidget", u"font-size: 13px", None))
         self.tolLineEdit.setText(QCoreApplication.translate("fitSettingsWidget", u"1e-6", None))
+        self.statusTextLabel_2.setText(QCoreApplication.translate("fitSettingsWidget", u"-", None))
     # retranslateUi
 

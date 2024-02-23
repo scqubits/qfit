@@ -325,67 +325,6 @@ QComboBox QAbstractItemView::item{
      </property>
     </widget>
    </item>
-   <item row="11" column="1">
-    <widget class="QLabel" name="mseLabel">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="minimumSize">
-      <size>
-       <width>200</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="font">
-      <font>
-       <family>Roboto Medium</family>
-       <pointsize>-1</pointsize>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">font-size: 13px</string>
-     </property>
-     <property name="text">
-      <string>MSE:  - GHz²   (+0.00%)</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="1">
-    <widget class="QLabel" name="label_44">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">font-size: 13px</string>
-     </property>
-     <property name="text">
-      <string>TRANSITIONS</string>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="1">
-    <widget class="QLabel" name="label">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">font-size: 13px</string>
-     </property>
-     <property name="text">
-      <string>INITIAL STATE</string>
-     </property>
-    </widget>
-   </item>
    <item row="10" column="2" colspan="2">
     <widget class="QSpinBox" name="prefitPhotonSpinBox">
      <property name="sizePolicy">
@@ -749,22 +688,6 @@ QSpinBox::down-button:pressed {
      </property>
     </widget>
    </item>
-   <item row="13" column="1">
-    <widget class="QLabel" name="statusTextLabel">
-     <property name="text">
-      <string>-</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-     </property>
-     <property name="wordWrap">
-      <bool>true</bool>
-     </property>
-     <property name="margin">
-      <number>5</number>
-     </property>
-    </widget>
-   </item>
    <item row="11" column="4">
     <widget class="QPushButton" name="prefitResultHelpPushButton">
      <property name="sizePolicy">
@@ -791,6 +714,83 @@ QSpinBox::down-button:pressed {
        <width>23</width>
        <height>23</height>
       </size>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1" rowspan="2">
+    <widget class="QLabel" name="label">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font-size: 13px</string>
+     </property>
+     <property name="text">
+      <string>INITIAL STATE</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1" rowspan="2">
+    <widget class="QLabel" name="label_44">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font-size: 13px</string>
+     </property>
+     <property name="text">
+      <string>TRANSITIONS</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="1">
+    <widget class="QLabel" name="mseLabel">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>200</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <family>Roboto Medium</family>
+       <pointsize>-1</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font-size: 13px</string>
+     </property>
+     <property name="text">
+      <string>MSE:  - GHz²   (+0.00%)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="1" colspan="5">
+    <widget class="QLabel" name="statusTextLabel">
+     <property name="text">
+      <string>-</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="margin">
+      <number>5</number>
      </property>
     </widget>
    </item>
