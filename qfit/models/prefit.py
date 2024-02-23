@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Dict
 import numpy as np
 from PySide6.QtCore import Signal, Slot
 from qfit.models.quantum_model_parameters import (
@@ -8,6 +8,8 @@ from qfit.models.quantum_model_parameters import (
 from qfit.models.data_structures import ParamAttr, QMSliderParam, QMFitParam
 from qfit.models.parameter_settings import DEFAULT_PARAM_MINMAX
 from scqubits.core.hilbert_space import HilbertSpace
+
+from qfit.models.registry import RegistryEntry
 
 
 class CombinedMeta(type(SliderModelMixin), type(ParamSet)):
@@ -70,6 +72,9 @@ class PrefitParamModel(
         """
         super()._storeParamAttr(self, paramAttr, fromSlider=fromSlider)
 
+    def registerAll(self) -> Dict[str, RegistryEntry]:
+        return self._registerAll(self)
+
     # HilbertSpace related methods, could be a mixin class =============
     hilbertSpaceUpdated = Signal(HilbertSpace)
 
@@ -126,7 +131,6 @@ class PrefitCaliModel(
     attrs = QMSliderParam.attrToRegister
 
     updateSlider = Signal(ParamAttr)
-    updateCaliModel = Signal(ParamAttr)
 
     # mixin methods ====================================================
     def __init__(self):
@@ -175,16 +179,8 @@ class PrefitCaliModel(
         """
         super()._storeParamAttr(self, paramAttr, fromSlider=fromSlider)
 
-        # send the calibration model the updated parameters
-        self.updateCaliModel.emit(ParamAttr(
-            paramAttr.parentName, 
-            paramAttr.name, 
-            paramAttr.attr, 
-            self[paramAttr.parentName][paramAttr.name].value
-        ))
-
     # Cailibration related methods =====================================
-    caliParamUpdated = Signal(ParamAttr)
+    updateCaliModel = Signal(ParamAttr)
 
     def replaceAllParam(
         self, 
@@ -199,13 +195,18 @@ class PrefitCaliModel(
         self.emitUpdateSlider()
 
     @Slot(str, str)
-    def updateCalibration(
+    def emitUpdateCaliModel(
         self,
         parentName: str,
         paramName: str,
     ):
-        paramAttr = self[parentName][paramName].exportAttr(attr="value")
-        self.caliParamUpdated.emit(paramAttr)
+        # send the calibration model the updated parameters
+        self.updateCaliModel.emit(ParamAttr(
+            parentName,
+            paramName,
+            "value", 
+            self[parentName][paramName].value
+        ))
 
     # general model methods ============================================
     def toFitParams(self) -> ParamSet[QMFitParam]:

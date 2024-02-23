@@ -431,10 +431,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.ui.prefitScrollAreaWidget,
             self.ui.prefitMinmaxScrollAreaWidget,
         )
-        self.prefitCaliView = PrefitParamView(
-            self.ui.prefitScrollAreaWidget,
-            self.ui.prefitMinmaxScrollAreaWidget,
-        )
         self.prefitView = PrefitView(
             runSweep=self.ui.plotButton,
             options=self.prefitOptions,
@@ -447,6 +443,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.quantumModelConnects()
         self.prefitButtonConnects()
         self.prefitSliderParamConnects()
+        self.prefitCaliConnects()
 
     def prefitDynamicalElementsBuild(
         self, hilbertspace: HilbertSpace, measurementData: List[MeasurementDataType]
@@ -467,6 +464,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # update everything in the view
         self.prefitParamModel.emitUpdateBox()
         self.prefitParamModel.emitUpdateSlider()
+        self.prefitCaliModel.emitUpdateBox()
+        self.prefitCaliModel.emitUpdateSlider()
 
         # update everything in the quantumModel
         self.quantumModel.disableSweep = True  # disable the auto sweep
@@ -489,7 +488,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # for the remaining parameters
         sweepParameterSet = HSParamSet.sweepSetByHS(hilbertspace)
         param_types: set["ParameterType"] = set(
-            sweepParameterSet.exportAttrDict("paramType").values()
+            sweepParameterSet.getAttrDict("paramType").values()
         )
 
         if len(sweepParameterSet) == 0:
@@ -567,30 +566,26 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             model: Union[PrefitParamModel, PrefitCaliModel]
 
             signalSet["sliderChanged"].connect(
-                lambda paramAttr: model.storeParamAttr(
-                    paramAttr, fromSlider=True
-                )
+                lambda paramAttr, model=model: 
+                model.storeParamAttr(paramAttr, fromSlider=True)
             )
             signalSet["textChanged"].connect(
-                lambda paramAttr: model.storeParamAttr(paramAttr)
+                lambda paramAttr, model=model: 
+                model.storeParamAttr(paramAttr)
             )
             signalSet["rangeEditingFinished"].connect(
-                lambda paramAttr: model.storeParamAttr(paramAttr)
-            )
-            signalSet["editingFinished"].connect(
-                model.updateParent
+                lambda paramAttr, model=model: 
+                model.storeParamAttr(paramAttr)
             )
 
             # synchronize slider and box
             model.updateSlider.connect(
-                lambda paramAttr: self.prefitParamView.setByParamAttr(
-                    paramAttr, toSlider=True
-                )
+                lambda paramAttr: 
+                self.prefitParamView.setByParamAttr(paramAttr, toSlider=True)
             )
             model.updateBox.connect(
-                lambda paramAttr: self.prefitParamView.setByParamAttr(
-                    paramAttr, toSlider=False
-                )
+                lambda paramAttr: 
+                self.prefitParamView.setByParamAttr(paramAttr, toSlider=False)
             )
 
             # self.prefitParamView.HSSliderChanged.connect(
@@ -619,6 +614,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             #         paramAttr, toSlider=False
             #     )
             # )
+
+        # update hilbert space
+        self.prefitParamView.HSEditingFinished.connect(
+            self.prefitParamModel.updateParent
+        )
+        # update cali model
+        self.prefitParamView.caliEditingFinished.connect(
+            self.prefitCaliModel.emitUpdateCaliModel
+        )
 
     def prefitCaliConnects(self):
         self.prefitCaliModel.updateCaliModel.connect(

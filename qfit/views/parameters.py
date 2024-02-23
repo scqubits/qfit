@@ -22,12 +22,12 @@ from typing import Dict, List, Optional, Union, overload, Literal
 class PrefitParamView(QObject):
     HSSliderChanged = Signal(ParamAttr)
     HSTextChanged = Signal(ParamAttr)
-    HSEditingFihished = Signal(str, str)
+    HSEditingFinished = Signal(str, str)
     HSRangeEditingFinished = Signal(ParamAttr)
     
     caliSliderChanged = Signal(ParamAttr)
     caliTextChanged = Signal(ParamAttr)
-    caliEditingFihished = Signal(str, str)
+    caliEditingFinished = Signal(str, str)
     caliRangeEditingFinished = Signal(ParamAttr)
 
     # Initialization ===================================================
@@ -50,13 +50,13 @@ class PrefitParamView(QObject):
         self.HSSignals = {
             "sliderChanged": self.HSSliderChanged,
             "textChanged": self.HSTextChanged,
-            "editingFinished": self.HSEditingFihished,
+            "editingFinished": self.HSEditingFinished,
             "rangeEditingFinished": self.HSRangeEditingFinished,
         }
         self.caliSignals = {
             "sliderChanged": self.caliSliderChanged,
             "textChanged": self.caliTextChanged,
-            "editingFinished": self.caliEditingFihished,
+            "editingFinished": self.caliEditingFinished,
             "rangeEditingFinished": self.caliRangeEditingFinished,
         }
 
@@ -179,29 +179,34 @@ class PrefitParamView(QObject):
 
 
                 slider.sliderValueChangedConnect(
-                    lambda value, name=name, groupName=groupName: signalSet["sliderChanged"].emit(
+                    lambda value, name=name, groupName=groupName, signalSet=signalSet: 
+                    signalSet["sliderChanged"].emit(
                         ParamAttr(groupName, name, "value", value)
                     )
                 )
                 slider.textValueChangedConnect(
-                    lambda text, name=name, groupName=groupName: signalSet["textChanged"].emit(
+                    lambda text, name=name, groupName=groupName, signalSet=signalSet: 
+                    signalSet["textChanged"].emit(
                         ParamAttr(groupName, name, "value", text)
                     )
                 )
                 slider.editingFinishedConnect(
-                    lambda name=name, groupName=groupName: signalSet["editingFinished"].emit(groupName, name)
+                    lambda name=name, groupName=groupName, signalSet=signalSet: 
+                    signalSet["editingFinished"].emit(groupName, name)
                 )
         
         for groupName, group in self.minMaxTable.items():
             for name, item in group.items():
                 item: MinMaxItems
                 item.minValue.editingFinished.connect(
-                    lambda item=item, name=name, groupName=groupName: signalSet["rangeEditingFinished"].emit(
+                    lambda item=item, name=name, groupName=groupName, signalSet=signalSet: 
+                    signalSet["rangeEditingFinished"].emit(
                         ParamAttr(groupName, name, "min", item.minValue.text())
                     )
                 )
                 item.maxValue.editingFinished.connect(
-                    lambda item=item, name=name, groupName=groupName: signalSet["rangeEditingFinished"].emit(
+                    lambda item=item, name=name, groupName=groupName, signalSet=signalSet: 
+                    signalSet["rangeEditingFinished"].emit(
                         ParamAttr(groupName, name, "max", item.maxValue.text())
                     )
                 )

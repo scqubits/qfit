@@ -674,7 +674,7 @@ class SliderModelMixin(ParamModelMixin[QMSliderParam]):
         paramAttr: ParamAttr,
         fromSlider: bool = False,
     ):
-        super()._storeParamAttr(paramSet, paramAttr)
+        super()._storeParamAttr(paramSet, paramAttr, fromSlider=fromSlider)
 
         if paramAttr.attr == "value":
             if fromSlider:
@@ -697,7 +697,7 @@ class CaliParamModel(
     plotCaliPtExtractStart = Signal(str)
     plotCaliPtExtractFinished = Signal(str, dict)
     plotCaliPtExtractInterrupted = Signal()
-    xCaliUpdated = Signal(Dict[str, HSParamSet])
+    xCaliUpdated = Signal(dict)
     yCaliUpdated = Signal(object)
     invYCaliUpdated = Signal(object)
     updatePrefitModel = Signal(ParamAttr)
@@ -827,7 +827,7 @@ class CaliParamModel(
                 rawXValue = 1.0 if rawVecCompIdx == (XRowIdx - 1) else 0.0
                 self._insertParamByArgs(
                     colName=rawVecCompName,
-                    rowIdx=XRowIdxName,
+                    rowName=XRowIdxName,
                     paramType="raw_X_vec_component",
                     parentSystemName=None,
                     sweepParamName=None,
@@ -838,7 +838,7 @@ class CaliParamModel(
                 for paramName, param in paramDictByParent.items():
                     self._insertParamByArgs(
                         colName=f"{parentName}.{paramName}",
-                        rowIdx=XRowIdxName,
+                        rowName=XRowIdxName,
                         paramType=param.paramType,
                         sweepParamName=paramName,
                         value=0,
@@ -848,7 +848,7 @@ class CaliParamModel(
             if self.isFullCalibration:
                 self._insertParamByArgs(
                     colName="pointPairSource",
-                    rowIdx=XRowIdxName,
+                    rowName=XRowIdxName,
                     paramType="point_pair_source",
                     parentSystemName=None,
                     sweepParamName=None,
@@ -858,7 +858,7 @@ class CaliParamModel(
                 # value is the figure name
                 self._insertParamByArgs(
                     colName="pointPairSource",
-                    rowIdx=XRowIdxName,
+                    rowName=XRowIdxName,
                     paramType="point_pair_source",
                     parentSystemName=None,
                     sweepParamName=None,
@@ -871,7 +871,7 @@ class CaliParamModel(
             mapYValue = rawYValue
             self._insertParamByArgs(
                 colName=self.rawYName,
-                rowIdx=YRowIdxName,
+                rowName=YRowIdxName,
                 paramType="raw_Y",
                 parentSystemName=None,
                 sweepParamName=None,
@@ -879,7 +879,7 @@ class CaliParamModel(
             )
             self._insertParamByArgs(
                 colName="mappedY",
-                rowIdx=YRowIdxName,
+                rowName=YRowIdxName,
                 paramType="mapped_Y",
                 sweepParamName=None,
                 value=mapYValue,
@@ -887,7 +887,7 @@ class CaliParamModel(
             )
             self._insertParamByArgs(
                 colName="pointPairSource",
-                rowIdx=YRowIdxName,
+                rowName=YRowIdxName,
                 paramType="point_pair_source",
                 sweepParamName=None,
                 value=None,
