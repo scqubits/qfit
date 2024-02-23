@@ -69,15 +69,15 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
     def __len__(self):
         return sum([len(para_dict) for para_dict in self.parameters.values()])
-    
+
     def insertParam(
         self,
-        parentName: str,  
+        parentName: str,
         paramName: str,
         param: ParamCls,
     ):
         """
-        Insert a parameter to the parameter set. When the parent system is 
+        Insert a parameter to the parameter set. When the parent system is
         not in the parameter set, create a new entry for the parent system.
         """
         if parentName not in self.parameters.keys():
@@ -161,7 +161,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
             setattr(para_dict[name], attr, value)
         except KeyError:
             raise KeyError(f"Cannot find parameter {name} in the parameter set.")
-        
+
     def setParamByPA(
         self,
         paramAttr: ParamAttr,
@@ -175,7 +175,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
     def toParamDict(self) -> Dict[str, ParamCls]:
         """
-        Provide a way to iterate through the parameter set. Used for fitting purposes 
+        Provide a way to iterate through the parameter set. Used for fitting purposes
         - as we need to provide a single-layer dictionary.
 
         Return a dictionary of all the parameters in the parameter set. Keys are "<parent name>.<parameter name>"
@@ -189,7 +189,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
     def getAttrDict(self, attribute: str = "value") -> Dict[str, Any]:
         """
-        Provide a way to iterate through the parameter set. Used for fitting purposes 
+        Provide a way to iterate through the parameter set. Used for fitting purposes
         - as we need to provide a single-layer dictionary.
 
         Convert the parameter set to a dictionary. Keys are "<parent name>.<parameter name>"
@@ -212,7 +212,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
         attribute: str = "value",
     ):
         """
-        Provide a way to iterate through the parameter set. Used for fitting purposes 
+        Provide a way to iterate through the parameter set. Used for fitting purposes
         - as we need to provide a single-layer dictionary.
 
         Update the parameter set from a dictionary. Keys are "<parent name>.<parameter name>"
@@ -223,7 +223,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
             self.setParameter(parent_name, name, attribute, value)
 
     def setAttrByParamDict(
-        self, 
+        self,
         paramSet: "ParamSet[ParamCls]",
         attrsToUpdate: Optional[List[str]] = None,
         insertMissing: bool = False,
@@ -237,7 +237,8 @@ class ParamSet(Registrable, Generic[ParamCls]):
             raise ValueError(
                 "When insertMissing is True, attrsToUpdate should be None. "
                 "Meaning that all of the attibutes of the parameters will "
-                "be inserted for the missing parameter.")
+                "be inserted for the missing parameter."
+            )
 
         for parentName, paraDict in paramSet.items():
             # check if the parent system is in the parameter set
@@ -259,17 +260,17 @@ class ParamSet(Registrable, Generic[ParamCls]):
                         raise ValueError(
                             f"Parameter {paramName} is not in the parameter set."
                         )
-                    
+
                 # check if the parameter is of the same type
-                assert type(param) is self.paramCls, (
-                    f"Parameter {paramName} is not of type {self.paramCls}."
-                )
+                assert (
+                    type(param) is self.paramCls
+                ), f"Parameter {paramName} is not of type {self.paramCls}."
 
                 # update the parameter for all the attributes
                 if attrsToUpdate is None:
                     attrsToUpdate = dir(param)
                 for attr in attrsToUpdate:
-                    if attr.startswith('_'):
+                    if attr.startswith("_"):
                         continue
                     self.setParameter(parentName, paramName, attr, getattr(param, attr))
 
@@ -588,7 +589,7 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
         **kwargs,
     ):
         """
-        Emit the signals to update the view. When the parentName, paramName, 
+        Emit the signals to update the view. When the parentName, paramName,
         and attr are not provided, emit the signals for all the parameters.
         Especially, when the attr is not provided, emit the signals for all the
         attributes (usually attr_to_register) of the parameter.
@@ -678,7 +679,9 @@ class SliderModelMixin(ParamModelMixin[QMSliderParam]):
 
         if paramAttr.attr == "value":
             if fromSlider:
-                self._emitUpdateBox(paramSet, paramAttr.parentName, paramAttr.name, paramAttr.attr)
+                self._emitUpdateBox(
+                    paramSet, paramAttr.parentName, paramAttr.name, paramAttr.attr
+                )
             elif not fromSlider:
                 self._emitUpdateSlider(paramSet, paramAttr.parentName, paramAttr.name)
         elif paramAttr.attr in ["min", "max"]:
@@ -834,16 +837,19 @@ class CaliParamModel(
                     value=rawXValue,
                 )
             # loop over the mapped vector components (given by sweep parameters)
+            mapXVecIdx = 0
             for parentName, paramDictByParent in self.sweepParamSet.items():
                 for paramName, param in paramDictByParent.items():
+                    mapXValue = 1.0 if mapXVecIdx == (XRowIdx - 1) else 0.0
                     self._insertParamByArgs(
                         colName=f"{parentName}.{paramName}",
                         rowName=XRowIdxName,
                         paramType=param.paramType,
                         sweepParamName=paramName,
-                        value=0,
+                        value=mapXValue,
                         parentSystemName=parentName,
                     )
+                    mapXVecIdx += 1
             # insert the point pair source
             if self.isFullCalibration:
                 self._insertParamByArgs(
@@ -938,46 +944,44 @@ class CaliParamModel(
     @property
     def sweepParamNr(self) -> int:
         return len(self.sweepParamSet)
-    
+
     def _prefitHas(self, rowName: str, colName: str) -> bool:
         """
         Check if the prefit parameter is in the prefit parameter set.
         """
         param = self.parameters[rowName][colName]
         return param.paramType in ["flux", "ng", "mapped_Y"]
-    
+
     def _xCaliDependOn(self, rowName: str, colName: str) -> bool:
         """
         Check if the mapped X value depends on the raw X value.
         """
         param = self.parameters[rowName][colName]
-        return param.paramType in [
-            "raw_X_vec_component", "ng", "flux"
-        ]
-    
+        return param.paramType in ["raw_X_vec_component", "ng", "flux"]
+
     def _yCaliDependOn(self, rowName: str, colName: str) -> bool:
         """
         Check if the mapped Y value depends on the raw Y value.
         """
         param = self.parameters[rowName][colName]
         return param.paramType in ["raw_Y", "mapped_Y"]
-    
+
     def toPrefitParams(self) -> ParamSet[QMSliderParam]:
-        # obtain the range of the parameters, which is helpful to determine 
+        # obtain the range of the parameters, which is helpful to determine
         # the range of the prefit parameters
         existedValue = {}
         for rowName, paramDictByParent in self.items():
             for colName, param in paramDictByParent.items():
                 # filter out the parameters that are not updated by the slider
                 if not self._prefitHas(rowName, colName):
-                    continue 
+                    continue
 
                 if colName not in existedValue.keys():
                     existedValue[colName] = []
                 existedValue[colName].append(param.value)
-        
+
         # compute the range of the existed mapped values
-        rangeDict = {} 
+        rangeDict = {}
         for key, valueList in existedValue.items():
             rangeDict[key] = np.max(valueList) - np.min(valueList)
 
@@ -991,7 +995,7 @@ class CaliParamModel(
 
                 value = param.value
                 valRange = rangeDict[colName] * 0.2
-                if valRange > 0:   
+                if valRange > 0:
                     # accept the range if it is not zero
                     pass
                 elif value != 0:
@@ -1001,12 +1005,12 @@ class CaliParamModel(
 
                 # insert a prefit parameter
                 prefitParam = QMSliderParam(
-                    name = colName,
-                    parent = param.parent,
-                    paramType = param.paramType,
-                    value = value,
-                    min = value - valRange/2,
-                    max = value + valRange/2,
+                    name=colName,
+                    parent=param.parent,
+                    paramType=param.paramType,
+                    value=value,
+                    min=value - valRange / 2,
+                    max=value + valRange / 2,
                 )
                 paramSet.insertParam(rowName, colName, prefitParam)
 
@@ -1333,12 +1337,14 @@ class CaliParamModel(
                 self.sendInvYCaliFunc()
 
             if self._prefitHas(rowIdx, colName):
-                self.updatePrefitModel.emit(ParamAttr(
-                    paramAttr.parentName, 
-                    paramAttr.name, 
-                    paramAttr.attr, 
-                    self[paramAttr.parentName][paramAttr.name].value
-                ))
+                self.updatePrefitModel.emit(
+                    ParamAttr(
+                        paramAttr.parentName,
+                        paramAttr.name,
+                        paramAttr.attr,
+                        self[paramAttr.parentName][paramAttr.name].value,
+                    )
+                )
 
     def updateCaliModelRawVecNameListForSwapXY(self):
         self.rawYName, self.rawXVecNameList = self.rawXVecNameList[0], [self.rawYName]
