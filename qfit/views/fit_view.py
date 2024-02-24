@@ -19,7 +19,8 @@ from typing import Dict, List
 
 
 class FitParamView(QObject):
-    dataEditingFinished = Signal(ParamAttr)
+    HSEditingFinished = Signal(ParamAttr)
+    CaliEditingFinished = Signal(ParamAttr)
 
     def __init__(
         self,
@@ -30,6 +31,10 @@ class FitParamView(QObject):
         self.fitScrollWidget = fitScrollAreaWidget
         self._configureLayout()
 
+        # A list to tell whether the parameter belongs to a hilbertspace
+        # or a calibration model.
+        self.HSNames: List[str] = []
+
     def _configureLayout(self):
         fitScrollArea = self.fitScrollWidget.parent()
         fitScrollArea.setStyleSheet(f"background-color: rgb(33, 33, 33);")
@@ -37,12 +42,16 @@ class FitParamView(QObject):
 
     def fitTableInserts(
         self,
-        paramNameDict: Dict[str, List[str]],
+        HSParamNames: Dict[str, List[str]],
+        caliParamNames: Dict[str, List[str]],
         removeExisting: bool = True
     ):
         """
         Insert a set of tables for the fitting parameters
         """
+
+        self.HSNames = list(HSParamNames.keys())
+        paramNameDict = HSParamNames | caliParamNames 
 
         # remove the existing widgets, if we somehow want to rebuild the sliders
         if removeExisting:
@@ -68,28 +77,40 @@ class FitParamView(QObject):
 
         fitScrollLayout.addWidget(self.fitTableSet)
 
+        self._signalProcessing()
+
     # Signal processing ================================================
     def _signalProcessing(self):
         for groupName, group in self.fitTableSet.items():
             for name, item in group.items():
                 item: FittingParameterItems
+
+                if groupName in self.HSNames:
+                    signal = self.HSEditingFinished
+                else:
+                    signal = self.CaliEditingFinished
+
                 item.minValue.editingFinished.connect(
-                    lambda item=item, name=name, groupName=groupName: self.dataEditingFinished.emit(
+                    lambda item=item, name=name, groupName=groupName, signal=signal: 
+                    signal.emit(
                         ParamAttr(groupName, name, "min", item.minValue.text())
                     )
                 )
                 item.maxValue.editingFinished.connect(
-                    lambda item=item, name=name, groupName=groupName: self.dataEditingFinished.emit(
+                    lambda item=item, name=name, groupName=groupName, signal=signal: 
+                    signal.emit(
                         ParamAttr(groupName, name, "max", item.maxValue.text())
                     )
                 )
                 item.fixCheckbox.toggled.connect(
-                    lambda value, name=name, groupName=groupName: self.dataEditingFinished.emit(
+                    lambda value, name=name, groupName=groupName, signal=signal: 
+                    signal.emit(
                         ParamAttr(groupName, name, "isFixed", value)
                     )
                 )
                 item.initialValue.editingFinished.connect(
-                    lambda item=item, name=name, groupName=groupName: self.dataEditingFinished.emit(
+                    lambda item=item, name=name, groupName=groupName, signal=signal: 
+                    signal.emit(
                         ParamAttr(groupName, name, "initValue", item.initialValue.text())
                     )
                 )

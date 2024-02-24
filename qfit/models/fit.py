@@ -13,26 +13,95 @@ from qfit.models.extracted_data import AllExtractedData
 from qfit.models.parameter_set import (
     HSParamSet, ParamModelMixin, ParamSet,
 )
-from qfit.models.data_structures import QMFitParam, ParamAttr, QMSliderParam
+from qfit.models.data_structures import FitParam, ParamAttr, SliderParam
 from qfit.models.registry import RegistryEntry
 from qfit.models.status import StatusModel
 
 
-class CombinedMeta(type(ParamModelMixin), type(HSParamSet)):
+class FitParamModelMixin(ParamModelMixin[FitParam]):
+
+    def _isValid(self, paramSet: ParamSet[FitParam]) -> bool:
+        for key, params in paramSet.toParamDict().items():
+            if params.min >= params.max:
+                ###############
+                # Error message
+                ###############
+                return False
+            if not params.isFixed and (
+                params.initValue < params.min or params.initValue > params.max
+            ):
+                ###############
+                # Error message
+                ###############
+                return False
+        return True
+            
+    def _fixedParams(self, paramSet: ParamSet[FitParam]) -> Dict[str, float]:
+        return {
+            key: params.initValue
+            for key, params in paramSet.toParamDict().items()
+            if params.isFixed
+        }
+        
+    def _freeParamRanges(self, paramSet: ParamSet[FitParam]) -> Dict[str, List[float]]:
+        return {
+            key: [params.min, params.max]
+            for key, params in paramSet.toParamDict().items()
+            if not params.isFixed
+        }
+    
+    def _initParams(self, paramSet: ParamSet[FitParam]) -> Dict[str, float]:
+        return {
+            key: params.initValue
+            for key, params in paramSet.toParamDict().items()
+        }
+    
+    def _toInitParams(self, paramSet: ParamSet[FitParam]) -> ParamSet[FitParam]:
+        initParamSet = ParamSet[FitParam](FitParam)
+        for parentName, parent in paramSet.items():
+            for paramName, param in parent.items():
+                fitParam = FitParam(
+                    name = paramName,           # useless
+                    parent = param.parent,      # useless
+                    paramType = param.paramType,# useless
+                    initValue = param.value,     
+                )
+                initParamSet.insertParam(parentName, paramName, fitParam)
+
+        return initParamSet
+    
+    def _toPrefitParams(self, paramSet: ParamSet[FitParam]) -> ParamSet[SliderParam]:
+        prefitParamSet = ParamSet[SliderParam](SliderParam)
+        for parentName, parent in paramSet.items():
+            for paramName, param in parent.items():
+                sliderParam = SliderParam(
+                    name = paramName,           # useless
+                    parent = param.parent,      # useless
+                    paramType = param.paramType,# useless
+                    value = param.value,
+                    min = -1,                   # useless
+                    max = -1,                   # useless
+                )
+                prefitParamSet.insertParam(parentName, paramName, sliderParam)
+
+        return prefitParamSet
+
+
+class CombinedMeta(type(FitParamModelMixin), type(HSParamSet)):
     pass
 
 
 class FitParamModel(
-    HSParamSet[QMFitParam],
-    ParamModelMixin[QMFitParam],  # ordering matters
+    HSParamSet[FitParam],
+    FitParamModelMixin,  # ordering matters
     metaclass=CombinedMeta,
 ):
-    attrs = QMFitParam.attrToRegister
+    attrs = FitParam.attrToRegister
 
     # mixin methods ====================================================
     def __init__(self):
         # ordering matters here
-        HSParamSet.__init__(self, QMFitParam)
+        HSParamSet.__init__(self, FitParam)
         ParamModelMixin.__init__(self)
 
     def setParameter(
@@ -51,6 +120,28 @@ class FitParamModel(
 
         self._emitUpdateBox(self, parentName=parentName, paramName=name, attr=attr)
 
+    @property
+    def isValid(self) -> bool:
+        return self._isValid(self)
+            
+    @property
+    def fixedParams(self) -> Dict[str, float]:
+        return self._fixedParams(self)
+        
+    @property
+    def freeParamRanges(self) -> Dict[str, List[float]]:
+        return self._freeParamRanges(self)
+    
+    @property
+    def initParams(self) -> Dict[str, float]:
+        return self._initParams(self)
+    
+    def toInitParams(self) -> ParamSet[FitParam]:
+        return self._toInitParams(self)
+    
+    def toPrefitParams(self) -> ParamSet[SliderParam]:
+        return self._toPrefitParams(self)
+
     def registerAll(
         self,
     ) -> Dict[str, RegistryEntry]:
@@ -63,96 +154,69 @@ class FitParamModel(
     ):
         super()._storeParamAttr(self, paramAttr, **kwargs)
 
-    # HilbertSpace related methods, could be a mixin class =============
-    hilbertSpaceUpdated = Signal(HilbertSpace)
 
-    # Signals 
-    def emitHSUpdated(self):
-        self.hilbertSpaceUpdated.emit(self.hilbertspace)
+class FitCaliModel(
+    ParamSet[FitParam],
+    FitParamModelMixin,  # ordering matters
+    metaclass=CombinedMeta,
+):
+    attrs = FitParam.attrToRegister
 
-    # Slots 
-    @Slot(str, str)
-    def updateParent(
+    # mixin methods ====================================================
+    def __init__(self):
+        # ordering matters here
+        ParamSet.__init__(self, FitParam)
+        ParamModelMixin.__init__(self)
+
+    def setParameter(
         self,
         parentName: str,
-        paramName: str,
+        name: str,
+        attr: str,
+        value: Union[int, float],
     ):
-        param = self[parentName][paramName]
-        param.setParameterForParent()
-        self.emitHSUpdated()
+        """
+        Not only set the parameter, but also emit the signal to update the view.
 
-    # fit properties ===================================================
+        A key method in updating the model by the internal processes.
+        """
+        super().setParameter(parentName, name, attr, value)
+
+        self._emitUpdateBox(self, parentName=parentName, paramName=name, attr=attr)
+
     @property
     def isValid(self) -> bool:
-        for key, params in self.toParamDict().items():
-            if params.min >= params.max:
-                ###############
-                # Error message
-                ###############
-                return False
-            if not params.isFixed and (
-                params.initValue < params.min or params.initValue > params.max
-            ):
-                ###############
-                # Error message
-                ###############
-                return False
-        return True
+        return self._isValid(self)
             
     @property
     def fixedParams(self) -> Dict[str, float]:
-        return {
-            key: params.initValue
-            for key, params in self.toParamDict().items()
-            if params.isFixed
-        }
+        return self._fixedParams(self)
         
     @property
     def freeParamRanges(self) -> Dict[str, List[float]]:
-        return {
-            key: [params.min, params.max]
-            for key, params in self.toParamDict().items()
-            if not params.isFixed
-        }
+        return self._freeParamRanges(self)
     
     @property
     def initParams(self) -> Dict[str, float]:
-        return {
-            key: params.initValue
-            for key, params in self.toParamDict().items()
-        }
+        return self._initParams(self)
     
-    def toInitParams(self) -> ParamSet[QMFitParam]:
-        paramSet = ParamSet[QMFitParam](QMFitParam)
-        for parentName, parent in self.items():
-            for paramName, param in parent.items():
-                fitParam = QMFitParam(
-                    name = paramName,           # useless
-                    parent = param.parent,      # useless
-                    paramType = param.paramType,# useless
-                    initValue = param.value,     
-                )
-                paramSet.insertParam(parentName, paramName, fitParam)
-
-        return paramSet
+    def toInitParams(self) -> ParamSet[FitParam]:
+        return self._toInitParams(self)
     
-    def toPrefitParams(self) -> ParamSet[QMSliderParam]:
-        paramSet = ParamSet[QMSliderParam](QMSliderParam)
-        for parentName, parent in self.items():
-            for paramName, param in parent.items():
-                sliderParam = QMSliderParam(
-                    name = paramName,           # useless
-                    parent = param.parent,      # useless
-                    paramType = param.paramType,# useless
-                    value = param.value,
-                    min = -1,                   # useless
-                    max = -1,                   # useless
-                )
-                paramSet.insertParam(parentName, paramName, sliderParam)
+    def toPrefitParams(self) -> ParamSet[SliderParam]:
+        return self._toPrefitParams(self)
 
-        return paramSet
+    def registerAll(
+        self,
+    ) -> Dict[str, RegistryEntry]:
+        return self._registerAll(self)
 
-    
+    def storeParamAttr(
+        self,
+        paramAttr: ParamAttr,
+        **kwargs,
+    ):
+        super()._storeParamAttr(self, paramAttr, **kwargs)
 
 
 class FitModel(QObject):

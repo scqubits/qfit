@@ -176,7 +176,6 @@ class PrefitParamView(QObject):
                 else:
                     signalSet = self.caliSignals
 
-
                 slider.sliderValueChangedConnect(
                     lambda value, name=name, groupName=groupName, signalSet=signalSet: 
                     signalSet["sliderChanged"].emit(

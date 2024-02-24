@@ -32,8 +32,8 @@ from qfit.models.data_structures import (
     ParamBase,
     QMSweepParam,
     DispParamBase,
-    QMSliderParam,
-    QMFitParam,
+    SliderParam,
+    FitParam,
     ParamAttr,
     CaliTableRowParam,
     ParentType,
@@ -447,7 +447,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
     @staticmethod
     def parentSystemNames(
         parent: ParentType,
-        with_type: bool = True,
+        with_type: bool = False,
     ) -> str:
         if isinstance(parent, HilbertSpace):
             return "Interactions"
@@ -462,14 +462,17 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
             )
 
     @staticmethod
-    def parentSystemIdstrByName(name: str) -> str:
+    def parentSystemIdstrByName(name: str, with_type: bool = False) -> str:
         """
         An inverse function of parentSystemNames
         """
-        return "".join(name.split(" ")[:-1])
+        if with_type:
+            return "".join(name.split(" ")[:-1])
+        else:
+            return name
 
-    def _updateNameMap(self, parent: ParentType, with_type: bool = True):
-        name = self.parentSystemNames(parent, with_type=with_type)
+    def _updateNameMap(self, parent: ParentType):
+        name = self.parentSystemNames(parent)
         if name not in self.parentObjByName.keys():
             self.parentNameByObj[parent] = name
             self.parentObjByName[name] = parent
@@ -493,14 +496,14 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
             "paramType": paramType,
         }
 
-        if self.paramCls is QMSliderParam:
+        if self.paramCls is SliderParam:
             kwargs["value"] = value
             kwargs.update(rangeDict)
 
         elif self.paramCls is QMSweepParam:
             kwargs["value"] = value
 
-        elif self.paramCls is QMFitParam:
+        elif self.paramCls is FitParam:
             pass
 
         else:
@@ -648,43 +651,4 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
     ):
         param = paramSet[paramAttr.parentName][paramAttr.name]
         param.storeAttr(paramAttr.attr, paramAttr.value, **kwargs)
-
-
-class SliderModelMixin(ParamModelMixin[QMSliderParam]):
-    updateSlider = Signal(ParamAttr)
-
-    def _emitUpdateSlider(
-        self,
-        paramSet: ParamSet[QMSliderParam],
-        parentName: Optional[str] = None,
-        paramName: Optional[str] = None,
-    ):
-        self._emitAttrByName(
-            paramSet,
-            self.updateSlider,
-            parentName=parentName,
-            paramName=paramName,
-            attr="value",
-            toSlider=True,
-        )
-
-    @Slot(ParamAttr)
-    def _storeParamAttr(
-        self,
-        paramSet: ParamSet[QMSliderParam],
-        paramAttr: ParamAttr,
-        fromSlider: bool = False,
-    ):
-        super()._storeParamAttr(paramSet, paramAttr, fromSlider=fromSlider)
-
-        if paramAttr.attr == "value":
-            if fromSlider:
-                self._emitUpdateBox(
-                    paramSet, paramAttr.parentName, paramAttr.name, paramAttr.attr
-                )
-            elif not fromSlider:
-                self._emitUpdateSlider(paramSet, paramAttr.parentName, paramAttr.name)
-        elif paramAttr.attr in ["min", "max"]:
-            self._emitUpdateSlider(paramSet, paramAttr.parentName, paramAttr.name)
-
 

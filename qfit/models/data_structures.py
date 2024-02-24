@@ -719,7 +719,7 @@ class QMSweepParam(ParamBase):
         self.value = self.calibration_func(value)
 
 
-class QMSliderParam(DispParamBase):
+class SliderParam(DispParamBase):
     """
     A class for parameters that are adjusted by a slider.
 
@@ -826,7 +826,7 @@ class QMSliderParam(DispParamBase):
             return self._toIntString(value)
 
 
-class QMFitParam(DispParamBase):
+class FitParam(DispParamBase):
     attrToRegister = ["initValue", "value", "min", "max", "isFixed"]
 
     def __init__(
@@ -847,7 +847,6 @@ class QMFitParam(DispParamBase):
         self.initValue = self._toIntAsNeeded(initValue)
         self.isFixed = isFixed
 
-        
     # setter for UI ====================================================
     def storeAttr(self, attr: str, value: Union[str, bool]):
         """

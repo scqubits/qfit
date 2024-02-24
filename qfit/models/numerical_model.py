@@ -23,7 +23,6 @@ from qfit.models.data_structures import Tag, SpectrumElement
 from typing import Dict, List, Tuple, Union, Callable, Any, Literal, Optional
 
 
-
 class QuantumModel(QObject):
     """
     Generate and manipulate a parameter sweep for a quantum model.

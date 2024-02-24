@@ -7,7 +7,7 @@ from typing import (
 )
 
 from qfit.models.data_structures import (
-    QMSweepParam, QMSliderParam, ParamAttr, CaliTableRowParam,
+    QMSweepParam, SliderParam, FitParam, ParamAttr, CaliTableRowParam,
 )
 from qfit.models.parameter_set import ParamSet, ParamModelMixin, HSParamSet
 from qfit.models.registry import RegistryEntry
@@ -326,20 +326,19 @@ class CaliParamModel(
 
         return (value + valRange/2, value - valRange/2)
     
-    def toPrefitParams(self) -> ParamSet[QMSliderParam]:
+    def toPrefitParams(self,) -> ParamSet[SliderParam]:
         # create the prefit parameters
-        paramSet = ParamSet[QMSliderParam](QMSliderParam)
+        paramSet = ParamSet[SliderParam](SliderParam)
         for rowName, paramDictByParent in self.items():
             for colName, param in paramDictByParent.items():
-                # filter out the parameters that are not updated by the slider
-                if param.paramType not in ["flux", "ng", "mapped_Y"]:
+                if not self._prefitHas(rowName, colName):
                     continue
                 
                 value = param.value
                 min, max = self._prefitMinMaxByColName(rowName, colName)
 
                 # insert a prefit parameter
-                prefitParam = QMSliderParam(
+                prefitParam = SliderParam(
                     name = colName,
                     parent = param.parent,
                     paramType = param.paramType,
@@ -348,6 +347,32 @@ class CaliParamModel(
                     max = max,
                 )
                 paramSet.insertParam(rowName, colName, prefitParam)
+
+        return paramSet
+    
+    def toFitParams(self,) -> ParamSet[FitParam]:
+        # create the prefit parameters
+        paramSet = ParamSet[FitParam](FitParam)
+        for rowName, paramDictByParent in self.items():
+            for colName, param in paramDictByParent.items():
+                if not self._prefitHas(rowName, colName):
+                    continue
+                
+                value = param.value
+                min, max = self._prefitMinMaxByColName(rowName, colName)
+
+                # insert a prefit parameter
+                fitParam = FitParam(
+                    name = colName,
+                    parent = param.parent,
+                    paramType = param.paramType,
+                    value = value,
+                    min = min,
+                    max = max,
+                    initValue = value,
+                    isFixed = True,
+                )
+                paramSet.insertParam(rowName, colName, fitParam)
 
         return paramSet
 
