@@ -653,7 +653,6 @@ class MplFigureCanvas(QFrame):
             element.inheritProperties(old_element)
             old_element.remove()
         
-        print(f"update element: {name}")
         # draw the new element
         self._plottingElements[name] = element
         self._plotElement(name, draw=True, **kwargs)
