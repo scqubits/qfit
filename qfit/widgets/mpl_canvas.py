@@ -653,6 +653,7 @@ class MplFigureCanvas(QFrame):
             element.inheritProperties(old_element)
             old_element.remove()
         
+        print(f"update element: {name}")
         # draw the new element
         self._plottingElements[name] = element
         self._plotElement(name, draw=True, **kwargs)
@@ -676,6 +677,7 @@ class MplFigureCanvas(QFrame):
             Whether to reset the x and y limits of the axes to fit all elements.
             If not, the x and y limits will be the same as before.
         """
+        print(f"plot all")
         for element in self._plottingElements.values():
             self._plotElement(element, draw=False)
 

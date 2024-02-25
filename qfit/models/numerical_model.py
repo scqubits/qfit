@@ -44,7 +44,6 @@ class QuantumModel(QObject):
     ):
         super().__init__()
 
-
     def dynamicalInit(self, hilbertspace: HilbertSpace, figNames: List[str]):
         self.hilbertspace = hilbertspace
         self._figNames = figNames
@@ -67,6 +66,10 @@ class QuantumModel(QObject):
         # options when generating the parameter sweep
         self._evalsCount: int = np.min([10, self.hilbertspace.dimension])
         self._pointsAdded: int = 10
+        self._rawXByX: Dict[str, Callable[[float], Dict[str, float]]] = {
+            figName: lambda x: {}
+            for figName in self._figNames
+        }
         self._xLim: Tuple[float, float] = (0, 1)
 
         # options when plotting the spectrum
@@ -110,6 +113,21 @@ class QuantumModel(QObject):
         """
         self._fullExtr = fullExtr
         # at the moment we don't update the calculation after the extracted data is updated
+
+    @Slot(dict)
+    def updateRawXMap(
+        self, rawXByX: Dict[
+            str, Callable[[float], Dict[str, float]]
+            ]
+        ):
+        """
+        Update the rawXByX dictionary.
+
+        Parameters
+        ----------
+        rawXByX: Dict[str, ndarray]
+        """
+        self._rawXByX = rawXByX
 
     @Slot(dict)
     def updateXCaliFunc(self, sweepParamSets: Dict[str, HSParamSet]):
@@ -329,8 +347,8 @@ class QuantumModel(QObject):
                 # add uniformly distributed x coordinates if current figure
                 # is being plotted
                 x_coordinates_uniform = np.linspace(
-                    extrX[0], extrX[-1], self._pointsAdded
-                )[1:-1]
+                    *self._xLim, self._pointsAdded
+                )
                 x_coordinates_all = np.concatenate([extrX, x_coordinates_uniform])
                 sweptX[figName] = np.sort(x_coordinates_all)
             else:
@@ -349,11 +367,11 @@ class QuantumModel(QObject):
         """
         updateHSDict = {}
         for figName, sweepParamSet in self._sweepParamSets.items():
-            spectra = self._fullExtr[figName]
+            rawXByX = self._rawXByX[figName]
 
             def updateHilbertspace(x: float) -> None:
                 # map x to the rawX (voltage vector)
-                rawX = spectra.rawXByX(x)
+                rawX = rawXByX(x)
                 for _, paramDictByParent in sweepParamSet.items():
                     for _, param in paramDictByParent.items():
                         # map rawX to the parameter values
@@ -461,7 +479,8 @@ class QuantumModel(QObject):
                 # TODO: emit error message
                 raise e
 
-        self.emitReadyToPlot()
+        if self._sweepUsage == "prefit":
+            self.emitReadyToPlot()
 
         # --------------------------------------------------------------
 
@@ -601,6 +620,8 @@ class QuantumModel(QObject):
                 status = "NO_MATCHED_BARE_INITIAL_AND_FINAL"
                 availableLabels = {}
 
+        sweep.reset_preslicing() # single point slice of sweep is not stable
+
         simulation_freq = self._closestTransFreq(
             dataFreq=dataFreq,
             evals=eigenenergies,
@@ -664,6 +685,9 @@ class QuantumModel(QObject):
         sweep.
 
         """
+        if self._fullExtr.count() == 0:
+            return 0.0
+
         mse = 0
         dataNameWOlabel = []
 

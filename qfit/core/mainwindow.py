@@ -601,6 +601,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.caliParamModel.xCaliUpdated.connect(self.quantumModel.updateXCaliFunc)
         self.caliParamModel.yCaliUpdated.connect(self.quantumModel.updateYCaliFunc)
         self.measurementData.relimCanvas.connect(self.quantumModel.relimX)
+        self.measurementData.updateRawXMap.connect(self.quantumModel.updateRawXMap)
         
         # connect the page change to the disable sweep
         self.pageView.pageChanged.connect(
@@ -696,6 +697,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.quantumModel.disableSweep = False
 
         return self.quantumModel.updateCalc()
+    
+    def _optCallback(self, *args, **kwargs):
+        print("Opt callback called.")
+        self.quantumModel.emitReadyToPlot()
 
     @Slot()
     def optimizeParams(self):
@@ -722,7 +727,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # cook up a cost function
         self.fitModel.runOptimization(
-            initParam=self.fitParamModel.initParams,
+            initParam=self.fitParamModel.initParams, 
+            callback=self._optCallback,
         )
 
     @Slot()

@@ -114,6 +114,7 @@ class PlottingCtrl(QObject):
         # plot everything available
         self.measurementData.emitReadyToPlot()
         self.measurementData.emitRelimCanvas()
+        self.measurementData.emitRawXMap()
         self.activeDataset.emitReadyToPlot()
         self.allDatasets.emitReadyToPlot()
         self.allDatasets.emitFocusChanged()  # update the snapX

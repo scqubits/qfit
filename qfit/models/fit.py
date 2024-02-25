@@ -240,6 +240,28 @@ class FitModel(QObject):
         self.tol = float(tol)
 
     # optimization setup ===============================================
+    def _costWarpper(
+        self,
+        func: Callable[
+            [Dict[str, float], Dict[str, float]], float
+        ],
+    ):
+        def costWarpper(
+            paramDict: Dict[str, float],
+        ) -> float:
+            HSParams = {
+                key: value for key, value in paramDict.items() 
+                if key in self.HSParamNames
+            }
+            caliParams = {
+                key: value for key, value in paramDict.items() 
+                if key not in self.HSParamNames
+            }
+
+            return func(HSParams, caliParams)
+        
+        return costWarpper
+
     def setupOptimization(
         self,
         HSFixedParams: Dict[str, float],
@@ -253,26 +275,12 @@ class FitModel(QObject):
         # distinguish between HS and cali parameters
         self.HSParamNames = list(HSFixedParams.keys()) + list(HSFreeParamRanges.keys())
 
-        def costWarpper(
-            paramDict: Dict[str, float],
-        ) -> float:
-            HSParams = {
-                key: value for key, value in paramDict.items() 
-                if key in self.HSParamNames
-            }
-            caliParams = {
-                key: value for key, value in paramDict.items() 
-                if key not in self.HSParamNames
-            }
-
-            return costFunction(HSParams, caliParams)
-
         # set up the optimization
         try:
             self.opt = Optimization(
                 HSFixedParams | caliFixedParams,
                 HSFreeParamRanges | caliFreeParamRanges,
-                costWarpper,
+                self._costWarpper(costFunction),
                 optimizer=self.optimizer,
                 opt_options={
                     "disp": False,
@@ -323,6 +331,7 @@ class FitModel(QObject):
     def runOptimization(
         self,
         initParam: Dict[str, float],
+        callback: Callable,
     ):
         """once the user clicks the optimize button, run the optimization"""
         # initial parameter & calculate the current MSE
@@ -330,7 +339,7 @@ class FitModel(QObject):
         runner = FitRunner(
             self.opt,
             initParam,
-            # self._optCallback,
+            callback,
         )
         runner.signalObj.optFinished.connect(self._postOptimization)
         self.fitThreadPool.start(runner)
@@ -348,18 +357,18 @@ class FitRunner(QRunnable):
         self,
         opt: Optimization,
         initParam: Dict[str, float],
-        # callback: Callable,
+        callback: Callable,
     ):
         super().__init__()
         
         self.opt = opt
         self.initParam = initParam
-        # self.callback = callback
+        self.callback = callback
 
     def run(self):
         traj = self.opt.run(
             init_x=self.initParam, 
-            # callback=self.callback
+            callback=self.callback
         )
 
         self.signalObj.optFinished.emit(traj)

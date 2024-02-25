@@ -59,6 +59,7 @@ class ListModelMeta(type(QAbstractListModel), type(Registrable)):
 class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     readyToPlot = Signal(PlotElement)
     relimCanvas = Signal(tuple, tuple)
+    updateRawXMap = Signal(dict)
 
     def __init__(self, measDatas: List["MeasurementDataType"]):
         super().__init__()
@@ -70,8 +71,6 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     def dynamicalInit(self, measDatas: List["MeasurementDataType"]):
         self._data = measDatas
         self.checkValidity()
-        self.emitReadyToPlot()
-        self.emitRelimCanvas()
         
     def checkValidity(self):
         # all of the data must have the same x and y axis names
@@ -149,6 +148,11 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             ),
         )
 
+    def emitRawXMap(self):
+        self.updateRawXMap.emit({
+            data.name: data.rawXByCurrentX for data in self._data
+        })
+
     @Slot(bool)
     def toggleBgndSubtractX(self, value: bool):
         self.currentMeasData.bgndSubtractX = value
@@ -200,6 +204,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.currentMeasData.swapXY()
         self.emitReadyToPlot()
         self.emitRelimCanvas()
+        self.emitRawXMap()
 
     # registry =========================================================
     def registerAll(
@@ -213,6 +218,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             self._data = value
             self.emitReadyToPlot()
             self.emitRelimCanvas()
+            self.emitRawXMap()
 
         return {
             "measDataSet.currentRow": RegistryEntry(
@@ -490,12 +496,15 @@ class NumericalMeasurementData(MeasurementData):
     #     self._currentX = self.currentXCompatibles.itemByIndex(itemIndex)
     #     self.emitReadyToPlot()
     #     self.emitRelimCanvas()
+        # self.emitRawXMap()
+    
 
     # def setCurrentY(self, itemIndex):
     #     self._currentY = self.currentYCompatibles.itemByIndex(itemIndex)
     #     self.emitReadyToPlot()
     #     self.emitRelimCanvas()
-
+        # self.emitRawXMap()
+        
     # properties =======================================================
     @property
     def currentZ(self) -> DictItem:

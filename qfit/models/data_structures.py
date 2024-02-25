@@ -279,37 +279,37 @@ class ExtrSpectra(list[ExtrTransition]):
         for transition in self:
             transition.swapXY()
 
-    def rawXByX(self, x: float) -> OrderedDictMod[str, float]:
-        """
-        Return the rawX data corresponding to the x value. Their relationship
-        is linear.
-        """
-        allX = self.allDataConcated()[0]
-        allRawX = self.allRawXConcated()
+    # def rawXByX(self, x: float) -> OrderedDictMod[str, float]:
+    #     """
+    #     Return the rawX data corresponding to the x value. Their relationship
+    #     is linear.
+    #     """
+    #     allX = self.allDataConcated()[0]
+    #     allRawX = self.allRawXConcated()
 
-        if self.count() < 2:
-            # try to find the exact x value
-            for idx, x_ in enumerate(allX):
-                if x_ == x:
-                    return OrderedDictMod(
-                        {key: value[idx] for key, value in allRawX.items()}
-                    )
-            raise ValueError("No data found for the x value")
+    #     if self.count() < 2:
+    #         # try to find the exact x value
+    #         for idx, x_ in enumerate(allX):
+    #             if x_ == x:
+    #                 return OrderedDictMod(
+    #                     {key: value[idx] for key, value in allRawX.items()}
+    #                 )
+    #         raise ValueError("No data found for the x value")
 
-        # calculate a linear mapping between the x values and the rawX data
-        # with the smallest and largest x values
-        minIdx = np.argmin(allX)
-        maxIdx = np.argmax(allX)
-        minX = allX[minIdx]
-        maxX = allX[maxIdx]
+    #     # calculate a linear mapping between the x values and the rawX data
+    #     # with the smallest and largest x values
+    #     minIdx = np.argmin(allX)
+    #     maxIdx = np.argmax(allX)
+    #     minX = allX[minIdx]
+    #     maxX = allX[maxIdx]
 
-        rawX = OrderedDictMod()
-        for key, value in allRawX.items():
-            minRawX = value[minIdx]
-            maxRawX = value[maxIdx]
-            rawX[key] = minRawX + (maxRawX - minRawX) / (maxX - minX) * (x - minX)
+    #     rawX = OrderedDictMod()
+    #     for key, value in allRawX.items():
+    #         minRawX = value[minIdx]
+    #         maxRawX = value[maxIdx]
+    #         rawX[key] = minRawX + (maxRawX - minRawX) / (maxX - minX) * (x - minX)
 
-        return rawX
+    #     return rawX
 
 
 class FullExtr(dict[str, ExtrSpectra]):
