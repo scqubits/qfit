@@ -22,7 +22,7 @@ from PySide6.QtCore import (
 )
 from typing import Tuple, Dict, Any, List, Union, Literal
 
-from qfit.models.parameter_set import HSParamSet
+from qfit.models.parameter_set import ParamSet
 from qfit.models.data_structures import QMSweepParam, ParamAttr
 
 
@@ -32,7 +32,7 @@ class CalibrationView(QObject):
     caliViewRawVecUpdatedForSwapXY = Signal()
     _virtualButton: QPushButton
 
-    sweepParamSet: HSParamSet[QMSweepParam]
+    sweepParamSet: ParamSet[QMSweepParam]
     caliTableXRowNr: int
     sweepParamParentName: str
     sweepParamName: str
@@ -65,7 +65,7 @@ class CalibrationView(QObject):
         rawXVecNameList: List[str],
         rawYName: str,
         caliTableXRowNr: int,
-        sweepParamSet: HSParamSet[QMSweepParam],
+        sweepParamSet: ParamSet[QMSweepParam],
     ):
         self.sweepParamSet = sweepParamSet
         self.caliTableXRowNr = caliTableXRowNr

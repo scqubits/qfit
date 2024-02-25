@@ -293,7 +293,12 @@ class CaliParamModel(
         param = self.parameters[rowName][colName]
         return param.paramType in ["raw_Y", "mapped_Y"]
     
-    def _prefitMinMaxByColName(self, rowName: str, colName: str) -> Tuple[float, float]:
+    def _fitMinMaxByColName(
+        self, 
+        rowName: str, 
+        colName: str,
+        scale: float = 0.2,
+    ) -> Tuple[float, float]:
         """
         Prefit parameters' min and max are determined by the range of the 
         existed mapped values, for fine-tuning the cali parameters.
@@ -314,13 +319,13 @@ class CaliParamModel(
                 existedValue.append(param.value)
 
         # using the min & max of the list, determine the range
-        valRange = (np.max(existedValue) - np.min(existedValue)) * 0.2
+        valRange = (np.max(existedValue) - np.min(existedValue)) * scale
         value = self[rowName][colName].value
         if valRange > 0:   
             # accept the range if it is not zero
             pass
         elif value != 0:
-            valRange = np.abs(value) * 0.4
+            valRange = np.abs(value) * scale * 2
         else:
             valRange = 1
 
@@ -335,7 +340,9 @@ class CaliParamModel(
                     continue
                 
                 value = param.value
-                min, max = self._prefitMinMaxByColName(rowName, colName)
+                min, max = self._fitMinMaxByColName(
+                    rowName, colName, scale=0.2
+                )
 
                 # insert a prefit parameter
                 prefitParam = SliderParam(
@@ -359,7 +366,9 @@ class CaliParamModel(
                     continue
                 
                 value = param.value
-                min, max = self._prefitMinMaxByColName(rowName, colName)
+                min, max = self._fitMinMaxByColName(
+                    rowName, colName, scale=0.1
+                )
 
                 # insert a prefit parameter
                 fitParam = FitParam(
@@ -377,7 +386,7 @@ class CaliParamModel(
         return paramSet
 
     # calibrate the raw vector to the mapped vector ====================
-    def _YCalibration(self) -> Callable:
+    def YCalibration(self) -> Callable:
         """
         Generate a function that applies the calibration to the raw Y value.
         """
@@ -402,7 +411,7 @@ class CaliParamModel(
 
         return YCalibration
 
-    def _invYCalibration(self) -> Callable:
+    def invYCalibration(self) -> Callable:
         """
         Generate a function that applies the inverse calibration to the mapped Y value.
         """
@@ -579,6 +588,12 @@ class CaliParamModel(
                     )
             sweepParamSetByFig[fig] = sweepParamSetFromCali
         return sweepParamSetByFig
+    
+    def XCalibration(self) -> Dict[str, HSParamSet[QMSweepParam]]:
+        if self.isFullCalibration:
+            return self._fullXCalibration()
+        else:
+            return self._partialXCalibration()
 
     # slots & public interface ================================================
     @Slot()
@@ -709,7 +724,7 @@ class CaliParamModel(
 
             if self._prefitHas(rowIdx, colName):
                 # update min, max, value for the prefit model
-                min, max = self._prefitMinMaxByColName(rowIdx, colName)
+                min, max = self._fitMinMaxByColName(rowIdx, colName)
                 self.updatePrefitModel.emit(ParamAttr(
                     paramAttr.parentName, 
                     paramAttr.name, 
@@ -827,10 +842,7 @@ class CaliParamModel(
         * XY swap triggers swapXYData
         * entering raw X by clicking on the plot triggers processSelectedPtFromPlot
         """
-        if self.isFullCalibration:
-            self.xCaliUpdated.emit(self._fullXCalibration())
-        else:
-            self.xCaliUpdated.emit(self._partialXCalibration())
+        self.xCaliUpdated.emit(self.XCalibration())
 
     def sendYCaliFunc(self):
         """
@@ -839,5 +851,5 @@ class CaliParamModel(
         * XY swap triggers swapXYData
         * entering raw Y by clicking on the plot triggers processSelectedPtFromPlot
         """
-        self.yCaliUpdated.emit(self._YCalibration(), self._invYCalibration())
+        self.yCaliUpdated.emit(self.YCalibration(), self.invYCalibration())
 

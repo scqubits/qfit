@@ -538,12 +538,16 @@ class SpectrumElement(PlotElement):
         )
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            self.highlighted_specdata.plot_evals_vs_paramvals(
-                label_list=self.highlighted_specdata.labels,
-                linewidth=2,
-                fig_ax=(fig, axes),
-                **kwargs,
-            )
+            if len(self.highlighted_specdata.energy_table) > 0:
+                self.highlighted_specdata.plot_evals_vs_paramvals(
+                    label_list=self.highlighted_specdata.labels,
+                    linewidth=2,
+                    fig_ax=(fig, axes),
+                    **kwargs,
+                )
+            else:
+                # no highlighted data (usually when evalsCount too small)
+                pass 
 
         artist_after = set(axes.get_children())
         self.artists = list(artist_after - artist_before)
@@ -612,10 +616,12 @@ class ParamBase(ABC):
         name: str,
         parent: Union[ParentType, str],
         paramType: ParameterType,
+        value: Union[int, float],
     ):
         self.name = name
         self.parent = parent
         self.paramType = paramType
+        self.value = self._toIntAsNeeded(value)
 
     def setParameterForParent(self):
         """
@@ -687,30 +693,16 @@ class QMSweepParam(ParamBase):
         value: Union[float, int],
         paramType: ParameterType,
     ):
-        super().__init__(name=name, parent=parent, paramType=paramType)
+        super().__init__(
+            name=name, parent=parent, paramType=paramType, value=value
+        )
 
-        self._value = value
 
     def setCalibrationFunc(self, func):
         """
         Set the calibration function for the parameter
         """
         self.calibration_func = func
-
-    @property
-    def value(self) -> Union[int, float]:
-        """
-        Get the value of the parameter
-        """
-        return self._value
-
-    @value.setter
-    def value(self, value: Union[int, float]):
-        """
-        Set the value of the parameter. Will update the both the parameter stored and the
-        parent object.
-        """
-        self._value = self._toIntAsNeeded(value)
 
     def setValueWithCali(self, value: Dict[str, float]):
         """
@@ -759,9 +751,10 @@ class SliderParam(DispParamBase):
         min: Union[int, float],
         max: Union[int, float],
     ):
-        super().__init__(name=name, parent=parent, paramType=paramType)
+        super().__init__(
+            name=name, parent=parent, paramType=paramType, value=value
+        )
 
-        self.value: Union[int, float] = self._toIntAsNeeded(value)
         self.min: Union[int, float] = self._toIntAsNeeded(min)
         self.max: Union[int, float] = self._toIntAsNeeded(max)
 
@@ -840,8 +833,9 @@ class FitParam(DispParamBase):
         initValue: Union[int, float] = 0,
         isFixed: bool = False,
     ):
-        super().__init__(name=name, parent=parent, paramType=paramType)
-        self.value = self._toIntAsNeeded(value)
+        super().__init__(
+            name=name, parent=parent, paramType=paramType, value=value
+        )
         self.min = self._toIntAsNeeded(min)
         self.max = self._toIntAsNeeded(max)
         self.initValue = self._toIntAsNeeded(initValue)
@@ -854,6 +848,8 @@ class FitParam(DispParamBase):
         """
         if isinstance(value, str):
             convertedValue = self._toIntAsNeeded(float(value))
+        else:
+            convertedValue = value
 
         setattr(self, attr, convertedValue)
 
@@ -900,8 +896,9 @@ class CaliTableRowParam(DispParamBase):
         sweepParamName: Optional[str],
         value: float,
     ):
-        super().__init__(name=colName, parent=rowIdx, paramType=paramType)
-        self.value: float = value
+        super().__init__(
+            name=colName, parent=rowIdx, paramType=paramType, value=value
+        )
         self.parentSystemName: Optional[str] = parentSystemName
         self.sweepParamName: Optional[str] = sweepParamName
 

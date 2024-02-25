@@ -11,9 +11,11 @@ from scqubits.core.hilbert_space import HilbertSpace
 from qfit.utils.wrapped_optimizer import Optimization, OptTraj
 from qfit.models.extracted_data import AllExtractedData
 from qfit.models.parameter_set import (
-    HSParamSet, ParamModelMixin, ParamSet,
+    ParamSet, ParamModelMixin, ParamSet,
 )
-from qfit.models.data_structures import FitParam, ParamAttr, SliderParam
+from qfit.models.data_structures import (
+    FitParam, ParamAttr, SliderParam, ParamBase
+)
 from qfit.models.registry import RegistryEntry
 from qfit.models.status import StatusModel
 
@@ -70,29 +72,27 @@ class FitParamModelMixin(ParamModelMixin[FitParam]):
 
         return initParamSet
     
-    def _toPrefitParams(self, paramSet: ParamSet[FitParam]) -> ParamSet[SliderParam]:
-        prefitParamSet = ParamSet[SliderParam](SliderParam)
+    def _toPrefitParams(self, paramSet: ParamSet[FitParam]) -> ParamSet[ParamBase]:
+        prefitParamSet = ParamSet[ParamBase](ParamBase)
         for parentName, parent in paramSet.items():
             for paramName, param in parent.items():
-                sliderParam = SliderParam(
+                sliderParam = ParamBase(
                     name = paramName,           # useless
                     parent = param.parent,      # useless
                     paramType = param.paramType,# useless
                     value = param.value,
-                    min = -1,                   # useless
-                    max = -1,                   # useless
                 )
                 prefitParamSet.insertParam(parentName, paramName, sliderParam)
 
         return prefitParamSet
 
 
-class CombinedMeta(type(FitParamModelMixin), type(HSParamSet)):
+class CombinedMeta(type(FitParamModelMixin), type(ParamSet)):
     pass
 
 
 class FitParamModel(
-    HSParamSet[FitParam],
+    ParamSet[FitParam],
     FitParamModelMixin,  # ordering matters
     metaclass=CombinedMeta,
 ):
@@ -101,7 +101,7 @@ class FitParamModel(
     # mixin methods ====================================================
     def __init__(self):
         # ordering matters here
-        HSParamSet.__init__(self, FitParam)
+        ParamSet.__init__(self, FitParam)
         ParamModelMixin.__init__(self)
 
     def setParameter(
@@ -139,7 +139,7 @@ class FitParamModel(
     def toInitParams(self) -> ParamSet[FitParam]:
         return self._toInitParams(self)
     
-    def toPrefitParams(self) -> ParamSet[SliderParam]:
+    def toPrefitParams(self) -> ParamSet[ParamBase]:
         return self._toPrefitParams(self)
 
     def registerAll(
@@ -203,7 +203,7 @@ class FitCaliModel(
     def toInitParams(self) -> ParamSet[FitParam]:
         return self._toInitParams(self)
     
-    def toPrefitParams(self) -> ParamSet[SliderParam]:
+    def toPrefitParams(self) -> ParamSet[ParamBase]:
         return self._toPrefitParams(self)
 
     def registerAll(
@@ -219,6 +219,7 @@ class FitCaliModel(
         super()._storeParamAttr(self, paramAttr, **kwargs)
 
 
+
 class FitModel(QObject):
     fitThreadPool = QThreadPool()
 
@@ -226,6 +227,8 @@ class FitModel(QObject):
     tol: float = 1e-6
 
     optFinished = Signal()
+
+    HSParamNames: List[str] = []
 
     # signal & slots ===================================================
     @Slot()
@@ -239,16 +242,37 @@ class FitModel(QObject):
     # optimization setup ===============================================
     def setupOptimization(
         self,
-        fixedParams: Dict[str, float],
-        freeParamRanges: Dict[str, List[float]],
-        costFunction: Callable[[Dict[str, float]], float],
+        HSFixedParams: Dict[str, float],
+        HSFreeParamRanges: Dict[str, List[float]],
+        caliFixedParams: Dict[str, float],
+        caliFreeParamRanges: Dict[str, List[float]],
+        costFunction: Callable[
+            [Dict[str, float], Dict[str, float]], float
+        ],
     ) -> bool:
+        # distinguish between HS and cali parameters
+        self.HSParamNames = list(HSFixedParams.keys()) + list(HSFreeParamRanges.keys())
+
+        def costWarpper(
+            paramDict: Dict[str, float],
+        ) -> float:
+            HSParams = {
+                key: value for key, value in paramDict.items() 
+                if key in self.HSParamNames
+            }
+            caliParams = {
+                key: value for key, value in paramDict.items() 
+                if key not in self.HSParamNames
+            }
+
+            return costFunction(HSParams, caliParams)
+
         # set up the optimization
         try:
             self.opt = Optimization(
-                fixedParams,
-                freeParamRanges,
-                costFunction,
+                HSFixedParams | caliFixedParams,
+                HSFreeParamRanges | caliFreeParamRanges,
+                costWarpper,
                 optimizer=self.optimizer,
                 opt_options={
                     "disp": False,
@@ -295,7 +319,6 @@ class FitModel(QObject):
         # # set the status
         # self.result.status_type = "SUCCESS"
         # self.result.statusStrForView = "Successfully optimized the parameter."
-
 
     def runOptimization(
         self,

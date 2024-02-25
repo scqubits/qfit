@@ -2,7 +2,7 @@ from typing import Union, Dict, Optional
 import numpy as np
 from PySide6.QtCore import Signal, Slot
 from qfit.models.parameter_set import (
-    HSParamSet, ParamSet,
+    ParamSet, HSParamSet,
     ParamModelMixin,
 )
 from qfit.models.data_structures import ParamAttr, SliderParam, FitParam
@@ -10,7 +10,6 @@ from qfit.models.parameter_settings import DEFAULT_PARAM_MINMAX
 from scqubits.core.hilbert_space import HilbertSpace
 
 from qfit.models.registry import RegistryEntry
-
 
 
 class SliderModelMixin(ParamModelMixin[SliderParam]):
@@ -133,7 +132,7 @@ class PrefitParamModel(
         self.emitHSUpdated()
 
     # general model methods ============================================
-    def toFitParams(self) -> ParamSet[FitParam]:
+    def toFitParams(self, scale: float = 0.1) -> ParamSet[FitParam]:
         paramSet = ParamSet[FitParam](FitParam)
         for parentName, parent in self.items():
             for paramName, param in parent.items():
@@ -143,8 +142,8 @@ class PrefitParamModel(
                 # between 20% of the default range and 40% of the 
                 # current value
                 defaultRange = DEFAULT_PARAM_MINMAX[param.paramType]
-                range1 = (defaultRange["max"] - defaultRange["max"]) * 0.2
-                range2 = np.abs(value) * 0.4
+                range1 = (defaultRange["max"] - defaultRange["max"]) * scale / 2
+                range2 = np.abs(value) * scale
                 valRange = np.max([range1, range2])
 
                 fitParam = FitParam(
@@ -246,25 +245,3 @@ class PrefitCaliModel(
             "value", 
             self[parentName][paramName].value
         ))
-
-    # general model methods ============================================
-    def toFitParams(self) -> ParamSet[FitParam]:
-        paramSet = ParamSet[FitParam](FitParam)
-        for parentName, parent in self.items():
-            for paramName, param in parent.items():
-                value = param.value
-
-                fitParam = FitParam(
-                    name = paramName,
-                    parent = param.parent,
-                    paramType = param.paramType,
-                    value = value,
-                    min = param.min,
-                    max = param.max,
-                    initValue = value,
-                    isFixed = False,
-                )
-                paramSet.insertParam(parentName, paramName, fitParam)
-
-        return paramSet
-    

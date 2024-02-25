@@ -37,8 +37,6 @@ class QuantumModel(QObject):
     readyToPlot = Signal(SpectrumElement)
     mseReadyToFit = Signal(float)
 
-    sweepUsage: Literal["prefit", "fit"] = "prefit"
-
     # options
 
     def __init__(
@@ -69,6 +67,7 @@ class QuantumModel(QObject):
         # options when generating the parameter sweep
         self._evalsCount: int = np.min([10, self.hilbertspace.dimension])
         self._pointsAdded: int = 10
+        self._xLim: Tuple[float, float] = (0, 1)
 
         # options when plotting the spectrum
         self._subsysToPlot: QuantumSystem = self.hilbertspace.subsystem_list[0]
@@ -77,6 +76,7 @@ class QuantumModel(QObject):
 
         # options when running
         self._autoRun: bool = True
+        self._sweepUsage: Literal["prefit", "fit"] = "prefit"
         self.disableSweep: bool = True    # always off, used for backend operations
 
     # Signals and Slots ========================================================
@@ -84,12 +84,6 @@ class QuantumModel(QObject):
     def switchFig(self, figName: str):
         self._currentFigName = figName
         self.updateCalc()
-
-    def updateHSWoCalc(self, hilbertspace: HilbertSpace):
-        """
-        It's used for manually update hilbertspace without running the calculation.
-        """
-        self.hilbertspace = hilbertspace
 
     @Slot(HilbertSpace)
     def updateHilbertSpace(self, hilbertspace: HilbertSpace):
@@ -100,7 +94,7 @@ class QuantumModel(QObject):
         ----------
         hilbertspace: HilbertSpace
         """
-        self.updateHSWoCalc(hilbertspace)
+        self.hilbertspace = hilbertspace
         self.updateCalc()
 
     @Slot(FullExtr)
@@ -118,7 +112,7 @@ class QuantumModel(QObject):
         # at the moment we don't update the calculation after the extracted data is updated
 
     @Slot(dict)
-    def updateSweepParamSets(self, sweepParamSets: Dict[str, HSParamSet]):
+    def updateXCaliFunc(self, sweepParamSets: Dict[str, HSParamSet]):
         """
         Update the parameter sets for the sweeps.
 
@@ -188,10 +182,12 @@ class QuantumModel(QObject):
         # update the calculation
         if attrName in ["subsysToPlot", "initialState", "photons"]:
             self.sweep2SpecMSE()
-            pass
         elif attrName in ["evalsCount", "pointsAdded", "autoRun"]:
             self.updateCalc()
-            pass
+
+    @Slot(tuple, tuple)
+    def relimX(self, xLim: Tuple[float, float], yLim: Tuple[float, float]):
+        self._xLim = xLim
 
     def exportSweepOption(self) -> Dict[str, Any]:
         """
@@ -217,6 +213,20 @@ class QuantumModel(QObject):
             "autoRun": self._autoRun,
         }
     
+    @Slot(str)
+    def updateModeOnPageChange(
+        self, 
+        currentPage: Literal["calibrate", "extract", "prefit", "fit"]
+    ):
+        """
+        Update the disableSweep attribute when the page changes.
+        """
+        if currentPage == "prefit" or currentPage == "fit":
+            self.disableSweep = False
+            self._sweepUsage = currentPage
+        else:
+            self.disableSweep = True
+
     # signals =================================================================
     def emitReadyToPlot(self):
         # since we always specify the subsystems to plot, we need change the 
@@ -406,14 +416,14 @@ class QuantumModel(QObject):
 
         return sweeps
     
-    def newSweep(self) -> None:
+    def _newSweep(self) -> None:
         """
         Create a new ParameterSweep object based on the stored data.
         """
         try:
             self._sweeps = self._generateSweep(
                 sweptX=self._prefitSweptX(
-                    addPoints = (self.sweepUsage == "prefit")
+                    addPoints = (self._sweepUsage == "prefit")
                 ),
                 updateHS=self._updateHSForSweep(),
                 subsysUpdateInfo=self._subsysUpdateInfo(),
@@ -428,7 +438,7 @@ class QuantumModel(QObject):
             sweep._out_of_sync_warning_issued = True
             sweep.run()
 
-    # public methods ==========================================================
+    # public methods ===========================================================
     @Slot()
     def sweep2SpecMSE(self) -> float:
         """
@@ -439,14 +449,14 @@ class QuantumModel(QObject):
         if self.disableSweep:
             # when manually update the quantumModel, we will turn this on
             # and the sweep will not be generated
-            return
+            return 0.0
         
         # run sweep (generate a new sweep if not exist)
         try:
             self._sweeps
         except AttributeError:
             try:
-                self.newSweep()
+                self._newSweep()
             except Exception as e:
                 # TODO: emit error message
                 raise e
@@ -469,7 +479,7 @@ class QuantumModel(QObject):
     @Slot()
     def updateCalc(
         self, 
-        callByPlotButton: bool = False
+        calledByPlotButton: bool = False
     ) -> Union[None, float]:
         """
         newSweep + sweep2SpecMSE (when autoRun is on / fit / called by plot button)
@@ -480,24 +490,16 @@ class QuantumModel(QObject):
         and MSE.
         """
         if self.disableSweep:
+            print("calc blocked")
             # when manually update the quantumModel, we will turn this on
             # and the sweep will not be generated
             return
 
-        self.newSweep()
+        print("updateCalc")
+        self._newSweep()
 
-        if self._autoRun or self.sweepUsage == "fit" or callByPlotButton:
+        if self._autoRun or self._sweepUsage == "fit" or calledByPlotButton:
             return self.sweep2SpecMSE()
-    
-    @Slot(str)
-    def updateDisableSweepOnPageChange(self, currentPage: str):
-        """
-        Update the disableSweep attribute when the page changes.
-        """
-        if currentPage in ["prefit", "fit"]:
-            self.disableSweep = False
-        else:
-            self.disableSweep = True
 
     # calculate MSE ===========================================================
     @staticmethod

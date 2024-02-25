@@ -183,6 +183,11 @@ class ParamSet(Registrable, Generic[ParamCls]):
         param_dict = {}
         for parent_name, para_dict in self.parameters.items():
             for name, para in para_dict.items():
+                if "." in parent_name:
+                    raise ValueError(
+                        "The parent name should not contain the character '.'."
+                    )
+                
                 param_dict[f"{parent_name}.{name}"] = para
 
         return param_dict
@@ -202,11 +207,16 @@ class ParamSet(Registrable, Generic[ParamCls]):
         paramval_dict = {}
         for parent_name, para_dict in self.parameters.items():
             for name, para in para_dict.items():
+                if "." in parent_name:
+                    raise ValueError(
+                        "The parent name should not contain the character '.'."
+                    )
+
                 paramval_dict[f"{parent_name}.{name}"] = getattr(para, attribute)
 
         return paramval_dict
 
-    def setAttrByAttrDict(
+    def setByAttrDict(
         self,
         paramval_dict: Union[Dict[str, float], Dict[str, int]],
         attribute: str = "value",
@@ -219,12 +229,14 @@ class ParamSet(Registrable, Generic[ParamCls]):
         and values are the value of the parameter.
         """
         for key, value in paramval_dict.items():
-            parent_name, name = key.split(".")
+            splitted_key = key.split(".")
+            parent_name = splitted_key[0]   # str before the first "."
+            name = ".".join(splitted_key[1:])   # str after the first "."
             self.setParameter(parent_name, name, attribute, value)
 
     def setAttrByParamDict(
         self,
-        paramSet: "ParamSet[ParamCls]",
+        paramSet: "ParamSet",
         attrsToUpdate: Optional[List[str]] = None,
         insertMissing: bool = False,
     ):
@@ -260,11 +272,6 @@ class ParamSet(Registrable, Generic[ParamCls]):
                         raise ValueError(
                             f"Parameter {paramName} is not in the parameter set."
                         )
-
-                # check if the parameter is of the same type
-                assert (
-                    type(param) is self.paramCls
-                ), f"Parameter {paramName} is not of type {self.paramCls}."
 
                 # update the parameter for all the attributes
                 if attrsToUpdate is None:
@@ -527,7 +534,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         self.parentObjByName = {}
 
     @classmethod
-    def sweepSetByHS(cls, hilbertSpace: HilbertSpace) -> "HSParamSet[QMSweepParam]":
+    def sweepSetByHS(cls, hilbertSpace: HilbertSpace) -> "ParamSet[QMSweepParam]":
         sweepParameterSet = HSParamSet(QMSweepParam)
         sweepParameterSet.dynamicalInit(
             hilbertSpace,

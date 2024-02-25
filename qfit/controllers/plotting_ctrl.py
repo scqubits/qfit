@@ -113,7 +113,7 @@ class PlottingCtrl(QObject):
 
         # plot everything available
         self.measurementData.emitReadyToPlot()
-        self.measurementData.relimCanvas.emit()
+        self.measurementData.emitRelimCanvas()
         self.activeDataset.emitReadyToPlot()
         self.allDatasets.emitReadyToPlot()
         self.allDatasets.emitFocusChanged()  # update the snapX
@@ -250,7 +250,7 @@ class PlottingCtrl(QObject):
         Should be done at the end and will emit all readyToPlot signal
         """
         self.measurementData.readyToPlot.connect(self.mplCanvas.updateElement)
-        self.measurementData.relimCanvas.connect(self.mplCanvas.relimByMeasData)
+        self.measurementData.relimCanvas.connect(self.mplCanvas.relim)
         self.quantumModel.readyToPlot.connect(self.mplCanvas.updateElement)
         return
 

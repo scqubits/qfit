@@ -306,38 +306,34 @@ class PrefitView(QObject):
             self.autoRun.setChecked(value)
         self.blockAllSignals(False)
 
-    def emitOption(self, option: str):
-        if option == "subsysToPlot":
-            self.optionUpdated.emit(option, self.subsysToPlot.currentText())
-        elif option == "initialState":
-            self.optionUpdated.emit(option, self.initialState.text())
-        elif option == "photons":
-            self.optionUpdated.emit(option, self.photons.value())
-        elif option == "pointsAdded":
-            self.optionUpdated.emit(option, self.pointsAdded.text())
-        elif option == "autoRun":
-            self.optionUpdated.emit(option, self.autoRun.isChecked())
-
-    # def emitAllOptions(self):
-    #     self.emitOption("subsysToPlot")
-    #     self.emitOption("initialState")
-    #     self.emitOption("photons")
-    #     self.emitOption("pointsAdded")
-    #     self.emitOption("autoRun")
-
     def optionsConnects(self):
         self.subsysToPlot.currentIndexChanged.connect(
-            lambda: self.emitOption("subsysToPlot")
+            lambda: self.optionUpdated.emit(
+                "subsysToPlot", self.subsysToPlot.currentText()
+            )
         )
         self.initialState.editingFinished.connect(
-            lambda: self.emitOption("initialState")
+            lambda: self.optionUpdated.emit(
+                "initialState", self.initialState.text()
+            )
         )
         self.photons.valueChanged.connect(
-            lambda: self.emitOption("photons")
+            lambda: self.optionUpdated.emit(
+                "photons", self.photons.value()
+            )
+        )
+        self.evalsCount.editingFinished.connect(
+            lambda: self.optionUpdated.emit(
+                "evalsCount", self.evalsCount.text()
+            )
         )
         self.pointsAdded.editingFinished.connect(
-            lambda: self.emitOption("pointsAdded")
+            lambda: self.optionUpdated.emit(
+                "pointsAdded", self.pointsAdded.text()
+            )
         )
         self.autoRun.stateChanged.connect(
-            lambda: self.emitOption("autoRun")
+            lambda: self.optionUpdated.emit(
+                "autoRun", self.autoRun.isChecked()
+            )
         )
