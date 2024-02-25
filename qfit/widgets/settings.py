@@ -25,8 +25,9 @@ from qfit.ui_designer.settings_visual import Ui_visualSettingsWidget
 class SettingsWidgetBase(QWidget):
     def __init__(self, parent):
         super(SettingsWidgetBase, self).__init__(parent=parent)
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self.mainwindow = parent
-        self.move(100, 100)
+        self.move(450, 500)
         self.oldPos: Union[None, QPoint] = self.pos()
         self.hide()
 
@@ -55,6 +56,7 @@ class VisualSettingsWidget(SettingsWidgetBase):
         super(VisualSettingsWidget, self).__init__(parent=parent)
         self.ui = Ui_visualSettingsWidget()
         self.ui.setupUi(self)
+        # self.setStyleSheet("background-color: #2F2F2F;")
 
 
 class FitSettingsWidget(SettingsWidgetBase):
@@ -62,6 +64,7 @@ class FitSettingsWidget(SettingsWidgetBase):
         super(FitSettingsWidget, self).__init__(parent=parent)
         self.ui = Ui_fitSettingsWidget()
         self.ui.setupUi(self)
+        # self.setStyleSheet("background-color: #2F2F2F;")
 
 
 class NumericalSpectrumSettingsWidget(SettingsWidgetBase):
@@ -69,6 +72,7 @@ class NumericalSpectrumSettingsWidget(SettingsWidgetBase):
         super(NumericalSpectrumSettingsWidget, self).__init__(parent=parent)
         self.ui = Ui_numericalSpectrumSettingsWidget()
         self.ui.setupUi(self)
+        # self.setStyleSheet("background-color: #2F2F2F;")
 
 
 @dataclass

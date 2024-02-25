@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>375</width>
     <height>433</height>
    </rect>
   </property>
@@ -18,13 +18,13 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>400</width>
+    <width>375</width>
     <height>0</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>400</width>
+    <width>375</width>
     <height>16777215</height>
    </size>
   </property>
@@ -33,11 +33,11 @@
   </property>
   <property name="styleSheet">
    <string notr="true">QMainWindow {
-	background-color: #2F2F2F;
+	background-color: #5F5F5F;
 }
 
 QFrame {
-	background-color: #2F2F2F;
+	background-color: #5F5F5F;
 }
 
 QToolTip {
@@ -413,13 +413,13 @@ QComboBox QAbstractItemView::item{
      </property>
      <property name="minimumSize">
       <size>
-       <width>45</width>
+       <width>25</width>
        <height>0</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>45</width>
+       <width>25</width>
        <height>16777215</height>
       </size>
      </property>
@@ -643,9 +643,12 @@ QComboBox QAbstractItemView::item{
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
      <property name="sizeHint" stdset="0">
       <size>
-       <width>45</width>
+       <width>25</width>
        <height>20</height>
       </size>
      </property>
@@ -751,7 +754,7 @@ QComboBox QAbstractItemView::item{
       <bool>true</bool>
      </property>
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>

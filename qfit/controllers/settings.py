@@ -41,6 +41,28 @@ class SettingsCtrl:
     def __init__(
         self,
         settingsWidgetSet: SettingsWidgetSet,
-        settingsButton: Dict[str, QPushButton],
+        settingsButtonSet: Dict[str, QPushButton],
     ):
-        pass
+        self.settingsWidgetSet = settingsWidgetSet
+        self.settingsButtonSet = settingsButtonSet
+        self.uiSettingsConnects()
+
+    def uiSettingsConnects(self):
+        # toggle on the settings widgets
+        self.settingsButtonSet["visual"].clicked.connect(
+            self.settingsWidgetSet.visual.toggle
+        )
+        self.settingsButtonSet["fit"].clicked.connect(self.settingsWidgetSet.fit.toggle)
+        self.settingsButtonSet["numericalSpectrum"].clicked.connect(
+            self.settingsWidgetSet.numericalSpectrum.toggle
+        )
+        # close buttons
+        self.settingsWidgetSet.visual.ui.visualSettingsCloseButton.clicked.connect(
+            self.settingsWidgetSet.visual.hide
+        )
+        self.settingsWidgetSet.fit.ui.fitSettingsCloseButton.clicked.connect(
+            self.settingsWidgetSet.fit.hide
+        )
+        self.settingsWidgetSet.numericalSpectrum.ui.numSpecSettingsCloseButton.clicked.connect(
+            self.settingsWidgetSet.numericalSpectrum.hide
+        )

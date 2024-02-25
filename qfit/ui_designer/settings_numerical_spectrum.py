@@ -26,20 +26,20 @@ class Ui_numericalSpectrumSettingsWidget(object):
     def setupUi(self, numericalSpectrumSettingsWidget):
         if not numericalSpectrumSettingsWidget.objectName():
             numericalSpectrumSettingsWidget.setObjectName(u"numericalSpectrumSettingsWidget")
-        numericalSpectrumSettingsWidget.resize(400, 432)
+        numericalSpectrumSettingsWidget.resize(375, 432)
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(numericalSpectrumSettingsWidget.sizePolicy().hasHeightForWidth())
         numericalSpectrumSettingsWidget.setSizePolicy(sizePolicy)
-        numericalSpectrumSettingsWidget.setMinimumSize(QSize(400, 0))
-        numericalSpectrumSettingsWidget.setMaximumSize(QSize(400, 16777215))
+        numericalSpectrumSettingsWidget.setMinimumSize(QSize(375, 0))
+        numericalSpectrumSettingsWidget.setMaximumSize(QSize(439, 16777215))
         numericalSpectrumSettingsWidget.setStyleSheet(u"QMainWindow {\n"
-"	background-color: #2F2F2F;\n"
+"	background-color: #3F3F3F;\n"
 "}\n"
 "\n"
 "QFrame {\n"
-"	background-color: #2F2F2F;\n"
+"	background-color: #3F3F3F;\n"
 "}\n"
 "\n"
 "QToolTip {\n"
@@ -294,6 +294,24 @@ class Ui_numericalSpectrumSettingsWidget(object):
 "")
         self.gridLayout = QGridLayout(numericalSpectrumSettingsWidget)
         self.gridLayout.setObjectName(u"gridLayout")
+        self.initStateLineEdit = StateLineEdit(numericalSpectrumSettingsWidget)
+        self.initStateLineEdit.setObjectName(u"initStateLineEdit")
+        sizePolicy.setHeightForWidth(self.initStateLineEdit.sizePolicy().hasHeightForWidth())
+        self.initStateLineEdit.setSizePolicy(sizePolicy)
+        self.initStateLineEdit.setMinimumSize(QSize(170, 30))
+        self.initStateLineEdit.setMaximumSize(QSize(16777215, 30))
+
+        self.gridLayout.addWidget(self.initStateLineEdit, 6, 2, 2, 3)
+
+        self.evalsCountLineEdit = IntLineEdit(numericalSpectrumSettingsWidget)
+        self.evalsCountLineEdit.setObjectName(u"evalsCountLineEdit")
+        sizePolicy.setHeightForWidth(self.evalsCountLineEdit.sizePolicy().hasHeightForWidth())
+        self.evalsCountLineEdit.setSizePolicy(sizePolicy)
+        self.evalsCountLineEdit.setMinimumSize(QSize(170, 30))
+        self.evalsCountLineEdit.setMaximumSize(QSize(16777215, 30))
+
+        self.gridLayout.addWidget(self.evalsCountLineEdit, 8, 2, 1, 3)
+
         self.label_46 = QLabel(numericalSpectrumSettingsWidget)
         self.label_46.setObjectName(u"label_46")
         sizePolicy1 = QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
@@ -306,6 +324,77 @@ class Ui_numericalSpectrumSettingsWidget(object):
 
         self.gridLayout.addWidget(self.label_46, 12, 1, 1, 1)
 
+        self.numericalSpectrumSettingsHelpPushButton = QPushButton(numericalSpectrumSettingsWidget)
+        self.numericalSpectrumSettingsHelpPushButton.setObjectName(u"numericalSpectrumSettingsHelpPushButton")
+        sizePolicy.setHeightForWidth(self.numericalSpectrumSettingsHelpPushButton.sizePolicy().hasHeightForWidth())
+        self.numericalSpectrumSettingsHelpPushButton.setSizePolicy(sizePolicy)
+        self.numericalSpectrumSettingsHelpPushButton.setMinimumSize(QSize(0, 0))
+        self.numericalSpectrumSettingsHelpPushButton.setStyleSheet(u"QPushButton {\n"
+"    border: none;\n"
+"    background: none;\n"
+"}")
+        icon = QIcon()
+        icon.addFile(u":/icons/svg/question-circle.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.numericalSpectrumSettingsHelpPushButton.setIcon(icon)
+        self.numericalSpectrumSettingsHelpPushButton.setIconSize(QSize(23, 23))
+
+        self.gridLayout.addWidget(self.numericalSpectrumSettingsHelpPushButton, 0, 4, 2, 1)
+
+        self.pointsAddLineEdit = IntLineEdit(numericalSpectrumSettingsWidget)
+        self.pointsAddLineEdit.setObjectName(u"pointsAddLineEdit")
+        sizePolicy.setHeightForWidth(self.pointsAddLineEdit.sizePolicy().hasHeightForWidth())
+        self.pointsAddLineEdit.setSizePolicy(sizePolicy)
+        self.pointsAddLineEdit.setMinimumSize(QSize(170, 30))
+        self.pointsAddLineEdit.setMaximumSize(QSize(16777215, 30))
+
+        self.gridLayout.addWidget(self.pointsAddLineEdit, 9, 2, 1, 3)
+
+        self.label_42 = QLabel(numericalSpectrumSettingsWidget)
+        self.label_42.setObjectName(u"label_42")
+        sizePolicy.setHeightForWidth(self.label_42.sizePolicy().hasHeightForWidth())
+        self.label_42.setSizePolicy(sizePolicy)
+        self.label_42.setStyleSheet(u"font-size: 13px")
+
+        self.gridLayout.addWidget(self.label_42, 8, 1, 1, 1)
+
+        self.horizontalSpacer = QSpacerItem(25, 10, QSizePolicy.Fixed, QSizePolicy.Minimum)
+
+        self.gridLayout.addItem(self.horizontalSpacer, 3, 5, 2, 1)
+
+        self.numSpecSettingsCloseButton = QPushButton(numericalSpectrumSettingsWidget)
+        self.numSpecSettingsCloseButton.setObjectName(u"numSpecSettingsCloseButton")
+        sizePolicy.setHeightForWidth(self.numSpecSettingsCloseButton.sizePolicy().hasHeightForWidth())
+        self.numSpecSettingsCloseButton.setSizePolicy(sizePolicy)
+        self.numSpecSettingsCloseButton.setMinimumSize(QSize(25, 0))
+        self.numSpecSettingsCloseButton.setMaximumSize(QSize(167777, 16777215))
+        self.numSpecSettingsCloseButton.setSizeIncrement(QSize(45, 0))
+        self.numSpecSettingsCloseButton.setStyleSheet(u"QPushButton {\n"
+"    border: none;\n"
+"    background: none;\n"
+"}")
+        icon1 = QIcon()
+        icon1.addFile(u":/icons/svg/cross.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.numSpecSettingsCloseButton.setIcon(icon1)
+        self.numSpecSettingsCloseButton.setIconSize(QSize(30, 30))
+
+        self.gridLayout.addWidget(self.numSpecSettingsCloseButton, 0, 5, 3, 1)
+
+        self.label_43 = QLabel(numericalSpectrumSettingsWidget)
+        self.label_43.setObjectName(u"label_43")
+        sizePolicy.setHeightForWidth(self.label_43.sizePolicy().hasHeightForWidth())
+        self.label_43.setSizePolicy(sizePolicy)
+        self.label_43.setStyleSheet(u"font-size: 13px")
+
+        self.gridLayout.addWidget(self.label_43, 9, 1, 1, 1)
+
+        self.label = QLabel(numericalSpectrumSettingsWidget)
+        self.label.setObjectName(u"label")
+        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy)
+        self.label.setStyleSheet(u"font-size: 13px")
+
+        self.gridLayout.addWidget(self.label, 6, 1, 2, 1)
+
         self.label_33 = QLabel(numericalSpectrumSettingsWidget)
         self.label_33.setObjectName(u"label_33")
         sizePolicy.setHeightForWidth(self.label_33.sizePolicy().hasHeightForWidth())
@@ -313,6 +402,18 @@ class Ui_numericalSpectrumSettingsWidget(object):
         self.label_33.setStyleSheet(u"font-size: 13px")
 
         self.gridLayout.addWidget(self.label_33, 10, 1, 1, 1)
+
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.gridLayout.addItem(self.verticalSpacer, 14, 1, 1, 1)
+
+        self.statusTextLabel = QLabel(numericalSpectrumSettingsWidget)
+        self.statusTextLabel.setObjectName(u"statusTextLabel")
+        self.statusTextLabel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
+        self.statusTextLabel.setWordWrap(True)
+        self.statusTextLabel.setMargin(5)
+
+        self.gridLayout.addWidget(self.statusTextLabel, 13, 1, 1, 5)
 
         self.prefitPhotonSpinBox = QSpinBox(numericalSpectrumSettingsWidget)
         self.prefitPhotonSpinBox.setObjectName(u"prefitPhotonSpinBox")
@@ -387,102 +488,6 @@ class Ui_numericalSpectrumSettingsWidget(object):
 
         self.gridLayout.addWidget(self.prefitPhotonSpinBox, 10, 2, 1, 2)
 
-        self.label_43 = QLabel(numericalSpectrumSettingsWidget)
-        self.label_43.setObjectName(u"label_43")
-        sizePolicy.setHeightForWidth(self.label_43.sizePolicy().hasHeightForWidth())
-        self.label_43.setSizePolicy(sizePolicy)
-        self.label_43.setStyleSheet(u"font-size: 13px")
-
-        self.gridLayout.addWidget(self.label_43, 9, 1, 1, 1)
-
-        self.numericalSpectrumSettingsHelpPushButton = QPushButton(numericalSpectrumSettingsWidget)
-        self.numericalSpectrumSettingsHelpPushButton.setObjectName(u"numericalSpectrumSettingsHelpPushButton")
-        sizePolicy.setHeightForWidth(self.numericalSpectrumSettingsHelpPushButton.sizePolicy().hasHeightForWidth())
-        self.numericalSpectrumSettingsHelpPushButton.setSizePolicy(sizePolicy)
-        self.numericalSpectrumSettingsHelpPushButton.setMinimumSize(QSize(0, 0))
-        self.numericalSpectrumSettingsHelpPushButton.setStyleSheet(u"QPushButton {\n"
-"    border: none;\n"
-"    background: none;\n"
-"}")
-        icon = QIcon()
-        icon.addFile(u":/icons/svg/question-circle.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.numericalSpectrumSettingsHelpPushButton.setIcon(icon)
-        self.numericalSpectrumSettingsHelpPushButton.setIconSize(QSize(23, 23))
-
-        self.gridLayout.addWidget(self.numericalSpectrumSettingsHelpPushButton, 0, 4, 2, 1)
-
-        self.numSpecSettingsCloseButton = QPushButton(numericalSpectrumSettingsWidget)
-        self.numSpecSettingsCloseButton.setObjectName(u"numSpecSettingsCloseButton")
-        sizePolicy.setHeightForWidth(self.numSpecSettingsCloseButton.sizePolicy().hasHeightForWidth())
-        self.numSpecSettingsCloseButton.setSizePolicy(sizePolicy)
-        self.numSpecSettingsCloseButton.setMinimumSize(QSize(45, 0))
-        self.numSpecSettingsCloseButton.setMaximumSize(QSize(167777, 16777215))
-        self.numSpecSettingsCloseButton.setSizeIncrement(QSize(45, 0))
-        self.numSpecSettingsCloseButton.setStyleSheet(u"QPushButton {\n"
-"    border: none;\n"
-"    background: none;\n"
-"}")
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/svg/cross.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.numSpecSettingsCloseButton.setIcon(icon1)
-        self.numSpecSettingsCloseButton.setIconSize(QSize(30, 30))
-
-        self.gridLayout.addWidget(self.numSpecSettingsCloseButton, 0, 5, 3, 1)
-
-        self.horizontalSpacer = QSpacerItem(45, 10, QSizePolicy.Fixed, QSizePolicy.Minimum)
-
-        self.gridLayout.addItem(self.horizontalSpacer, 3, 5, 2, 1)
-
-        self.label_42 = QLabel(numericalSpectrumSettingsWidget)
-        self.label_42.setObjectName(u"label_42")
-        sizePolicy.setHeightForWidth(self.label_42.sizePolicy().hasHeightForWidth())
-        self.label_42.setSizePolicy(sizePolicy)
-        self.label_42.setStyleSheet(u"font-size: 13px")
-
-        self.gridLayout.addWidget(self.label_42, 8, 1, 1, 1)
-
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-
-        self.gridLayout.addItem(self.verticalSpacer, 14, 1, 1, 1)
-
-        self.initStateLineEdit = StateLineEdit(numericalSpectrumSettingsWidget)
-        self.initStateLineEdit.setObjectName(u"initStateLineEdit")
-        sizePolicy.setHeightForWidth(self.initStateLineEdit.sizePolicy().hasHeightForWidth())
-        self.initStateLineEdit.setSizePolicy(sizePolicy)
-        self.initStateLineEdit.setMinimumSize(QSize(170, 30))
-        self.initStateLineEdit.setMaximumSize(QSize(16777215, 30))
-
-        self.gridLayout.addWidget(self.initStateLineEdit, 6, 2, 2, 3)
-
-        self.evalsCountLineEdit = IntLineEdit(numericalSpectrumSettingsWidget)
-        self.evalsCountLineEdit.setObjectName(u"evalsCountLineEdit")
-        sizePolicy.setHeightForWidth(self.evalsCountLineEdit.sizePolicy().hasHeightForWidth())
-        self.evalsCountLineEdit.setSizePolicy(sizePolicy)
-        self.evalsCountLineEdit.setMinimumSize(QSize(170, 30))
-        self.evalsCountLineEdit.setMaximumSize(QSize(16777215, 30))
-
-        self.gridLayout.addWidget(self.evalsCountLineEdit, 8, 2, 1, 3)
-
-        self.pointsAddLineEdit = IntLineEdit(numericalSpectrumSettingsWidget)
-        self.pointsAddLineEdit.setObjectName(u"pointsAddLineEdit")
-        sizePolicy.setHeightForWidth(self.pointsAddLineEdit.sizePolicy().hasHeightForWidth())
-        self.pointsAddLineEdit.setSizePolicy(sizePolicy)
-        self.pointsAddLineEdit.setMinimumSize(QSize(170, 30))
-        self.pointsAddLineEdit.setMaximumSize(QSize(16777215, 30))
-
-        self.gridLayout.addWidget(self.pointsAddLineEdit, 9, 2, 1, 3)
-
-        self.subsysComboBox = QComboBox(numericalSpectrumSettingsWidget)
-        self.subsysComboBox.setObjectName(u"subsysComboBox")
-        sizePolicy.setHeightForWidth(self.subsysComboBox.sizePolicy().hasHeightForWidth())
-        self.subsysComboBox.setSizePolicy(sizePolicy)
-        self.subsysComboBox.setMinimumSize(QSize(170, 30))
-        self.subsysComboBox.setMaximumSize(QSize(16777215, 30))
-        self.subsysComboBox.setStyleSheet(u"")
-        self.subsysComboBox.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
-
-        self.gridLayout.addWidget(self.subsysComboBox, 3, 2, 2, 3)
-
         self.numericalSpectrumSettingsLabel = QLabel(numericalSpectrumSettingsWidget)
         self.numericalSpectrumSettingsLabel.setObjectName(u"numericalSpectrumSettingsLabel")
         sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
@@ -501,29 +506,16 @@ class Ui_numericalSpectrumSettingsWidget(object):
 
         self.gridLayout.addWidget(self.numericalSpectrumSettingsLabel, 1, 1, 1, 3)
 
-        self.prefitResultHelpPushButton = QPushButton(numericalSpectrumSettingsWidget)
-        self.prefitResultHelpPushButton.setObjectName(u"prefitResultHelpPushButton")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.prefitResultHelpPushButton.sizePolicy().hasHeightForWidth())
-        self.prefitResultHelpPushButton.setSizePolicy(sizePolicy3)
-        self.prefitResultHelpPushButton.setStyleSheet(u"QPushButton {\n"
-"    border: none;\n"
-"    background: none;\n"
-"}")
-        self.prefitResultHelpPushButton.setIcon(icon)
-        self.prefitResultHelpPushButton.setIconSize(QSize(23, 23))
+        self.subsysComboBox = QComboBox(numericalSpectrumSettingsWidget)
+        self.subsysComboBox.setObjectName(u"subsysComboBox")
+        sizePolicy.setHeightForWidth(self.subsysComboBox.sizePolicy().hasHeightForWidth())
+        self.subsysComboBox.setSizePolicy(sizePolicy)
+        self.subsysComboBox.setMinimumSize(QSize(170, 30))
+        self.subsysComboBox.setMaximumSize(QSize(16777215, 30))
+        self.subsysComboBox.setStyleSheet(u"")
+        self.subsysComboBox.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
 
-        self.gridLayout.addWidget(self.prefitResultHelpPushButton, 11, 4, 1, 1)
-
-        self.label = QLabel(numericalSpectrumSettingsWidget)
-        self.label.setObjectName(u"label")
-        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy)
-        self.label.setStyleSheet(u"font-size: 13px")
-
-        self.gridLayout.addWidget(self.label, 6, 1, 2, 1)
+        self.gridLayout.addWidget(self.subsysComboBox, 3, 2, 2, 3)
 
         self.label_44 = QLabel(numericalSpectrumSettingsWidget)
         self.label_44.setObjectName(u"label_44")
@@ -535,11 +527,11 @@ class Ui_numericalSpectrumSettingsWidget(object):
 
         self.mseLabel = QLabel(numericalSpectrumSettingsWidget)
         self.mseLabel.setObjectName(u"mseLabel")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.mseLabel.sizePolicy().hasHeightForWidth())
-        self.mseLabel.setSizePolicy(sizePolicy4)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.mseLabel.sizePolicy().hasHeightForWidth())
+        self.mseLabel.setSizePolicy(sizePolicy3)
         self.mseLabel.setMinimumSize(QSize(200, 0))
         font1 = QFont()
         font1.setFamilies([u"Roboto Medium"])
@@ -549,13 +541,21 @@ class Ui_numericalSpectrumSettingsWidget(object):
 
         self.gridLayout.addWidget(self.mseLabel, 11, 1, 1, 1)
 
-        self.statusTextLabel = QLabel(numericalSpectrumSettingsWidget)
-        self.statusTextLabel.setObjectName(u"statusTextLabel")
-        self.statusTextLabel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
-        self.statusTextLabel.setWordWrap(True)
-        self.statusTextLabel.setMargin(5)
+        self.prefitResultHelpPushButton = QPushButton(numericalSpectrumSettingsWidget)
+        self.prefitResultHelpPushButton.setObjectName(u"prefitResultHelpPushButton")
+        sizePolicy4 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.prefitResultHelpPushButton.sizePolicy().hasHeightForWidth())
+        self.prefitResultHelpPushButton.setSizePolicy(sizePolicy4)
+        self.prefitResultHelpPushButton.setStyleSheet(u"QPushButton {\n"
+"    border: none;\n"
+"    background: none;\n"
+"}")
+        self.prefitResultHelpPushButton.setIcon(icon)
+        self.prefitResultHelpPushButton.setIconSize(QSize(23, 23))
 
-        self.gridLayout.addWidget(self.statusTextLabel, 13, 1, 1, 5)
+        self.gridLayout.addWidget(self.prefitResultHelpPushButton, 11, 4, 1, 1)
 
 
         self.retranslateUi(numericalSpectrumSettingsWidget)
@@ -565,21 +565,21 @@ class Ui_numericalSpectrumSettingsWidget(object):
 
     def retranslateUi(self, numericalSpectrumSettingsWidget):
         numericalSpectrumSettingsWidget.setWindowTitle(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"Form", None))
-        self.label_46.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"STATUS:", None))
-        self.label_33.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"PHOTONS", None))
-        self.label_43.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"POINTS ADDED", None))
-        self.numericalSpectrumSettingsHelpPushButton.setText("")
-        self.numSpecSettingsCloseButton.setText("")
-        self.label_42.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"EVALS COUNT", None))
         self.initStateLineEdit.setPlaceholderText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"dressed or bare label", None))
         self.evalsCountLineEdit.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"20", None))
+        self.label_46.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"STATUS:", None))
+        self.numericalSpectrumSettingsHelpPushButton.setText("")
         self.pointsAddLineEdit.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"10", None))
         self.pointsAddLineEdit.setPlaceholderText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"# of x value for spectrum sweep", None))
-        self.numericalSpectrumSettingsLabel.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"SETTINGS: NUMERICAL SPECTRUM", None))
-        self.prefitResultHelpPushButton.setText("")
+        self.label_42.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"EVALS COUNT", None))
+        self.numSpecSettingsCloseButton.setText("")
+        self.label_43.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"POINTS ADDED", None))
         self.label.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"INITIAL STATE", None))
+        self.label_33.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"PHOTONS", None))
+        self.statusTextLabel.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"-", None))
+        self.numericalSpectrumSettingsLabel.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"SETTINGS: NUMERICAL SPECTRUM", None))
         self.label_44.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"TRANSITIONS", None))
         self.mseLabel.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"MSE:  - GHz\u00b2   (+0.00%)", None))
-        self.statusTextLabel.setText(QCoreApplication.translate("numericalSpectrumSettingsWidget", u"-", None))
+        self.prefitResultHelpPushButton.setText("")
     # retranslateUi
 

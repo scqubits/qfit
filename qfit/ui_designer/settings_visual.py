@@ -24,20 +24,20 @@ class Ui_visualSettingsWidget(object):
     def setupUi(self, visualSettingsWidget):
         if not visualSettingsWidget.objectName():
             visualSettingsWidget.setObjectName(u"visualSettingsWidget")
-        visualSettingsWidget.resize(400, 433)
+        visualSettingsWidget.resize(375, 433)
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(visualSettingsWidget.sizePolicy().hasHeightForWidth())
         visualSettingsWidget.setSizePolicy(sizePolicy)
-        visualSettingsWidget.setMinimumSize(QSize(400, 0))
-        visualSettingsWidget.setMaximumSize(QSize(400, 16777215))
+        visualSettingsWidget.setMinimumSize(QSize(375, 0))
+        visualSettingsWidget.setMaximumSize(QSize(375, 16777215))
         visualSettingsWidget.setStyleSheet(u"QMainWindow {\n"
-"	background-color: #2F2F2F;\n"
+"	background-color: #5F5F5F;\n"
 "}\n"
 "\n"
 "QFrame {\n"
-"	background-color: #2F2F2F;\n"
+"	background-color: #5F5F5F;\n"
 "}\n"
 "\n"
 "QToolTip {\n"
@@ -363,8 +363,8 @@ class Ui_visualSettingsWidget(object):
         self.visualSettingsCloseButton.setObjectName(u"visualSettingsCloseButton")
         sizePolicy.setHeightForWidth(self.visualSettingsCloseButton.sizePolicy().hasHeightForWidth())
         self.visualSettingsCloseButton.setSizePolicy(sizePolicy)
-        self.visualSettingsCloseButton.setMinimumSize(QSize(45, 0))
-        self.visualSettingsCloseButton.setMaximumSize(QSize(45, 16777215))
+        self.visualSettingsCloseButton.setMinimumSize(QSize(25, 0))
+        self.visualSettingsCloseButton.setMaximumSize(QSize(25, 16777215))
         self.visualSettingsCloseButton.setStyleSheet(u"QPushButton {\n"
 "    border: none;\n"
 "    background: none;\n"
@@ -461,7 +461,7 @@ class Ui_visualSettingsWidget(object):
 
         self.gridLayout.addWidget(self.logScaleCheckBox, 2, 2, 1, 1)
 
-        self.horizontalSpacer = QSpacerItem(45, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(25, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
 
         self.gridLayout.addItem(self.horizontalSpacer, 2, 3, 1, 1)
 
@@ -505,8 +505,8 @@ class Ui_visualSettingsWidget(object):
         self.label_4 = QLabel(visualSettingsWidget)
         self.label_4.setObjectName(u"label_4")
         self.label_4.setEnabled(True)
-        sizePolicy1.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
-        self.label_4.setSizePolicy(sizePolicy1)
+        sizePolicy.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
+        self.label_4.setSizePolicy(sizePolicy)
         self.label_4.setMinimumSize(QSize(0, 23))
         font1 = QFont()
         font1.setFamilies([u"Roboto Medium"])

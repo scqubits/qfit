@@ -25,15 +25,16 @@ class Ui_fitSettingsWidget(object):
     def setupUi(self, fitSettingsWidget):
         if not fitSettingsWidget.objectName():
             fitSettingsWidget.setObjectName(u"fitSettingsWidget")
-        fitSettingsWidget.resize(400, 432)
-        fitSettingsWidget.setMinimumSize(QSize(400, 0))
-        fitSettingsWidget.setMaximumSize(QSize(400, 16777215))
-        fitSettingsWidget.setStyleSheet(u"QMainWindow {\n"
-"	background-color: #2F2F2F;\n"
+        fitSettingsWidget.setWindowModality(Qt.WindowModal)
+        fitSettingsWidget.resize(375, 432)
+        fitSettingsWidget.setMinimumSize(QSize(375, 0))
+        fitSettingsWidget.setMaximumSize(QSize(484, 16777215))
+        fitSettingsWidget.setStyleSheet(u"QWidget {\n"
+"	background-color: #3F3F3F;\n"
 "}\n"
 "\n"
 "QFrame {\n"
-"	background-color: #2F2F2F;\n"
+"	background-color: #3F3F3F;\n"
 "}\n"
 "\n"
 "QToolTip {\n"
@@ -81,8 +82,8 @@ class Ui_fitSettingsWidget(object):
 "    border: 1px solid #DBBCFB;\n"
 "	width: 20px;\n"
 "	height: 20px;\n"
-" 	border-radi"
-                        "us: 11px;\n"
+" 	border-radius: "
+                        "11px;\n"
 "    background: transparent;\n"
 "}\n"
 "\n"
@@ -130,8 +131,8 @@ class Ui_fitSettingsWidget(object):
 "    border-radius: 9px;\n"
 "    height: 18px;\n"
 "	margin: 0px;\n"
-"	background-color: #3"
-                        "8363B;\n"
+"	background-color: #38363"
+                        "B;\n"
 "}\n"
 "\n"
 "QSlider::groove:horizontal:hover {\n"
@@ -179,8 +180,8 @@ class Ui_fitSettingsWidget(object):
 "    background-color: rgb(105, 180, 255);\n"
 "}\n"
 "\n"
-"QSlider::handle:vertical:press"
-                        "ed {\n"
+"QSlider::handle:vertical:pressed {"
+                        "\n"
 "    background-color: rgb(65, 130, 195);\n"
 "}\n"
 "\n"
@@ -288,6 +289,18 @@ class Ui_fitSettingsWidget(object):
 "")
         self.gridLayout = QGridLayout(fitSettingsWidget)
         self.gridLayout.setObjectName(u"gridLayout")
+        self.tolLineEdit = PositiveFloatLineEdit(fitSettingsWidget)
+        self.tolLineEdit.setObjectName(u"tolLineEdit")
+        sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tolLineEdit.sizePolicy().hasHeightForWidth())
+        self.tolLineEdit.setSizePolicy(sizePolicy)
+        self.tolLineEdit.setMinimumSize(QSize(170, 30))
+        self.tolLineEdit.setMaximumSize(QSize(16777215, 30))
+
+        self.gridLayout.addWidget(self.tolLineEdit, 3, 2, 1, 1)
+
         self.optimizerComboBox = QComboBox(fitSettingsWidget)
         self.optimizerComboBox.addItem("")
         self.optimizerComboBox.addItem("")
@@ -295,9 +308,6 @@ class Ui_fitSettingsWidget(object):
         self.optimizerComboBox.addItem("")
         self.optimizerComboBox.addItem("")
         self.optimizerComboBox.setObjectName(u"optimizerComboBox")
-        sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.optimizerComboBox.sizePolicy().hasHeightForWidth())
         self.optimizerComboBox.setSizePolicy(sizePolicy)
         self.optimizerComboBox.setMinimumSize(QSize(170, 30))
@@ -305,17 +315,64 @@ class Ui_fitSettingsWidget(object):
 
         self.gridLayout.addWidget(self.optimizerComboBox, 2, 2, 1, 1)
 
-        self.label_8 = QLabel(fitSettingsWidget)
-        self.label_8.setObjectName(u"label_8")
+        self.label_49 = QLabel(fitSettingsWidget)
+        self.label_49.setObjectName(u"label_49")
+        self.label_49.setStyleSheet(u"font-size: 13px")
+
+        self.gridLayout.addWidget(self.label_49, 5, 1, 1, 1)
+
+        self.fitSettingsCloseButton = QPushButton(fitSettingsWidget)
+        self.fitSettingsCloseButton.setObjectName(u"fitSettingsCloseButton")
+        sizePolicy.setHeightForWidth(self.fitSettingsCloseButton.sizePolicy().hasHeightForWidth())
+        self.fitSettingsCloseButton.setSizePolicy(sizePolicy)
+        self.fitSettingsCloseButton.setMinimumSize(QSize(25, 0))
+        self.fitSettingsCloseButton.setSizeIncrement(QSize(0, 0))
+        self.fitSettingsCloseButton.setStyleSheet(u"QPushButton {\n"
+"    border: none;\n"
+"    background: none;\n"
+"}")
+        icon = QIcon()
+        icon.addFile(u":/icons/svg/cross.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.fitSettingsCloseButton.setIcon(icon)
+        self.fitSettingsCloseButton.setIconSize(QSize(30, 30))
+
+        self.gridLayout.addWidget(self.fitSettingsCloseButton, 1, 4, 1, 1)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
+        self.gridLayout.addItem(self.horizontalSpacer_2, 2, 3, 1, 1)
+
+        self.horizontalSpacer = QSpacerItem(25, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
+
+        self.gridLayout.addItem(self.horizontalSpacer, 2, 4, 1, 1)
+
+        self.fitResultHelpPushButton = QPushButton(fitSettingsWidget)
+        self.fitResultHelpPushButton.setObjectName(u"fitResultHelpPushButton")
+        self.fitResultHelpPushButton.setStyleSheet(u"QPushButton {\n"
+"    border: none;\n"
+"    background: none;\n"
+"}")
+        icon1 = QIcon()
+        icon1.addFile(u":/icons/svg/question-circle.svg", QSize(), QIcon.Normal, QIcon.Off)
+        self.fitResultHelpPushButton.setIcon(icon1)
+        self.fitResultHelpPushButton.setIconSize(QSize(23, 23))
+
+        self.gridLayout.addWidget(self.fitResultHelpPushButton, 4, 3, 1, 1)
+
+        self.label_47 = QLabel(fitSettingsWidget)
+        self.label_47.setObjectName(u"label_47")
         sizePolicy1 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.label_8.sizePolicy().hasHeightForWidth())
-        self.label_8.setSizePolicy(sizePolicy1)
-        self.label_8.setMinimumSize(QSize(0, 0))
-        self.label_8.setStyleSheet(u"font-size: 13px")
+        sizePolicy1.setHeightForWidth(self.label_47.sizePolicy().hasHeightForWidth())
+        self.label_47.setSizePolicy(sizePolicy1)
+        self.label_47.setStyleSheet(u"font-size: 13px")
 
-        self.gridLayout.addWidget(self.label_8, 3, 1, 1, 1)
+        self.gridLayout.addWidget(self.label_47, 2, 1, 1, 1)
+
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.gridLayout.addItem(self.verticalSpacer, 7, 1, 1, 1)
 
         self.label_45 = QLabel(fitSettingsWidget)
         self.label_45.setObjectName(u"label_45")
@@ -333,15 +390,27 @@ class Ui_fitSettingsWidget(object):
 
         self.gridLayout.addWidget(self.label_45, 1, 1, 1, 2)
 
-        self.label_49 = QLabel(fitSettingsWidget)
-        self.label_49.setObjectName(u"label_49")
-        self.label_49.setStyleSheet(u"font-size: 13px")
+        self.statusTextLabel_2 = QLabel(fitSettingsWidget)
+        self.statusTextLabel_2.setObjectName(u"statusTextLabel_2")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.statusTextLabel_2.sizePolicy().hasHeightForWidth())
+        self.statusTextLabel_2.setSizePolicy(sizePolicy2)
+        self.statusTextLabel_2.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
+        self.statusTextLabel_2.setWordWrap(True)
+        self.statusTextLabel_2.setMargin(5)
 
-        self.gridLayout.addWidget(self.label_49, 5, 1, 1, 1)
+        self.gridLayout.addWidget(self.statusTextLabel_2, 6, 1, 1, 4)
 
-        self.horizontalSpacer = QSpacerItem(45, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
+        self.label_8 = QLabel(fitSettingsWidget)
+        self.label_8.setObjectName(u"label_8")
+        sizePolicy1.setHeightForWidth(self.label_8.sizePolicy().hasHeightForWidth())
+        self.label_8.setSizePolicy(sizePolicy1)
+        self.label_8.setMinimumSize(QSize(0, 0))
+        self.label_8.setStyleSheet(u"font-size: 13px")
 
-        self.gridLayout.addItem(self.horizontalSpacer, 2, 4, 1, 1)
+        self.gridLayout.addWidget(self.label_8, 3, 1, 1, 1)
 
         self.mseLabel_2 = QLabel(fitSettingsWidget)
         self.mseLabel_2.setObjectName(u"mseLabel_2")
@@ -357,74 +426,6 @@ class Ui_fitSettingsWidget(object):
 
         self.gridLayout.addWidget(self.mseLabel_2, 4, 1, 1, 1)
 
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
-        self.gridLayout.addItem(self.horizontalSpacer_2, 2, 3, 1, 1)
-
-        self.fitResultHelpPushButton = QPushButton(fitSettingsWidget)
-        self.fitResultHelpPushButton.setObjectName(u"fitResultHelpPushButton")
-        self.fitResultHelpPushButton.setStyleSheet(u"QPushButton {\n"
-"    border: none;\n"
-"    background: none;\n"
-"}")
-        icon = QIcon()
-        icon.addFile(u":/icons/svg/question-circle.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.fitResultHelpPushButton.setIcon(icon)
-        self.fitResultHelpPushButton.setIconSize(QSize(23, 23))
-
-        self.gridLayout.addWidget(self.fitResultHelpPushButton, 4, 3, 1, 1)
-
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-
-        self.gridLayout.addItem(self.verticalSpacer, 7, 1, 1, 1)
-
-        self.fitSettingsCloseButton = QPushButton(fitSettingsWidget)
-        self.fitSettingsCloseButton.setObjectName(u"fitSettingsCloseButton")
-        sizePolicy.setHeightForWidth(self.fitSettingsCloseButton.sizePolicy().hasHeightForWidth())
-        self.fitSettingsCloseButton.setSizePolicy(sizePolicy)
-        self.fitSettingsCloseButton.setMinimumSize(QSize(45, 0))
-        self.fitSettingsCloseButton.setSizeIncrement(QSize(45, 0))
-        self.fitSettingsCloseButton.setStyleSheet(u"QPushButton {\n"
-"    border: none;\n"
-"    background: none;\n"
-"}")
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/svg/cross.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.fitSettingsCloseButton.setIcon(icon1)
-        self.fitSettingsCloseButton.setIconSize(QSize(30, 30))
-
-        self.gridLayout.addWidget(self.fitSettingsCloseButton, 1, 4, 1, 1)
-
-        self.label_47 = QLabel(fitSettingsWidget)
-        self.label_47.setObjectName(u"label_47")
-        sizePolicy1.setHeightForWidth(self.label_47.sizePolicy().hasHeightForWidth())
-        self.label_47.setSizePolicy(sizePolicy1)
-        self.label_47.setStyleSheet(u"font-size: 13px")
-
-        self.gridLayout.addWidget(self.label_47, 2, 1, 1, 1)
-
-        self.tolLineEdit = PositiveFloatLineEdit(fitSettingsWidget)
-        self.tolLineEdit.setObjectName(u"tolLineEdit")
-        sizePolicy.setHeightForWidth(self.tolLineEdit.sizePolicy().hasHeightForWidth())
-        self.tolLineEdit.setSizePolicy(sizePolicy)
-        self.tolLineEdit.setMinimumSize(QSize(170, 30))
-        self.tolLineEdit.setMaximumSize(QSize(16777215, 30))
-
-        self.gridLayout.addWidget(self.tolLineEdit, 3, 2, 1, 1)
-
-        self.statusTextLabel_2 = QLabel(fitSettingsWidget)
-        self.statusTextLabel_2.setObjectName(u"statusTextLabel_2")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        sizePolicy2.setHorizontalStretch(0)
-        sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.statusTextLabel_2.sizePolicy().hasHeightForWidth())
-        self.statusTextLabel_2.setSizePolicy(sizePolicy2)
-        self.statusTextLabel_2.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
-        self.statusTextLabel_2.setWordWrap(True)
-        self.statusTextLabel_2.setMargin(5)
-
-        self.gridLayout.addWidget(self.statusTextLabel_2, 6, 1, 1, 4)
-
 
         self.retranslateUi(fitSettingsWidget)
 
@@ -432,7 +433,8 @@ class Ui_fitSettingsWidget(object):
     # setupUi
 
     def retranslateUi(self, fitSettingsWidget):
-        fitSettingsWidget.setWindowTitle(QCoreApplication.translate("fitSettingsWidget", u"Form", None))
+        self.tolLineEdit.setStyleSheet(QCoreApplication.translate("fitSettingsWidget", u"font-size: 13px", None))
+        self.tolLineEdit.setText(QCoreApplication.translate("fitSettingsWidget", u"1e-6", None))
         self.optimizerComboBox.setItemText(0, QCoreApplication.translate("fitSettingsWidget", u"L-BFGS-B", None))
         self.optimizerComboBox.setItemText(1, QCoreApplication.translate("fitSettingsWidget", u"Nelder-Mead", None))
         self.optimizerComboBox.setItemText(2, QCoreApplication.translate("fitSettingsWidget", u"Powell", None))
@@ -440,15 +442,14 @@ class Ui_fitSettingsWidget(object):
         self.optimizerComboBox.setItemText(4, QCoreApplication.translate("fitSettingsWidget", u"differential evolution", None))
 
         self.optimizerComboBox.setStyleSheet(QCoreApplication.translate("fitSettingsWidget", u"font-size: 13px", None))
-        self.label_8.setText(QCoreApplication.translate("fitSettingsWidget", u"TOLERANCE", None))
-        self.label_45.setText(QCoreApplication.translate("fitSettingsWidget", u"SETTINGS: FIT", None))
         self.label_49.setText(QCoreApplication.translate("fitSettingsWidget", u"STATUS:", None))
-        self.mseLabel_2.setText(QCoreApplication.translate("fitSettingsWidget", u"MSE:  - GHz\u00b2   (+0.00%)", None))
-        self.fitResultHelpPushButton.setText("")
         self.fitSettingsCloseButton.setText("")
+        self.fitResultHelpPushButton.setText("")
         self.label_47.setText(QCoreApplication.translate("fitSettingsWidget", u"OPTIMIZER", None))
-        self.tolLineEdit.setStyleSheet(QCoreApplication.translate("fitSettingsWidget", u"font-size: 13px", None))
-        self.tolLineEdit.setText(QCoreApplication.translate("fitSettingsWidget", u"1e-6", None))
+        self.label_45.setText(QCoreApplication.translate("fitSettingsWidget", u"SETTINGS: FIT", None))
         self.statusTextLabel_2.setText(QCoreApplication.translate("fitSettingsWidget", u"-", None))
+        self.label_8.setText(QCoreApplication.translate("fitSettingsWidget", u"TOLERANCE", None))
+        self.mseLabel_2.setText(QCoreApplication.translate("fitSettingsWidget", u"MSE:  - GHz\u00b2   (+0.00%)", None))
+        pass
     # retranslateUi
 

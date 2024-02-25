@@ -32,7 +32,7 @@ from PySide6.QtCore import (
     QThreadPool,
     QEvent,
     Signal,
-    SignalInstance
+    SignalInstance,
 )
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
@@ -54,6 +54,9 @@ from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
 from qfit.controllers.help_tooltip import HelpButtonCtrl
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
+
+# settings
+from qfit.controllers.settings import SettingsCtrl
 from qfit.widgets.settings import (
     VisualSettingsWidget,
     FitSettingsWidget,
@@ -156,6 +159,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             fit=FitSettingsWidget(self),
             numericalSpectrum=NumericalSpectrumSettingsWidget(self),
         )
+        self.settingsMVCInit()
 
         # calibration - should be inited after prefit, as it requires a sweep parameter set
         self.calibrationMVCInits()
@@ -173,7 +177,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.plottingMVCInits()
 
         # help button
-        self.helpButtonConnects()
+        self.helpButtonMVCInits()
 
         # register all the data
         self.registry = Registry()
@@ -235,9 +239,19 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             eff.setColor(QColor(0, 0, 0, 90))
             button.setGraphicsEffect(eff)
 
+    # settings #########################################################
+    ####################################################################
+    def settingsMVCInit(self):
+        self.settingsButtonSet = {
+            "visual": self.ui.extractSettingsPushButton,
+            "fit": self.ui.fitSettingsPushButton,
+            "numericalSpectrum": self.ui.prefitSettingsPushButton,
+        }
+        self.settingsCtrl = SettingsCtrl(self.ui_settings, self.settingsButtonSet)
+
     # help button and gif tooltip ######################################
     ####################################################################
-    def helpButtonConnects(self):
+    def helpButtonMVCInits(self):
         self.helpButtons = {
             "calibration": self.ui.calibrationHelpPushButton,
             "fit": self.ui.fitHelpPushButton,
@@ -494,7 +508,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitView.emitAllOptions()  # auto run sync to the view
         # self.quantumModel.disableSweep = False
 
-
     def prefitBuildParamSet(self, hilbertspace: HilbertSpace):
         """
         Should belong to PREFIT PARAMETER CONTROLLER
@@ -548,7 +561,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.caliParamModel.toPrefitParams(),
             insertMissing=True,
         )
-            
+
     def prefitViewInsertParams(self):
         """
         THIS METHOS BELONGS TO THE PREFIT PARAMETER CONTROLLER
@@ -563,9 +576,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         HSParamNames = self.prefitParamModel.paramNamesDict()
         caliParamNames = self.prefitCaliModel.paramNamesDict()
         self.prefitParamView.insertSliderMinMax(
-            HSParamNames, 
-            caliParamNames,
-            removeExisting=True
+            HSParamNames, caliParamNames, removeExisting=True
         )
 
     def prefitSliderParamConnects(self):
@@ -584,26 +595,27 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             model: Union[PrefitParamModel, PrefitCaliModel]
 
             signalSet["sliderChanged"].connect(
-                lambda paramAttr, model=model: 
-                model.storeParamAttr(paramAttr, fromSlider=True)
+                lambda paramAttr, model=model: model.storeParamAttr(
+                    paramAttr, fromSlider=True
+                )
             )
             signalSet["textChanged"].connect(
-                lambda paramAttr, model=model: 
-                model.storeParamAttr(paramAttr)
+                lambda paramAttr, model=model: model.storeParamAttr(paramAttr)
             )
             signalSet["rangeEditingFinished"].connect(
-                lambda paramAttr, model=model: 
-                model.storeParamAttr(paramAttr)
+                lambda paramAttr, model=model: model.storeParamAttr(paramAttr)
             )
 
             # synchronize slider and box
             model.updateSlider.connect(
-                lambda paramAttr: 
-                self.prefitParamView.setByParamAttr(paramAttr, toSlider=True)
+                lambda paramAttr: self.prefitParamView.setByParamAttr(
+                    paramAttr, toSlider=True
+                )
             )
             model.updateBox.connect(
-                lambda paramAttr: 
-                self.prefitParamView.setByParamAttr(paramAttr, toSlider=False)
+                lambda paramAttr: self.prefitParamView.setByParamAttr(
+                    paramAttr, toSlider=False
+                )
             )
 
             # self.prefitParamView.HSSliderChanged.connect(
@@ -643,12 +655,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
 
     def prefitCaliConnects(self):
-        self.prefitCaliModel.updateCaliModel.connect(
-            self.caliParamModel.setParamByPA
-        )
-        self.caliParamModel.updatePrefitModel.connect(
-            self.prefitCaliModel.setParamByPA
-        )
+        self.prefitCaliModel.updateCaliModel.connect(self.caliParamModel.setParamByPA)
+        self.caliParamModel.updatePrefitModel.connect(self.prefitCaliModel.setParamByPA)
 
     def quantumModelConnects(self):
         self.prefitParamModel.hilbertSpaceUpdated.connect(
@@ -658,8 +666,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.caliParamModel.xCaliUpdated.connect(self.quantumModel.updateSweepParamSets)
         self.caliParamModel.yCaliUpdated.connect(self.quantumModel.updateYCaliFunc)
         self.caliParamModel.invYCaliUpdated.connect(
-            self.quantumModel.updateInvYCaliFunc)
-        
+            self.quantumModel.updateInvYCaliFunc
+        )
+
         # connect the page change to the disable sweep
         self.pageView.pageChanged.connect(
             self.quantumModel.updateDisableSweepOnPageChange
