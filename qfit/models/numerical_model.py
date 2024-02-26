@@ -509,12 +509,10 @@ class QuantumModel(QObject):
         and MSE.
         """
         if self.disableSweep:
-            print("calc blocked")
             # when manually update the quantumModel, we will turn this on
             # and the sweep will not be generated
             return
 
-        print("updateCalc")
         self._newSweep()
 
         if self._autoRun or self._sweepUsage == "fit" or calledByPlotButton:

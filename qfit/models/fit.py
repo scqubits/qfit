@@ -56,6 +56,7 @@ class FitParamModelMixin(ParamModelMixin[FitParam]):
         return {
             key: params.initValue
             for key, params in paramSet.toParamDict().items()
+            if not params.isFixed
         }
     
     def _toInitParams(self, paramSet: ParamSet[FitParam]) -> ParamSet[FitParam]:
@@ -230,6 +231,11 @@ class FitModel(QObject):
 
     HSParamNames: List[str] = []
 
+    def __init__(self):
+        super().__init__()
+
+        FitRunner.signalObj.optFinished.connect(self._postOptimization)
+
     # signal & slots ===================================================
     @Slot()
     def updateOptimizer(self, optimizer: str):
@@ -336,12 +342,12 @@ class FitModel(QObject):
         """once the user clicks the optimize button, run the optimization"""
         # initial parameter & calculate the current MSE
 
+        print("Runner starts.")
         runner = FitRunner(
             self.opt,
             initParam,
             callback,
         )
-        runner.signalObj.optFinished.connect(self._postOptimization)
         self.fitThreadPool.start(runner)
 
     
@@ -360,7 +366,8 @@ class FitRunner(QRunnable):
         callback: Callable,
     ):
         super().__init__()
-        
+        print("Runner inits.", self)
+
         self.opt = opt
         self.initParam = initParam
         self.callback = callback

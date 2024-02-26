@@ -706,8 +706,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         Cook up a cost function for the optimization
         """
-        print("Cost function called.")
-
         self.quantumModel.disableSweep = True
 
         # update the hilbert space
