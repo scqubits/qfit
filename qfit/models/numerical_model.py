@@ -80,8 +80,8 @@ class QuantumModel(QObject):
 
         # options when running
         self._autoRun: bool = True
-        self._sweepUsage: Literal["prefit", "fit"] = "prefit"
-        self.disableSweep: bool = True  # always off, used for backend operations
+        self.sweepUsage: Literal["prefit", "fit"] = "prefit"
+        self.disableSweep: bool = True    # always off, used for backend operations
 
     # Signals and Slots ========================================================
     @Slot(str)
@@ -236,7 +236,7 @@ class QuantumModel(QObject):
         """
         if currentPage == "prefit" or currentPage == "fit":
             self.disableSweep = False
-            self._sweepUsage = currentPage
+            self.sweepUsage = currentPage
         else:
             self.disableSweep = True
 
@@ -433,7 +433,9 @@ class QuantumModel(QObject):
         """
         try:
             self._sweeps = self._generateSweep(
-                sweptX=self._prefitSweptX(addPoints=(self._sweepUsage == "prefit")),
+                sweptX=self._prefitSweptX(
+                    addPoints = (self.sweepUsage == "prefit")
+                ),
                 updateHS=self._updateHSForSweep(),
                 subsysUpdateInfo=self._subsysUpdateInfo(),
             )
@@ -470,7 +472,7 @@ class QuantumModel(QObject):
                 # TODO: emit error message
                 raise e
 
-        if self._sweepUsage == "prefit":
+        if self.sweepUsage == "prefit":
             self.emitReadyToPlot()
 
         # --------------------------------------------------------------
@@ -503,7 +505,7 @@ class QuantumModel(QObject):
 
         self._newSweep()
 
-        if self._autoRun or self._sweepUsage == "fit" or calledByPlotButton:
+        if self._autoRun or self.sweepUsage == "fit" or calledByPlotButton:
             return self.sweep2SpecMSE()
 
     # calculate MSE ===========================================================
@@ -581,8 +583,8 @@ class QuantumModel(QObject):
 
         # if provided bare label
         elif tag.tagType == "DISPERSIVE_BARE":
-            initial_energy = sweep["x":x_coord].energy_by_bare_index(tag.initial)
-            final_energy = sweep["x":x_coord].energy_by_bare_index(tag.final)
+            initial_energy = sweep.energy_by_bare_index(tag.initial)["x":x_coord]
+            final_energy = sweep.energy_by_bare_index(tag.final)["x":x_coord]
 
             # when we can identify both initial and final states
             if initial_energy is not np.nan and final_energy is not np.nan:
@@ -593,20 +595,19 @@ class QuantumModel(QObject):
             # when some of the states are not identifiable
             elif initial_energy is np.nan and final_energy is not np.nan:
                 status = "NO_MATCHED_BARE_INITIAL"
-                final_energy_dressed_label = sweep["x":x_coord].dressed_index(tag.final)
+                final_energy_dressed_label = sweep.dressed_index(tag.final)["x":x_coord]
                 availableLabels = {"final": final_energy_dressed_label}
 
             elif final_energy is np.nan and initial_energy is not np.nan:
                 status = "NO_MATCHED_BARE_FINAL"
-                initial_energy_dressed_label = sweep["x":x_coord].dressed_index(
+                initial_energy_dressed_label = sweep.dressed_index(
                     tag.initial
-                )
+                )["x":x_coord]
                 availableLabels = {"initial": initial_energy_dressed_label}
+
             else:
                 status = "NO_MATCHED_BARE_INITIAL_AND_FINAL"
                 availableLabels = {}
-
-        sweep.reset_preslicing()  # single point slice of sweep is not stable
 
         simulation_freq = self._closestTransFreq(
             dataFreq=dataFreq,
