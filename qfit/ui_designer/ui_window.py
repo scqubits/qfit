@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QAbstractSpinBox, QApplication, QCheckBox, QCombo
     QSpinBox, QStackedWidget, QStatusBar, QVBoxLayout,
     QWidget)
 
-from qfit.views.calibration import CalibrationLineEdit
+from qfit.views.calibration_view import CalibrationLineEdit
 from qfit.widgets.data_extracting import (DataExtractingWidget, ListView)
 from qfit.widgets.mpl_canvas import (MplFigureCanvas, MplNavButtons)
 from qfit.widgets.validated_line_edits import IntTupleLineEdit

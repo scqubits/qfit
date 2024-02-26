@@ -14,14 +14,14 @@ from qfit.models.measurement_data import (
 from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal, List
 
 if TYPE_CHECKING:
-    from qfit.models.quantum_model_parameters import CaliParamModel
+    from qfit.models.parameter_set import CaliParamModel
 
     # from qfit.models.calibration_data import CalibrationData
     from qfit.models.measurement_data import MeasDataSet
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
-    from qfit.models.quantum_model_parameters import ParamSet
+    from qfit.models.parameter_set import ParamSet
     from qfit.models.numerical_model import QuantumModel
-    from qfit.views.paging import PageView
+    from qfit.views.paging_view import PageView
 
 
 class PlottingCtrl(QObject):
@@ -113,7 +113,8 @@ class PlottingCtrl(QObject):
 
         # plot everything available
         self.measurementData.emitReadyToPlot()
-        self.measurementData.relimCanvas.emit()
+        self.measurementData.emitRelimCanvas()
+        self.measurementData.emitRawXMap()
         self.activeDataset.emitReadyToPlot()
         self.allDatasets.emitReadyToPlot()
         self.allDatasets.emitFocusChanged()  # update the snapX
@@ -250,7 +251,7 @@ class PlottingCtrl(QObject):
         Should be done at the end and will emit all readyToPlot signal
         """
         self.measurementData.readyToPlot.connect(self.mplCanvas.updateElement)
-        self.measurementData.relimCanvas.connect(self.mplCanvas.relimByMeasData)
+        self.measurementData.relimCanvas.connect(self.mplCanvas.relim)
         self.quantumModel.readyToPlot.connect(self.mplCanvas.updateElement)
         return
 

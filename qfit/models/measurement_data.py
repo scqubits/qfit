@@ -58,7 +58,8 @@ class ListModelMeta(type(QAbstractListModel), type(Registrable)):
 
 class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     readyToPlot = Signal(PlotElement)
-    relimCanvas = Signal()
+    relimCanvas = Signal(tuple, tuple)
+    updateRawXMap = Signal(dict)
 
     def __init__(self, measDatas: List["MeasurementDataType"]):
         super().__init__()
@@ -70,8 +71,6 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     def dynamicalInit(self, measDatas: List["MeasurementDataType"]):
         self._data = measDatas
         self.checkValidity()
-        self.emitReadyToPlot()
-        self.relimCanvas.emit()
         
     def checkValidity(self):
         # all of the data must have the same x and y axis names
@@ -137,6 +136,22 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     # Signal & Slots ===================================================
     def emitReadyToPlot(self):
         self.readyToPlot.emit(self.currentMeasData.generatePlotElement())
+    
+    def emitRelimCanvas(self):
+        self.relimCanvas.emit(
+            (
+                np.min(self.currentMeasData.currentX.data),
+                np.max(self.currentMeasData.currentX.data)
+            ), (
+                np.min(self.currentMeasData.currentY.data),
+                np.max(self.currentMeasData.currentY.data)
+            ),
+        )
+
+    def emitRawXMap(self):
+        self.updateRawXMap.emit({
+            data.name: data.rawXByCurrentX for data in self._data
+        })
 
     @Slot(bool)
     def toggleBgndSubtractX(self, value: bool):
@@ -182,13 +197,14 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     def setCurrentZ(self, itemIndex: int):
         self.currentMeasData.setCurrentZ(itemIndex)
         self.emitReadyToPlot()
-        self.relimCanvas.emit()
+        self.emitRelimCanvas()
 
     @Slot()
     def swapXY(self):
         self.currentMeasData.swapXY()
         self.emitReadyToPlot()
-        self.relimCanvas.emit()
+        self.emitRelimCanvas()
+        self.emitRawXMap()
 
     # registry =========================================================
     def registerAll(
@@ -201,7 +217,8 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         def dataSetter(value):
             self._data = value
             self.emitReadyToPlot()
-            self.relimCanvas.emit()
+            self.emitRelimCanvas()
+            self.emitRawXMap()
 
         return {
             "measDataSet.currentRow": RegistryEntry(
@@ -478,13 +495,16 @@ class NumericalMeasurementData(MeasurementData):
     # def setCurrentX(self, itemIndex):
     #     self._currentX = self.currentXCompatibles.itemByIndex(itemIndex)
     #     self.emitReadyToPlot()
-    #     self.relimCanvas.emit()
+    #     self.emitRelimCanvas()
+        # self.emitRawXMap()
+    
 
     # def setCurrentY(self, itemIndex):
     #     self._currentY = self.currentYCompatibles.itemByIndex(itemIndex)
     #     self.emitReadyToPlot()
-    #     self.relimCanvas.emit()
-
+    #     self.emitRelimCanvas()
+        # self.emitRawXMap()
+        
     # properties =======================================================
     @property
     def currentZ(self) -> DictItem:

@@ -279,37 +279,37 @@ class ExtrSpectra(list[ExtrTransition]):
         for transition in self:
             transition.swapXY()
 
-    def rawXByX(self, x: float) -> OrderedDictMod[str, float]:
-        """
-        Return the rawX data corresponding to the x value. Their relationship
-        is linear.
-        """
-        allX = self.allDataConcated()[0]
-        allRawX = self.allRawXConcated()
+    # def rawXByX(self, x: float) -> OrderedDictMod[str, float]:
+    #     """
+    #     Return the rawX data corresponding to the x value. Their relationship
+    #     is linear.
+    #     """
+    #     allX = self.allDataConcated()[0]
+    #     allRawX = self.allRawXConcated()
 
-        if self.count() < 2:
-            # try to find the exact x value
-            for idx, x_ in enumerate(allX):
-                if x_ == x:
-                    return OrderedDictMod(
-                        {key: value[idx] for key, value in allRawX.items()}
-                    )
-            raise ValueError("No data found for the x value")
+    #     if self.count() < 2:
+    #         # try to find the exact x value
+    #         for idx, x_ in enumerate(allX):
+    #             if x_ == x:
+    #                 return OrderedDictMod(
+    #                     {key: value[idx] for key, value in allRawX.items()}
+    #                 )
+    #         raise ValueError("No data found for the x value")
 
-        # calculate a linear mapping between the x values and the rawX data
-        # with the smallest and largest x values
-        minIdx = np.argmin(allX)
-        maxIdx = np.argmax(allX)
-        minX = allX[minIdx]
-        maxX = allX[maxIdx]
+    #     # calculate a linear mapping between the x values and the rawX data
+    #     # with the smallest and largest x values
+    #     minIdx = np.argmin(allX)
+    #     maxIdx = np.argmax(allX)
+    #     minX = allX[minIdx]
+    #     maxX = allX[maxIdx]
 
-        rawX = OrderedDictMod()
-        for key, value in allRawX.items():
-            minRawX = value[minIdx]
-            maxRawX = value[maxIdx]
-            rawX[key] = minRawX + (maxRawX - minRawX) / (maxX - minX) * (x - minX)
+    #     rawX = OrderedDictMod()
+    #     for key, value in allRawX.items():
+    #         minRawX = value[minIdx]
+    #         maxRawX = value[maxIdx]
+    #         rawX[key] = minRawX + (maxRawX - minRawX) / (maxX - minX) * (x - minX)
 
-        return rawX
+    #     return rawX
 
 
 class FullExtr(dict[str, ExtrSpectra]):
@@ -538,12 +538,16 @@ class SpectrumElement(PlotElement):
         )
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            self.highlighted_specdata.plot_evals_vs_paramvals(
-                label_list=self.highlighted_specdata.labels,
-                linewidth=2,
-                fig_ax=(fig, axes),
-                **kwargs,
-            )
+            if len(self.highlighted_specdata.energy_table) > 0:
+                self.highlighted_specdata.plot_evals_vs_paramvals(
+                    label_list=self.highlighted_specdata.labels,
+                    linewidth=2,
+                    fig_ax=(fig, axes),
+                    **kwargs,
+                )
+            else:
+                # no highlighted data (usually when evalsCount too small)
+                pass 
 
         artist_after = set(axes.get_children())
         self.artists = list(artist_after - artist_before)
@@ -612,10 +616,12 @@ class ParamBase(ABC):
         name: str,
         parent: Union[ParentType, str],
         paramType: ParameterType,
+        value: Union[int, float],
     ):
         self.name = name
         self.parent = parent
         self.paramType = paramType
+        self.value = self._toIntAsNeeded(value)
 
     def setParameterForParent(self):
         """
@@ -687,30 +693,16 @@ class QMSweepParam(ParamBase):
         value: Union[float, int],
         paramType: ParameterType,
     ):
-        super().__init__(name=name, parent=parent, paramType=paramType)
+        super().__init__(
+            name=name, parent=parent, paramType=paramType, value=value
+        )
 
-        self._value = value
 
     def setCalibrationFunc(self, func):
         """
         Set the calibration function for the parameter
         """
         self.calibration_func = func
-
-    @property
-    def value(self) -> Union[int, float]:
-        """
-        Get the value of the parameter
-        """
-        return self._value
-
-    @value.setter
-    def value(self, value: Union[int, float]):
-        """
-        Set the value of the parameter. Will update the both the parameter stored and the
-        parent object.
-        """
-        self._value = self._toIntAsNeeded(value)
 
     def setValueWithCali(self, value: Dict[str, float]):
         """
@@ -719,7 +711,7 @@ class QMSweepParam(ParamBase):
         self.value = self.calibration_func(value)
 
 
-class QMSliderParam(DispParamBase):
+class SliderParam(DispParamBase):
     """
     A class for parameters that are adjusted by a slider.
 
@@ -759,9 +751,10 @@ class QMSliderParam(DispParamBase):
         min: Union[int, float],
         max: Union[int, float],
     ):
-        super().__init__(name=name, parent=parent, paramType=paramType)
+        super().__init__(
+            name=name, parent=parent, paramType=paramType, value=value
+        )
 
-        self.value: Union[int, float] = self._toIntAsNeeded(value)
         self.min: Union[int, float] = self._toIntAsNeeded(min)
         self.max: Union[int, float] = self._toIntAsNeeded(max)
 
@@ -826,7 +819,7 @@ class QMSliderParam(DispParamBase):
             return self._toIntString(value)
 
 
-class QMFitParam(DispParamBase):
+class FitParam(DispParamBase):
     attrToRegister = ["initValue", "value", "min", "max", "isFixed"]
 
     def __init__(
@@ -840,14 +833,14 @@ class QMFitParam(DispParamBase):
         initValue: Union[int, float] = 0,
         isFixed: bool = False,
     ):
-        super().__init__(name=name, parent=parent, paramType=paramType)
-        self.value = self._toIntAsNeeded(value)
+        super().__init__(
+            name=name, parent=parent, paramType=paramType, value=value
+        )
         self.min = self._toIntAsNeeded(min)
         self.max = self._toIntAsNeeded(max)
         self.initValue = self._toIntAsNeeded(initValue)
         self.isFixed = isFixed
 
-        
     # setter for UI ====================================================
     def storeAttr(self, attr: str, value: Union[str, bool]):
         """
@@ -855,6 +848,8 @@ class QMFitParam(DispParamBase):
         """
         if isinstance(value, str):
             convertedValue = self._toIntAsNeeded(float(value))
+        else:
+            convertedValue = value
 
         setattr(self, attr, convertedValue)
 
@@ -901,8 +896,9 @@ class CaliTableRowParam(DispParamBase):
         sweepParamName: Optional[str],
         value: float,
     ):
-        super().__init__(name=colName, parent=rowIdx, paramType=paramType)
-        self.value: float = value
+        super().__init__(
+            name=colName, parent=rowIdx, paramType=paramType, value=value
+        )
         self.parentSystemName: Optional[str] = parentSystemName
         self.sweepParamName: Optional[str] = sweepParamName
 
@@ -928,5 +924,7 @@ class CaliTableRowParam(DispParamBase):
             return self._toIntString(value)
         elif isinstance(value, str):
             return value
+        elif value is None:
+            return ""
         else:
             raise ValueError(f"Unknown type of value: {value}")

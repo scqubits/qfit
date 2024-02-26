@@ -10,29 +10,98 @@ from PySide6.QtCore import (
 from scqubits.core.hilbert_space import HilbertSpace
 from qfit.utils.wrapped_optimizer import Optimization, OptTraj
 from qfit.models.extracted_data import AllExtractedData
-from qfit.models.quantum_model_parameters import (
-    HSParamSet, ParamModelMixin, ParamSet,
+from qfit.models.parameter_set import (
+    ParamSet, ParamModelMixin, ParamSet,
 )
-from qfit.models.data_structures import QMFitParam, ParamAttr, QMSliderParam
+from qfit.models.data_structures import (
+    FitParam, ParamAttr, SliderParam, ParamBase
+)
 from qfit.models.registry import RegistryEntry
 from qfit.models.status import StatusModel
 
 
-class CombinedMeta(type(ParamModelMixin), type(HSParamSet)):
+class FitParamModelMixin(ParamModelMixin[FitParam]):
+
+    def _isValid(self, paramSet: ParamSet[FitParam]) -> bool:
+        for key, params in paramSet.toParamDict().items():
+            if params.min >= params.max:
+                ###############
+                # Error message
+                ###############
+                return False
+            if not params.isFixed and (
+                params.initValue < params.min or params.initValue > params.max
+            ):
+                ###############
+                # Error message
+                ###############
+                return False
+        return True
+            
+    def _fixedParams(self, paramSet: ParamSet[FitParam]) -> Dict[str, float]:
+        return {
+            key: params.initValue
+            for key, params in paramSet.toParamDict().items()
+            if params.isFixed
+        }
+        
+    def _freeParamRanges(self, paramSet: ParamSet[FitParam]) -> Dict[str, List[float]]:
+        return {
+            key: [params.min, params.max]
+            for key, params in paramSet.toParamDict().items()
+            if not params.isFixed
+        }
+    
+    def _initParams(self, paramSet: ParamSet[FitParam]) -> Dict[str, float]:
+        return {
+            key: params.initValue
+            for key, params in paramSet.toParamDict().items()
+        }
+    
+    def _toInitParams(self, paramSet: ParamSet[FitParam]) -> ParamSet[FitParam]:
+        initParamSet = ParamSet[FitParam](FitParam)
+        for parentName, parent in paramSet.items():
+            for paramName, param in parent.items():
+                fitParam = FitParam(
+                    name = paramName,           # useless
+                    parent = param.parent,      # useless
+                    paramType = param.paramType,# useless
+                    initValue = param.value,     
+                )
+                initParamSet.insertParam(parentName, paramName, fitParam)
+
+        return initParamSet
+    
+    def _toPrefitParams(self, paramSet: ParamSet[FitParam]) -> ParamSet[ParamBase]:
+        prefitParamSet = ParamSet[ParamBase](ParamBase)
+        for parentName, parent in paramSet.items():
+            for paramName, param in parent.items():
+                sliderParam = ParamBase(
+                    name = paramName,           # useless
+                    parent = param.parent,      # useless
+                    paramType = param.paramType,# useless
+                    value = param.value,
+                )
+                prefitParamSet.insertParam(parentName, paramName, sliderParam)
+
+        return prefitParamSet
+
+
+class CombinedMeta(type(FitParamModelMixin), type(ParamSet)):
     pass
 
 
 class FitParamModel(
-    HSParamSet[QMFitParam],
-    ParamModelMixin[QMFitParam],  # ordering matters
+    ParamSet[FitParam],
+    FitParamModelMixin,  # ordering matters
     metaclass=CombinedMeta,
 ):
-    attrs = QMFitParam.attrToRegister
+    attrs = FitParam.attrToRegister
 
     # mixin methods ====================================================
     def __init__(self):
         # ordering matters here
-        HSParamSet.__init__(self, QMFitParam)
+        ParamSet.__init__(self, FitParam)
         ParamModelMixin.__init__(self)
 
     def setParameter(
@@ -51,6 +120,28 @@ class FitParamModel(
 
         self._emitUpdateBox(self, parentName=parentName, paramName=name, attr=attr)
 
+    @property
+    def isValid(self) -> bool:
+        return self._isValid(self)
+            
+    @property
+    def fixedParams(self) -> Dict[str, float]:
+        return self._fixedParams(self)
+        
+    @property
+    def freeParamRanges(self) -> Dict[str, List[float]]:
+        return self._freeParamRanges(self)
+    
+    @property
+    def initParams(self) -> Dict[str, float]:
+        return self._initParams(self)
+    
+    def toInitParams(self) -> ParamSet[FitParam]:
+        return self._toInitParams(self)
+    
+    def toPrefitParams(self) -> ParamSet[ParamBase]:
+        return self._toPrefitParams(self)
+
     def registerAll(
         self,
     ) -> Dict[str, RegistryEntry]:
@@ -63,96 +154,70 @@ class FitParamModel(
     ):
         super()._storeParamAttr(self, paramAttr, **kwargs)
 
-    # HilbertSpace related methods, could be a mixin class =============
-    hilbertSpaceUpdated = Signal(HilbertSpace)
 
-    # Signals 
-    def emitHSUpdated(self):
-        self.hilbertSpaceUpdated.emit(self.hilbertspace)
+class FitCaliModel(
+    ParamSet[FitParam],
+    FitParamModelMixin,  # ordering matters
+    metaclass=CombinedMeta,
+):
+    attrs = FitParam.attrToRegister
 
-    # Slots 
-    @Slot(str, str)
-    def updateParent(
+    # mixin methods ====================================================
+    def __init__(self):
+        # ordering matters here
+        ParamSet.__init__(self, FitParam)
+        ParamModelMixin.__init__(self)
+
+    def setParameter(
         self,
         parentName: str,
-        paramName: str,
+        name: str,
+        attr: str,
+        value: Union[int, float],
     ):
-        param = self[parentName][paramName]
-        param.setParameterForParent()
-        self.emitHSUpdated()
+        """
+        Not only set the parameter, but also emit the signal to update the view.
 
-    # fit properties ===================================================
+        A key method in updating the model by the internal processes.
+        """
+        super().setParameter(parentName, name, attr, value)
+
+        self._emitUpdateBox(self, parentName=parentName, paramName=name, attr=attr)
+
     @property
     def isValid(self) -> bool:
-        for key, params in self.toParamDict().items():
-            if params.min >= params.max:
-                ###############
-                # Error message
-                ###############
-                return False
-            if not params.isFixed and (
-                params.initValue < params.min or params.initValue > params.max
-            ):
-                ###############
-                # Error message
-                ###############
-                return False
-        return True
+        return self._isValid(self)
             
     @property
     def fixedParams(self) -> Dict[str, float]:
-        return {
-            key: params.initValue
-            for key, params in self.toParamDict().items()
-            if params.isFixed
-        }
+        return self._fixedParams(self)
         
     @property
     def freeParamRanges(self) -> Dict[str, List[float]]:
-        return {
-            key: [params.min, params.max]
-            for key, params in self.toParamDict().items()
-            if not params.isFixed
-        }
+        return self._freeParamRanges(self)
     
     @property
     def initParams(self) -> Dict[str, float]:
-        return {
-            key: params.initValue
-            for key, params in self.toParamDict().items()
-        }
+        return self._initParams(self)
     
-    def toInitParams(self) -> ParamSet[QMFitParam]:
-        paramSet = ParamSet[QMFitParam](QMFitParam)
-        for parentName, parent in self.items():
-            for paramName, param in parent.items():
-                fitParam = QMFitParam(
-                    name = paramName,           # useless
-                    parent = param.parent,      # useless
-                    paramType = param.paramType,# useless
-                    initValue = param.value,     
-                )
-                paramSet.insertParam(parentName, paramName, fitParam)
-
-        return paramSet
+    def toInitParams(self) -> ParamSet[FitParam]:
+        return self._toInitParams(self)
     
-    def toPrefitParams(self) -> ParamSet[QMSliderParam]:
-        paramSet = ParamSet[QMSliderParam](QMSliderParam)
-        for parentName, parent in self.items():
-            for paramName, param in parent.items():
-                sliderParam = QMSliderParam(
-                    name = paramName,           # useless
-                    parent = param.parent,      # useless
-                    paramType = param.paramType,# useless
-                    value = param.value,
-                    min = -1,                   # useless
-                    max = -1,                   # useless
-                )
-                paramSet.insertParam(parentName, paramName, sliderParam)
+    def toPrefitParams(self) -> ParamSet[ParamBase]:
+        return self._toPrefitParams(self)
 
-        return paramSet
+    def registerAll(
+        self,
+    ) -> Dict[str, RegistryEntry]:
+        return self._registerAll(self)
 
-    
+    def storeParamAttr(
+        self,
+        paramAttr: ParamAttr,
+        **kwargs,
+    ):
+        super()._storeParamAttr(self, paramAttr, **kwargs)
+
 
 
 class FitModel(QObject):
@@ -162,6 +227,8 @@ class FitModel(QObject):
     tol: float = 1e-6
 
     optFinished = Signal()
+
+    HSParamNames: List[str] = []
 
     # signal & slots ===================================================
     @Slot()
@@ -173,18 +240,47 @@ class FitModel(QObject):
         self.tol = float(tol)
 
     # optimization setup ===============================================
+    def _costWarpper(
+        self,
+        func: Callable[
+            [Dict[str, float], Dict[str, float]], float
+        ],
+    ):
+        def costWarpper(
+            paramDict: Dict[str, float],
+        ) -> float:
+            HSParams = {
+                key: value for key, value in paramDict.items() 
+                if key in self.HSParamNames
+            }
+            caliParams = {
+                key: value for key, value in paramDict.items() 
+                if key not in self.HSParamNames
+            }
+
+            return func(HSParams, caliParams)
+        
+        return costWarpper
+
     def setupOptimization(
         self,
-        fixedParams: Dict[str, float],
-        freeParamRanges: Dict[str, List[float]],
-        costFunction: Callable[[Dict[str, float]], float],
+        HSFixedParams: Dict[str, float],
+        HSFreeParamRanges: Dict[str, List[float]],
+        caliFixedParams: Dict[str, float],
+        caliFreeParamRanges: Dict[str, List[float]],
+        costFunction: Callable[
+            [Dict[str, float], Dict[str, float]], float
+        ],
     ) -> bool:
+        # distinguish between HS and cali parameters
+        self.HSParamNames = list(HSFixedParams.keys()) + list(HSFreeParamRanges.keys())
+
         # set up the optimization
         try:
             self.opt = Optimization(
-                fixedParams,
-                freeParamRanges,
-                costFunction,
+                HSFixedParams | caliFixedParams,
+                HSFreeParamRanges | caliFreeParamRanges,
+                self._costWarpper(costFunction),
                 optimizer=self.optimizer,
                 opt_options={
                     "disp": False,
@@ -232,10 +328,10 @@ class FitModel(QObject):
         # self.result.status_type = "SUCCESS"
         # self.result.statusStrForView = "Successfully optimized the parameter."
 
-
     def runOptimization(
         self,
         initParam: Dict[str, float],
+        callback: Callable,
     ):
         """once the user clicks the optimize button, run the optimization"""
         # initial parameter & calculate the current MSE
@@ -243,7 +339,7 @@ class FitModel(QObject):
         runner = FitRunner(
             self.opt,
             initParam,
-            # self._optCallback,
+            callback,
         )
         runner.signalObj.optFinished.connect(self._postOptimization)
         self.fitThreadPool.start(runner)
@@ -261,18 +357,18 @@ class FitRunner(QRunnable):
         self,
         opt: Optimization,
         initParam: Dict[str, float],
-        # callback: Callable,
+        callback: Callable,
     ):
         super().__init__()
         
         self.opt = opt
         self.initParam = initParam
-        # self.callback = callback
+        self.callback = callback
 
     def run(self):
         traj = self.opt.run(
             init_x=self.initParam, 
-            # callback=self.callback
+            callback=self.callback
         )
 
         self.signalObj.optFinished.emit(traj)

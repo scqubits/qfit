@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from qfit.core.mainwindow import MainWindow
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
     from qfit.models.measurement_data import MeasurementDataType
-    from qfit.views.extracting import ExtractingView
+    from qfit.views.extracting_view import ExtractingView
     from qfit.models.data_structures import Tag
 
 

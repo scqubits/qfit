@@ -23,7 +23,7 @@ matplotlib.use("qtagg")
 
 from qfit.core.mainwindow import MainWindow
 from qfit.utils.helpers import executed_in_ipython
-from qfit.controllers.io_menu import IOCtrl
+from qfit.controllers.io_menu_ctrl import IOCtrl
 
 from typing import Union, Dict, Any
 

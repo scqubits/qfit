@@ -24,6 +24,7 @@ from matplotlib.backends.backend_qtagg import (
     FigureCanvas as FigureCanvasQTAgg,
     NavigationToolbar2QT,
 )
+from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.widgets import Cursor
 import matplotlib.cm as cm
@@ -350,15 +351,17 @@ class MplFigureCanvas(QFrame):
         self.colorMapStr: str = "PuOr"
         self._updateElementColors()
 
-        self.xlim: Tuple[float, float] = (0, 1)
-        self.ylim: Tuple[float, float] = (0, 1)
+        self.xLim: Tuple[float, float] = (0, 1)
+        self.yLim: Tuple[float, float] = (0, 1)
+        self.measXLim: Tuple[float, float] = (0, 1)
+        self.measYLim: Tuple[float, float] = (0, 1)
 
         # should be call at the end - it will make use of other properties like 
         # coloring
 
     # Properties =======================================================
     @property
-    def axes(self):
+    def axes(self) -> Axes:
         return self.canvas.figure.axes[0]
     
     @Slot()
@@ -377,24 +380,41 @@ class MplFigureCanvas(QFrame):
         self.scatterColor = color_dict[self.colorMapStr]["Scatter"]
         self.cmap = copy.copy(getattr(cm, self.colorMapStr))
 
+    def _setMeasXYLim(self, xLim: Tuple[float, float], yLim: Tuple[float, float]):
+        """
+        When click the reset button, we want to reset to the previous x 
+        and y limits determined by the measurement data. This method records
+        the x and y limits of the axes when the measurement data is loaded.
+        """
+        self.measXLim = xLim
+        self.measYLim = yLim
+
     def _recordXYLim(self):
         """
+        When update the other plotting elements, we want to keep the 
+        previous x and y limits of the axes unchanged. This method records
+        the x and y limits of the axes.
+
         It will be called when:
         1. the view is initializes/reset internally, for example, 
             when the measurement data is loaded / transposed
         2. the view's x and y limits are zoomed/panned/reset externally
         """
-        self.xlim = self.axes.get_xlim()
-        self.ylim = self.axes.get_ylim()
+        self.xLim = self.axes.get_xlim()
+        self.yLim = self.axes.get_ylim()
 
-    def _keepXYLim(self):
+    def _restoreXYLim(self, byMeasData: bool = False):
         """
         Keep the x and y limits of the axes unchanged.
         It will be called when the plot elements are updated and the x and y limits
         are automatically changed by matplotlib.
         """
-        self.axes.set_xlim(self.xlim)
-        self.axes.set_ylim(self.ylim)
+        if byMeasData:
+            self.axes.set_xlim(*self.measXLim)
+            self.axes.set_ylim(*self.measYLim)
+        else:
+            self.axes.set_xlim(*self.xLim)
+            self.axes.set_ylim(*self.yLim)
 
     # View Manipulation: Cursor ========================================
     def updateCursor(
@@ -539,17 +559,26 @@ class MplFigureCanvas(QFrame):
             dummy_element.set_visible(visible)
             self.updateElement(dummy_element)
 
-    @Slot() 
-    def relimByMeasData(self):
+    # @Slot()
+    # def relimByMeasData(self):
+    #     """
+    #     Set the x and y limits of the axes to fit the measurement data
+    #     """
+    #     if not self._hasElement("measurement"):
+    #         # measurement data not loaded
+    #         return 
+        
+    #     self.axes.set_xlim(self._plottingElements["measurement"].xLim)
+    #     self.axes.set_ylim(self._plottingElements["measurement"].yLim)
+    #     self._recordXYLim()
+
+    @Slot()
+    def relim(self, xLim: Tuple[float, float], yLim: Tuple[float, float]):
         """
         Set the x and y limits of the axes to fit the measurement data
-        """
-        if not self._hasElement("measurement"):
-            # measurement data not loaded
-            return 
-        
-        self.axes.set_xlim(self._plottingElements["measurement"].xLim)
-        self.axes.set_ylim(self._plottingElements["measurement"].yLim)
+        """        
+        self._setMeasXYLim(xLim, yLim)
+        self._restoreXYLim(byMeasData=True)
         self._recordXYLim()
 
     # manipulate plotting elements        
@@ -602,7 +631,7 @@ class MplFigureCanvas(QFrame):
             **self._coloringKwargs(element.name),
             **kwargs
         )
-        self._keepXYLim()
+        self._restoreXYLim()
 
         if draw:
             self.canvas.draw()
@@ -624,6 +653,7 @@ class MplFigureCanvas(QFrame):
             element.inheritProperties(old_element)
             old_element.remove()
         
+        print(f"update element: {name}")
         # draw the new element
         self._plottingElements[name] = element
         self._plotElement(name, draw=True, **kwargs)
@@ -647,11 +677,12 @@ class MplFigureCanvas(QFrame):
             Whether to reset the x and y limits of the axes to fit all elements.
             If not, the x and y limits will be the same as before.
         """
+        print(f"plot all")
         for element in self._plottingElements.values():
             self._plotElement(element, draw=False)
 
         if resetXYLim:
-            self.relimByMeasData()
+            self._restoreXYLim(byMeasData=True)
 
         self.canvas.draw()
         

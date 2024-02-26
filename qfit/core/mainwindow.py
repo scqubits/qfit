@@ -70,18 +70,18 @@ from qfit.ui_designer.settings_numerical_spectrum import (
 from qfit.ui_designer.settings_visual import Ui_visualSettingsWidget
 
 # paging:
-from qfit.views.paging import PageView
+from qfit.views.paging_view import PageView
 
 # calibration:
 # from qfit.models.calibration_data import CalibrationData
-from qfit.models.quantum_model_parameters import CaliParamModel
-from qfit.views.calibration import CalibrationView
-from qfit.controllers.calibration import CalibrationCtrl
+from qfit.models.calibration import CaliParamModel
+from qfit.views.calibration_view import CalibrationView
+from qfit.controllers.calibration_ctrl import CalibrationCtrl
 
 # extract
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
-from qfit.controllers.extracting import ExtractingCtrl
-from qfit.views.extracting import ExtractingView
+from qfit.controllers.extracting_ctrl import ExtractingCtrl
+from qfit.views.extracting_view import ExtractingView
 
 # status bar
 from qfit.models.status import StatusModel
@@ -89,29 +89,23 @@ from qfit.controllers.status import StatusCtrl
 from qfit.views.status_bar import StatusBarView
 
 # pre-fit
-from qfit.views.parameters import PrefitParamView
-from qfit.views.prefit import PrefitView
-from qfit.models.data_structures import QMSliderParam, QMSweepParam
-from qfit.models.quantum_model_parameters import (
-    ParamSet,
-    HSParamSet,
-)
+from qfit.views.prefit_view import PrefitParamView, PrefitView
+from qfit.models.parameter_set import HSParamSet
 from qfit.models.prefit import PrefitParamModel, PrefitCaliModel
 from qfit.models.numerical_model import QuantumModel
 
 # fit
-from qfit.models.data_structures import QMFitParam
-from qfit.views.parameters import FitParamView
-from qfit.models.fit import FitParamModel, FitModel
+from qfit.views.fit_view import FitParamView
+from qfit.models.fit import FitParamModel, FitCaliModel, FitModel
 
 # plot
-from qfit.controllers.plotting import PlottingCtrl
+from qfit.controllers.plotting_ctrl import PlottingCtrl
 
 # registry
 from qfit.models.registry import Registry, RegistryEntry, Registrable
 
 # menu controller
-from qfit.controllers.io_menu import IOCtrl
+from qfit.controllers.io_menu_ctrl import IOCtrl
 
 if TYPE_CHECKING:
     from qfit.models.parameter_settings import ParameterType
@@ -200,7 +194,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.calibrationCtrl.dynamicalInit(hilbertspace, measurementData)
         self.extractingCtrl.dynamicalInit(hilbertspace, measurementData)
         self.prefitDynamicalElementsBuild(hilbertspace, measurementData)
-        self.fitDynamicalElementsBuild(hilbertspace)
+        self.fitDynamicalElementsBuild()
         self.plottingCtrl.dynamicalInit(measurementData)
 
         self.register()
@@ -475,20 +469,19 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.quantumModelConnects()
         self.prefitButtonConnects()
         self.prefitSliderParamConnects()
-        self.prefitCaliConnects()
 
     def prefitDynamicalElementsBuild(
         self, hilbertspace: HilbertSpace, measurementData: List[MeasurementDataType]
     ):
         self.prefitBuildParamSet(hilbertspace)
-        self.prefitViewInsertParams()
         self.prefitView.dynamicalInit(
             subsysNames=[
                 HSParamSet.parentSystemNames(subsys)
                 for subsys in hilbertspace.subsystem_list[::-1]
             ],
-            hilbertDim=hilbertspace.dimension,
         )
+        self.prefitViewInsertParams()
+        
         self.quantumModel.dynamicalInit(
             hilbertspace, [data.name for data in measurementData]
         )
@@ -498,6 +491,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitParamModel.emitUpdateSlider()
         self.prefitCaliModel.emitUpdateBox()
         self.prefitCaliModel.emitUpdateSlider()
+        for option, value in self.quantumModel.exportSweepOption().items():
+            self.prefitView.setOptions(option, value)
 
         # update everything in the quantumModel
         self.quantumModel.disableSweep = True  # disable the auto sweep
@@ -505,8 +500,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.allDatasets.emitDataUpdated()
         self.caliParamModel.sendXCaliFunc()
         self.caliParamModel.sendYCaliFunc()
-        self.prefitView.emitAllOptions()  # auto run sync to the view
-        # self.quantumModel.disableSweep = False
 
     def prefitBuildParamSet(self, hilbertspace: HilbertSpace):
         """
@@ -514,7 +507,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         identify prefit slider parameters
         """
-
         # check how many sweep parameters are found and create sliders
         # for the remaining parameters
         sweepParameterSet = HSParamSet.sweepSetByHS(hilbertspace)
@@ -573,10 +565,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         will not be changed)
         """
         # initialize the sliders, boxes and minmax
-        HSParamNames = self.prefitParamModel.paramNamesDict()
-        caliParamNames = self.prefitCaliModel.paramNamesDict()
         self.prefitParamView.insertSliderMinMax(
-            HSParamNames, caliParamNames, removeExisting=True
+            self.prefitParamModel.paramNamesDict(), 
+            self.prefitCaliModel.paramNamesDict(),
+            removeExisting=True
         )
 
     def prefitSliderParamConnects(self):
@@ -586,7 +578,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         Note that in the current implementation, main window is both the
         controller and the model (hosting the parameterset)
         """
-        # update the value
+        # connect the HS & Cali parameters separately
         for signalSet, model in [
             (self.prefitParamView.HSSignals, self.prefitParamModel),
             (self.prefitParamView.caliSignals, self.prefitCaliModel),
@@ -618,80 +610,43 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 )
             )
 
-            # self.prefitParamView.HSSliderChanged.connect(
-            #     lambda paramAttr: self.prefitParamModel.storeParamAttr(
-            #         paramAttr, fromSlider=True
-            #     )
-            # )
-            # self.prefitParamView.HSTextChanged.connect(
-            #     lambda paramAttr: self.prefitParamModel.storeParamAttr(paramAttr)
-            # )
-            # self.prefitParamView.HSRangeEditingFinished.connect(
-            #     lambda paramAttr: self.prefitParamModel.storeParamAttr(paramAttr)
-            # )
-            # self.prefitParamView.HSEditingFihished.connect(
-            #     self.prefitParamModel.updateParent
-            # )
-
-            # # synchronize slider and box
-            # self.prefitParamModel.updateSlider.connect(
-            #     lambda paramAttr: self.prefitParamView.setByParamAttr(
-            #         paramAttr, toSlider=True
-            #     )
-            # )
-            # self.prefitParamModel.updateBox.connect(
-            #     lambda paramAttr: self.prefitParamView.setByParamAttr(
-            #         paramAttr, toSlider=False
-            #     )
-            # )
-
         # update hilbert space
         self.prefitParamView.HSEditingFinished.connect(
             self.prefitParamModel.updateParent
         )
+
         # update cali model
         self.prefitParamView.caliEditingFinished.connect(
             self.prefitCaliModel.emitUpdateCaliModel
         )
-
-    def prefitCaliConnects(self):
-        self.prefitCaliModel.updateCaliModel.connect(self.caliParamModel.setParamByPA)
-        self.caliParamModel.updatePrefitModel.connect(self.prefitCaliModel.setParamByPA)
+        self.prefitCaliModel.updateCaliModel.connect(
+            self.caliParamModel.setParamByPA
+        )
+        self.caliParamModel.updatePrefitModel.connect(
+            self.prefitCaliModel.setParamByPA
+        )
 
     def quantumModelConnects(self):
         self.prefitParamModel.hilbertSpaceUpdated.connect(
             self.quantumModel.updateHilbertSpace
         )
         self.allDatasets.dataUpdated.connect(self.quantumModel.updateExtractedData)
-        self.caliParamModel.xCaliUpdated.connect(self.quantumModel.updateSweepParamSets)
+        self.caliParamModel.xCaliUpdated.connect(self.quantumModel.updateXCaliFunc)
         self.caliParamModel.yCaliUpdated.connect(self.quantumModel.updateYCaliFunc)
-        self.caliParamModel.invYCaliUpdated.connect(
-            self.quantumModel.updateInvYCaliFunc
-        )
-
+        self.measurementData.relimCanvas.connect(self.quantumModel.relimX)
+        self.measurementData.updateRawXMap.connect(self.quantumModel.updateRawXMap)
+        
         # connect the page change to the disable sweep
         self.pageView.pageChanged.connect(
-            self.quantumModel.updateDisableSweepOnPageChange
+            self.quantumModel.updateModeOnPageChange
         )
 
     def prefitButtonConnects(self):
-        """
-        View --> model: numerical model options
-        model --> view: numerical model --> prefit plot
-        TODO: should be able to seprate the connection
-        TODO: Should be able to combine with prefitQuantumModelOptionsConnects
+        self.prefitView.optionUpdated.connect(self.quantumModel.storeSweepOption)
 
-        Set up the connects for the prefit options for UI:
-        1. subsystem combo box
-        2. initial state line edit
-        3. photons spin box
-        4. evals count line edit
-        5. points add line edit
-        """
-
-        self.prefitView.optionUpdated.connect(self.quantumModel.updateSweepOption)
-
-        self.prefitView.runSweep.clicked.connect(self.quantumModel.sweep2SpecMSE)
+        self.prefitView.runSweep.clicked.connect(
+            lambda: self.quantumModel.updateCalc(calledByPlotButton=True)
+        )
 
     # Fit ##############################################################
     # ##################################################################
@@ -700,64 +655,85 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.ui.fitScrollAreaWidget,
         )
         self.fitParamModel = FitParamModel()
+        self.fitCaliModel = FitCaliModel()
         self.fitModel = FitModel()
 
         self.fitStaticElementsBuild()
-
-    def fitDynamicalElementsBuild(self, hilbertspace: HilbertSpace):
-        self.fitParamModel.dynamicalInit(
-            hilbertspace=hilbertspace,
-            excluded_parameter_type=["ng", "flux", "cutoff", "truncated_dim", "l_osc"],
-        )
-        self.fitParamView.fitTableInserts(
-            self.fitParamModel.paramNamesDict(), removeExisting=True
-        )
 
     def fitStaticElementsBuild(self):
         self.fitOptionConnects()
         self.fitTableParamConnects()
         self.fitPushButtonConnects()
+        self.fitConnects()
 
-    @Slot()
-    def fittingParameterLoad(self, source: Literal["prefit", "fit"]):
+    def fitDynamicalElementsBuild(self):
+        # build paramset
+        self.fitParamModel.setAttrByParamDict(
+            self.prefitParamModel.toFitParams(),
+            insertMissing=True,
+        )
+        self.fitCaliModel.setAttrByParamDict(
+            self.caliParamModel.toFitParams(),
+            insertMissing=True,
+        )
+        # insert parameters
+        self.fitParamView.fitTableInserts(
+            self.fitParamModel.paramNamesDict(), 
+            self.fitCaliModel.paramNamesDict(),
+            removeExisting=True
+        )
+
+    def fitTableParamConnects(self):
         """
-        Load the initial value, min, and max from the source parameter set
+        table --> parameter
+
+        Note that in the current implementation, main window is both the
+        controller and the model (hosting the parameterset)
         """
-        if source == "prefit":
-            init_value_dict = self.prefitParamModel.getAttrDict("value")
-        elif source == "fit":
-            init_value_dict = self.fitParamModel.getAttrDict("value")
+        # update the value
+        self.fitParamView.HSEditingFinished.connect(
+            self.fitParamModel.storeParamAttr
+        )
+        self.fitParamView.CaliEditingFinished.connect(
+            self.fitCaliModel.storeParamAttr
+        )
+        self.fitParamModel.updateBox.connect(self.fitParamView.setBoxValue)
+        self.fitCaliModel.updateBox.connect(self.fitParamView.setBoxValue)
 
-        self.fitParamModel.setAttrByAttrDict(init_value_dict, "initValue")
-        self.fitParamModel.setAttrByAttrDict(init_value_dict, "value")
-        max_value_dict = {
-            key: (value * 1.2 if value > 0 else value * 0.8)
-            for key, value in init_value_dict.items()
-        }
-        self.fitParamModel.setAttrByAttrDict(max_value_dict, "max")
-        min_value_dict = {
-            key: (value * 0.8 if value > 0 else value * 1.2)
-            for key, value in init_value_dict.items()
-        }
-        self.fitParamModel.setAttrByAttrDict(min_value_dict, "min")
-
-    @Slot()
-    def prefitParamLoad(self):
-        value_dict = self.fitParamModel.getAttrDict("value")
-        self.prefitParamModel.setAttrByAttrDict(value_dict, "value")
-
-    def _costFunction(self, paramDict: Dict[str, float]) -> float:
+    def _costFunction(
+        self, HSParams: Dict[str, float], caliParams: Dict[str, float]
+    ) -> float:
         """
         Cook up a cost function for the optimization
         """
-        self.fitParamModel.setAttrByAttrDict(paramDict, "value")
-        for params in self.fitParamModel.values():
+        print("Cost function called.")
+
+        self.quantumModel.disableSweep = True
+
+        # update the hilbert space
+        self.fitParamModel.setByAttrDict(HSParams, "value") # display the value
+        self.prefitParamModel.setByAttrDict(HSParams, "value")  # update HS
+        for params in self.prefitParamModel.values():
             for p in params.values():
                 p.setParameterForParent()
+        self.quantumModel.updateHilbertSpace(self.prefitParamModel.hilbertspace)
 
-        self.quantumModel.updateHSWoCalc(self.fitParamModel.hilbertspace)
+        # update the calibration
+        self.caliParamModel.setByAttrDict(caliParams, "value")
+        self.fitCaliModel.setByAttrDict(caliParams, "value")
+        self.quantumModel.updateXCaliFunc(self.caliParamModel.XCalibration())
+        self.quantumModel.updateYCaliFunc(
+            self.caliParamModel.YCalibration(),
+            self.caliParamModel.invYCalibration(),
+        )
+
+        self.quantumModel.disableSweep = False
 
         return self.quantumModel.updateCalc()
+    
+    def _optCallback(self, *args, **kwargs):
+        print("Opt callback called.")
+        self.quantumModel.emitReadyToPlot()
 
     @Slot()
     def optimizeParams(self):
@@ -765,27 +741,36 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             return
 
         # configure other models & views
-        self.quantumModel.sweepUsage = "fit"
         self.ui.fitButton.setEnabled(False)
         self.prefitParamView.sliderSet.setEnabled(False)
+        # it seems that even though the sweep is disabled while changing 
+        # the parameters, the signals are still able to reach the quantumModel
+        # and trigger the calculation. So we need to block the signals
+        self.prefitParamModel.blockSignals(True)   
+        self.caliParamModel.blockSignals(True)
 
         # setup the optimization
         self.fitModel.setupOptimization(
-            fixedParams=self.fitParamModel.fixedParams,
-            freeParamRanges=self.fitParamModel.freeParamRanges,
+            HSFixedParams=self.fitParamModel.fixedParams,
+            HSFreeParamRanges=self.fitParamModel.freeParamRanges,
+            caliFixedParams=self.fitCaliModel.fixedParams,
+            caliFreeParamRanges=self.fitCaliModel.freeParamRanges,
             costFunction=self._costFunction,
         )
 
         # cook up a cost function
         self.fitModel.runOptimization(
-            initParam=self.fitParamModel.initParams,
+            initParam=self.fitParamModel.initParams, 
+            callback=self._optCallback,
         )
 
     @Slot()
     def postOptimization(self):
+        print("Opt ends.")
         self.ui.fitButton.setEnabled(True)
         self.prefitParamView.sliderSet.setEnabled(True)
-        self.quantumModel.sweepUsage = "prefit"
+        self.prefitParamModel.blockSignals(False)
+        self.caliParamModel.blockSignals(False)
 
     def fitOptionConnects(self):
         self.ui_settings.fit.ui.tolLineEdit.editingFinished.connect(
@@ -818,6 +803,13 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 insertMissing=False,
             )
         )
+        self.dataExportButtons["prefit"].clicked.connect(
+            lambda: self.fitCaliModel.setAttrByParamDict(
+                self.caliParamModel.toFitParams(),
+                attrsToUpdate=["value", "min", "max", "initValue", "isFixed"],
+                insertMissing=False,
+            )
+        )
         # the fit parameter export to prefit
         self.dataExportButtons["fit"].clicked.connect(
             lambda: self.prefitParamModel.setAttrByParamDict(
@@ -826,6 +818,21 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 insertMissing=False,
             )
         )
+        self.dataExportButtons["fit"].clicked.connect(
+            lambda: self.prefitCaliModel.setAttrByParamDict(
+                self.fitCaliModel.toPrefitParams(),
+                attrsToUpdate=["value"],
+                insertMissing=False,
+            )
+        )
+        self.dataExportButtons["fit"].clicked.connect(
+            lambda: self.caliParamModel.setAttrByParamDict(
+                self.fitCaliModel.toPrefitParams(),
+                attrsToUpdate=["value"],
+                insertMissing=False,
+            )
+        )
+
         # the final value to initial value
         self.ui.pushButton_2.clicked.connect(
             lambda: self.fitParamModel.setAttrByParamDict(
@@ -834,19 +841,13 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
                 insertMissing=False,
             )
         )
-
-    def fitTableParamConnects(self):
-        """
-        table --> parameter
-
-        Note that in the current implementation, main window is both the
-        controller and the model (hosting the parameterset)
-        """
-        # update the value
-        self.fitParamView.dataEditingFinished.connect(
-            self.fitParamModel._storeParamAttr
+        self.ui.pushButton_2.clicked.connect(
+            lambda: self.fitCaliModel.setAttrByParamDict(
+                self.fitCaliModel.toInitParams(),
+                attrsToUpdate=["initValue"],
+                insertMissing=False,
+            )
         )
-        self.fitParamModel.updateBox.connect(self.fitParamView.setBoxValue)
 
     def fitConnects(self):
         self.fitModel.optFinished.connect(self.postOptimization)
