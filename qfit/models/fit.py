@@ -234,7 +234,7 @@ class FitModel(QObject):
     def __init__(self):
         super().__init__()
 
-        FitRunner.signalObj.optFinished.connect(self._postOptimization)
+        FitRunner.signalHoster.optFinished.connect(self._postOptimization)
 
     # signal & slots ===================================================
     @Slot()
@@ -357,7 +357,7 @@ class RunnerSignal(QObject):
 
 class FitRunner(QRunnable):
 
-    signalObj = RunnerSignal()
+    signalHoster = RunnerSignal()
 
     def __init__(
         self,
@@ -378,4 +378,4 @@ class FitRunner(QRunnable):
             callback=self.callback
         )
 
-        self.signalObj.optFinished.emit(traj)
+        self.signalHoster.optFinished.emit(traj)

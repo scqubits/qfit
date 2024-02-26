@@ -737,12 +737,18 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitParamModel.blockSignals(False)
         self.caliParamModel.blockSignals(False)
 
+        # plot the spectrum as if we are in prefit
+        tmp = self.quantumModel.sweepUsage
+        self.quantumModel.sweepUsage = "prefit"
+        self.quantumModel.updateCalc()
+        self.quantumModel.sweepUsage = tmp
+
     def fitOptionConnects(self):
         self.ui.tolLineEdit.editingFinished.connect(
-            lambda: self.fitParamModel.updateTol(self.ui.tolLineEdit.value())
+            lambda: self.fitModel.updateTol(self.ui.tolLineEdit.value())
         )
         self.ui.optimizerComboBox.currentIndexChanged.connect(
-            lambda: self.fitParamModel.updateOptimizer(
+            lambda: self.fitModel.updateOptimizer(
                 self.ui.optimizerComboBox.currentText()
             )
         )
