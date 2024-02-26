@@ -11,15 +11,17 @@ from qfit.models.measurement_data import (
     MeasurementDataType,
 )
 
-from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal, List
+from qfit.models.parameter_set import HSParamSet
+from qfit.models.data_structures import QMSweepParam
+
+from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal, List, Callable
 
 if TYPE_CHECKING:
-    from qfit.models.parameter_set import CaliParamModel
+    from qfit.models.calibration import CaliParamModel
 
     # from qfit.models.calibration_data import CalibrationData
     from qfit.models.measurement_data import MeasDataSet
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
-    from qfit.models.parameter_set import ParamSet
     from qfit.models.numerical_model import QuantumModel
     from qfit.views.paging_view import PageView
 
@@ -43,6 +45,8 @@ class PlottingCtrl(QObject):
 
     # other annotations
     pageView: "PageView"
+    XCaliFuncDict: Dict[str, HSParamSet[QMSweepParam]]
+    YCaliFunc: Callable
 
     def __init__(
         self,
@@ -222,6 +226,8 @@ class PlottingCtrl(QObject):
     # calibration ======================================================
     def toggleCalibrationConnect(self):
         self.calibratedCheckBox.toggled.connect(self.toggleCalibration)
+        self.calibrationModel.xCaliUpdated.connect(self.onXCaliFuncUpdated)
+        self.calibrationModel.yCaliUpdated.connect(self.onYCaliFuncUpdated)
 
     @Slot(bool)
     def toggleCalibration(self, checked: bool):
@@ -465,8 +471,8 @@ class PlottingCtrl(QObject):
     @Slot(bool)
     def toggleCanvasLabels(self, checked: bool):
         """
-        TO BE REFACTORED (moving part to the calibration)
         Toggle the labels on the canvas.
+        TODO: more bugs to fix on zooming, swapping xy, etc.
         """
         if checked:
             # xlabel = <swept_parameter> (<sysstem id string>)
@@ -487,35 +493,36 @@ class PlottingCtrl(QObject):
             xlocs, xticklabels = self.axes.get_xticks(), self.axes.get_xticklabels()
             ylocs, yticklabels = self.axes.get_yticks(), self.axes.get_yticklabels()
             # update the labels using the calibration function
-            # notice that the label positions are obtained from x(y)ticklabels which
-            # are text objects.
-            # results are rounded to 2 decimals
-            xticklabels = np.round(
-                self.calibrationModel.calibrateDataset(
-                    array=np.array(
-                        [
-                            [float(xticklabel.get_position()[0]), 0]
-                            for xticklabel in xticklabels
-                        ]
-                    ).T,
-                    calibration_axis="x",
-                )[0, :],
-                decimals=2,
+            # this method need to be accessed through the calibration model
+            currentFigureName = self.measurementData.currentMeasData.name
+            currentXAxisName = self.measurementData.currentMeasData.currentX.name
+            # in the future, generalize this code to handle cases with multiple axes
+            calibrationFunc = list(
+                list(self.XCaliFuncDict[currentFigureName].parameters.values())[
+                    0
+                ].values()
+            )[0].calibration_func
+            calibratedXTickLabels = []
+            for xTickLabel in xticklabels:
+                # the calibration function takes in a dictionary of raw X values and returns
+                # the calibrated X value for the specific parameter
+                rawXByCurrentX = self.measurementData.currentMeasData.rawXByCurrentX(
+                    xTickLabel.get_position()[0]
+                )
+                calibratedXTickLabels.append(calibrationFunc(rawXByCurrentX))
+            calibratedXTickLabels = np.round(
+                np.array(calibratedXTickLabels), decimals=2
             )
-            yticklabels = np.round(
-                self.calibrationModel.calibrateDataset(
-                    array=np.array(
-                        [
-                            [0, float(yticklabel.get_position()[1])]
-                            for yticklabel in yticklabels
-                        ]
-                    ).T,
-                    calibration_axis="y",
-                )[1, :],
-                decimals=2,
+            calibratedYTickLabels = []
+            for yTickLabel in yticklabels:
+                calibratedYTickLabels.append(
+                    self.YCaliFunc(yTickLabel.get_position()[1])
+                )
+            calibratedYTickLabels = np.round(
+                np.array(calibratedYTickLabels), decimals=2
             )
-            self.axes.set_xticks(xlocs, xticklabels)
-            self.axes.set_yticks(ylocs, yticklabels)
+            self.axes.set_xticks(xlocs, calibratedXTickLabels)
+            self.axes.set_yticks(ylocs, calibratedYTickLabels)
         else:
             # revert to original ticklabels
             self.axes.xaxis.set_major_locator(mpl.ticker.AutoLocator())
@@ -529,6 +536,14 @@ class PlottingCtrl(QObject):
                 self.axes.set_ylabel(self.measurementData.currentMeasData.currentY.name)
 
         self.axes.figure.canvas.draw()
+
+    def onXCaliFuncUpdated(self, XCaliFuncDict: Dict[str, HSParamSet[QMSweepParam]]):
+        """Update the X calibration function and the labels on the canvas."""
+        self.XCaliFuncDict = XCaliFuncDict
+
+    def onYCaliFuncUpdated(self, YCaliFunc: Callable, invYCaliFunc: Callable):
+        """Update the Y calibration function and the labels on the canvas."""
+        self.YCaliFunc = YCaliFunc
 
     def isRelativelyClose(self, x1y1: np.ndarray, x2y2: np.ndarray):
         """Check whether the point x1y1 is relatively close to x2y2, given the current

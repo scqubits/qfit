@@ -20,6 +20,8 @@ from qfit.models.data_structures import (
 )
 from qfit.models.data_structures import Tag, SpectrumElement
 
+from qfit.models.data_structures import Status
+
 from typing import Dict, List, Tuple, Union, Callable, Any, Literal, Optional
 
 
@@ -67,8 +69,7 @@ class QuantumModel(QObject):
         self._evalsCount: int = np.min([10, self.hilbertspace.dimension])
         self._pointsAdded: int = 10
         self._rawXByX: Dict[str, Callable[[float], Dict[str, float]]] = {
-            figName: lambda x: {}
-            for figName in self._figNames
+            figName: lambda x: {} for figName in self._figNames
         }
         self._xLim: Tuple[float, float] = (0, 1)
 
@@ -80,7 +81,7 @@ class QuantumModel(QObject):
         # options when running
         self._autoRun: bool = True
         self._sweepUsage: Literal["prefit", "fit"] = "prefit"
-        self.disableSweep: bool = True    # always off, used for backend operations
+        self.disableSweep: bool = True  # always off, used for backend operations
 
     # Signals and Slots ========================================================
     @Slot(str)
@@ -115,11 +116,7 @@ class QuantumModel(QObject):
         # at the moment we don't update the calculation after the extracted data is updated
 
     @Slot(dict)
-    def updateRawXMap(
-        self, rawXByX: Dict[
-            str, Callable[[float], Dict[str, float]]
-            ]
-        ):
+    def updateRawXMap(self, rawXByX: Dict[str, Callable[[float], Dict[str, float]]]):
         """
         Update the rawXByX dictionary.
 
@@ -167,7 +164,6 @@ class QuantumModel(QObject):
             "autoRun",
         ],
         value: Any,
-        
     ):
         """
         Set the sweep options.
@@ -216,12 +212,12 @@ class QuantumModel(QObject):
         A tuple of the attribute name and the value.
         """
         if isinstance(self._initialState, tuple):
-            initStateStr = str(self._initialState)[1:-1]    # remove the parentheses
+            initStateStr = str(self._initialState)[1:-1]  # remove the parentheses
         elif isinstance(self._initialState, int):
             initStateStr = str(self._initialState)
         else:
             initStateStr = ""
-    
+
         return {
             "subsysToPlot": HSParamSet.parentSystemNames(self._subsysToPlot),
             "initialState": initStateStr,
@@ -230,11 +226,10 @@ class QuantumModel(QObject):
             "pointsAdded": str(self._pointsAdded),
             "autoRun": self._autoRun,
         }
-    
+
     @Slot(str)
     def updateModeOnPageChange(
-        self, 
-        currentPage: Literal["calibrate", "extract", "prefit", "fit"]
+        self, currentPage: Literal["calibrate", "extract", "prefit", "fit"]
     ):
         """
         Update the disableSweep attribute when the page changes.
@@ -247,7 +242,7 @@ class QuantumModel(QObject):
 
     # signals =================================================================
     def emitReadyToPlot(self):
-        # since we always specify the subsystems to plot, we need change the 
+        # since we always specify the subsystems to plot, we need change the
         # default setting for initial state: None means (0, 0, ...)
         if self._initialState is None:
             initialState = (0,) * self.hilbertspace.subsystem_count
@@ -346,9 +341,7 @@ class QuantumModel(QObject):
             if figName == self._currentFigName and addPoints:
                 # add uniformly distributed x coordinates if current figure
                 # is being plotted
-                x_coordinates_uniform = np.linspace(
-                    *self._xLim, self._pointsAdded
-                )
+                x_coordinates_uniform = np.linspace(*self._xLim, self._pointsAdded)
                 x_coordinates_all = np.concatenate([extrX, x_coordinates_uniform])
                 sweptX[figName] = np.sort(x_coordinates_all)
             else:
@@ -433,23 +426,21 @@ class QuantumModel(QObject):
             sweeps[figName] = param_sweep
 
         return sweeps
-    
+
     def _newSweep(self) -> None:
         """
         Create a new ParameterSweep object based on the stored data.
         """
         try:
             self._sweeps = self._generateSweep(
-                sweptX=self._prefitSweptX(
-                    addPoints = (self._sweepUsage == "prefit")
-                ),
+                sweptX=self._prefitSweptX(addPoints=(self._sweepUsage == "prefit")),
                 updateHS=self._updateHSForSweep(),
                 subsysUpdateInfo=self._subsysUpdateInfo(),
             )
         except Exception as e:
             # TODO: emit error message
             raise e
-        
+
         # result.status_type = "COMPUTING"
         for sweep in self._sweeps.values():
             # manually turn off the warning message
@@ -468,7 +459,7 @@ class QuantumModel(QObject):
             # when manually update the quantumModel, we will turn this on
             # and the sweep will not be generated
             return 0.0
-        
+
         # run sweep (generate a new sweep if not exist)
         try:
             self._sweeps
@@ -496,10 +487,7 @@ class QuantumModel(QObject):
         # result.statusStrForView = status_text
 
     @Slot()
-    def updateCalc(
-        self, 
-        calledByPlotButton: bool = False
-    ) -> Union[None, float]:
+    def updateCalc(self, calledByPlotButton: bool = False) -> Union[None, float]:
         """
         newSweep + sweep2SpecMSE (when autoRun is on / fit / called by plot button)
 
@@ -618,7 +606,7 @@ class QuantumModel(QObject):
                 status = "NO_MATCHED_BARE_INITIAL_AND_FINAL"
                 availableLabels = {}
 
-        sweep.reset_preslicing() # single point slice of sweep is not stable
+        sweep.reset_preslicing()  # single point slice of sweep is not stable
 
         simulation_freq = self._closestTransFreq(
             dataFreq=dataFreq,
@@ -656,10 +644,13 @@ class QuantumModel(QObject):
             # process the status
             # if the transition_freq is None, return directly with a mse of None
             if get_transition_freq_status == "DRESSED_OUT_OF_RANGE":
-                status_type = "ERROR"
-                status_text = (
+                statusType = "error"
+                statusText = (
                     f"The {tag.tagType} tag {tag.initial}->{tag.final} includes"
                     " state label(s) that exceed evals count."
+                )
+                status = Status(
+                    statusSource="prefit", statusType=statusType, message=statusText
                 )
                 return np.nan
             # if the return status is not SUCCESS, add a warning message and set status type to WARNING

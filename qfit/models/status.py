@@ -52,7 +52,7 @@ class StatusModel(QObject):
         self._updateMseForComputingDelta()
 
     @property
-    def deltaMse(self):
+    def deltaMse(self) -> Union[float, None]:
         return self._deltaMse
 
     @deltaMse.setter
@@ -70,12 +70,12 @@ class StatusModel(QObject):
             else:
                 self._mseChangeSign = "+"
 
-    # to be deleted
-    @property
-    def displayed_status_type(self):
-        if self.current_status_type is None:
-            return "STATUS:  -"
-        return f"STATUS:  {self.status_type}"
+    # # to be deleted
+    # @property
+    # def displayed_status_type(self):
+    #     if self.current_status_type is None:
+    #         return "STATUS:  -"
+    #     return f"STATUS:  {self.status_type}"
 
     @property
     def displayed_status_text(self):
