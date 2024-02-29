@@ -1,0 +1,620 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>fitSettingsWidget</class>
+ <widget class="QWidget" name="fitSettingsWidget">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>375</width>
+    <height>432</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>375</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>484</width>
+    <height>16777215</height>
+   </size>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget {
+	background-color: #3F3F3F;
+}
+
+QFrame {
+	background-color: #3F3F3F;
+}
+
+QToolTip {
+	color: #ffffff;
+	background-color: rgba(27, 29, 35, 160);
+	border: 1px solid rgb(40, 40, 40);
+	border-radius: 2px;
+}
+
+QWidget {
+	font-family: &quot;Roboto Medium&quot;;
+	background-color: #2F2F2F;
+}
+
+QLabel {
+	color: rgb(170, 170, 170);
+    font-size: 14px;
+}
+
+/* LINE EDIT */
+QLineEdit {
+	color: rgb(170, 170, 170);
+	background-color: #171717;
+	border-radius: 5px;
+	border: 2px solid rgb(27, 29, 35);
+	padding-left: 5px;
+}
+
+QLineEdit:hover {
+	border: 2px solid rgb(64, 71, 88);
+}
+
+QLineEdit:focus {
+	border: 2px solid rgb(91, 101, 124);
+}
+
+/* CHECKBOX */
+QCheckBox {
+	color: #AAAAAA;
+    spacing: 10px;
+    font-size: 14px;
+}
+
+QCheckBox::indicator {
+    border: 1px solid #DBBCFB;
+	width: 20px;
+	height: 20px;
+ 	border-radius: 11px;
+    background: transparent;
+}
+
+QCheckBox::indicator:hover {
+	border: 1px solid #BE82FA;
+   background: transparent;
+}
+
+QCheckBox::indicator:checked {
+	border: 1px solid #BE82FA;
+   background: transparent;
+	image: url(:/icons/svg/check.svg);
+}
+
+/* RADIO BUTTON */
+QRadioButton {
+	color: #AAAAAA;
+    spacing: 10px;
+    font-size: 14px;
+}
+
+QRadioButton::indicator {
+    border: 1px solid #DBBCFB;
+	width: 20px;
+	height: 20px;
+ 	border-radius: 11px;
+    background: transparent;
+}
+
+QRadioButton::indicator:hover {
+	border: 1px solid #BE82FA;
+   background: transparent;
+}
+
+QRadioButton::indicator:checked {
+	border: 1px solid #BE82FA;
+   background: transparent;
+	image: url(:/icons/svg/check.svg);
+}
+
+
+
+/* SLIDERS */
+QSlider::groove:horizontal {
+    border-radius: 9px;
+    height: 18px;
+	margin: 0px;
+	background-color: #38363B;
+}
+
+QSlider::groove:horizontal:hover {
+	background-color: #3A393F;
+}
+
+QSlider::handle:horizontal {
+    background-color: #BE82FA;
+    border: none;
+    height: 18px;
+    width: 18px;
+    margin: 0px;
+	border-radius: 9px;
+}
+
+QSlider::handle:horizontal:hover {
+    background-color: #C186FE;
+}
+
+QSlider::handle:horizontal:pressed {
+    background-color: #A870E0;
+}
+
+QSlider::groove:vertical {
+    border-radius: 9px;
+    width: 18px;
+    margin: 0px;
+	background-color: rgb(52, 59, 72);
+}
+
+QSlider::groove:vertical:hover {
+	background-color: rgb(55, 62, 76);
+}
+
+QSlider::handle:vertical {
+    background-color: rgb(85, 170, 255);
+	border: none;
+    height: 18px;
+    width: 18px;
+    margin: 0px;
+	border-radius: 9px;
+}
+
+QSlider::handle:vertical:hover {
+    background-color: rgb(105, 180, 255);
+}
+
+QSlider::handle:vertical:pressed {
+    background-color: rgb(65, 130, 195);
+}
+
+QGroupBox {
+	border: 0;
+	color: rgb(170, 170, 170);
+	font: 57 10px &quot;Roboto Medium&quot;;
+}
+
+QSpinBox {
+	background-color: transparent;
+	color: rgb(170, 170, 170);
+    padding-right: 5px; /* make room for the arrows */
+    border-width: 3;
+}
+
+QSpinBox::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: right; /* position at the top right corner */
+	height: 28px;
+    width: 28px; 
+	background-color: rgb(93,93,93);
+    border-radius: 4px;
+    border: 1px;
+}
+
+QSpinBox::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: left; /* position at the top right corner */
+	height: 28px;
+    width: 28px;
+	background-color: rgb(93,93,93);
+    border-radius: 4px;
+    border: 1px;
+}
+
+QSpinBox::up-arrow {
+    width: 20px;
+    height: 20px;
+    image: url(:/icons/svg/plus.svg) 1;
+}
+
+QSpinBox::down-arrow {
+    image: url(:/icons/svg/minus.svg) 1;
+    width: 20px;
+    height: 20px;
+}
+
+QSpinBox::up-button:pressed {
+    background-color: rgb(200,200,200);
+}
+
+
+/* COMBOBOX */
+QComboBox {
+	color: rgb(170, 170, 170);
+	background-color: #171717;
+	border-radius: 5px;
+	border: 2px solid rgb(27, 29, 35);
+	padding: 5px;
+	padding-left: 10px;
+}
+
+
+
+QComboBox:hover{
+	background-color: #171717;
+	border: 2px solid rgb(64, 71, 88);
+}
+
+QComboBox::drop-down {
+	background-color: #171717;
+	subcontrol-origin: padding;
+	subcontrol-position: top right;
+	width: 25px; 
+	border-left-width: 3px;
+	border-left-color: rgba(39, 44, 54, 150);
+	border-left-style: solid;
+	border-top-right-radius: 3px;
+	border-bottom-right-radius: 3px;	
+ }
+QComboBox::drop-down:button {
+	width: 25px; 
+ }
+
+QComboBox::down-arrow{
+	image: url(:/icons/svg/arrow-down-2F2F2F.svg);
+	width: 12px;
+	height: 9px;
+}
+ 
+QComboBox QAbstractItemView {
+	color: rgb(85, 170, 255);	
+	background-color: #2F2F2F;
+	padding: 5px;
+	selection-background-color: #2F2F2F;
+}
+
+QComboBox QAbstractItemView::item{
+    height: 50px;
+}
+
+</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="3" column="2">
+    <widget class="PositiveFloatLineEdit" name="tolLineEdit">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>170</width>
+       <height>30</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>30</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string>font-size: 13px</string>
+     </property>
+     <property name="text">
+      <string>1e-6</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="2">
+    <widget class="QComboBox" name="optimizerComboBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>170</width>
+       <height>30</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777213</width>
+       <height>30</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string>font-size: 13px</string>
+     </property>
+     <item>
+      <property name="text">
+       <string>L-BFGS-B</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Nelder-Mead</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Powell</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>shgo</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>differential evolution</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QLabel" name="label_49">
+     <property name="styleSheet">
+      <string notr="true">font-size: 13px</string>
+     </property>
+     <property name="text">
+      <string>STATUS:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="4">
+    <widget class="QPushButton" name="fitSettingsCloseButton">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>25</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="sizeIncrement">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton {
+    border: none;
+    background: none;
+}</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/icons/svg/cross.svg</normaloff>:/icons/svg/cross.svg</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>30</width>
+       <height>30</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="3">
+    <spacer name="horizontalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="2" column="4">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>25</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="4" column="3">
+    <widget class="QPushButton" name="fitResultHelpPushButton">
+     <property name="styleSheet">
+      <string notr="true">QPushButton {
+    border: none;
+    background: none;
+}</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/icons/svg/question-circle.svg</normaloff>:/icons/svg/question-circle.svg</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>23</width>
+       <height>23</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QLabel" name="label_47">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font-size: 13px</string>
+     </property>
+     <property name="text">
+      <string>OPTIMIZER</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="1" column="1" colspan="2">
+    <widget class="QLabel" name="label_45">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>23</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <family>Roboto Medium</family>
+       <pointsize>-1</pointsize>
+       <italic>false</italic>
+       <fontweight>Light</fontweight>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: rgb(190, 130, 250);
+ font-size: 16px;</string>
+     </property>
+     <property name="text">
+      <string>SETTINGS: FIT</string>
+     </property>
+     <property name="indent">
+      <number>-1</number>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1" colspan="4">
+    <widget class="QLabel" name="statusTextLabel_2">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>-</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="margin">
+      <number>5</number>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QLabel" name="label_8">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font-size: 13px</string>
+     </property>
+     <property name="text">
+      <string>TOLERANCE</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QLabel" name="mseLabel_2">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>200</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>200</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <family>Roboto Medium</family>
+       <pointsize>-1</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font-size: 13px</string>
+     </property>
+     <property name="text">
+      <string>MSE:  - GHz²   (+0.00%)</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PositiveFloatLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qfit/widgets/validated_line_edits.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>

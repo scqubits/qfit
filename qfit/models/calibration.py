@@ -3,11 +3,22 @@ import numpy as np
 from PySide6.QtCore import Signal, Slot
 
 from typing import (
-    Dict, List, Union, Tuple, Callable, Literal, Optional, TYPE_CHECKING,
+    Dict,
+    List,
+    Union,
+    Tuple,
+    Callable,
+    Literal,
+    Optional,
+    TYPE_CHECKING,
 )
 
 from qfit.models.data_structures import (
-    QMSweepParam, SliderParam, FitParam, ParamAttr, CaliTableRowParam,
+    QMSweepParam,
+    SliderParam,
+    FitParam,
+    ParamAttr,
+    CaliTableRowParam,
 )
 from qfit.models.parameter_set import ParamSet, ParamModelMixin, HSParamSet
 from qfit.models.registry import RegistryEntry
@@ -292,15 +303,15 @@ class CaliParamModel(
         """
         param = self.parameters[rowName][colName]
         return param.paramType in ["raw_Y", "mapped_Y"]
-    
+
     def _fitMinMaxByColName(
-        self, 
-        rowName: str, 
+        self,
+        rowName: str,
         colName: str,
         scale: float = 0.2,
     ) -> Tuple[float, float]:
         """
-        Prefit parameters' min and max are determined by the range of the 
+        Prefit parameters' min and max are determined by the range of the
         existed mapped values, for fine-tuning the cali parameters.
         """
         # obtain a list of values that has the same column name
@@ -315,13 +326,13 @@ class CaliParamModel(
                     raise ValueError(
                         "This method should be only used for prefit parameters."
                     )
-                
+
                 existedValue.append(param.value)
 
         # using the min & max of the list, determine the range
         valRange = (np.max(existedValue) - np.min(existedValue)) * scale
         value = self[rowName][colName].value
-        if valRange > 0:   
+        if valRange > 0:
             # accept the range if it is not zero
             pass
         elif value != 0:
@@ -329,57 +340,57 @@ class CaliParamModel(
         else:
             valRange = 1
 
-        return (value + valRange/2, value - valRange/2)
-    
-    def toPrefitParams(self,) -> ParamSet[SliderParam]:
+        return (value + valRange / 2, value - valRange / 2)
+
+    def toPrefitParams(
+        self,
+    ) -> ParamSet[SliderParam]:
         # create the prefit parameters
         paramSet = ParamSet[SliderParam](SliderParam)
         for rowName, paramDictByParent in self.items():
             for colName, param in paramDictByParent.items():
                 if not self._prefitHas(rowName, colName):
                     continue
-                
+
                 value = param.value
-                min, max = self._fitMinMaxByColName(
-                    rowName, colName, scale=0.2
-                )
+                min, max = self._fitMinMaxByColName(rowName, colName, scale=0.2)
 
                 # insert a prefit parameter
                 prefitParam = SliderParam(
-                    name = colName,
-                    parent = param.parent,
-                    paramType = param.paramType,
-                    value = value,
-                    min = min,
-                    max = max,
+                    name=colName,
+                    parent=param.parent,
+                    paramType=param.paramType,
+                    value=value,
+                    min=min,
+                    max=max,
                 )
                 paramSet.insertParam(rowName, colName, prefitParam)
 
         return paramSet
-    
-    def toFitParams(self,) -> ParamSet[FitParam]:
+
+    def toFitParams(
+        self,
+    ) -> ParamSet[FitParam]:
         # create the prefit parameters
         paramSet = ParamSet[FitParam](FitParam)
         for rowName, paramDictByParent in self.items():
             for colName, param in paramDictByParent.items():
                 if not self._prefitHas(rowName, colName):
                     continue
-                
+
                 value = param.value
-                min, max = self._fitMinMaxByColName(
-                    rowName, colName, scale=0.1
-                )
+                min, max = self._fitMinMaxByColName(rowName, colName, scale=0.1)
 
                 # insert a prefit parameter
                 fitParam = FitParam(
-                    name = colName,
-                    parent = param.parent,
-                    paramType = param.paramType,
-                    value = value,
-                    min = min,
-                    max = max,
-                    initValue = value,
-                    isFixed = True,
+                    name=colName,
+                    parent=param.parent,
+                    paramType=param.paramType,
+                    value=value,
+                    min=min,
+                    max=max,
+                    initValue=value,
+                    isFixed=True,
                 )
                 paramSet.insertParam(rowName, colName, fitParam)
 
@@ -588,7 +599,7 @@ class CaliParamModel(
                     )
             sweepParamSetByFig[fig] = sweepParamSetFromCali
         return sweepParamSetByFig
-    
+
     def XCalibration(self) -> Dict[str, HSParamSet[QMSweepParam]]:
         if self.isFullCalibration:
             return self._fullXCalibration()
@@ -707,7 +718,7 @@ class CaliParamModel(
         **kwargs,
     ):
         """
-        Store attr from view. 
+        Store attr from view.
 
         It also updates the prefit model if the parameter is a prefit parameter.
         """
@@ -725,24 +736,20 @@ class CaliParamModel(
             if self._prefitHas(rowIdx, colName):
                 # update min, max, value for the prefit model
                 min, max = self._fitMinMaxByColName(rowIdx, colName)
-                self.updatePrefitModel.emit(ParamAttr(
-                    paramAttr.parentName, 
-                    paramAttr.name, 
-                    "min", 
-                    min
-                ))
-                self.updatePrefitModel.emit(ParamAttr(
-                    paramAttr.parentName, 
-                    paramAttr.name, 
-                    "max", 
-                    max
-                ))
-                self.updatePrefitModel.emit(ParamAttr(
-                    paramAttr.parentName, 
-                    paramAttr.name, 
-                    paramAttr.attr, 
-                    self[paramAttr.parentName][paramAttr.name].value
-                ))
+                self.updatePrefitModel.emit(
+                    ParamAttr(paramAttr.parentName, paramAttr.name, "min", min)
+                )
+                self.updatePrefitModel.emit(
+                    ParamAttr(paramAttr.parentName, paramAttr.name, "max", max)
+                )
+                self.updatePrefitModel.emit(
+                    ParamAttr(
+                        paramAttr.parentName,
+                        paramAttr.name,
+                        paramAttr.attr,
+                        self[paramAttr.parentName][paramAttr.name].value,
+                    )
+                )
 
     def updateCaliModelRawVecNameListForSwapXY(self):
         self.rawYName, self.rawXVecNameList = self.rawXVecNameList[0], [self.rawYName]
@@ -852,4 +859,3 @@ class CaliParamModel(
         * entering raw Y by clicking on the plot triggers processSelectedPtFromPlot
         """
         self.yCaliUpdated.emit(self.YCalibration(), self.invYCalibration())
-

@@ -32,16 +32,16 @@ class Status:
 
     def __init__(
         self,
-        statusSource: str,
+        statusSource: Optional[str],
         statusType: str,
-        message: str,
+        message: Optional[str] = None,
         mse: Optional[float] = None,
         messageTime: Optional[float] = None,
     ):
-        self.statusSource: str = statusSource
+        self.statusSource: Optional[str] = statusSource
         self.statusType: str = statusType
-        self.message: str = message
-        self.mse: Union[float, None] = mse
+        self.message: Optional[str] = message
+        self.mse: Optional[float] = mse
         self.timestamp: datetime = datetime.now()
         self.messageTime: Optional[float] = messageTime
 
@@ -547,7 +547,7 @@ class SpectrumElement(PlotElement):
                 )
             else:
                 # no highlighted data (usually when evalsCount too small)
-                pass 
+                pass
 
         artist_after = set(axes.get_children())
         self.artists = list(artist_after - artist_before)
@@ -693,10 +693,7 @@ class QMSweepParam(ParamBase):
         value: Union[float, int],
         paramType: ParameterType,
     ):
-        super().__init__(
-            name=name, parent=parent, paramType=paramType, value=value
-        )
-
+        super().__init__(name=name, parent=parent, paramType=paramType, value=value)
 
     def setCalibrationFunc(self, func):
         """
@@ -751,9 +748,7 @@ class SliderParam(DispParamBase):
         min: Union[int, float],
         max: Union[int, float],
     ):
-        super().__init__(
-            name=name, parent=parent, paramType=paramType, value=value
-        )
+        super().__init__(name=name, parent=parent, paramType=paramType, value=value)
 
         self.min: Union[int, float] = self._toIntAsNeeded(min)
         self.max: Union[int, float] = self._toIntAsNeeded(max)
@@ -775,15 +770,11 @@ class SliderParam(DispParamBase):
 
     # setters from UI ==================================================
     @overload
-    def storeAttr(
-        self, attr: str, value: str, fromSlider: Literal[False]
-    ) -> None:
+    def storeAttr(self, attr: str, value: str, fromSlider: Literal[False]) -> None:
         pass
 
     @overload
-    def storeAttr(
-        self, attr: str, value: int, fromSlider: Literal[True]
-    ) -> None:
+    def storeAttr(self, attr: str, value: int, fromSlider: Literal[True]) -> None:
         pass
 
     def storeAttr(self, attr: str, value: Union[str, int], fromSlider: bool = False):
@@ -833,9 +824,7 @@ class FitParam(DispParamBase):
         initValue: Union[int, float] = 0,
         isFixed: bool = False,
     ):
-        super().__init__(
-            name=name, parent=parent, paramType=paramType, value=value
-        )
+        super().__init__(name=name, parent=parent, paramType=paramType, value=value)
         self.min = self._toIntAsNeeded(min)
         self.max = self._toIntAsNeeded(max)
         self.initValue = self._toIntAsNeeded(initValue)
@@ -896,9 +885,7 @@ class CaliTableRowParam(DispParamBase):
         sweepParamName: Optional[str],
         value: float,
     ):
-        super().__init__(
-            name=colName, parent=rowIdx, paramType=paramType, value=value
-        )
+        super().__init__(name=colName, parent=rowIdx, paramType=paramType, value=value)
         self.parentSystemName: Optional[str] = parentSystemName
         self.sweepParamName: Optional[str] = sweepParamName
 

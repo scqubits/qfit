@@ -12,12 +12,14 @@ if TYPE_CHECKING:
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
     from qfit.views.status_bar import StatusBarView
     from qfit.models.status import StatusModel
+    from qfit.models.numerical_model import QuantumModel
+    from qfit.models.fit import FitModel
 
 
 class StatusCtrl(QObject):
     def __init__(
         self,
-        models: Tuple["AllExtractedData", "ActiveExtractedData"],
+        models: Tuple["QuantumModel", "FitModel", "MainWindow"],
         statusModel: "StatusModel",
         statusBarView: "StatusBarView",
         *args,
@@ -44,7 +46,9 @@ class StatusCtrl(QObject):
 
         self.statusModel = statusModel
         self.statusBarView = statusBarView
-        self.models = models
+        self.quantumModel = models[0]
+        self.fitModel = models[1]
+        self.mainWindow = models[2]
 
         self._messageUpdatedConnects()
 
@@ -53,7 +57,12 @@ class StatusCtrl(QObject):
         """
         Connect the signals for updating messages in the status bar.
         """
+        # status model (signal) --> status bar view (slot)
         self.statusModel.normalStatusChanged.connect(
             self.statusBarView.updateNormalMessage
         )
+        # quantum model (signal) --> status model (slot)
+        self.quantumModel.updateStatus.connect(self.statusModel.updateNormalStatus)
+        # fit model (signal) --> status model (slot)
+        self.fitModel.updateStatus.connect(self.statusModel.updateNormalStatus)
         # self.statusModel.tempStatusChanged.connect(self.statusBarView.updateTempMessage)

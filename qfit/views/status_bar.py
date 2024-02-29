@@ -2,8 +2,9 @@ from PySide6.QtCore import (
     QObject,
     Signal,
     Slot,
+    Qt,
 )
-from PySide6.QtWidgets import QStatusBar, QLabel
+from PySide6.QtWidgets import QStatusBar, QLabel, QSizePolicy
 from typing import Tuple, Dict, Any, Union, List
 import time
 
@@ -20,6 +21,16 @@ class StatusBarView(QObject):
 
         self.statusBar = statusBar
         self.statusBarLabel = QLabel()
+        # self.statusBarLabel.setFixedWidth(900)
+        self.statusBarLabel.setMinimumWidth(1000)
+        self.statusBarLabel.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.statusBarLabel.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding
+        )
+        self.statusBarLabel.setStyleSheet(
+            "padding-left: 5px; padding-right: 5px; padding-top: 5px; padding-bottom: 5px;"
+        )
+        self.statusBarLabel.setWordWrap(True)
 
         self._initializeUI()
 

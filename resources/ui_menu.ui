@@ -14,7 +14,7 @@
    <string/>
   </property>
   <property name="autoFillBackground">
-   <bool>true</bool>
+   <bool>false</bool>
   </property>
   <property name="styleSheet">
    <string notr="true">QWidget {
@@ -22,7 +22,8 @@
 }
 
 QPushButton {	
-	font: 57 11pt &quot;Roboto Medium&quot;;
+	font-family: &quot;Roboto Medium&quot;;
+	font-size: 11px;
 	color: rgb(249, 249, 249);
 	background-color: rgb(18, 18, 18);
 	border: none;
@@ -80,13 +81,12 @@ QPushButton:checked {
      <property name="font">
       <font>
        <family>Roboto Medium</family>
-       <pointsize>11</pointsize>
-       <italic>false</italic>
-       <bold>false</bold>
+       <pointsize>-1</pointsize>
+       <fontweight>Light</fontweight>
       </font>
      </property>
      <property name="text">
-      <string>NEW</string>
+      <string>CREATE NEW FIT FILE</string>
      </property>
     </widget>
    </item>
@@ -113,13 +113,13 @@ QPushButton:checked {
      <property name="font">
       <font>
        <family>Roboto Medium</family>
-       <pointsize>11</pointsize>
+       <pointsize>-1</pointsize>
        <italic>false</italic>
-       <bold>false</bold>
+       <fontweight>Light</fontweight>
       </font>
      </property>
      <property name="text">
-      <string>OPEN</string>
+      <string>IMPORT FIT FILE</string>
      </property>
     </widget>
    </item>
@@ -146,9 +146,8 @@ QPushButton:checked {
      <property name="font">
       <font>
        <family>Roboto Medium</family>
-       <pointsize>11</pointsize>
-       <italic>false</italic>
-       <bold>false</bold>
+       <pointsize>-1</pointsize>
+       <fontweight>Light</fontweight>
       </font>
      </property>
      <property name="text">
@@ -179,9 +178,8 @@ QPushButton:checked {
      <property name="font">
       <font>
        <family>Roboto Medium</family>
-       <pointsize>11</pointsize>
-       <italic>false</italic>
-       <bold>false</bold>
+       <pointsize>-1</pointsize>
+       <fontweight>Light</fontweight>
       </font>
      </property>
      <property name="text">
@@ -212,9 +210,8 @@ QPushButton:checked {
      <property name="font">
       <font>
        <family>Roboto Medium</family>
-       <pointsize>11</pointsize>
-       <italic>false</italic>
-       <bold>false</bold>
+       <pointsize>-1</pointsize>
+       <fontweight>Light</fontweight>
       </font>
      </property>
      <property name="text">

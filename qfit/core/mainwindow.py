@@ -32,7 +32,7 @@ from PySide6.QtCore import (
     QThreadPool,
     QEvent,
     Signal,
-    SignalInstance
+    SignalInstance,
 )
 from PySide6.QtGui import QColor, QMouseEvent, Qt
 from PySide6.QtWidgets import (
@@ -54,6 +54,20 @@ from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
 from qfit.controllers.help_tooltip import HelpButtonCtrl
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
+
+# settings
+from qfit.controllers.settings import SettingsCtrl
+from qfit.widgets.settings import (
+    VisualSettingsWidget,
+    FitSettingsWidget,
+    NumericalSpectrumSettingsWidget,
+    SettingsWidgetSet,
+)
+from qfit.ui_designer.settings_fit import Ui_fitSettingsWidget
+from qfit.ui_designer.settings_numerical_spectrum import (
+    Ui_numericalSpectrumSettingsWidget,
+)
+from qfit.ui_designer.settings_visual import Ui_visualSettingsWidget
 
 # paging:
 from qfit.views.paging_view import PageView
@@ -108,7 +122,7 @@ class CombinedMeta(type(QMainWindow), type(Registrable)):
 class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     """Class for the main window of the app."""
 
-    status: StatusModel
+    statusModel: StatusModel
 
     optInitialized: bool = False
 
@@ -133,6 +147,14 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.ui_menu = MenuWidget(parent=self)
         self.pagingMVCInits()
 
+        # settings
+        self.ui_settings = SettingsWidgetSet(
+            visual=VisualSettingsWidget(self),
+            fit=FitSettingsWidget(self),
+            numericalSpectrum=NumericalSpectrumSettingsWidget(self),
+        )
+        self.settingsMVCInit()
+
         # calibration - should be inited after prefit, as it requires a sweep parameter set
         self.calibrationMVCInits()
 
@@ -149,7 +171,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.plottingMVCInits()
 
         # help button
-        self.helpButtonConnects()
+        self.helpButtonMVCInits()
 
         # register all the data
         self.registry = Registry()
@@ -211,15 +233,25 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             eff.setColor(QColor(0, 0, 0, 90))
             button.setGraphicsEffect(eff)
 
+    # settings #########################################################
+    ####################################################################
+    def settingsMVCInit(self):
+        self.settingsButtonSet = {
+            "visual": self.ui.extractSettingsPushButton,
+            "fit": self.ui.fitSettingsPushButton,
+            "numericalSpectrum": self.ui.prefitSettingsPushButton,
+        }
+        self.settingsCtrl = SettingsCtrl(self.ui_settings, self.settingsButtonSet)
+
     # help button and gif tooltip ######################################
     ####################################################################
-    def helpButtonConnects(self):
+    def helpButtonMVCInits(self):
         self.helpButtons = {
             "calibration": self.ui.calibrationHelpPushButton,
             "fit": self.ui.fitHelpPushButton,
-            "fitResult": self.ui.fitResultHelpPushButton,
-            "prefitResult": self.ui.prefitResultHelpPushButton,
-            "numericalSpectrumSettings": self.ui.numericalSpectrumSettingsHelpPushButton,
+            "fitResult": self.ui_settings.fit.ui.fitResultHelpPushButton,
+            "prefitResult": self.ui_settings.numericalSpectrum.ui.prefitResultHelpPushButton,
+            "numericalSpectrumSettings": self.ui_settings.numericalSpectrum.ui.numericalSpectrumSettingsHelpPushButton,
         }
         self.helpButtonCtrl = HelpButtonCtrl(self.helpButtons)
 
@@ -233,15 +265,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "z": self.ui.zComboBox,
         }
         self.measPlotSettings = {
-            "topHat": self.ui.topHatCheckBox,
-            "wavelet": self.ui.waveletCheckBox,
-            "edge": self.ui.edgeFilterCheckBox,
-            "bgndX": self.ui.bgndSubtractXCheckBox,
-            "bgndY": self.ui.bgndSubtractYCheckBox,
-            "log": self.ui.logScaleCheckBox,
-            "min": self.ui.rangeSliderMin,
-            "max": self.ui.rangeSliderMax,
-            "color": self.ui.colorComboBox,
+            "topHat": self.ui_settings.visual.ui.topHatCheckBox,
+            "wavelet": self.ui_settings.visual.ui.waveletCheckBox,
+            "edge": self.ui_settings.visual.ui.edgeFilterCheckBox,
+            "bgndX": self.ui_settings.visual.ui.bgndSubtractXCheckBox,
+            "bgndY": self.ui_settings.visual.ui.bgndSubtractYCheckBox,
+            "log": self.ui_settings.visual.ui.logScaleCheckBox,
+            "min": self.ui_settings.visual.ui.rangeSliderMin,
+            "max": self.ui_settings.visual.ui.rangeSliderMax,
+            "color": self.ui_settings.visual.ui.colorComboBox,
         }
         self.canvasTools = {
             "reset": self.ui.resetViewButton,
@@ -409,11 +441,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def prefitMVCInits(self):
         # UI grouping
         self.prefitOptions = {
-            "subsysToPlot": self.ui.subsysComboBox,
-            "initialState": self.ui.initStateLineEdit,
-            "photons": self.ui.prefitPhotonSpinBox,
-            "evalsCount": self.ui.evalsCountLineEdit,
-            "pointsAdded": self.ui.pointsAddLineEdit,
+            "subsysToPlot": self.ui_settings.numericalSpectrum.ui.subsysComboBox,
+            "initialState": self.ui_settings.numericalSpectrum.ui.initStateLineEdit,
+            "photons": self.ui_settings.numericalSpectrum.ui.prefitPhotonSpinBox,
+            "evalsCount": self.ui_settings.numericalSpectrum.ui.evalsCountLineEdit,
+            "pointsAdded": self.ui_settings.numericalSpectrum.ui.pointsAddLineEdit,
             "autoRun": self.ui.autoRunCheckBox,
         }
 
@@ -449,7 +481,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             ],
         )
         self.prefitViewInsertParams()
-        
+
         self.quantumModel.dynamicalInit(
             hilbertspace, [data.name for data in measurementData]
         )
@@ -521,7 +553,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.caliParamModel.toPrefitParams(),
             insertMissing=True,
         )
-            
+
     def prefitViewInsertParams(self):
         """
         THIS METHOS BELONGS TO THE PREFIT PARAMETER CONTROLLER
@@ -534,9 +566,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         # initialize the sliders, boxes and minmax
         self.prefitParamView.insertSliderMinMax(
-            self.prefitParamModel.paramNamesDict(), 
+            self.prefitParamModel.paramNamesDict(),
             self.prefitCaliModel.paramNamesDict(),
-            removeExisting=True
+            removeExisting=True,
         )
 
     def prefitSliderParamConnects(self):
@@ -555,26 +587,27 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             model: Union[PrefitParamModel, PrefitCaliModel]
 
             signalSet["sliderChanged"].connect(
-                lambda paramAttr, model=model: 
-                model.storeParamAttr(paramAttr, fromSlider=True)
+                lambda paramAttr, model=model: model.storeParamAttr(
+                    paramAttr, fromSlider=True
+                )
             )
             signalSet["textChanged"].connect(
-                lambda paramAttr, model=model: 
-                model.storeParamAttr(paramAttr)
+                lambda paramAttr, model=model: model.storeParamAttr(paramAttr)
             )
             signalSet["rangeEditingFinished"].connect(
-                lambda paramAttr, model=model: 
-                model.storeParamAttr(paramAttr)
+                lambda paramAttr, model=model: model.storeParamAttr(paramAttr)
             )
 
             # synchronize slider and box
             model.updateSlider.connect(
-                lambda paramAttr: 
-                self.prefitParamView.setByParamAttr(paramAttr, toSlider=True)
+                lambda paramAttr: self.prefitParamView.setByParamAttr(
+                    paramAttr, toSlider=True
+                )
             )
             model.updateBox.connect(
-                lambda paramAttr: 
-                self.prefitParamView.setByParamAttr(paramAttr, toSlider=False)
+                lambda paramAttr: self.prefitParamView.setByParamAttr(
+                    paramAttr, toSlider=False
+                )
             )
 
         # update hilbert space
@@ -586,12 +619,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitParamView.caliEditingFinished.connect(
             self.prefitCaliModel.emitUpdateCaliModel
         )
-        self.prefitCaliModel.updateCaliModel.connect(
-            self.caliParamModel.setParamByPA
-        )
-        self.caliParamModel.updatePrefitModel.connect(
-            self.prefitCaliModel.setParamByPA
-        )
+        self.prefitCaliModel.updateCaliModel.connect(self.caliParamModel.setParamByPA)
+        self.caliParamModel.updatePrefitModel.connect(self.prefitCaliModel.setParamByPA)
 
     def quantumModelConnects(self):
         self.prefitParamModel.hilbertSpaceUpdated.connect(
@@ -602,11 +631,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.caliParamModel.yCaliUpdated.connect(self.quantumModel.updateYCaliFunc)
         self.measurementData.relimCanvas.connect(self.quantumModel.relimX)
         self.measurementData.updateRawXMap.connect(self.quantumModel.updateRawXMap)
-        
+
         # connect the page change to the disable sweep
-        self.pageView.pageChanged.connect(
-            self.quantumModel.updateModeOnPageChange
-        )
+        self.pageView.pageChanged.connect(self.quantumModel.updateModeOnPageChange)
 
     def prefitButtonConnects(self):
         self.prefitView.optionUpdated.connect(self.quantumModel.storeSweepOption)
@@ -645,9 +672,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
         # insert parameters
         self.fitParamView.fitTableInserts(
-            self.fitParamModel.paramNamesDict(), 
+            self.fitParamModel.paramNamesDict(),
             self.fitCaliModel.paramNamesDict(),
-            removeExisting=True
+            removeExisting=True,
         )
 
     def fitTableParamConnects(self):
@@ -658,12 +685,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         controller and the model (hosting the parameterset)
         """
         # update the value
-        self.fitParamView.HSEditingFinished.connect(
-            self.fitParamModel.storeParamAttr
-        )
-        self.fitParamView.CaliEditingFinished.connect(
-            self.fitCaliModel.storeParamAttr
-        )
+        self.fitParamView.HSEditingFinished.connect(self.fitParamModel.storeParamAttr)
+        self.fitParamView.CaliEditingFinished.connect(self.fitCaliModel.storeParamAttr)
         self.fitParamModel.updateBox.connect(self.fitParamView.setBoxValue)
         self.fitCaliModel.updateBox.connect(self.fitParamView.setBoxValue)
 
@@ -676,7 +699,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.quantumModel.disableSweep = True
 
         # update the hilbert space
-        self.fitParamModel.setByAttrDict(HSParams, "value") # display the value
+        self.fitParamModel.setByAttrDict(HSParams, "value")  # display the value
         self.prefitParamModel.setByAttrDict(HSParams, "value")  # update HS
         for params in self.prefitParamModel.values():
             for p in params.values():
@@ -695,10 +718,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.quantumModel.disableSweep = False
 
         return self.quantumModel.updateCalc()
-    
+
     def _optCallback(self, *args, **kwargs):
         print("Opt callback called.")
         self.quantumModel.emitReadyToPlot()
+        return self.quantumModel.sweep2SpecMSE()
 
     @Slot()
     def optimizeParams(self):
@@ -708,10 +732,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # configure other models & views
         self.ui.fitButton.setEnabled(False)
         self.prefitParamView.sliderSet.setEnabled(False)
-        # it seems that even though the sweep is disabled while changing 
+        # it seems that even though the sweep is disabled while changing
         # the parameters, the signals are still able to reach the quantumModel
         # and trigger the calculation. So we need to block the signals
-        self.prefitParamModel.blockSignals(True)   
+        self.prefitParamModel.blockSignals(True)
         self.caliParamModel.blockSignals(True)
 
         # setup the optimization
@@ -725,7 +749,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # cook up a cost function
         self.fitModel.runOptimization(
-            initParam=self.fitParamModel.initParams, 
+            initParam=self.fitParamModel.initParams,
             callback=self._optCallback,
         )
 
@@ -738,18 +762,19 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.caliParamModel.blockSignals(False)
 
         # plot the spectrum as if we are in prefit
+        # TODO: make this usage "fit" so that the status bar is correctly updated
         tmp = self.quantumModel.sweepUsage
-        self.quantumModel.sweepUsage = "prefit"
+        self.quantumModel.sweepUsage = "fit-result"
         self.quantumModel.updateCalc()
         self.quantumModel.sweepUsage = tmp
 
     def fitOptionConnects(self):
-        self.ui.tolLineEdit.editingFinished.connect(
-            lambda: self.fitModel.updateTol(self.ui.tolLineEdit.value())
+        self.ui_settings.fit.ui.tolLineEdit.editingFinished.connect(
+            lambda: self.fitModel.updateTol(self.ui_settings.fit.ui.tolLineEdit.value())
         )
-        self.ui.optimizerComboBox.currentIndexChanged.connect(
+        self.ui_settings.fit.ui.optimizerComboBox.currentIndexChanged.connect(
             lambda: self.fitModel.updateOptimizer(
-                self.ui.optimizerComboBox.currentText()
+                self.ui_settings.fit.ui.optimizerComboBox.currentText()
             )
         )
 
@@ -901,11 +926,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     # error message system #############################################
     # ##################################################################
     def statusMVCInits(self):
-        self.status = StatusModel()
+        self.statusModel = StatusModel()
         self.statusBarView = StatusBarView(self.ui.statusBar)
         self.statusCtrl = StatusCtrl(
-            (self.allDatasets, self.activeDataset),
-            self.status,
+            (self.quantumModel, self.fitModel, self),
+            self.statusModel,
             self.statusBarView,
         )
 

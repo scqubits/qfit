@@ -23,13 +23,14 @@ class Ui_MenuWidget(object):
         if not MenuWidget.objectName():
             MenuWidget.setObjectName(u"MenuWidget")
         MenuWidget.resize(211, 389)
-        MenuWidget.setAutoFillBackground(True)
+        MenuWidget.setAutoFillBackground(False)
         MenuWidget.setStyleSheet(u"QWidget {\n"
 "	background-color: rgb(18, 18, 18);\n"
 "}\n"
 "\n"
 "QPushButton {	\n"
-"	font: 57 11pt \"Roboto Medium\";\n"
+"	font-family: \"Roboto Medium\";\n"
+"	font-size: 11px;\n"
 "	color: rgb(249, 249, 249);\n"
 "	background-color: rgb(18, 18, 18);\n"
 "	border: none;\n"
@@ -62,9 +63,7 @@ class Ui_MenuWidget(object):
         self.menuNewButton.setMaximumSize(QSize(16777215, 50))
         font = QFont()
         font.setFamilies([u"Roboto Medium"])
-        font.setPointSize(11)
-        font.setBold(False)
-        font.setItalic(False)
+        font.setWeight(QFont.Light)
         self.menuNewButton.setFont(font)
 
         self.verticalLayout.addWidget(self.menuNewButton)
@@ -75,7 +74,11 @@ class Ui_MenuWidget(object):
         self.menuOpenButton.setSizePolicy(sizePolicy)
         self.menuOpenButton.setMinimumSize(QSize(0, 45))
         self.menuOpenButton.setMaximumSize(QSize(16777215, 50))
-        self.menuOpenButton.setFont(font)
+        font1 = QFont()
+        font1.setFamilies([u"Roboto Medium"])
+        font1.setWeight(QFont.Light)
+        font1.setItalic(False)
+        self.menuOpenButton.setFont(font1)
 
         self.verticalLayout.addWidget(self.menuOpenButton)
 
@@ -121,8 +124,8 @@ class Ui_MenuWidget(object):
 
     def retranslateUi(self, MenuWidget):
         MenuWidget.setWindowTitle("")
-        self.menuNewButton.setText(QCoreApplication.translate("MenuWidget", u"NEW", None))
-        self.menuOpenButton.setText(QCoreApplication.translate("MenuWidget", u"OPEN", None))
+        self.menuNewButton.setText(QCoreApplication.translate("MenuWidget", u"CREATE NEW FIT FILE", None))
+        self.menuOpenButton.setText(QCoreApplication.translate("MenuWidget", u"IMPORT FIT FILE", None))
         self.menuSaveButton.setText(QCoreApplication.translate("MenuWidget", u"SAVE", None))
         self.menuSaveAsButton.setText(QCoreApplication.translate("MenuWidget", u"SAVE AS", None))
         self.menuQuitButton.setText(QCoreApplication.translate("MenuWidget", u"QUIT", None))

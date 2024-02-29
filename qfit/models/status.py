@@ -52,7 +52,7 @@ class StatusModel(QObject):
         self._updateMseForComputingDelta()
 
     @property
-    def deltaMse(self):
+    def deltaMse(self) -> Union[float, None]:
         return self._deltaMse
 
     @deltaMse.setter
@@ -70,12 +70,12 @@ class StatusModel(QObject):
             else:
                 self._mseChangeSign = "+"
 
-    # to be deleted
-    @property
-    def displayed_status_type(self):
-        if self.current_status_type is None:
-            return "STATUS:  -"
-        return f"STATUS:  {self.status_type}"
+    # # to be deleted
+    # @property
+    # def displayed_status_type(self):
+    #     if self.current_status_type is None:
+    #         return "STATUS:  -"
+    #     return f"STATUS:  {self.status_type}"
 
     @property
     def displayed_status_text(self):
@@ -92,7 +92,28 @@ class StatusModel(QObject):
         else:
             plus_minus = "-" if self.deltaMse < 0 else "+"
             return f"MSE:  {self.newMseForComputingDelta:.4f} GHz\u00B2  ({plus_minus}{self.deltaMse:.2f} %)"
-        
+
+    @property
+    def sourceChanged(self):
+        # treat fit/fit-result as the same source
+        # first rule out the case when the source is None
+        if (self.currentNormalStatus.statusSource is not None) and (
+            self.previousNormalStatus.statusSource is not None
+        ):
+            if (self.currentNormalStatus.statusSource == "fit") and (
+                self.currentNormalStatus.statusSource == "fit-result"
+            ):
+                return False
+            elif (self.currentNormalStatus.statusSource == "fit-result") and (
+                self.currentNormalStatus.statusSource == "fit"
+            ):
+                return False
+        _sourceChanged = (
+            self.currentNormalStatus.statusSource
+            is not self.previousNormalStatus.statusSource
+        )
+        return _sourceChanged
+
     def setupUISetters(
         self,
         mseChangeUISetter: Callable,
@@ -102,33 +123,6 @@ class StatusModel(QObject):
         self.mse_change_ui_setter = mseChangeUISetter
         self.status_type_ui_setter = status_type_ui_setter
         self.status_text_ui_setter = status_text_ui_setter
-    # to be deleted
-
-    # @mse_change.setter
-    # def mse_change(self, value: float):
-    #     self._mse_change = value
-    #     self.mse_change_ui_setter()
-
-    # @previous_mse.setter
-    # def previous_mse(self, value: float):
-    #     # update previous MSE, however, the relative change is not updated here
-    #     self._previous_mse = value
-
-    # @current_mse.setter
-    # def current_mse(self, value: float):
-    #     # update current MSE, update the relative change and trigger the UI update
-    #     self._current_mse = value
-    #     self.mse_change = self._compute_relative_change()
-
-    # @status_type.setter
-    # def status_type(self, value: Literal["SUCCESS", "WARNING", "ERROR", "COMPUTING"]):
-    #     self._status_type = value
-    #     self.status_type_ui_setter()
-
-    # @_status_text.setter
-    # def _status_text(self, value: str):
-    #     self._status_text = value
-    #     self.status_text_ui_setter()
 
     @Slot(Status)
     def updateNormalStatus(
@@ -144,19 +138,18 @@ class StatusModel(QObject):
         """
         # update the status of the message
         self._updateCurrentPreviousNormalStatus(status)
-        # check if source is changed
-        self.sourceChanged = (
-            self.currentNormalStatus.statusSource
-            is not self.previousNormalStatus.statusSource
-        )
         # get the date and time stamp for the current status
         dateTime = self.currentNormalStatus.timestamp.strftime("%H:%M:%S")
-        self.statusStrForView = f"{dateTime} "
+        self.statusStrForView = f"{dateTime}    "
         if self.currentNormalStatus.statusSource is not None:
-            self.statusStrForView += f"({self.currentNormalStatus.statusSource}) "
+            statusSource = self.currentNormalStatus.statusSource
+            if statusSource == "fit-result":
+                statusSource = "fit"
+            statusSource = statusSource.upper()
+            self.statusStrForView += f"({statusSource}) "
         # parse and generate the message
         if self.currentNormalStatus.statusType == "ready":
-            self.statusStrForView += self.currentNormalStatus.message
+            self.statusStrForView += f"{self.currentNormalStatus.message}"
         elif self.currentNormalStatus.statusType == "error":
             self.statusStrForView += f"ERROR: {self.currentNormalStatus.message}"
         elif self.currentNormalStatus.statusType == "success":
@@ -170,7 +163,7 @@ class StatusModel(QObject):
             if self.currentNormalStatus.statusSource in ["fit", "prefit"]:
                 finalMse = self.currentNormalStatus.mse
                 self._updateMseForComputingDelta()
-                self.statusStrForView += f"WARNING: MSE = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %) - {warningMessage}"
+                self.statusStrForView += f"WARNING: MSE = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)  |  {warningMessage}"
             else:
                 self.statusStrForView += f"WARNING: {warningMessage}"
         elif self.currentNormalStatus.statusType == "computing":
@@ -188,6 +181,7 @@ class StatusModel(QObject):
             )
         # emit the signal indicating the status is changed
         self.normalStatusChanged.emit(self.statusStrForView)
+        print(self.statusStrForView)
 
     # @Slot(Status)
     # def updateTempStatus(
@@ -222,7 +216,7 @@ class StatusModel(QObject):
             if self.currentNormalStatus.statusSource == "prefit":
                 self.oldMseForComputingDelta = self.newMseForComputingDelta
             # if the information is from fit, depend on the previous status
-            elif self.currentNormalStatus.statusSource == "fit":
+            elif self.currentNormalStatus.statusSource in ["fit", "fit-result"]:
                 # only if the previous status is initializing, store the previous MSE
                 # otherwise, the previous MSE stays the same (which is the initialized MSE)
                 if self.previousNormalStatus.statusType == "initializing":
