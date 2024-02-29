@@ -39,6 +39,8 @@ class QuantumModel(QObject):
     readyToPlot = Signal(SpectrumElement)
     mseReadyToFit = Signal(float)
 
+    updateStatus = Signal(Status)
+
     # options
 
     def __init__(
@@ -80,8 +82,8 @@ class QuantumModel(QObject):
 
         # options when running
         self._autoRun: bool = True
-        self.sweepUsage: Literal["prefit", "fit"] = "prefit"
-        self.disableSweep: bool = True    # always off, used for backend operations
+        self.sweepUsage: Literal["prefit", "fit", "fit-result"] = "prefit"
+        self.disableSweep: bool = True  # always off, used for backend operations
 
     # Signals and Slots ========================================================
     @Slot(str)
@@ -434,16 +436,33 @@ class QuantumModel(QObject):
         try:
             self._sweeps = self._generateSweep(
                 sweptX=self._prefitSweptX(
-                    addPoints = (self.sweepUsage == "prefit")
+                    addPoints=(self.sweepUsage in ["prefit", "fit-result"])
                 ),
                 updateHS=self._updateHSForSweep(),
                 subsysUpdateInfo=self._subsysUpdateInfo(),
             )
         except Exception as e:
             # TODO: emit error message
+            status = Status(
+                statusSource=self.sweepUsage,
+                statusType="error",
+                message=f"{e}",
+            )
+            self.updateStatus.emit(status)
+            print(f"triggered from _newSweep, source: {self.sweepUsage}")
             raise e
 
-        # result.status_type = "COMPUTING"
+        # only issue computing status in the prefit stage
+        # for fit, new sweep is generated at every iteration, so we don't issue the
+        # computing status here
+        if self.sweepUsage == "prefit":
+            status = Status(
+                statusSource=self.sweepUsage,
+                statusType="computing",
+                message="",
+            )
+            self.updateStatus.emit(status)
+            print(f"triggered from _newSweep, source: {self.sweepUsage}")
         for sweep in self._sweeps.values():
             # manually turn off the warning message
             sweep._out_of_sync_warning_issued = True
@@ -469,10 +488,16 @@ class QuantumModel(QObject):
             try:
                 self._newSweep()
             except Exception as e:
-                # TODO: emit error message
+                status = Status(
+                    statusSource=self.sweepUsage,
+                    statusType="error",
+                    message=f"{e}",
+                )
+                print(f"triggered from sweep2SpecMSE, source: {self.sweepUsage}")
+                self.updateStatus.emit(status)
                 raise e
 
-        if self.sweepUsage == "prefit":
+        if self.sweepUsage in ["prefit", "fit-result"]:
             self.emitReadyToPlot()
 
         # --------------------------------------------------------------
@@ -600,9 +625,9 @@ class QuantumModel(QObject):
 
             elif final_energy is np.nan and initial_energy is not np.nan:
                 status = "NO_MATCHED_BARE_FINAL"
-                initial_energy_dressed_label = sweep.dressed_index(
-                    tag.initial
-                )["x":x_coord]
+                initial_energy_dressed_label = sweep.dressed_index(tag.initial)[
+                    "x":x_coord
+                ]
                 availableLabels = {"initial": initial_energy_dressed_label}
 
             else:
@@ -650,9 +675,14 @@ class QuantumModel(QObject):
                     f"The {tag.tagType} tag {tag.initial}->{tag.final} includes"
                     " state label(s) that exceed evals count."
                 )
+                # emit error message
                 status = Status(
-                    statusSource="prefit", statusType=statusType, message=statusText
+                    statusSource=self.sweepUsage,
+                    statusType=statusType,
+                    message=statusText,
                 )
+                self.updateStatus.emit(status)
+                print(f"triggered from _MSEByTransition, source: {self.sweepUsage}")
                 return np.nan
             # if the return status is not SUCCESS, add a warning message and set status type to WARNING
             if get_transition_freq_status != "SUCCESS":
@@ -689,17 +719,43 @@ class QuantumModel(QObject):
         # normalize the MSE
         mse /= self._fullExtr.count()
 
-        # add to the status text if there is any unidentifiable tag
-        if dataNameWOlabel != []:
-            status_type = "WARNING"
-            status_text = (
-                f"Data sets {dataNameWOlabel} have unidentifiable state "
-                "labels or are untagged. "
-                "Selected transition frequencies are matched to the closest ones in the model, "
-                "starting from the ground state.\n"
-            )
+        # if in fit mode, return the mse directly, the status message will be
+        # handled in the fit model instead
+        if self.sweepUsage in ["fit", "fit-result"]:
+            return mse
+        # otherwise, add to the status text if there is any unidentifiable tag
+        # and send out the status
+        else:
+            if dataNameWOlabel != []:
+                statusType = "warning"
+                message = (
+                    f"Data sets {dataNameWOlabel} have unidentifiable state "
+                    "labels or are untagged. "
+                    "Selected transition frequencies are matched to the closest ones in the model, "
+                    "starting from the ground state.\n"
+                )
+                status = Status(
+                    statusSource=self.sweepUsage,
+                    statusType=statusType,
+                    message=message,
+                    mse=mse,
+                )
+                self.updateStatus.emit(status)
+                print(f"triggered from _calculateMSE, source: {self.sweepUsage}")
 
-        return mse
+            # else, send out the success status with the MSE
+            else:
+                statusType = "success"
+                message = "MSE calculation successful."
+                status = Status(
+                    statusSource=self.sweepUsage,
+                    message=message,
+                    statusType=statusType,
+                    mse=mse,
+                )
+                self.updateStatus.emit(status)
+                print(f"triggered from _calculateMSE, source: {self.sweepUsage}")
+            return mse
 
     # def MSEByParameters(
     #     self,

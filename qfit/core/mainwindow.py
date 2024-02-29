@@ -122,7 +122,7 @@ class CombinedMeta(type(QMainWindow), type(Registrable)):
 class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     """Class for the main window of the app."""
 
-    status: StatusModel
+    statusModel: StatusModel
 
     optInitialized: bool = False
 
@@ -481,7 +481,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             ],
         )
         self.prefitViewInsertParams()
-        
+
         self.quantumModel.dynamicalInit(
             hilbertspace, [data.name for data in measurementData]
         )
@@ -566,9 +566,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         # initialize the sliders, boxes and minmax
         self.prefitParamView.insertSliderMinMax(
-            self.prefitParamModel.paramNamesDict(), 
+            self.prefitParamModel.paramNamesDict(),
             self.prefitCaliModel.paramNamesDict(),
-            removeExisting=True
+            removeExisting=True,
         )
 
     def prefitSliderParamConnects(self):
@@ -619,12 +619,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitParamView.caliEditingFinished.connect(
             self.prefitCaliModel.emitUpdateCaliModel
         )
-        self.prefitCaliModel.updateCaliModel.connect(
-            self.caliParamModel.setParamByPA
-        )
-        self.caliParamModel.updatePrefitModel.connect(
-            self.prefitCaliModel.setParamByPA
-        )
+        self.prefitCaliModel.updateCaliModel.connect(self.caliParamModel.setParamByPA)
+        self.caliParamModel.updatePrefitModel.connect(self.prefitCaliModel.setParamByPA)
 
     def quantumModelConnects(self):
         self.prefitParamModel.hilbertSpaceUpdated.connect(
@@ -635,11 +631,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.caliParamModel.yCaliUpdated.connect(self.quantumModel.updateYCaliFunc)
         self.measurementData.relimCanvas.connect(self.quantumModel.relimX)
         self.measurementData.updateRawXMap.connect(self.quantumModel.updateRawXMap)
-        
+
         # connect the page change to the disable sweep
-        self.pageView.pageChanged.connect(
-            self.quantumModel.updateModeOnPageChange
-        )
+        self.pageView.pageChanged.connect(self.quantumModel.updateModeOnPageChange)
 
     def prefitButtonConnects(self):
         self.prefitView.optionUpdated.connect(self.quantumModel.storeSweepOption)
@@ -678,9 +672,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
         # insert parameters
         self.fitParamView.fitTableInserts(
-            self.fitParamModel.paramNamesDict(), 
+            self.fitParamModel.paramNamesDict(),
             self.fitCaliModel.paramNamesDict(),
-            removeExisting=True
+            removeExisting=True,
         )
 
     def fitTableParamConnects(self):
@@ -691,12 +685,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         controller and the model (hosting the parameterset)
         """
         # update the value
-        self.fitParamView.HSEditingFinished.connect(
-            self.fitParamModel.storeParamAttr
-        )
-        self.fitParamView.CaliEditingFinished.connect(
-            self.fitCaliModel.storeParamAttr
-        )
+        self.fitParamView.HSEditingFinished.connect(self.fitParamModel.storeParamAttr)
+        self.fitParamView.CaliEditingFinished.connect(self.fitCaliModel.storeParamAttr)
         self.fitParamModel.updateBox.connect(self.fitParamView.setBoxValue)
         self.fitCaliModel.updateBox.connect(self.fitParamView.setBoxValue)
 
@@ -709,7 +699,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.quantumModel.disableSweep = True
 
         # update the hilbert space
-        self.fitParamModel.setByAttrDict(HSParams, "value") # display the value
+        self.fitParamModel.setByAttrDict(HSParams, "value")  # display the value
         self.prefitParamModel.setByAttrDict(HSParams, "value")  # update HS
         for params in self.prefitParamModel.values():
             for p in params.values():
@@ -728,10 +718,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.quantumModel.disableSweep = False
 
         return self.quantumModel.updateCalc()
-    
+
     def _optCallback(self, *args, **kwargs):
         print("Opt callback called.")
         self.quantumModel.emitReadyToPlot()
+        return self.quantumModel.sweep2SpecMSE()
 
     @Slot()
     def optimizeParams(self):
@@ -741,10 +732,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # configure other models & views
         self.ui.fitButton.setEnabled(False)
         self.prefitParamView.sliderSet.setEnabled(False)
-        # it seems that even though the sweep is disabled while changing 
+        # it seems that even though the sweep is disabled while changing
         # the parameters, the signals are still able to reach the quantumModel
         # and trigger the calculation. So we need to block the signals
-        self.prefitParamModel.blockSignals(True)   
+        self.prefitParamModel.blockSignals(True)
         self.caliParamModel.blockSignals(True)
 
         # setup the optimization
@@ -758,7 +749,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         # cook up a cost function
         self.fitModel.runOptimization(
-            initParam=self.fitParamModel.initParams, 
+            initParam=self.fitParamModel.initParams,
             callback=self._optCallback,
         )
 
@@ -771,16 +762,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.caliParamModel.blockSignals(False)
 
         # plot the spectrum as if we are in prefit
+        # TODO: make this usage "fit" so that the status bar is correctly updated
         tmp = self.quantumModel.sweepUsage
-        self.quantumModel.sweepUsage = "prefit"
+        self.quantumModel.sweepUsage = "fit-result"
         self.quantumModel.updateCalc()
         self.quantumModel.sweepUsage = tmp
 
     def fitOptionConnects(self):
         self.ui_settings.fit.ui.tolLineEdit.editingFinished.connect(
-            lambda: self.fitModel.updateTol(
-                self.ui_settings.fit.ui.tolLineEdit.value()
-            )
+            lambda: self.fitModel.updateTol(self.ui_settings.fit.ui.tolLineEdit.value())
         )
         self.ui_settings.fit.ui.optimizerComboBox.currentIndexChanged.connect(
             lambda: self.fitModel.updateOptimizer(
@@ -934,11 +924,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     # error message system #############################################
     # ##################################################################
     def statusMVCInits(self):
-        self.status = StatusModel()
+        self.statusModel = StatusModel()
         self.statusBarView = StatusBarView(self.ui.statusBar)
         self.statusCtrl = StatusCtrl(
-            (self.allDatasets, self.activeDataset),
-            self.status,
+            (self.quantumModel, self.fitModel, self),
+            self.statusModel,
             self.statusBarView,
         )
 

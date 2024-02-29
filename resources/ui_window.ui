@@ -863,7 +863,7 @@ QPushButton:pressed {
           <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="DataExtractingWidget" name="extractPointsWidget">
           <property name="sizePolicy">
@@ -3079,9 +3079,6 @@ QSpinBox::down-button:pressed {
                          <property name="toolTip">
                           <string notr="true"/>
                          </property>
-                         <property name="statusTip">
-                          <string>RR</string>
-                         </property>
                          <property name="text">
                           <string notr="true">By dressed indices</string>
                          </property>
@@ -3103,9 +3100,6 @@ QSpinBox::down-button:pressed {
                          </property>
                          <property name="toolTip">
                           <string notr="true"/>
-                         </property>
-                         <property name="statusTip">
-                          <string>RR</string>
                          </property>
                          <property name="text">
                           <string notr="true">By bare states</string>
@@ -5809,6 +5803,9 @@ Axes</string>
 color: #AAAAAA;
 </string>
    </property>
+   <property name="sizeGripEnabled">
+    <bool>false</bool>
+   </property>
   </widget>
  </widget>
  <customwidgets>
@@ -5831,7 +5828,7 @@ color: #AAAAAA;
   <customwidget>
    <class>CalibrationLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>qfit/views/calibration.h</header>
+   <header>qfit/views/calibration_view.h</header>
   </customwidget>
   <customwidget>
    <class>IntTupleLineEdit</class>

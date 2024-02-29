@@ -2742,11 +2742,12 @@ class Ui_MainWindow(object):
         self.statusBar.setStyleSheet(u"background-color: #2F2F2F;\n"
 "color: #AAAAAA;\n"
 "")
+        self.statusBar.setSizeGripEnabled(False)
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
 
-        self.pagesStackedWidget.setCurrentIndex(0)
+        self.pagesStackedWidget.setCurrentIndex(1)
         self.bottomStackedWidget.setCurrentIndex(0)
 
 
@@ -2774,12 +2775,6 @@ class Ui_MainWindow(object):
         self.swapXYButton.setText(QCoreApplication.translate("MainWindow", u"   Switch X And Y Axis", None))
         self.label_32.setText(QCoreApplication.translate("MainWindow", u"TRANSITIONS", None))
         self.label_41.setText("")
-#if QT_CONFIG(statustip)
-        self.tagDispersiveDressedRadioButton.setStatusTip(QCoreApplication.translate("MainWindow", u"RR", None))
-#endif // QT_CONFIG(statustip)
-#if QT_CONFIG(statustip)
-        self.tagDispersiveBareRadioButton.setStatusTip(QCoreApplication.translate("MainWindow", u"RR", None))
-#endif // QT_CONFIG(statustip)
         self.bareLabelOrder.setText(QCoreApplication.translate("MainWindow", u"Labels order by:", None))
         self.label_48.setText("")
         self.label_6.setText(QCoreApplication.translate("MainWindow", u"PRE-FIT", None))
