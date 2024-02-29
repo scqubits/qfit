@@ -122,6 +122,8 @@ class ParamSet(Registrable, Generic[ParamCls]):
         The value of the parameter(s)
         """
 
+        print(f"parentName: {parentName}, name: {name}, attr: {attr}")
+
         try:
             para_dict = self[parentName]
         except KeyError:
@@ -551,27 +553,56 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
 
     updateBox = Signal(ParamAttr)
 
-    def _registerAttr(
-        self,
-        paramSet: ParamSet[DispParamCls],
-        parentName: str,
-        paramName: str,
-        attr: str,
-    ) -> RegistryEntry:
-        """
-        This method set
-        """
-        entryName = ".".join([type(self).__name__, parentName, paramName, attr])
+    # def _registerAttr(
+    #     self,
+    #     paramSet: ParamSet[DispParamCls],
+    #     parentName: str,
+    #     paramName: str,
+    #     attr: str,
+    # ) -> RegistryEntry:
+    #     """
+    #     This method set
+    #     """
+    #     entryName = ".".join([type(self).__name__, parentName, paramName, attr])
 
-        return RegistryEntry(
-            name=entryName,
-            quantity_type="r+",
-            getter=lambda: paramSet.getParameter(parentName, paramName, attr),
-            setter=lambda value: paramSet.setParameter(
-                parentName, paramName, attr, value
-            ),
-        )
+    #     return RegistryEntry(
+    #         name=entryName,
+    #         quantity_type="r+",
+    #         getter=lambda: paramSet.getParameter(parentName, paramName, attr),
+    #         setter=lambda value: paramSet.setParameter(
+    #             parentName, paramName, attr, value
+    #         ),
+    #     )
 
+    # def _registerAll(
+    #     self,
+    #     paramSet: ParamSet[DispParamCls],
+    # ) -> Dict[str, RegistryEntry]:
+    #     """
+    #     Register all the parameters in the parameter set
+    #     """
+    #     # start from an empty registry
+    #     registry = {}
+    #     for parentName, paraDict in paramSet.items():
+    #         for paraName, para in paraDict.items():
+    #             for attr in para.attrToRegister:
+    #                 print(f"parentName: {parentName}, paraName: {paraName}, attr: {attr}")
+    #                 entry = self._registerAttr(paramSet, parentName, paraName, attr)
+    #                 registry[entry.name] = entry
+    #     return registry
+
+    def _registrySetter(
+        self, 
+        value: Dict[str, Dict[str, DispParamCls]],
+        paramSet: ParamSet[DispParamCls]
+    ):
+        paramSet.parameters = value
+
+        for parentName, paraDict in value.items():
+            for paraName, para in paraDict.items():
+                for attr in para.attrToRegister:
+                    self._emitUpdateBox(paramSet, parentName, paraName, attr)
+    
     def _registerAll(
         self,
         paramSet: ParamSet[DispParamCls],
@@ -579,14 +610,14 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
         """
         Register all the parameters in the parameter set
         """
-        # start from an empty registry
-        registry = {}
-        for parentName, paraDict in paramSet.items():
-            for paraName, para in paraDict.items():
-                for attr in para.attrToRegister:
-                    entry = self._registerAttr(paramSet, parentName, paraName, attr)
-                    registry[entry.name] = entry
-        return registry
+
+        return {type(self).__name__: RegistryEntry(
+            name=type(self).__name__,
+            quantity_type="r+",
+            getter=lambda: paramSet.parameters,
+            setter=lambda value: self._registrySetter(value, paramSet),
+        )}
+
 
     # Signals ==========================================================
     def _emitAttrByName(

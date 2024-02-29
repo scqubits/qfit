@@ -868,6 +868,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # parameters
         self.registry.register(self.prefitParamModel)
         self.registry.register(self.fitParamModel)
+        self.registry.register(self.prefitCaliModel)
+        self.registry.register(self.fitCaliModel)
 
         # main window
         self.registry.register(self)
