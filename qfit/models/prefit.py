@@ -59,7 +59,7 @@ class PrefitParamModel(
     SliderModelMixin,  # ordering matters
     metaclass=CombinedMeta,
 ):
-    attrs = SliderParam.attrToRegister
+    attrs = SliderParam.dataAttr
 
     updateSlider = Signal(ParamAttr)
 
@@ -166,7 +166,7 @@ class PrefitCaliModel(
     SliderModelMixin,  # ordering matters
     metaclass=CombinedMeta,
 ):
-    attrs = SliderParam.attrToRegister
+    attrs = SliderParam.dataAttr
 
     updateSlider = Signal(ParamAttr)
 

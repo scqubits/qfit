@@ -47,8 +47,8 @@ def readMeasurementFile(fileName) -> MeasurementDataType:
         reader = ImageFileReader()
     elif suffix.lower() == ".mat":
         reader = MatlabReader()
-    # elif suffix.lower() == ".csv":
-    #     reader = CSVReader()
+    elif suffix.lower() == ".csv":
+        reader = CSVReader()
     else:
         raise Exception("IOError: The requested file type is not supported.")
     data = reader.fromFile(fileName)
@@ -158,7 +158,10 @@ class MatlabReader(MeasFileReader):
         return NumericalMeasurementData(fileStr, dataCollection)
 
 
-# class CSVReader:
-#     def fromFile(self, fileName):
-
-#         return NumericalMeasurementData({fileName: np.loadtxt(fileName)})
+class CSVReader(MeasFileReader):
+    def fromFile(self, fileName):
+        _, fileStr = os.path.split(fileName)
+        return NumericalMeasurementData(
+            fileStr,
+            {fileName: np.loadtxt(fileName)}
+        )

@@ -66,8 +66,36 @@ class DictItem(Generic[Key, Value]):
         self.name: Key = name
         self.data: Value = data
 
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, DictItem):
+            return False
+        
+        if (
+            isinstance(self.data, np.ndarray | float) 
+            and isinstance(__value.data, np.ndarray | float)
+        ):
+            if not np.array_equal(self.data, __value.data):
+                return False
+        else:
+            if self.data != __value.data:
+                return False
+            
+        return self.name == __value.name
+
 
 class OrderedDictMod(OrderedDict[Key, Value], Generic[Key, Value]):
+    """
+    Mofiied OrderedDict with additional methods:
+
+    Faster access to the keys and values of the dictionary:
+    * valList: returns a list of the values
+    * keyList: returns a list of the keys
+    * itemByIndex: returns a DictItem by index
+    * itemList: returns a list of DictItems
+
+    Compare two dictionaries:
+    * __eq__: compares two dictionaries. It only compares the keys and values of the first level. 
+    """
     @property
     def valList(self) -> List[Value]:
         return list(self.values())
@@ -81,6 +109,41 @@ class OrderedDictMod(OrderedDict[Key, Value], Generic[Key, Value]):
 
     def itemList(self) -> List[DictItem[Key, Value]]:
         return [DictItem(key, val) for key, val in self.items()]
+    
+    def __eq__(self, __value: object) -> bool:
+        """
+        Compare two dictionaries. It only compares the keys and values of the first level. It does not compare nested   
+        dictionaries or numpy arrays. 
+
+        Parameters
+        ----------
+        dict1: dict
+        dict2: dict
+
+        Returns
+        -------
+        bool
+        """
+        if not isinstance(__value, OrderedDictMod):
+            return False
+
+        if self.keyList != __value.keyList:
+            return False
+        
+        for key in self.keys():
+            if type(self[key]) != type(__value[key]):
+                return False
+
+            if (
+                isinstance(self[key], np.ndarray | float) 
+                and isinstance(self[key], np.ndarray | float)
+            ):
+                if not np.array_equal(self[key], __value[key]):
+                    return False
+            else:
+                if self[key] != __value[key]:
+                    return False
+        return True
 
 
 

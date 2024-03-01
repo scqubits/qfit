@@ -155,42 +155,42 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
 
     @Slot(bool)
     def toggleBgndSubtractX(self, value: bool):
-        self.currentMeasData.bgndSubtractX = value
+        self.currentMeasData._bgndSubtractX = value
         self.emitReadyToPlot()
 
     @Slot(bool)
     def toggleBgndSubtractY(self, value: bool):
-        self.currentMeasData.bgndSubtractY = value
+        self.currentMeasData._bgndSubtractY = value
         self.emitReadyToPlot()
 
     @Slot(bool)
     def toggleTopHatFilter(self, value: bool):
-        self.currentMeasData.topHatFilter = value
+        self.currentMeasData._topHatFilter = value
         self.emitReadyToPlot()
 
     @Slot(bool)
     def toggleWaveletFilter(self, value: bool):
-        self.currentMeasData.waveletFilter = value
+        self.currentMeasData._waveletFilter = value
         self.emitReadyToPlot()
 
     @Slot(bool)
     def toggleEdgeFilter(self, value: bool):
-        self.currentMeasData.edgeFilter = value
+        self.currentMeasData._edgeFilter = value
         self.emitReadyToPlot()
 
     @Slot(bool)
     def toggleLogColoring(self, value: bool):
-        self.currentMeasData.logColoring = value
+        self.currentMeasData._logColoring = value
         self.emitReadyToPlot()
 
     @Slot(float)
     def setZMin(self, value: float):
-        self.currentMeasData.zMin = value / 100
+        self.currentMeasData._zMin = value / 100
         self.emitReadyToPlot()
 
     @Slot(float)
     def setZMax(self, value: float):
-        self.currentMeasData.zMax = value / 100
+        self.currentMeasData._zMax = value / 100
         self.emitReadyToPlot()
 
     @Slot(int)
@@ -251,13 +251,22 @@ class MeasurementData(Registrable):
     _currentX: DictItem
     _currentY: DictItem
 
+    # filters
+    _bgndSubtractX = False
+    _bgndSubtractY = False
+    _topHatFilter = False
+    _waveletFilter = False
+    _edgeFilter = False
+
+    _logColoring = False
+    _zMin = 0.0
+    _zMax = 1.0
+
     def __init__(self, name: str, rawData):
         super().__init__()
 
         self.name: str = name
         self.rawData = rawData
-
-        self._initializeDataOptions()
 
     def currentZ(self) -> DictItem:
         """
@@ -301,6 +310,48 @@ class MeasurementData(Registrable):
     @property
     def rawYNames(self) -> List[str]:
         return self._currentYCompatibles.keyList
+    
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, MeasurementData):
+            return False
+
+        # # compare dictionaries of numpy arrays
+        # dictAttrs = [
+        # ]
+        # for attr in dictAttrs:
+        #     selfAttr = getattr(self, attr)
+        #     valueAttr = getattr(__value, attr)
+        #     if not selfAttr.keys() == valueAttr.keys():
+        #         return False
+        #     for key in selfAttr.keys():
+        #         if not np.all(selfAttr[key] == valueAttr[key]):
+        #             return False
+
+        # compare the rest of the attributes
+        dataAttrs = [
+            "name",
+            "rawData",
+            "_zCandidates",
+            "_currentXCompatibles",
+            "_currentYCompatibles",
+            "_currentZ",
+            "_currentX",
+            "_currentY",
+            "_bgndSubtractX",
+            "_bgndSubtractY",
+            "_topHatFilter",
+            "_waveletFilter",
+            "_edgeFilter",
+            "_logColoring",
+            "_zMin",
+            "_zMax",
+        ]
+        
+        return all([
+            getattr(self, attr) == getattr(__value, attr)
+            for attr in dataAttrs]
+        )
+
 
     # manipulation =====================================================
     @abc.abstractmethod
@@ -353,21 +404,10 @@ class MeasurementData(Registrable):
             rawX[name] = data[0] + fraction * (data[-1] - data[0])
         return rawX
 
-    # filters ==========================================================
-    def _initializeDataOptions(self):
-        self.bgndSubtractX = False
-        self.bgndSubtractY = False
-        self.topHatFilter = False
-        self.waveletFilter = False
-        self.edgeFilter = False
-
-        self.logColoring = False
-        self.zMin = 0.0
-        self.zMax = 1.0
-
+    # filters =============================================================
     def currentMinMax(self) -> Tuple[float, float]:
-        min_val = min(self.zMin, self.zMax)
-        max_val = max(self.zMin, self.zMax)
+        min_val = min(self._zMin, self._zMax)
+        max_val = max(self._zMin, self._zMax)
         return (min_val, max_val)
 
 
@@ -388,8 +428,8 @@ class NumericalMeasurementData(MeasurementData):
 
     def __init__(
         self,
-        name,
-        rawData,
+        name: str,
+        rawData: OrderedDictMod[str, np.ndarray],
     ):
         """
 
@@ -517,15 +557,15 @@ class NumericalMeasurementData(MeasurementData):
         """
         zData = copy.copy(self._currentZ)
 
-        if self.bgndSubtractX:
+        if self._bgndSubtractX:
             zData.data = self._doBgndSubtraction(zData.data, axis=1)
-        if self.bgndSubtractY:
+        if self._bgndSubtractY:
             zData.data = self._doBgndSubtraction(zData.data, axis=0)
-        if self.topHatFilter:
+        if self._topHatFilter:
             zData.data = self._applyTopHatFilter(zData.data)
-        if self.waveletFilter:
+        if self._waveletFilter:
             zData.data = self._applyWaveletFilter(zData.data)
-        if self.edgeFilter:
+        if self._edgeFilter:
             zData.data = gaussian_laplace(zData.data, 1.0)
 
         return zData
@@ -593,7 +633,7 @@ class NumericalMeasurementData(MeasurementData):
         zMin = rawZMin + zRange[0] * (rawZMax - rawZMin)
         zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
 
-        if self.logColoring:
+        if self._logColoring:
             linthresh = max(abs(zMin), abs(zMax)) / 20.0
             # if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion(
             #     "3.2.0"
@@ -680,7 +720,7 @@ class ImageMeasurementData(MeasurementData):
         zMin = rawZMin + zRange[0] * (rawZMax - rawZMin)
         zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
 
-        if self.logColoring:
+        if self._logColoring:
             # if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion(
             #     "3.2.0"
             # ):
