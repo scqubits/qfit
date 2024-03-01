@@ -571,6 +571,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.prefitCaliModel.paramNamesDict(),
             removeExisting=True,
         )
+        
 
     def prefitSliderParamConnects(self):
         """
@@ -677,6 +678,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.fitCaliModel.paramNamesDict(),
             removeExisting=True,
         )
+        # like what happened with the prefit min max table, only after the table 
+        # is inserted, we can set the width of the column; reason unknown, only 
+        # happens on windows. TODO: investigate
+        self.fitParamView.fitTableSet.setWidthOfColumn()
 
     def fitTableParamConnects(self):
         """
