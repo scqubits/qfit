@@ -124,6 +124,7 @@ class PlottingCtrl(QObject):
         self.activeDataset.emitReadyToPlot()
         self.allDatasets.emitReadyToPlot()
         self.allDatasets.emitFocusChanged()  # update the snapX
+        self.setXYAxes()
         self.updateCursor()
 
     # measurement ======================================================
@@ -238,73 +239,13 @@ class PlottingCtrl(QObject):
         selected points."""
 
         self.calibrateAxes = checked
-        self.setAxes()
+        self.setXYAxes()
 
-    def setAxes(self):
+    def setXYAxes(self):
         """
         Toggle the labels on the canvas.
         TODO: more bugs to fix on zooming, swapping xy, etc.
         """
-        # if checked:
-        #     # xlabel = <swept_parameter> (<sysstem id string>)
-        #     xlabel = (
-        #         "param name"
-        #         # list(list(self.sweepParameterSet.values())[0].keys())[0]
-        #         + " "
-        #         + "("
-        #         + "parent id str"
-        #         # + list(list(self.sweepParameterSet.values())[0].values())[0].parent.id_str
-        #         + ")"
-        #         + " (to be implemented)"
-        #     )
-        #     self.axes.set_xlabel(xlabel)
-        #     self.axes.set_ylabel("energy [GHz]")
-        #     # update ticks to reflect the calibration
-        #     # get the current labels and locations
-        #     xlocs, xticklabels = self.axes.get_xticks(), self.axes.get_xticklabels()
-        #     ylocs, yticklabels = self.axes.get_yticks(), self.axes.get_yticklabels()
-        #     # update the labels using the calibration function
-        #     # this method need to be accessed through the calibration model
-        #     currentFigureName = self.measurementData.currentMeasData.name
-        #     currentXAxisName = self.measurementData.currentMeasData.currentX.name
-        #     # in the future, generalize this code to handle cases with multiple axes
-        #     calibrationFunc = list(
-        #         list(self.XCaliFuncDict[currentFigureName].parameters.values())[
-        #             0
-        #         ].values()
-        #     )[0].calibration_func
-        #     calibratedXTickLabels = []
-        #     for xTickLabel in xticklabels:
-        #         # the calibration function takes in a dictionary of raw X values and returns
-        #         # the calibrated X value for the specific parameter
-        #         rawXByCurrentX = self.measurementData.currentMeasData.rawXByCurrentX(
-        #             xTickLabel.get_position()[0]
-        #         )
-        #         calibratedXTickLabels.append(calibrationFunc(rawXByCurrentX))
-        #     calibratedXTickLabels = np.round(
-        #         np.array(calibratedXTickLabels), decimals=2
-        #     )
-        #     calibratedYTickLabels = []
-        #     for yTickLabel in yticklabels:
-        #         calibratedYTickLabels.append(
-        #             self.YCaliFunc(yTickLabel.get_position()[1])
-        #         )
-        #     calibratedYTickLabels = np.round(
-        #         np.array(calibratedYTickLabels), decimals=2
-        #     )
-        #     self.axes.set_xticks(xlocs, calibratedXTickLabels)
-        #     self.axes.set_yticks(ylocs, calibratedYTickLabels)
-        # else:
-        #     # revert to original ticklabels
-        #     self.axes.xaxis.set_major_locator(mpl.ticker.AutoLocator())
-        #     self.axes.xaxis.set_major_formatter(mpl.ticker.ScalarFormatter())
-
-        #     if isinstance(self.measurementData.currentMeasData, ImageMeasurementData):
-        #         self.axes.set_xlabel("x")
-        #         self.axes.set_ylabel("y")
-        #     else:
-        #         self.axes.set_xlabel(self.measurementData.currentMeasData.currentX.name)
-        #         self.axes.set_ylabel(self.measurementData.currentMeasData.currentY.name)
 
         if self.measurementData.rowCount() == 0:
             # not yet initialized
@@ -581,13 +522,13 @@ class PlottingCtrl(QObject):
     def onXCaliFuncUpdated(self, XCaliFuncDict: Dict[str, "SweepParamSet"]):
         """Update the X calibration function and the labels on the canvas."""
         self.XCaliFuncDict = XCaliFuncDict
-        self.setAxes()
+        self.setXYAxes()
 
     def onYCaliFuncUpdated(self, YCaliFunc: Callable, invYCaliFunc: Callable):
         """Update the Y calibration function and the labels on the canvas."""
         self.YCaliFunc = YCaliFunc
         self.invYCaliFunc = invYCaliFunc
-        self.setAxes()
+        self.setXYAxes()
 
     def isRelativelyClose(self, x1y1: np.ndarray, x2y2: np.ndarray):
         """Check whether the point x1y1 is relatively close to x2y2, given the current

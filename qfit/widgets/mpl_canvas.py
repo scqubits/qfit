@@ -461,7 +461,7 @@ class MplFigureCanvas(QFrame):
             new_axes.append(ax)
         self.xAxes = new_axes
 
-        self.canvas.figure.tight_layout()
+        # self.canvas.figure.tight_layout()
         self.canvas.draw()
 
     def updateYAxes(self, yName: str, yRange: Tuple[float, float]):
@@ -483,7 +483,7 @@ class MplFigureCanvas(QFrame):
         # ax.yaxis.set_label_coords(1.05, -0.08 * (i))  # set label position
         self.yAxes = [ax]
 
-        self.canvas.figure.tight_layout()
+        # self.canvas.figure.tight_layout()
         self.canvas.draw()
 
     # View Manipulation: Cursor ========================================
