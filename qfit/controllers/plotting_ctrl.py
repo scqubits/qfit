@@ -124,7 +124,7 @@ class PlottingCtrl(QObject):
         self.activeDataset.emitReadyToPlot()
         self.allDatasets.emitReadyToPlot()
         self.allDatasets.emitFocusChanged()  # update the snapX
-        # self.setXYAxes()
+        self.setXYAxes()
         self.updateCursor()
 
     # measurement ======================================================
