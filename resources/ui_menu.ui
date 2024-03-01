@@ -23,7 +23,7 @@
 
 QPushButton {	
 	font-family: &quot;Roboto Medium&quot;;
-	font-size: 11px;
+	font-size: 16px;
 	color: rgb(249, 249, 249);
 	background-color: rgb(18, 18, 18);
 	border: none;

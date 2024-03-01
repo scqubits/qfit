@@ -1,5 +1,9 @@
 <RCC>
   <qresource prefix="/">
+    <file>icons/svg/ruler-square.svg</file>
+    <file>icons/svg/slider-horizontal.svg</file>
+    <file>icons/svg/tag-question.svg</file>
+    <file>icons/svg/tag.svg</file>
     <file>images/spin_box_bg_171717.svg</file>
     <file>icons/svg/cross.svg</file>
     <file>icons/svg/extract-on.svg</file>

@@ -30,7 +30,7 @@ class Ui_MenuWidget(object):
 "\n"
 "QPushButton {	\n"
 "	font-family: \"Roboto Medium\";\n"
-"	font-size: 11px;\n"
+"	font-size: 16px;\n"
 "	color: rgb(249, 249, 249);\n"
 "	background-color: rgb(18, 18, 18);\n"
 "	border: none;\n"

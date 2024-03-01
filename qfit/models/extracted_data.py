@@ -236,7 +236,9 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
     def _initSpectra(self, figName: str):
         transition = ExtrTransition()
         transition.name = "Transition 1"
-        spectra = ExtrSpectra(transition,)
+        spectra = ExtrSpectra(
+            transition,
+        )
         self._fullSpectra[figName] = spectra
 
     def _initFullSpectra(self):
@@ -268,13 +270,13 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
             icon1 = QtGui.QIcon()
             if self._currentSpectrum[index.row()].tag.tagType != "NO_TAG":
                 icon1.addPixmap(
-                    QtGui.QPixmap(":/icons/svg/cil-list.svg"),
+                    QtGui.QPixmap(":/icons/svg/tag.svg").scaled(40, 40),
                     QtGui.QIcon.Normal,
                     QtGui.QIcon.Off,
                 )
             else:
                 icon1.addPixmap(
-                    QtGui.QPixmap(":/icons/svg/cil-link-broken.svg"),
+                    QtGui.QPixmap(":/icons/svg/tag-question.svg").scaled(40, 40),
                     QtGui.QIcon.Normal,
                     QtGui.QIcon.Off,
                 )
@@ -325,7 +327,6 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         # data updated:
         self.rowsInserted.connect(self.emitDataUpdated)
         self.rowsRemoved.connect(self.emitDataUpdated)
-
 
     # Internal data manipulation methods ===============================
     def insertRow(self, row, parent=QModelIndex(), *args, **kwargs):

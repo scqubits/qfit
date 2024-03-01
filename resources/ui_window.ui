@@ -587,7 +587,7 @@ QPushButton:checked {
             </property>
             <property name="icon">
              <iconset resource="resources.qrc">
-              <normaloff>:/icons/svg/cil-list.svg</normaloff>:/icons/svg/cil-list.svg</iconset>
+              <normaloff>:/icons/svg/ruler-square.svg</normaloff>:/icons/svg/ruler-square.svg</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -794,7 +794,7 @@ QPushButton:pressed {
             </property>
             <property name="icon">
              <iconset resource="resources.qrc">
-              <normaloff>:/icons/svg/cil-chart-line.svg</normaloff>:/icons/svg/cil-chart-line.svg</iconset>
+              <normaloff>:/icons/svg/slider-horizontal.svg</normaloff>:/icons/svg/slider-horizontal.svg</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -5772,7 +5772,7 @@ QPushButton:checked {
                <x>520</x>
                <y>15</y>
                <width>200</width>
-               <height>40</height>
+               <height>50</height>
               </rect>
              </property>
              <property name="sizePolicy">
@@ -5784,13 +5784,13 @@ QPushButton:checked {
              <property name="minimumSize">
               <size>
                <width>200</width>
-               <height>40</height>
+               <height>50</height>
               </size>
              </property>
              <property name="maximumSize">
               <size>
                <width>200</width>
-               <height>40</height>
+               <height>50</height>
               </size>
              </property>
              <property name="font">
