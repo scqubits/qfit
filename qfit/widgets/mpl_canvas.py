@@ -167,7 +167,7 @@ class NavigationHidden(NavigationToolbar2QT):
 class SpecialCursor(Cursor):
     def __init__(
         self,
-        ax,
+        axes: List[Axes],
         xSnapMode: bool,
         xSnapValues: np.ndarray,
         xyMin: Tuple[float, float],
@@ -199,8 +199,9 @@ class SpecialCursor(Cursor):
             Whether to use blitting for faster drawing
         """
         super().__init__(
-            ax, horizOn=horizOn, vertOn=vertOn, useblit=useblit, **lineprops
+            axes[0], horizOn=horizOn, vertOn=vertOn, useblit=useblit, **lineprops
         )
+        self.allAxes = axes
         self.xSnapMode = xSnapMode
         self.xSnapValues = xSnapValues
 
@@ -220,7 +221,7 @@ class SpecialCursor(Cursor):
         if not self.canvas.widgetlock.available(self):
             return
         
-        if event.inaxes != self.ax:
+        if event.inaxes not in self.allAxes:
             # Hide the vertical and horizontal lines when the mouse is outside the axes
             self.linev.set_visible(False)
             self.lineh.set_visible(False)
@@ -446,8 +447,6 @@ class MplFigureCanvas(QFrame):
         for ax in self.xAxes:
             self.canvas.figure.delaxes(ax)
 
-        print(f"update x axes: {xAxes}")
-
         # Create a new axes for each x-values in the dictionary
         new_axes = []
         for i, (xName, xRange) in enumerate(xAxes.items()):
@@ -462,6 +461,7 @@ class MplFigureCanvas(QFrame):
         self.xAxes = new_axes
 
         # self.canvas.figure.tight_layout()
+        self.updateCursor()
         self.canvas.draw()
 
     def updateYAxes(self, yName: str, yRange: Tuple[float, float]):
@@ -470,8 +470,6 @@ class MplFigureCanvas(QFrame):
         """
         for ax in self.yAxes:
             self.canvas.figure.delaxes(ax)
-
-        print(f"update y axes: {yName}, {yRange}")
 
         # Create a new axes for each x-values in the dictionary
         ax = self.axes.twinx()
@@ -484,6 +482,7 @@ class MplFigureCanvas(QFrame):
         self.yAxes = [ax]
 
         # self.canvas.figure.tight_layout()
+        self.updateCursor()
         self.canvas.draw()
 
     # View Manipulation: Cursor ========================================
@@ -524,7 +523,7 @@ class MplFigureCanvas(QFrame):
             self.specialCursor.remove()
 
         self.specialCursor = SpecialCursor(
-            self.axes,
+            [self.axes] + self.xAxes + self.yAxes,
             xSnapMode = self.xSnapMode,
             xSnapValues = self.cursorXSnapValues,
             xyMin = (self.axes.get_xlim()[0], self.axes.get_ylim()[0]),
