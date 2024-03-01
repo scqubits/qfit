@@ -267,19 +267,20 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
             return str_value
 
         if role == Qt.DecorationRole:
-            icon1 = QtGui.QIcon()
             if self._currentSpectrum[index.row()].tag.tagType != "NO_TAG":
-                icon1.addPixmap(
-                    QtGui.QPixmap(":/icons/svg/tag.svg").scaled(40, 40),
-                    QtGui.QIcon.Normal,
-                    QtGui.QIcon.Off,
-                )
+                # icon1.addPixmap(
+                #     QtGui.QPixmap(":/icons/svg/tag.svg").scaled(40, 40),
+                #     QtGui.QIcon.Normal,
+                #     QtGui.QIcon.Off,
+                # )
+                icon1 = QtGui.QIcon(":/icons/svg/tag.svg")
             else:
-                icon1.addPixmap(
-                    QtGui.QPixmap(":/icons/svg/tag-question.svg").scaled(40, 40),
-                    QtGui.QIcon.Normal,
-                    QtGui.QIcon.Off,
-                )
+                # icon1.addPixmap(
+                #     QtGui.QPixmap(":/icons/svg/tag-question.svg").scaled(40, 40),
+                #     QtGui.QIcon.Normal,
+                #     QtGui.QIcon.Off,
+                # )
+                icon1 = QtGui.QIcon(":/icons/svg/tag-question.svg")
             return icon1
 
     def rowCount(self, *args) -> int:
