@@ -56,3 +56,4 @@ media_raw_source/Backup_of_tag.cdr
 .gitignore
 media_raw_source/tag.cdr
 media_raw_source/tag-question.cdr
+plot_data.ipynb

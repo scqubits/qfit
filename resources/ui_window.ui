@@ -4698,7 +4698,13 @@ icon: url(:/icons/svg/copy-pressed.svg);
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>100</height>
+           <height>70</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>70</height>
           </size>
          </property>
          <property name="font">
@@ -5284,7 +5290,7 @@ QPushButton:checked {
             <property name="minimumSize">
              <size>
               <width>550</width>
-              <height>300</height>
+              <height>733</height>
              </size>
             </property>
             <property name="maximumSize">

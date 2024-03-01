@@ -2324,7 +2324,8 @@ class Ui_MainWindow(object):
         self.bottomStackedWidget.setObjectName(u"bottomStackedWidget")
         sizePolicy13.setHeightForWidth(self.bottomStackedWidget.sizePolicy().hasHeightForWidth())
         self.bottomStackedWidget.setSizePolicy(sizePolicy13)
-        self.bottomStackedWidget.setMinimumSize(QSize(0, 100))
+        self.bottomStackedWidget.setMinimumSize(QSize(0, 70))
+        self.bottomStackedWidget.setMaximumSize(QSize(16777215, 70))
         self.bottomStackedWidget.setFont(font3)
         self.bottomStackedWidget.setStyleSheet(u"QPushButton {\n"
 "	border: 0px solid rgb(52, 59, 72);\n"
@@ -2532,7 +2533,7 @@ class Ui_MainWindow(object):
         self.mplFigureCanvas.setObjectName(u"mplFigureCanvas")
         sizePolicy.setHeightForWidth(self.mplFigureCanvas.sizePolicy().hasHeightForWidth())
         self.mplFigureCanvas.setSizePolicy(sizePolicy)
-        self.mplFigureCanvas.setMinimumSize(QSize(550, 300))
+        self.mplFigureCanvas.setMinimumSize(QSize(550, 733))
         self.mplFigureCanvas.setMaximumSize(QSize(16777215, 16777215))
         self.mplFigureCanvas.setStyleSheet(u"QFrame {\n"
 "	background-color: #2A2A2A;\n"
