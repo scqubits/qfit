@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import (
     QIcon,
 )
-from PySide6.QtCore import Qt, QSize, QCoreApplication, Slot
+from PySide6.QtCore import Qt, QSize, QCoreApplication, Slot, Signal
 
 SPACING = 12
 MARGIN = -1
@@ -70,6 +70,8 @@ class FoldableWidget(QGroupBox):
     hidden when the widget is not checked.
     """
 
+    expandWidgetToggled = Signal(bool)
+
     def __init__(self, title="Foldable", content_widget=None, parent=None):
         super().__init__(parent)
         # set fold push button
@@ -100,6 +102,8 @@ class FoldableWidget(QGroupBox):
     @Slot(bool)
     def _toggleContent(self, checked):
         self.content_widget.setVisible(checked)
+        # send a signal to expand the frame
+        self.expandWidgetToggled.emit(checked)
 
     def toggle(self):
         self.foldPushButton.toggle()
