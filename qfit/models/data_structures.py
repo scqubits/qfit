@@ -13,7 +13,6 @@ from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
 from matplotlib.artist import Artist
 
-
 from qfit.models.parameter_settings import ParameterType
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
 from qfit.utils.helpers import OrderedDictMod
@@ -129,6 +128,16 @@ class Tag:
 
     def __repr__(self):
         return self.__str__()
+    
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, Tag):
+            return False
+        return (
+            self.tagType == __value.tagType 
+            and self.initial == __value.initial 
+            and self.final == __value.final 
+            and self.photons == __value.photons
+        )
 
 
 class ExtrTransition:
@@ -220,6 +229,17 @@ class ExtrTransition:
         self._data = OrderedDictMod(list(self._data.items())[::-1])
         self.rawX = OrderedDictMod(list(self._data.items())[0:1])  # raw x is x
 
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, ExtrTransition):
+            return False
+        
+        return (
+            self.name == __value.name 
+            and self._data == __value._data
+            and self.rawX == __value.rawX
+            and self.tag == __value.tag
+        )
+
 
 class ExtrSpectra(list[ExtrTransition]):
     """
@@ -279,38 +299,6 @@ class ExtrSpectra(list[ExtrTransition]):
         for transition in self:
             transition.swapXY()
 
-    # def rawXByX(self, x: float) -> OrderedDictMod[str, float]:
-    #     """
-    #     Return the rawX data corresponding to the x value. Their relationship
-    #     is linear.
-    #     """
-    #     allX = self.allDataConcated()[0]
-    #     allRawX = self.allRawXConcated()
-
-    #     if self.count() < 2:
-    #         # try to find the exact x value
-    #         for idx, x_ in enumerate(allX):
-    #             if x_ == x:
-    #                 return OrderedDictMod(
-    #                     {key: value[idx] for key, value in allRawX.items()}
-    #                 )
-    #         raise ValueError("No data found for the x value")
-
-    #     # calculate a linear mapping between the x values and the rawX data
-    #     # with the smallest and largest x values
-    #     minIdx = np.argmin(allX)
-    #     maxIdx = np.argmax(allX)
-    #     minX = allX[minIdx]
-    #     maxX = allX[maxIdx]
-
-    #     rawX = OrderedDictMod()
-    #     for key, value in allRawX.items():
-    #         minRawX = value[minIdx]
-    #         maxRawX = value[maxIdx]
-    #         rawX[key] = minRawX + (maxRawX - minRawX) / (maxX - minX) * (x - minX)
-
-    #     return rawX
-
 
 class FullExtr(dict[str, ExtrSpectra]):
     """
@@ -329,6 +317,7 @@ class FullExtr(dict[str, ExtrSpectra]):
     def swapXY(self):
         for value in self.values():
             value.swapXY()
+
 
 
 # ######################################################################
@@ -549,6 +538,9 @@ class SpectrumElement(PlotElement):
                 # no highlighted data (usually when evalsCount too small)
                 pass
 
+        axes.set_xlabel("")
+        axes.set_ylabel("")
+
         artist_after = set(axes.get_children())
         self.artists = list(artist_after - artist_before)
         self.set_visible(self._visible)
@@ -609,6 +601,7 @@ class ParamAttr:
 
 
 class ParamBase(ABC):
+    dataAttr: List[str] = ["value"]
     intergerParameterTypes = ["cutoff", "truncated_dim"]
 
     def __init__(
@@ -643,11 +636,16 @@ class ParamBase(ABC):
             return np.round(value).astype(int)
         else:
             return value
-
+        
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, ParamBase):
+            return False
+        return all([
+            getattr(self, attr) == getattr(__value, attr) 
+            for attr in self.dataAttr
+        ])
 
 class DispParamBase(ParamBase):
-    attrToRegister: List[str]
-
     def _toIntString(self, value: Union[int, float], precision=4) -> str:
         """
         Convert the value to an integer if the parameter type is cutoff or truncated_dim.
@@ -684,7 +682,7 @@ class QMSweepParam(ParamBase):
 
     calibration_func: Callable[[Dict[str, float]], float]
 
-    attrToRegister = ["value"]
+    dataAttr = ["value"]
 
     def __init__(
         self,
@@ -737,7 +735,7 @@ class SliderParam(DispParamBase):
         The type of the parameter
     """
 
-    attrToRegister = ["value", "min", "max"]
+    dataAttr = ["value", "min", "max"]
 
     def __init__(
         self,
@@ -811,7 +809,7 @@ class SliderParam(DispParamBase):
 
 
 class FitParam(DispParamBase):
-    attrToRegister = ["initValue", "value", "min", "max", "isFixed"]
+    dataAttr = ["initValue", "value", "min", "max", "isFixed"]
 
     def __init__(
         self,
@@ -870,7 +868,7 @@ class CaliTableRowParam(DispParamBase):
     The updated class for calibration table parameters.
     """
 
-    attrToRegister = [
+    dataAttr = [
         "value",
         "sweepParamName",
         "parentSystemName",

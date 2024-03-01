@@ -12,7 +12,7 @@ from scqubits.core.param_sweep import ParameterSweep
 from scqubits.core.storage import SpectrumData
 
 
-from qfit.models.parameter_set import HSParamSet
+from qfit.models.parameter_set import SweepParamSet
 from qfit.models.data_structures import (
     QMSweepParam,
     FullExtr,
@@ -60,8 +60,8 @@ class QuantumModel(QObject):
         self._fullExtr = FullExtr()
 
         # calibration
-        self._sweepParamSets: Dict[str, HSParamSet[QMSweepParam]] = {
-            figName: HSParamSet[QMSweepParam](QMSweepParam)
+        self._sweepParamSets: Dict[str, SweepParamSet] = {
+            figName: SweepParamSet()
             for figName in self._figNames
         }
         self._yCaliFunc: Callable = lambda x: x
@@ -129,13 +129,13 @@ class QuantumModel(QObject):
         self._rawXByX = rawXByX
 
     @Slot(dict)
-    def updateXCaliFunc(self, sweepParamSets: Dict[str, HSParamSet]):
+    def updateXCaliFunc(self, sweepParamSets: Dict[str, SweepParamSet]):
         """
         Update the parameter sets for the sweeps.
 
         Parameters
         ----------
-        sweepParamSets: Dict[str, HSParamSet]
+        sweepParamSets: Dict[str, SweepParamSet]
         """
         self._sweepParamSets = sweepParamSets
         self.updateCalc()
@@ -179,7 +179,7 @@ class QuantumModel(QObject):
         """
         # process the raw value from UI
         if attrName == "subsysToPlot":
-            id_str = HSParamSet.parentSystemIdstrByName(value)
+            id_str = SweepParamSet.parentSystemIdstrByName(value)
             value = self.hilbertspace.subsys_by_id_str(id_str)
         elif attrName == "initialState":
             value = self._stateStr2Label(value)
@@ -221,7 +221,7 @@ class QuantumModel(QObject):
             initStateStr = ""
 
         return {
-            "subsysToPlot": HSParamSet.parentSystemNames(self._subsysToPlot),
+            "subsysToPlot": SweepParamSet.parentSystemNames(self._subsysToPlot),
             "initialState": initStateStr,
             "photons": self._photons,
             "evalsCount": str(self._evalsCount),
@@ -367,12 +367,8 @@ class QuantumModel(QObject):
             def updateHilbertspace(x: float) -> None:
                 # map x to the rawX (voltage vector)
                 rawX = rawXByX(x)
-                for _, paramDictByParent in sweepParamSet.items():
-                    for _, param in paramDictByParent.items():
-                        # map rawX to the parameter values
-                        param.setValueWithCali(rawX)
-                        # update the HilbertSpace object
-                        param.setParameterForParent()
+                sweepParamSet.setByRawX(rawX)
+                sweepParamSet.setParameterForParent()
 
             updateHSDict[figName] = updateHilbertspace
 

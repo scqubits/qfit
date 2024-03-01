@@ -96,7 +96,7 @@ class FitParamModel(
     FitParamModelMixin,  # ordering matters
     metaclass=CombinedMeta,
 ):
-    attrs = FitParam.attrToRegister
+    attrs = FitParam.dataAttr
 
     # mixin methods ====================================================
     def __init__(self):
@@ -160,7 +160,7 @@ class FitCaliModel(
     FitParamModelMixin,  # ordering matters
     metaclass=CombinedMeta,
 ):
-    attrs = FitParam.attrToRegister
+    attrs = FitParam.dataAttr
 
     # mixin methods ====================================================
     def __init__(self):

@@ -158,6 +158,13 @@ class ParamSet(Registrable, Generic[ParamCls]):
             raise KeyError(
                 f"Cannot find parent system {parentName} in the parameter set."
             )
+        
+        if attr not in para_dict[name].dataAttr:
+            raise ValueError(
+                f"Attribute {attr} is not in the data attribute list of "
+                "the parameter {name}. Thus can't be set externally by "
+                "calling setParameter."
+            )
 
         try:
             setattr(para_dict[name], attr, value)
@@ -238,7 +245,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
     def setAttrByParamDict(
         self,
-        paramSet: "ParamSet",
+        paramSet: "ParamSet[ParamCls]",
         attrsToUpdate: Optional[List[str]] = None,
         insertMissing: bool = False,
     ):
@@ -277,10 +284,8 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
                 # update the parameter for all the attributes
                 if attrsToUpdate is None:
-                    attrsToUpdate = dir(param)
+                    attrsToUpdate = param.dataAttr
                 for attr in attrsToUpdate:
-                    if attr.startswith("_"):
-                        continue
                     self.setParameter(parentName, paramName, attr, getattr(param, attr))
 
 
@@ -535,14 +540,35 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         self.parentNameByObj = {}
         self.parentObjByName = {}
 
+    def setParameterForParent(self):
+        """
+        To be updated - later param will not store a parent object internally
+        """
+        for _, paramDictByParent in self.items():
+            for _, param in paramDictByParent.items():
+                # map rawX to the parameter values
+                param.setParameterForParent()
+    
+
+class SweepParamSet(HSParamSet[QMSweepParam]):
+
+    def __init__(self):
+        super().__init__(QMSweepParam)
+
     @classmethod
-    def sweepSetByHS(cls, hilbertSpace: HilbertSpace) -> "ParamSet[QMSweepParam]":
-        sweepParameterSet = HSParamSet(QMSweepParam)
+    def initByHS(cls, hilbertSpace: HilbertSpace) -> "SweepParamSet":
+        sweepParameterSet = SweepParamSet()
         sweepParameterSet.dynamicalInit(
             hilbertSpace,
             included_parameter_type=["ng", "flux"],
         )
         return sweepParameterSet
+    
+    def setByRawX(self, rawX: Dict[str, float]):
+        for _, paramDictByParent in self.items():
+            for _, param in paramDictByParent.items():
+                # map rawX to the parameter values
+                param.setValueWithCali(rawX)
 
 
 DispParamCls = TypeVar("DispParamCls", bound="DispParamBase")
@@ -596,11 +622,16 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
         value: Dict[str, Dict[str, DispParamCls]],
         paramSet: ParamSet[DispParamCls]
     ):
+        """
+        It may be a little dangerous as the parameter may contain
+        some global variables (hilbertspace) that may be updated differently
+        when the parameter set is updated.
+        """
         paramSet.parameters = value
 
         for parentName, paraDict in value.items():
             for paraName, para in paraDict.items():
-                for attr in para.attrToRegister:
+                for attr in para.dataAttr:
                     self._emitUpdateBox(paramSet, parentName, paraName, attr)
     
     def _registerAll(

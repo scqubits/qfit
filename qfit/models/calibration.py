@@ -20,7 +20,7 @@ from qfit.models.data_structures import (
     ParamAttr,
     CaliTableRowParam,
 )
-from qfit.models.parameter_set import ParamSet, ParamModelMixin, HSParamSet
+from qfit.models.parameter_set import ParamSet, ParamModelMixin, SweepParamSet
 from qfit.models.registry import RegistryEntry
 
 if TYPE_CHECKING:
@@ -91,17 +91,7 @@ class CaliParamModel(
         ParamSet.__init__(self, CaliTableRowParam)
         ParamModelMixin.__init__(self)
 
-        self.applyCaliToAxis = False
         self.caliStatus = False
-
-        # the following will be called separately outside of the class
-        # self.dynamicalInit(
-        #     hilbertSpace,
-        #     rawXVecNameList,
-        #     rawYName,
-        #     figName,
-        #     sweepParamSet,
-        # )
 
     # initialize =======================================================
     def dynamicalInit(
@@ -115,7 +105,7 @@ class CaliParamModel(
         self.rawXVecNameList = rawXVecNameList
         self.rawYName = rawYName
         self.figName = figName
-        self.sweepParamSet = HSParamSet.sweepSetByHS(hilbertSpace)
+        self.sweepParamSet = SweepParamSet.initByHS(hilbertSpace)
         self.sweepParamParentName = list(self.sweepParamSet.keys())[0]
         self.sweepParamName = list(
             self.sweepParamSet[self.sweepParamParentName].keys()
@@ -249,7 +239,7 @@ class CaliParamModel(
     ):
         """
         Create a Parameter object and add it to the parameter set. Notice that this method
-        has a dual version in the HSParamSet class.
+        has a dual version in the SweepParamSet class.
         """
 
         # process the keyword arguments (if needed)
@@ -463,7 +453,7 @@ class CaliParamModel(
         alphaVec = np.linalg.solve(augRawYMat, mapCompVec)
         return alphaVec
 
-    def _fullXCalibration(self) -> Dict[str, HSParamSet[QMSweepParam]]:
+    def _fullXCalibration(self) -> Dict[str, SweepParamSet]:
         """
         Generate a function that applies the full calibration to the raw X vector.
 
@@ -484,7 +474,7 @@ class CaliParamModel(
         # loop over sweep parameters
         # assemble sweep parameter set, add sweep parameters to the parameter set
 
-        sweepParamSetFromCali = HSParamSet[QMSweepParam](QMSweepParam)
+        sweepParamSetFromCali = SweepParamSet()
         for parentName, paramDictByParent in self.sweepParamSet.items():
             for paramName, param in paramDictByParent.items():
                 sweepParamSetFromCali._insertParamByArgs(
@@ -524,16 +514,16 @@ class CaliParamModel(
                 sweepParamSetFromCali[parentName][param.name].setCalibrationFunc(
                     fullCalibration
                 )
-        sweepParamSetByFig: Dict[str, HSParamSet[QMSweepParam]] = {}
+        sweepParamSetByFig: Dict[str, SweepParamSet] = {}
         for fig in self.figName:
             sweepParamSetByFig[fig] = sweepParamSetFromCali
         return sweepParamSetByFig
 
-    def _partialXCalibration(self) -> Dict[str, HSParamSet[QMSweepParam]]:
+    def _partialXCalibration(self) -> Dict[str, SweepParamSet]:
         """
         Generate a function that applies the partial calibration to the raw vector.
         """
-        sweepParamSetByFig: Dict[str, HSParamSet[QMSweepParam]] = {}
+        sweepParamSetByFig: Dict[str, SweepParamSet] = {}
         # loop over all the figures
         for fig in self.figName:
             # get the row indices for the figure
@@ -553,7 +543,7 @@ class CaliParamModel(
                 key=lambda k: abs(rawXVecPairValues[k][0] - rawXVecPairValues[k][1]),
             )
             # assemble sweep parameter set, add sweep parameters to the parameter set
-            sweepParamSetFromCali = HSParamSet[QMSweepParam](QMSweepParam)
+            sweepParamSetFromCali = SweepParamSet()
             for parentName, paramDictByParent in self.sweepParamSet.items():
                 for paramName, param in paramDictByParent.items():
                     # extract mapped vector pair values
@@ -600,7 +590,7 @@ class CaliParamModel(
             sweepParamSetByFig[fig] = sweepParamSetFromCali
         return sweepParamSetByFig
 
-    def XCalibration(self) -> Dict[str, HSParamSet[QMSweepParam]]:
+    def XCalibration(self) -> Dict[str, SweepParamSet]:
         if self.isFullCalibration:
             return self._fullXCalibration()
         else:
@@ -688,9 +678,6 @@ class CaliParamModel(
             )
             self.plotCaliPtExtractFinished.emit(caliLabel, data)
             self.caliStatus = False
-
-    def toggleAxisCaliRep(self):
-        self.applyCaliToAxis = not self.applyCaliToAxis
 
     @Slot()
     def interruptCali(self):

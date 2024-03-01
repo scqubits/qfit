@@ -296,62 +296,31 @@ class IOCtrl:
 
     def closeApp(self) -> bool:
         """End the application"""
-        # # first, if the project is open from a file, check the registry dict of the old file
-        # # with that obtained from the current session, if something changed, ask the user
-        # # whether to save the changes
-        # if self.mainWindow.projectFile is not None:
-        #     registryDict = copy.deepcopy(self.registry.exportDict())
-        #     registryDictFromFile = copy.deepcopy(
-        #         self._registryDictFromFile(self.mainWindow.projectFile)
-        #     )
-        #     assert registryDictFromFile is not None, "File not found"
-        #     # remove HilbertSpace and file name from these dicts
-        #     registryDict.pop("HilbertSpace")
-        #     registryDictFromFile.pop("HilbertSpace")
-        #     registryDict.pop("projectFile")
-        #     registryDictFromFile.pop("projectFile")
-        #     currentTagList = registryDict["allExtractedData"]["taglist"]
-        #     fileTagList = registryDictFromFile["allExtractedData"]["taglist"]
-        #     if len(currentTagList) != len(fileTagList):
-        #         self.mainWindow.unsavedChanges = True
-        #     else:
-        #         for currentTag, fileTag in zip(currentTagList, fileTagList):
-        #             # compare each tag attribute-by-attribute
-        #             if currentTag.__dict__ != fileTag.__dict__:
-        #                 self.mainWindow.unsavedChanges = True
-        #                 break
-        #     registryDict["allExtractedData"].pop("taglist")
-        #     registryDictFromFile["allExtractedData"].pop("taglist")
-        #     # use numpy.testing.assert_equal to check equality for the rest of the dict
-        #     try:
-        #         np.testing.assert_equal(
-        #             registryDict, registryDictFromFile, verbose=True
-        #         )
-        #     except AssertionError:
-        #         self.mainWindow.unsavedChanges = True
+        # first, if the project is open from a file, check the registry dict of the old file
+        # with that obtained from the current session, if something changed, ask the user
+        # whether to save the changes
+        if self.mainWindow.projectFile is not None:
+            registryDict = copy.deepcopy(self.registry.exportDict())
+            registryDictFromFile = copy.deepcopy(
+                self._registryDictFromFile(self.mainWindow.projectFile)
+            )
+            assert registryDictFromFile is not None, "File not found"
 
-        #     # for key, value in registryDictFromFile.items():
-        #     #     if key in {"HilbertSpace", "measurementData.args"}:
-        #     #         continue
-        #     #     if key not in registryDict:
-        #     #         self.mainWindow.unsavedChanges = True
-        #     #         break
-        #     #     if type(value) is np.ndarray:
-        #     #         if (value != registryDict[key]).any():
-        #     #             self.mainWindow.unsavedChanges = True
-        #     #             break
-        #     #     else:
-        #     #         print(value)
-        #     #         if value != registryDict[key]:
-        #     #             self.mainWindow.unsavedChanges = True
-        #     #             break
-        # else:
-        #     self.mainWindow.unsavedChanges = True
-        #     if self.mainWindow.allDatasets.isEmpty():
-        #         self.mainWindow.unsavedChanges = False
+            # remove HilbertSpace and file name from these dicts
+            # we don't want to compare these two entries
+            # because the HilbertSpace object does not have a proper __eq__ method
+            # and the file name may be different for similar projects
+            registryDict.pop("HilbertSpace")
+            registryDictFromFile.pop("HilbertSpace")
+            registryDict.pop("projectFile")
+            registryDictFromFile.pop("projectFile")
 
-        # remove this feature for now, always ask the user to save the changes
-        self.mainWindow.unsavedChanges = True
+            # compare the two dicts
+            if registryDict != registryDictFromFile:
+                self.mainWindow.unsavedChanges = True
+
+        else:
+            self.mainWindow.unsavedChanges = False
 
         if self.mainWindow.unsavedChanges:
             msgBox = QMessageBox()
