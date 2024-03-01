@@ -165,6 +165,10 @@ class PrefitParamView(QObject):
         paramNameDict = HSParamNames | caliParamNames
         self._insertSliders(paramNameDict, removeExisting)
         self._insertMinMax(paramNameDict, removeExisting)
+        # don't know yet the exact reason, but only when _insertMinMax is called
+        # I can set width of the columns successfully for the minmax table
+        # in Windows. TODO: find out the reason.
+        self.minMaxTable.setWidthOfColumn()
         self._connectMinmaxTableFolding()
         self._signalProcessing()
 

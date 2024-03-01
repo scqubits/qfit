@@ -341,6 +341,7 @@ class FoldableTable(QTableWidget, Generic[CollectionType]):
         self.setCheckable(True)
         self.setChecked(True)
 
+
     def keys(self):
         return self.params.keys()
 
@@ -391,11 +392,12 @@ class FoldableTable(QTableWidget, Generic[CollectionType]):
         """
         # Set the column widths.
         for idx, entry_type in enumerate(self._columns):
+            # fix the width
+            self.horizontalHeader().setSectionResizeMode(idx, QHeaderView.Fixed)
             width = self._paramType.columnWidths[entry_type]
             self.setHorizontalHeaderLabels(self._columns)
             self.setColumnWidth(idx, width)
-            # fix the width
-            self.horizontalHeader().setSectionResizeMode(idx, QHeaderView.Fixed)
+            
 
         # disable the vertical header, grid, and frame
         self.verticalHeader().setVisible(False)
@@ -424,6 +426,11 @@ class FoldableTable(QTableWidget, Generic[CollectionType]):
 
         # self.resizeColumnsToContents()
         # self.resizeRowsToContents()
+    def setWidthOfColumn(self):
+        for idx, entry_type in enumerate(self._columns):
+            # fix the width
+            width = self._paramType.columnWidths[entry_type]
+            self.setColumnWidth(idx, width)
 
     def setCheckable(self, value):
         """
