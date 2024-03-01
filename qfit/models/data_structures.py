@@ -538,6 +538,9 @@ class SpectrumElement(PlotElement):
                 # no highlighted data (usually when evalsCount too small)
                 pass
 
+        axes.set_xlabel("")
+        axes.set_ylabel("")
+
         artist_after = set(axes.get_children())
         self.artists = list(artist_after - artist_before)
         self.set_visible(self._visible)

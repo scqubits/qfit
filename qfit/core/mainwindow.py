@@ -90,7 +90,7 @@ from qfit.views.status_bar import StatusBarView
 
 # pre-fit
 from qfit.views.prefit_view import PrefitParamView, PrefitView
-from qfit.models.parameter_set import HSParamSet
+from qfit.models.parameter_set import SweepParamSet
 from qfit.models.prefit import PrefitParamModel, PrefitCaliModel
 from qfit.models.numerical_model import QuantumModel
 
@@ -477,7 +477,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitBuildParamSet(hilbertspace)
         self.prefitView.dynamicalInit(
             subsysNames=[
-                HSParamSet.parentSystemNames(subsys)
+                SweepParamSet.parentSystemNames(subsys)
                 for subsys in hilbertspace.subsystem_list[::-1]
             ],
         )
@@ -510,7 +510,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         # check how many sweep parameters are found and create sliders
         # for the remaining parameters
-        sweepParameterSet = HSParamSet.sweepSetByHS(hilbertspace)
+        sweepParameterSet = SweepParamSet.initByHS(hilbertspace)
         param_types: set["ParameterType"] = set(
             sweepParameterSet.getAttrDict("paramType").values()
         )

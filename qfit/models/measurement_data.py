@@ -102,6 +102,10 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     @property
     def currentMeasData(self) -> "MeasurementDataType":
         return self._data[self._currentRow]
+    
+    @property
+    def currentFigName(self) -> str:
+        return self.currentMeasData.name
 
     def data(self, index: QModelIndex, role):
         """
@@ -244,8 +248,8 @@ class MeasurementData(Registrable):
     _zCandidates: OrderedDictMod[
         str, np.ndarray
     ] = OrderedDictMod()  # dict of 2d ndarrays
-    _currentXCompatibles: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
-    _currentYCompatibles: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
+    rawX: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
+    rawY: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
 
     _currentZ: DictItem
     _currentX: DictItem
@@ -305,11 +309,11 @@ class MeasurementData(Registrable):
 
     @property
     def rawXNames(self) -> List[str]:
-        return self._currentXCompatibles.keyList
+        return self.rawX.keyList
 
     @property
     def rawYNames(self) -> List[str]:
-        return self._currentYCompatibles.keyList
+        return self.rawY.keyList
     
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, MeasurementData):
@@ -366,7 +370,7 @@ class MeasurementData(Registrable):
         pass
 
     def swapXY(self):
-        if len(self._currentXCompatibles) > 1:
+        if len(self.rawX) > 1:
             raise ValueError(
                 "Cannot swap x and y axes if there are multiple x-axis candidates"
             )
@@ -377,9 +381,9 @@ class MeasurementData(Registrable):
         self._zCandidates = OrderedDictMod(swappedZCandidates)
         self._currentZ.data = self._currentZ.data.transpose()
 
-        self._currentXCompatibles, self._currentYCompatibles = (
-            self._currentYCompatibles,
-            self._currentXCompatibles,
+        self.rawX, self.rawY = (
+            self.rawY,
+            self.rawX,
         )
         self._currentX, self._currentY = self._currentY, self._currentX
 
@@ -400,7 +404,7 @@ class MeasurementData(Registrable):
             self.currentX.data[-1] - self.currentX.data[0]
         )
         rawX = OrderedDictMod()
-        for name, data in self._currentXCompatibles.items():
+        for name, data in self.rawX.items():
             rawX[name] = data[0] + fraction * (data[-1] - data[0])
         return rawX
 
@@ -459,7 +463,7 @@ class NumericalMeasurementData(MeasurementData):
 
         return zCandidates
 
-    def _findXYCompatibles(self):
+    def _findRawXY(self):
         """
         By trying to match the dimensions of the zData with the x and y axis candidates,
         find the x and y axis candidates that are compatible with the zData.
@@ -476,8 +480,8 @@ class NumericalMeasurementData(MeasurementData):
                     xyCandidates[name] = theObject[:, 0]
 
         # based on the shape, find the compatible x and y axis candidates
-        self._currentXCompatibles = OrderedDictMod()
-        self._currentYCompatibles = OrderedDictMod()
+        self.rawX = OrderedDictMod()
+        self.rawY = OrderedDictMod()
         ydim, xdim = self._currentZ.data.shape
         if ydim == xdim:
             raise NotImplementedError(
@@ -487,36 +491,37 @@ class NumericalMeasurementData(MeasurementData):
         # insert the compatible x and y axis candidates into the respective dicts
         for name, data in xyCandidates.items():
             if len(data) == xdim:
-                self._currentXCompatibles[name] = data
+                self.rawX[name] = data
             if len(data) == ydim:
-                self._currentYCompatibles[name] = data
-        if not self._currentXCompatibles:
-            self._currentXCompatibles = OrderedDictMod(no_axis=np.arange(xdim))
-        if not self._currentYCompatibles:
-            self._currentYCompatibles = OrderedDictMod(no_axis=np.arange(ydim))
+                self.rawY[name] = data
+        if not self.rawX:
+            self.rawX = OrderedDictMod(no_axis=np.arange(xdim))
+        if not self.rawY:
+            self.rawY = OrderedDictMod(no_axis=np.arange(ydim))
 
         # based on the number of the compatible x and y axis candidates
         # determine the tuning axis and freq axis. Freq axis is the one
         # with only one compatible candidate.
-        if len(self._currentYCompatibles) == 1 and len(self._currentXCompatibles) >= 1:
+        if len(self.rawY) == 1 and len(self.rawX) >= 1:
             # do nothing
             pass
-        elif len(self._currentXCompatibles) == 1 and len(self._currentYCompatibles) > 1:
+        elif len(self.rawX) == 1 and len(self.rawY) > 1:
             self.swapXY()
-        elif len(self._currentXCompatibles) > 1 or len(self._currentYCompatibles) > 1:
+        elif len(self.rawX) > 1 or len(self.rawY) > 1:
             raise NotImplementedError(
-                "Multiple compatible x or y-axis data found and currently not supported"
+                "Multiple compatible x or y-axis data found and currently "
+                "not supported. Will be supported in the next version."
             )
 
         # finally, determine the principal x axis - largest change in the data
-        if len(self._currentXCompatibles) > 1:
+        if len(self.rawX) > 1:
             idx = np.argmax(
                 [
                     np.abs(data[-1] - data[0])
-                    for data in self._currentXCompatibles.values()
+                    for data in self.rawX.values()
                 ]
             )
-            self._currentX = self._currentXCompatibles.itemByIndex(idx)
+            self._currentX = self.rawX.itemByIndex(idx)
 
     def _initXYZ(self):
         """
@@ -525,9 +530,9 @@ class NumericalMeasurementData(MeasurementData):
         self._zCandidates = self._findZCandidates(self.rawData)
         self._currentZ = self._zCandidates.itemByIndex(0)
 
-        self._findXYCompatibles()
-        self._currentX = self._currentXCompatibles.itemByIndex(0)
-        self._currentY = self._currentYCompatibles.itemByIndex(0)
+        self._findRawXY()
+        self._currentX = self.rawX.itemByIndex(0)
+        self._currentY = self.rawY.itemByIndex(0)
 
     def setCurrentZ(self, itemIndex):
         self._currentZ = self._zCandidates.itemByIndex(itemIndex)
@@ -673,12 +678,12 @@ class ImageMeasurementData(MeasurementData):
 
         xdim, ydim = self._currentZ.data.shape
 
-        self._currentXCompatibles = OrderedDictMod(no_axis=np.arange(xdim))
-        self._currentYCompatibles = OrderedDictMod(no_axis=np.arange(ydim))
+        self.rawX = OrderedDictMod(no_axis=np.arange(xdim))
+        self.rawY = OrderedDictMod(no_axis=np.arange(ydim))
 
         self._currentZ = self._zCandidates.itemByIndex(0)
-        self._currentX = self._currentXCompatibles.itemByIndex(0)
-        self._currentY = self._currentYCompatibles.itemByIndex(0)
+        self._currentX = self.rawX.itemByIndex(0)
+        self._currentY = self.rawY.itemByIndex(0)
 
     # def registerAll(
     #     self,

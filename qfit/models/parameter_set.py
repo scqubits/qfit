@@ -540,14 +540,35 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         self.parentNameByObj = {}
         self.parentObjByName = {}
 
+    def setParameterForParent(self):
+        """
+        To be updated - later param will not store a parent object internally
+        """
+        for _, paramDictByParent in self.items():
+            for _, param in paramDictByParent.items():
+                # map rawX to the parameter values
+                param.setParameterForParent()
+    
+
+class SweepParamSet(HSParamSet[QMSweepParam]):
+
+    def __init__(self):
+        super().__init__(QMSweepParam)
+
     @classmethod
-    def sweepSetByHS(cls, hilbertSpace: HilbertSpace) -> "ParamSet[QMSweepParam]":
-        sweepParameterSet = HSParamSet(QMSweepParam)
+    def initByHS(cls, hilbertSpace: HilbertSpace) -> "SweepParamSet":
+        sweepParameterSet = SweepParamSet()
         sweepParameterSet.dynamicalInit(
             hilbertSpace,
             included_parameter_type=["ng", "flux"],
         )
         return sweepParameterSet
+    
+    def setByRawX(self, rawX: Dict[str, float]):
+        for _, paramDictByParent in self.items():
+            for _, param in paramDictByParent.items():
+                # map rawX to the parameter values
+                param.setValueWithCali(rawX)
 
 
 DispParamCls = TypeVar("DispParamCls", bound="DispParamBase")

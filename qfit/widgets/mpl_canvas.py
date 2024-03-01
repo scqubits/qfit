@@ -13,7 +13,7 @@
 import numpy as np
 import copy
 import warnings
-from typing import Union, Literal, Tuple, Dict, Any
+from typing import Union, Literal, Tuple, Dict, Any, List
 
 from PySide6 import QtCore
 from PySide6.QtCore import Slot
@@ -333,13 +333,26 @@ class MplFigureCanvas(QFrame):
         vertical_layout.addWidget(self.canvas)
         self.setLayout(vertical_layout)
 
-        # initialize the plotting elements and properties
-        self._plottingElements: Dict[str, PlotElement] = {}
+        # initialize the properties
+        
         self.initializeProperties()
 
     def initializeProperties(self):
         self.canvas.figure.subplots()
         self.axes.autoscale(enable=False)
+
+        # remove the default x- and y-axis
+        self.axes.spines['bottom'].set_visible(False)
+        self.axes.xaxis.set_ticks([])
+        self.axes.set_xticklabels([])
+        self.axes.spines['left'].set_visible(False)
+        self.axes.yaxis.set_ticks([])
+        self.axes.set_yticklabels([])
+
+        # the axes for displaying the x & y values
+        self.xAxes: List[Axes] = []
+        self.yAxes: List[Axes] = []
+        self._plottingElements: Dict[str, PlotElement] = {}
 
         self.plottingDisabled: bool = False
 
@@ -380,6 +393,7 @@ class MplFigureCanvas(QFrame):
         self.scatterColor = color_dict[self.colorMapStr]["Scatter"]
         self.cmap = copy.copy(getattr(cm, self.colorMapStr))
 
+    # View Manipulation: Axes ==========================================
     def _setMeasXYLim(self, xLim: Tuple[float, float], yLim: Tuple[float, float]):
         """
         When click the reset button, we want to reset to the previous x 
@@ -415,6 +429,62 @@ class MplFigureCanvas(QFrame):
         else:
             self.axes.set_xlim(*self.xLim)
             self.axes.set_ylim(*self.yLim)
+
+    @Slot()
+    def relim(self, xLim: Tuple[float, float], yLim: Tuple[float, float]):
+        """
+        Set the x and y limits of the axes to fit the measurement data
+        """        
+        self._setMeasXYLim(xLim, yLim)
+        self._restoreXYLim(byMeasData=True)
+        self._recordXYLim()
+
+    def updateXAxes(self, xAxes: Dict[str, Tuple[float, float]]):
+        """
+        Update the x-axes value. 
+        """
+        for ax in self.xAxes:
+            self.canvas.figure.delaxes(ax)
+
+        print(f"update x axes: {xAxes}")
+
+        # Create a new axes for each x-values in the dictionary
+        new_axes = []
+        for i, (xName, xRange) in enumerate(xAxes.items()):
+            ax = self.axes.twiny()
+            ax.set_xlim(*xRange)
+            ax.set_xlabel(xName)
+            ax.xaxis.set_ticks_position('bottom')
+            ax.xaxis.set_label_position('bottom')
+            ax.spines['bottom'].set_position(('outward', 40 * i))
+            # ax.xaxis.set_label_coords(1.05, -0.08 * (i))  # set label position
+            new_axes.append(ax)
+        self.xAxes = new_axes
+
+        self.canvas.figure.tight_layout()
+        self.canvas.draw()
+
+    def updateYAxes(self, yName: str, yRange: Tuple[float, float]):
+        """
+        Update the y-axes. (there is only one y-axis)
+        """
+        for ax in self.yAxes:
+            self.canvas.figure.delaxes(ax)
+
+        print(f"update y axes: {yName}, {yRange}")
+
+        # Create a new axes for each x-values in the dictionary
+        ax = self.axes.twinx()
+        ax.set_ylim(*yRange)
+        ax.set_ylabel(yName)
+        ax.yaxis.set_ticks_position('left')
+        ax.yaxis.set_label_position('left')
+        ax.spines['left'].set_position(('outward', 40 * 0))
+        # ax.yaxis.set_label_coords(1.05, -0.08 * (i))  # set label position
+        self.yAxes = [ax]
+
+        self.canvas.figure.tight_layout()
+        self.canvas.draw()
 
     # View Manipulation: Cursor ========================================
     def updateCursor(
@@ -571,15 +641,6 @@ class MplFigureCanvas(QFrame):
     #     self.axes.set_xlim(self._plottingElements["measurement"].xLim)
     #     self.axes.set_ylim(self._plottingElements["measurement"].yLim)
     #     self._recordXYLim()
-
-    @Slot()
-    def relim(self, xLim: Tuple[float, float], yLim: Tuple[float, float]):
-        """
-        Set the x and y limits of the axes to fit the measurement data
-        """        
-        self._setMeasXYLim(xLim, yLim)
-        self._restoreXYLim(byMeasData=True)
-        self._recordXYLim()
 
     # manipulate plotting elements        
     @Slot()

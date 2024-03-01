@@ -5,7 +5,7 @@ from PySide6.QtCore import (
 )
 from PySide6.QtWidgets import QPushButton
 
-from qfit.models.parameter_set import HSParamSet
+from qfit.models.parameter_set import SweepParamSet
 
 from typing import TYPE_CHECKING, Tuple, Dict, Any, List
 
@@ -68,7 +68,7 @@ class CalibrationCtrl(QObject):
             rawXVecNameList=measurementData[0].rawXNames,
             rawYName=measurementData[0].rawYNames[0],
             caliTableXRowNr=self.caliParamModel.caliTableXRowNr,
-            sweepParamSet=HSParamSet.sweepSetByHS(hilbertspace),
+            sweepParamSet=SweepParamSet.initByHS(hilbertspace),
         )
         self.caliParamModel.updateAllBoxes()
 
