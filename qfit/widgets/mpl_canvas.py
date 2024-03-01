@@ -35,7 +35,6 @@ from qfit.models.data_structures import PlotElement
 from qfit.settings import color_dict
 
 
-
 class MplNavButtons(QFrame):
     pass
 
@@ -44,16 +43,16 @@ class NavigationHidden(NavigationToolbar2QT):
     """
     Helper class to realize a MPL navigation toolbar without the buttons.
     """
-    
+
     # only connect to external buttons
     toolitems = [
         t for t in NavigationToolbar2QT.toolitems if t[0] in ("Home", "Pan", "Zoom")
     ]
 
     def __init__(
-        self, 
-        canvas: FigureCanvasQTAgg, 
-        parent: "MplFigureCanvas", 
+        self,
+        canvas: FigureCanvasQTAgg,
+        parent: "MplFigureCanvas",
     ):
         super().__init__(canvas, parent, coordinates=False)
         self.set_cursor(cursors.SELECT_REGION)
@@ -143,7 +142,7 @@ class NavigationHidden(NavigationToolbar2QT):
         """
         The x and y limits of the axes can only be changed by zoom, pan, or
         home buttons. To do this, we need to record the x and y limits of the
-        axes after each zoom/pan/home action. The recorded x and y limits 
+        axes after each zoom/pan/home action. The recorded x and y limits
         will be used when the plot element is updated.
         """
         super().release_zoom(event)
@@ -210,16 +209,16 @@ class SpecialCursor(Cursor):
     def onmove(self, event):
         """
         Internal event handler to draw the cursor when the mouse moves.
-        
+
         When the mouse moves, the cursor (a scatter plot) is drawn at the
         closest x value in the list of all x values.
         """
         if self.ignore(event):
             return
-        
+
         if not self.canvas.widgetlock.available(self):
             return
-        
+
         if event.inaxes != self.ax:
             # Hide the vertical and horizontal lines when the mouse is outside the axes
             self.linev.set_visible(False)
@@ -229,18 +228,18 @@ class SpecialCursor(Cursor):
                 self.canvas.draw()
                 self.needclear = False
             return
-        
+
         self.needclear = True
-        
+
         if not self.visible:
             return
-        
+
         # Update the vertical line position based on the mouse x-coordinate
         self.linev.set_xdata((event.xdata, event.xdata))
 
         # Update the horizontal line position based on the mouse y-coordinate
         self.lineh.set_ydata((event.ydata, event.ydata))
-        
+
         # Calculate the x-coordinate of the point based on the snapping mode and axis snap mode
         if self.axis_snap_mode == "Y":
             point_x_coordinate = self.xyMin[0]
@@ -248,7 +247,7 @@ class SpecialCursor(Cursor):
             point_x_coordinate = self.closest_line(event.xdata)
         else:
             point_x_coordinate = event.xdata
-        
+
         # Calculate the y-coordinate of the point based on the axis snap mode
         if self.axis_snap_mode == "X":
             point_y_coordinate = self.xyMin[1]
@@ -256,9 +255,9 @@ class SpecialCursor(Cursor):
             point_y_coordinate = event.ydata
 
         # remove the old cursor
-        if hasattr(self, 'cross'):
+        if hasattr(self, "cross"):
             self.cross.remove()
-        
+
         # Draw the cursor (a scatter plot) at the calculated coordinates
         self.cross = self.ax.scatter(
             point_x_coordinate,
@@ -284,7 +283,7 @@ class SpecialCursor(Cursor):
         """
         if self.xSnapValues is None or len(self.xSnapValues) == 0:
             return xdat
-        
+
         allxdiff = {np.abs(xdat - i): i for i in self.xSnapValues}
         if allxdiff:
             return allxdiff[min(allxdiff.keys())]
@@ -312,7 +311,7 @@ class SpecialCursor(Cursor):
     def remove(self):
         self.linev.remove()
         self.lineh.remove()
-        if hasattr(self, 'cross'):
+        if hasattr(self, "cross"):
             self.cross.remove()
 
 
@@ -338,6 +337,8 @@ class MplFigureCanvas(QFrame):
         self.initializeProperties()
 
     def initializeProperties(self):
+        # change background color
+        self.canvas.figure.patch.set_facecolor("#B8B8B8")
         self.canvas.figure.subplots()
         self.axes.autoscale(enable=False)
 
@@ -356,14 +357,14 @@ class MplFigureCanvas(QFrame):
         self.measXLim: Tuple[float, float] = (0, 1)
         self.measYLim: Tuple[float, float] = (0, 1)
 
-        # should be call at the end - it will make use of other properties like 
+        # should be call at the end - it will make use of other properties like
         # coloring
 
     # Properties =======================================================
     @property
     def axes(self) -> Axes:
         return self.canvas.figure.axes[0]
-    
+
     @Slot()
     def updateColorMap(self, colorMap: str):
         self.colorMapStr = colorMap
@@ -372,7 +373,7 @@ class MplFigureCanvas(QFrame):
 
     def _updateElementColors(self):
         """
-        According to the color map, update the colors of the elements. 
+        According to the color map, update the colors of the elements.
         It won't redraw the elements, but wait for the next updateAllElements() call.
         """
         self.crossColor = color_dict[self.colorMapStr]["Cross"]
@@ -382,7 +383,7 @@ class MplFigureCanvas(QFrame):
 
     def _setMeasXYLim(self, xLim: Tuple[float, float], yLim: Tuple[float, float]):
         """
-        When click the reset button, we want to reset to the previous x 
+        When click the reset button, we want to reset to the previous x
         and y limits determined by the measurement data. This method records
         the x and y limits of the axes when the measurement data is loaded.
         """
@@ -391,12 +392,12 @@ class MplFigureCanvas(QFrame):
 
     def _recordXYLim(self):
         """
-        When update the other plotting elements, we want to keep the 
+        When update the other plotting elements, we want to keep the
         previous x and y limits of the axes unchanged. This method records
         the x and y limits of the axes.
 
         It will be called when:
-        1. the view is initializes/reset internally, for example, 
+        1. the view is initializes/reset internally, for example,
             when the measurement data is loaded / transposed
         2. the view's x and y limits are zoomed/panned/reset externally
         """
@@ -455,15 +456,15 @@ class MplFigureCanvas(QFrame):
 
         self.specialCursor = SpecialCursor(
             self.axes,
-            xSnapMode = self.xSnapMode,
-            xSnapValues = self.cursorXSnapValues,
-            xyMin = (self.axes.get_xlim()[0], self.axes.get_ylim()[0]),
-            axisSnapMode = self.axisSnapMode,
-            useblit = True,
-            horizOn = self.crosshairHorizOn,
-            vertOn = self.crosshairVertOn,
-            color = self.crossColor,
-            alpha = 0.5,
+            xSnapMode=self.xSnapMode,
+            xSnapValues=self.cursorXSnapValues,
+            xyMin=(self.axes.get_xlim()[0], self.axes.get_ylim()[0]),
+            axisSnapMode=self.axisSnapMode,
+            useblit=True,
+            horizOn=self.crosshairHorizOn,
+            vertOn=self.crosshairVertOn,
+            color=self.crossColor,
+            alpha=0.5,
         )
         self.canvas.draw()
         self.specialCursor.line_blit_on()
@@ -501,7 +502,7 @@ class MplFigureCanvas(QFrame):
     @Slot()
     def updateCursorXSnapValues(self, newCursorXSnapValues: np.ndarray):
         self.cursorXSnapValues = newCursorXSnapValues
-        self.updateCursor()        
+        self.updateCursor()
 
     # View Manipulation: Plotting ======================================
     # toolbox
@@ -510,23 +511,21 @@ class MplFigureCanvas(QFrame):
         Check whether the element name is valid
         """
         if name not in [
-            "measurement", 
+            "measurement",
             "active_extractions",
             "all_extractions",
             "extraction_vlines",
-            "spectrum"
+            "spectrum",
         ]:
-            raise ValueError(
-                f"Invalid element name: {name}. "
-            )    
-        
+            raise ValueError(f"Invalid element name: {name}. ")
+
     def _hasElement(self, elementName: str) -> bool:
         """
         Check whether the element is in the plotting elements dictionary
         """
         self._checkElementName(elementName)
         return elementName in self._plottingElements.keys()
-        
+
     def _coloringKwargs(self, elementName: str) -> Dict[str, Any]:
         """
         For different elements, they accept different coloring kwargs.
@@ -542,11 +541,11 @@ class MplFigureCanvas(QFrame):
         elif elementName == "extraction_vlines":
             return {"color": self.lineColor}
         else:
-            return {} 
-        
+            return {}
+
     def _setVisible(self, elementName: str, visible: bool):
         """
-        Set the visibility of the element. If the element does not exist, 
+        Set the visibility of the element. If the element does not exist,
         create a dummy element and set its visibility. It will be updated
         when the actual element is created, and the visibility will be
         inherited.
@@ -566,8 +565,8 @@ class MplFigureCanvas(QFrame):
     #     """
     #     if not self._hasElement("measurement"):
     #         # measurement data not loaded
-    #         return 
-        
+    #         return
+
     #     self.axes.set_xlim(self._plottingElements["measurement"].xLim)
     #     self.axes.set_ylim(self._plottingElements["measurement"].yLim)
     #     self._recordXYLim()
@@ -576,16 +575,15 @@ class MplFigureCanvas(QFrame):
     def relim(self, xLim: Tuple[float, float], yLim: Tuple[float, float]):
         """
         Set the x and y limits of the axes to fit the measurement data
-        """        
+        """
         self._setMeasXYLim(xLim, yLim)
         self._restoreXYLim(byMeasData=True)
         self._recordXYLim()
 
-    # manipulate plotting elements        
+    # manipulate plotting elements
     @Slot()
     def updateElemPropertyByPage(
-        self, 
-        page: Literal["calibrate", "extract", "prefit", "fit"]
+        self, page: Literal["calibrate", "extract", "prefit", "fit"]
     ):
         """
         Switch to the mode and update the plotting elements
@@ -610,27 +608,20 @@ class MplFigureCanvas(QFrame):
             self._setVisible("spectrum", True)
 
         self.canvas.draw()
-        
+
     def _plotElement(
-        self, 
-        element: Union[PlotElement, str], 
-        draw: bool = True,
-        **kwargs
+        self, element: Union[PlotElement, str], draw: bool = True, **kwargs
     ):
         """
         Plot the element by name
         """
         if self.plottingDisabled:
             return
-        
+
         if isinstance(element, str):
             element = self._plottingElements[element]
 
-        element.canvasPlot(
-            self.axes, 
-            **self._coloringKwargs(element.name),
-            **kwargs
-        )
+        element.canvasPlot(self.axes, **self._coloringKwargs(element.name), **kwargs)
         self._restoreXYLim()
 
         if draw:
@@ -639,7 +630,7 @@ class MplFigureCanvas(QFrame):
     @Slot()
     def updateElement(self, element: PlotElement, **kwargs):
         """
-        Update the element in the plotting elements dictionary and 
+        Update the element in the plotting elements dictionary and
         redraw the element on the canvas. Note that the visibility of the
         element will be inherited from the previous element with the same
         name.
@@ -652,7 +643,7 @@ class MplFigureCanvas(QFrame):
             old_element = self._plottingElements[name]
             element.inheritProperties(old_element)
             old_element.remove()
-        
+
         # draw the new element
         self._plottingElements[name] = element
         self._plotElement(name, draw=True, **kwargs)
@@ -660,7 +651,7 @@ class MplFigureCanvas(QFrame):
     @Slot()
     def updateMultiElements(self, *elements: PlotElement, **kwargs):
         """
-        Update multiple elements in the plotting elements dictionary and 
+        Update multiple elements in the plotting elements dictionary and
         redraw the elements on the canvas
         """
         for element in elements:
@@ -684,6 +675,5 @@ class MplFigureCanvas(QFrame):
             self._restoreXYLim(byMeasData=True)
 
         self.canvas.draw()
-        
+
     # Signal Processing ================================================
-    
