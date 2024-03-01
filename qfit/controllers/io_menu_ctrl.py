@@ -307,6 +307,9 @@ class IOCtrl:
             assert registryDictFromFile is not None, "File not found"
 
             # remove HilbertSpace and file name from these dicts
+            # we don't want to compare these two entries
+            # because the HilbertSpace object does not have a proper __eq__ method
+            # and the file name may be different for similar projects
             registryDict.pop("HilbertSpace")
             registryDictFromFile.pop("HilbertSpace")
             registryDict.pop("projectFile")
