@@ -217,6 +217,9 @@ class PrefitCaliModel(
         """
         super()._storeParamAttr(self, paramAttr, fromSlider=fromSlider)
 
+    def registerAll(self) -> Dict[str, RegistryEntry]:
+        return self._registerAll(self)
+
     # Cailibration related methods =====================================
     updateCaliModel = Signal(ParamAttr)
 
