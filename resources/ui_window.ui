@@ -148,14 +148,14 @@ QScrollBar:vertical {
  }
 
  QScrollBar::handle:vertical {	
-	background: rgb(85, 170, 255);
+	background: #64568e;
     min-height: 25px;
 	border-radius: 5px
  }
 
  QScrollBar::add-line:vertical {
      border: none;
-    background: rgb(55, 63, 77);
+    background: #3b3940;
      height: 20px;
 	border-bottom-left-radius: 7px;
     border-bottom-right-radius: 7px;
@@ -165,7 +165,7 @@ QScrollBar:vertical {
 
  QScrollBar::sub-line:vertical {
 	border: none;
-    background: rgb(55, 63, 77);
+    background: #3b3940;
      height: 20px;
 	border-top-left-radius: 7px;
     border-top-right-radius: 7px;
@@ -268,15 +268,15 @@ QSlider::groove:vertical {
     border-radius: 9px;
     width: 18px;
     margin: 0px;
-	background-color: rgb(52, 59, 72);
+	background-color: #3c3a40;
 }
 
 QSlider::groove:vertical:hover {
-	background-color: rgb(55, 62, 76);
+	background-color: #3c3a40;
 }
 
 QSlider::handle:vertical {
-    background-color: rgb(85, 170, 255);
+    background-color: #64568e;
 	border: none;
     height: 18px;
     width: 18px;
@@ -285,11 +285,11 @@ QSlider::handle:vertical {
 }
 
 QSlider::handle:vertical:hover {
-    background-color: rgb(105, 180, 255);
+    background-color: #64568e;
 }
 
 QSlider::handle:vertical:pressed {
-    background-color: rgb(65, 130, 195);
+    background-color: #64568e;
 }
 
 QGroupBox {
@@ -863,7 +863,7 @@ QPushButton:pressed {
           <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="DataExtractingWidget" name="extractPointsWidget">
           <property name="sizePolicy">
@@ -3646,8 +3646,8 @@ QPushButton: pressed{
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>441</width>
+                   <height>485</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -3673,7 +3673,7 @@ QPushButton: pressed{
            <item>
             <widget class="QFrame" name="frame_prefit_minmax">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
@@ -3681,6 +3681,12 @@ QPushButton: pressed{
              <property name="minimumSize">
               <size>
                <width>0</width>
+               <height>100</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
                <height>0</height>
               </size>
              </property>
@@ -3703,7 +3709,7 @@ QPushButton: pressed{
               <item>
                <widget class="QScrollArea" name="scrollArea">
                 <property name="sizePolicy">
-                 <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                 <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
@@ -3717,7 +3723,7 @@ QPushButton: pressed{
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
-                  <height>250</height>
+                  <height>16777215</height>
                  </size>
                 </property>
                 <property name="styleSheet">
@@ -3739,8 +3745,8 @@ border-bottom-right-radius: 6px;	</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>60</height>
+                   <width>446</width>
+                   <height>100</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_16"/>
@@ -3761,13 +3767,13 @@ border-bottom-right-radius: 6px;	</string>
              <property name="minimumSize">
               <size>
                <width>0</width>
-               <height>99</height>
+               <height>130</height>
               </size>
              </property>
              <property name="maximumSize">
               <size>
                <width>16777215</width>
-               <height>99</height>
+               <height>130</height>
               </size>
              </property>
              <property name="styleSheet">
@@ -3892,7 +3898,7 @@ border-bottom-right-radius: 6px;	</string>
                 <property name="sizeHint" stdset="0">
                  <size>
                   <width>20</width>
-                  <height>50</height>
+                  <height>70</height>
                  </size>
                 </property>
                </spacer>
@@ -3968,8 +3974,8 @@ background-color: #9163BF;
                 </property>
                 <property name="iconSize">
                  <size>
-                  <width>20</width>
-                  <height>20</height>
+                  <width>15</width>
+                  <height>15</height>
                  </size>
                 </property>
                </widget>
@@ -4223,7 +4229,7 @@ font-size: 16px;
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
-                     <width>160</width>
+                     <width>215</width>
                      <height>47</height>
                     </size>
                    </property>
@@ -4318,7 +4324,7 @@ icon: url(:/icons/svg/copy-pressed.svg);
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
-                     <width>130</width>
+                     <width>185</width>
                      <height>20</height>
                     </size>
                    </property>
@@ -4330,6 +4336,7 @@ icon: url(:/icons/svg/copy-pressed.svg);
                     <font>
                      <family>Roboto Medium</family>
                      <pointsize>-1</pointsize>
+                     <stylestrategy>NoAntialias</stylestrategy>
                     </font>
                    </property>
                    <property name="text">
@@ -4378,8 +4385,8 @@ icon: url(:/icons/svg/copy-pressed.svg);
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>441</width>
+                   <height>563</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -4413,13 +4420,13 @@ icon: url(:/icons/svg/copy-pressed.svg);
              <property name="minimumSize">
               <size>
                <width>0</width>
-               <height>99</height>
+               <height>130</height>
               </size>
              </property>
              <property name="maximumSize">
               <size>
                <width>16777215</width>
-               <height>99</height>
+               <height>130</height>
               </size>
              </property>
              <property name="frameShape">
@@ -4492,8 +4499,8 @@ background-color: #9163BF;
                 </property>
                 <property name="iconSize">
                  <size>
-                  <width>20</width>
-                  <height>20</height>
+                  <width>15</width>
+                  <height>15</height>
                  </size>
                 </property>
                </widget>
@@ -4509,7 +4516,7 @@ background-color: #9163BF;
                 <property name="sizeHint" stdset="0">
                  <size>
                   <width>20</width>
-                  <height>50</height>
+                  <height>70</height>
                  </size>
                 </property>
                </spacer>
@@ -5251,7 +5258,7 @@ QToolTip {
                <x>0</x>
                <y>0</y>
                <width>16777215</width>
-               <height>80</height>
+               <height>90</height>
               </rect>
              </property>
              <property name="sizePolicy">
@@ -5263,7 +5270,13 @@ QToolTip {
              <property name="minimumSize">
               <size>
                <width>0</width>
-               <height>80</height>
+               <height>90</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>90</height>
               </size>
              </property>
              <property name="autoFillBackground">
@@ -5326,7 +5339,7 @@ QPushButton:checked {
              <widget class="QPushButton" name="panViewButton">
               <property name="geometry">
                <rect>
-                <x>100</x>
+                <x>110</x>
                 <y>10</y>
                 <width>40</width>
                 <height>40</height>
@@ -5365,7 +5378,7 @@ QPushButton:checked {
              <widget class="QPushButton" name="zoomViewButton">
               <property name="geometry">
                <rect>
-                <x>155</x>
+                <x>170</x>
                 <y>10</y>
                 <width>40</width>
                 <height>40</height>
@@ -5401,7 +5414,7 @@ QPushButton:checked {
              <widget class="QPushButton" name="horizontalSnapButton">
               <property name="geometry">
                <rect>
-                <x>280</x>
+                <x>310</x>
                 <y>10</y>
                 <width>40</width>
                 <height>40</height>
@@ -5437,7 +5450,7 @@ QPushButton:checked {
              <widget class="QPushButton" name="selectViewButton">
               <property name="geometry">
                <rect>
-                <x>210</x>
+                <x>230</x>
                 <y>10</y>
                 <width>40</width>
                 <height>40</height>
@@ -5476,7 +5489,7 @@ QPushButton:checked {
              <widget class="QPushButton" name="verticalSnapButton">
               <property name="geometry">
                <rect>
-                <x>335</x>
+                <x>370</x>
                 <y>10</y>
                 <width>40</width>
                 <height>40</height>
@@ -5514,7 +5527,7 @@ QPushButton:checked {
              <property name="geometry">
               <rect>
                <x>30</x>
-               <y>50</y>
+               <y>60</y>
                <width>41</width>
                <height>20</height>
               </rect>
@@ -5539,8 +5552,8 @@ QPushButton:checked {
             <widget class="QLabel" name="label_27">
              <property name="geometry">
               <rect>
-               <x>105</x>
-               <y>50</y>
+               <x>114</x>
+               <y>60</y>
                <width>31</width>
                <height>20</height>
               </rect>
@@ -5558,8 +5571,8 @@ QPushButton:checked {
             <widget class="QLabel" name="label_34">
              <property name="geometry">
               <rect>
-               <x>155</x>
-               <y>50</y>
+               <x>170</x>
+               <y>60</y>
                <width>41</width>
                <height>20</height>
               </rect>
@@ -5577,9 +5590,9 @@ QPushButton:checked {
             <widget class="QLabel" name="label_35">
              <property name="geometry">
               <rect>
-               <x>210</x>
-               <y>50</y>
-               <width>41</width>
+               <x>224</x>
+               <y>60</y>
+               <width>54</width>
                <height>20</height>
               </rect>
              </property>
@@ -5596,8 +5609,8 @@ QPushButton:checked {
             <widget class="QLabel" name="label_36">
              <property name="geometry">
               <rect>
-               <x>277</x>
-               <y>50</y>
+               <x>305</x>
+               <y>60</y>
                <width>51</width>
                <height>20</height>
               </rect>
@@ -5615,8 +5628,8 @@ QPushButton:checked {
             <widget class="QLabel" name="label_37">
              <property name="geometry">
               <rect>
-               <x>331</x>
-               <y>50</y>
+               <x>366</x>
+               <y>60</y>
                <width>51</width>
                <height>20</height>
               </rect>
@@ -5640,7 +5653,7 @@ QPushButton:checked {
             <widget class="QLabel" name="label_50">
              <property name="geometry">
               <rect>
-               <x>85</x>
+               <x>90</x>
                <y>12</y>
                <width>2</width>
                <height>40</height>
@@ -5668,7 +5681,7 @@ QPushButton:checked {
             <widget class="QLabel" name="label_51">
              <property name="geometry">
               <rect>
-               <x>265</x>
+               <x>290</x>
                <y>12</y>
                <width>2</width>
                <height>40</height>
@@ -5697,7 +5710,7 @@ QPushButton:checked {
              <property name="geometry">
               <rect>
                <x>520</x>
-               <y>10</y>
+               <y>15</y>
                <width>200</width>
                <height>40</height>
               </rect>

@@ -1,5 +1,12 @@
 from PySide6.QtCore import QObject, Signal, Slot, Qt
-from PySide6.QtWidgets import QComboBox, QCheckBox, QSpinBox, QPushButton, QWidget
+from PySide6.QtWidgets import (
+    QComboBox,
+    QCheckBox,
+    QSpinBox,
+    QPushButton,
+    QWidget,
+    QFrame,
+)
 from qfit.widgets.validated_line_edits import IntLineEdit, StateLineEdit
 
 from qfit.widgets.grouped_sliders import (
@@ -23,7 +30,7 @@ class PrefitParamView(QObject):
     HSTextChanged = Signal(ParamAttr)
     HSEditingFinished = Signal(str, str)
     HSRangeEditingFinished = Signal(ParamAttr)
-    
+
     caliSliderChanged = Signal(ParamAttr)
     caliTextChanged = Signal(ParamAttr)
     caliEditingFinished = Signal(str, str)
@@ -31,20 +38,25 @@ class PrefitParamView(QObject):
 
     # Initialization ===================================================
     def __init__(
-        self, 
+        self,
         prefitScrollAreaWidget: QWidget,
         prefitMinmaxScrollAreaWidget: QWidget,
-        *args, 
-        **kwargs
+        prefitMinMaxFrame: QFrame,
+        *args,
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
 
         self.prefitScrollAreaWidget = prefitScrollAreaWidget
-        self.prefitMinmaxScrollAreaWidget = prefitMinmaxScrollAreaWidget    
+        self.prefitMinmaxScrollAreaWidget = prefitMinmaxScrollAreaWidget
+        self.prefitMinMaxFrame = prefitMinMaxFrame
+
+        # setting for prefit minmax scroll area
+        # self.prefitMinmaxScrollAreaWidget.setWidgetResizable(True)
 
         # A list to tell whether the parameter belongs to a hilbertspace
         # or a calibration model.
-        self.HSNames: List[str] = []  
+        self.HSNames: List[str] = []
         # Group the signals for easier connection (avoid code repetition)
         self.HSSignals = {
             "sliderChanged": self.HSSliderChanged,
@@ -59,11 +71,8 @@ class PrefitParamView(QObject):
             "rangeEditingFinished": self.caliRangeEditingFinished,
         }
 
-
     def _insertSliders(
-        self,
-        paramNameDict: Dict[str, List[str]],
-        removeExisting: bool = True
+        self, paramNameDict: Dict[str, List[str]], removeExisting: bool = True
     ):
         """
         View init: pre-fit sliders
@@ -105,9 +114,7 @@ class PrefitParamView(QObject):
     #     pass
 
     def _insertMinMax(
-        self,
-        paramNameDict: Dict[str, List[str]],
-        removeExisting: bool = True
+        self, paramNameDict: Dict[str, List[str]], removeExisting: bool = True
     ):
         """
         View init: pre-fit min max table
@@ -138,33 +145,34 @@ class PrefitParamView(QObject):
                 self.minMaxTable.insertParams(key, para_name)
 
         # add the minmax table to the scroll area
-        foldable_widget = FoldableWidget("RANGES OF SLIDERS", self.minMaxTable)
-        prefitMinmaxScrollLayout.addWidget(foldable_widget)
+        self.foldable_widget = FoldableWidget("RANGES OF SLIDERS", self.minMaxTable)
+        prefitMinmaxScrollLayout.addWidget(self.foldable_widget)
 
         # default to fold the table
-        foldable_widget.toggle()
+        self.foldable_widget.toggle()
 
     # def _removeMinMax(self, groupName: str):
     #     pass
-        
+
     def insertSliderMinMax(
         self,
         HSParamNames: Dict[str, List[str]],
         caliParamNames: Dict[str, List[str]],
-        removeExisting: bool = True
+        removeExisting: bool = True,
     ):
         self.HSNames = list(HSParamNames.keys())
-        
-        paramNameDict = HSParamNames | caliParamNames 
+
+        paramNameDict = HSParamNames | caliParamNames
         self._insertSliders(paramNameDict, removeExisting)
         self._insertMinMax(paramNameDict, removeExisting)
+        self._connectMinmaxTableFolding()
         self._signalProcessing()
 
     # signal processing ================================================
     def _signalProcessing(self):
         """
         Collect the signals from the sliders and minmax table, and emit
-        in one connection. It should be called whenver the sliders and minmax 
+        in one connection. It should be called whenver the sliders and minmax
         table are re-initialized.
         """
         for groupName, group in self.sliderSet.items():
@@ -177,43 +185,55 @@ class PrefitParamView(QObject):
                     signalSet = self.caliSignals
 
                 slider.sliderValueChangedConnect(
-                    lambda value, name=name, groupName=groupName, signalSet=signalSet: 
-                    signalSet["sliderChanged"].emit(
+                    lambda value, name=name, groupName=groupName, signalSet=signalSet: signalSet[
+                        "sliderChanged"
+                    ].emit(
                         ParamAttr(groupName, name, "value", value)
                     )
                 )
                 slider.textValueChangedConnect(
-                    lambda text, name=name, groupName=groupName, signalSet=signalSet: 
-                    signalSet["textChanged"].emit(
+                    lambda text, name=name, groupName=groupName, signalSet=signalSet: signalSet[
+                        "textChanged"
+                    ].emit(
                         ParamAttr(groupName, name, "value", text)
                     )
                 )
                 slider.editingFinishedConnect(
-                    lambda name=name, groupName=groupName, signalSet=signalSet: 
-                    signalSet["editingFinished"].emit(groupName, name)
+                    lambda name=name, groupName=groupName, signalSet=signalSet: signalSet[
+                        "editingFinished"
+                    ].emit(
+                        groupName, name
+                    )
                 )
-        
+
         for groupName, group in self.minMaxTable.items():
             for name, item in group.items():
                 item: MinMaxItems
                 item.minValue.editingFinished.connect(
-                    lambda item=item, name=name, groupName=groupName, signalSet=signalSet: 
-                    signalSet["rangeEditingFinished"].emit(
+                    lambda item=item, name=name, groupName=groupName, signalSet=signalSet: signalSet[
+                        "rangeEditingFinished"
+                    ].emit(
                         ParamAttr(groupName, name, "min", item.minValue.text())
                     )
                 )
                 item.maxValue.editingFinished.connect(
-                    lambda item=item, name=name, groupName=groupName, signalSet=signalSet: 
-                    signalSet["rangeEditingFinished"].emit(
+                    lambda item=item, name=name, groupName=groupName, signalSet=signalSet: signalSet[
+                        "rangeEditingFinished"
+                    ].emit(
                         ParamAttr(groupName, name, "max", item.maxValue.text())
                     )
                 )
 
-    # setters ==========================================================
+    def _connectMinmaxTableFolding(self):
+        self.foldable_widget.expandWidgetToggled.connect(self.toggleMinMaxTableFrame)
+
+    # slots ==========================================================
     @Slot(ParamAttr)
     def setByParamAttr(self, paramAttr: ParamAttr, toSlider: bool = True):
         if paramAttr.attr == "value":
-            labeledSlider: LabeledSlider = self.sliderSet[paramAttr.parentName][paramAttr.name]
+            labeledSlider: LabeledSlider = self.sliderSet[paramAttr.parentName][
+                paramAttr.name
+            ]
             labeledSlider.setValue(paramAttr.value, toSlider=toSlider)
         elif paramAttr.attr == "min":
             assert toSlider == False
@@ -225,6 +245,14 @@ class PrefitParamView(QObject):
             item.maxValue.setText(paramAttr.value)
         else:
             raise ValueError(f"Invalid attribute {paramAttr.attr}")
+
+    @Slot(bool)
+    def toggleMinMaxTableFrame(self, b: bool):
+        print(f"{b}")
+        if b:
+            self.prefitMinMaxFrame.setMaximumHeight(400)
+        else:
+            self.prefitMinMaxFrame.setMaximumHeight(0)
 
 
 class PrefitView(QObject):
@@ -313,27 +341,17 @@ class PrefitView(QObject):
             )
         )
         self.initialState.editingFinished.connect(
-            lambda: self.optionUpdated.emit(
-                "initialState", self.initialState.text()
-            )
+            lambda: self.optionUpdated.emit("initialState", self.initialState.text())
         )
         self.photons.valueChanged.connect(
-            lambda: self.optionUpdated.emit(
-                "photons", self.photons.value()
-            )
+            lambda: self.optionUpdated.emit("photons", self.photons.value())
         )
         self.evalsCount.editingFinished.connect(
-            lambda: self.optionUpdated.emit(
-                "evalsCount", self.evalsCount.text()
-            )
+            lambda: self.optionUpdated.emit("evalsCount", self.evalsCount.text())
         )
         self.pointsAdded.editingFinished.connect(
-            lambda: self.optionUpdated.emit(
-                "pointsAdded", self.pointsAdded.text()
-            )
+            lambda: self.optionUpdated.emit("pointsAdded", self.pointsAdded.text())
         )
         self.autoRun.stateChanged.connect(
-            lambda: self.optionUpdated.emit(
-                "autoRun", self.autoRun.isChecked()
-            )
+            lambda: self.optionUpdated.emit("autoRun", self.autoRun.isChecked())
         )

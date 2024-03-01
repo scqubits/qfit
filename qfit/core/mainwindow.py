@@ -456,6 +456,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitParamView = PrefitParamView(
             self.ui.prefitScrollAreaWidget,
             self.ui.prefitMinmaxScrollAreaWidget,
+            self.ui.frame_prefit_minmax,
         )
         self.prefitView = PrefitView(
             runSweep=self.ui.plotButton,

@@ -1,12 +1,9 @@
 from PySide6.QtCore import (
     QObject,
-    Signal,
     Slot,
     Qt,
 )
 from PySide6.QtWidgets import QStatusBar, QLabel, QSizePolicy
-from typing import Tuple, Dict, Any, Union, List
-import time
 
 
 class StatusBarView(QObject):

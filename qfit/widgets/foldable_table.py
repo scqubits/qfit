@@ -167,12 +167,12 @@ class FittingParameterItems(WidgetCollection):
     }
     # column widths
     columnWidths = {
-        "NAME": 55,
+        "NAME": 115,
         "FIX": 30,
-        "INITIAL": 73,
-        "MIN": 73,
-        "MAX": 73,
-        "RESULT": 73,
+        "INITIAL": 70,
+        "MIN": 70,
+        "MAX": 70,
+        "RESULT": 70,
     }
     columnCount = len(columns)
 
@@ -227,15 +227,15 @@ class MinMaxItems(WidgetCollection):
     # the background color of each column
     # None = default (transparent)
     columnBackgroundColors = {
-        "NAME": None,
+        "NAME": "#212121",
         "MIN": "#292929",
         "MAX": "#363636",
     }
     # column widths
     columnWidths = {
-        "NAME": 100,
-        "MIN": 120,
-        "MAX": 120,
+        "NAME": 115,
+        "MIN": 130,
+        "MAX": 130,
     }
     columnCount = len(columns)
 
@@ -343,13 +343,13 @@ class FoldableTable(QTableWidget, Generic[CollectionType]):
 
     def keys(self):
         return self.params.keys()
-    
+
     def values(self):
         return self.params.values()
-    
+
     def items(self):
         return self.params.items()
-    
+
     def __getitem__(self, key: str) -> Dict[str, CollectionType]:
         return self.params[key]
 

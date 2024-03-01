@@ -149,14 +149,14 @@ class Ui_MainWindow(object):
 " }\n"
 "\n"
 " QScrollBar::handle:vertical {	\n"
-"	background: rgb(85, 170, 255);\n"
+"	background: #64568e;\n"
 "    min-height: 25px;\n"
 "	border-radius: 5px\n"
 " }\n"
 "\n"
 " QScrollBar::add-line:vertical {\n"
 "     border: none;\n"
-"    background: rgb(55, 63, 77);\n"
+"    background: #3b3940;\n"
 "     height: 20px;\n"
 "	border-bottom-left-radius: 7px;\n"
 "    border-bottom-right-radius: 7px;\n"
@@ -166,7 +166,7 @@ class Ui_MainWindow(object):
 "\n"
 " QScrollBar::sub-line:vertical {\n"
 "	border: none;\n"
-"    background: rgb(55, 63, 77);\n"
+"    background: #3b3940;\n"
 "     height: 20px;\n"
 "	border-top-left-radius: 7px;\n"
 "    border-top-right-radius: 7px;\n"
@@ -186,11 +186,11 @@ class Ui_MainWindow(object):
 "QCheckBox {\n"
 "	color: #AAAAAA;\n"
 "    spacing: 10px;\n"
-"    font-size: 14px"
-                        ";\n"
+"    font-size: 14px;\n"
 "}\n"
 "\n"
-"QCheckBox::indicator {\n"
+"QCheckBox"
+                        "::indicator {\n"
 "    border: 1px solid #DBBCFB;\n"
 "	width: 20px;\n"
 "	height: 20px;\n"
@@ -237,9 +237,9 @@ class Ui_MainWindow(object):
 "\n"
 "\n"
 "\n"
-"/* SLIDERS "
-                        "*/\n"
-"QSlider::groove:horizontal {\n"
+"/* SLIDERS */\n"
+"QSlider::groove:hor"
+                        "izontal {\n"
 "    border-radius: 9px;\n"
 "    height: 18px;\n"
 "	margin: 0px;\n"
@@ -271,29 +271,29 @@ class Ui_MainWindow(object):
 "    border-radius: 9px;\n"
 "    width: 18px;\n"
 "    margin: 0px;\n"
-"	background-color: rgb(52, 59, 72);\n"
+"	background-color: #3c3a40;\n"
 "}\n"
 "\n"
 "QSlider::groove:vertical:hover {\n"
-"	background-color: rgb(55, 62, 76);\n"
+"	background-color: #3c3a40;\n"
 "}\n"
 "\n"
 "QSlider::handle:vertical {\n"
-"    background-color: rgb(85, 170, 255);\n"
+"    background-color: #64568e;\n"
 "	border: none;\n"
 "    height: 18px;\n"
 "    width: 18px;\n"
 "    margin: 0px;\n"
 "	border-radius: 9px;\n"
 "}\n"
-""
-                        "\n"
+"\n"
 "QSlider::handle:vertical:hover {\n"
-"    background-color: rgb(105, 180, 255);\n"
+"    backgr"
+                        "ound-color: #64568e;\n"
 "}\n"
 "\n"
 "QSlider::handle:vertical:pressed {\n"
-"    background-color: rgb(65, 130, 195);\n"
+"    background-color: #64568e;\n"
 "}\n"
 "\n"
 "QGroupBox {\n"
@@ -327,12 +327,12 @@ class Ui_MainWindow(object):
 "	background-color: rgb(93,93,93);\n"
 "    border-radius: 4px;\n"
 "    border: 1px;\n"
-"}"
-                        "\n"
+"}\n"
 "\n"
 "QSpinBox::up-arrow {\n"
 "    width: 20px;\n"
-"    height: 20px;\n"
+"    height: 20px;"
+                        "\n"
 "    image: url(:/icons/svg/plus.svg) 1;\n"
 "}\n"
 "\n"
@@ -375,12 +375,12 @@ class Ui_MainWindow(object):
 "	border-top-right-radius: 3px;\n"
 "	border-bottom-right-radius: 3px;	\n"
 " }\n"
-"QCo"
-                        "mboBox::drop-down:button {\n"
+"QComboBox::drop-down:button {\n"
 "	width: 25px; \n"
 " }\n"
 "\n"
-"QComboBox::down-arrow{\n"
+"QComboBox::"
+                        "down-arrow{\n"
 "	image: url(:/icons/svg/arrow-down-2F2F2F.svg);\n"
 "	width: 12px;\n"
 "	height: 9px;\n"
@@ -421,11 +421,11 @@ class Ui_MainWindow(object):
 "}\n"
 "*/\n"
 "\n"
-"L"
-                        "istView\n"
+"ListView\n"
 "{\n"
 "	selection-background-color: rgb(93, 93, 93);\n"
-"	background: rgb(63,63,63);\n"
+"	back"
+                        "ground: rgb(63,63,63);\n"
 "	color: rgb(220,220,220);\n"
 "}\n"
 "\n"
@@ -1922,7 +1922,7 @@ class Ui_MainWindow(object):
         self.prefitScrollArea.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.prefitScrollAreaWidget = QWidget()
         self.prefitScrollAreaWidget.setObjectName(u"prefitScrollAreaWidget")
-        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 100, 30))
+        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 441, 485))
         self.verticalLayout_11 = QVBoxLayout(self.prefitScrollAreaWidget)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -1935,9 +1935,10 @@ class Ui_MainWindow(object):
 
         self.frame_prefit_minmax = QFrame(self.prefitWidget)
         self.frame_prefit_minmax.setObjectName(u"frame_prefit_minmax")
-        sizePolicy10.setHeightForWidth(self.frame_prefit_minmax.sizePolicy().hasHeightForWidth())
-        self.frame_prefit_minmax.setSizePolicy(sizePolicy10)
-        self.frame_prefit_minmax.setMinimumSize(QSize(0, 0))
+        sizePolicy5.setHeightForWidth(self.frame_prefit_minmax.sizePolicy().hasHeightForWidth())
+        self.frame_prefit_minmax.setSizePolicy(sizePolicy5)
+        self.frame_prefit_minmax.setMinimumSize(QSize(0, 100))
+        self.frame_prefit_minmax.setMaximumSize(QSize(16777215, 0))
         self.verticalLayout_14 = QVBoxLayout(self.frame_prefit_minmax)
 #ifndef Q_OS_MAC
         self.verticalLayout_14.setSpacing(-1)
@@ -1946,13 +1947,13 @@ class Ui_MainWindow(object):
         self.verticalLayout_14.setContentsMargins(0, 0, 0, 0)
         self.scrollArea = QScrollArea(self.frame_prefit_minmax)
         self.scrollArea.setObjectName(u"scrollArea")
-        sizePolicy17 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        sizePolicy17 = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         sizePolicy17.setHorizontalStretch(0)
         sizePolicy17.setVerticalStretch(0)
         sizePolicy17.setHeightForWidth(self.scrollArea.sizePolicy().hasHeightForWidth())
         self.scrollArea.setSizePolicy(sizePolicy17)
         self.scrollArea.setMinimumSize(QSize(0, 60))
-        self.scrollArea.setMaximumSize(QSize(16777215, 250))
+        self.scrollArea.setMaximumSize(QSize(16777215, 16777215))
         self.scrollArea.setStyleSheet(u"background-color: #292929;\n"
 "border-top-right-radius: 6px;\n"
 "border-bottom-right-radius: 6px;	")
@@ -1961,7 +1962,7 @@ class Ui_MainWindow(object):
         self.scrollArea.setWidgetResizable(True)
         self.prefitMinmaxScrollAreaWidget = QWidget()
         self.prefitMinmaxScrollAreaWidget.setObjectName(u"prefitMinmaxScrollAreaWidget")
-        self.prefitMinmaxScrollAreaWidget.setGeometry(QRect(0, 0, 100, 60))
+        self.prefitMinmaxScrollAreaWidget.setGeometry(QRect(0, 0, 446, 100))
         self.verticalLayout_16 = QVBoxLayout(self.prefitMinmaxScrollAreaWidget)
         self.verticalLayout_16.setObjectName(u"verticalLayout_16")
         self.scrollArea.setWidget(self.prefitMinmaxScrollAreaWidget)
@@ -1975,8 +1976,8 @@ class Ui_MainWindow(object):
         self.frame_3.setObjectName(u"frame_3")
         sizePolicy10.setHeightForWidth(self.frame_3.sizePolicy().hasHeightForWidth())
         self.frame_3.setSizePolicy(sizePolicy10)
-        self.frame_3.setMinimumSize(QSize(0, 99))
-        self.frame_3.setMaximumSize(QSize(16777215, 99))
+        self.frame_3.setMinimumSize(QSize(0, 130))
+        self.frame_3.setMaximumSize(QSize(16777215, 130))
         self.frame_3.setStyleSheet(u"")
         self.frame_3.setFrameShape(QFrame.NoFrame)
         self.frame_3.setFrameShadow(QFrame.Raised)
@@ -2010,7 +2011,7 @@ class Ui_MainWindow(object):
 
         self.gridLayout_15.addItem(self.horizontalSpacer_30, 1, 2, 1, 1)
 
-        self.verticalSpacer_13 = QSpacerItem(20, 50, QSizePolicy.Minimum, QSizePolicy.Fixed)
+        self.verticalSpacer_13 = QSpacerItem(20, 70, QSizePolicy.Minimum, QSizePolicy.Fixed)
 
         self.gridLayout_15.addItem(self.verticalSpacer_13, 2, 3, 3, 1)
 
@@ -2045,7 +2046,7 @@ class Ui_MainWindow(object):
         icon11 = QIcon()
         icon11.addFile(u":/icons/svg/play.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.plotButton.setIcon(icon11)
-        self.plotButton.setIconSize(QSize(20, 20))
+        self.plotButton.setIconSize(QSize(15, 15))
 
         self.gridLayout_15.addWidget(self.plotButton, 1, 1, 1, 1)
 
@@ -2145,7 +2146,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_18.setSpacing(0)
         self.horizontalLayout_18.setObjectName(u"horizontalLayout_18")
         self.horizontalLayout_18.setContentsMargins(0, 0, 0, 0)
-        self.horizontalSpacer_27 = QSpacerItem(160, 47, QSizePolicy.Fixed, QSizePolicy.Minimum)
+        self.horizontalSpacer_27 = QSpacerItem(215, 47, QSizePolicy.Fixed, QSizePolicy.Minimum)
 
         self.horizontalLayout_18.addItem(self.horizontalSpacer_27)
 
@@ -2183,13 +2184,16 @@ class Ui_MainWindow(object):
         self.horizontalLayout_8.setSpacing(0)
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
         self.horizontalLayout_8.setContentsMargins(0, 0, 0, 0)
-        self.horizontalSpacer_25 = QSpacerItem(130, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
+        self.horizontalSpacer_25 = QSpacerItem(185, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
 
         self.horizontalLayout_8.addItem(self.horizontalSpacer_25)
 
         self.label_7 = QLabel(self.widget_12)
         self.label_7.setObjectName(u"label_7")
-        self.label_7.setFont(font3)
+        font9 = QFont()
+        font9.setFamilies([u"Roboto Medium"])
+        font9.setStyleStrategy(QFont.NoAntialias)
+        self.label_7.setFont(font9)
         self.label_7.setPixmap(QPixmap(u":/images/result-to-initial-arrow.svg"))
         self.label_7.setScaledContents(False)
 
@@ -2210,7 +2214,7 @@ class Ui_MainWindow(object):
         self.fitScrollArea.setWidgetResizable(True)
         self.fitScrollAreaWidget = QWidget()
         self.fitScrollAreaWidget.setObjectName(u"fitScrollAreaWidget")
-        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 100, 30))
+        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 441, 563))
         self.verticalLayout_4 = QVBoxLayout(self.fitScrollAreaWidget)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -2225,8 +2229,8 @@ class Ui_MainWindow(object):
         self.frame_6.setObjectName(u"frame_6")
         sizePolicy10.setHeightForWidth(self.frame_6.sizePolicy().hasHeightForWidth())
         self.frame_6.setSizePolicy(sizePolicy10)
-        self.frame_6.setMinimumSize(QSize(0, 99))
-        self.frame_6.setMaximumSize(QSize(16777215, 99))
+        self.frame_6.setMinimumSize(QSize(0, 130))
+        self.frame_6.setMaximumSize(QSize(16777215, 130))
         self.frame_6.setFrameShape(QFrame.NoFrame)
         self.frame_6.setFrameShadow(QFrame.Raised)
         self.gridLayout_12 = QGridLayout(self.frame_6)
@@ -2251,11 +2255,11 @@ class Ui_MainWindow(object):
 "background-color: #9163BF;\n"
 "}")
         self.fitButton.setIcon(icon11)
-        self.fitButton.setIconSize(QSize(20, 20))
+        self.fitButton.setIconSize(QSize(15, 15))
 
         self.gridLayout_12.addWidget(self.fitButton, 2, 1, 1, 1)
 
-        self.verticalSpacer_11 = QSpacerItem(20, 50, QSizePolicy.Minimum, QSizePolicy.Fixed)
+        self.verticalSpacer_11 = QSpacerItem(20, 70, QSizePolicy.Minimum, QSizePolicy.Fixed)
 
         self.gridLayout_12.addItem(self.verticalSpacer_11, 4, 1, 1, 1)
 
@@ -2533,10 +2537,11 @@ class Ui_MainWindow(object):
         self.mplFigureCanvas.setLineWidth(0)
         self.mplFigureButtons = MplNavButtons(self.mplFigureCanvas)
         self.mplFigureButtons.setObjectName(u"mplFigureButtons")
-        self.mplFigureButtons.setGeometry(QRect(0, 0, 16777215, 80))
+        self.mplFigureButtons.setGeometry(QRect(0, 0, 16777215, 90))
         sizePolicy3.setHeightForWidth(self.mplFigureButtons.sizePolicy().hasHeightForWidth())
         self.mplFigureButtons.setSizePolicy(sizePolicy3)
-        self.mplFigureButtons.setMinimumSize(QSize(0, 80))
+        self.mplFigureButtons.setMinimumSize(QSize(0, 90))
+        self.mplFigureButtons.setMaximumSize(QSize(16777215, 90))
         self.mplFigureButtons.setAutoFillBackground(False)
         self.mplFigureButtons.setStyleSheet(u"QToolTip {\n"
 "	color: #1e1e1e;\n"
@@ -2576,7 +2581,7 @@ class Ui_MainWindow(object):
         self.resetViewButton.setIconSize(QSize(20, 20))
         self.panViewButton = QPushButton(self.mplFigureButtons)
         self.panViewButton.setObjectName(u"panViewButton")
-        self.panViewButton.setGeometry(QRect(100, 10, 40, 40))
+        self.panViewButton.setGeometry(QRect(110, 10, 40, 40))
         self.panViewButton.setCursor(QCursor(Qt.ArrowCursor))
 #if QT_CONFIG(tooltip)
         self.panViewButton.setToolTip(u"Pan mode: Drag to move the canvas")
@@ -2591,7 +2596,7 @@ class Ui_MainWindow(object):
         self.panViewButton.setAutoExclusive(True)
         self.zoomViewButton = QPushButton(self.mplFigureButtons)
         self.zoomViewButton.setObjectName(u"zoomViewButton")
-        self.zoomViewButton.setGeometry(QRect(155, 10, 40, 40))
+        self.zoomViewButton.setGeometry(QRect(170, 10, 40, 40))
         self.zoomViewButton.setCursor(QCursor(Qt.ArrowCursor))
 #if QT_CONFIG(tooltip)
         self.zoomViewButton.setToolTip(u"Zoom mode: Drag to magnify a region")
@@ -2605,7 +2610,7 @@ class Ui_MainWindow(object):
         self.zoomViewButton.setAutoExclusive(True)
         self.horizontalSnapButton = QPushButton(self.mplFigureButtons)
         self.horizontalSnapButton.setObjectName(u"horizontalSnapButton")
-        self.horizontalSnapButton.setGeometry(QRect(280, 10, 40, 40))
+        self.horizontalSnapButton.setGeometry(QRect(310, 10, 40, 40))
 #if QT_CONFIG(tooltip)
         self.horizontalSnapButton.setToolTip(u"Dataset snapping: align the x-coordinates for datasets")
 #endif // QT_CONFIG(tooltip)
@@ -2619,7 +2624,7 @@ class Ui_MainWindow(object):
         self.horizontalSnapButton.setAutoExclusive(False)
         self.selectViewButton = QPushButton(self.mplFigureButtons)
         self.selectViewButton.setObjectName(u"selectViewButton")
-        self.selectViewButton.setGeometry(QRect(210, 10, 40, 40))
+        self.selectViewButton.setGeometry(QRect(230, 10, 40, 40))
         self.selectViewButton.setCursor(QCursor(Qt.ArrowCursor))
 #if QT_CONFIG(tooltip)
         self.selectViewButton.setToolTip(u"Extract mode: Click to extract peaks")
@@ -2634,7 +2639,7 @@ class Ui_MainWindow(object):
         self.selectViewButton.setAutoExclusive(True)
         self.verticalSnapButton = QPushButton(self.mplFigureButtons)
         self.verticalSnapButton.setObjectName(u"verticalSnapButton")
-        self.verticalSnapButton.setGeometry(QRect(335, 10, 40, 40))
+        self.verticalSnapButton.setGeometry(QRect(370, 10, 40, 40))
 #if QT_CONFIG(tooltip)
         self.verticalSnapButton.setToolTip(u"Peak snapping: Locate the nearby peak along y axis")
 #endif // QT_CONFIG(tooltip)
@@ -2648,62 +2653,62 @@ class Ui_MainWindow(object):
         self.verticalSnapButton.setAutoExclusive(False)
         self.label_9 = QLabel(self.mplFigureCanvas)
         self.label_9.setObjectName(u"label_9")
-        self.label_9.setGeometry(QRect(30, 50, 41, 20))
-        font9 = QFont()
-        font9.setFamilies([u"Roboto Medium"])
-        font9.setBold(False)
-        self.label_9.setFont(font9)
+        self.label_9.setGeometry(QRect(30, 60, 41, 20))
+        font10 = QFont()
+        font10.setFamilies([u"Roboto Medium"])
+        font10.setBold(False)
+        self.label_9.setFont(font10)
         self.label_9.setStyleSheet(u"color: #DDDDDD; background-color: transparent;")
         self.label_9.setAlignment(Qt.AlignCenter)
         self.label_27 = QLabel(self.mplFigureCanvas)
         self.label_27.setObjectName(u"label_27")
-        self.label_27.setGeometry(QRect(105, 50, 31, 20))
+        self.label_27.setGeometry(QRect(114, 60, 31, 20))
         self.label_27.setStyleSheet(u"color: #DDDDDD; background-color: transparent;")
         self.label_27.setAlignment(Qt.AlignCenter)
         self.label_34 = QLabel(self.mplFigureCanvas)
         self.label_34.setObjectName(u"label_34")
-        self.label_34.setGeometry(QRect(155, 50, 41, 20))
+        self.label_34.setGeometry(QRect(170, 60, 41, 20))
         self.label_34.setStyleSheet(u"color: #DDDDDD; background-color: transparent;")
         self.label_34.setAlignment(Qt.AlignCenter)
         self.label_35 = QLabel(self.mplFigureCanvas)
         self.label_35.setObjectName(u"label_35")
-        self.label_35.setGeometry(QRect(210, 50, 41, 20))
+        self.label_35.setGeometry(QRect(224, 60, 54, 20))
         self.label_35.setStyleSheet(u"color: #DDDDDD; background-color: transparent;")
         self.label_35.setAlignment(Qt.AlignCenter)
         self.label_36 = QLabel(self.mplFigureCanvas)
         self.label_36.setObjectName(u"label_36")
-        self.label_36.setGeometry(QRect(277, 50, 51, 20))
+        self.label_36.setGeometry(QRect(305, 60, 51, 20))
         self.label_36.setStyleSheet(u"color: #DDDDDD; background-color: transparent;")
         self.label_36.setAlignment(Qt.AlignCenter)
         self.label_37 = QLabel(self.mplFigureCanvas)
         self.label_37.setObjectName(u"label_37")
-        self.label_37.setGeometry(QRect(331, 50, 51, 20))
+        self.label_37.setGeometry(QRect(366, 60, 51, 20))
         self.label_37.setFont(font3)
         self.label_37.setStyleSheet(u"color: #DDDDDD; background-color: transparent;")
         self.label_37.setAlignment(Qt.AlignCenter)
         self.label_50 = QLabel(self.mplFigureCanvas)
         self.label_50.setObjectName(u"label_50")
-        self.label_50.setGeometry(QRect(85, 12, 2, 40))
+        self.label_50.setGeometry(QRect(90, 12, 2, 40))
         self.label_50.setMinimumSize(QSize(2, 0))
         self.label_50.setMaximumSize(QSize(2, 16777215))
         self.label_50.setStyleSheet(u"background-color: #4B4B4B")
         self.label_51 = QLabel(self.mplFigureCanvas)
         self.label_51.setObjectName(u"label_51")
-        self.label_51.setGeometry(QRect(265, 12, 2, 40))
+        self.label_51.setGeometry(QRect(290, 12, 2, 40))
         self.label_51.setMinimumSize(QSize(2, 0))
         self.label_51.setMaximumSize(QSize(2, 16777215))
         self.label_51.setStyleSheet(u"background-color: #4B4B4B")
         self.calibratedCheckBox = QPushButton(self.mplFigureCanvas)
         self.calibratedCheckBox.setObjectName(u"calibratedCheckBox")
-        self.calibratedCheckBox.setGeometry(QRect(520, 10, 200, 40))
+        self.calibratedCheckBox.setGeometry(QRect(520, 15, 200, 40))
         sizePolicy3.setHeightForWidth(self.calibratedCheckBox.sizePolicy().hasHeightForWidth())
         self.calibratedCheckBox.setSizePolicy(sizePolicy3)
         self.calibratedCheckBox.setMinimumSize(QSize(200, 40))
         self.calibratedCheckBox.setMaximumSize(QSize(200, 40))
-        font10 = QFont()
-        font10.setFamilies([u"Roboto Medium"])
-        font10.setKerning(False)
-        self.calibratedCheckBox.setFont(font10)
+        font11 = QFont()
+        font11.setFamilies([u"Roboto Medium"])
+        font11.setKerning(False)
+        self.calibratedCheckBox.setFont(font11)
         self.calibratedCheckBox.setStyleSheet(u"QPushButton {\n"
 "color: #DDDDDD;\n"
 "background-color: transparent;\n"
@@ -2738,7 +2743,7 @@ class Ui_MainWindow(object):
         self.statusBar.setSizePolicy(sizePolicy10)
         self.statusBar.setMinimumSize(QSize(0, 60))
         self.statusBar.setMaximumSize(QSize(16777215, 60))
-        self.statusBar.setFont(font10)
+        self.statusBar.setFont(font11)
         self.statusBar.setStyleSheet(u"background-color: #2F2F2F;\n"
 "color: #AAAAAA;\n"
 "")
@@ -2747,7 +2752,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.pagesStackedWidget.setCurrentIndex(1)
+        self.pagesStackedWidget.setCurrentIndex(0)
         self.bottomStackedWidget.setCurrentIndex(0)
 
 
