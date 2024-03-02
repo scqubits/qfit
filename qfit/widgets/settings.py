@@ -28,7 +28,7 @@ class SettingsWidgetBase(QWidget):
         super(SettingsWidgetBase, self).__init__(parent=parent)
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.mainwindow = parent
-        self.move(450, 500)
+        self.move(350, 300)
         self.oldPos: Union[None, QPoint] = self.pos()
         self.hide()
 
@@ -57,5 +57,3 @@ class SettingsWidget(SettingsWidgetBase):
         super(SettingsWidget, self).__init__(parent=parent)
         self.ui = Ui_settingsWidget()
         self.ui.setupUi(self)
-
-

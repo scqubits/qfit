@@ -142,7 +142,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # ui
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.setShadows()
         self.ui.verticalSnapButton.setAutoExclusive(False)
 
         # navigation
@@ -152,6 +151,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # settings
         self.ui_settings = SettingsWidget(self)
         self.settingsMVCInit()
+
+        # set shadows
+        self.setShadows()
 
         # calibration - should be inited after prefit, as it requires a sweep parameter set
         self.calibrationMVCInits()
@@ -230,6 +232,13 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             eff.setBlurRadius(18.0)
             eff.setColor(QColor(0, 0, 0, 90))
             button.setGraphicsEffect(eff)
+
+        for widget in [self.ui_settings]:
+            eff = QGraphicsDropShadowEffect(widget)
+            eff.setOffset(2)
+            eff.setBlurRadius(18.0)
+            eff.setColor(QColor(0, 0, 0, 90))
+            widget.setGraphicsEffect(eff)
 
     # settings #########################################################
     ####################################################################

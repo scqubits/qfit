@@ -27,23 +27,15 @@ class Ui_settingsWidget(object):
     def setupUi(self, settingsWidget):
         if not settingsWidget.objectName():
             settingsWidget.setObjectName(u"settingsWidget")
-        settingsWidget.resize(375, 413)
+        settingsWidget.resize(390, 470)
         sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(settingsWidget.sizePolicy().hasHeightForWidth())
         settingsWidget.setSizePolicy(sizePolicy)
-        settingsWidget.setMinimumSize(QSize(375, 413))
-        settingsWidget.setMaximumSize(QSize(375, 413))
-        settingsWidget.setStyleSheet(u"QMainWindow {\n"
-"	background-color: #5F5F5F;\n"
-"}\n"
-"\n"
-"QFrame {\n"
-"	background-color: #5F5F5F;\n"
-"}\n"
-"\n"
-"QToolTip {\n"
+        settingsWidget.setMinimumSize(QSize(390, 470))
+        settingsWidget.setMaximumSize(QSize(390, 470))
+        settingsWidget.setStyleSheet(u"QToolTip {\n"
 "	color: #ffffff;\n"
 "	background-color: rgba(27, 29, 35, 160);\n"
 "	border: 1px solid rgb(40, 40, 40);\n"
@@ -52,6 +44,8 @@ class Ui_settingsWidget(object):
 "\n"
 "QWidget {\n"
 "	font-family: \"Roboto Medium\";\n"
+"	border: 2px solid #171717; \n"
+"	border-radius: 5px;\n"
 "	background-color: #2F2F2F;\n"
 "}\n"
 "\n"
@@ -61,49 +55,6 @@ class Ui_settingsWidget(object):
 "}\n"
 "\n"
 "/* LINE EDIT */\n"
-"/* LINE EDIT */\n"
-"QLineEdit {\n"
-"	color: rgb(170, 170, 170);\n"
-"	background-color: #171717;\n"
-"	border-radius: 5px;\n"
-"	border: 2px solid rgb(27, 29, 35);\n"
-"	padding-left: 5px;\n"
-"}\n"
-"\n"
-"QLineEdit:hover {\n"
-"	border: 2px solid rgb(64, 71, 88);\n"
-"}\n"
-"\n"
-"QLineEdit:focus {\n"
-"	border: 2px solid rgb(91, 101, 124);\n"
-"}\n"
-"\n"
-"/* CHECKBOX */\n"
-"QCheckBox {\n"
-"	color: #AAAAAA;\n"
-"    spacing: 10px;\n"
-"    font-size: 14px;\n"
-"}\n"
-"\n"
-"QCheckBox::indicator {\n"
-"    border: 1px solid #DBBCFB;\n"
-"	width: 20px;\n"
-"	height: 20p"
-                        "x;\n"
-" 	border-radius: 11px;\n"
-"    background: transparent;\n"
-"}\n"
-"\n"
-"QCheckBox::indicator:hover {\n"
-"	border: 1px solid #BE82FA;\n"
-"   background: transparent;\n"
-"}\n"
-"\n"
-"QCheckBox::indicator:checked {\n"
-"	border: 1px solid #BE82FA;\n"
-"   background: transparent;\n"
-"	image: url(:/icons/svg/check.svg);\n"
-"}\n"
 "\n"
 "/* RADIO BUTTON */\n"
 "QRadioButton {\n"
@@ -134,12 +85,12 @@ class Ui_settingsWidget(object):
 "\n"
 "\n"
 "/* SLIDERS */\n"
-"QSlider::groove:horizontal {\n"
+"QSlider::groove:horizo"
+                        "ntal {\n"
 "    border-radius: 9px;\n"
 "    height: 18px;\n"
 "	margin: 0px;\n"
-"	"
-                        "background-color: #38363B;\n"
+"	background-color: #38363B;\n"
 "}\n"
 "\n"
 "QSlider::groove:horizontal:hover {\n"
@@ -183,12 +134,12 @@ class Ui_settingsWidget(object):
 "	border-radius: 9px;\n"
 "}\n"
 "\n"
-"QSlider::handle:vertical:hover {\n"
+"QSlider::handle:vertical"
+                        ":hover {\n"
 "    background-color: rgb(105, 180, 255);\n"
 "}\n"
 "\n"
-"QSlider::h"
-                        "andle:vertical:pressed {\n"
+"QSlider::handle:vertical:pressed {\n"
 "    background-color: rgb(65, 130, 195);\n"
 "}\n"
 "\n"
@@ -225,11 +176,11 @@ class Ui_settingsWidget(object):
 "    border: 1px;\n"
 "}\n"
 "\n"
-"QSpinBox::up-arrow {\n"
+"QSpinBox::up-arrow "
+                        "{\n"
 "    width: 20px;\n"
 "    height: 20px;\n"
-"    image: url(:/icons/svg/plus"
-                        ".svg) 1;\n"
+"    image: url(:/icons/svg/plus.svg) 1;\n"
 "}\n"
 "\n"
 "QSpinBox::down-arrow {\n"
@@ -242,56 +193,6 @@ class Ui_settingsWidget(object):
 "    background-color: rgb(200,200,200);\n"
 "}\n"
 "\n"
-"\n"
-"/* COMBOBOX */\n"
-"QComboBox {\n"
-"	color: rgb(170, 170, 170);\n"
-"	background-color: #171717;\n"
-"	border-radius: 5px;\n"
-"	border: 2px solid rgb(27, 29, 35);\n"
-"	padding: 5px;\n"
-"	padding-left: 10px;\n"
-"}\n"
-"\n"
-"\n"
-"\n"
-"QComboBox:hover{\n"
-"	background-color: #171717;\n"
-"	border: 2px solid rgb(64, 71, 88);\n"
-"}\n"
-"\n"
-"QComboBox::drop-down {\n"
-"	background-color: #171717;\n"
-"	subcontrol-origin: padding;\n"
-"	subcontrol-position: top right;\n"
-"	width: 25px; \n"
-"	border-left-width: 3px;\n"
-"	border-left-color: rgba(39, 44, 54, 150);\n"
-"	border-left-style: solid;\n"
-"	border-top-right-radius: 3px;\n"
-"	border-bottom-right-radius: 3px;	\n"
-" }\n"
-"QComboBox::drop-down:button {\n"
-"	width: 25px; \n"
-" }\n"
-"\n"
-"QComboBox::down-arrow{\n"
-"	image: url(:/icons/"
-                        "svg/arrow-down-2F2F2F.svg);\n"
-"	width: 12px;\n"
-"	height: 9px;\n"
-"}\n"
-" \n"
-"QComboBox QAbstractItemView {\n"
-"	color: rgb(85, 170, 255);	\n"
-"	background-color: #2F2F2F;\n"
-"	padding: 5px;\n"
-"	selection-background-color: #2F2F2F;\n"
-"}\n"
-"\n"
-"QComboBox QAbstractItemView::item{\n"
-"    height: 50px;\n"
-"}\n"
 "\n"
 "")
         self.gridLayout_3 = QGridLayout(settingsWidget)
@@ -309,8 +210,8 @@ class Ui_settingsWidget(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.tabWidget.sizePolicy().hasHeightForWidth())
         self.tabWidget.setSizePolicy(sizePolicy1)
-        self.tabWidget.setMinimumSize(QSize(0, 370))
-        self.tabWidget.setMaximumSize(QSize(16777215, 370))
+        self.tabWidget.setMinimumSize(QSize(0, 430))
+        self.tabWidget.setMaximumSize(QSize(16777215, 430))
         self.tabWidget.setStyleSheet(u"QTabWidget::tab-bar {\n"
 "    left: 5px; /* move to the right by 5px */\n"
 "}\n"
@@ -339,6 +240,106 @@ class Ui_settingsWidget(object):
 "    margin-top: 2px; /* make non-selected tabs look smaller */\n"
 "	font: 14px \"Roboto Medium\";\n"
 "    color: #797979;\n"
+"}\n"
+"\n"
+"QWidget {\n"
+"	font-family: \"Roboto Medium\";\n"
+"	background-color: #2F2F2F;\n"
+"	border: 0px black;\n"
+"}\n"
+"\n"
+"/* LINE EDIT */\n"
+"QLineEdit {\n"
+"	color: rgb(170, "
+                        "170, 170);\n"
+"	background-color: #171717;\n"
+"	border-radius: 5px;\n"
+"	border: 2px solid rgb(27, 29, 35);\n"
+"	padding-left: 5px;\n"
+"}\n"
+"\n"
+"QLineEdit:hover {\n"
+"	border: 2px solid rgb(64, 71, 88);\n"
+"}\n"
+"\n"
+"QLineEdit:focus {\n"
+"	border: 2px solid rgb(91, 101, 124);\n"
+"}\n"
+"\n"
+"/* CHECKBOX */\n"
+"QCheckBox {\n"
+"	color: #AAAAAA;\n"
+"    spacing: 10px;\n"
+"    font-size: 14px;\n"
+"}\n"
+"\n"
+"QCheckBox::indicator {\n"
+"    border: 1px solid #DBBCFB;\n"
+"	width: 20px;\n"
+"	height: 20px;\n"
+" 	border-radius: 11px;\n"
+"    background: transparent;\n"
+"}\n"
+"\n"
+"QCheckBox::indicator:hover {\n"
+"	border: 1px solid #BE82FA;\n"
+"   background: transparent;\n"
+"}\n"
+"\n"
+"QCheckBox::indicator:checked {\n"
+"	border: 1px solid #BE82FA;\n"
+"   background: transparent;\n"
+"	image: url(:/icons/svg/check.svg);\n"
+"}\n"
+"\n"
+"/* COMBOBOX */\n"
+"QComboBox {\n"
+"	color: rgb(170, 170, 170);\n"
+"	background-color: #171717;\n"
+"	border-radius: 5px;\n"
+"	border: 2px solid rgb(27, 29, 35);\n"
+"	padding: 5px;\n"
+"	pad"
+                        "ding-left: 10px;\n"
+"}\n"
+"\n"
+"\n"
+"\n"
+"QComboBox:hover{\n"
+"	background-color: #171717;\n"
+"	border: 2px solid rgb(64, 71, 88);\n"
+"}\n"
+"\n"
+"QComboBox::drop-down {\n"
+"	background-color: #171717;\n"
+"	subcontrol-origin: padding;\n"
+"	subcontrol-position: top right;\n"
+"	width: 25px; \n"
+"	border-left-width: 3px;\n"
+"	border-left-color: rgba(39, 44, 54, 150);\n"
+"	border-left-style: solid;\n"
+"	border-top-right-radius: 3px;\n"
+"	border-bottom-right-radius: 3px;	\n"
+" }\n"
+"QComboBox::drop-down:button {\n"
+"	width: 25px; \n"
+" }\n"
+"\n"
+"QComboBox::down-arrow{\n"
+"	image: url(:/icons/svg/arrow-down-2F2F2F.svg);\n"
+"	width: 12px;\n"
+"	height: 9px;\n"
+"}\n"
+" \n"
+"QComboBox QAbstractItemView {\n"
+"	color: rgb(85, 170, 255);	\n"
+"	background-color: #2F2F2F;\n"
+"	padding: 5px;\n"
+"	selection-background-color: #2F2F2F;\n"
+"}\n"
+"\n"
+"QComboBox QAbstractItemView::item{\n"
+"    height: 50px;\n"
 "}")
         self.tabWidget.setTabPosition(QTabWidget.North)
         self.tabWidget.setTabShape(QTabWidget.Rounded)
@@ -350,8 +351,8 @@ class Ui_settingsWidget(object):
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.visualTabContainerWidget = QWidget(self.visualTab)
         self.visualTabContainerWidget.setObjectName(u"visualTabContainerWidget")
-        self.visualTabContainerWidget.setMinimumSize(QSize(0, 330))
-        self.visualTabContainerWidget.setMaximumSize(QSize(16777215, 330))
+        self.visualTabContainerWidget.setMinimumSize(QSize(0, 360))
+        self.visualTabContainerWidget.setMaximumSize(QSize(16777215, 430))
         self.gridLayout_2 = QGridLayout(self.visualTabContainerWidget)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.gridLayout_2.setContentsMargins(0, 5, 0, 0)
@@ -565,6 +566,8 @@ class Ui_settingsWidget(object):
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.spectrumTabContainerWidget = QWidget(self.spectrumTab)
         self.spectrumTabContainerWidget.setObjectName(u"spectrumTabContainerWidget")
+        self.spectrumTabContainerWidget.setMinimumSize(QSize(0, 360))
+        self.spectrumTabContainerWidget.setMaximumSize(QSize(16777215, 430))
         self.gridLayout = QGridLayout(self.spectrumTabContainerWidget)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setContentsMargins(0, 5, 0, 0)
@@ -750,6 +753,8 @@ class Ui_settingsWidget(object):
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.fitTabContainerWidget = QWidget(self.fitTab)
         self.fitTabContainerWidget.setObjectName(u"fitTabContainerWidget")
+        self.fitTabContainerWidget.setMinimumSize(QSize(0, 360))
+        self.fitTabContainerWidget.setMaximumSize(QSize(16777215, 430))
         self.gridLayout_4 = QGridLayout(self.fitTabContainerWidget)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setContentsMargins(0, 5, 0, 0)
@@ -827,7 +832,7 @@ class Ui_settingsWidget(object):
 
         self.retranslateUi(settingsWidget)
 
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(settingsWidget)

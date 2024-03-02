@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>375</width>
-    <height>413</height>
+    <width>390</width>
+    <height>470</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -18,29 +18,21 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>375</width>
-    <height>413</height>
+    <width>390</width>
+    <height>470</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>375</width>
-    <height>413</height>
+    <width>390</width>
+    <height>470</height>
    </size>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QMainWindow {
-	background-color: #5F5F5F;
-}
-
-QFrame {
-	background-color: #5F5F5F;
-}
-
-QToolTip {
+   <string notr="true">QToolTip {
 	color: #ffffff;
 	background-color: rgba(27, 29, 35, 160);
 	border: 1px solid rgb(40, 40, 40);
@@ -49,6 +41,8 @@ QToolTip {
 
 QWidget {
 	font-family: &quot;Roboto Medium&quot;;
+	border: 2px solid #171717; 
+	border-radius: 5px;
 	background-color: #2F2F2F;
 }
 
@@ -58,48 +52,6 @@ QLabel {
 }
 
 /* LINE EDIT */
-/* LINE EDIT */
-QLineEdit {
-	color: rgb(170, 170, 170);
-	background-color: #171717;
-	border-radius: 5px;
-	border: 2px solid rgb(27, 29, 35);
-	padding-left: 5px;
-}
-
-QLineEdit:hover {
-	border: 2px solid rgb(64, 71, 88);
-}
-
-QLineEdit:focus {
-	border: 2px solid rgb(91, 101, 124);
-}
-
-/* CHECKBOX */
-QCheckBox {
-	color: #AAAAAA;
-    spacing: 10px;
-    font-size: 14px;
-}
-
-QCheckBox::indicator {
-    border: 1px solid #DBBCFB;
-	width: 20px;
-	height: 20px;
- 	border-radius: 11px;
-    background: transparent;
-}
-
-QCheckBox::indicator:hover {
-	border: 1px solid #BE82FA;
-   background: transparent;
-}
-
-QCheckBox::indicator:checked {
-	border: 1px solid #BE82FA;
-   background: transparent;
-	image: url(:/icons/svg/check.svg);
-}
 
 /* RADIO BUTTON */
 QRadioButton {
@@ -236,6 +188,137 @@ QSpinBox::up-button:pressed {
 }
 
 
+</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_3">
+   <property name="leftMargin">
+    <number>12</number>
+   </property>
+   <property name="topMargin">
+    <number>12</number>
+   </property>
+   <property name="rightMargin">
+    <number>12</number>
+   </property>
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <item row="1" column="1">
+    <spacer name="verticalSpacer_3">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Expanding</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>5</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="0" column="0" rowspan="2">
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>430</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>430</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QTabWidget::tab-bar {
+    left: 5px; /* move to the right by 5px */
+}
+
+/* Style the tab using the tab sub-control. Note that
+    it reads QTabBar _not_ QTabWidget */
+QTabBar::tab {
+    background: #171717;
+	border: 2px solid #171717;
+    border-bottom-color: #2F2F2F; /* same as the pane color */
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    min-width: 8ex;
+    padding: 7px;
+}
+
+QTabBar::tab:selected {
+	background: #2F2F2F;
+	border: 2px solid #171717;
+    border-bottom-color: #2F2F2F; /* same as pane color */
+	font: 14px &quot;Roboto Medium&quot;;
+    color: #DBBCFB;
+}
+
+QTabBar::tab:!selected {
+    margin-top: 2px; /* make non-selected tabs look smaller */
+	font: 14px &quot;Roboto Medium&quot;;
+    color: #797979;
+}
+
+QWidget {
+	font-family: &quot;Roboto Medium&quot;;
+	background-color: #2F2F2F;
+	border: 0px black;
+}
+
+/* LINE EDIT */
+QLineEdit {
+	color: rgb(170, 170, 170);
+	background-color: #171717;
+	border-radius: 5px;
+	border: 2px solid rgb(27, 29, 35);
+	padding-left: 5px;
+}
+
+QLineEdit:hover {
+	border: 2px solid rgb(64, 71, 88);
+}
+
+QLineEdit:focus {
+	border: 2px solid rgb(91, 101, 124);
+}
+
+/* CHECKBOX */
+QCheckBox {
+	color: #AAAAAA;
+    spacing: 10px;
+    font-size: 14px;
+}
+
+QCheckBox::indicator {
+    border: 1px solid #DBBCFB;
+	width: 20px;
+	height: 20px;
+ 	border-radius: 11px;
+    background: transparent;
+}
+
+QCheckBox::indicator:hover {
+	border: 1px solid #BE82FA;
+   background: transparent;
+}
+
+QCheckBox::indicator:checked {
+	border: 1px solid #BE82FA;
+   background: transparent;
+	image: url(:/icons/svg/check.svg);
+}
+
 /* COMBOBOX */
 QComboBox {
 	color: rgb(170, 170, 170);
@@ -283,88 +366,6 @@ QComboBox QAbstractItemView {
 
 QComboBox QAbstractItemView::item{
     height: 50px;
-}
-
-</string>
-  </property>
-  <layout class="QGridLayout" name="gridLayout_3">
-   <property name="leftMargin">
-    <number>12</number>
-   </property>
-   <property name="topMargin">
-    <number>12</number>
-   </property>
-   <property name="rightMargin">
-    <number>12</number>
-   </property>
-   <property name="spacing">
-    <number>0</number>
-   </property>
-   <item row="1" column="1">
-    <spacer name="verticalSpacer_3">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Expanding</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>5</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="0" column="0" rowspan="2">
-    <widget class="QTabWidget" name="tabWidget">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>370</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>370</height>
-      </size>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QTabWidget::tab-bar {
-    left: 5px; /* move to the right by 5px */
-}
-
-/* Style the tab using the tab sub-control. Note that
-    it reads QTabBar _not_ QTabWidget */
-QTabBar::tab {
-    background: #171717;
-	border: 2px solid #171717;
-    border-bottom-color: #2F2F2F; /* same as the pane color */
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-    min-width: 8ex;
-    padding: 7px;
-}
-
-QTabBar::tab:selected {
-	background: #2F2F2F;
-	border: 2px solid #171717;
-    border-bottom-color: #2F2F2F; /* same as pane color */
-	font: 14px &quot;Roboto Medium&quot;;
-    color: #DBBCFB;
-}
-
-QTabBar::tab:!selected {
-    margin-top: 2px; /* make non-selected tabs look smaller */
-	font: 14px &quot;Roboto Medium&quot;;
-    color: #797979;
 }</string>
      </property>
      <property name="tabPosition">
@@ -374,7 +375,7 @@ QTabBar::tab:!selected {
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideRight</enum>
@@ -401,13 +402,13 @@ QTabBar::tab:!selected {
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>330</height>
+           <height>360</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
            <width>16777215</width>
-           <height>330</height>
+           <height>430</height>
           </size>
          </property>
          <layout class="QGridLayout" name="gridLayout_2">
@@ -864,6 +865,18 @@ QTabBar::tab:!selected {
        </property>
        <item>
         <widget class="QWidget" name="spectrumTabContainerWidget" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>360</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>430</height>
+          </size>
+         </property>
          <layout class="QGridLayout" name="gridLayout">
           <property name="leftMargin">
            <number>0</number>
@@ -1221,6 +1234,18 @@ QSpinBox::down-button:pressed {
        </property>
        <item>
         <widget class="QWidget" name="fitTabContainerWidget" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>360</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>430</height>
+          </size>
+         </property>
          <layout class="QGridLayout" name="gridLayout_4">
           <property name="leftMargin">
            <number>0</number>
