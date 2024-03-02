@@ -48,24 +48,6 @@ class SettingsCtrl:
         self.uiSettingsConnects()
 
     def uiSettingsConnects(self):
-        # # toggle on the settings widgets
-        # self.settingsButtonSet["visual"].clicked.connect(
-        #     self.settingsWidgetSet.visual.toggle
-        # )
-        # self.settingsButtonSet["fit"].clicked.connect(self.settingsWidgetSet.fit.toggle)
-        # self.settingsButtonSet["numericalSpectrum"].clicked.connect(
-        #     self.settingsWidgetSet.numericalSpectrum.toggle
-        # )
-        # # close buttons
-        # self.settingsWidgetSet.visual.ui.visualSettingsCloseButton.clicked.connect(
-        #     self.settingsWidgetSet.visual.hide
-        # )
-        # self.settingsWidgetSet.fit.ui.fitSettingsCloseButton.clicked.connect(
-        #     self.settingsWidgetSet.fit.hide
-        # )
-        # self.settingsWidgetSet.numericalSpectrum.ui.numSpecSettingsCloseButton.clicked.connect(
-        #     self.settingsWidgetSet.numericalSpectrum.hide
-        # )
         self.settingsButton.clicked.connect(self.settingsWidget.toggle)
         self.settingsWidget.ui.settingsCloseButton.clicked.connect(
             self.settingsWidget.hide
