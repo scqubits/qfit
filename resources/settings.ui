@@ -336,6 +336,37 @@ QComboBox QAbstractItemView::item{
        <height>370</height>
       </size>
      </property>
+     <property name="styleSheet">
+      <string notr="true">QTabWidget::tab-bar {
+    left: 5px; /* move to the right by 5px */
+}
+
+/* Style the tab using the tab sub-control. Note that
+    it reads QTabBar _not_ QTabWidget */
+QTabBar::tab {
+    background: #171717;
+	border: 2px solid #171717;
+    border-bottom-color: #2F2F2F; /* same as the pane color */
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    min-width: 8ex;
+    padding: 7px;
+}
+
+QTabBar::tab:selected {
+	background: #2F2F2F;
+	border: 2px solid #171717;
+    border-bottom-color: #2F2F2F; /* same as pane color */
+	font: 14px &quot;Roboto Medium&quot;;
+    color: #DBBCFB;
+}
+
+QTabBar::tab:!selected {
+    margin-top: 2px; /* make non-selected tabs look smaller */
+	font: 14px &quot;Roboto Medium&quot;;
+    color: #797979;
+}</string>
+     </property>
      <property name="tabPosition">
       <enum>QTabWidget::North</enum>
      </property>
@@ -343,7 +374,7 @@ QComboBox QAbstractItemView::item{
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideRight</enum>
@@ -384,7 +415,7 @@ QComboBox QAbstractItemView::item{
            <number>0</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>5</number>
           </property>
           <property name="rightMargin">
            <number>0</number>
@@ -465,7 +496,7 @@ QComboBox QAbstractItemView::item{
             <property name="sizeHint" stdset="0">
              <size>
               <width>20</width>
-              <height>13</height>
+              <height>7</height>
              </size>
             </property>
            </spacer>
@@ -832,13 +863,13 @@ QComboBox QAbstractItemView::item{
         <number>0</number>
        </property>
        <item>
-        <widget class="QWidget" name="widget" native="true">
+        <widget class="QWidget" name="spectrumTabContainerWidget" native="true">
          <layout class="QGridLayout" name="gridLayout">
           <property name="leftMargin">
            <number>0</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>5</number>
           </property>
           <property name="rightMargin">
            <number>0</number>
@@ -1098,7 +1129,7 @@ QSpinBox::down-button:pressed {
             <property name="sizeHint" stdset="0">
              <size>
               <width>20</width>
-              <height>133</height>
+              <height>115</height>
              </size>
             </property>
            </spacer>
@@ -1189,13 +1220,13 @@ QSpinBox::down-button:pressed {
         <number>0</number>
        </property>
        <item>
-        <widget class="QWidget" name="widget_2" native="true">
+        <widget class="QWidget" name="fitTabContainerWidget" native="true">
          <layout class="QGridLayout" name="gridLayout_4">
           <property name="leftMargin">
            <number>0</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>5</number>
           </property>
           <property name="rightMargin">
            <number>0</number>
@@ -1239,7 +1270,7 @@ QSpinBox::down-button:pressed {
             <property name="sizeHint" stdset="0">
              <size>
               <width>20</width>
-              <height>258</height>
+              <height>240</height>
              </size>
             </property>
            </spacer>
