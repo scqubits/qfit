@@ -20,6 +20,7 @@ from qfit.ui_designer.settings_numerical_spectrum import (
     Ui_numericalSpectrumSettingsWidget,
 )
 from qfit.ui_designer.settings_visual import Ui_visualSettingsWidget
+from qfit.ui_designer.settings import Ui_settingsWidget
 
 
 class SettingsWidgetBase(QWidget):
@@ -51,42 +52,48 @@ class SettingsWidgetBase(QWidget):
             self.hide()
 
 
-class VisualSettingsWidget(SettingsWidgetBase):
+# class VisualSettingsWidget(SettingsWidgetBase):
+#     def __init__(self, parent):
+#         super(VisualSettingsWidget, self).__init__(parent=parent)
+#         self.ui = Ui_visualSettingsWidget()
+#         self.ui.setupUi(self)
+#         # self.setStyleSheet("background-color: #2F2F2F;")
+
+
+# class FitSettingsWidget(SettingsWidgetBase):
+#     def __init__(self, parent):
+#         super(FitSettingsWidget, self).__init__(parent=parent)
+#         self.ui = Ui_fitSettingsWidget()
+#         self.ui.setupUi(self)
+#         # self.setStyleSheet("background-color: #2F2F2F;")
+
+
+# class NumericalSpectrumSettingsWidget(SettingsWidgetBase):
+#     def __init__(self, parent):
+#         super(NumericalSpectrumSettingsWidget, self).__init__(parent=parent)
+#         self.ui = Ui_numericalSpectrumSettingsWidget()
+#         self.ui.setupUi(self)
+#         # self.setStyleSheet("background-color: #2F2F2F;")
+
+class SettingsWidget(SettingsWidgetBase):
     def __init__(self, parent):
-        super(VisualSettingsWidget, self).__init__(parent=parent)
-        self.ui = Ui_visualSettingsWidget()
+        super(SettingsWidget, self).__init__(parent=parent)
+        self.ui = Ui_settingsWidget()
         self.ui.setupUi(self)
-        # self.setStyleSheet("background-color: #2F2F2F;")
 
 
-class FitSettingsWidget(SettingsWidgetBase):
-    def __init__(self, parent):
-        super(FitSettingsWidget, self).__init__(parent=parent)
-        self.ui = Ui_fitSettingsWidget()
-        self.ui.setupUi(self)
-        # self.setStyleSheet("background-color: #2F2F2F;")
+# @dataclass
+# class SettingsWidgetSet:
+#     visual: "VisualSettingsWidget"
+#     fit: "FitSettingsWidget"
+#     numericalSpectrum: "NumericalSpectrumSettingsWidget"
 
-
-class NumericalSpectrumSettingsWidget(SettingsWidgetBase):
-    def __init__(self, parent):
-        super(NumericalSpectrumSettingsWidget, self).__init__(parent=parent)
-        self.ui = Ui_numericalSpectrumSettingsWidget()
-        self.ui.setupUi(self)
-        # self.setStyleSheet("background-color: #2F2F2F;")
-
-
-@dataclass
-class SettingsWidgetSet:
-    visual: "VisualSettingsWidget"
-    fit: "FitSettingsWidget"
-    numericalSpectrum: "NumericalSpectrumSettingsWidget"
-
-    def __init__(
-        self,
-        visual: "VisualSettingsWidget",
-        fit: "FitSettingsWidget",
-        numericalSpectrum: "NumericalSpectrumSettingsWidget",
-    ):
-        self.visual = visual
-        self.fit = fit
-        self.numericalSpectrum = numericalSpectrum
+#     def __init__(
+#         self,
+#         visual: "VisualSettingsWidget",
+#         fit: "FitSettingsWidget",
+#         numericalSpectrum: "NumericalSpectrumSettingsWidget",
+#     ):
+#         self.visual = visual
+#         self.fit = fit
+#         self.numericalSpectrum = numericalSpectrum
