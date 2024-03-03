@@ -14,7 +14,6 @@ from typing import (
 )
 
 from qfit.models.data_structures import (
-    QMSweepParam,
     SliderParam,
     FitParam,
     ParamAttr,
@@ -809,6 +808,7 @@ class CaliParamModel(
         self.emitUpdateBox()
         self.sendXCaliFunc()
         self.sendYCaliFunc()
+        self.emitUpdatePrefitModel()
 
     def updateAllBoxes(self):
         """
@@ -846,3 +846,25 @@ class CaliParamModel(
         * entering raw Y by clicking on the plot triggers processSelectedPtFromPlot
         """
         self.yCaliUpdated.emit(self.YCalibration(), self.invYCalibration())
+
+    def emitUpdatePrefitModel(self):
+        """Update everything in prefit model"""
+        for rowName, paramDictByParent in self.items():
+            for colName, param in paramDictByParent.items():
+                if self._prefitHas(rowName, colName):
+                    # update min, max, value for the prefit model
+                    min, max = self._fitMinMaxByColName(rowName, colName)
+                    self.updatePrefitModel.emit(
+                        ParamAttr(rowName, colName, "min", min)
+                    )
+                    self.updatePrefitModel.emit(
+                        ParamAttr(rowName, colName, "max", max)
+                    )
+                    self.updatePrefitModel.emit(
+                        ParamAttr(
+                            rowName,
+                            colName,
+                            "value",
+                            param.value,
+                        )
+                    )

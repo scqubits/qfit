@@ -375,6 +375,7 @@ class PlottingCtrl(QObject):
 
     def setClickResponse(self, response: Literal["ZOOM", "PAN", "EXTRACT"]):
         self.clickResponse = response
+        self.updateCursor()
 
     @Slot()
     def setDataDestAxisSnap(
