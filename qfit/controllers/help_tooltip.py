@@ -79,19 +79,6 @@ class HelpButtonCtrl(QObject):
         )
         tutorial_dialog.exec()
 
-    @Slot()
-    def prefitResultHelp(self):
-        tutorial_dialog = DialogWindowWithMedia(
-            "<b>MSE</b>: mean squared error between extracted transition frequencies and those simulated with the fitted parameters.",
-        )
-        tutorial_dialog.exec()
-
-    @Slot()
-    def fitResultHelp(self):
-        tutorial_dialog = DialogWindowWithMedia(
-            "<b>MSE</b>: mean squared error between extracted transition frequencies and those simulated with the fitted parameters.",
-        )
-        tutorial_dialog.exec()
 
     @Slot()
     def numericalSpectrumSettingsHelp(self):

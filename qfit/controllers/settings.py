@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 from scqubits.core.hilbert_space import HilbertSpace
 
 from qfit.models.registry import Registry
-from qfit.widgets.settings import SettingsWidgetSet
+from qfit.widgets.settings import SettingsWidget
 from qfit.utils.helpers import StopExecution
 from qfit.io_utils.measurement_file_readers import readMeasurementFile
 
@@ -40,29 +40,15 @@ class SettingsCtrl:
 
     def __init__(
         self,
-        settingsWidgetSet: SettingsWidgetSet,
-        settingsButtonSet: Dict[str, QPushButton],
+        settingsWidget: SettingsWidget,
+        settingsButton: QPushButton,
     ):
-        self.settingsWidgetSet = settingsWidgetSet
-        self.settingsButtonSet = settingsButtonSet
+        self.settingsWidget = settingsWidget
+        self.settingsButton = settingsButton
         self.uiSettingsConnects()
 
     def uiSettingsConnects(self):
-        # toggle on the settings widgets
-        self.settingsButtonSet["visual"].clicked.connect(
-            self.settingsWidgetSet.visual.toggle
-        )
-        self.settingsButtonSet["fit"].clicked.connect(self.settingsWidgetSet.fit.toggle)
-        self.settingsButtonSet["numericalSpectrum"].clicked.connect(
-            self.settingsWidgetSet.numericalSpectrum.toggle
-        )
-        # close buttons
-        self.settingsWidgetSet.visual.ui.visualSettingsCloseButton.clicked.connect(
-            self.settingsWidgetSet.visual.hide
-        )
-        self.settingsWidgetSet.fit.ui.fitSettingsCloseButton.clicked.connect(
-            self.settingsWidgetSet.fit.hide
-        )
-        self.settingsWidgetSet.numericalSpectrum.ui.numSpecSettingsCloseButton.clicked.connect(
-            self.settingsWidgetSet.numericalSpectrum.hide
+        self.settingsButton.clicked.connect(self.settingsWidget.toggle)
+        self.settingsWidget.ui.settingsCloseButton.clicked.connect(
+            self.settingsWidget.hide
         )

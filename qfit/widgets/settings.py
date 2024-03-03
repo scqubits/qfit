@@ -20,6 +20,7 @@ from qfit.ui_designer.settings_numerical_spectrum import (
     Ui_numericalSpectrumSettingsWidget,
 )
 from qfit.ui_designer.settings_visual import Ui_visualSettingsWidget
+from qfit.ui_designer.settings import Ui_settingsWidget
 
 
 class SettingsWidgetBase(QWidget):
@@ -27,7 +28,7 @@ class SettingsWidgetBase(QWidget):
         super(SettingsWidgetBase, self).__init__(parent=parent)
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.mainwindow = parent
-        self.move(450, 500)
+        self.move(350, 300)
         self.oldPos: Union[None, QPoint] = self.pos()
         self.hide()
 
@@ -51,42 +52,8 @@ class SettingsWidgetBase(QWidget):
             self.hide()
 
 
-class VisualSettingsWidget(SettingsWidgetBase):
+class SettingsWidget(SettingsWidgetBase):
     def __init__(self, parent):
-        super(VisualSettingsWidget, self).__init__(parent=parent)
-        self.ui = Ui_visualSettingsWidget()
+        super(SettingsWidget, self).__init__(parent=parent)
+        self.ui = Ui_settingsWidget()
         self.ui.setupUi(self)
-        # self.setStyleSheet("background-color: #2F2F2F;")
-
-
-class FitSettingsWidget(SettingsWidgetBase):
-    def __init__(self, parent):
-        super(FitSettingsWidget, self).__init__(parent=parent)
-        self.ui = Ui_fitSettingsWidget()
-        self.ui.setupUi(self)
-        # self.setStyleSheet("background-color: #2F2F2F;")
-
-
-class NumericalSpectrumSettingsWidget(SettingsWidgetBase):
-    def __init__(self, parent):
-        super(NumericalSpectrumSettingsWidget, self).__init__(parent=parent)
-        self.ui = Ui_numericalSpectrumSettingsWidget()
-        self.ui.setupUi(self)
-        # self.setStyleSheet("background-color: #2F2F2F;")
-
-
-@dataclass
-class SettingsWidgetSet:
-    visual: "VisualSettingsWidget"
-    fit: "FitSettingsWidget"
-    numericalSpectrum: "NumericalSpectrumSettingsWidget"
-
-    def __init__(
-        self,
-        visual: "VisualSettingsWidget",
-        fit: "FitSettingsWidget",
-        numericalSpectrum: "NumericalSpectrumSettingsWidget",
-    ):
-        self.visual = visual
-        self.fit = fit
-        self.numericalSpectrum = numericalSpectrum

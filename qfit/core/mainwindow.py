@@ -58,16 +58,18 @@ from qfit.widgets.menu import MenuWidget
 # settings
 from qfit.controllers.settings import SettingsCtrl
 from qfit.widgets.settings import (
-    VisualSettingsWidget,
-    FitSettingsWidget,
-    NumericalSpectrumSettingsWidget,
-    SettingsWidgetSet,
+    # VisualSettingsWidget,
+    # FitSettingsWidget,
+    # NumericalSpectrumSettingsWidget,
+    # SettingsWidgetSet,
+    SettingsWidget,
 )
-from qfit.ui_designer.settings_fit import Ui_fitSettingsWidget
-from qfit.ui_designer.settings_numerical_spectrum import (
-    Ui_numericalSpectrumSettingsWidget,
-)
-from qfit.ui_designer.settings_visual import Ui_visualSettingsWidget
+
+# from qfit.ui_designer.settings_fit import Ui_fitSettingsWidget
+# from qfit.ui_designer.settings_numerical_spectrum import (
+#     Ui_numericalSpectrumSettingsWidget,
+# )
+# from qfit.ui_designer.settings_visual import Ui_visualSettingsWidget
 
 # paging:
 from qfit.views.paging_view import PageView
@@ -140,7 +142,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # ui
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.setShadows()
         self.ui.verticalSnapButton.setAutoExclusive(False)
 
         # navigation
@@ -148,12 +149,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.pagingMVCInits()
 
         # settings
-        self.ui_settings = SettingsWidgetSet(
-            visual=VisualSettingsWidget(self),
-            fit=FitSettingsWidget(self),
-            numericalSpectrum=NumericalSpectrumSettingsWidget(self),
-        )
+        self.ui_settings = SettingsWidget(self)
         self.settingsMVCInit()
+
+        # set shadows
+        self.setShadows()
 
         # calibration - should be inited after prefit, as it requires a sweep parameter set
         self.calibrationMVCInits()
@@ -233,15 +233,17 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             eff.setColor(QColor(0, 0, 0, 90))
             button.setGraphicsEffect(eff)
 
+        for widget in [self.ui_settings]:
+            eff = QGraphicsDropShadowEffect(widget)
+            eff.setOffset(2)
+            eff.setBlurRadius(18.0)
+            eff.setColor(QColor(0, 0, 0, 90))
+            widget.setGraphicsEffect(eff)
+
     # settings #########################################################
     ####################################################################
     def settingsMVCInit(self):
-        self.settingsButtonSet = {
-            "visual": self.ui.extractSettingsPushButton,
-            "fit": self.ui.fitSettingsPushButton,
-            "numericalSpectrum": self.ui.prefitSettingsPushButton,
-        }
-        self.settingsCtrl = SettingsCtrl(self.ui_settings, self.settingsButtonSet)
+        self.settingsCtrl = SettingsCtrl(self.ui_settings, self.ui.settingsPushButton)
 
     # help button and gif tooltip ######################################
     ####################################################################
@@ -249,9 +251,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.helpButtons = {
             "calibration": self.ui.calibrationHelpPushButton,
             "fit": self.ui.fitHelpPushButton,
-            "fitResult": self.ui_settings.fit.ui.fitResultHelpPushButton,
-            "prefitResult": self.ui_settings.numericalSpectrum.ui.prefitResultHelpPushButton,
-            "numericalSpectrumSettings": self.ui_settings.numericalSpectrum.ui.numericalSpectrumSettingsHelpPushButton,
+            "numericalSpectrumSettings": self.ui_settings.ui.numericalSpectrumSettingsHelpPushButton,
         }
         self.helpButtonCtrl = HelpButtonCtrl(self.helpButtons)
 
@@ -265,15 +265,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             "z": self.ui.zComboBox,
         }
         self.measPlotSettings = {
-            "topHat": self.ui_settings.visual.ui.topHatCheckBox,
-            "wavelet": self.ui_settings.visual.ui.waveletCheckBox,
-            "edge": self.ui_settings.visual.ui.edgeFilterCheckBox,
-            "bgndX": self.ui_settings.visual.ui.bgndSubtractXCheckBox,
-            "bgndY": self.ui_settings.visual.ui.bgndSubtractYCheckBox,
-            "log": self.ui_settings.visual.ui.logScaleCheckBox,
-            "min": self.ui_settings.visual.ui.rangeSliderMin,
-            "max": self.ui_settings.visual.ui.rangeSliderMax,
-            "color": self.ui_settings.visual.ui.colorComboBox,
+            "topHat": self.ui_settings.ui.topHatCheckBox,
+            "wavelet": self.ui_settings.ui.waveletCheckBox,
+            "edge": self.ui_settings.ui.edgeFilterCheckBox,
+            "bgndX": self.ui_settings.ui.bgndSubtractXCheckBox,
+            "bgndY": self.ui_settings.ui.bgndSubtractYCheckBox,
+            "log": self.ui_settings.ui.logScaleCheckBox,
+            "min": self.ui_settings.ui.rangeSliderMin,
+            "max": self.ui_settings.ui.rangeSliderMax,
+            "color": self.ui_settings.ui.colorComboBox,
         }
         self.canvasTools = {
             "reset": self.ui.resetViewButton,
@@ -322,7 +322,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         }
         self.pageStackedWidgets = {
             "center": self.ui.pagesStackedWidget,
-            "bottom": self.ui.bottomStackedWidget,
+            # "bottom": self.ui.bottomStackedWidget,
         }
 
         self.pageView = PageView(
@@ -367,20 +367,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         )
         # self.calibrationData = CalibrationData()
         # self.calibrationData.setCalibration(*self.calibrationView.calibrationPoints())
-
-    # def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
-    #     """
-    #     SHOULD GO TO CALIBRATION VIEW
-    #     Highlight the button by changing its color."""
-    #     if reset:
-    #         button.setStyleSheet("")
-    #     else:
-    #         button.setStyleSheet("QPushButton {background-color: #BE82FA}")
-
-    # def _resetHighlightButtons(self):
-    #     """Reset the highlighting of all calibration buttons."""
-    #     for label in self.calibrationButtons:
-    #         self._highlightCaliButton(self.calibrationButtons[label], reset=True)
 
     # extract and tag ##################################################
     # ##################################################################
@@ -441,11 +427,11 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def prefitMVCInits(self):
         # UI grouping
         self.prefitOptions = {
-            "subsysToPlot": self.ui_settings.numericalSpectrum.ui.subsysComboBox,
-            "initialState": self.ui_settings.numericalSpectrum.ui.initStateLineEdit,
-            "photons": self.ui_settings.numericalSpectrum.ui.prefitPhotonSpinBox,
-            "evalsCount": self.ui_settings.numericalSpectrum.ui.evalsCountLineEdit,
-            "pointsAdded": self.ui_settings.numericalSpectrum.ui.pointsAddLineEdit,
+            "subsysToPlot": self.ui_settings.ui.subsysComboBox,
+            "initialState": self.ui_settings.ui.initStateLineEdit,
+            "photons": self.ui_settings.ui.prefitPhotonSpinBox,
+            "evalsCount": self.ui_settings.ui.evalsCountLineEdit,
+            "pointsAdded": self.ui_settings.ui.pointsAddLineEdit,
             "autoRun": self.ui.autoRunCheckBox,
         }
 
@@ -571,7 +557,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.prefitCaliModel.paramNamesDict(),
             removeExisting=True,
         )
-        
 
     def prefitSliderParamConnects(self):
         """
@@ -678,8 +663,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             self.fitCaliModel.paramNamesDict(),
             removeExisting=True,
         )
-        # like what happened with the prefit min max table, only after the table 
-        # is inserted, we can set the width of the column; reason unknown, only 
+        # like what happened with the prefit min max table, only after the table
+        # is inserted, we can set the width of the column; reason unknown, only
         # happens on windows. TODO: investigate
         self.fitParamView.fitTableSet.setWidthOfColumn()
 
@@ -767,20 +752,19 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitParamModel.blockSignals(False)
         self.caliParamModel.blockSignals(False)
 
-        # plot the spectrum as if we are in prefit
-        # TODO: make this usage "fit" so that the status bar is correctly updated
+        # plot the spectrum
         tmp = self.quantumModel.sweepUsage
         self.quantumModel.sweepUsage = "fit-result"
         self.quantumModel.updateCalc()
         self.quantumModel.sweepUsage = tmp
 
     def fitOptionConnects(self):
-        self.ui_settings.fit.ui.tolLineEdit.editingFinished.connect(
-            lambda: self.fitModel.updateTol(self.ui_settings.fit.ui.tolLineEdit.value())
+        self.ui_settings.ui.tolLineEdit.editingFinished.connect(
+            lambda: self.fitModel.updateTol(self.ui_settings.ui.tolLineEdit.value())
         )
-        self.ui_settings.fit.ui.optimizerComboBox.currentIndexChanged.connect(
+        self.ui_settings.ui.optimizerComboBox.currentIndexChanged.connect(
             lambda: self.fitModel.updateOptimizer(
-                self.ui_settings.fit.ui.optimizerComboBox.currentText()
+                self.ui_settings.ui.optimizerComboBox.currentText()
             )
         )
 
