@@ -340,6 +340,7 @@ class MplFigureCanvas(QFrame):
     def initializeProperties(self):
         # change background color
         self.canvas.figure.patch.set_facecolor("#B8B8B8")
+        self.canvas.figure.patch.set_facecolor("#B8B8B8")
         self.canvas.figure.subplots()
         self.axes.autoscale(enable=False)
 

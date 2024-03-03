@@ -359,7 +359,15 @@ class PlottingCtrl(QObject):
 
     @property
     def xSnap(self):
-        return self.xSnapTool and not self.trans0Focused
+        """
+        Only in the extract mode, focusing on a transition other than 
+        the first one, x snap can be turned on.
+        """
+        return (
+            self.xSnapTool 
+            and not self.trans0Focused
+            and self.dataDestination == "EXTRACT"
+        )
 
     def setTrans0Focused(self, checked: bool):
         self.trans0Focused = checked
