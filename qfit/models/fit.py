@@ -402,7 +402,6 @@ class FitModel(QObject):
         )
         self.updateStatus.emit(status)
 
-        print("Runner starts.")
         runner = FitRunner(
             self.opt,
             initParam,
@@ -426,7 +425,6 @@ class FitRunner(QRunnable):
         callback: Callable,
     ):
         super().__init__()
-        print("Runner inits.", self)
 
         self.opt = opt
         self.initParam = initParam

@@ -61,6 +61,8 @@ License
 [![license](https://img.shields.io/badge/license-New%20BSD-blue.svg)](http://en.wikipedia.org/wiki/BSD_licenses#3-clause_license_.28.22Revised_BSD_License.22.2C_.22New_BSD_License.22.2C_or_.22Modified_BSD_License.22.29)
 
 You are free to use this software, with or without modification, provided that the conditions listed in the LICENSE file are satisfied.
+
+qfit uses Qt library under license [LGPLv3](https://www.gnu.org/licenses/lgpl-3.0.html).
  
 qfit uses [CoreUI icons](https://coreui.io/docs/icons/) and [Font Awesome icons](https://fontawesome.com/icons), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 

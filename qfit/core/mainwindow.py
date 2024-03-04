@@ -736,7 +736,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitParamModel.blockSignals(True)
         self.caliParamModel.blockSignals(True)
 
+        # TODO: later, fit model will be able to update hspace
+        # and we don't need to store the prefit parameters
         self.tmpPrefitParams = self.prefitParamModel.getAttrDict("value")
+        self.tmpCaliParams = self.caliParamModel.getAttrDict("value")
 
         # setup the optimization
         self.fitModel.setupOptimization(
@@ -760,9 +763,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitParamModel.blockSignals(False)
         self.caliParamModel.blockSignals(False)
 
+        # TODO: later, fit model will be able to update hspace
         self.prefitParamModel.setByAttrDict(
-            self.tmpPrefitParams,
-            "value"
+            self.tmpPrefitParams, "value"
+        )
+        self.caliParamModel.setByAttrDict(
+            self.tmpCaliParams, "value"
         )
 
         # plot the spectrum
