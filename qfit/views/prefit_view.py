@@ -213,6 +213,12 @@ class PrefitParamView(QObject):
         for groupName, group in self.minMaxTable.items():
             for name, item in group.items():
                 item: MinMaxItems
+
+                if groupName in self.HSNames:
+                    signalSet = self.HSSignals
+                else:
+                    signalSet = self.caliSignals
+                    
                 item.minValue.editingFinished.connect(
                     lambda item=item, name=name, groupName=groupName, signalSet=signalSet: signalSet[
                         "rangeEditingFinished"

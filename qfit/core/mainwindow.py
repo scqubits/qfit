@@ -573,17 +573,24 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
             signalSet: Dict[str, SignalInstance]
             model: Union[PrefitParamModel, PrefitCaliModel]
 
+            
             signalSet["sliderChanged"].connect(
                 lambda paramAttr, model=model: model.storeParamAttr(
                     paramAttr, fromSlider=True
                 )
             )
+            # signalSet["sliderChanged"].connect(
+            #     lambda paramAttr, model=model: print(model, "slider changed")
+            # )
             signalSet["textChanged"].connect(
                 lambda paramAttr, model=model: model.storeParamAttr(paramAttr)
             )
             signalSet["rangeEditingFinished"].connect(
                 lambda paramAttr, model=model: model.storeParamAttr(paramAttr)
             )
+            # signalSet["rangeEditingFinished"].connect(
+            #     lambda paramAttr, model=model: print(model, "range editing finished")
+            # )
 
             # synchronize slider and box
             model.updateSlider.connect(
@@ -938,7 +945,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.statusModel = StatusModel()
         self.statusBarView = StatusBarView(self.ui.statusBar)
         self.statusCtrl = StatusCtrl(
-            (self.quantumModel, self.fitModel, self),
+            (
+                self.quantumModel, self.fitModel, 
+                self.fitParamModel, self.fitCaliModel
+            ),
             self.statusModel,
             self.statusBarView,
         )

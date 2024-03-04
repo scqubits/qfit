@@ -20,20 +20,25 @@ from qfit.models.data_structures import Status
 
 
 class FitParamModelMixin(ParamModelMixin[FitParam]):
+    updateStatus = Signal(Status)
 
     def _isValid(self, paramSet: ParamSet[FitParam]) -> bool:
         for key, params in paramSet.toParamDict().items():
             if params.min >= params.max:
-                ###############
-                # Error message
-                ###############
+                self.updateStatus.emit(Status(
+                    statusSource="fit",
+                    statusType="error",
+                    message=f"For {key}, min value is greater than or equal to max value.",
+                ))
                 return False
             if not params.isFixed and (
                 params.initValue < params.min or params.initValue > params.max
             ):
-                ###############
-                # Error message
-                ###############
+                self.updateStatus.emit(Status(
+                    statusSource="fit",
+                    statusType="error",
+                    message=f"For {key}, initial value is out of range.",
+                ))
                 return False
         return True
 
