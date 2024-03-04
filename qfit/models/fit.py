@@ -364,7 +364,17 @@ class FitModel(QObject):
                 mse=traj.final_target,
             )
             self.updateStatus.emit(status)
-            print(f"triggered by _postOptimization, source: fit")
+            return
+
+        if np.nan in traj.final_para.values() or traj.final_target == np.nan:
+            status = Status(
+                statusSource="fit",
+                statusType="error",
+                message="The optimization failed and returned nan values, "
+                        "please try again",
+                mse=traj.final_target,
+            )
+            self.updateStatus.emit(status)
             return
 
         # # set the status
@@ -428,6 +438,9 @@ class FitRunner(QRunnable):
         self.callback = callback
 
     def run(self):
-        traj = self.opt.run(init_x=self.initParam, callback=self.callback)
+        try:
+            traj = self.opt.run(init_x=self.initParam, callback=self.callback)
+        except:
+            pass
 
         self.signalHoster.optFinished.emit(traj)

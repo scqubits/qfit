@@ -445,7 +445,6 @@ class QuantumModel(QObject):
                 message=f"{e}",
             )
             self.updateStatus.emit(status)
-            print(f"triggered from _newSweep, source: {self.sweepUsage}")
             raise e
 
         # only issue computing status in the prefit stage
@@ -458,7 +457,6 @@ class QuantumModel(QObject):
                 message="",
             )
             self.updateStatus.emit(status)
-            print(f"triggered from _newSweep, source: {self.sweepUsage}")
         for sweep in self._sweeps.values():
             # manually turn off the warning message
             sweep._out_of_sync_warning_issued = True
@@ -678,7 +676,6 @@ class QuantumModel(QObject):
                     message=statusText,
                 )
                 self.updateStatus.emit(status)
-                print(f"triggered from _MSEByTransition, source: {self.sweepUsage}")
                 return np.nan
             # if the return status is not SUCCESS, add a warning message and set status type to WARNING
             if get_transition_freq_status != "SUCCESS":
