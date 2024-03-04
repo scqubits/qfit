@@ -337,22 +337,22 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         # ui grouping
         self.rawLineEdits = {
-            "X0": self.ui.rawX1LineEdit,
-            "X1": self.ui.rawX2LineEdit,
-            "Y0": self.ui.rawY1LineEdit,
-            "Y1": self.ui.rawY2LineEdit,
+            "X1": self.ui.rawX1LineEdit,
+            "X2": self.ui.rawX2LineEdit,
+            "Y1": self.ui.rawY1LineEdit,
+            "Y2": self.ui.rawY2LineEdit,
         }
         self.mapLineEdits = {
-            "X0": self.ui.mapX1LineEdit,
-            "X1": self.ui.mapX2LineEdit,
-            "Y0": self.ui.mapY1LineEdit,
-            "Y1": self.ui.mapY2LineEdit,
+            "X1": self.ui.mapX1LineEdit,
+            "X2": self.ui.mapX2LineEdit,
+            "Y1": self.ui.mapY1LineEdit,
+            "Y2": self.ui.mapY2LineEdit,
         }
         self.calibrationButtons = {
-            "X0": self.ui.calibrateX1Button,
-            "X1": self.ui.calibrateX2Button,
-            "Y0": self.ui.calibrateY1Button,
-            "Y1": self.ui.calibrateY2Button,
+            "X1": self.ui.calibrateX1Button,
+            "X2": self.ui.calibrateX2Button,
+            "Y1": self.ui.calibrateY1Button,
+            "Y2": self.ui.calibrateY2Button,
         }
 
         self.caliParamModel = CaliParamModel()

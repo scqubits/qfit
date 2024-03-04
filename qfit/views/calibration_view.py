@@ -86,11 +86,11 @@ class CalibrationView(QObject):
         self._generateCaliTableSet()
 
         # need to be removed in the future
-        self.caliTableSet["X0"][self.rawXVecNameList[0]].setSibling(
-            self.caliTableSet["X1"][self.rawXVecNameList[0]]
+        self.caliTableSet["X1"][self.rawXVecNameList[0]].setSibling(
+            self.caliTableSet["X2"][self.rawXVecNameList[0]]
         )
-        self.caliTableSet["Y0"][self.rawYName].setSibling(
-            self.caliTableSet["Y1"][self.rawYName]
+        self.caliTableSet["Y1"][self.rawYName].setSibling(
+            self.caliTableSet["Y2"][self.rawYName]
         )
 
         # connects
@@ -101,25 +101,25 @@ class CalibrationView(QObject):
         if self.caliTableSet != {}:
             self.caliTableSet.clear()
         self.caliTableSet: Dict[str, Dict[str, "CalibrationLineEdit"]] = {
-            "X0": {
-                self.rawXVecNameList[0]: self.rawLineEdits["X0"],
-                f"{self.sweepParamParentName}.{self.sweepParamName}": self.mapLineEdits[
-                    "X0"
-                ],
-            },
             "X1": {
                 self.rawXVecNameList[0]: self.rawLineEdits["X1"],
                 f"{self.sweepParamParentName}.{self.sweepParamName}": self.mapLineEdits[
                     "X1"
                 ],
             },
-            "Y0": {
-                self.rawYName: self.rawLineEdits["Y0"],
-                "mappedY": self.mapLineEdits["Y0"],
+            "X2": {
+                self.rawXVecNameList[0]: self.rawLineEdits["X2"],
+                f"{self.sweepParamParentName}.{self.sweepParamName}": self.mapLineEdits[
+                    "X2"
+                ],
             },
             "Y1": {
                 self.rawYName: self.rawLineEdits["Y1"],
                 "mappedY": self.mapLineEdits["Y1"],
+            },
+            "Y2": {
+                self.rawYName: self.rawLineEdits["Y2"],
+                "mappedY": self.mapLineEdits["Y2"],
             },
         }
 
@@ -132,9 +132,9 @@ class CalibrationView(QObject):
         """
         self.rowIdxToButtonGroupId: Dict[str, int] = {}
         for rowIdx in range(self.caliTableXRowNr):
-            self.rowIdxToButtonGroupId[f"X{rowIdx}"] = rowIdx
-        self.rowIdxToButtonGroupId["Y0"] = self.caliTableXRowNr
-        self.rowIdxToButtonGroupId["Y1"] = self.caliTableXRowNr + 1
+            self.rowIdxToButtonGroupId[f"X{rowIdx+1}"] = rowIdx
+        self.rowIdxToButtonGroupId["Y1"] = self.caliTableXRowNr
+        self.rowIdxToButtonGroupId["Y2"] = self.caliTableXRowNr + 1
 
         self.buttonGroupIdToRowIdx: Dict[int, str] = {
             v: k for k, v in self.rowIdxToButtonGroupId.items()

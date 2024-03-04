@@ -42,12 +42,12 @@ class CaliParamModel(
     yCaliUpdated = Signal(object, object)
     updatePrefitModel = Signal(ParamAttr)
     caliModelRawVecUpdatedForSwapXY = Signal()
-    # calibrationIsOn: Literal["CALI_X1", "CALI_X2", "CALI_Y1", "CALI_Y2", False]
+    # calibrationIsOn: Literal["CALI_X2", "CALI_X2", "CALI_Y2", "CALI_Y2", False]
 
     isFullCalibration: bool
     caliTableXRowNr: int
     caliTableXRowIdxList: List[str]
-    caliTableYRowIdxList: List[str] = ["Y0", "Y1"]
+    caliTableYRowIdxList: List[str] = ["Y1", "Y2"]
     xRowIdxBySourceDict: Dict[str, List[str]] = {}
 
     parameters: Dict[str, Dict[str, CaliTableRowParam]]
@@ -69,8 +69,8 @@ class CaliParamModel(
         If insufficient number of figures are provided, the calibration is partial. In this case, the calibration
         is done for each figure separately. Assume we have F figures, then for each figure, the relation between the
         rawVecX and mapVecX is:
-        rawVecX = rawVecX1 + tX * (rawVecX2 - rawVecX1)
-        mapVecX = mapVecX1 + tX * (mapVecX2 - mapVecX1)
+        rawVecX = rawVecX2 + tX * (rawVecX2 - rawVecX2)
+        mapVecX = mapVecX2 + tX * (mapVecX2 - mapVecX2)
         here the rawVecX is the voltage vector in a figure that one wants to calibrate, and mapVecX is the calibrated
         vector. The tX is the parameter that determines the position of the rawVecX in the figure. The calibration
         is done by providing 2 pairs of (rawVecX, mapVecX) data points for each figure.
@@ -143,7 +143,7 @@ class CaliParamModel(
             self.isFullCalibration = True
             self.caliTableXRowNr = pointsRequired
         self.caliTableXRowIdxList = [
-            f"X{XRowIdx}" for XRowIdx in range(self.caliTableXRowNr)
+            f"X{XRowIdx+1}" for XRowIdx in range(self.caliTableXRowNr)
         ]
 
     def insertAllParams(self):
@@ -444,11 +444,11 @@ class CaliParamModel(
         augRawYMat = np.zeros((2, 2))
         for YRowIdx in range(2):
             augRawYMat[YRowIdx, 0] = 1
-            augRawYMat[YRowIdx, 1] = self[f"Y{YRowIdx}"][self.rawYName].value
+            augRawYMat[YRowIdx, 1] = self[f"Y{YRowIdx+1}"][self.rawYName].value
         # gather all the point pair mapped value and solve alphaVec by inversion
         mapCompVec = np.zeros(2)
         for YRowIdx in range(2):
-            mapCompVec[YRowIdx] = self[f"Y{YRowIdx}"]["mappedY"].value
+            mapCompVec[YRowIdx] = self[f"Y{YRowIdx+1}"]["mappedY"].value
         alphaVec = np.linalg.solve(augRawYMat, mapCompVec)
         return alphaVec
 
@@ -754,24 +754,18 @@ class CaliParamModel(
         # will send the signals after the swap is done
         self.blockSignals(True)
 
-        oldX0RawValue = self.parameters["X0"][self.rawXVecNameList[0]].value
         oldX1RawValue = self.parameters["X1"][self.rawXVecNameList[0]].value
-        oldX0MapValue = self.parameters["X0"][
-            f"{self.sweepParamParentName}.{self.sweepParamName}"
-        ].value
+        oldX2RawValue = self.parameters["X2"][self.rawXVecNameList[0]].value
         oldX1MapValue = self.parameters["X1"][
             f"{self.sweepParamParentName}.{self.sweepParamName}"
         ].value
-        oldY0RawValue = self.parameters["Y0"][self.rawYName].value
+        oldX2MapValue = self.parameters["X2"][
+            f"{self.sweepParamParentName}.{self.sweepParamName}"
+        ].value
         oldY1RawValue = self.parameters["Y1"][self.rawYName].value
-        oldY0MapValue = self.parameters["Y0"]["mappedY"].value
+        oldY2RawValue = self.parameters["Y2"][self.rawYName].value
         oldY1MapValue = self.parameters["Y1"]["mappedY"].value
-        self.setParameter(
-            rowIdx="X0",
-            colName=self.rawXVecNameList[0],
-            attr="value",
-            value=oldY0RawValue,
-        )
+        oldY2MapValue = self.parameters["Y2"]["mappedY"].value
         self.setParameter(
             rowIdx="X1",
             colName=self.rawXVecNameList[0],
@@ -779,10 +773,10 @@ class CaliParamModel(
             value=oldY1RawValue,
         )
         self.setParameter(
-            rowIdx="X0",
-            colName=f"{self.sweepParamParentName}.{self.sweepParamName}",
+            rowIdx="X2",
+            colName=self.rawXVecNameList[0],
             attr="value",
-            value=oldY0MapValue,
+            value=oldY2RawValue,
         )
         self.setParameter(
             rowIdx="X1",
@@ -791,16 +785,22 @@ class CaliParamModel(
             value=oldY1MapValue,
         )
         self.setParameter(
-            rowIdx="Y0", colName=self.rawYName, attr="value", value=oldX0RawValue
+            rowIdx="X2",
+            colName=f"{self.sweepParamParentName}.{self.sweepParamName}",
+            attr="value",
+            value=oldY2MapValue,
         )
         self.setParameter(
             rowIdx="Y1", colName=self.rawYName, attr="value", value=oldX1RawValue
         )
         self.setParameter(
-            rowIdx="Y0", colName="mappedY", attr="value", value=oldX0MapValue
+            rowIdx="Y2", colName=self.rawYName, attr="value", value=oldX2RawValue
         )
         self.setParameter(
             rowIdx="Y1", colName="mappedY", attr="value", value=oldX1MapValue
+        )
+        self.setParameter(
+            rowIdx="Y2", colName="mappedY", attr="value", value=oldX2MapValue
         )
 
         self.blockSignals(False)
@@ -854,12 +854,8 @@ class CaliParamModel(
                 if self._prefitHas(rowName, colName):
                     # update min, max, value for the prefit model
                     min, max = self._fitMinMaxByColName(rowName, colName)
-                    self.updatePrefitModel.emit(
-                        ParamAttr(rowName, colName, "min", min)
-                    )
-                    self.updatePrefitModel.emit(
-                        ParamAttr(rowName, colName, "max", max)
-                    )
+                    self.updatePrefitModel.emit(ParamAttr(rowName, colName, "min", min))
+                    self.updatePrefitModel.emit(ParamAttr(rowName, colName, "max", max))
                     self.updatePrefitModel.emit(
                         ParamAttr(
                             rowName,
