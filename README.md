@@ -62,9 +62,9 @@ License
 
 You are free to use this software, with or without modification, provided that the conditions listed in the LICENSE file are satisfied.
 
-qfit uses Qt library under license [LGPLv3](https://www.gnu.org/licenses/lgpl-3.0.html).
+qfit uses Qt library under license [GNU Lesser General Public License v3.0](https://www.gnu.org/licenses/lgpl-3.0.html).
  
-qfit uses [CoreUI icons](https://coreui.io/docs/icons/) and [Font Awesome icons](https://fontawesome.com/icons), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+qfit uses [CoreUI icons](https://coreui.io/docs/icons/) and [Font Awesome icons](https://fontawesome.com/icons) licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), and [SVG Reop icons](https://www.svgrepo.com) licensed under the MIT license.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
