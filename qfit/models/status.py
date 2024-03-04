@@ -150,14 +150,17 @@ class StatusModel(QObject):
         # parse and generate the message
         if self.currentNormalStatus.statusType == "ready":
             self.statusStrForView += f"{self.currentNormalStatus.message}"
+
         elif self.currentNormalStatus.statusType == "error":
             self.statusStrForView += f"ERROR: {self.currentNormalStatus.message}"
+
         elif self.currentNormalStatus.statusType == "success":
             finalMse = self.currentNormalStatus.mse
             self._updateMseForComputingDelta()
             self.statusStrForView += (
                 f"SUCCESS: MSE = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)"
             )
+
         elif self.currentNormalStatus.statusType == "warning":
             warningMessage = self.currentNormalStatus.message
             if self.currentNormalStatus.statusSource in ["fit", "prefit"]:
@@ -166,6 +169,7 @@ class StatusModel(QObject):
                 self.statusStrForView += f"WARNING: MSE = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)  |  {warningMessage}"
             else:
                 self.statusStrForView += f"WARNING: {warningMessage}"
+
         elif self.currentNormalStatus.statusType == "computing":
             if self.currentNormalStatus.statusSource == "fit":
                 computingMse = self.currentNormalStatus.mse
@@ -173,15 +177,17 @@ class StatusModel(QObject):
                 self.statusStrForView += f"COMPUTING: MSE = {computingMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)"
             elif self.currentNormalStatus.statusSource == "prefit":
                 self.statusStrForView += f"COMPUTING"
+
         elif self.currentNormalStatus.statusType == "initializing":
             initial_mse = self.currentNormalStatus.mse
             self._updateMseForComputingDelta()
             self.statusStrForView += (
                 f"INITIALIZE FITTING: MSE = {initial_mse:.4f} GHz\u00B2"
             )
+
         # emit the signal indicating the status is changed
         self.normalStatusChanged.emit(self.statusStrForView)
-        print(self.statusStrForView)
+        # print(self.statusStrForView)
 
     # @Slot(Status)
     # def updateTempStatus(

@@ -459,7 +459,15 @@ class QuantumModel(QObject):
         for sweep in self._sweeps.values():
             # manually turn off the warning message
             sweep._out_of_sync_warning_issued = True
-            sweep.run()
+            try:
+                sweep.run()
+            except Exception as e:
+                status = Status(
+                    statusSource=self.sweepUsage,
+                    statusType="error",
+                    message=f"{e}",
+                )
+                self.updateStatus.emit(status)
 
     # public methods ===========================================================
     @Slot()

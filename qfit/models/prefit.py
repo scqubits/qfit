@@ -131,6 +131,12 @@ class PrefitParamModel(
         param.setParameterForParent()
         self.emitHSUpdated()
 
+    def updateAllParents(self):
+        for _, parent in self.items():
+            for _, param in parent.items():
+                param.setParameterForParent()
+        self.emitHSUpdated()
+
     # general model methods ============================================
     def toFitParams(self, scale: float = 0.1) -> ParamSet[FitParam]:
         paramSet = ParamSet[FitParam](FitParam)

@@ -1077,7 +1077,6 @@ class MultiOpt():
             )
 
         except ValueError as e:
-            print(f"Capture a ValueError from optimization: {e}")
             if save_path is not None:
                 try:
                     os.remove(self.optimize._running_filename(f"{save_path}/{idx}.csv"))

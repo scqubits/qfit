@@ -475,6 +475,7 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
             self._fullSpectra = initdata
             self.layoutChanged.emit()  # update the list view to show the new data
             self.emitFocusChanged()
+            self.emitDataUpdated()
             self.emitXUpdated()
 
         registry_entry = RegistryEntry(
