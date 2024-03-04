@@ -61,8 +61,7 @@ class QuantumModel(QObject):
 
         # calibration
         self._sweepParamSets: Dict[str, SweepParamSet] = {
-            figName: SweepParamSet()
-            for figName in self._figNames
+            figName: SweepParamSet() for figName in self._figNames
         }
         self._yCaliFunc: Callable = lambda x: x
         self._yInvCaliFunc: Callable = lambda x: x
@@ -445,7 +444,6 @@ class QuantumModel(QObject):
                 message=f"{e}",
             )
             self.updateStatus.emit(status)
-            print(f"triggered from _newSweep, source: {self.sweepUsage}")
             raise e
 
         # only issue computing status in the prefit stage
@@ -458,7 +456,6 @@ class QuantumModel(QObject):
                 message="",
             )
             self.updateStatus.emit(status)
-            print(f"triggered from _newSweep, source: {self.sweepUsage}")
         for sweep in self._sweeps.values():
             # manually turn off the warning message
             sweep._out_of_sync_warning_issued = True
@@ -489,7 +486,6 @@ class QuantumModel(QObject):
                     statusType="error",
                     message=f"{e}",
                 )
-                print(f"triggered from sweep2SpecMSE, source: {self.sweepUsage}")
                 self.updateStatus.emit(status)
                 raise e
 
@@ -500,7 +496,6 @@ class QuantumModel(QObject):
 
         # mse calculation
         mse = self._calculateMSE()
-        print(mse)
         return mse
 
         # # pass MSE and status messages to the model
@@ -608,18 +603,18 @@ class QuantumModel(QObject):
             final_energy = sweep.energy_by_bare_index(tag.final)["x":x_coord]
 
             # when we can identify both initial and final states
-            if initial_energy is not np.nan and final_energy is not np.nan:
+            if not np.isnan(initial_energy) and not np.isnan(final_energy):
                 simulation_freq = final_energy - initial_energy
                 status = "SUCCESS"
                 return simulation_freq, status
 
             # when some of the states are not identifiable
-            elif initial_energy is np.nan and final_energy is not np.nan:
+            elif np.isnan(initial_energy) and not np.isnan(final_energy):
                 status = "NO_MATCHED_BARE_INITIAL"
                 final_energy_dressed_label = sweep.dressed_index(tag.final)["x":x_coord]
                 availableLabels = {"final": final_energy_dressed_label}
 
-            elif final_energy is np.nan and initial_energy is not np.nan:
+            elif not np.isnan(initial_energy) and np.isnan(final_energy):
                 status = "NO_MATCHED_BARE_FINAL"
                 initial_energy_dressed_label = sweep.dressed_index(tag.initial)[
                     "x":x_coord
@@ -678,7 +673,6 @@ class QuantumModel(QObject):
                     message=statusText,
                 )
                 self.updateStatus.emit(status)
-                print(f"triggered from _MSEByTransition, source: {self.sweepUsage}")
                 return np.nan
             # if the return status is not SUCCESS, add a warning message and set status type to WARNING
             if get_transition_freq_status != "SUCCESS":
@@ -737,7 +731,6 @@ class QuantumModel(QObject):
                     mse=mse,
                 )
                 self.updateStatus.emit(status)
-                print(f"triggered from _calculateMSE, source: {self.sweepUsage}")
 
             # else, send out the success status with the MSE
             else:
@@ -750,7 +743,6 @@ class QuantumModel(QObject):
                     mse=mse,
                 )
                 self.updateStatus.emit(status)
-                print(f"triggered from _calculateMSE, source: {self.sweepUsage}")
             return mse
 
     # def MSEByParameters(

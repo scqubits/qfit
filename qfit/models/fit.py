@@ -364,7 +364,6 @@ class FitModel(QObject):
                 mse=traj.final_target,
             )
             self.updateStatus.emit(status)
-            print(f"triggered by _postOptimization, source: fit")
             return
 
         # # set the status
@@ -377,7 +376,6 @@ class FitModel(QObject):
             mse=traj.final_target,
         )
         self.updateStatus.emit(status)
-        print(f"triggered by _postOptimization, source: fit")
 
     def runOptimization(
         self,
@@ -395,7 +393,6 @@ class FitModel(QObject):
             mse=initMSE,
         )
         self.updateStatus.emit(status)
-        print(f"triggered by runOptimization, source: fit, status type: initializing")
 
         print("Runner starts.")
         runner = FitRunner(
