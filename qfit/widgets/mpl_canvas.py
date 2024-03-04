@@ -728,7 +728,6 @@ class MplFigureCanvas(QFrame):
             Whether to reset the x and y limits of the axes to fit all elements.
             If not, the x and y limits will be the same as before.
         """
-        print(f"plot all")
         for element in self._plottingElements.values():
             self._plotElement(element, draw=False)
 

@@ -252,7 +252,6 @@ class PrefitParamView(QObject):
 
     @Slot(bool)
     def toggleMinMaxTableFrame(self, b: bool):
-        print(f"{b}")
         if b:
             self.prefitMinMaxFrame.setMaximumHeight(400)
         else:

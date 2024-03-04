@@ -121,9 +121,6 @@ class ParamSet(Registrable, Generic[ParamCls]):
         -------
         The value of the parameter(s)
         """
-
-        print(f"parentName: {parentName}, name: {name}, attr: {attr}")
-
         try:
             para_dict = self[parentName]
         except KeyError:

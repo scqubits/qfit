@@ -601,6 +601,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         self.prefitParamView.HSEditingFinished.connect(
             self.prefitParamModel.updateParent
         )
+        self.pageView.pageChanged.connect(
+            lambda page: self.prefitParamModel.updateAllParents() if page == "prefit" else None
+        )
 
         # update cali model
         self.prefitParamView.caliEditingFinished.connect(
@@ -708,10 +711,14 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
         self.quantumModel.disableSweep = False
 
-        return self.quantumModel.updateCalc()
+        mse = self.quantumModel.updateCalc()
+
+        if mse is None or mse == np.nan:
+            raise ValueError("The cost function returns None or np.nan.")
+
+        return mse
 
     def _optCallback(self, *args, **kwargs):
-        print("Opt callback called.")
         self.quantumModel.emitReadyToPlot()
         return self.quantumModel.sweep2SpecMSE()
 
@@ -728,6 +735,8 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         # and trigger the calculation. So we need to block the signals
         self.prefitParamModel.blockSignals(True)
         self.caliParamModel.blockSignals(True)
+
+        self.tmpPrefitParams = self.prefitParamModel.getAttrDict("value")
 
         # setup the optimization
         self.fitModel.setupOptimization(
@@ -746,11 +755,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
 
     @Slot()
     def postOptimization(self):
-        print("Opt ends.")
         self.ui.fitButton.setEnabled(True)
         self.prefitParamView.sliderSet.setEnabled(True)
         self.prefitParamModel.blockSignals(False)
         self.caliParamModel.blockSignals(False)
+
+        self.prefitParamModel.setByAttrDict(
+            self.tmpPrefitParams,
+            "value"
+        )
 
         # plot the spectrum
         tmp = self.quantumModel.sweepUsage

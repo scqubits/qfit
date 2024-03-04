@@ -487,7 +487,6 @@ class QuantumModel(QObject):
                     statusType="error",
                     message=f"{e}",
                 )
-                print(f"triggered from sweep2SpecMSE, source: {self.sweepUsage}")
                 self.updateStatus.emit(status)
                 raise e
 
@@ -498,7 +497,6 @@ class QuantumModel(QObject):
 
         # mse calculation
         mse = self._calculateMSE()
-        print(mse)
         return mse
 
         # # pass MSE and status messages to the model
@@ -734,7 +732,6 @@ class QuantumModel(QObject):
                     mse=mse,
                 )
                 self.updateStatus.emit(status)
-                print(f"triggered from _calculateMSE, source: {self.sweepUsage}")
 
             # else, send out the success status with the MSE
             else:
@@ -747,7 +744,6 @@ class QuantumModel(QObject):
                     mse=mse,
                 )
                 self.updateStatus.emit(status)
-                print(f"triggered from _calculateMSE, source: {self.sweepUsage}")
             return mse
 
     # def MSEByParameters(

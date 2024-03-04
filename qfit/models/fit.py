@@ -283,7 +283,6 @@ class FitModel(QObject):
 
         def wrappedCallback(*args, **kwargs):
             mse = callback(*args, **kwargs)
-            print(f"mse in _callbackWrapper: {mse}")
             self.iteration += 1
             # status update; during the optimization, the status is always computing
             status = Status(
@@ -293,9 +292,6 @@ class FitModel(QObject):
                 mse=mse,  # a dummy value
             )
             self.updateStatus.emit(status)
-            print(
-                f"triggered by _callbackWrapper, source: fit, iteration: {self.iteration}"
-            )
 
         return wrappedCallback
 
@@ -351,27 +347,28 @@ class FitModel(QObject):
         return False
 
     @Slot(OptTraj)
-    def _postOptimization(self, traj: OptTraj):
+    def _postOptimization(self, traj: Union[OptTraj, str]):
         self.optFinished.emit()
         # reset iteration
         self.iteration = 0
+
+        if isinstance(traj, str):
+            status = Status(
+                statusSource="fit",
+                statusType="error",
+                message="Fail to optimize the parameter. Due to the "
+                        "following reason: " + traj,
+                mse=np.nan,
+            )
+            self.updateStatus.emit(status)
+            return
+        
 
         if self._paramHitBound(traj):
             status = Status(
                 statusSource="fit",
                 statusType="warning",
                 message="The optimized parameters may hit the bound.",
-                mse=traj.final_target,
-            )
-            self.updateStatus.emit(status)
-            return
-
-        if np.nan in traj.final_para.values() or traj.final_target == np.nan:
-            status = Status(
-                statusSource="fit",
-                statusType="error",
-                message="The optimization failed and returned nan values, "
-                        "please try again",
                 mse=traj.final_target,
             )
             self.updateStatus.emit(status)
@@ -387,7 +384,6 @@ class FitModel(QObject):
             mse=traj.final_target,
         )
         self.updateStatus.emit(status)
-        print(f"triggered by _postOptimization, source: fit")
 
     def runOptimization(
         self,
@@ -405,7 +401,6 @@ class FitModel(QObject):
             mse=initMSE,
         )
         self.updateStatus.emit(status)
-        print(f"triggered by runOptimization, source: fit, status type: initializing")
 
         print("Runner starts.")
         runner = FitRunner(
@@ -440,7 +435,7 @@ class FitRunner(QRunnable):
     def run(self):
         try:
             traj = self.opt.run(init_x=self.initParam, callback=self.callback)
-        except:
-            pass
+        except Exception as e:
+            self.signalHoster.optFinished.emit(str(e))
 
         self.signalHoster.optFinished.emit(traj)
