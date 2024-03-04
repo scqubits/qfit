@@ -41,8 +41,8 @@ EXTRA_KWARGS = {}
 
 
 # all information about scqubits goes here
-MAJOR = 0
-MINOR = 1
+MAJOR = 1
+MINOR = 0
 MICRO = 0
 ISRELEASED = True
 
@@ -59,6 +59,7 @@ PACKAGES = [
     "qfit/models",
     "qfit/controllers",
     "qfit/widgets",
+    "qfit/views",
     "qfit/utils",
     "qfit/io_utils",
     "qfit/ui_designer",
