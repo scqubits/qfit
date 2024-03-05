@@ -1,21 +1,18 @@
 from PySide6.QtCore import QObject, Signal, Slot, Qt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
-
-from qfit.widgets.grouped_sliders import (
-    LabeledSlider,
-    GroupedWidgetSet,
-    SPACING_BETWEEN_GROUPS,
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QSizePolicy, 
+    QPushButton, QLineEdit, QComboBox,
 )
+
 from qfit.widgets.foldable_table import (
     FoldableTable,
-    MinMaxItems,
     FittingParameterItems,
 )
-from qfit.widgets.foldable_widget import FoldableWidget
+from qfit.widgets.validated_line_edits import FloatLineEdit
 from qfit.models.data_structures import ParamAttr
 from qfit.utils.helpers import clearChildren
 
-from typing import Dict, List
+from typing import Dict, List, Any
 
 
 class FitParamView(QObject):
@@ -131,3 +128,17 @@ class FitParamView(QObject):
             item.fixCheckbox.setChecked(paramAttr.value)
         else:
             raise ValueError(f"Invalid attribute {paramAttr.attr}")        
+        
+
+class FitView(QObject):
+    def __init__(
+        self,
+        runFit: QPushButton,
+        dataTransferButtons: Dict[str, QPushButton],
+        options: Dict[str, Any],
+    ):
+        super().__init__()
+        self.runFit = runFit
+        self.dataTransferButtons = dataTransferButtons
+        self.tolLineEdit: FloatLineEdit = options["tol"]
+        self.optimizerComboBox: QComboBox = options["optimizer"]
