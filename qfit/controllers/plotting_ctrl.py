@@ -27,6 +27,10 @@ if TYPE_CHECKING:
     from qfit.views.paging_view import PageView
 
 
+mpl.rcParams["toolbar"] = "None"
+mpl.use("qtagg")
+
+
 class PlottingCtrl(QObject):
     """
     Establishes the connection among the mpl canvas, the mpl toolbar, and the

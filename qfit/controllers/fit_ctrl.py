@@ -3,8 +3,8 @@ from PySide6.QtCore import QObject, Slot
 import numpy as np
 
 if TYPE_CHECKING:
-    from qfit.models.fit import FitModel, FitParamModel, FitCaliModel
-    from qfit.models.prefit import PrefitParamModel, PrefitCaliModel
+    from qfit.models.fit import FitModel, FitHSParams, FitCaliParams
+    from qfit.models.prefit import PrefitHSParams, PrefitCaliParams
     from qfit.models.numerical_model import QuantumModel
     from qfit.models.status import StatusModel
     from qfit.models.extracted_data import AllExtractedData
@@ -17,8 +17,8 @@ class FitCtrl(QObject):
     def __init__(
         self, 
         models: Tuple[
-            "FitModel", "FitParamModel", "FitCaliModel", 
-            "PrefitParamModel", "PrefitCaliModel", "QuantumModel",
+            "FitModel", "FitHSParams", "FitCaliParams", 
+            "PrefitHSParams", "PrefitCaliParams", "QuantumModel",
             "AllExtractedData", "CaliParamModel", 
             "MeasDataSet"
         ], 
@@ -26,8 +26,8 @@ class FitCtrl(QObject):
     ):
         super().__init__()
         (
-            self.fitModel, self.fitParamModel, self.fitCaliModel, 
-            self.prefitParamModel, self.prefitCaliModel, self.quantumModel,
+            self.fitModel, self.fitHSParams, self.fitCaliParams, 
+            self.prefitHSParams, self.prefitCaliParams, self.quantumModel,
             self.allDatasets, self.caliParamModel, 
             self.measurementData, 
         ) = models
@@ -39,18 +39,18 @@ class FitCtrl(QObject):
 
     def dynamicalInit(self):
         # build paramset
-        self.fitParamModel.setAttrByParamDict(
-            self.prefitParamModel.toFitParams(),
+        self.fitHSParams.setAttrByParamDict(
+            self.prefitHSParams.toFitParams(),
             insertMissing=True,
         )
-        self.fitCaliModel.setAttrByParamDict(
+        self.fitCaliParams.setAttrByParamDict(
             self.caliParamModel.toFitParams(),
             insertMissing=True,
         )
         # insert parameters
         self.fitParamView.fitTableInserts(
-            self.fitParamModel.paramNamesDict(),
-            self.fitCaliModel.paramNamesDict(),
+            self.fitHSParams.paramNamesDict(),
+            self.fitCaliParams.paramNamesDict(),
             removeExisting=True,
         )
         # like what happened with the prefit min max table, only after the table
@@ -66,10 +66,10 @@ class FitCtrl(QObject):
         controller and the model (hosting the parameterset)
         """
         # update the value
-        self.fitParamView.HSEditingFinished.connect(self.fitParamModel.storeParamAttr)
-        self.fitParamView.CaliEditingFinished.connect(self.fitCaliModel.storeParamAttr)
-        self.fitParamModel.updateBox.connect(self.fitParamView.setBoxValue)
-        self.fitCaliModel.updateBox.connect(self.fitParamView.setBoxValue)
+        self.fitParamView.HSEditingFinished.connect(self.fitHSParams.storeParamAttr)
+        self.fitParamView.CaliEditingFinished.connect(self.fitCaliParams.storeParamAttr)
+        self.fitHSParams.updateBox.connect(self.fitParamView.setBoxValue)
+        self.fitCaliParams.updateBox.connect(self.fitParamView.setBoxValue)
 
     def _costFunction(
         self, HSParams: Dict[str, float], caliParams: Dict[str, float]
@@ -80,16 +80,14 @@ class FitCtrl(QObject):
         self.quantumModel.disableSweep = True
 
         # update the hilbert space
-        self.fitParamModel.setByAttrDict(HSParams, "value")  # display the value
-        self.prefitParamModel.setByAttrDict(HSParams, "value")  # update HS
-        for params in self.prefitParamModel.values():
-            for p in params.values():
-                p.setParameterForParent()
-        self.quantumModel.updateHilbertSpace(self.prefitParamModel.hilbertspace)
+        self.fitHSParams.setByAttrDict(HSParams, "value")  # display the value
+        # self.prefitHSParams.setByAttrDict(HSParams, "value")  # update HS
+        self.fitHSParams.updateAllParents()
+        self.quantumModel.updateHilbertSpace(self.prefitHSParams.hilbertspace)
 
         # update the calibration
         self.caliParamModel.setByAttrDict(caliParams, "value")
-        self.fitCaliModel.setByAttrDict(caliParams, "value")
+        self.fitCaliParams.setByAttrDict(caliParams, "value")
         self.quantumModel.updateXCaliFunc(self.caliParamModel.XCalibration())
         self.quantumModel.updateYCaliFunc(
             self.caliParamModel.YCalibration(),
@@ -111,7 +109,7 @@ class FitCtrl(QObject):
 
     @Slot()
     def optimizeParams(self):
-        if not self.fitParamModel.isValid:
+        if not self.fitHSParams.isValid:
             return
 
         # configure other models & views
@@ -120,26 +118,25 @@ class FitCtrl(QObject):
         # it seems that even though the sweep is disabled while changing
         # the parameters, the signals are still able to reach the quantumModel
         # and trigger the calculation. So we need to block the signals
-        self.prefitParamModel.blockSignals(True)
+        self.prefitHSParams.blockSignals(True)
         self.caliParamModel.blockSignals(True)
 
         # TODO: later, fit model will be able to update hspace
         # and we don't need to store the prefit parameters
-        self.tmpPrefitParams = self.prefitParamModel.getAttrDict("value")
         self.tmpCaliParams = self.caliParamModel.getAttrDict("value")
 
         # setup the optimization
         self.fitModel.setupOptimization(
-            HSFixedParams=self.fitParamModel.fixedParams,
-            HSFreeParamRanges=self.fitParamModel.freeParamRanges,
-            caliFixedParams=self.fitCaliModel.fixedParams,
-            caliFreeParamRanges=self.fitCaliModel.freeParamRanges,
+            HSFixedParams=self.fitHSParams.fixedParams,
+            HSFreeParamRanges=self.fitHSParams.freeParamRanges,
+            caliFixedParams=self.fitCaliParams.fixedParams,
+            caliFreeParamRanges=self.fitCaliParams.freeParamRanges,
             costFunction=self._costFunction,
         )
 
         # cook up a cost function
         self.fitModel.runOptimization(
-            initParam=self.fitParamModel.initParams,
+            initParam=self.fitHSParams.initParams,
             callback=self._optCallback,
         )
 
@@ -147,13 +144,10 @@ class FitCtrl(QObject):
     def postOptimization(self):
         self.fitView.runFit.setEnabled(True)
         self.prefitParamView.sliderSet.setEnabled(True)
-        self.prefitParamModel.blockSignals(False)
+        self.prefitHSParams.blockSignals(False)
         self.caliParamModel.blockSignals(False)
 
         # TODO: later, fit model will be able to update hspace
-        self.prefitParamModel.setByAttrDict(
-            self.tmpPrefitParams, "value"
-        )
         self.caliParamModel.setByAttrDict(
             self.tmpCaliParams, "value"
         )
@@ -182,19 +176,24 @@ class FitCtrl(QObject):
         3. parameters transfer: fit to prefit
         4. parameters transfer: fit result to fit
         """
+        # update hilbert space
+        self.fitHSParams.hilbertSpaceUpdated.connect(
+            self.quantumModel.updateHilbertSpace
+        )
+
         # run optimization
         self.fitView.runFit.clicked.connect(self.optimizeParams)
 
         # the prefit parameter export to fit
         self.fitView.dataTransferButtons["prefit"].clicked.connect(
-            lambda: self.fitParamModel.setAttrByParamDict(
-                self.prefitParamModel.toFitParams(),
+            lambda: self.fitHSParams.setAttrByParamDict(
+                self.prefitHSParams.toFitParams(),
                 attrsToUpdate=["value", "min", "max", "initValue"],
                 insertMissing=False,
             )
         )
         self.fitView.dataTransferButtons["prefit"].clicked.connect(
-            lambda: self.fitCaliModel.setAttrByParamDict(
+            lambda: self.fitCaliParams.setAttrByParamDict(
                 self.caliParamModel.toFitParams(),
                 attrsToUpdate=["value", "min", "max", "initValue", "isFixed"],
                 insertMissing=False,
@@ -202,22 +201,22 @@ class FitCtrl(QObject):
         )
         # the fit parameter export to prefit
         self.fitView.dataTransferButtons["fit"].clicked.connect(
-            lambda: self.prefitParamModel.setAttrByParamDict(
-                self.fitParamModel.toPrefitParams(),
+            lambda: self.prefitHSParams.setAttrByParamDict(
+                self.fitHSParams.toPrefitParams(),
                 attrsToUpdate=["value"],
                 insertMissing=False,
             )
         )
         self.fitView.dataTransferButtons["fit"].clicked.connect(
-            lambda: self.prefitCaliModel.setAttrByParamDict(
-                self.fitCaliModel.toPrefitParams(),
+            lambda: self.prefitCaliParams.setAttrByParamDict(
+                self.fitCaliParams.toPrefitParams(),
                 attrsToUpdate=["value"],
                 insertMissing=False,
             )
         )
         self.fitView.dataTransferButtons["fit"].clicked.connect(
             lambda: self.caliParamModel.setAttrByParamDict(
-                self.fitCaliModel.toPrefitParams(),
+                self.fitCaliParams.toPrefitParams(),
                 attrsToUpdate=["value"],
                 insertMissing=False,
             )
@@ -225,15 +224,15 @@ class FitCtrl(QObject):
 
         # the final value to initial value
         self.fitView.dataTransferButtons["init"].clicked.connect(
-            lambda: self.fitParamModel.setAttrByParamDict(
-                self.fitParamModel.toInitParams(),
+            lambda: self.fitHSParams.setAttrByParamDict(
+                self.fitHSParams.toInitParams(),
                 attrsToUpdate=["initValue"],
                 insertMissing=False,
             )
         )
         self.fitView.dataTransferButtons["init"].clicked.connect(
-            lambda: self.fitCaliModel.setAttrByParamDict(
-                self.fitCaliModel.toInitParams(),
+            lambda: self.fitCaliParams.setAttrByParamDict(
+                self.fitCaliParams.toInitParams(),
                 attrsToUpdate=["initValue"],
                 insertMissing=False,
             )

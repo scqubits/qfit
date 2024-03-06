@@ -17,20 +17,12 @@ from qfit.ui_designer.ui_menu import Ui_MenuWidget
 
 class MenuWidget(QWidget):
     def __init__(self, parent):
-        super(MenuWidget, self).__init__(parent=parent)
-        self.mainwindow = parent
+        super(MenuWidget, self).__init__(parent)
         self.ui = Ui_MenuWidget()
         self.ui.setupUi(self)
 
         self.move(0, 32)
         self.hide()
-
-        # should be connected in mainwindow instead of directly in a widget
-        # self.set_connects()
-
-    # def set_connects(self):
-    #     self.ui.menuQuitButton.clicked.connect(self.mainwindow.closeApp)
-    #     self.ui.menuOpenButton.clicked.connect(self.mainwindow.openFile)
 
     def toggle(self):
         if self.isHidden():

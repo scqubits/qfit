@@ -11,8 +11,9 @@ from qfit.models.parameter_set import (
     ParamSet,
     ParamModelMixin,
     ParamSet,
+    HSParamSet,
 )
-from qfit.models.data_structures import FitParam, ParamAttr, SliderParam, ParamBase
+from qfit.models.data_structures import FitParam, ParamAttr, ParamBase
 from qfit.models.registry import RegistryEntry
 from qfit.models.status import StatusModel
 
@@ -90,14 +91,14 @@ class FitParamModelMixin(ParamModelMixin[FitParam]):
                 prefitParamSet.insertParam(parentName, paramName, sliderParam)
 
         return prefitParamSet
-
+    
 
 class CombinedMeta(type(FitParamModelMixin), type(ParamSet)):
     pass
 
 
-class FitParamModel(
-    ParamSet[FitParam],
+class FitHSParams(
+    HSParamSet[FitParam],
     FitParamModelMixin,  # ordering matters
     metaclass=CombinedMeta,
 ):
@@ -106,7 +107,7 @@ class FitParamModel(
     # mixin methods ====================================================
     def __init__(self):
         # ordering matters here
-        ParamSet.__init__(self, FitParam)
+        HSParamSet.__init__(self, FitParam)
         ParamModelMixin.__init__(self)
 
     def setParameter(
@@ -159,8 +160,30 @@ class FitParamModel(
     ):
         super()._storeParamAttr(self, paramAttr, **kwargs)
 
+    # hilbert space related methods ====================================
+    hilbertSpaceUpdated = Signal(HilbertSpace)
 
-class FitCaliModel(
+    # Signals 
+    def emitHSUpdated(self):
+        self.hilbertSpaceUpdated.emit(self.hilbertspace)
+
+    def updateParent(
+        self,
+        parentName: str,
+        paramName: str,
+    ):
+        param = self[parentName][paramName]
+        param.setParameterForParent()
+        self.emitHSUpdated()
+
+    def updateAllParents(self):
+        for _, parent in self.items():
+            for _, param in parent.items():
+                param.setParameterForParent()
+        self.emitHSUpdated()
+
+
+class FitCaliParams(
     ParamSet[FitParam],
     FitParamModelMixin,  # ordering matters
     metaclass=CombinedMeta,

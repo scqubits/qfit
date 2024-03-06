@@ -4,7 +4,7 @@ from qfit.models.parameter_set import SweepParamSet
 from typing import Union, List, Dict, Tuple, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from qfit.models.prefit import PrefitParamModel, PrefitCaliModel
+    from qfit.models.prefit import PrefitHSParams, PrefitCaliParams
     from qfit.models.calibration import CaliParamModel
     from qfit.models.numerical_model import QuantumModel
     from qfit.models.status import StatusModel
@@ -22,7 +22,7 @@ class PrefitCtrl(QObject):
     def __init__(
         self, 
         models: Tuple[
-            "QuantumModel", "PrefitParamModel", "PrefitCaliModel",
+            "QuantumModel", "PrefitHSParams", "PrefitCaliParams",
             "AllExtractedData", "CaliParamModel",
             "MeasDataSet", "MainWindow"
         ],
@@ -30,7 +30,7 @@ class PrefitCtrl(QObject):
     ):
         super().__init__()
         (
-            self.quantumModel, self.prefitParamModel, self.prefitCaliModel, 
+            self.quantumModel, self.prefitHSParams, self.prefitCaliParams, 
             self.allDatasets, self.caliParamModel,
             self.measurementData, self.mainWindow
         ) = models
@@ -53,8 +53,8 @@ class PrefitCtrl(QObject):
             ],
         )
         self.prefitParamView.insertSliderMinMax(
-            self.prefitParamModel.paramNamesDict(),
-            self.prefitCaliModel.paramNamesDict(),
+            self.prefitHSParams.paramNamesDict(),
+            self.prefitCaliParams.paramNamesDict(),
             removeExisting=True,
         )
 
@@ -63,22 +63,22 @@ class PrefitCtrl(QObject):
         )
 
         # update everything in the view
-        self.prefitParamModel.emitUpdateBox()
-        self.prefitParamModel.emitUpdateSlider()
-        self.prefitCaliModel.emitUpdateBox()
-        self.prefitCaliModel.emitUpdateSlider()
+        self.prefitHSParams.emitUpdateBox()
+        self.prefitHSParams.emitUpdateSlider()
+        self.prefitCaliParams.emitUpdateBox()
+        self.prefitCaliParams.emitUpdateSlider()
         for option, value in self.quantumModel.exportSweepOption().items():
             self.prefitView.setOptions(option, value)
 
         # update everything in the quantumModel
         self.quantumModel.disableSweep = True  # disable the auto sweep
-        self.prefitParamModel.emitHSUpdated()
+        self.prefitHSParams.emitHSUpdated()
         self.allDatasets.emitDataUpdated()
         self.caliParamModel.sendXCaliFunc()
         self.caliParamModel.sendYCaliFunc()
 
     def _quantumModelConnects(self):
-        self.prefitParamModel.hilbertSpaceUpdated.connect(
+        self.prefitHSParams.hilbertSpaceUpdated.connect(
             self.quantumModel.updateHilbertSpace
         )
         self.allDatasets.dataUpdated.connect(self.quantumModel.updateExtractedData)
@@ -106,11 +106,11 @@ class PrefitCtrl(QObject):
         """
         # connect the HS & Cali parameters separately
         for signalSet, model in [
-            (self.prefitParamView.HSSignals, self.prefitParamModel),
-            (self.prefitParamView.caliSignals, self.prefitCaliModel),
+            (self.prefitParamView.HSSignals, self.prefitHSParams),
+            (self.prefitParamView.caliSignals, self.prefitCaliParams),
         ]:
             signalSet: Dict[str, SignalInstance]
-            model: Union[PrefitParamModel, PrefitCaliModel]
+            model: Union[PrefitHSParams, PrefitCaliParams]
 
             
             signalSet["sliderChanged"].connect(
@@ -145,18 +145,18 @@ class PrefitCtrl(QObject):
 
         # update hilbert space
         self.prefitParamView.HSEditingFinished.connect(
-            self.prefitParamModel.updateParent
+            self.prefitHSParams.updateParent
         )
         self.pageView.pageChanged.connect(
-            lambda page: self.prefitParamModel.updateAllParents() if page == "prefit" else None
+            lambda page: self.prefitHSParams.updateAllParents() if page == "prefit" else None
         )
 
         # update cali model
         self.prefitParamView.caliEditingFinished.connect(
-            self.prefitCaliModel.emitUpdateCaliModel
+            self.prefitCaliParams.emitUpdateCaliModel
         )
-        self.prefitCaliModel.updateCaliModel.connect(self.caliParamModel.setParamByPA)
-        self.caliParamModel.updatePrefitModel.connect(self.prefitCaliModel.setParamByPA)
+        self.prefitCaliParams.updateCaliModel.connect(self.caliParamModel.setParamByPA)
+        self.caliParamModel.updatePrefitModel.connect(self.prefitCaliParams.setParamByPA)
 
     def _buildParamSet(self, hilbertspace: "HilbertSpace"):
         """
@@ -181,7 +181,7 @@ class PrefitCtrl(QObject):
             # only one sweep parameter is found, so we can create sliders
             # for the remaining parameters
             excluded: List[ParameterType] = ["cutoff", "truncated_dim", "l_osc"]
-            self.prefitParamModel.dynamicalInit(
+            self.prefitHSParams.dynamicalInit(
                 hilbertspace=hilbertspace,
                 excluded_parameter_type=(
                     excluded + [list(param_types)[0]]  # exclude the sweep parameter
@@ -191,7 +191,7 @@ class PrefitCtrl(QObject):
         elif len(sweepParameterSet) == 2 and param_types == set(["flux", "ng"]):
             # a flux and ng are detected in the HilbertSpace object
             # right now, we assume that the flux is always swept in this case
-            self.prefitParamModel.dynamicalInit(
+            self.prefitHSParams.dynamicalInit(
                 hilbertspace=hilbertspace,
                 excluded_parameter_type=["flux", "cutoff", "truncated_dim", "l_osc"],
             )
@@ -205,7 +205,7 @@ class PrefitCtrl(QObject):
             self.mainWindow.close()
 
         # initialize calibration sliders
-        self.prefitCaliModel.setAttrByParamDict(
+        self.prefitCaliParams.setAttrByParamDict(
             self.caliParamModel.toPrefitParams(),
             insertMissing=True,
         )

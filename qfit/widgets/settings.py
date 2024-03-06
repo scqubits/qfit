@@ -25,7 +25,7 @@ from qfit.ui_designer.settings import Ui_settingsWidget
 
 class SettingsWidgetBase(QWidget):
     def __init__(self, parent):
-        super(SettingsWidgetBase, self).__init__(parent=parent)
+        super().__init__(parent)
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.mainwindow = parent
         self.move(350, 300)

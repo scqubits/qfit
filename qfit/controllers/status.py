@@ -13,14 +13,14 @@ if TYPE_CHECKING:
     from qfit.views.status_bar import StatusBarView
     from qfit.models.status import StatusModel
     from qfit.models.numerical_model import QuantumModel
-    from qfit.models.fit import FitModel, FitParamModel, FitCaliModel
+    from qfit.models.fit import FitModel, FitHSParams, FitCaliParams
 
 
 class StatusCtrl(QObject):
     def __init__(
         self,
         models: Tuple[
-            "QuantumModel", "FitModel", "FitParamModel", "FitCaliModel",
+            "QuantumModel", "FitModel", "FitHSParams", "FitCaliParams",
         ],
         statusModel: "StatusModel",
         statusBarView: "StatusBarView",

@@ -54,7 +54,7 @@ class CombinedMeta(type(SliderModelMixin), type(ParamSet)):
     pass
 
 
-class PrefitParamModel(
+class PrefitHSParams(
     HSParamSet[SliderParam],
     SliderModelMixin,  # ordering matters
     metaclass=CombinedMeta,
@@ -167,7 +167,7 @@ class PrefitParamModel(
         return paramSet
 
 
-class PrefitCaliModel(
+class PrefitCaliParams(
     ParamSet[SliderParam],
     SliderModelMixin,  # ordering matters
     metaclass=CombinedMeta,
