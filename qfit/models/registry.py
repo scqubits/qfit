@@ -1,5 +1,6 @@
 from typing import Callable, Any, Dict, Literal, Union
 import pickle
+from qfit.version import version
 
 from abc import ABC
 
@@ -98,10 +99,13 @@ class RegistryEntry:
 
 
 class Registry:
-    _registry: Dict[str, RegistryEntry] = {}
-
-    def __init__(self):
-        pass
+    _registry: Dict[str, RegistryEntry] = {
+        "version": RegistryEntry(
+            "version",
+            "r",
+            lambda: version,
+        ),
+    }
 
     def __getitem__(self, key: str) -> Any:
         return self._registry[key].getter()

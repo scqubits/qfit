@@ -14,12 +14,12 @@ from PySide6.QtWidgets import (
 from qfit.models.registry import Registry
 from qfit.widgets.menu import MenuWidget
 from qfit.utils.helpers import StopExecution
-from qfit.io_utils.measurement_file_readers import readMeasurementFile
+from qfit.utils.measurement_file_readers import readMeasurementFile
 import qfit.settings as settings
 
 from typing import (
     TYPE_CHECKING, Union, Dict, Any, Optional, List,
-    Callable,
+    Callable, Tuple,
 )
 
 if TYPE_CHECKING:
@@ -101,7 +101,7 @@ class IOCtrl(QObject):
         self.menu.ui.menuSaveAsButton.clicked.connect(self.saveFileAs)
         self.mainWindow.closeWindow.connect(self.closeByMainWindow)
 
-    # load ####################################################################
+    # load data from file #####################################################
     @staticmethod
     def _measurementDataFromFile(
         fileName: str,
@@ -208,6 +208,23 @@ class IOCtrl(QObject):
         self.mainWindow.activateWindow()
 
         return registryDict
+    
+    # open ####################################################################
+    def _parseRegDict(
+        self, 
+        registryDict: Dict[str, Any], 
+    ) -> Tuple[Dict[str, Any], HilbertSpace, List[MeasurementDataType]]:
+        version = registryDict["version"]
+        major, minor, micro = version.split(".")
+        major, minor, micro = int(major), int(minor), int(micro)
+
+        if major == 1 and minor == 0:
+            hilbertSpace = registryDict["HilbertSpace"]
+            measurementData = registryDict["measDataSet.data"]
+            return registryDict, hilbertSpace, measurementData
+        else:
+            raise ValueError(f"File version {version} is no longer supported. "
+                             f"Please contact the developer for retrieving the data.")  
 
     # save ####################################################################
     def _saveProject(
@@ -377,8 +394,7 @@ class IOCtrl(QObject):
 
         if registryDict is not None:
             # load the hilbertspace and measurementData
-            hilbertspace = registryDict["HilbertSpace"]
-            measurementData = registryDict["measDataSet.data"]
+            parsedDict, hilbertspace, measurementData = self._parseRegDict(registryDict)
 
             # update the dynamical elements in the main window (i.e. load from the registry
             # the r entries)
@@ -388,7 +404,7 @@ class IOCtrl(QObject):
             )
 
             # update the rest of the registry (i.e. those entries with r+)
-            self.registry.setByDict(registryDict)
+            self.registry.setByDict(parsedDict)
 
             self.mainWindow.unsavedChanges = False
 
