@@ -50,14 +50,14 @@ class ActiveExtractedData(QAbstractTableModel):
         ScatterElement
     )  # the above two signals are connected to this signal
 
-    def __init__(self):
+    def __init__(self, parent):
         """
         Parameters
         ----------
         data: np.ndarray
             numpy array of floats, shape=(2, N)
         """
-        super().__init__()
+        super().__init__(parent)
 
         self._transition = ExtrTransition()
 
@@ -216,8 +216,8 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
     _currentFigName: str
     _currentRow: int
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent):
+        super().__init__(parent)
 
         self._fullSpectra = FullExtr()
 

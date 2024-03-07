@@ -55,6 +55,7 @@ class PlottingCtrl(QObject):
 
     def __init__(
         self,
+        parent: QObject,
         mplCanvas: "MplFigureCanvas",
         models: Tuple[
             "MeasDataSet",
@@ -67,7 +68,7 @@ class PlottingCtrl(QObject):
         views: Tuple[Any, ...],
         # calibrationStates: Dict[str, Literal['CALIBRATE_X1', 'CALIBRATE_X2', 'CALIBRATE_Y1', 'CALIBRATE_Y2']],
     ):
-        super().__init__()
+        super().__init__(parent)
         (
             self.measurementData,
             self.calibrationModel,

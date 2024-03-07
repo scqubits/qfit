@@ -21,8 +21,7 @@ class StatusModel(QObject):
 
     def __init__(
         self,
-        *args,
-        **kwargs,
+        parent: QObject,
     ):
         """
         This model:
@@ -42,7 +41,7 @@ class StatusModel(QObject):
         - update_status: receive the signal from prefit model when status is changed, the signal contains
           a Status object.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(parent)
         self.statusStrForView: Optional[str] = None
         self.previousNormalStatus: Status = DEFAULT_STATUS
         self.currentNormalStatus: Status = DEFAULT_STATUS

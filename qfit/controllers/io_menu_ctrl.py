@@ -3,7 +3,7 @@ import os
 import numpy as np
 import copy
 
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, QObject
 from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from scqubits.core.hilbert_space import HilbertSpace
 
 
-class IOCtrl:
+class IOCtrl(QObject):
     """
     It is a companion class to the Fit, helping handling the IO operations.
     This controller handles the menu bar and related IO operations, including:
@@ -60,12 +60,14 @@ class IOCtrl:
 
     def __init__(
         self,
+        parent: QObject,
         menuButton: QPushButton,
         menuUi: MenuWidget,
         registry: Registry,
         mainWindow: "MainWindow",  
         fullDynmicalInit: Callable[["HilbertSpace", List["MeasurementDataType"]], None],
     ):
+        super().__init__(parent)
         self.menuButton = menuButton
         self.menu = menuUi
         self.registry = registry
@@ -97,7 +99,7 @@ class IOCtrl:
         self.menu.ui.menuNewButton.clicked.connect(self.newProject)
         self.menu.ui.menuSaveButton.clicked.connect(self.saveFile)
         self.menu.ui.menuSaveAsButton.clicked.connect(self.saveFileAs)
-        self.mainWindow.closeWindow.connect(self.close)
+        self.mainWindow.closeWindow.connect(self.closeByMainWindow)
 
     # load ####################################################################
     @staticmethod
@@ -142,7 +144,7 @@ class IOCtrl:
             )
             if not fileName:
                 if not window_initialized:
-                    self.closeApp()
+                    self._closeAppAfterSaving()
                     raise StopExecution
                 else:
                     return None
@@ -185,7 +187,7 @@ class IOCtrl:
             )
             if not fileName:
                 if not window_initialized:
-                    self.closeApp()
+                    self._closeAppAfterSaving()
                     raise StopExecution
                 else:
                     return None
@@ -250,13 +252,7 @@ class IOCtrl:
         self.registry.exportPkl(fileName)
 
     # quit / close ############################################################
-    def _quit(self):
-        if executed_in_ipython():
-            self.closeAppIPython()
-        else:
-            sys.exit()
-
-    def closeApp(self) -> bool:
+    def _closeAppAfterSaving(self) -> bool:
         """End the application"""
         # first, if the project is open from a file, check the registry dict of the old file
         # with that obtained from the current session, if something changed, ask the user
@@ -280,9 +276,11 @@ class IOCtrl:
             # compare the two dicts
             if registryDict != registryDictFromFile:
                 self.mainWindow.unsavedChanges = True
+            else:
+                self.mainWindow.unsavedChanges = False
 
         else:
-            self.mainWindow.unsavedChanges = False
+            self.mainWindow.unsavedChanges = True
 
         if self.mainWindow.unsavedChanges:
             msgBox = QMessageBox()
@@ -298,27 +296,30 @@ class IOCtrl:
             reply = msgBox.exec_()
 
             if reply == QMessageBox.Save:
-                self.saveAndCloseApp()
+                self.saveAndCloseApp(
+                    save_as = self.mainWindow.projectFile is None
+                )
                 return True
             elif reply == QMessageBox.Discard:
-                self._quit()
+                self._closeApp()
                 return True
             else:  # reply == QMessageBox.Cancel
                 self.menu.toggle()
                 return False
 
         else:
-            self._quit()
+            self._closeApp()
             return True
-
-    def closeAppIPython(self):
-        """
-        Close the app when running in ipython
-        """
-        self.mainWindow.close()
-        self.mainWindow.deleteLater()
-        self.mainWindow.destroy()
-        # raise StopExecution
+        
+    def _closeApp(self):
+        if executed_in_ipython():
+            print("IOCtrl.closeApp")
+            # self.mainWindow.close()
+            self.mainWindow.deleteLater()
+            self.mainWindow.destroy()
+            # raise StopExecution
+        else:
+            sys.exit()
 
     # slots ###################################################################
     @Slot()
@@ -407,18 +408,18 @@ class IOCtrl:
         self.menu.toggle()
 
     @Slot()
-    def saveAndCloseApp(self):
+    def saveAndCloseApp(self, save_as: bool = False):
         """Save the extracted data and calibration information to file, then exit the
         application."""
-        success = self.saveFile()
+        success = self._saveProject(save_as=save_as)
         if not success:
             return
-        self._quit()
+        self._closeApp()
 
     @Slot()
-    def close(self, event):
+    def closeByMainWindow(self, event):
         print("IO ctrl close called")
-        status = self.closeApp()
+        status = self._closeAppAfterSaving()
 
         if status:
             event.accept()

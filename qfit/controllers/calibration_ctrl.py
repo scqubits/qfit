@@ -20,11 +20,10 @@ if TYPE_CHECKING:
 class CalibrationCtrl(QObject):
     def __init__(
         self,
+        parent: QObject,
         caliParamModel: "CaliParamModel",
         calibrationView: "CalibrationView",
         pageButtons: Dict[str, QPushButton],
-        *args,
-        **kwargs,
     ):
         """
         Controller for calibration. This controller serves as a transmittor between the calibration
@@ -46,7 +45,7 @@ class CalibrationCtrl(QObject):
         Relevant model:
         - calibration model
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(parent)
 
         self.caliParamModel = caliParamModel
         self.calibrationView = calibrationView

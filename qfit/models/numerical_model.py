@@ -45,8 +45,9 @@ class QuantumModel(QObject):
 
     def __init__(
         self,
+        parent: QObject,
     ):
-        super().__init__()
+        super().__init__(parent)
 
     def dynamicalInit(self, hilbertspace: HilbertSpace, figNames: List[str]):
         self.hilbertspace = hilbertspace

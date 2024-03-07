@@ -15,11 +15,12 @@ class PageView(QObject):
 
     def __init__(
         self, 
+        parent: QObject,
         pageButtons: Dict[str, QPushButton],
         dataExportButtons: Dict[str, QPushButton],
         stackWidgets: Dict[str, QStackedWidget],
     ):
-        super().__init__()
+        super().__init__(parent)
         self.pageButtons = pageButtons
         self.dataExportButtons = dataExportButtons
         self.stackWidgets = stackWidgets

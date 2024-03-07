@@ -9,12 +9,13 @@ from PySide6.QtWidgets import QStatusBar, QLabel, QSizePolicy
 class StatusBarView(QObject):
     def __init__(
         self,
+        parent: QObject,
         statusBar: QStatusBar,
     ):
         """
         All widgets related to tagging.
         """
-        super().__init__()
+        super().__init__(parent)
 
         self.statusBar = statusBar
         self.statusBarLabel = QLabel()

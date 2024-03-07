@@ -39,13 +39,12 @@ class PrefitParamView(QObject):
     # Initialization ===================================================
     def __init__(
         self,
+        parent: QObject,
         prefitScrollAreaWidget: QWidget,
         prefitMinmaxScrollAreaWidget: QWidget,
         prefitMinMaxFrame: QFrame,
-        *args,
-        **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(parent)
 
         self.prefitScrollAreaWidget = prefitScrollAreaWidget
         self.prefitMinmaxScrollAreaWidget = prefitMinmaxScrollAreaWidget
@@ -270,10 +269,11 @@ class PrefitView(QObject):
 
     def __init__(
         self,
+        parent: QObject,
         runSweep: QPushButton,
         options: Dict[str, Any],
     ):
-        super().__init__()
+        super().__init__(parent)
 
         self.runSweep = runSweep
 

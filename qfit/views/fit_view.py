@@ -21,9 +21,10 @@ class FitParamView(QObject):
 
     def __init__(
         self,
+        parent: QObject,
         fitScrollAreaWidget: QWidget,
     ):
-        super().__init__()
+        super().__init__(parent)
 
         self.fitScrollWidget = fitScrollAreaWidget
         self._configureLayout()
@@ -133,11 +134,12 @@ class FitParamView(QObject):
 class FitView(QObject):
     def __init__(
         self,
+        parent: QObject,
         runFit: QPushButton,
         dataTransferButtons: Dict[str, QPushButton],
         options: Dict[str, Any],
     ):
-        super().__init__()
+        super().__init__(parent)
         self.runFit = runFit
         self.dataTransferButtons = dataTransferButtons
         self.tolLineEdit: FloatLineEdit = options["tol"]

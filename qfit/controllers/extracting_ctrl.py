@@ -8,21 +8,17 @@ from typing import TYPE_CHECKING, Tuple, Dict, Any, List
 
 if TYPE_CHECKING:
     from scqubits.core.hilbert_space import HilbertSpace
-    from qfit.ui_designer.ui_window import Ui_MainWindow
-    from qfit.core.mainwindow import MainWindow
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
     from qfit.models.measurement_data import MeasurementDataType
     from qfit.views.extracting_view import ExtractingView
-    from qfit.models.data_structures import Tag
 
 
 class ExtractingCtrl(QObject):
     def __init__(
         self,
+        parent: QObject,
         dataSets: Tuple["AllExtractedData", "ActiveExtractedData"],
         extractingView: "ExtractingView",
-        *args,
-        **kwargs,
     ):
         """
         Controller for the tagging panel (not for the tag data itself). This controller serves as a
@@ -50,7 +46,7 @@ class ExtractingCtrl(QObject):
             and uiDressedLabelInputs
         additional arguments are passed to QObject.__init__()
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(parent)
 
         self.allDatasets, self.activeDataset = dataSets
         self.extractingView = extractingView

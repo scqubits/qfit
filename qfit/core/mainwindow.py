@@ -16,7 +16,7 @@ from PySide6.QtCore import (
     Qt,
     Signal,
 )
-from PySide6.QtWidgets import QStyle
+from PySide6.QtWidgets import QStyle, QApplication
 from PySide6.QtWidgets import QMainWindow
 from qfit.models.registry import Registrable
 
@@ -105,7 +105,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         closing the application. Will be triggered when the user clicks the "X"
         or call the close() method.
         """
-        super().closeEvent(event)
 
         print("mainwindow closeEvent called")
+        QApplication.processEvents()
         self.closeWindow.emit(event)
+
+        super().closeEvent(event)

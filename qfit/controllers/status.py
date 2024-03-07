@@ -7,9 +7,6 @@ from PySide6.QtCore import (
 from typing import TYPE_CHECKING, Tuple, Dict, Any
 
 if TYPE_CHECKING:
-    from qfit.ui_designer.ui_window import Ui_MainWindow
-    from qfit.core.mainwindow import MainWindow
-    from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
     from qfit.views.status_bar import StatusBarView
     from qfit.models.status import StatusModel
     from qfit.models.numerical_model import QuantumModel
@@ -19,13 +16,12 @@ if TYPE_CHECKING:
 class StatusCtrl(QObject):
     def __init__(
         self,
+        parent: QObject,
         models: Tuple[
             "QuantumModel", "FitModel", "FitHSParams", "FitCaliParams",
         ],
         statusModel: "StatusModel",
         statusBarView: "StatusBarView",
-        *args,
-        **kwargs,
     ):
         """
         Controller for the status bar. This controller serves as a transmittor between the status bar
@@ -44,7 +40,7 @@ class StatusCtrl(QObject):
         ----------
         statusBarView: StatusBarView
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(parent)
 
         self.statusModel = statusModel
         self.models = models

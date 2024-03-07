@@ -64,10 +64,10 @@ class PrefitHSParams(
     updateSlider = Signal(ParamAttr)
 
     # mixin methods ====================================================
-    def __init__(self):
+    def __init__(self, parent):
         # ordering matters here
         HSParamSet.__init__(self, SliderParam)
-        SliderModelMixin.__init__(self)
+        SliderModelMixin.__init__(self, parent)
 
     def emitUpdateBox(
         self, 
@@ -177,10 +177,10 @@ class PrefitCaliParams(
     updateSlider = Signal(ParamAttr)
 
     # mixin methods ====================================================
-    def __init__(self):
+    def __init__(self, parent):
         # ordering matters here
         ParamSet.__init__(self, SliderParam)
-        SliderModelMixin.__init__(self)
+        SliderModelMixin.__init__(self, parent)
 
     def emitUpdateBox(
         self, 

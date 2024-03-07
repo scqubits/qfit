@@ -76,7 +76,6 @@ if executed_in_ipython():
 
 class Fit:
     app: Union[QApplication, None] = None
-    _mainWindow: MainWindow
 
     # IOs ####################################################################
     def __new__(cls, *args, **kwargs) -> "Fit":
@@ -93,15 +92,16 @@ class Fit:
         else:
             pass
 
-        instance._mainWindow = MainWindow()
-        instance._MVCInit()
-        instance._mainWindow.show()
-
         return instance
 
     def __init__(
         self, hilbertSpace: HilbertSpace, measurementFileName: Union[str, None] = None
     ):
+        # main window
+        self._mainWindow = MainWindow()
+        self._MVCInit()
+        self._mainWindow.show()
+
         # check if file exists
         if measurementFileName is not None:
             if not os.path.isfile(measurementFileName):
@@ -353,6 +353,7 @@ class Fit:
         }
 
         self._pageView = PageView(
+            self._mainWindow,
             self._pageButtons, self._dataTransferButtons, self._pageStackedWidgets
         )
 
@@ -360,6 +361,7 @@ class Fit:
     def _settingsMVCInit(self):
         self._settingUi = SettingsWidget(self._mainWindow)
         self._settingsCtrl = SettingsCtrl(
+            self._mainWindow,
             self._settingUi, 
             self._mainUi.settingsPushButton
         )
@@ -371,7 +373,7 @@ class Fit:
             "fit": self._mainUi.fitHelpPushButton,
             "numericalSpectrumSettings": self._settingUi.ui.numericalSpectrumSettingsHelpPushButton,
         }
-        self._helpButtonCtrl = HelpButtonCtrl(self._helpButtons)
+        self._helpButtonCtrl = HelpButtonCtrl(self._mainWindow, self._helpButtons)
 
     # calibration ####################################
     ####################################################################
@@ -399,14 +401,16 @@ class Fit:
             "Y1": self._mainUi.calibrateY2Button,
         }
 
-        self._caliParamModel = CaliParamModel()
+        self._caliParamModel = CaliParamModel(self._mainWindow)
         self._calibrationView = CalibrationView(
+            self._mainWindow,
             rawLineEdits=self._rawLineEdits,
             mapLineEdits=self._mapLineEdits,
             calibrationButtons=self._calibrationButtons,
         )
 
         self._calibrationCtrl = CalibrationCtrl(
+            self._mainWindow,
             self._caliParamModel, self._calibrationView, self._pageButtons
         )
 
@@ -442,10 +446,11 @@ class Fit:
             "clear": self._mainUi.clearAllButton,
         }
 
-        self._activeDataset = ActiveExtractedData()
-        self._allDatasets = AllExtractedData()
+        self._activeDataset = ActiveExtractedData(self._mainWindow)
+        self._allDatasets = AllExtractedData(self._mainWindow)
 
         self._extractingView = ExtractingView(
+            self._mainWindow,
             (
                 self._uiLabelBoxes,
                 self._uiLabelRadioButtons,
@@ -458,6 +463,7 @@ class Fit:
         )
 
         self._extractingCtrl = ExtractingCtrl(
+            self._mainWindow,
             (self._allDatasets, self._activeDataset),
             self._extractingView,
         )
@@ -474,21 +480,24 @@ class Fit:
             "autoRun": self._mainUi.autoRunCheckBox,
         }
 
-        self._quantumModel = QuantumModel()
+        self._quantumModel = QuantumModel(self._mainWindow)
 
-        self._prefitHSParams = PrefitHSParams()
-        self._prefitCaliParams = PrefitCaliParams()
+        self._prefitHSParams = PrefitHSParams(self._mainWindow)
+        self._prefitCaliParams = PrefitCaliParams(self._mainWindow)
         self._prefitParamView = PrefitParamView(
+            self._mainWindow,
             self._mainUi.prefitScrollAreaWidget,
             self._mainUi.prefitMinmaxScrollAreaWidget,
             self._mainUi.frame_prefit_minmax,
         )
         self._prefitView = PrefitView(
+            self._mainWindow,
             runSweep=self._mainUi.plotButton,
             options=self._prefitOptions,
         )
 
         self._prefitCtrl = PrefitCtrl(
+            self._mainWindow,
             (
                 self._quantumModel, self._prefitHSParams, self._prefitCaliParams,
                 self._allDatasets, self._caliParamModel, 
@@ -505,20 +514,23 @@ class Fit:
             "optimizer": self._settingUi.ui.optimizerComboBox,
         }
 
-        self._fitHSParams = FitHSParams()
-        self._fitCaliParams = FitCaliParams()
-        self._fitModel = FitModel()
+        self._fitHSParams = FitHSParams(self._mainWindow)
+        self._fitCaliParams = FitCaliParams(self._mainWindow)
+        self._fitModel = FitModel(self._mainWindow)
 
         self._fitParamView = FitParamView(
+            self._mainWindow,
             self._mainUi.fitScrollAreaWidget,
         )
         self._fitView = FitView(
+            self._mainWindow,
             self._mainUi.fitButton,
             self._dataTransferButtons,
             self._fitOptions,
         )
 
         self._fitCtrl = FitCtrl(
+            self._mainWindow,
             (
                 self._fitModel, self._fitHSParams, self._fitCaliParams,
                 self._prefitHSParams, self._prefitCaliParams, self._quantumModel,
@@ -557,6 +569,7 @@ class Fit:
         }
 
         self._plottingCtrl = PlottingCtrl(
+            self._mainWindow,
             self._mainUi.mplFigureCanvas,
             (
                 self._measurementData,
@@ -579,8 +592,9 @@ class Fit:
     # IO ###############################################################
     def _IOMVCInits(self):
         self._registry = Registry()
-        self._menuUi = MenuWidget(parent=self._mainWindow)
+        self._menuUi = MenuWidget(self._mainWindow)
         self._ioMenuCtrl = IOCtrl(
+            self._mainWindow,
             menuButton=self._mainUi.toggleMenuButton,
             menuUi=self._menuUi,
             registry=self._registry,
@@ -608,9 +622,13 @@ class Fit:
 
     # error message system #############################################
     def _statusMVCInits(self):
-        self._statusModel = StatusModel()
-        self._statusBarView = StatusBarView(self._mainUi.statusBar)
+        self._statusModel = StatusModel(self._mainWindow)
+        self._statusBarView = StatusBarView(
+            self._mainWindow,
+            self._mainUi.statusBar
+        )
         self._statusCtrl = StatusCtrl(
+            self._mainWindow,
             (
                 self._quantumModel, self._fitModel, 
                 self._fitHSParams, self._fitCaliParams

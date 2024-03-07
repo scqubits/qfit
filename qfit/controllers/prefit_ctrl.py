@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 class PrefitCtrl(QObject):
     def __init__(
         self, 
+        parent: QObject,
         models: Tuple[
             "QuantumModel", "PrefitHSParams", "PrefitCaliParams",
             "AllExtractedData", "CaliParamModel",
@@ -28,7 +29,7 @@ class PrefitCtrl(QObject):
         ],
         views: Tuple["PrefitView", "PrefitParamView", "PageView"],
     ):
-        super().__init__()
+        super().__init__(parent)
         (
             self.quantumModel, self.prefitHSParams, self.prefitCaliParams, 
             self.allDatasets, self.caliParamModel,

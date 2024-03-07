@@ -44,6 +44,7 @@ class CalibrationView(QObject):
 
     def __init__(
         self,
+        parent: QObject,
         rawLineEdits: Dict[str, "CalibrationLineEdit"],
         mapLineEdits: Dict[str, "CalibrationLineEdit"],
         calibrationButtons: Dict[str, QPushButton],
@@ -52,7 +53,7 @@ class CalibrationView(QObject):
         In the future, all the line edits and buttons should be generated
         dynamically based on the number of calibration rows.
         """
-        super().__init__()
+        super().__init__(parent)
 
         self.rawLineEdits = rawLineEdits
         self.mapLineEdits = mapLineEdits

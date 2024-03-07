@@ -13,9 +13,8 @@ from qfit.widgets.gif_tooltip import DialogWindowWithMedia
 class HelpButtonCtrl(QObject):
     def __init__(
         self,
+        parent: QObject,    
         helpButtons: Dict[str, "QPushButton"],
-        *args,
-        **kwargs,
     ):
         """
         Controller for the helper push buttons. Once clicked, a window will pop up to show
@@ -34,7 +33,7 @@ class HelpButtonCtrl(QObject):
             dictionary of help buttons
         additional arguments are passed to QObject.__init__()
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(parent)
 
         self.helpButtons = helpButtons
 

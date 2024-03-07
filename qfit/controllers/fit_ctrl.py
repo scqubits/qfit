@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 class FitCtrl(QObject):
     def __init__(
         self, 
+        parent: QObject,
         models: Tuple[
             "FitModel", "FitHSParams", "FitCaliParams", 
             "PrefitHSParams", "PrefitCaliParams", "QuantumModel",
@@ -24,7 +25,7 @@ class FitCtrl(QObject):
         ], 
         views: Tuple["FitView", "FitParamView", "PrefitParamView"]
     ):
-        super().__init__()
+        super().__init__(parent)
         (
             self.fitModel, self.fitHSParams, self.fitCaliParams, 
             self.prefitHSParams, self.prefitCaliParams, self.quantumModel,

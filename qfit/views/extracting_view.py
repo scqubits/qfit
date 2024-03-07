@@ -16,6 +16,7 @@ class ExtractingView(QObject):
 
     def __init__(
         self,
+        parent: QObject,
         uiGroups: Tuple[
             Dict[str, QGroupBox], Dict[str, QRadioButton],
             Dict[str, IntTupleLineEdit], Dict[str, QSpinBox],
@@ -26,9 +27,8 @@ class ExtractingView(QObject):
         """
         All widgets related to tagging.
         """
-        super().__init__()
+        super().__init__(parent)
 
-        
         (
             self.groupBox, self.radioButtons, 
             self.bareLabels, self.dressedLabels,

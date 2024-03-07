@@ -1,6 +1,6 @@
 import numpy as np
 
-from PySide6.QtCore import Signal, Slot
+from PySide6.QtCore import Signal, Slot, QObject
 
 from typing import (
     Dict,
@@ -54,6 +54,7 @@ class CaliParamModel(
 
     def __init__(
         self,
+        parent: QObject,
     ):
         """
         Store calibration data for x and y axes, and provide methods to transform between uncalibrated and calibrated
@@ -88,7 +89,7 @@ class CaliParamModel(
         """
         # ordering matters here
         ParamSet.__init__(self, CaliTableRowParam)
-        ParamModelMixin.__init__(self)
+        ParamModelMixin.__init__(self, parent)
 
         self.caliStatus = False
 

@@ -105,10 +105,10 @@ class FitHSParams(
     attrs = FitParam.dataAttr
 
     # mixin methods ====================================================
-    def __init__(self):
+    def __init__(self, parent: QObject):
         # ordering matters here
         HSParamSet.__init__(self, FitParam)
-        ParamModelMixin.__init__(self)
+        ParamModelMixin.__init__(self, parent)
 
     def setParameter(
         self,
@@ -191,10 +191,10 @@ class FitCaliParams(
     attrs = FitParam.dataAttr
 
     # mixin methods ====================================================
-    def __init__(self):
+    def __init__(self, parent: QObject):
         # ordering matters here
         ParamSet.__init__(self, FitParam)
-        ParamModelMixin.__init__(self)
+        ParamModelMixin.__init__(self, parent)
 
     def setParameter(
         self,
@@ -260,8 +260,8 @@ class FitModel(QObject):
     iteration: int = 0
     status: Status
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent: QObject):
+        super().__init__(parent)
 
         FitRunner.signalHoster.optFinished.connect(self._postOptimization)
 
