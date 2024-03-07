@@ -1,10 +1,14 @@
 from PySide6.QtCore import QObject, Signal, Slot, Qt
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QSizePolicy, 
-    QPushButton, QLineEdit, QComboBox,
+    QWidget,
+    QVBoxLayout,
+    QSizePolicy,
+    QPushButton,
+    QLineEdit,
+    QComboBox,
 )
 
-from qfit.widgets.foldable_table import (
+from qfit.widgets.custom_table import (
     FoldableTable,
     FittingParameterItems,
 )
@@ -42,24 +46,23 @@ class FitParamView(QObject):
         self,
         HSParamNames: Dict[str, List[str]],
         caliParamNames: Dict[str, List[str]],
-        removeExisting: bool = True
+        removeExisting: bool = True,
     ):
         """
         Insert a set of tables for the fitting parameters
         """
 
         self.HSNames = list(HSParamNames.keys())
-        paramNameDict = HSParamNames | caliParamNames 
+        paramNameDict = HSParamNames | caliParamNames
 
         # remove the existing widgets, if we somehow want to rebuild the sliders
         if removeExisting:
             clearChildren(self.fitScrollWidget)
-            
+
         if self.fitScrollWidget.layout() is None:
             fitScrollLayout = QVBoxLayout(self.fitScrollWidget)
         else:
             fitScrollLayout = self.fitScrollWidget.layout()
-
 
         # create an empty table with just group names
         self.fitTableSet = FoldableTable(
@@ -89,34 +92,34 @@ class FitParamView(QObject):
                     signal = self.CaliEditingFinished
 
                 item.minValue.editingFinished.connect(
-                    lambda item=item, name=name, groupName=groupName, signal=signal: 
-                    signal.emit(
+                    lambda item=item, name=name, groupName=groupName, signal=signal: signal.emit(
                         ParamAttr(groupName, name, "min", item.minValue.text())
                     )
                 )
                 item.maxValue.editingFinished.connect(
-                    lambda item=item, name=name, groupName=groupName, signal=signal: 
-                    signal.emit(
+                    lambda item=item, name=name, groupName=groupName, signal=signal: signal.emit(
                         ParamAttr(groupName, name, "max", item.maxValue.text())
                     )
                 )
                 item.fixCheckbox.toggled.connect(
-                    lambda value, name=name, groupName=groupName, signal=signal: 
-                    signal.emit(
+                    lambda value, name=name, groupName=groupName, signal=signal: signal.emit(
                         ParamAttr(groupName, name, "isFixed", value)
                     )
                 )
                 item.initialValue.editingFinished.connect(
-                    lambda item=item, name=name, groupName=groupName, signal=signal: 
-                    signal.emit(
-                        ParamAttr(groupName, name, "initValue", item.initialValue.text())
+                    lambda item=item, name=name, groupName=groupName, signal=signal: signal.emit(
+                        ParamAttr(
+                            groupName, name, "initValue", item.initialValue.text()
+                        )
                     )
                 )
 
     # Setters ==========================================================
     @Slot(ParamAttr)
     def setBoxValue(self, paramAttr: ParamAttr):
-        item: FittingParameterItems = self.fitTableSet[paramAttr.parentName][paramAttr.name]
+        item: FittingParameterItems = self.fitTableSet[paramAttr.parentName][
+            paramAttr.name
+        ]
         if paramAttr.attr == "min":
             item.minValue.setText(paramAttr.value)
         elif paramAttr.attr == "max":
@@ -128,8 +131,8 @@ class FitParamView(QObject):
         elif paramAttr.attr == "isFixed":
             item.fixCheckbox.setChecked(paramAttr.value)
         else:
-            raise ValueError(f"Invalid attribute {paramAttr.attr}")        
-        
+            raise ValueError(f"Invalid attribute {paramAttr.attr}")
+
 
 class FitView(QObject):
     def __init__(

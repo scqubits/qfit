@@ -14,7 +14,7 @@ from qfit.widgets.grouped_sliders import (
     GroupedWidgetSet,
     SPACING_BETWEEN_GROUPS,
 )
-from qfit.widgets.foldable_table import (
+from qfit.widgets.custom_table import (
     FoldableTable,
     MinMaxItems,
 )

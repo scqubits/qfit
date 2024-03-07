@@ -383,22 +383,22 @@ class Fit:
         """
         # ui grouping
         self._rawLineEdits = {
-            "X0": self._mainUi.rawX1LineEdit,
-            "X1": self._mainUi.rawX2LineEdit,
-            "Y0": self._mainUi.rawY1LineEdit,
-            "Y1": self._mainUi.rawY2LineEdit,
+            "X1": self._mainUi.rawX1LineEdit,
+            "X2": self._mainUi.rawX2LineEdit,
+            "Y1": self._mainUi.rawY1LineEdit,
+            "Y2": self._mainUi.rawY2LineEdit,
         }
         self._mapLineEdits = {
-            "X0": self._mainUi.mapX1LineEdit,
-            "X1": self._mainUi.mapX2LineEdit,
-            "Y0": self._mainUi.mapY1LineEdit,
-            "Y1": self._mainUi.mapY2LineEdit,
+            "X1": self._mainUi.mapX1LineEdit,
+            "X2": self._mainUi.mapX2LineEdit,
+            "Y1": self._mainUi.mapY1LineEdit,
+            "Y2": self._mainUi.mapY2LineEdit,
         }
         self._calibrationButtons = {
-            "X0": self._mainUi.calibrateX1Button,
-            "X1": self._mainUi.calibrateX2Button,
-            "Y0": self._mainUi.calibrateY1Button,
-            "Y1": self._mainUi.calibrateY2Button,
+            "X1": self._mainUi.calibrateX1Button,
+            "X2": self._mainUi.calibrateX2Button,
+            "Y1": self._mainUi.calibrateY1Button,
+            "Y2": self._mainUi.calibrateY2Button,
         }
 
         self._caliParamModel = CaliParamModel(self._mainWindow)
