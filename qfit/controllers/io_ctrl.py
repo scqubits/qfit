@@ -314,7 +314,7 @@ class IOCtrl(QObject):
     def _closeApp(self):
         if executed_in_ipython():
             print("IOCtrl.closeApp")
-            # self.mainWindow.close()
+            self.mainWindow.close()
             self.mainWindow.deleteLater()
             self.mainWindow.destroy()
             # raise StopExecution

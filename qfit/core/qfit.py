@@ -62,7 +62,7 @@ from qfit.controllers.plotting_ctrl import PlottingCtrl
 from qfit.models.registry import Registry
 
 # menu controller
-from qfit.controllers.io_menu_ctrl import IOCtrl
+from qfit.controllers.io_ctrl import IOCtrl
 
 # measurement data
 from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
@@ -107,7 +107,7 @@ class Fit:
             if not os.path.isfile(measurementFileName):
                 raise FileNotFoundError(f"File '{measurementFileName}' does not exist.")
             
-        self._ioMenuCtrl.newProject(
+        self._ioCtrl.newProject(
             from_menu=False, 
             hilbertSpace=hilbertSpace,
             measurementFileName=measurementFileName
@@ -170,7 +170,7 @@ class Fit:
         instance = cls.__new__(cls)
 
         # load registry
-        instance._ioMenuCtrl.openFile(
+        instance._ioCtrl.openFile(
             from_menu=False,
             fileName=fileName,
         )
@@ -287,7 +287,7 @@ class Fit:
         self._prefitCtrl.dynamicalInit(hilbertspace, measurementData)
         self._fitCtrl.dynamicalInit()
         self._plottingCtrl.dynamicalInit(measurementData)
-        self._ioMenuCtrl.dynamicalInit(hilbertspace)
+        self._ioCtrl.dynamicalInit(hilbertspace)
         self._register()
 
         self._mainWindow.raise_()
@@ -593,7 +593,7 @@ class Fit:
     def _IOMVCInits(self):
         self._registry = Registry()
         self._menuUi = MenuWidget(self._mainWindow)
-        self._ioMenuCtrl = IOCtrl(
+        self._ioCtrl = IOCtrl(
             self._mainWindow,
             menuButton=self._mainUi.toggleMenuButton,
             menuUi=self._menuUi,
