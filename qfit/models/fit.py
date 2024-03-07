@@ -110,6 +110,10 @@ class FitHSParams(
         HSParamSet.__init__(self, FitParam)
         ParamModelMixin.__init__(self, parent)
 
+    def dynamicalInit(self, hilbertspace: HilbertSpace):
+        # override the parent method which also initialize the parameters
+        self.hilbertspace = hilbertspace
+
     def setParameter(
         self,
         parentName: str,

@@ -17,12 +17,12 @@ class PageView(QObject):
         self, 
         parent: QObject,
         pageButtons: Dict[str, QPushButton],
-        dataExportButtons: Dict[str, QPushButton],
+        dataTransferButtons: Dict[str, QPushButton],
         stackWidgets: Dict[str, QStackedWidget],
     ):
         super().__init__(parent)
         self.pageButtons = pageButtons
-        self.dataExportButtons = dataExportButtons
+        self.dataTransferButtons = dataTransferButtons
         self.stackWidgets = stackWidgets
         self.currentPage = "calibrate"
 
@@ -30,14 +30,14 @@ class PageView(QObject):
         
     def staticInits(self):
         for key, button in self.pageButtons.items():
-            button.clicked.connect(lambda *args, key=key: self._switchToPage(key))
+            button.clicked.connect(lambda *args, key=key: self.switchToPage(key))
 
         # when clicked parameter export button, switch to the desired page
-        for key, button in self.dataExportButtons.items():
-            button.clicked.connect(lambda *args, key=key: self._switchToPage(key))
+        for key, button in self.dataTransferButtons.items():
+            button.clicked.connect(lambda *args, key=key: self.switchToPage(key))
 
     @Slot()
-    def _switchToPage(self, page: str):
+    def switchToPage(self, page: str):
         if page == self.currentPage:
             return
         self.currentPage = page

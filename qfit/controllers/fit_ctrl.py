@@ -3,15 +3,16 @@ from PySide6.QtCore import QObject, Slot
 import numpy as np
 
 if TYPE_CHECKING:
+    from scqubits.core.hilbert_space import HilbertSpace
     from qfit.models.fit import FitModel, FitHSParams, FitCaliParams
     from qfit.models.prefit import PrefitHSParams, PrefitCaliParams
     from qfit.models.numerical_model import QuantumModel
-    from qfit.models.status import StatusModel
     from qfit.models.extracted_data import AllExtractedData
     from qfit.models.calibration import CaliParamModel
     from qfit.models.measurement_data import MeasDataSet
     from qfit.views.fit_view import FitView, FitParamView
     from qfit.views.prefit_view import PrefitParamView
+    from qfit.views.paging_view import PageView
 
 class FitCtrl(QObject):
     def __init__(
@@ -23,7 +24,10 @@ class FitCtrl(QObject):
             "AllExtractedData", "CaliParamModel", 
             "MeasDataSet"
         ], 
-        views: Tuple["FitView", "FitParamView", "PrefitParamView"]
+        views: Tuple[
+            "FitView", "FitParamView", "PrefitParamView", 
+            "PageView"
+        ]
     ):
         super().__init__(parent)
         (
@@ -32,14 +36,18 @@ class FitCtrl(QObject):
             self.allDatasets, self.caliParamModel, 
             self.measurementData, 
         ) = models
-        self.fitView, self.fitParamView, self.prefitParamView = views
+        (
+            self.fitView, self.fitParamView, self.prefitParamView, 
+            self.pageView
+        ) = views
 
         self._optionConnects()
         self._tableParamConnects()
         self._fitCtrlConnects()
 
-    def dynamicalInit(self):
+    def dynamicalInit(self, hilbertSpace: "HilbertSpace"):
         # build paramset
+        self.fitHSParams.dynamicalInit(hilbertSpace)
         self.fitHSParams.setAttrByParamDict(
             self.prefitHSParams.toFitParams(),
             insertMissing=True,
@@ -72,93 +80,6 @@ class FitCtrl(QObject):
         self.fitHSParams.updateBox.connect(self.fitParamView.setBoxValue)
         self.fitCaliParams.updateBox.connect(self.fitParamView.setBoxValue)
 
-    def _costFunction(
-        self, HSParams: Dict[str, float], caliParams: Dict[str, float]
-    ) -> float:
-        """
-        Cook up a cost function for the optimization
-        """
-        self.quantumModel.disableSweep = True
-
-        # update the hilbert space
-        self.fitHSParams.setByAttrDict(HSParams, "value")  # display the value
-        # self.prefitHSParams.setByAttrDict(HSParams, "value")  # update HS
-        self.fitHSParams.updateAllParents()
-        self.quantumModel.updateHilbertSpace(self.prefitHSParams.hilbertspace)
-
-        # update the calibration
-        self.caliParamModel.setByAttrDict(caliParams, "value")
-        self.fitCaliParams.setByAttrDict(caliParams, "value")
-        self.quantumModel.updateXCaliFunc(self.caliParamModel.XCalibration())
-        self.quantumModel.updateYCaliFunc(
-            self.caliParamModel.YCalibration(),
-            self.caliParamModel.invYCalibration(),
-        )
-
-        self.quantumModel.disableSweep = False
-
-        mse = self.quantumModel.updateCalc()
-
-        if mse is None or np.isnan(mse):
-            raise ValueError("The cost function returns None or np.nan.")
-
-        return mse
-
-    def _optCallback(self, *args, **kwargs):
-        self.quantumModel.emitReadyToPlot()
-        return self.quantumModel.sweep2SpecMSE()
-
-    @Slot()
-    def optimizeParams(self):
-        if not self.fitHSParams.isValid:
-            return
-
-        # configure other models & views
-        self.fitView.runFit.setEnabled(False)
-        self.prefitParamView.sliderSet.setEnabled(False)
-        # it seems that even though the sweep is disabled while changing
-        # the parameters, the signals are still able to reach the quantumModel
-        # and trigger the calculation. So we need to block the signals
-        self.prefitHSParams.blockSignals(True)
-        self.caliParamModel.blockSignals(True)
-
-        # TODO: later, fit model will be able to update hspace
-        # and we don't need to store the prefit parameters
-        self.tmpCaliParams = self.caliParamModel.getAttrDict("value")
-
-        # setup the optimization
-        self.fitModel.setupOptimization(
-            HSFixedParams=self.fitHSParams.fixedParams,
-            HSFreeParamRanges=self.fitHSParams.freeParamRanges,
-            caliFixedParams=self.fitCaliParams.fixedParams,
-            caliFreeParamRanges=self.fitCaliParams.freeParamRanges,
-            costFunction=self._costFunction,
-        )
-
-        # cook up a cost function
-        self.fitModel.runOptimization(
-            initParam=self.fitHSParams.initParams,
-            callback=self._optCallback,
-        )
-
-    @Slot()
-    def postOptimization(self):
-        self.fitView.runFit.setEnabled(True)
-        self.prefitParamView.sliderSet.setEnabled(True)
-        self.prefitHSParams.blockSignals(False)
-        self.caliParamModel.blockSignals(False)
-
-        # TODO: later, fit model will be able to update hspace
-        self.caliParamModel.setByAttrDict(
-            self.tmpCaliParams, "value"
-        )
-
-        # plot the spectrum
-        tmp = self.quantumModel.sweepUsage
-        self.quantumModel.sweepUsage = "fit-result"
-        self.quantumModel.updateCalc()
-        self.quantumModel.sweepUsage = tmp
-
     def _optionConnects(self):
         self.fitView.tolLineEdit.editingFinished.connect(
             lambda: self.fitModel.updateTol(self.fitView.tolLineEdit.value())
@@ -186,14 +107,14 @@ class FitCtrl(QObject):
         self.fitView.runFit.clicked.connect(self.optimizeParams)
 
         # the prefit parameter export to fit
-        self.fitView.dataTransferButtons["prefit"].clicked.connect(
+        self.fitView.dataTransferButtons["fit"].clicked.connect(
             lambda: self.fitHSParams.setAttrByParamDict(
                 self.prefitHSParams.toFitParams(),
                 attrsToUpdate=["value", "min", "max", "initValue"],
                 insertMissing=False,
             )
         )
-        self.fitView.dataTransferButtons["prefit"].clicked.connect(
+        self.fitView.dataTransferButtons["fit"].clicked.connect(
             lambda: self.fitCaliParams.setAttrByParamDict(
                 self.caliParamModel.toFitParams(),
                 attrsToUpdate=["value", "min", "max", "initValue", "isFixed"],
@@ -201,21 +122,21 @@ class FitCtrl(QObject):
             )
         )
         # the fit parameter export to prefit
-        self.fitView.dataTransferButtons["fit"].clicked.connect(
+        self.fitView.dataTransferButtons["prefit"].clicked.connect(
             lambda: self.prefitHSParams.setAttrByParamDict(
                 self.fitHSParams.toPrefitParams(),
                 attrsToUpdate=["value"],
                 insertMissing=False,
             )
         )
-        self.fitView.dataTransferButtons["fit"].clicked.connect(
+        self.fitView.dataTransferButtons["prefit"].clicked.connect(
             lambda: self.prefitCaliParams.setAttrByParamDict(
                 self.fitCaliParams.toPrefitParams(),
                 attrsToUpdate=["value"],
                 insertMissing=False,
             )
         )
-        self.fitView.dataTransferButtons["fit"].clicked.connect(
+        self.fitView.dataTransferButtons["prefit"].clicked.connect(
             lambda: self.caliParamModel.setAttrByParamDict(
                 self.fitCaliParams.toPrefitParams(),
                 attrsToUpdate=["value"],
@@ -241,3 +162,91 @@ class FitCtrl(QObject):
 
         # post optimization
         self.fitModel.optFinished.connect(self.postOptimization)
+
+    # optimization =====================================================
+    @Slot()
+    def optimizeParams(self):
+        if not self.fitHSParams.isValid:
+            return
+
+        # configure other models & views
+        self.fitView.runFit.setEnabled(False)
+        self.prefitParamView.sliderSet.setEnabled(False)
+        # it seems that even though the sweep is disabled while changing
+        # the parameters, the signals are still able to reach the quantumModel
+        # and trigger the calculation. So we need to block the signals
+        self.fitHSParams.blockSignals(True)
+        self.caliParamModel.blockSignals(True)
+
+        # store a copy of the calibration parameters as we will change them
+        # during the optimization, and we want to restore them afterward
+        self.tmpCaliParams = self.caliParamModel.getAttrDict("value")
+
+        # setup the optimization
+        self.fitModel.setupOptimization(
+            HSFixedParams=self.fitHSParams.fixedParams,
+            HSFreeParamRanges=self.fitHSParams.freeParamRanges,
+            caliFixedParams=self.fitCaliParams.fixedParams,
+            caliFreeParamRanges=self.fitCaliParams.freeParamRanges,
+            costFunction=self._costFunction,
+        )
+
+        # cook up a cost function
+        self.fitModel.runOptimization(
+            initParam=self.fitHSParams.initParams,
+            callback=self._optCallback,
+        )
+
+    def _costFunction(
+        self, HSParams: Dict[str, float], caliParams: Dict[str, float]
+    ) -> float:
+        """
+        Cook up a cost function for the optimization
+        """
+        self.quantumModel.disableSweep = True
+
+        # update the hilbert space
+        self.fitHSParams.setByAttrDict(HSParams, "value")  # display the value
+        # self.prefitHSParams.setByAttrDict(HSParams, "value")  # update HS
+        self.fitHSParams.updateAllParents()
+        self.quantumModel.updateHilbertSpace(self.fitHSParams.hilbertspace)
+
+        # update the calibration
+        self.caliParamModel.setByAttrDict(caliParams, "value")
+        self.fitCaliParams.setByAttrDict(caliParams, "value")
+        self.quantumModel.updateXCaliFunc(self.caliParamModel.XCalibration())
+        self.quantumModel.updateYCaliFunc(
+            self.caliParamModel.YCalibration(),
+            self.caliParamModel.invYCalibration(),
+        )
+
+        self.quantumModel.disableSweep = False
+
+        mse = self.quantumModel.updateCalc()
+
+        if mse is None or np.isnan(mse):
+            raise ValueError("The cost function returns None or np.nan.")
+
+        return mse
+
+    def _optCallback(self, *args, **kwargs):
+        self.quantumModel.emitReadyToPlot()
+        return self.quantumModel.sweep2SpecMSE()
+
+    @Slot()
+    def postOptimization(self):
+        # TODO: later, fit model will be able to update hspace
+        self.caliParamModel.setByAttrDict(
+            self.tmpCaliParams, "value"
+        )
+
+        # plot the spectrum
+        tmp = self.quantumModel.sweepUsage
+        self.quantumModel.sweepUsage = "fit-result"
+        self.quantumModel.updateCalc()
+        self.quantumModel.sweepUsage = tmp
+
+        self.fitView.runFit.setEnabled(True)
+        self.prefitParamView.sliderSet.setEnabled(True)
+        self.fitHSParams.blockSignals(False)
+        self.caliParamModel.blockSignals(False)

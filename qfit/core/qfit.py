@@ -65,7 +65,7 @@ from qfit.controllers.io_ctrl import IOCtrl
 # measurement data
 from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
 
-import qfit.models.settings as settings
+import qfit.settings as settings
 if executed_in_ipython():
     # inside ipython, the function get_ipython is always in globals()
     ipython = get_ipython()
@@ -77,6 +77,7 @@ else:
 
 class Fit:
     app: Union[QApplication, None] = None
+    _mainWindow: MainWindow
 
     # IOs ####################################################################
     def __new__(cls, *args, **kwargs) -> "Fit":
@@ -93,20 +94,17 @@ class Fit:
         else:
             pass
 
+        # main window
+        instance._mainWindow = MainWindow()
+        instance._MVCInit()
+        instance._mainWindow.show()
+
         return instance
 
     def __init__(
         self, hilbertSpace: HilbertSpace, measurementFileName: Union[str, None] = None
     ):
-        # main window
-        self._mainWindow = MainWindow()
-        self._MVCInit()
-        self._mainWindow.show()
-
-        # check if file exists
-        if measurementFileName is not None:
-            if not os.path.isfile(measurementFileName):
-                raise FileNotFoundError(f"File '{measurementFileName}' does not exist.")
+        self._mainWindow: MainWindow
             
         self._ioCtrl.newProject(
             from_menu=False, 
@@ -162,11 +160,6 @@ class Fit:
         -------
         qfit project
         """
-
-        # check if file exists
-        if fileName is not None:
-            if not os.path.isfile(fileName):
-                raise FileNotFoundError(f"File '{fileName}' does not exist.")
 
         instance = cls.__new__(cls)
 
@@ -286,7 +279,7 @@ class Fit:
         self._calibrationCtrl.dynamicalInit(hilbertspace, measurementData)
         self._extractingCtrl.dynamicalInit(hilbertspace, measurementData)
         self._prefitCtrl.dynamicalInit(hilbertspace, measurementData)
-        self._fitCtrl.dynamicalInit()
+        self._fitCtrl.dynamicalInit(hilbertspace)
         self._plottingCtrl.dynamicalInit(measurementData)
         self._ioCtrl.dynamicalInit(hilbertspace)
         self._register()
@@ -344,8 +337,8 @@ class Fit:
             "fit": self._mainUi.modeFitButton,
         }
         self._dataTransferButtons = {
-            "fit": self._mainUi.exportToPrefitButton,
-            "prefit": self._mainUi.exportToFitButton,
+            "prefit": self._mainUi.exportToPrefitButton,
+            "fit": self._mainUi.exportToFitButton,
             "init": self._mainUi.pushButton_2,
         }
         self._pageStackedWidgets = {
@@ -538,7 +531,10 @@ class Fit:
                 self._allDatasets, self._caliParamModel,
                 self._measurementData
             ),
-            (self._fitView, self._fitParamView, self._prefitParamView),
+            (
+                self._fitView, self._fitParamView, self._prefitParamView,
+                self._pageView,
+            ),
         )
 
     # plot #############################################################
@@ -600,7 +596,7 @@ class Fit:
             menuUi=self._menuUi,
             registry=self._registry,
             mainWindow=self._mainWindow,
-            fullDynmicalInit=self._dynamicalInit,
+            fullDynamicalInit=self._dynamicalInit,
         )
 
     def _register(self):

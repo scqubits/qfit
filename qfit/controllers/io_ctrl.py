@@ -65,14 +65,14 @@ class IOCtrl(QObject):
         menuUi: MenuWidget,
         registry: Registry,
         mainWindow: "MainWindow",  
-        fullDynmicalInit: Callable[["HilbertSpace", List["MeasurementDataType"]], None],
+        fullDynamicalInit: Callable[["HilbertSpace", List["MeasurementDataType"]], None],
     ):
         super().__init__(parent)
         self.menuButton = menuButton
         self.menu = menuUi
         self.registry = registry
         self.mainWindow = mainWindow
-        self.fullDynamicalInit = fullDynmicalInit
+        self.fullDynamicalInit = fullDynamicalInit
 
         self.setConnects()
 
@@ -213,8 +213,12 @@ class IOCtrl(QObject):
     def _parseRegDict(
         self, 
         registryDict: Dict[str, Any], 
-    ) -> Tuple[Dict[str, Any], HilbertSpace, List[MeasurementDataType]]:
-        version = registryDict["version"]
+    ) -> Tuple[Dict[str, Any], "HilbertSpace", List["MeasurementDataType"]]:
+        try:
+            version = registryDict["version"]
+        except KeyError:
+            version = "1.0.0"   # the version that we haven't stored the version number
+            
         major, minor, micro = version.split(".")
         major, minor, micro = int(major), int(minor), int(micro)
 
@@ -352,6 +356,11 @@ class IOCtrl(QObject):
         if from_menu:
             self.menu.toggle()
 
+        # check if file exists
+        if measurementFileName is not None:
+            if not os.path.isfile(measurementFileName):
+                raise FileNotFoundError(f"File '{measurementFileName}' does not exist.")
+
         # ask for a measurement file from dialog
         if measurementFileName is None:
             measurementData = self._measurementDataFromDialog(window_initialized=from_menu)
@@ -382,6 +391,11 @@ class IOCtrl(QObject):
         """
         if from_menu:
             self.menu.toggle()
+
+        # check if file exists
+        if fileName is not None:
+            if not os.path.isfile(fileName):
+                raise FileNotFoundError(f"File '{fileName}' does not exist.")
 
         if fileName is None:
             registryDict = self._registryDictFromDialog(
