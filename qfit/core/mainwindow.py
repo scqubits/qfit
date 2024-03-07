@@ -90,23 +90,12 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         return registryDict
     
     # signals ##########################################################
-    def close(self):
-        """
-        Override the original class method to add a confirmation dialog before
-        closing the application. Will be triggered when the user clicks the "X"
-        or call the close() method.
-        """
-        print("mainwindow close called")
-        super().close()
-
     def closeEvent(self, event):
         """
         Override the original class method to add a confirmation dialog before
         closing the application. Will be triggered when the user clicks the "X"
         or call the close() method.
         """
-
-        print("mainwindow closeEvent called")
         QApplication.processEvents()
         self.closeWindow.emit(event)
 

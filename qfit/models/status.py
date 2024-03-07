@@ -186,7 +186,6 @@ class StatusModel(QObject):
 
         # emit the signal indicating the status is changed
         self.normalStatusChanged.emit(self.statusStrForView)
-        # print(self.statusStrForView)
 
     # @Slot(Status)
     # def updateTempStatus(

@@ -67,11 +67,14 @@ from qfit.controllers.io_ctrl import IOCtrl
 # measurement data
 from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
 
-
+import qfit.models.settings as settings
 if executed_in_ipython():
     # inside ipython, the function get_ipython is always in globals()
     ipython = get_ipython()
     ipython.run_line_magic("gui", "qt6")
+    settings.EXECUTED_IN_IPYTHON = True
+else:
+    settings.EXECUTED_IN_IPYTHON = False
 
 
 class Fit:
@@ -83,7 +86,7 @@ class Fit:
         instance = object.__new__(cls)
 
         # Create a new QApplication if it does not exist
-        if not executed_in_ipython():
+        if not settings.EXECUTED_IN_IPYTHON:
             app = QApplication.instance()
             if app is None:
                 app = QApplication(sys.argv)
@@ -113,7 +116,7 @@ class Fit:
             measurementFileName=measurementFileName
         )
 
-        if not executed_in_ipython():
+        if not settings.EXECUTED_IN_IPYTHON:
             self.app.exec_()
 
     # methods to create a new project #########################################
@@ -175,7 +178,7 @@ class Fit:
             fileName=fileName,
         )
 
-        if not executed_in_ipython():
+        if not settings.EXECUTED_IN_IPYTHON:
             instance.app.exec_()
 
         return instance

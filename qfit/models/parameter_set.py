@@ -8,10 +8,10 @@ from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.qubit_base import QuantumSystem
 from scqubits.core.circuit import Circuit
 
-from qfit.models.parameter_settings import ParameterType
+from qfit.models.settings import ParameterType
 from qfit.models.registry import RegistryEntry, Registrable
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
-from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
+from qfit.models.settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
 
 from typing import (
     Dict,
@@ -575,44 +575,6 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
     attrs: List[str] = ["value"]
 
     updateBox = Signal(ParamAttr)
-
-    # def _registerAttr(
-    #     self,
-    #     paramSet: ParamSet[DispParamCls],
-    #     parentName: str,
-    #     paramName: str,
-    #     attr: str,
-    # ) -> RegistryEntry:
-    #     """
-    #     This method set
-    #     """
-    #     entryName = ".".join([type(self).__name__, parentName, paramName, attr])
-
-    #     return RegistryEntry(
-    #         name=entryName,
-    #         quantity_type="r+",
-    #         getter=lambda: paramSet.getParameter(parentName, paramName, attr),
-    #         setter=lambda value: paramSet.setParameter(
-    #             parentName, paramName, attr, value
-    #         ),
-    #     )
-
-    # def _registerAll(
-    #     self,
-    #     paramSet: ParamSet[DispParamCls],
-    # ) -> Dict[str, RegistryEntry]:
-    #     """
-    #     Register all the parameters in the parameter set
-    #     """
-    #     # start from an empty registry
-    #     registry = {}
-    #     for parentName, paraDict in paramSet.items():
-    #         for paraName, para in paraDict.items():
-    #             for attr in para.attrToRegister:
-    #                 print(f"parentName: {parentName}, paraName: {paraName}, attr: {attr}")
-    #                 entry = self._registerAttr(paramSet, parentName, paraName, attr)
-    #                 registry[entry.name] = entry
-    #     return registry
 
     def _registrySetter(
         self, 

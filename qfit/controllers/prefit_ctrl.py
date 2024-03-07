@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from qfit.models.status import StatusModel
     from qfit.models.extracted_data import AllExtractedData
     from qfit.models.measurement_data import MeasDataSet, MeasurementDataType
-    from qfit.models.parameter_settings import ParameterType
+    from qfit.models.settings import ParameterType
     from qfit.views.prefit_view import PrefitView, PrefitParamView
     from qfit.views.paging_view import PageView
     from qfit.core.mainwindow import MainWindow

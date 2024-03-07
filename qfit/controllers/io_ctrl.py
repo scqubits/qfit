@@ -15,7 +15,7 @@ from qfit.models.registry import Registry
 from qfit.widgets.menu import MenuWidget
 from qfit.utils.helpers import StopExecution
 from qfit.io_utils.measurement_file_readers import readMeasurementFile
-from qfit.utils.helpers import executed_in_ipython
+import qfit.models.settings as settings
 
 from typing import (
     TYPE_CHECKING, Union, Dict, Any, Optional, List,
@@ -312,8 +312,7 @@ class IOCtrl(QObject):
             return True
         
     def _closeApp(self):
-        if executed_in_ipython():
-            print("IOCtrl.closeApp")
+        if settings.EXECUTED_IN_IPYTHON:
             self.mainWindow.close()
             self.mainWindow.deleteLater()
             self.mainWindow.destroy()
@@ -418,7 +417,6 @@ class IOCtrl(QObject):
 
     @Slot()
     def closeByMainWindow(self, event):
-        print("IO ctrl close called")
         status = self._closeAppAfterSaving()
 
         if status:

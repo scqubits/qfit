@@ -9,8 +9,9 @@ from scqubits import (
     GenericQubit,
 )
 
-from typing_extensions import Literal
+from typing import Literal
 
+# paremeters ===========================================================
 ParameterType = Literal[
     "EC",
     "EJ",
@@ -118,3 +119,6 @@ QSYS_PARAM_NAMES = {
         "E": ["E"],
     },
 }
+
+# executed in ipython ==================================================
+EXECUTED_IN_IPYTHON = False
