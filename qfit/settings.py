@@ -6,3 +6,5 @@ color_dict = {
     "cividis": {"Cross": "red", "line": "green", "Scatter": "black"},
     "gray": {"Cross": "blue", "line": "green", "Scatter": "red"},
 }
+
+EXECUTED_IN_IPYTHON = False

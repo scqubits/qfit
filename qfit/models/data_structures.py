@@ -14,7 +14,7 @@ from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
 from matplotlib.artist import Artist
 
-from qfit.models.settings import ParameterType
+from qfit.models.parameter_settings import ParameterType
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
 from qfit.utils.helpers import OrderedDictMod
 

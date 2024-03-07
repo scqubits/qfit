@@ -8,10 +8,10 @@ from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.qubit_base import QuantumSystem
 from scqubits.core.circuit import Circuit
 
-from qfit.models.settings import ParameterType
+from qfit.models.parameter_settings import ParameterType
 from qfit.models.registry import RegistryEntry, Registrable
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
-from qfit.models.settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
+from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
 
 from typing import (
     Dict,

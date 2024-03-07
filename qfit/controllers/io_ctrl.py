@@ -15,7 +15,7 @@ from qfit.models.registry import Registry
 from qfit.widgets.menu import MenuWidget
 from qfit.utils.helpers import StopExecution
 from qfit.io_utils.measurement_file_readers import readMeasurementFile
-import qfit.models.settings as settings
+import qfit.settings as settings
 
 from typing import (
     TYPE_CHECKING, Union, Dict, Any, Optional, List,

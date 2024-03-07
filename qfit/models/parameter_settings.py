@@ -11,7 +11,6 @@ from scqubits import (
 
 from typing import Literal
 
-# paremeters ===========================================================
 ParameterType = Literal[
     "EC",
     "EJ",
@@ -119,6 +118,3 @@ QSYS_PARAM_NAMES = {
         "E": ["E"],
     },
 }
-
-# executed in ipython ==================================================
-EXECUTED_IN_IPYTHON = False

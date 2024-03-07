@@ -22,9 +22,7 @@ from qfit.controllers.help_tooltip import HelpButtonCtrl
 
 # settings
 from qfit.controllers.settings import SettingsCtrl
-from qfit.widgets.settings import (
-    SettingsWidget,
-)
+from qfit.widgets.settings import SettingsWidget
 
 # paging:
 from qfit.views.paging_view import PageView

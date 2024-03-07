@@ -6,7 +6,7 @@ from qfit.models.parameter_set import (
     ParamModelMixin,
 )
 from qfit.models.data_structures import ParamAttr, SliderParam, FitParam
-from qfit.models.settings import DEFAULT_PARAM_MINMAX
+from qfit.models.parameter_settings import DEFAULT_PARAM_MINMAX
 from scqubits.core.hilbert_space import HilbertSpace
 
 from qfit.models.registry import RegistryEntry
