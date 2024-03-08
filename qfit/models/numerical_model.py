@@ -457,6 +457,12 @@ class QuantumModel(QObject):
                 message="",
             )
             self.updateStatus.emit(status)
+
+    def _runSweep(self) -> None:
+        """
+        Run the existing sweeps. This method must be called after calling 
+        the _newSweep method.
+        """
         for sweep in self._sweeps.values():
             # manually turn off the warning message
             sweep._out_of_sync_warning_issued = True
@@ -531,6 +537,7 @@ class QuantumModel(QObject):
         self._newSweep()
 
         if self._autoRun or self.sweepUsage == "fit" or calledByPlotButton:
+            self._runSweep()
             return self.sweep2SpecMSE()
 
     # calculate MSE ===========================================================

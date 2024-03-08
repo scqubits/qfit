@@ -269,7 +269,7 @@ class FitModel(QObject):
     def __init__(self, parent: QObject):
         super().__init__(parent)
 
-        FitRunner.signalHoster.optFinished.connect(self._postOptimization)
+        FitRunner.signalHost.optFinished.connect(self._postOptimization)
 
     # signal & slots ===================================================
     @Slot()
@@ -450,7 +450,7 @@ class RunnerSignal(QObject):
 
 class FitRunner(QRunnable):
 
-    signalHoster = RunnerSignal()
+    signalHost = RunnerSignal()
 
     def __init__(
         self,
@@ -468,6 +468,6 @@ class FitRunner(QRunnable):
         try:
             traj = self.opt.run(init_x=self.initParam, callback=self.callback)
         except Exception as e:
-            self.signalHoster.optFinished.emit(str(e))
+            self.signalHost.optFinished.emit(str(e))
 
-        self.signalHoster.optFinished.emit(traj)
+        self.signalHost.optFinished.emit(traj)
