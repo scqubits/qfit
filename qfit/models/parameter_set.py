@@ -80,6 +80,8 @@ class ParamSet(Registrable, Generic[ParamCls]):
         Insert a parameter to the parameter set. When the parent system is
         not in the parameter set, create a new entry for the parent system.
         """
+        assert param.__class__ == self.paramCls
+        
         if parentName not in self.parameters.keys():
             self.parameters[parentName] = {}
         self.parameters[parentName][paramName] = param
@@ -242,7 +244,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
     def setAttrByParamDict(
         self,
-        paramSet: "ParamSet[ParamCls]",
+        paramSet: "ParamSet",
         attrsToUpdate: Optional[List[str]] = None,
         insertMissing: bool = False,
     ):

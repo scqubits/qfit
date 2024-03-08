@@ -119,18 +119,12 @@ class PrefitCtrl(QObject):
                     paramAttr, fromSlider=True
                 )
             )
-            # signalSet["sliderChanged"].connect(
-            #     lambda paramAttr, model=model: print(model, "slider changed")
-            # )
             signalSet["textChanged"].connect(
                 lambda paramAttr, model=model: model.storeParamAttr(paramAttr)
             )
             signalSet["rangeEditingFinished"].connect(
                 lambda paramAttr, model=model: model.storeParamAttr(paramAttr)
             )
-            # signalSet["rangeEditingFinished"].connect(
-            #     lambda paramAttr, model=model: print(model, "range editing finished")
-            # )
 
             # synchronize slider and box
             model.updateSlider.connect(
@@ -148,9 +142,9 @@ class PrefitCtrl(QObject):
         self.prefitParamView.HSEditingFinished.connect(
             self.prefitHSParams.updateParent
         )
-        self.pageView.pageChanged.connect(
-            lambda page: self.prefitHSParams.updateAllParents() if page == "prefit" else None
-        )
+        # self.pageView.pageChanged.connect(
+        #     lambda page: self.prefitHSParams.updateAllParents() if page == "prefit" else None
+        # )
 
         # update cali model
         self.prefitParamView.caliEditingFinished.connect(

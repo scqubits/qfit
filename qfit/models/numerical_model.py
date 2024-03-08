@@ -527,7 +527,7 @@ class QuantumModel(QObject):
             # when manually update the quantumModel, we will turn this on
             # and the sweep will not be generated
             return
-
+        
         self._newSweep()
 
         if self._autoRun or self.sweepUsage == "fit" or calledByPlotButton:

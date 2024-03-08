@@ -13,7 +13,7 @@ from qfit.models.parameter_set import (
     ParamSet,
     HSParamSet,
 )
-from qfit.models.data_structures import FitParam, ParamAttr, ParamBase
+from qfit.models.data_structures import FitParam, ParamAttr, SliderParam
 from qfit.models.registry import RegistryEntry
 from qfit.models.status import StatusModel
 
@@ -78,15 +78,17 @@ class FitParamModelMixin(ParamModelMixin[FitParam]):
 
         return initParamSet
 
-    def _toPrefitParams(self, paramSet: ParamSet[FitParam]) -> ParamSet[ParamBase]:
-        prefitParamSet = ParamSet[ParamBase](ParamBase)
+    def _toPrefitParams(self, paramSet: ParamSet[FitParam]) -> ParamSet[SliderParam]:
+        prefitParamSet = ParamSet[SliderParam](SliderParam)
         for parentName, parent in paramSet.items():
             for paramName, param in parent.items():
-                sliderParam = ParamBase(
+                sliderParam = SliderParam(
                     name=paramName,  # useless
                     parent=param.parent,  # useless
                     paramType=param.paramType,  # useless
                     value=param.value,
+                    min=0,      # useless
+                    max=1,      # useless
                 )
                 prefitParamSet.insertParam(parentName, paramName, sliderParam)
 
@@ -149,7 +151,7 @@ class FitHSParams(
     def toInitParams(self) -> ParamSet[FitParam]:
         return self._toInitParams(self)
 
-    def toPrefitParams(self) -> ParamSet[ParamBase]:
+    def toPrefitParams(self) -> ParamSet[SliderParam]:
         return self._toPrefitParams(self)
 
     def registerAll(
@@ -235,7 +237,7 @@ class FitCaliParams(
     def toInitParams(self) -> ParamSet[FitParam]:
         return self._toInitParams(self)
 
-    def toPrefitParams(self) -> ParamSet[ParamBase]:
+    def toPrefitParams(self) -> ParamSet[SliderParam]:
         return self._toPrefitParams(self)
 
     def registerAll(

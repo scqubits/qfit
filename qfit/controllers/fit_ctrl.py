@@ -67,6 +67,7 @@ class FitCtrl(QObject):
         # happens on windows. TODO: investigate
         self.fitParamView.fitTableSet.setWidthOfColumn()
 
+    # connections ======================================================
     def _tableParamConnects(self):
         """
         table --> parameter
@@ -108,60 +109,73 @@ class FitCtrl(QObject):
 
         # the prefit parameter export to fit
         self.fitView.dataTransferButtons["fit"].clicked.connect(
-            lambda: self.fitHSParams.setAttrByParamDict(
-                self.prefitHSParams.toFitParams(),
-                attrsToUpdate=["value", "min", "max", "initValue"],
-                insertMissing=False,
-            )
-        )
-        self.fitView.dataTransferButtons["fit"].clicked.connect(
-            lambda: self.fitCaliParams.setAttrByParamDict(
-                self.caliParamModel.toFitParams(),
-                attrsToUpdate=["value", "min", "max", "initValue", "isFixed"],
-                insertMissing=False,
-            )
+            self._prefitToFit
         )
         # the fit parameter export to prefit
         self.fitView.dataTransferButtons["prefit"].clicked.connect(
-            lambda: self.prefitHSParams.setAttrByParamDict(
-                self.fitHSParams.toPrefitParams(),
-                attrsToUpdate=["value"],
-                insertMissing=False,
-            )
-        )
-        self.fitView.dataTransferButtons["prefit"].clicked.connect(
-            lambda: self.prefitCaliParams.setAttrByParamDict(
-                self.fitCaliParams.toPrefitParams(),
-                attrsToUpdate=["value"],
-                insertMissing=False,
-            )
-        )
-        self.fitView.dataTransferButtons["prefit"].clicked.connect(
-            lambda: self.caliParamModel.setAttrByParamDict(
-                self.fitCaliParams.toPrefitParams(),
-                attrsToUpdate=["value"],
-                insertMissing=False,
-            )
+            self._resultToPrefit
         )
 
         # the final value to initial value
         self.fitView.dataTransferButtons["init"].clicked.connect(
-            lambda: self.fitHSParams.setAttrByParamDict(
-                self.fitHSParams.toInitParams(),
-                attrsToUpdate=["initValue"],
-                insertMissing=False,
-            )
-        )
-        self.fitView.dataTransferButtons["init"].clicked.connect(
-            lambda: self.fitCaliParams.setAttrByParamDict(
-                self.fitCaliParams.toInitParams(),
-                attrsToUpdate=["initValue"],
-                insertMissing=False,
-            )
+            self._resultToInit
         )
 
         # post optimization
         self.fitModel.optFinished.connect(self.postOptimization)
+
+    # slots ============================================================
+    @Slot()
+    def _prefitToFit(self):
+        self.fitHSParams.setAttrByParamDict(
+            self.prefitHSParams.toFitParams(),
+            attrsToUpdate=["value", "min", "max", "initValue"],
+            insertMissing=False,
+        )
+        self.fitCaliParams.setAttrByParamDict(
+            self.caliParamModel.toFitParams(),
+            attrsToUpdate=["value", "min", "max", "initValue", "isFixed"],
+            insertMissing=False,
+        )
+
+    @Slot()
+    def _resultToPrefit(self):
+        self.caliParamModel.blockSignals(True)
+        self.prefitHSParams.blockSignals(True)
+
+        self.prefitHSParams.setAttrByParamDict(
+            self.fitHSParams.toPrefitParams(),
+            attrsToUpdate=["value"],
+            insertMissing=False,
+        )
+        self.prefitCaliParams.setAttrByParamDict(
+            self.fitCaliParams.toPrefitParams(),
+            attrsToUpdate=["value"],
+            insertMissing=False,
+        )
+        self.caliParamModel.setAttrByParamDict(
+            self.fitCaliParams.toPrefitParams(),
+            attrsToUpdate=["value"],
+            insertMissing=False,
+        )
+
+        self.caliParamModel.blockSignals(False)
+        self.prefitHSParams.blockSignals(False)
+
+        self.quantumModel.updateCalc()
+
+    @Slot()
+    def _resultToInit(self):
+        self.fitHSParams.setAttrByParamDict(
+            self.fitHSParams.toInitParams(),
+            attrsToUpdate=["initValue"],
+            insertMissing=False,
+        )
+        self.fitCaliParams.setAttrByParamDict(
+            self.fitCaliParams.toInitParams(),
+            attrsToUpdate=["initValue"],
+            insertMissing=False,
+        )
 
     # optimization =====================================================
     @Slot()

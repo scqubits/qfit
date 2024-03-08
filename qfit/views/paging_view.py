@@ -34,6 +34,8 @@ class PageView(QObject):
 
         # when clicked parameter export button, switch to the desired page
         for key, button in self.dataTransferButtons.items():
+            if key not in self.pageNames:
+                continue
             button.clicked.connect(lambda *args, key=key: self.switchToPage(key))
 
     @Slot()
