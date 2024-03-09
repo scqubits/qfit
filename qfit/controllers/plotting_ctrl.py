@@ -274,11 +274,11 @@ class PlottingCtrl(QObject):
         currentSweepParam.setByRawX(
             {key: rng[0] for key, rng in rawXLim.items()}
         )
-        mappedXLeft = currentSweepParam.getAttrDict("value")
+        mappedXLeft = currentSweepParam.getFlattenedAttrDict("value")
         currentSweepParam.setByRawX(
             {key: rng[1] for key, rng in rawXLim.items()}
         )
-        mappedXRight = currentSweepParam.getAttrDict("value")
+        mappedXRight = currentSweepParam.getFlattenedAttrDict("value")
         mappedXLim = {
             key: (mappedXLeft[key], mappedXRight[key]) 
             for key in mappedXLeft.keys()

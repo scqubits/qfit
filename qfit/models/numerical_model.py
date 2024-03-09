@@ -368,7 +368,7 @@ class QuantumModel(QObject):
                 # map x to the rawX (voltage vector)
                 rawX = rawXByX(x)
                 sweepParamSet.setByRawX(rawX)
-                sweepParamSet.setParameterForParent()
+                sweepParamSet.updateParamForHS()
 
             updateHSDict[figName] = updateHilbertspace
 
@@ -380,7 +380,9 @@ class QuantumModel(QObject):
         that need to be updated when the x-coordinate is changed.
         """
         return {
-            figName: [sweepParamSet.parentObjByName[list(sweepParamSet.keys())[0]]]
+            figName: list(set(sweepParamSet.parentObjByName[
+                key
+            ] for key in sweepParamSet.keys()))
             for figName, sweepParamSet in self._sweepParamSets.items()
         }
 

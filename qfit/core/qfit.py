@@ -186,13 +186,13 @@ class Fit:
         """
         if fromFit:
             return (
-                self._fitHSParams.getAttrDict("value") 
-                | self._fitCaliParams.getAttrDict("value")
+                self._fitHSParams.getFlattenedAttrDict("value") 
+                | self._fitCaliParams.getFlattenedAttrDict("value")
             )
         else:
             return (
-                self._prefitHSParams.getAttrDict("value") 
-                | self._prefitCaliParams.getAttrDict("value")
+                self._prefitHSParams.getFlattenedAttrDict("value") 
+                | self._prefitCaliParams.getFlattenedAttrDict("value")
             )
         
     def exportHilbertSpace(
@@ -214,14 +214,14 @@ class Fit:
 
         if fromFit:
             self._fitHSParams.blockSignals(True)
-            self._fitHSParams.updateAllParents()
+            self._fitHSParams.updateParamForHS()
             self._fitHSParams.blockSignals(False)
 
             hilbertSpace = self._fitHSParams.hilbertspace
 
         else:
             self._prefitHSParams.blockSignals(True)
-            self._prefitHSParams.updateAllParents()
+            self._prefitHSParams.updateParamForHS()
             self._prefitHSParams.blockSignals(False)
 
             hilbertSpace = self._prefitHSParams.hilbertspace

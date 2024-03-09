@@ -256,9 +256,7 @@ class CaliParamModel(
         param = CaliTableRowParam(**kwargs)
 
         # add the parameter to the parameter set
-        if rowName not in self.parameters.keys():
-            self.parameters[rowName] = {}
-        self.parameters[rowName][colName] = param
+        self.insertParam(rowName, colName, param)
 
     # property =========================================================
     @property
@@ -478,8 +476,8 @@ class CaliParamModel(
         for parentName, paramDictByParent in self.sweepParamSet.items():
             for paramName, param in paramDictByParent.items():
                 sweepParamSetFromCali._insertParamByArgs(
+                    parent=self.sweepParamSet.parentObjByName[parentName],
                     paramName=paramName,
-                    parent=param.parent,
                     value=param.value,
                     paramType=param.paramType,
                     rangeDict={},  # not used
@@ -554,8 +552,8 @@ class CaliParamModel(
                         f"{parentName}.{paramName}"
                     ].value
                     sweepParamSetFromCali._insertParamByArgs(
+                        parent=self.sweepParamSet.parentObjByName[parentName],
                         paramName=paramName,
-                        parent=param.parent,
                         value=param.value,
                         paramType=param.paramType,
                         rangeDict={},  # not used

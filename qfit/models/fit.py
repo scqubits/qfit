@@ -24,7 +24,7 @@ class FitParamModelMixin(ParamModelMixin[FitParam]):
     updateStatus = Signal(Status)
 
     def _isValid(self, paramSet: ParamSet[FitParam]) -> bool:
-        for key, params in paramSet.toParamDict().items():
+        for key, params in paramSet.flattenedParamDict().items():
             if params.min >= params.max:
                 self.updateStatus.emit(Status(
                     statusSource="fit",
@@ -46,21 +46,21 @@ class FitParamModelMixin(ParamModelMixin[FitParam]):
     def _fixedParams(self, paramSet: ParamSet[FitParam]) -> Dict[str, float]:
         return {
             key: params.initValue
-            for key, params in paramSet.toParamDict().items()
+            for key, params in paramSet.flattenedParamDict().items()
             if params.isFixed
         }
 
     def _freeParamRanges(self, paramSet: ParamSet[FitParam]) -> Dict[str, List[float]]:
         return {
             key: [params.min, params.max]
-            for key, params in paramSet.toParamDict().items()
+            for key, params in paramSet.flattenedParamDict().items()
             if not params.isFixed
         }
 
     def _initParams(self, paramSet: ParamSet[FitParam]) -> Dict[str, float]:
         return {
             key: params.initValue
-            for key, params in paramSet.toParamDict().items()
+            for key, params in paramSet.flattenedParamDict().items()
             if not params.isFixed
         }
 
@@ -110,12 +110,12 @@ class FitHSParams(
     def __init__(self, parent: QObject):
         # ordering matters here
         HSParamSet.__init__(self, FitParam)
-        ParamModelMixin.__init__(self, parent)
+        FitParamModelMixin.__init__(self, parent)
 
     def dynamicalInit(self, hilbertspace: HilbertSpace):
         # override the parent method which also initialize the parameters
         self.hilbertspace = hilbertspace
-
+        
     def setParameter(
         self,
         parentName: str,
@@ -173,19 +173,12 @@ class FitHSParams(
     def emitHSUpdated(self):
         self.hilbertSpaceUpdated.emit(self.hilbertspace)
 
-    def updateParent(
-        self,
-        parentName: str,
-        paramName: str,
+    def updateParamForHS(
+        self, 
+        parentName: str | None = None, 
+        paramName: str | None = None
     ):
-        param = self[parentName][paramName]
-        param.setParameterForParent()
-        self.emitHSUpdated()
-
-    def updateAllParents(self):
-        for _, parent in self.items():
-            for _, param in parent.items():
-                param.setParameterForParent()
+        super().updateParamForHS(parentName, paramName)
         self.emitHSUpdated()
 
 

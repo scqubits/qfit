@@ -181,7 +181,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
             paramAttr.value,
         )
 
-    def toParamDict(self) -> Dict[str, ParamCls]:
+    def flattenedParamDict(self) -> Dict[str, ParamCls]:
         """
         Provide a way to iterate through the parameter set. Used for fitting purposes
         - as we need to provide a single-layer dictionary.
@@ -200,7 +200,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
         return param_dict
 
-    def getAttrDict(self, attribute: str = "value") -> Dict[str, Any]:
+    def getFlattenedAttrDict(self, attribute: str = "value") -> Dict[str, Any]:
         """
         Provide a way to iterate through the parameter set. Used for fitting purposes
         - as we need to provide a single-layer dictionary.
@@ -224,7 +224,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
         return paramval_dict
 
-    def setByAttrDict(
+    def setByFlattenedAttrDict(
         self,
         paramval_dict: Union[Dict[str, float], Dict[str, int]],
         attribute: str = "value",
@@ -313,7 +313,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
             excluded_parameter_type=excluded_parameter_type,
         )
 
-    def _generateParamDictForCircuit(self, subsystem: Circuit) -> Dict[str, List[str]]:
+    def _paramDictForCircuit(self, subsystem: Circuit) -> Dict[str, List[str]]:
         """
         generate parameter dict for a Circuit instance, conforming with those stored in
         QSYS_PARAM_NAMES
@@ -392,20 +392,16 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
 
         # obtain all the parameters in the subsystems of the HilbertSpace object
         subsystems = self.hilbertspace.subsystem_list
-        for subsystem in subsystems:
+        for parentSys in subsystems:
             # obtain the available parameters in the subsystem
-            subsystem_type = subsystem.__class__
-            # if the subsystem is not a Circuit instance, look up parameters from
-            # QSYS_PARAM_NAMES
-            if subsystem_type is not Circuit:
-                parameters = QSYS_PARAM_NAMES[subsystem_type]
-            # else, generate parameter lookup dict for the circuit
+            if isinstance(parentSys, Circuit):
+                # for Circuit, we need to generate a lookup dict
+                parameters = self._paramDictForCircuit(parentSys)
             else:
-                parameters = self._generateParamDictForCircuit(subsystem)
-
+                parameters = QSYS_PARAM_NAMES[parentSys.__class__]
+                
             # loop over different types of the parameters
             for parameter_type, parameter_names in parameters.items():
-                # check if the parameter type is included or excluded
                 if (
                     (included_parameter_type is not None)
                     and (parameter_type not in included_parameter_type)
@@ -419,11 +415,11 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
                 for parameter_name in parameter_names:
                     range_dict = DEFAULT_PARAM_MINMAX[parameter_type]
                     # value = range_dict["min"] * 4/5 + range_dict["max"] * 1/5
-                    value = getattr(subsystem, parameter_name)
+                    value = getattr(parentSys, parameter_name)
 
                     self._insertParamByArgs(
+                        parent=parentSys,
                         paramName=parameter_name,
-                        parent=subsystem,
                         paramType=parameter_type,
                         value=value,
                         rangeDict=range_dict,
@@ -450,8 +446,8 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
                     )
 
                 self._insertParamByArgs(
-                    paramName=f"g{interaction_term_index+1}",
                     parent=self.hilbertspace,
+                    paramName=f"g{interaction_term_index+1}",
                     paramType="interaction_strength",
                     value=value,
                     rangeDict=DEFAULT_PARAM_MINMAX["interaction_strength"],
@@ -492,8 +488,8 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
 
     def _insertParamByArgs(
         self,
-        paramName: str,
         parent: ParentType,
+        paramName: str,
         paramType: str,
         value: Union[int, float],
         rangeDict: Dict,
@@ -501,11 +497,14 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         """
         Create a Parameter object and add it to the parameter set.
         """
+        # update the name map
+        self._updateNameMap(parent)
+        parentName = self.parentNameByObj[parent]
 
         # process the keyword arguments based on the needed arguments for the parameter class
-        kwargs = {
+        kwargs: Dict[str, Any] = {
             "name": paramName,
-            "parent": parent,
+            "parent": parentName,
             "paramType": paramType,
         }
 
@@ -526,9 +525,6 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         param = self.paramCls(**kwargs)
 
         # insert the parameter object to the parameter set
-        self._updateNameMap(param.parent)
-        parentName = self.parentNameByObj[param.parent]
-
         self.insertParam(parentName, paramName, param)
 
     def clear(self):
@@ -539,15 +535,31 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         self.parentNameByObj = {}
         self.parentObjByName = {}
 
-    def setParameterForParent(self):
+    def updateParamForHS(
+        self, 
+        parentName: Optional[str] = None,
+        paramName: Optional[str] = None,
+    ):
         """
-        To be updated - later param will not store a parent object internally
+        Update the HilbertSpace object based on the parameter set.
         """
-        for _, paramDictByParent in self.items():
-            for _, param in paramDictByParent.items():
-                # map rawX to the parameter values
-                param.setParameterForParent()
-    
+        for prtName, paramDict in self.items():
+            if parentName is not None and parentName != prtName:
+                continue
+            parentSys = self.parentObjByName[prtName]
+
+            for prName, param in paramDict.items():
+                if paramName is not None and paramName != prName:
+                    continue
+
+                if isinstance(parentSys, HilbertSpace):
+                    assert param.paramType == "interaction_strength"
+                    interaction_index = int(param.name[1:]) - 1
+                    interaction = parentSys.interaction_list[interaction_index]
+                    interaction.g_strength = param.value
+                else:
+                    setattr(parentSys, param.name, param.value)                
+
 
 class SweepParamSet(HSParamSet[QMSweepParam]):
 
@@ -609,7 +621,6 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
             getter=lambda: paramSet.parameters,
             setter=lambda value: self._registrySetter(value, paramSet),
         )}
-
 
     # Signals ==========================================================
     def _emitAttrByName(

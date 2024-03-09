@@ -52,6 +52,10 @@ class FitCtrl(QObject):
             self.prefitHSParams.toFitParams(),
             insertMissing=True,
         )
+        # change this later to make it more safe
+        self.fitHSParams.parentNameByObj = self.prefitHSParams.parentNameByObj
+        self.fitHSParams.parentObjByName = self.prefitHSParams.parentObjByName
+
         self.fitCaliParams.setAttrByParamDict(
             self.caliParamModel.toFitParams(),
             insertMissing=True,
@@ -194,7 +198,7 @@ class FitCtrl(QObject):
 
         # store a copy of the calibration parameters as we will change them
         # during the optimization, and we want to restore them afterward
-        self.tmpCaliParams = self.caliParamModel.getAttrDict("value")
+        self.tmpCaliParams = self.caliParamModel.getFlattenedAttrDict("value")
 
         # setup the optimization
         self.fitModel.setupOptimization(
@@ -220,14 +224,14 @@ class FitCtrl(QObject):
         self.quantumModel.disableSweep = True
 
         # update the hilbert space
-        self.fitHSParams.setByAttrDict(HSParams, "value")  # display the value
+        self.fitHSParams.setByFlattenedAttrDict(HSParams, "value")  # display the value
         # self.prefitHSParams.setByAttrDict(HSParams, "value")  # update HS
-        self.fitHSParams.updateAllParents()
+        self.fitHSParams.updateParamForHS()
         self.quantumModel.updateHilbertSpace(self.fitHSParams.hilbertspace)
 
         # update the calibration
-        self.caliParamModel.setByAttrDict(caliParams, "value")
-        self.fitCaliParams.setByAttrDict(caliParams, "value")
+        self.caliParamModel.setByFlattenedAttrDict(caliParams, "value")
+        self.fitCaliParams.setByFlattenedAttrDict(caliParams, "value")
         self.quantumModel.updateXCaliFunc(self.caliParamModel.XCalibration())
         self.quantumModel.updateYCaliFunc(
             self.caliParamModel.YCalibration(),
@@ -250,7 +254,7 @@ class FitCtrl(QObject):
     @Slot()
     def postOptimization(self):
         # TODO: later, fit model will be able to update hspace
-        self.caliParamModel.setByAttrDict(
+        self.caliParamModel.setByFlattenedAttrDict(
             self.tmpCaliParams, "value"
         )
 

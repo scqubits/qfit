@@ -122,19 +122,12 @@ class PrefitHSParams(
         
     # Slots 
     @Slot(str, str)
-    def updateParent(
-        self,
-        parentName: str,
-        paramName: str,
+    def updateParamForHS(
+        self, 
+        parentName: str | None = None, 
+        paramName: str | None = None
     ):
-        param = self[parentName][paramName]
-        param.setParameterForParent()
-        self.emitHSUpdated()
-
-    def updateAllParents(self):
-        for _, parent in self.items():
-            for _, param in parent.items():
-                param.setParameterForParent()
+        super().updateParamForHS(parentName, paramName)
         self.emitHSUpdated()
 
     # general model methods ============================================

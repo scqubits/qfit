@@ -613,7 +613,7 @@ class ParamBase(ABC):
     def __init__(
         self,
         name: str,
-        parent: Union[ParentType, str],
+        parent: str,
         paramType: ParameterType,
         value: Union[int, float],
     ):
@@ -621,18 +621,6 @@ class ParamBase(ABC):
         self.parent = parent
         self.paramType = paramType
         self.value = self._toIntAsNeeded(value)
-
-    def setParameterForParent(self):
-        """
-        Set the parameter for the parent
-        """
-        if isinstance(self.parent, HilbertSpace):
-            assert self.paramType == "interaction_strength"
-            interaction_index = int(self.name[1:]) - 1
-            interaction = self.parent.interaction_list[interaction_index]
-            interaction.g_strength = self.value
-        else:
-            setattr(self.parent, self.name, self.value)
 
     def _toIntAsNeeded(self, value: Union[int, float]) -> Union[int, float]:
         """
@@ -693,7 +681,7 @@ class QMSweepParam(ParamBase):
     def __init__(
         self,
         name: str,
-        parent: ParentType,
+        parent: str,
         value: Union[float, int],
         paramType: ParameterType,
     ):
@@ -746,7 +734,7 @@ class SliderParam(DispParamBase):
     def __init__(
         self,
         name: str,
-        parent: ParentType,
+        parent: str,
         paramType: ParameterType,
         value: Union[int, float],
         min: Union[int, float],
@@ -820,7 +808,7 @@ class FitParam(DispParamBase):
     def __init__(
         self,
         name: str,
-        parent: ParentType,
+        parent: str,
         paramType: ParameterType,
         value: Union[int, float] = 0,
         min: Union[int, float] = 0,

@@ -140,11 +140,8 @@ class PrefitCtrl(QObject):
 
         # update hilbert space
         self.prefitParamView.HSEditingFinished.connect(
-            self.prefitHSParams.updateParent
+            self.prefitHSParams.updateParamForHS
         )
-        # self.pageView.pageChanged.connect(
-        #     lambda page: self.prefitHSParams.updateAllParents() if page == "prefit" else None
-        # )
 
         # update cali model
         self.prefitParamView.caliEditingFinished.connect(
@@ -162,7 +159,7 @@ class PrefitCtrl(QObject):
         # for the remaining parameters
         sweepParameterSet = SweepParamSet.initByHS(hilbertspace)
         param_types: set["ParameterType"] = set(
-            sweepParameterSet.getAttrDict("paramType").values()
+            sweepParameterSet.getFlattenedAttrDict("paramType").values()
         )
 
         if len(sweepParameterSet) == 0:
