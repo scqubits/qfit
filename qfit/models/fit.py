@@ -247,7 +247,7 @@ class FitCaliParams(
 
 
 class FitModel(QObject):
-    fitThreadPool = QThreadPool()
+    _fitThreadPool = QThreadPool()
 
     optimizer: str = "L-BFGS-B"
     tol: float = 1e-6
@@ -434,16 +434,16 @@ class FitModel(QObject):
             initParam,
             self._callbackWrapper(callback),
         )
-        self.fitThreadPool.start(runner)
+        self._fitThreadPool.start(runner)
 
 
-class RunnerSignal(QObject):
+class fitSignalHost(QObject):
     optFinished = Signal(OptTraj)
 
 
 class FitRunner(QRunnable):
 
-    signalHost = RunnerSignal()
+    signalHost = fitSignalHost()
 
     def __init__(
         self,

@@ -1,4 +1,4 @@
-from PySide6.QtCore import Slot, Signal, QObject
+from PySide6.QtCore import Slot, Signal, QObject, QRunnable, QThreadPool
 
 import numpy as np
 from numpy import ndarray
@@ -48,6 +48,9 @@ class QuantumModel(QObject):
         parent: QObject,
     ):
         super().__init__(parent)
+
+        self._sweepThreadPool = QThreadPool()
+        SweepRunner.signalHost.sweepFinished.connect(self._postSweepInThread)
 
     def dynamicalInit(self, hilbertspace: HilbertSpace, figNames: List[str]):
         self.hilbertspace = hilbertspace
@@ -478,6 +481,25 @@ class QuantumModel(QObject):
                 )
                 self.updateStatus.emit(status)
 
+    def _runSweepInThread(self):
+        runner = SweepRunner(self._sweeps)
+        self._sweepThreadPool.start(runner)
+
+    def _postSweepInThread(
+        self, 
+        result: Union[Dict[str, ParameterSweep], str]
+    ):
+        if isinstance(result, str):
+            status = Status(
+                statusSource=self.sweepUsage,
+                statusType="error",
+                message=result,
+            )
+            self.updateStatus.emit(status)
+        else:
+            self._sweeps = result
+            self.sweep2SpecMSE()
+
     # public methods ===========================================================
     @Slot()
     def sweep2SpecMSE(self) -> float:
@@ -538,7 +560,14 @@ class QuantumModel(QObject):
         
         self._newSweep()
 
-        if self._autoRun or self.sweepUsage == "fit" or calledByPlotButton:
+        if self._autoRun and self.sweepUsage == "prefit":
+            self._runSweepInThread()
+            return
+
+        if (
+            self.sweepUsage == "fit" 
+            or calledByPlotButton
+        ):
             self._runSweep()
             return self.sweep2SpecMSE()
 
@@ -763,29 +792,26 @@ class QuantumModel(QObject):
                 self.updateStatus.emit(status)
             return mse
 
-    # def MSEByParameters(
-    #     self,
-    #     parameterSet: ParamSet,
-    #     sweep_parameter_set: ParamSet,
-    #     calibration_data: CalibrationData,
-    #     extracted_data: AllExtractedData,
-    # ):
-    #     """
-    #     For parameter fitting purpose, calculate the MSE with just the
-    #     parameters
-    #     """
-    #     # set calibration functions for the parameters in the sweep parameter set
-    #     for parameters in sweep_parameter_set.values():
-    #         for parameter in parameters.values():
-    #             self._setCalibrationFunction(parameter, calibration_data)
-    #     # update the HilbertSpace object and generate parameter sweep
-    #     # this step is after the setup of calibration functions because the update_hilbertspace in ParameterSweep need the calibration information
-    #     self._updateQuantumModelFromParameterSet(parameterSet)
-    #     # generate parameter sweep
-    #     self._sweeps = self._generateSweep(
-    #         x_coordinate_list=self.extrX,
-    #         sweep_parameter_set=sweep_parameter_set,
-    #     )
-    #     # run sweep
-    #     self._sweeps.run()
-    #     return self.calculateMSE(extracted_data)[0]
+
+class sweepSignalHost(QObject):
+    sweepFinished = Signal(object)
+
+
+class SweepRunner(QRunnable):
+
+    signalHost = sweepSignalHost()
+
+    def __init__(self, sweeps: Dict[str, ParameterSweep]):
+        super().__init__()
+        self.sweeps = sweeps
+
+    def run(self):
+        for sweep in self.sweeps.values():
+            # manually turn off the warning message
+            sweep._out_of_sync_warning_issued = True
+            try:
+                sweep.run()
+            except Exception as e:
+                self.signalHost.sweepFinished.emit(str(e))
+
+        self.signalHost.sweepFinished.emit(self.sweeps)
