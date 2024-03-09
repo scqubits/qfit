@@ -95,6 +95,7 @@ class IOCtrl(QObject):
         self.menuButton.clicked.connect(self.menu.toggle)
 
         self.menu.ui.menuQuitButton.clicked.connect(self.mainWindow.close)
+        self.menu.ui.menuQuitButton.clicked.connect(self.menu.toggle)
         self.menu.ui.menuOpenButton.clicked.connect(self.openFile)
         self.menu.ui.menuNewButton.clicked.connect(self.newProject)
         self.menu.ui.menuSaveButton.clicked.connect(self.saveFile)
@@ -325,7 +326,6 @@ class IOCtrl(QObject):
                 self._closeApp()
                 return True
             else:  # reply == QMessageBox.Cancel
-                self.menu.toggle()
                 return False
 
         else:
