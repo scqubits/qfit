@@ -201,9 +201,9 @@ class QuantumModel(QObject):
         elif attrName in ["evalsCount", "pointsAdded", "autoRun"]:
             self.updateCalc()
 
-    @Slot(tuple, tuple)
-    def relimX(self, xLim: Tuple[float, float], yLim: Tuple[float, float]):
-        self._xLim = xLim
+    @Slot(np.ndarray, np.ndarray)
+    def relimX(self, x: np.ndarray, y: np.ndarray):
+        self._xLim = (np.min(x), np.max(x))
 
     def exportSweepOption(self) -> Dict[str, Any]:
         """

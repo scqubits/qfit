@@ -470,7 +470,6 @@ class PlottingCtrl(QObject):
             self.calibrationModel.processSelectedPtFromPlot(
                 data=rawXYDict, figName=self.measurementData.currentMeasData.name
             )
-
             # the above will then trigger the update the view:
             # turn off highlighting, set value, etc
 
@@ -483,11 +482,10 @@ class PlottingCtrl(QObject):
             current_data = self.activeDataset.allPoints()
 
             # x snap
-            if self.xSnap:
-                snappedX = self.mplCanvas.specialCursor.closest_line(event.xdata)
-                rawX = self.measurementData.currentMeasData.rawXByCurrentX(snappedX)
-                xyDict[xName] = snappedX
-            else:
+            snappedX = self.mplCanvas.specialCursor.snapToProperX(event.xdata)
+            xyDict[xName] = snappedX
+            rawX = self.measurementData.currentMeasData.rawXByCurrentX(snappedX)
+            if not self.xSnapTool:
                 # turn on the horizontal snap automatically, if the user turned it off
                 self.canvasTools["snapX"].setChecked(True)
 
@@ -498,9 +496,7 @@ class PlottingCtrl(QObject):
                     return
 
             # y snap
-            if self.canvasTools["snapY"].isChecked() and isinstance(
-                self.measurementData.currentMeasData, NumericalMeasurementData
-            ):
+            if self.canvasTools["snapY"].isChecked():
                 x_list = self.measurementData.currentMeasData.currentX.data
                 y_list = self.measurementData.currentMeasData.currentY.data
                 z_data = self.measurementData.currentMeasData.currentZ.data

@@ -58,7 +58,7 @@ class ListModelMeta(type(QAbstractListModel), type(Registrable)):
 
 class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     readyToPlot = Signal(PlotElement)
-    relimCanvas = Signal(tuple, tuple)
+    relimCanvas = Signal(np.ndarray, np.ndarray)
     updateRawXMap = Signal(dict)
 
     def __init__(self, measDatas: List["MeasurementDataType"]):
@@ -143,13 +143,8 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     
     def emitRelimCanvas(self):
         self.relimCanvas.emit(
-            (
-                np.min(self.currentMeasData.currentX.data),
-                np.max(self.currentMeasData.currentX.data)
-            ), (
-                np.min(self.currentMeasData.currentY.data),
-                np.max(self.currentMeasData.currentY.data)
-            ),
+            self.currentMeasData.currentX.data,
+            self.currentMeasData.currentY.data,
         )
 
     def emitRawXMap(self):
@@ -543,7 +538,6 @@ class NumericalMeasurementData(MeasurementData):
     #     self.emitRelimCanvas()
         # self.emitRawXMap()
     
-
     # def setCurrentY(self, itemIndex):
     #     self._currentY = self.currentYCompatibles.itemByIndex(itemIndex)
     #     self.emitReadyToPlot()

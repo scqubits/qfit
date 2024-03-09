@@ -426,6 +426,10 @@ def y_snap(
         x_list, y_list, z_data, user_selected_xy, half_y_range
     )
 
+    # if the data is an image (has RGB channels), then make the data grayscale
+    if len(data_for_peak_finding.shape) == 3:
+        data_for_peak_finding = data_for_peak_finding.mean(axis=2)
+
     # find the peaks
     if mode == "lorentzian":
         peak_idx = _find_lorentzian_peak(data_for_peak_finding)
