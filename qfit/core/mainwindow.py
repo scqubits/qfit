@@ -96,7 +96,6 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         closing the application. Will be triggered when the user clicks the "X"
         or call the close() method.
         """
-        QApplication.processEvents()
+        super().closeEvent(event)
         self.closeWindow.emit(event)
 
-        super().closeEvent(event)
