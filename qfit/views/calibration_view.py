@@ -10,7 +10,7 @@
 ############################################################################
 
 
-from PySide6.QtWidgets import QMessageBox, QPushButton, QButtonGroup
+from PySide6.QtWidgets import QMessageBox, QPushButton, QButtonGroup, QWidget, QFrame
 
 from qfit.widgets.validated_line_edits import FloatLineEdit
 
@@ -20,6 +20,7 @@ from PySide6.QtCore import (
     Signal,
     Slot,
 )
+
 from typing import Tuple, Dict, Any, List, Union, Literal
 
 from qfit.models.parameter_set import ParamSet
@@ -42,12 +43,22 @@ class CalibrationView(QObject):
     rowIdxToButtonGroupId: Dict[str, int]
     buttonGroupIdToRowIdx: Dict[int, str]
 
+    rawYLineEdits: Dict[str, "CalibrationLineEdit"]
+    mapYLineEdits: Dict[str, "CalibrationLineEdit"]
+    caliYButtons: Dict[str, QPushButton]
+
+    rawXLineEdits: Dict[str, "CalibrationLineEdit"]
+    mapXLineEdits: Dict[str, "CalibrationLineEdit"]
+    caliXButtons: Dict[str, QPushButton]
+
     def __init__(
         self,
         parent: QObject,
-        rawLineEdits: Dict[str, "CalibrationLineEdit"],
-        mapLineEdits: Dict[str, "CalibrationLineEdit"],
-        calibrationButtons: Dict[str, QPushButton],
+        caliXScrollAreaWidget: QWidget,
+        caliXFrame: QFrame,
+        rawYLineEdits: Dict[str, "CalibrationLineEdit"],
+        mapYLineEdits: Dict[str, "CalibrationLineEdit"],
+        caliYButtons: Dict[str, QPushButton],
     ):
         """
         In the future, all the line edits and buttons should be generated
@@ -55,11 +66,13 @@ class CalibrationView(QObject):
         """
         super().__init__(parent)
 
-        self.rawLineEdits = rawLineEdits
-        self.mapLineEdits = mapLineEdits
-        self.calibrationButtons = calibrationButtons
+        self.rawYLineEdits = rawYLineEdits
+        self.mapYLineEdits = mapYLineEdits
+        self.caliYButtons = caliYButtons
         self.caliTableSet = {}
         self._previousCheckedButtonIdx = None
+        self.caliXScrollAreaWidget = caliXScrollAreaWidget
+        self.caliXFrame = caliXFrame
 
     def dynamicalInit(
         self,
@@ -68,18 +81,25 @@ class CalibrationView(QObject):
         caliTableXRowNr: int,
         sweepParamSet: ParamSet[QMSweepParam],
     ):
+        """
+        dynamically initialize the calibration view. Dynamically generate the line edits
+        and buttons based on the number of calibration rows and columns.
+        """
         self.sweepParamSet = sweepParamSet
         self.caliTableXRowNr = caliTableXRowNr
-        self.sweepParamParentName = list(self.sweepParamSet.keys())[0]
-        self.sweepParamName = list(
-            self.sweepParamSet[self.sweepParamParentName].keys()
-        )[0]
+        self.sweepParamParentName: List[str] = []
+        self.sweepParamName: List[str] = []
+        # create a list for all sweep parameters and their parent names
+        for parentName, sweepParamDict in self.sweepParamSet.items():
+            for sweepParamName, sweepParam in sweepParamDict.items():
+                self.sweepParamParentName.append(parentName)
+                self.sweepParamName.append(sweepParamName)
         self.rawXVecNameList = rawXVecNameList
         self.rawYName = rawYName
 
         self.caliButtonGroup = QButtonGroup()
         self._generateRowIdxToButtonGroupIdDict()
-        for Idx, button in self.calibrationButtons.items():
+        for Idx, button in self.caliYButtons.items():
             self.caliButtonGroup.addButton(button, self.rowIdxToButtonGroupId[Idx])
         self.caliButtonGroup.setExclusive(False)
 
@@ -103,24 +123,24 @@ class CalibrationView(QObject):
             self.caliTableSet.clear()
         self.caliTableSet: Dict[str, Dict[str, "CalibrationLineEdit"]] = {
             "X1": {
-                self.rawXVecNameList[0]: self.rawLineEdits["X1"],
-                f"{self.sweepParamParentName}.{self.sweepParamName}": self.mapLineEdits[
+                self.rawXVecNameList[0]: self.rawYLineEdits["X1"],
+                f"{self.sweepParamParentName}.{self.sweepParamName}": self.mapYLineEdits[
                     "X1"
                 ],
             },
             "X2": {
-                self.rawXVecNameList[0]: self.rawLineEdits["X2"],
-                f"{self.sweepParamParentName}.{self.sweepParamName}": self.mapLineEdits[
+                self.rawXVecNameList[0]: self.rawYLineEdits["X2"],
+                f"{self.sweepParamParentName}.{self.sweepParamName}": self.mapYLineEdits[
                     "X2"
                 ],
             },
             "Y1": {
-                self.rawYName: self.rawLineEdits["Y1"],
-                "mappedY": self.mapLineEdits["Y1"],
+                self.rawYName: self.rawYLineEdits["Y1"],
+                "mappedY": self.mapYLineEdits["Y1"],
             },
             "Y2": {
-                self.rawYName: self.rawLineEdits["Y2"],
-                "mappedY": self.mapLineEdits["Y2"],
+                self.rawYName: self.rawYLineEdits["Y2"],
+                "mappedY": self.mapYLineEdits["Y2"],
             },
         }
 
@@ -198,25 +218,25 @@ class CalibrationView(QObject):
         # mode again
         buttonIdx = self.buttonGroupIdToRowIdx[buttonGroupIdx]
         if buttonIdx is self._previousCheckedButtonIdx:
-            self.calibrationButtons[buttonIdx].setChecked(False)
+            self.caliYButtons[buttonIdx].setChecked(False)
             self._previousCheckedButtonIdx = None
             self.caliStatusChangedByButtonClicked.emit(False)
             return
         else:
-            for button in self.calibrationButtons.values():
+            for button in self.caliYButtons.values():
                 button.setChecked(False)
-            self.calibrationButtons[buttonIdx].setChecked(True)
+            self.caliYButtons[buttonIdx].setChecked(True)
             self._previousCheckedButtonIdx = buttonIdx
             self.caliStatusChangedByButtonClicked.emit(buttonIdx)
 
     @Slot()
     def uncheckAllCaliButtons(self):
-        for button in self.calibrationButtons.values():
+        for button in self.caliYButtons.values():
             button.setChecked(False)
         self._previousCheckedButtonIdx = None
 
     def calibrationStatus(self):
-        for calibrationLabel, button in self.calibrationButtons.items():
+        for calibrationLabel, button in self.caliYButtons.items():
             if button.isChecked():
                 return calibrationLabel
         return False

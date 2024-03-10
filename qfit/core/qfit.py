@@ -106,11 +106,11 @@ class Fit:
         if measurementFileName is not None:
             if not os.path.isfile(measurementFileName):
                 raise FileNotFoundError(f"File '{measurementFileName}' does not exist.")
-            
+
         self._ioCtrl.newProject(
-            from_menu=False, 
+            from_menu=False,
             hilbertSpace=hilbertSpace,
-            measurementFileName=measurementFileName
+            measurementFileName=measurementFileName,
         )
 
         if not executed_in_ipython():
@@ -183,7 +183,7 @@ class Fit:
     # methods to export data ##################################################
     def exportParameters(self, fromFit: bool = True) -> Dict[str, Any]:
         """
-        Export the fit parameters to a file. 
+        Export the fit parameters to a file.
 
         Parameters
         ----------
@@ -191,20 +191,16 @@ class Fit:
             As we have two copies of parameters, one from prefit sliders and one from fit tables, please specify which one to export.
         """
         if fromFit:
-            return (
-                self._fitHSParams.getAttrDict("value") 
-                | self._fitCaliParams.getAttrDict("value")
-            )
+            return self._fitHSParams.getAttrDict(
+                "value"
+            ) | self._fitCaliParams.getAttrDict("value")
         else:
-            return (
-                self._prefitHSParams.getAttrDict("value") 
-                | self._prefitCaliParams.getAttrDict("value")
-            )
-        
+            return self._prefitHSParams.getAttrDict(
+                "value"
+            ) | self._prefitCaliParams.getAttrDict("value")
+
     def exportHilbertSpace(
-        self, 
-        deepcopy: bool = False,
-        fromFit: bool = True
+        self, deepcopy: bool = False, fromFit: bool = True
     ) -> HilbertSpace:
         """
         Export the HilbertSpace object.
@@ -233,7 +229,7 @@ class Fit:
             hilbertSpace = self._prefitHSParams.hilbertspace
 
         return _deepcopy(hilbertSpace) if deepcopy else hilbertSpace
-    
+
     # models, views and controllers ####################################
     # ##################################################################
     def _MVCInit(self):
@@ -354,16 +350,16 @@ class Fit:
 
         self._pageView = PageView(
             self._mainWindow,
-            self._pageButtons, self._dataTransferButtons, self._pageStackedWidgets
+            self._pageButtons,
+            self._dataTransferButtons,
+            self._pageStackedWidgets,
         )
 
     # settings #########################################################
     def _settingsMVCInit(self):
         self._settingUi = SettingsWidget(self._mainWindow)
         self._settingsCtrl = SettingsCtrl(
-            self._mainWindow,
-            self._settingUi, 
-            self._mainUi.settingsPushButton
+            self._mainWindow, self._settingUi, self._mainUi.settingsPushButton
         )
 
     # help button and gif tooltip ######################################
@@ -404,14 +400,16 @@ class Fit:
         self._caliParamModel = CaliParamModel(self._mainWindow)
         self._calibrationView = CalibrationView(
             self._mainWindow,
-            rawLineEdits=self._rawLineEdits,
-            mapLineEdits=self._mapLineEdits,
-            calibrationButtons=self._calibrationButtons,
+            rawYLineEdits=self._rawLineEdits,
+            mapYLineEdits=self._mapLineEdits,
+            caliYButtons=self._calibrationButtons,
         )
 
         self._calibrationCtrl = CalibrationCtrl(
             self._mainWindow,
-            self._caliParamModel, self._calibrationView, self._pageButtons
+            self._caliParamModel,
+            self._calibrationView,
+            self._pageButtons,
         )
 
     # extract and tag ##################################################
@@ -499,9 +497,13 @@ class Fit:
         self._prefitCtrl = PrefitCtrl(
             self._mainWindow,
             (
-                self._quantumModel, self._prefitHSParams, self._prefitCaliParams,
-                self._allDatasets, self._caliParamModel, 
-                self._measurementData, self._mainWindow
+                self._quantumModel,
+                self._prefitHSParams,
+                self._prefitCaliParams,
+                self._allDatasets,
+                self._caliParamModel,
+                self._measurementData,
+                self._mainWindow,
             ),
             (self._prefitView, self._prefitParamView, self._pageView),
         )
@@ -532,10 +534,15 @@ class Fit:
         self._fitCtrl = FitCtrl(
             self._mainWindow,
             (
-                self._fitModel, self._fitHSParams, self._fitCaliParams,
-                self._prefitHSParams, self._prefitCaliParams, self._quantumModel,
-                self._allDatasets, self._caliParamModel,
-                self._measurementData
+                self._fitModel,
+                self._fitHSParams,
+                self._fitCaliParams,
+                self._prefitHSParams,
+                self._prefitCaliParams,
+                self._quantumModel,
+                self._allDatasets,
+                self._caliParamModel,
+                self._measurementData,
             ),
             (self._fitView, self._fitParamView, self._prefitParamView),
         )
@@ -623,15 +630,14 @@ class Fit:
     # error message system #############################################
     def _statusMVCInits(self):
         self._statusModel = StatusModel(self._mainWindow)
-        self._statusBarView = StatusBarView(
-            self._mainWindow,
-            self._mainUi.statusBar
-        )
+        self._statusBarView = StatusBarView(self._mainWindow, self._mainUi.statusBar)
         self._statusCtrl = StatusCtrl(
             self._mainWindow,
             (
-                self._quantumModel, self._fitModel, 
-                self._fitHSParams, self._fitCaliParams
+                self._quantumModel,
+                self._fitModel,
+                self._fitHSParams,
+                self._fitCaliParams,
             ),
             self._statusModel,
             self._statusBarView,
