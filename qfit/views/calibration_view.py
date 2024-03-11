@@ -144,6 +144,28 @@ class CalibrationView(QObject):
             },
         }
 
+    def _generateCaliTableSet(self):
+        if self.caliTableSet != {}:
+            self.caliTableSet.clear()
+        self.caliTableSet: Dict[str, Dict[str, "CalibrationLineEdit"]] = {}
+        for XRowIdx in range(self.caliTableXRowNr):
+            self.caliTableSet[f"X{XRowIdx+1}"] = {
+                self.rawXVecNameList[XRowIdx]: self.rawLineEdits[f"X{XRowIdx+1}"],
+                f"{self.sweepParamParentName}.{self.sweepParamName}": self.mapLineEdits[
+                    f"X{XRowIdx+1}"
+                ],
+            }
+        self.caliTableSet = {
+            "Y1": {
+                self.rawYName: self.rawLineEdits["Y1"],
+                "mappedY": self.mapLineEdits["Y1"],
+            },
+            "Y2": {
+                self.rawYName: self.rawLineEdits["Y2"],
+                "mappedY": self.mapLineEdits["Y2"],
+            },
+        }
+
     def _generateRowIdxToButtonGroupIdDict(self):
         """
         Maintain a dictionary to translate the row index to the button group id.
