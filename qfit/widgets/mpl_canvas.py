@@ -216,47 +216,44 @@ class SpecialCursor(Cursor):
         When the mouse moves, the cursor (a scatter plot) is drawn at the
         closest x value in the list of all x values.
         """
+        # Do nothing if the event is ignored or the widget is locked 
+        # or the cursor is not visible
         if self.ignore(event):
             return
-
         if not self.canvas.widgetlock.available(self):
             return
+        if not self.visible:
+            return
         
+        # Hide the vertical and horizontal lines when the mouse is outside the axes
         if event.inaxes not in self.allAxes:
-            # Hide the vertical and horizontal lines when the mouse is outside the axes
             self.linev.set_visible(False)
             self.lineh.set_visible(False)
-
             if self.needclear:
                 self.canvas.draw()
                 self.needclear = False
             return
-
         self.needclear = True
 
-        if not self.visible:
-            return
+        # convert the mouse x and y coordinates to the data coordinates
+        xdata, ydata = self.allAxes[0].transData.inverted().transform((event.x, event.y))
 
         # Calculate the x-coordinate of the point based on the snapping mode and axis snap mode
         if self.axis_snap_mode == "Y":
             point_x_coordinate = self.xyMin[0]
         else:
-            point_x_coordinate = self.snapToProperX(event.xdata)
-        
+            point_x_coordinate = self.snapToProperX(xdata)
 
         # Calculate the y-coordinate of the point based on the axis snap mode
         if self.axis_snap_mode == "X":
             point_y_coordinate = self.xyMin[1]
         else:
-            point_y_coordinate = event.ydata
+            point_y_coordinate = ydata
 
         # Update the vertical line position based on the mouse x-coordinate
         self.linev.set_xdata((point_x_coordinate, point_x_coordinate))
-        # self.linev.set_xdata((event.xdata, event.xdata))
-
         # Update the horizontal line position based on the mouse y-coordinate
         self.lineh.set_ydata((point_y_coordinate, point_y_coordinate))
-        # self.lineh.set_ydata((event.ydata, event.ydata))
 
         # remove the old cursor
         if hasattr(self, "cross"):

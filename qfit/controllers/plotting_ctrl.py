@@ -368,20 +368,16 @@ class PlottingCtrl(QObject):
         Only in the extract mode, focusing on a transition other than 
         the first one, x snap can be turned on.
         """
-        if (
-            self.xSnapTool 
-            and not self.trans0Focused
-            and self.dataDestination == "EXTRACT"
-        ):
-            # In extracted mode, snap to the x values if tool is on
-            return "ExtrX"
-        elif (
-            not self.xSnapTool 
-            and not self.trans0Focused
-            and self.dataDestination == "EXTRACT"
-        ):
-            # In extracted mode, snap to the measData if tool is off
-            return "MeasData"
+        if self.dataDestination == "EXTRACT":
+            if (
+                self.xSnapTool 
+                and not self.trans0Focused
+            ):
+                # In extracted mode, snap to the x values if tool is on
+                return "ExtrX"
+            else:
+                # In extracted mode, snap to the measData if tool is off
+                return "MeasData"
         else:
             return "OFF"
 
@@ -464,10 +460,11 @@ class PlottingCtrl(QObject):
             return
 
         # process the data
+        xdata, ydata = self.axes.transData.inverted().transform((event.x, event.y))
         xName = self.measurementData.currentMeasData.currentX.name
         yName = self.measurementData.currentMeasData.currentY.name
-        xyDict = OrderedDictMod({xName: event.xdata, yName: event.ydata})
-        rawX = self.measurementData.currentMeasData.rawXByCurrentX(event.xdata)
+        xyDict = OrderedDictMod({xName: xdata, yName: ydata})
+        rawX = self.measurementData.currentMeasData.rawXByCurrentX(xdata)
         rawXYDict = rawX | xyDict  # needed by calibration data
 
         # calibration mode
@@ -488,7 +485,7 @@ class PlottingCtrl(QObject):
             current_data = self.activeDataset.allPoints()
 
             # x snap
-            snappedX = self.mplCanvas.specialCursor.snapToProperX(event.xdata)
+            snappedX = self.mplCanvas.specialCursor.snapToProperX(xdata)
             xyDict[xName] = snappedX
             rawX = self.measurementData.currentMeasData.rawXByCurrentX(snappedX)
             if not self.xSnapTool:
@@ -508,7 +505,7 @@ class PlottingCtrl(QObject):
                 z_data = self.measurementData.currentMeasData.currentZ.data
 
                 # calculate half index range as 5x linewidth
-                linewidth = 0.02  # GHz
+                linewidth = 0.01  # GHz
                 half_y_range = self.invYCaliFunc(linewidth * 5) - self.invYCaliFunc(0)
 
                 # snap the y value
