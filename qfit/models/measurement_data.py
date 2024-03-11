@@ -419,7 +419,7 @@ class MeasurementData(Registrable):
         return rawX
 
     # filters =============================================================
-    def currentMinMax(self, array2D: np.ndarray) -> Tuple[float, float]:
+    def currentMinMax(self, array2D: np.ndarray) -> Tuple[float, float, float, float]:
         if array2D.ndim != 2:
             raise ValueError("array must be 2D")
         
@@ -432,11 +432,31 @@ class MeasurementData(Registrable):
         zMin = rawZMin + normedMin * (rawZMax - rawZMin)
         zMax = rawZMin + normedMax * (rawZMax - rawZMin)
 
-        return zMin, zMax
+        return zMin, zMax, rawZMin, rawZMax
 
     def _doBgndSubtraction(self, array: np.ndarray, axis=0):
-        # globalAverage = np.nanmean(array)
-        avgArray = array - np.nanmean(array, axis=axis, keepdims=True)
+        previousMin = np.nanmin(array, axis=axis, keepdims=True)
+        previousMax = np.nanmax(array, axis=axis, keepdims=True)
+
+        # subtract the background
+        background = np.nanmedian(array, axis=axis, keepdims=True)
+        avgArray = array - background
+
+        # rescale the data to the range of the original data
+        currentMin = np.nanmin(avgArray, axis=axis, keepdims=True)
+        currentMax = np.nanmax(avgArray, axis=axis, keepdims=True)
+        currentRange = currentMax - currentMin
+        previousRange = previousMax - previousMin
+        previousRange[currentRange == 0] = 1
+        currentRange[currentRange == 0] = 1
+
+        avgArray = (avgArray - currentMin) / currentRange * previousRange + previousMin
+
+        print(previousRange[300, 0, 0], currentRange[300, 0, 0], background[300, 0, 0])
+
+        if array.ndim == 3:
+            avgArray = np.round(avgArray, 0).astype(int)
+
         return avgArray
 
     def _applyWaveletFilter(self, array: np.ndarray):
@@ -490,12 +510,19 @@ class MeasurementData(Registrable):
             result = np.zeros_like(array)
             for i in range(array.shape[2]):
                 result[:, :, i] = self._clip(array[:, :, i])
-            return result
+
+            return np.round(result, 0).astype(int)
         
         # Original function for 1D or 2D arrays
-        zMin, zMax = self.currentMinMax(array)
+        zMin, zMax, rawZMin, rawZMax = self.currentMinMax(array)
 
-        return np.clip(array, zMin, zMax)
+        # Clip the data to the range of the slider
+        array = np.clip(array, zMin, zMax)
+
+        # Rescale the data to the range of the original data
+        array = (array - zMin) / (zMax - zMin) * (rawZMax - rawZMin) + rawZMin
+
+        return array
 
 
 class NumericalMeasurementData(MeasurementData):
@@ -692,7 +719,7 @@ class ImageMeasurementData(MeasurementData):
     def generatePlotElement(self, **kwargs) -> ImageElement:
         return ImageElement(
             "measurement",
-            self._currentZ.data,
+            self.currentZ.data,
             rasterized=True,
         )
 
