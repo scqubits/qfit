@@ -338,6 +338,12 @@ class StopExecution(Exception):
 
 
 # peak finding #################################################################
+def _closest_idx(arr, val):
+    """
+    find the index of the closest value in the array
+    """
+    return np.argmin(np.abs(arr - val))
+
 def _find_lorentzian_peak(data: np.ndarray, gamma_guess=5) -> int:
     """
     fit the data with a Lorentzian function. The data is supposed to be taken from
@@ -366,11 +372,14 @@ def _find_lorentzian_peak(data: np.ndarray, gamma_guess=5) -> int:
         idx_list,
         data,
         p0=[mid_idx_guess, gamma_guess, amp_guess, bias_guess],
-        maxfev=2000,
+        maxfev=1000,
     )
 
-    return np.round(popt[0]).astype(int)
+    if np.sum(pcov) == np.inf:
+        raise ValueError("Lorentzian fit failed, potentially due to the data is "
+                         "flat in this region.")
 
+    return np.round(popt[0]).astype(int)
 
 def _extract_data_for_peak_finding(
     x_list, y_list, z_data, user_selected_xy, half_y_range: float = 0.1
@@ -380,23 +389,37 @@ def _extract_data_for_peak_finding(
     """
     x_val = user_selected_xy[0]
     y_val = user_selected_xy[1]
+    y_min_val = y_val - half_y_range
+    y_max_val = y_val + half_y_range
     # find the index of the selected point
-    x_idx = np.argmin(np.abs(x_list - x_val))
-    y_idx = np.argmin(np.abs(y_list - y_val))
+    x_idx = _closest_idx(x_list, x_val)
+    y_idx = _closest_idx(y_list, y_val)
+    y_min_idx = _closest_idx(y_list, y_min_val)
+    y_max_idx = _closest_idx(y_list, y_max_val)
     # translate to the min and max index of the y range; minimal number of points is
-    # 2 for each direction
-    y_min_idx = max(
-        min(np.argmin(np.abs(y_list - (y_val - half_y_range))), y_idx - 2), 0
+    # 6 for each direction. (Actually we just need 4 points to fit, but to make the
+    # snapping functionality more visible, we use at least 12 pixels.)
+    y_start = max(
+        min(
+            y_min_idx,
+            y_max_idx,
+            y_idx - 6
+        ), 
+        0
     )
-    y_max_idx = min(
-        max(np.argmin(np.abs(y_list - (y_val + half_y_range))), y_idx + 2),
+    y_end = min(
+        max(
+            y_min_idx,
+            y_max_idx,
+            y_idx + 6
+        ),
         len(y_list) - 1,
     )
 
     # extract data for fitting
-    data_for_fitting = z_data[y_min_idx : y_max_idx + 1, x_idx]
+    data_for_fitting = z_data[y_start : y_end + 1, x_idx]
 
-    return y_min_idx, y_max_idx, data_for_fitting
+    return y_start, y_end, data_for_fitting
 
 
 def y_snap(
@@ -427,12 +450,16 @@ def y_snap(
     )
 
     # if the data is an image (has RGB channels), then make the data grayscale
-    if len(data_for_peak_finding.shape) == 3:
-        data_for_peak_finding = data_for_peak_finding.mean(axis=2)
+    # by averaging the RGB channels
+    if len(data_for_peak_finding.shape) == 2:
+        data_for_peak_finding = data_for_peak_finding.mean(axis=1)
 
     # find the peaks
     if mode == "lorentzian":
-        peak_idx = _find_lorentzian_peak(data_for_peak_finding)
+        try:
+            peak_idx = _find_lorentzian_peak(data_for_peak_finding)
+        except Exception as e:
+            return user_selected_xy[1]
     elif mode == "extremum":
         peak_idx = np.argmax(np.abs(data_for_peak_finding))
 

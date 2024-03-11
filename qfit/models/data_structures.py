@@ -404,24 +404,15 @@ class ImageElement(PlotElement):
         Plot the image on the canvas
         """
         super().canvasPlot(axes, **kwargs)
+        # axes.set_aspect('equal', adjustable='box')
 
-        combined_kwargs = {**self.kwargs, **kwargs}
+        combined_kwargs = {
+            "aspect": "auto",
+            **self.kwargs, 
+            **kwargs
+        }
         self.artists = axes.imshow(self.z, **combined_kwargs)
         self.set_visible(self._visible)
-
-    @property
-    def xLim(self) -> Tuple[float, float]:
-        """
-        Return the x limits of the image
-        """
-        return (0, self.z.shape[1])
-
-    @property
-    def yLim(self) -> Tuple[float, float]:
-        """
-        Return the y limits of the image
-        """
-        return (self.z.shape[0], 0)
 
 
 class MeshgridElement(PlotElement):
@@ -449,20 +440,6 @@ class MeshgridElement(PlotElement):
         combined_kwargs = {**self.kwargs, **kwargs}
         self.artists = axes.pcolormesh(self.x, self.y, self.z, **combined_kwargs)
         self.set_visible(self._visible)
-
-    @property
-    def xLim(self) -> Tuple[float, float]:
-        """
-        Return the x limits of the meshgrid
-        """
-        return (np.min(self.x), np.max(self.x))
-
-    @property
-    def yLim(self) -> Tuple[float, float]:
-        """
-        Return the y limits of the meshgrid
-        """
-        return (np.min(self.y), np.max(self.y))
 
 
 class ScatterElement(PlotElement):
@@ -640,7 +617,7 @@ class ParamBase(ABC):
         ])
 
 class DispParamBase(ParamBase):
-    def _toIntString(self, value: Union[int, float], precision=4) -> str:
+    def _toIntStrAsNeeded(self, value: Union[int, float], precision=4) -> str:
         """
         Convert the value to an integer if the parameter type is cutoff or truncated_dim.
         """
@@ -799,7 +776,7 @@ class SliderParam(DispParamBase):
         if toSlider:
             return self._normalizeValue(value)
         else:
-            return self._toIntString(value)
+            return self._toIntStrAsNeeded(value)
 
 
 class FitParam(DispParamBase):
@@ -845,7 +822,7 @@ class FitParam(DispParamBase):
             # as bool is a subclass of int
             return value
         elif isinstance(value, int) or isinstance(value, float):
-            return self._toIntString(value)
+            return self._toIntStrAsNeeded(value)
         else:
             raise ValueError(f"Unknown type of value: {value}")
 
@@ -897,10 +874,11 @@ class CaliTableRowParam(DispParamBase):
         Export the value of the parameter
         """
         value = getattr(self, attr)
+
         if isinstance(value, bool):
             return value
         elif isinstance(value, int) or isinstance(value, float):
-            return self._toIntString(value)
+            return self._toIntStrAsNeeded(value)
         elif isinstance(value, str):
             return value
         elif value is None:

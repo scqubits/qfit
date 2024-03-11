@@ -641,7 +641,6 @@ class CaliParamModel(
             self.sendXCaliFunc()
         elif self._yCaliDependOn(rowIdx, colName):
             self.sendYCaliFunc()
-            # self.sendInvYCaliFunc()
 
     def processSelectedPtFromPlot(self, data: Dict[str, float], figName: str):
         """

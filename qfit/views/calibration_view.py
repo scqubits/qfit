@@ -229,14 +229,18 @@ class CalibrationView(QObject):
         # if x axis is calibrated, update the raw line edits by the value of the clicked point
         if rowIdx[0] == "X":
             for rawXVecCompName in self.rawXVecNameList:
-                self.caliTableSet[rowIdx][rawXVecCompName].setText(
-                    str(data[rawXVecCompName])
-                )
+                # we have already update the model, which will update the 
+                # view automatically. So the following line is not necessary.
+                # self.caliTableSet[rowIdx][rawXVecCompName].setText(
+                #     str(data[rawXVecCompName])
+                # )
                 self.caliTableSet[rowIdx][rawXVecCompName].home(False)
             colName = f"{self.sweepParamParentName}.{self.sweepParamName}"
         # if y axis is calibrated, update the raw line edits by the value of the clicked point
         elif rowIdx[0] == "Y":
-            self.caliTableSet[rowIdx][self.rawYName].setText(str(data[self.rawYName]))
+            # we have already update the model, which will update the 
+            # view automatically. So the following line is not necessary.
+            # self.caliTableSet[rowIdx][self.rawYName].setText(str(data[self.rawYName]))
             self.caliTableSet[rowIdx][self.rawYName].home(False)
             colName = "mappedY"
         # highlight the map line edit

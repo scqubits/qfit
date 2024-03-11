@@ -16,7 +16,6 @@ import distutils.version as version
 
 from typing import Dict, Tuple, Union
 
-import matplotlib
 import numpy as np
 import skimage.filters
 import skimage.morphology
@@ -267,6 +266,8 @@ class MeasurementData(Registrable):
         self.name: str = name
         self.rawData = rawData
 
+    # properties =======================================================
+    @property
     def currentZ(self) -> DictItem:
         """
         Return current dataset describing the z values (measurement data) with all filters etc. applied.
@@ -275,7 +276,22 @@ class MeasurementData(Registrable):
         -------
         DataItem
         """
-        return self._currentZ
+        zData = copy.copy(self._currentZ)
+
+        if self._bgndSubtractX:
+            zData.data = self._doBgndSubtraction(zData.data, axis=1)
+        if self._bgndSubtractY:
+            zData.data = self._doBgndSubtraction(zData.data, axis=0)
+        if self._topHatFilter:
+            zData.data = self._applyTopHatFilter(zData.data)
+        if self._waveletFilter:
+            zData.data = self._applyWaveletFilter(zData.data)
+        if self._edgeFilter:
+            zData.data = gaussian_laplace(zData.data, 1.0)
+
+        zData.data = self._clip(zData.data)
+
+        return zData
 
     @property
     def currentX(self) -> DictItem:
@@ -351,7 +367,6 @@ class MeasurementData(Registrable):
             for attr in dataAttrs]
         )
 
-
     # manipulation =====================================================
     @abc.abstractmethod
     def generatePlotElement(self) -> Union[ImageElement, MeshgridElement]:
@@ -404,10 +419,83 @@ class MeasurementData(Registrable):
         return rawX
 
     # filters =============================================================
-    def currentMinMax(self) -> Tuple[float, float]:
-        min_val = min(self._zMin, self._zMax)
-        max_val = max(self._zMin, self._zMax)
-        return (min_val, max_val)
+    def currentMinMax(self, array2D: np.ndarray) -> Tuple[float, float]:
+        if array2D.ndim != 2:
+            raise ValueError("array must be 2D")
+        
+        normedMin = min(self._zMin, self._zMax)
+        normedMax = max(self._zMin, self._zMax)
+
+        rawZMin = array2D.min()
+        rawZMax = array2D.max()
+        # Choose Z value range according to the range slider values.
+        zMin = rawZMin + normedMin * (rawZMax - rawZMin)
+        zMax = rawZMin + normedMax * (rawZMax - rawZMin)
+
+        return zMin, zMax
+
+    def _doBgndSubtraction(self, array: np.ndarray, axis=0):
+        # globalAverage = np.nanmean(array)
+        avgArray = array - np.nanmean(array, axis=axis, keepdims=True)
+        return avgArray
+
+    def _applyWaveletFilter(self, array: np.ndarray):
+        return skimage.restoration.denoise_wavelet(array, rescale_sigma=True)
+    
+    def _applyEdgeFilter(self, array: np.ndarray):
+        # Check if the data is a 3D array
+        if len(array.shape) == 3:
+            # Apply the filter to each color channel separately
+            for i in range(array.shape[2]):
+                array[:, :, i] = gaussian_laplace(array[:, :, i], 1.0)
+        else:
+            array = gaussian_laplace(array, 1.0)
+
+        return array
+    
+    def _applyTopHatFilter(self, array: np.ndarray):
+        # Check if the array is 3D
+        if len(array.shape) == 3:
+            # Apply the filter to each color channel separately
+            result = np.zeros_like(array)
+            for i in range(array.shape[2]):
+                result[:, :, i] = self._applyTopHatFilter(array[:, :, i])
+            return result
+
+        # Original function for 1D or 2D arrays
+        array = array - np.mean(array)
+        stdvar = np.std(array)
+
+        histogram, bin_edges = np.histogram(
+            array, bins=30, range=(-1.5 * stdvar, 1.5 * stdvar)
+        )
+        max_index = np.argmax(histogram)
+        mid_value = (bin_edges[max_index + 1] + bin_edges[max_index]) / 2
+        array = array - mid_value
+        stdvar = np.std(array)
+        ones = np.ones_like(array)
+
+        return (
+            np.select(
+                [array > 1.5 * stdvar, array < -1.5 * stdvar, True],
+                [ones, ones, 0.0 * ones],
+            )
+            * array
+        )
+    
+    def _clip(self, array: np.ndarray):
+        # check if the array is 3D
+        if len(array.shape) == 3:
+            # Apply the filter to each color channel separately
+            result = np.zeros_like(array)
+            for i in range(array.shape[2]):
+                result[:, :, i] = self._clip(array[:, :, i])
+            return result
+        
+        # Original function for 1D or 2D arrays
+        zMin, zMax = self.currentMinMax(array)
+
+        return np.clip(array, zMin, zMax)
 
 
 class NumericalMeasurementData(MeasurementData):
@@ -490,9 +578,9 @@ class NumericalMeasurementData(MeasurementData):
             if len(data) == ydim:
                 self.rawY[name] = data
         if not self.rawX:
-            self.rawX = OrderedDictMod(no_axis=np.arange(xdim))
+            self.rawX = OrderedDictMod(pixel_x=np.arange(xdim))
         if not self.rawY:
-            self.rawY = OrderedDictMod(no_axis=np.arange(ydim))
+            self.rawY = OrderedDictMod(pixel_y=np.arange(ydim))
 
         # based on the number of the compatible x and y axis candidates
         # determine the tuning axis and freq axis. Freq axis is the one
@@ -544,108 +632,17 @@ class NumericalMeasurementData(MeasurementData):
     #     self.emitRelimCanvas()
         # self.emitRawXMap()
         
-    # properties =======================================================
-    @property
-    def currentZ(self) -> DictItem:
-        """
-        Return current dataset describing the z values (measurement data) with all filters etc. applied.
-
-        Returns
-        -------
-        DataItem
-        """
-        zData = copy.copy(self._currentZ)
-
-        if self._bgndSubtractX:
-            zData.data = self._doBgndSubtraction(zData.data, axis=1)
-        if self._bgndSubtractY:
-            zData.data = self._doBgndSubtraction(zData.data, axis=0)
-        if self._topHatFilter:
-            zData.data = self._applyTopHatFilter(zData.data)
-        if self._waveletFilter:
-            zData.data = self._applyWaveletFilter(zData.data)
-        if self._edgeFilter:
-            zData.data = gaussian_laplace(zData.data, 1.0)
-
-        return zData
-
-    @property
-    def currentX(self) -> DictItem:
-        """
-        Return current dataset describing the x-axis values, taking into account the possibility of an x-y swap.
-
-        Returns
-        -------
-        ndarray, ndim=1
-        """
-        return self._currentX
-
-    @property
-    def currentY(self) -> DictItem:
-        """
-        Return current dataset describing the y-axis values, taking into account the possibility of an x-y swap.
-
-        Returns
-        -------
-        ndarray, ndim=1
-        """
-        return self._currentY
-
-    # manipulation =====================================================
-    def _doBgndSubtraction(self, array, axis=0):
-        globalAverage = np.nanmean(array)
-        avgArray = array - np.nanmean(array, axis=axis, keepdims=True)
-        return avgArray
-
-    def _applyWaveletFilter(self, array):
-        return skimage.restoration.denoise_wavelet(array, rescale_sigma=True)
-
-    def _applyTopHatFilter(self, array):
-        array = array - np.mean(array)
-        stdvar = np.std(array)
-
-        histogram, bin_edges = np.histogram(
-            array, bins=30, range=(-1.5 * stdvar, 1.5 * stdvar)
-        )
-        max_index = np.argmax(histogram)
-        mid_value = (bin_edges[max_index + 1] + bin_edges[max_index]) / 2
-        array = array - mid_value
-        stdvar = np.std(array)
-        ones = np.ones_like(array)
-
-        return (
-            np.select(
-                [array > 1.5 * stdvar, array < -1.5 * stdvar, True],
-                [ones, ones, 0.0 * ones],
-            )
-            * array
-        )
-
-    def generatePlotElement(self) -> Union[ImageElement, MeshgridElement]:
+    def generatePlotElement(self) -> MeshgridElement:
         zData = self.currentZ.data
-        rawZMin = zData.min()
-        rawZMax = zData.max()
-
-        # Extract zRange from range slider values
-        zRange = self.currentMinMax()
-        # Choose Z value range according to the range slider values.
-        zMin = rawZMin + zRange[0] * (rawZMax - rawZMin)
-        zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
 
         if self._logColoring:
+            zMin, zMax = self.currentMinMax(zData)
             linthresh = max(abs(zMin), abs(zMax)) / 20.0
-            # if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion(
-            #     "3.2.0"
-            # ):
-            #     add_on_mpl_3_2_0 = {"base": 10}
-            # else:
-            #     add_on_mpl_3_2_0 = {}
             norm = colors.SymLogNorm(
                 linthresh=linthresh,
                 vmin=zMin,
                 vmax=zMax,  # **add_on_mpl_3_2_0
             )
-            zMin = zMax = None
         else:
             norm = None
 
@@ -655,108 +652,52 @@ class NumericalMeasurementData(MeasurementData):
             xData,
             yData,
             zData,
-            vmin=zMin,
-            vmax=zMax,
             norm=norm,
             rasterized=True,
         )
 
 
 class ImageMeasurementData(MeasurementData):
+    rawData: np.ndarray
+
     def __init__(self, name: str, image: np.ndarray):
         super().__init__(name, image)
         self._initXYZ()
 
     def _initXYZ(self):
+        self.rawData = self._processRawZ(self.rawData)
         self._zCandidates = OrderedDictMod({self.name: self.rawData})
-
-        xdim, ydim = self._currentZ.data.shape
-
-        self.rawX = OrderedDictMod(no_axis=np.arange(xdim))
-        self.rawY = OrderedDictMod(no_axis=np.arange(ydim))
-
         self._currentZ = self._zCandidates.itemByIndex(0)
+
+        print(self._currentZ.data.shape)
+
+        # note that the x and y axis for images are swapped
+        ydim, xdim, _ = self._currentZ.data.shape
+        self.rawX = OrderedDictMod(pixel_x=np.arange(xdim))
+        self.rawY = OrderedDictMod(pixel_y=np.arange(ydim))
         self._currentX = self.rawX.itemByIndex(0)
         self._currentY = self.rawY.itemByIndex(0)
 
-    # def registerAll(
-    #     self,
-    # ) -> Dict[str, RegistryEntry]:
-    #     """
-    #     Register all the attributes of the parameter
-    #     """
+    def _processRawZ(self, zData: np.ndarray) -> np.ndarray:
+        """
+        Convert a 3d array to a 2d array by averaging over the third dimension.
+        """
+        assert zData.ndim in [2, 3], "zData must be a 2d or 3d array"
 
-    #     def getter():
-    #         fileName = list(self.zCandidates.keys())[0]
-    #         image = list(self.zCandidates.values())[0]
-    #         return (fileName, image)
+        # inverse the y axis
+        zData = np.flip(zData, axis=0)
 
-    #     return {
-    #         "measurementData.type": RegistryEntry(
-    #             name="measurementData.type",
-    #             quantity_type="r",
-    #             getter=lambda: "ImageMeasurementData",
-    #         ),
-    #         "measurementData.args": RegistryEntry(
-    #             name="measurementData.args",
-    #             quantity_type="r",
-    #             getter=getter,
-    #         ),
-    #     }
+        return zData
 
     def generatePlotElement(self, **kwargs) -> ImageElement:
-        zData = (
-            np.sum(self.currentZ.data, axis=2)
-            if (self.currentZ.data.ndim == 3)
-            else self.currentZ.data
-        )
-        rawZMin = zData.min()
-        rawZMax = zData.max()
-
-        # Extract zRange from range slider values
-        zRange = self.currentMinMax()
-        # Choose Z value range according to the range slider values.
-        zMin = rawZMin + zRange[0] * (rawZMax - rawZMin)
-        zMax = rawZMin + zRange[1] * (rawZMax - rawZMin)
-
-        if self._logColoring:
-            # if version.LooseVersion(matplotlib.__version__) >= version.LooseVersion(
-            #     "3.2.0"
-            # ):
-            #     add_on_mpl_3_2_0 = {"base": 10}
-            # else:
-            #     add_on_mpl_3_2_0 = {}
-            norm = colors.SymLogNorm(
-                linthresh=0.2,
-                vmin=self.currentZ.data.min(),
-                vmax=self.currentZ.data.max(),
-                # **add_on_mpl_3_2_0
-            )
-        else:
-            norm = None
-
         return ImageElement(
             "measurement",
-            zData,
-            vmin=-max([abs(zMin), abs(zMax)]),
-            vmax=max([abs(zMin), abs(zMax)]),
-            norm=norm,
+            self._currentZ.data,
             rasterized=True,
         )
 
     def swapXY(self):
         raise NotImplementedError
-
-
-def dummy_measurement_data() -> NumericalMeasurementData:
-    xData = np.linspace(0.0, 1.0, 50)
-    yData = np.linspace(3.0, 9.0, 100)
-    zData = np.zeros((50, 100))
-    zData[0, 0] = 1.0  # to make zData inhomogeneous and can be recognized as 2d ndarray
-    return NumericalMeasurementData(
-        "dummy data",
-        {"param": xData, "frequency": yData, "S21": zData},
-    )
 
 
 MeasurementDataType = Union[NumericalMeasurementData, ImageMeasurementData]

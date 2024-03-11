@@ -399,7 +399,6 @@ class PlottingCtrl(QObject):
         destination: Literal["CALI_X", "CALI_Y", "EXTRACT", "NONE"],
     ):
         self.dataDestination = destination
-        print(f"Data destination: {self.dataDestination}")
 
         if destination == "CALI_X":
             self.axisSnap = "X"
@@ -467,12 +466,7 @@ class PlottingCtrl(QObject):
         # process the data
         xName = self.measurementData.currentMeasData.currentX.name
         yName = self.measurementData.currentMeasData.currentY.name
-        xyDict = OrderedDictMod(
-            {
-                xName: event.xdata,
-                yName: event.ydata,
-            }
-        )  # needed by extracted data
+        xyDict = OrderedDictMod({xName: event.xdata, yName: event.ydata})
         rawX = self.measurementData.currentMeasData.rawXByCurrentX(event.xdata)
         rawXYDict = rawX | xyDict  # needed by calibration data
 
@@ -515,20 +509,18 @@ class PlottingCtrl(QObject):
 
                 # calculate half index range as 5x linewidth
                 linewidth = 0.02  # GHz
-                half_y_range = linewidth * 5
-                try:
-                    snapped_y1 = y_snap(
-                        x_list=x_list,
-                        y_list=y_list,
-                        z_data=z_data,
-                        user_selected_xy=xyDict.valList,
-                        half_y_range=half_y_range,
-                        mode="lorentzian",
-                    )
-                    xyDict[yName] = snapped_y1
+                half_y_range = self.invYCaliFunc(linewidth * 5) - self.invYCaliFunc(0)
 
-                except RuntimeError:
-                    pass
+                # snap the y value
+                snapped_y1 = y_snap(
+                    x_list=x_list,
+                    y_list=y_list,
+                    z_data=z_data,
+                    user_selected_xy=xyDict.valList,
+                    half_y_range=half_y_range,
+                    mode="lorentzian",
+                )
+                xyDict[yName] = snapped_y1
 
             self.activeDataset.append(xyDict, rawX)
 
