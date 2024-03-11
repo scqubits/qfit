@@ -679,8 +679,9 @@ class CaliParamModel(
 
     @Slot()
     def interruptCali(self):
-        self.caliStatus = False
-        self.plotCaliPtExtractInterrupted.emit()
+        if self.caliStatus:
+            self.caliStatus = False
+            self.plotCaliPtExtractInterrupted.emit()
 
         # if self.caliStatus:
         #     self.caliStatus = False

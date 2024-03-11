@@ -363,16 +363,27 @@ class PlottingCtrl(QObject):
         self.updateCursor()
 
     @property
-    def xSnap(self):
+    def xSnap(self) -> Literal["MeasData", "ExtrX", "OFF"]:
         """
         Only in the extract mode, focusing on a transition other than 
         the first one, x snap can be turned on.
         """
-        return (
+        if (
             self.xSnapTool 
             and not self.trans0Focused
             and self.dataDestination == "EXTRACT"
-        )
+        ):
+            # In extracted mode, snap to the x values if tool is on
+            return "ExtrX"
+        elif (
+            not self.xSnapTool 
+            and not self.trans0Focused
+            and self.dataDestination == "EXTRACT"
+        ):
+            # In extracted mode, snap to the measData if tool is off
+            return "MeasData"
+        else:
+            return "OFF"
 
     def setTrans0Focused(self, checked: bool):
         self.trans0Focused = checked
@@ -388,6 +399,7 @@ class PlottingCtrl(QObject):
         destination: Literal["CALI_X", "CALI_Y", "EXTRACT", "NONE"],
     ):
         self.dataDestination = destination
+        print(f"Data destination: {self.dataDestination}")
 
         if destination == "CALI_X":
             self.axisSnap = "X"

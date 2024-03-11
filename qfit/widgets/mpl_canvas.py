@@ -167,7 +167,7 @@ class SpecialCursor(Cursor):
     def __init__(
         self,
         axes: List[Axes],
-        xSnapMode: bool,
+        xSnapMode: Literal["MeasData", "ExtrX", "OFF"],
         distinctExtrX: np.ndarray,
         measX: np.ndarray,
         xyMin: Tuple[float, float],
@@ -310,10 +310,12 @@ class SpecialCursor(Cursor):
         return self._closestX(xdat, self.distinctExtrX)
     
     def snapToProperX(self, xdat):
-        if self.xSnapMode == True:
+        if self.xSnapMode == "ExtrX":
             return self._snapToExtrX(xdat)
-        else:
+        elif self.xSnapMode == "MeasData":
             return self._snapToMeasDataGrid(xdat)
+        else:
+            return xdat
 
     def _update(self):
         if self.useblit:
@@ -382,7 +384,7 @@ class MplFigureCanvas(QFrame):
 
         self.plottingDisabled: bool = False
 
-        self._xSnapMode: bool = False
+        self._xSnapMode: Literal["MeasData", "ExtrX", "OFF"] = "OFF"
         self._distinctExtrX = np.array([])
         self._crosshairHorizOn: bool = False
         self._crosshairVertOn: bool = False
@@ -523,7 +525,7 @@ class MplFigureCanvas(QFrame):
 
     def updateCursor(
         self,
-        xSnapMode: Union[bool, None] = None,
+        xSnapMode: Literal["MeasData", "ExtrX", "OFF", None] = None,
         axisSnapMode: Literal["X", "Y", "OFF"] = "OFF",
         horizOn: Union[bool, None] = None,
         vertOn: Union[bool, None] = None,
