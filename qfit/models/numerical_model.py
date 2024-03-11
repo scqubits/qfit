@@ -375,6 +375,7 @@ class QuantumModel(QObject):
                 x_coordinates_all = np.concatenate([extrX, x_coordinates_uniform])
                 sweptX[figName] = np.sort(x_coordinates_all)
             else:
+                print(f"\t number of x: {len(extrX)}")
                 # only calculate the spectrum for the extracted data x coordinates
                 sweptX[figName] = extrX
 
@@ -459,6 +460,7 @@ class QuantumModel(QObject):
         """
         Create a new ParameterSweep object based on the stored data.
         """
+        print("\tnew sweep")
         try:
             self._sweeps = self._generateSweep(
                 sweptX=self._prefitSweptX(
@@ -497,6 +499,7 @@ class QuantumModel(QObject):
             # manually turn off the warning message
             sweep._out_of_sync_warning_issued = True
             try:
+                print("\trunning sweep")
                 sweep.run()
             except Exception as e:
                 status = Status(
