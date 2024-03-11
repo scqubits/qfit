@@ -697,8 +697,6 @@ class ImageMeasurementData(MeasurementData):
         self._zCandidates = OrderedDictMod({self.name: self.rawData})
         self._currentZ = self._zCandidates.itemByIndex(0)
 
-        print(self._currentZ.data.shape)
-
         # note that the x and y axis for images are swapped
         ydim, xdim, _ = self._currentZ.data.shape
         self.rawX = OrderedDictMod(pixel_x=np.arange(xdim))
