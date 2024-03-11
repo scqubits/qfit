@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from qfit.views.paging_view import PageView
 
 class FitCtrl(QObject):
-    userTerminateOpt = False
+    OptTerminated = False
 
     def __init__(
         self, 
@@ -189,7 +189,7 @@ class FitCtrl(QObject):
 
     @Slot()
     def userTerminateOptimization(self):
-        self.userTerminateOpt = True
+        self.OptTerminated = True
 
     @Slot()
     def optimizeParams(self):
@@ -227,7 +227,8 @@ class FitCtrl(QObject):
         """
         Cook up a cost function for the optimization
         """
-        if self.userTerminateOpt:
+        print("cost function called")
+        if self.OptTerminated:
             raise Exception("Opt terminated by the user.")
 
         # update the hilbert space
@@ -257,7 +258,7 @@ class FitCtrl(QObject):
 
     @Slot()
     def postOptimization(self):
-        self.userTerminateOpt = False
+        self.OptTerminated = False
         
         # TODO: later, fit model will be able to update hspace
         self.caliParamModel.setByFlattenedAttrDict(

@@ -446,7 +446,7 @@ class QuantumModel(QObject):
                 hilbertspace=self.hilbertspace,
                 paramvals_by_name=paramvals_by_name,
                 update_hilbertspace=update_hilbertspace,
-                evals_count=self._evalsCount,  # change this later to connect to the number from the view
+                evals_count=self._evalsCount, 
                 subsys_update_info=subsys_update_info,
                 autorun=False,
                 num_cpus=1,  # change this later to connect to the number from the view
@@ -533,7 +533,6 @@ class QuantumModel(QObject):
         for the prefit stage. It make use of the existing sweep object to
         get a spectrum data and MSE.
         """
-
         if self.sweepUsage != "prefit" and not forced:
             # only in prefit mode, this method will be activated as a slot
             # function
@@ -571,19 +570,23 @@ class QuantumModel(QObject):
         and MSE.
         """
         if self.sweepUsage != "prefit" and not forced:
+            print("\tupdateCalc called, no action")
             # only in prefit mode, this method will be activated as a slot
             # function
             return
         
         if self._autoRun and self.sweepUsage == "prefit":
+            print("\tupdateCalc called, prefit")
             self._newSweep()
             self._sweepInThread()
 
         elif forced and self.sweepUsage in ["prefit", "fit-result"]:
+            print("\tupdateCalc called, prefit and forced")
             self._newSweep()
             self._sweepInThread()
 
         elif forced and self.sweepUsage == "fit":
+            print("\tupdateCalc called, fit and forced")
             self._newSweep()
             self._runSweep()
             return self.sweep2SpecMSE(forced=forced)
