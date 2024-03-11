@@ -320,6 +320,15 @@ class PrefitView(QObject):
 
         self.blockAllSignals(False)
 
+    def setEnabled(self, value: bool):
+        self.evalsCount.setEnabled(value)
+        self.subsysToPlot.setEnabled(value)
+        self.initialState.setEnabled(value)
+        self.photons.setEnabled(value)
+        self.pointsAdded.setEnabled(value)
+        self.autoRun.setEnabled(value)
+        self.runSweep.setEnabled(value)
+
     # Signal processing ======================================================
     def blockAllSignals(self, b: bool):
         super().blockSignals(b)

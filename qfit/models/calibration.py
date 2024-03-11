@@ -374,7 +374,7 @@ class CaliParamModel(
                     name=colName,
                     parent=param.parent,
                     paramType=param.paramType,
-                    value=value,
+                    value=0,    # not used
                     min=min,
                     max=max,
                     initValue=value,

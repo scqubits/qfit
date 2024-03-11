@@ -166,20 +166,24 @@ class FitHSParams(
     ):
         super()._storeParamAttr(self, paramAttr, **kwargs)
 
+    def emitUpdateBox(
+        self,
+        parentName: str | None = None,
+        paramName: str | None = None,
+        attr: str | None = None,
+    ):
+        self._emitUpdateBox(self, parentName, paramName, attr)
+
     # hilbert space related methods ====================================
-    hilbertSpaceUpdated = Signal(HilbertSpace)
-
-    # Signals 
-    def emitHSUpdated(self):
-        self.hilbertSpaceUpdated.emit(self.hilbertspace)
-
     def updateParamForHS(
         self, 
         parentName: str | None = None, 
         paramName: str | None = None
     ):
+        """
+        Upd
+        """
         super().updateParamForHS(parentName, paramName)
-        self.emitHSUpdated()
 
 
 class FitCaliParams(
@@ -374,29 +378,39 @@ class FitModel(QObject):
         return False
 
     @Slot(OptTraj)
-    def _postOptimization(self, traj: Union[OptTraj, str]):
+    def _postOptimization(self, result: Union[OptTraj, str]):
         self.optFinished.emit()
         # reset iteration
         self.iteration = 0
 
-        if isinstance(traj, str):
+        if isinstance(result, str):
+            if result == "Opt terminated by the user.":
+                status = Status(
+                    statusSource="fit",
+                    statusType="warning",
+                    message="The optimization is terminated by the user.",
+                    mse=np.nan,
+                )
+                self.updateStatus.emit(status)
+                return
+
             status = Status(
                 statusSource="fit",
                 statusType="error",
                 message="Fail to optimize the parameter. Due to the "
-                        "following reason: " + traj,
+                        "following reason: " + result,
                 mse=np.nan,
             )
             self.updateStatus.emit(status)
             return
         
 
-        if self._paramHitBound(traj):
+        if self._paramHitBound(result):
             status = Status(
                 statusSource="fit",
                 statusType="warning",
                 message="The optimized parameters may hit the bound.",
-                mse=traj.final_target,
+                mse=result.final_target,
             )
             self.updateStatus.emit(status)
             return
@@ -408,7 +422,7 @@ class FitModel(QObject):
             statusSource="fit",
             statusType="success",
             message="Successfully optimized the parameter.",
-            mse=traj.final_target,
+            mse=result.final_target,
         )
         self.updateStatus.emit(status)
 
@@ -460,7 +474,7 @@ class FitRunner(QRunnable):
     def run(self):
         try:
             traj = self.opt.run(init_x=self.initParam, callback=self.callback)
+            self.signalHost.optFinished.emit(traj)
         except Exception as e:
             self.signalHost.optFinished.emit(str(e))
 
-        self.signalHost.optFinished.emit(traj)

@@ -55,3 +55,9 @@ class PageView(QObject):
             button.setChecked(key == page)
 
         self.pageChanged.emit(page)
+
+    def setEnabled(self, enabled: bool):
+        for button in self.pageButtons.values():
+            button.setEnabled(enabled)
+        for button in self.dataTransferButtons.values():
+            button.setEnabled(enabled)

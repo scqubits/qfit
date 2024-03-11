@@ -164,7 +164,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
                 "the parameter {name}. Thus can't be set externally by "
                 "calling setParameter."
             )
-
+        
         try:
             setattr(para_dict[name], attr, value)
         except KeyError:

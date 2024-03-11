@@ -532,7 +532,8 @@ class Fit:
                 self._measurementData
             ),
             (
-                self._fitView, self._fitParamView, self._prefitParamView,
+                self._fitView, self._fitParamView, 
+                self._prefitParamView, self._prefitView,
                 self._pageView,
             ),
         )

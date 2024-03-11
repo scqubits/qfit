@@ -11,10 +11,12 @@ if TYPE_CHECKING:
     from qfit.models.calibration import CaliParamModel
     from qfit.models.measurement_data import MeasDataSet
     from qfit.views.fit_view import FitView, FitParamView
-    from qfit.views.prefit_view import PrefitParamView
+    from qfit.views.prefit_view import PrefitParamView, PrefitView
     from qfit.views.paging_view import PageView
 
 class FitCtrl(QObject):
+    userTerminateOpt = False
+
     def __init__(
         self, 
         parent: QObject,
@@ -25,7 +27,8 @@ class FitCtrl(QObject):
             "MeasDataSet"
         ], 
         views: Tuple[
-            "FitView", "FitParamView", "PrefitParamView", 
+            "FitView", "FitParamView", 
+            "PrefitParamView", "PrefitView",
             "PageView"
         ]
     ):
@@ -37,7 +40,8 @@ class FitCtrl(QObject):
             self.measurementData, 
         ) = models
         (
-            self.fitView, self.fitParamView, self.prefitParamView, 
+            self.fitView, self.fitParamView, 
+            self.prefitParamView, self.prefitView,
             self.pageView
         ) = views
 
@@ -103,11 +107,6 @@ class FitCtrl(QObject):
         3. parameters transfer: fit to prefit
         4. parameters transfer: fit result to fit
         """
-        # update hilbert space
-        self.fitHSParams.hilbertSpaceUpdated.connect(
-            self.quantumModel.updateHilbertSpace
-        )
-
         # run optimization
         self.fitView.runFit.clicked.connect(self.optimizeParams)
 
@@ -133,12 +132,12 @@ class FitCtrl(QObject):
     def _prefitToFit(self):
         self.fitHSParams.setAttrByParamDict(
             self.prefitHSParams.toFitParams(),
-            attrsToUpdate=["value", "min", "max", "initValue"],
+            attrsToUpdate=["min", "max", "initValue"],
             insertMissing=False,
         )
         self.fitCaliParams.setAttrByParamDict(
             self.caliParamModel.toFitParams(),
-            attrsToUpdate=["value", "min", "max", "initValue", "isFixed"],
+            attrsToUpdate=["min", "max", "initValue", "isFixed"],
             insertMissing=False,
         )
 
@@ -182,19 +181,26 @@ class FitCtrl(QObject):
         )
 
     # optimization =====================================================
+    def _paramTuningEnabled(self, enabled: bool):
+        self.fitView.setEnabled(enabled)
+        self.prefitParamView.sliderSet.setEnabled(enabled)
+        self.prefitView.setEnabled(enabled)
+        self.pageView.setEnabled(enabled)
+
+    @Slot()
+    def userTerminateOptimization(self):
+        self.userTerminateOpt = True
+
     @Slot()
     def optimizeParams(self):
         if not self.fitHSParams.isValid:
             return
+        
+        if not self.quantumModel.readyToOpt:
+            return
 
         # configure other models & views
-        self.fitView.runFit.setEnabled(False)
-        self.prefitParamView.sliderSet.setEnabled(False)
-        # it seems that even though the sweep is disabled while changing
-        # the parameters, the signals are still able to reach the quantumModel
-        # and trigger the calculation. So we need to block the signals
-        self.fitHSParams.blockSignals(True)
-        self.caliParamModel.blockSignals(True)
+        self._paramTuningEnabled(False)
 
         # store a copy of the calibration parameters as we will change them
         # during the optimization, and we want to restore them afterward
@@ -221,11 +227,11 @@ class FitCtrl(QObject):
         """
         Cook up a cost function for the optimization
         """
-        self.quantumModel.disableSweep = True
+        if self.userTerminateOpt:
+            raise Exception("Opt terminated by the user.")
 
         # update the hilbert space
-        self.fitHSParams.setByFlattenedAttrDict(HSParams, "value")  # display the value
-        # self.prefitHSParams.setByAttrDict(HSParams, "value")  # update HS
+        self.fitHSParams.setByFlattenedAttrDict(HSParams, "value")
         self.fitHSParams.updateParamForHS()
         self.quantumModel.updateHilbertSpace(self.fitHSParams.hilbertspace)
 
@@ -238,9 +244,7 @@ class FitCtrl(QObject):
             self.caliParamModel.invYCalibration(),
         )
 
-        self.quantumModel.disableSweep = False
-
-        mse = self.quantumModel.updateCalc()
+        mse = self.quantumModel.updateCalc(forced=True)
 
         if mse is None or np.isnan(mse):
             raise ValueError("The cost function returns None or np.nan.")
@@ -249,22 +253,21 @@ class FitCtrl(QObject):
 
     def _optCallback(self, *args, **kwargs):
         self.quantumModel.emitReadyToPlot()
-        return self.quantumModel.sweep2SpecMSE()
+        return self.quantumModel.sweep2SpecMSE(forced=True)
 
     @Slot()
     def postOptimization(self):
+        self.userTerminateOpt = False
+        
         # TODO: later, fit model will be able to update hspace
         self.caliParamModel.setByFlattenedAttrDict(
             self.tmpCaliParams, "value"
         )
 
-        # plot the spectrum
+        # plot the spectrum again with new parameters
         tmp = self.quantumModel.sweepUsage
         self.quantumModel.sweepUsage = "fit-result"
-        self.quantumModel.updateCalc()
+        self.quantumModel.updateCalc(forced=True)
         self.quantumModel.sweepUsage = tmp
 
-        self.fitView.runFit.setEnabled(True)
-        self.prefitParamView.sliderSet.setEnabled(True)
-        self.fitHSParams.blockSignals(False)
-        self.caliParamModel.blockSignals(False)
+        self._paramTuningEnabled(True)

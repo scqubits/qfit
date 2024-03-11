@@ -72,7 +72,6 @@ class PrefitCtrl(QObject):
             self.prefitView.setOptions(option, value)
 
         # update everything in the quantumModel
-        self.quantumModel.disableSweep = True  # disable the auto sweep
         self.prefitHSParams.emitHSUpdated()
         self.allDatasets.emitDataUpdated()
         self.caliParamModel.sendXCaliFunc()
@@ -95,7 +94,7 @@ class PrefitCtrl(QObject):
         self.prefitView.optionUpdated.connect(self.quantumModel.storeSweepOption)
 
         self.prefitView.runSweep.clicked.connect(
-            lambda: self.quantumModel.updateCalc(calledByPlotButton=True)
+            lambda: self.quantumModel.updateCalc(forced=True)
         )
 
     def _sliderParamConnects(self):

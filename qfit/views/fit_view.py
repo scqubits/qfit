@@ -147,3 +147,10 @@ class FitView(QObject):
         self.dataTransferButtons = dataTransferButtons
         self.tolLineEdit: FloatLineEdit = options["tol"]
         self.optimizerComboBox: QComboBox = options["optimizer"]
+
+    def setEnabled(self, enabled: bool):
+        self.runFit.setEnabled(enabled)
+        for button in self.dataTransferButtons.values():
+            button.setEnabled(enabled)
+        self.tolLineEdit.setEnabled(enabled)
+        self.optimizerComboBox.setEnabled(enabled)

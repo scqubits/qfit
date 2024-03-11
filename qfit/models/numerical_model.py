@@ -85,8 +85,9 @@ class QuantumModel(QObject):
 
         # options when running
         self._autoRun: bool = True
-        self.sweepUsage: Literal["prefit", "fit", "fit-result"] = "prefit"
-        self.disableSweep: bool = True  # always off, used for backend operations
+        self.sweepUsage: Literal[
+            "none", "prefit", "fit", "fit-result"
+        ] = "none"
 
     # Signals and Slots ========================================================
     @Slot(str)
@@ -95,7 +96,10 @@ class QuantumModel(QObject):
         self.updateCalc()
 
     @Slot(HilbertSpace)
-    def updateHilbertSpace(self, hilbertspace: HilbertSpace):
+    def updateHilbertSpace(
+        self, 
+        hilbertspace: HilbertSpace,
+    ):
         """
         Update the HilbertSpace object.
 
@@ -104,7 +108,10 @@ class QuantumModel(QObject):
         hilbertspace: HilbertSpace
         """
         self.hilbertspace = hilbertspace
-        self.updateCalc()
+
+        if self.sweepUsage == "prefit":
+            # automatically update the calculation when prefit
+            self.updateCalc()
 
     @Slot(FullExtr)
     def updateExtractedData(self, fullExtr: FullExtr):
@@ -141,7 +148,10 @@ class QuantumModel(QObject):
         sweepParamSets: Dict[str, SweepParamSet]
         """
         self._sweepParamSets = sweepParamSets
-        self.updateCalc()
+
+        if self.sweepUsage == "prefit":
+            # automatically update the calculation when prefit
+            self.updateCalc()
 
     @Slot(object, object)  # can't use Callable here in the initialization
     # because Argument of type "type[Callable]" cannot be assigned to parameter of type "type"
@@ -198,11 +208,12 @@ class QuantumModel(QObject):
         # set the value
         setattr(self, "_" + attrName, value)
 
-        # update the calculation
-        if attrName in ["subsysToPlot", "initialState", "photons"]:
-            self.sweep2SpecMSE()
-        elif attrName in ["evalsCount", "pointsAdded", "autoRun"]:
-            self.updateCalc()
+        if self.sweepUsage == "prefit":
+            # automatically update the calculation when prefit
+            if attrName in ["subsysToPlot", "initialState", "photons"]:
+                self.sweep2SpecMSE()
+            elif attrName in ["evalsCount", "pointsAdded", "autoRun"]:
+                self.updateCalc()
 
     @Slot(np.ndarray, np.ndarray)
     def relimX(self, x: np.ndarray, y: np.ndarray):
@@ -239,11 +250,12 @@ class QuantumModel(QObject):
         """
         Update the disableSweep attribute when the page changes.
         """
-        if currentPage == "prefit" or currentPage == "fit":
-            self.disableSweep = False
+        if currentPage == "prefit":
+            self.sweepUsage = currentPage
+        elif currentPage == "fit":
             self.sweepUsage = currentPage
         else:
-            self.disableSweep = True
+            self.sweepUsage = "none"
 
     # signals =================================================================
     def emitReadyToPlot(self):
@@ -287,7 +299,20 @@ class QuantumModel(QObject):
     @property
     def _currentSweep(self) -> ParameterSweep:
         return self._sweeps[self._currentFigName]
+    
+    @property
+    def readyToOpt(self) -> bool:
+        if self._fullExtr.count() == 0:
+            status = Status(
+                statusSource=self.sweepUsage,
+                statusType="error",
+                message="No extracted data is available for fitting.",
+            )
+            self.updateStatus.emit(status)
+            return False
 
+        return True
+    
     # tools ===================================================================
     def _stateStr2Label(self, state_str: str):
         # convert string to state label
@@ -481,7 +506,7 @@ class QuantumModel(QObject):
                 )
                 self.updateStatus.emit(status)
 
-    def _runSweepInThread(self):
+    def _sweepInThread(self):
         runner = SweepRunner(self._sweeps)
         self._sweepThreadPool.start(runner)
 
@@ -502,18 +527,18 @@ class QuantumModel(QObject):
 
     # public methods ===========================================================
     @Slot()
-    def sweep2SpecMSE(self) -> float:
+    def sweep2SpecMSE(self, forced: bool = False) -> float:
         """
         It is connected to the signal emitted by the UI when the user clicks the plot button
         for the prefit stage. It make use of the existing sweep object to
         get a spectrum data and MSE.
         """
-        if self.disableSweep:
-            # when manually update the quantumModel, we will turn this on
-            # and the sweep will not be generated
-            return 0.0
 
-        # run sweep (generate a new sweep if not exist)
+        if self.sweepUsage != "prefit" and not forced:
+            # only in prefit mode, this method will be activated as a slot
+            # function
+            return 0.0
+        
         try:
             self._sweeps
         except AttributeError:
@@ -531,20 +556,12 @@ class QuantumModel(QObject):
         if self.sweepUsage in ["prefit", "fit-result"]:
             self.emitReadyToPlot()
 
-        # --------------------------------------------------------------
-
         # mse calculation
         mse = self._calculateMSE()
         return mse
 
-        # # pass MSE and status messages to the model
-        # result.oldMseForComputingDelta = result.newMseForComputingDelta
-        # result.newMseForComputingDelta = mse
-        # result.status_type = status_type
-        # result.statusStrForView = status_text
-
     @Slot()
-    def updateCalc(self, calledByPlotButton: bool = False) -> Union[None, float]:
+    def updateCalc(self, forced: bool = False) -> Union[None, float]:
         """
         newSweep + sweep2SpecMSE (when autoRun is on / fit / called by plot button)
 
@@ -553,23 +570,23 @@ class QuantumModel(QObject):
         the HilbertSpace object. If auto run is on, it will also compute the spectrum
         and MSE.
         """
-        if self.disableSweep:
-            # when manually update the quantumModel, we will turn this on
-            # and the sweep will not be generated
+        if self.sweepUsage != "prefit" and not forced:
+            # only in prefit mode, this method will be activated as a slot
+            # function
             return
         
-        self._newSweep()
-
         if self._autoRun and self.sweepUsage == "prefit":
-            self._runSweepInThread()
-            return
+            self._newSweep()
+            self._sweepInThread()
 
-        if (
-            self.sweepUsage == "fit" 
-            or calledByPlotButton
-        ):
+        elif forced and self.sweepUsage in ["prefit", "fit-result"]:
+            self._newSweep()
+            self._sweepInThread()
+
+        elif forced and self.sweepUsage == "fit":
+            self._newSweep()
             self._runSweep()
-            return self.sweep2SpecMSE()
+            return self.sweep2SpecMSE(forced=forced)
 
     # calculate MSE ===========================================================
     @staticmethod

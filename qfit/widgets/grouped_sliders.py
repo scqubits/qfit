@@ -225,6 +225,10 @@ class LabeledSlider(QWidget):
         modifyStyleSheet(self.label, "font", '13px "Roboto Medium"')
         modifyStyleSheet(self.label, "color", "#FFFFFF")
 
+    def setEnabled(self, value: bool) -> None:
+        self._slider.setEnabled(value)
+        self._value.setEnabled(value)
+
 
 WidgetCls = TypeVar("WidgetCls", bound=QWidget)
 

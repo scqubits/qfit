@@ -149,7 +149,7 @@ class PrefitHSParams(
                     name = paramName,
                     parent = param.parent,
                     paramType = param.paramType,
-                    value = value,
+                    value = 0,  # not used
                     min = value - valRange/2,
                     max = value + valRange/2,
                     initValue = value,
