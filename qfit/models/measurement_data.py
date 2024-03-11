@@ -379,6 +379,12 @@ class MeasurementData(Registrable):
         """
         pass
 
+    def _transposeZ(self, array: np.ndarray) -> np.ndarray:
+        if array.ndim == 2:
+            return array.transpose()
+        if array.ndim == 3:
+            return array.transpose(1, 0, 2)
+
     def swapXY(self):
         if len(self.rawX) > 1:
             raise ValueError(
@@ -386,15 +392,12 @@ class MeasurementData(Registrable):
             )
 
         swappedZCandidates = {
-            key: array.transpose(0, 1) for key, array in self._zCandidates.items()
+            key: self._transposeZ(array) for key, array in self._zCandidates.items()
         }
         self._zCandidates = OrderedDictMod(swappedZCandidates)
-        self._currentZ.data = self._currentZ.data.transpose()
+        self._currentZ.data = self._transposeZ(self._currentZ.data)
 
-        self.rawX, self.rawY = (
-            self.rawY,
-            self.rawX,
-        )
+        self.rawX, self.rawY = self.rawY, self.rawX
         self._currentX, self._currentY = self._currentY, self._currentX
 
     def rawXByCurrentX(self, currentX: float) -> OrderedDictMod[str, float]:
@@ -435,24 +438,22 @@ class MeasurementData(Registrable):
         return zMin, zMax, rawZMin, rawZMax
 
     def _doBgndSubtraction(self, array: np.ndarray, axis=0):
-        previousMin = np.nanmin(array, axis=axis, keepdims=True)
-        previousMax = np.nanmax(array, axis=axis, keepdims=True)
+        previousMin = np.nanmin(array)
+        previousMax = np.nanmax(array)
+        previousRange = previousMax - previousMin
 
         # subtract the background
         background = np.nanmedian(array, axis=axis, keepdims=True)
         avgArray = array - background
 
         # rescale the data to the range of the original data
-        currentMin = np.nanmin(avgArray, axis=axis, keepdims=True)
-        currentMax = np.nanmax(avgArray, axis=axis, keepdims=True)
+        currentMin = np.nanmin(avgArray)
+        currentMax = np.nanmax(avgArray)
         currentRange = currentMax - currentMin
-        previousRange = previousMax - previousMin
-        previousRange[currentRange == 0] = 1
-        currentRange[currentRange == 0] = 1
+        if currentRange == 0:
+            currentRange = previousRange = 1
 
         avgArray = (avgArray - currentMin) / currentRange * previousRange + previousMin
-
-        print(previousRange[300, 0, 0], currentRange[300, 0, 0], background[300, 0, 0])
 
         if array.ndim == 3:
             avgArray = np.round(avgArray, 0).astype(int)
@@ -722,9 +723,6 @@ class ImageMeasurementData(MeasurementData):
             self.currentZ.data,
             rasterized=True,
         )
-
-    def swapXY(self):
-        raise NotImplementedError
 
 
 MeasurementDataType = Union[NumericalMeasurementData, ImageMeasurementData]
