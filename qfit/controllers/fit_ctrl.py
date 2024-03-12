@@ -231,7 +231,6 @@ class FitCtrl(QObject):
         """
         Cook up a cost function for the optimization
         """
-        print("cost function called")
         if self.OptTerminated:
             raise Exception("Opt terminated by the user.")
 
