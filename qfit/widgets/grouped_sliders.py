@@ -33,7 +33,7 @@ class LabeledSlider(QWidget):
 
     Parameters
     ----------
-    label_text : str
+    name : str
         The name of the slider, will be displayed as a QLabel.
     label_value_position : str
         The position of the label and the value box.
@@ -62,19 +62,19 @@ class LabeledSlider(QWidget):
         super().__init__(parent)
 
         # initialize the widgets
-        self.label = QLabel(name)
+        self._label = QLabel(name)
         self._slider = QSlider(Qt.Horizontal, self)
         self._slider.setMinimum(1)
         self._slider.setMaximum(SLIDER_RANGE)
         self._slider.setSingleStep(1)
-        self._value = FloatLineEdit("0", self)
-        self._value.setMaximumWidth(50)
+        self._textBox = FloatLineEdit("0", self)
+        self._textBox.setMaximumWidth(50)
 
         # format the widgets
-        self.formatLabeledSlider()
+        self._formatLabeledSlider()
 
         # initialize the layout
-        self.sliderLayout = QGridLayout(self)
+        self._sliderLayout = QGridLayout(self)
 
         # insert the widgets into the layout
         self._insertWidgets(label_value_position)
@@ -85,19 +85,32 @@ class LabeledSlider(QWidget):
         # behavior and avoid endless call loops, realized by the following connections.
         self._slider.sliderPressed.connect(self._userSliding)
         self._slider.sliderReleased.connect(self._userSlidingEnds)
-        self._value.textChanged.connect(self._userTyping)
-        self._value.editingFinished.connect(self._userTypingEnds)
+        self._textBox.textChanged.connect(self._userTyping)
+        self._textBox.editingFinished.connect(self._userTypingEnds)
 
         # margin and spacing
-        self.sliderLayout.setContentsMargins(0, 0, 0, 0)
-        self.sliderLayout.setSpacing(SPACING)
+        self._sliderLayout.setContentsMargins(0, 0, 0, 0)
+        self._sliderLayout.setSpacing(SPACING)
 
         # connect the slider and the value box in a simplest way
         if auto_connect:
             self._naiveConnection()
 
     def _insertWidgets(self, label_value_position):
-        """add the widgets to the layout according to the label_value_position"""
+        """
+        Insert the slider, label, and value box into the layout according to the
+        label_value_position.
+
+        Parameters
+        ----------
+        label_value_position : str
+            The position of the label and the value box.
+            - 'left_right': label, slider, value
+            - 'right_left': slider, label, value
+            - 'both_bottom': slider, (line break), label, value
+            - 'value_left': slider, value
+            - 'value_right': value, slider
+        """
         with_label = label_value_position in ["left_right", "right_left", "both_bottom"]
 
         if label_value_position == "left_right":
@@ -124,41 +137,75 @@ class LabeledSlider(QWidget):
             raise ValueError(f"Unknown label_value_position: {label_value_position}")
 
         if with_label:
-            self.sliderLayout.addWidget(self._slider, *slider_position)
-        self.sliderLayout.addWidget(self.label, *label_position)
-        self.sliderLayout.addWidget(self._value, *value_position)
+            self._sliderLayout.addWidget(self._slider, *slider_position)
+        self._sliderLayout.addWidget(self._label, *label_position)
+        self._sliderLayout.addWidget(self._textBox, *value_position)
 
     def _naiveConnection(self):
         """
-        The simplest way to connect the slider and the value box.
+        The simplest way to connect the slider and the value box:
+        - the value box displays the raw value of the slider.
+        - the slider value is set to the value box when the value box is changed.
         """
-
         def updateValue():
-            self._value.setText(str(self._slider.value()))
+            self._textBox.setText(str(self._slider.value()))
 
         def updateSlider():
-            self._slider.setValue(int(self._value.text()))
+            self._slider.setValue(int(self._textBox.text()))
 
         self.sliderValueChangedConnect(updateValue)
         self.textValueChangedConnect(updateSlider)
 
     def _userSliding(self):
+        """
+        Set the flag to indicate that the user is sliding the slider,
+        it's used to avoid endless call loops.
+        """
         self.user_is_sliding = True
 
     def _userSlidingEnds(self):
+        """
+        Set the flag to indicate that the user is done sliding the slider,
+        it's used to avoid endless call loops.
+        """
         self.user_is_sliding = False
 
     def _userTyping(self):
+        """
+        Set the flag to indicate that the user is typing in the value box,
+        it's used to avoid endless call loops.
+        """
         if not self.user_is_sliding:
             self.user_is_typing = True
         else:
             self.user_is_typing = False
 
     def _userTypingEnds(self):
+        """
+        Set the flag to indicate that the user is done typing in the value box,
+        it's used to avoid endless call loops.
+        """
         self.user_is_typing = False
 
+    def _formatLabeledSlider(self):
+        """
+        Format the labeled slider.
+        """
+        modifyStyleSheet(self._textBox, "border", "1px solid #5F5F5F")
+        modifyStyleSheet(self._textBox, "font", '13px "Roboto Medium"')
+        modifyStyleSheet(self._textBox, "color", "#FFFFFF")
+        modifyStyleSheet(self._label, "font", '13px "Roboto Medium"')
+        modifyStyleSheet(self._label, "color", "#FFFFFF")
+
+    def setEnabled(self, value: bool) -> None:
+        self._slider.setEnabled(value)
+        self._textBox.setEnabled(value)
+
+    # public methods
     def sliderValueChangedConnect(self, func):
         """
+        Should be used instead of self._slider.valueChanged.connect(func).
+
         Both user and (potentially) box value change will emit the slider.valueChanged
         signal. This function will react to the signal only when the user is sliding
         (not typing). It will also avoid endless call loops.
@@ -178,6 +225,8 @@ class LabeledSlider(QWidget):
 
     def textValueChangedConnect(self, func):
         """
+        Should be used instead of self._textBox.textChanged.connect(func).
+
         Both user and (potentially) slider value change will emit the value.textChanged
         signal. This function will react to the signal only when the user is typing
         (not sliding). It will also avoid endless call loops.
@@ -187,22 +236,22 @@ class LabeledSlider(QWidget):
             if self.user_is_typing and not self.user_is_sliding:
                 func(*args, **kwargs)
 
-        self._value.textChanged.connect(func_wrapper)
+        self._textBox.textChanged.connect(func_wrapper)
 
     def editingFinishedConnect(self, func):
         """
         Emit the signal when the user is done typing / sliding.
+        Should be used instead of self._textBox.editingFinished.connect(func).
         """
-
         # remove the last connection, which is always self.editingFinished
-        self._value.editingFinished.disconnect(self._userTypingEnds)
+        self._textBox.editingFinished.disconnect(self._userTypingEnds)
 
         # connect
-        self._value.editingFinished.connect(func)
+        self._textBox.editingFinished.connect(func)
         self._slider.sliderReleased.connect(func)
 
         # put the self.editingFinished back
-        self._value.editingFinished.connect(self._userTypingEnds)
+        self._textBox.editingFinished.connect(self._userTypingEnds)
 
     def setValue(self, value: Union[str, int], toSlider: bool = True):
         """
@@ -212,22 +261,9 @@ class LabeledSlider(QWidget):
             self._slider.setValue(int(value))
         else:
             self.user_is_typing = False
-            self._value.setText(value)
+            self._textBox.setText(value)
             self.user_is_typing = False
 
-    def formatLabeledSlider(self):
-        """
-        Format the labeled slider.
-        """
-        modifyStyleSheet(self._value, "border", "1px solid #5F5F5F")
-        modifyStyleSheet(self._value, "font", '13px "Roboto Medium"')
-        modifyStyleSheet(self._value, "color", "#FFFFFF")
-        modifyStyleSheet(self.label, "font", '13px "Roboto Medium"')
-        modifyStyleSheet(self.label, "color", "#FFFFFF")
-
-    def setEnabled(self, value: bool) -> None:
-        self._slider.setEnabled(value)
-        self._value.setEnabled(value)
 
 
 WidgetCls = TypeVar("WidgetCls", bound=QWidget)
@@ -235,17 +271,16 @@ WidgetCls = TypeVar("WidgetCls", bound=QWidget)
 
 class GroupedWidget(QWidget, Generic[WidgetCls]):
     """
-    A class that contains multiple LabeledSlider widgets. The sliders will be displayed
-    in a grid layout.
+    A class that contains multiple widgets, which will be displayed in a grid layout.
 
     Parameters
     ----------
-    widget_class : QWidget
+    widgetClass : QWidget
         The class of the widget to be grouped. The initialization of the widget should
         accept a name as it's first positional argument (even if the name is not displayed).
-    widget_names : List[str]
+    widgetNames : List[str]
         The names of the widgets to be grouped.
-    init_kwargs : Dict[str, Any]
+    initKwargs : Dict[str, Any]
         The keyword arguments to be passed to the initialization of the widget.
     columns : int
         The number of columns in the grid layout.
@@ -269,7 +304,7 @@ class GroupedWidget(QWidget, Generic[WidgetCls]):
         self.columns = columns
         self.gridLayout = QGridLayout(self)
 
-        self.createWidgets(widgetNames)
+        self.insertMultipleWidgets(widgetNames)
 
         # set the layout that no vertical space between the widgets (labelled sliders here)
         self.gridLayout.setContentsMargins(MARGIN, 0, MARGIN, 0)
@@ -289,6 +324,9 @@ class GroupedWidget(QWidget, Generic[WidgetCls]):
         return self.widgets[key]
     
     def insertWidget(self, name: str, idx: Optional[int] = None):
+        """
+        Insert a widget into the layout.
+        """
         if idx is None:
             idx = len(self.widgets)
         widget = self.widgetClass(name, **self.initKwargs)
@@ -296,23 +334,27 @@ class GroupedWidget(QWidget, Generic[WidgetCls]):
         self.gridLayout.addWidget(widget, idx // self.columns, idx % self.columns)
 
     def removeWidget(self, name: str):
+        """
+        Remove a widget from the layout.
+        """
         widget = self.widgets.pop(name)
         widget.setParent(None)
         del widget
 
-    def createWidgets(self, widget_names: List[str]):
+    def insertMultipleWidgets(self, widget_names: List[str]):
+        """
+        Insert multiple widgets into the layout based on the given names.
+        """
         # Clear existing sliders
         self.clearLayout()
 
         for idx, name in enumerate(widget_names):
             self.insertWidget(name, idx)
 
-    # def clearLayout(self):
-    #     for i in reversed(range(self.gridLayout.count())):
-    #         self.gridLayout.itemAt(i).widget().setParent(None)
-    #     self.widgets.clear()
-
     def clearLayout(self):
+        """
+        Remove all the widgets from the layout.
+        """
         for widget in self.widgets.values():
             self.removeWidget(widget)
 
@@ -323,7 +365,18 @@ class GroupedWidget(QWidget, Generic[WidgetCls]):
 
 class GroupedWidgetSet(QWidget, Generic[WidgetCls]):
     """
-    Represent a set of grouped sliders. Each group will be displayed in a FoldableWidget.
+    Multiple GroupedWidget instances, which will be displayed in a vertical layout.
+
+    Parameters
+    ----------
+    widgetClass : QWidget
+        The class of the widget to be grouped. The initialization of the widget should
+        accept a name as it's first positional argument (even if the name is not displayed).
+    initKwargs : Dict[str, Any]
+        The keyword arguments to be passed to the initialization of the widget.
+    columns : int
+        The number of columns in the grid layout.
+    parent : QWidget
     """
 
     def __init__(
@@ -362,6 +415,18 @@ class GroupedWidgetSet(QWidget, Generic[WidgetCls]):
         setName: str,
         widgetNames: List[str],
     ):
+        """
+        Add a group of widgets to the layout, it will automatically create a GroupedWidget
+        instance and add it to the layout.
+
+        Parameters
+        ----------
+        setName : str
+            The name of the group.
+        widgetNames : List[str]
+            The names of the widgets to be grouped, one of the parameters of 
+            the widgetClass.
+        """
         # store the group
         self.widgetGroups[setName] = GroupedWidget(
             widgetClass=self.widgetClass,
@@ -380,6 +445,9 @@ class GroupedWidgetSet(QWidget, Generic[WidgetCls]):
         )
 
     def removeGroupedWidgets(self, set_name: str):
+        """
+        Remove a group of widgets from the layout.
+        """
         self.widgetSetLayout.removeWidget(self.widgetGroups[set_name])
         self.widgetGroups[set_name].setParent(None)
         del self.widgetGroups[set_name]

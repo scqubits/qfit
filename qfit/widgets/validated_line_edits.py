@@ -28,7 +28,7 @@ class CombinedMeta(type(QLineEdit), type(ABC)):
 class ValidatedLineEdit(QLineEdit, ABC, metaclass=CombinedMeta):
     """
     A base class for line edits that validate the input, if it's not valid
-    the line edit is highlighted in red, and an error will 
+    the line edit is highlighted in red. 
 
     * A note to the developer: This class is a MV class, and the controller
     is also enbeded here.
@@ -133,47 +133,6 @@ class IntLineEdit(ValidatedLineEdit):
         """
         self._validator = QIntValidator()
         self.setValidator(self._validator)
-
-
-# class StrTupleLineEdit(QLineEdit):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-
-#         regEx = QRegExp("(^[a-zA-Z][a-zA-Z0-9]*)+(, ?([a-zA-Z][a-zA-Z0-9]*)+)*$")
-#         validator = QRegExpValidator(regEx)
-#         self.setValidator(validator)
-
-#         self.editingFinished.connect(self.processUpdate)
-#         self.previousStr = ""
-
-#     def setText(self, nameListStr):
-#         if self.validator().validate(nameListStr, 0)[0] is QValidator.State.Acceptable:
-#             self.previousStr = nameListStr
-#         super().setText(nameListStr)
-
-#     def value(self):
-#         return self.text()
-
-#     def getSubsysNameList(self):
-#         if self.isValid():
-#             return [name.strip() for name in self.value().split(",")]
-#         return []
-
-#     def setFromSubsysNameList(self, subsysNameList):
-#         subsysStr = ", ".join(subsysNameList)
-#         self.setText(subsysStr)
-
-#     def subsysCount(self):
-#         return len(self.getSubsysNameList())
-
-#     def processUpdate(self):
-#         if self.hasAcceptableInput():
-#             self.previousStr = self.text()
-#         else:
-#             self.setText(self.previousStr)
-
-#     def isValid(self):
-#         return self.hasAcceptableInput()
 
 
 class IntTupleLineEdit(ValidatedLineEdit):
