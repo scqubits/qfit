@@ -93,11 +93,10 @@ class GenericH5Reader(MeasFileReader):
             dataCollection = OrderedDictMod()
 
             def visitor_func(name, data):
-                if isinstance(data, h5py.Dataset) and data[:].dtype in [
-                    np.float32,
-                    np.float64,
-                ]:
-                    dataCollection[name] = data[:]
+                if isinstance(data, h5py.Dataset):
+                    if data.shape != ():  # ignore scalar datasets
+                        if data[:].dtype in [np.float32, np.float64]:
+                            dataCollection[name] = data[:]
 
             h5File.visititems(visitor_func)
 
