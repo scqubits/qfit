@@ -24,6 +24,9 @@ from qfit.ui_designer.settings import Ui_settingsWidget
 
 
 class SettingsWidgetBase(QWidget):
+    """
+    Base class for settings widgets.
+    """
     def __init__(self, parent):
         super().__init__(parent)
         self.setAttribute(Qt.WA_StyledBackground, True)

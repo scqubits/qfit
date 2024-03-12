@@ -187,11 +187,13 @@ class Fit:
         if fromFit:
             return (
                 self._fitHSParams.getFlattenedAttrDict("value") 
+                | self._caliParamModel.getFlattenedAttrDict("value")
                 | self._fitCaliParams.getFlattenedAttrDict("value")
             )
         else:
             return (
                 self._prefitHSParams.getFlattenedAttrDict("value") 
+                | self._caliParamModel.getFlattenedAttrDict("value")
                 | self._prefitCaliParams.getFlattenedAttrDict("value")
             )
         

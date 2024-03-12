@@ -21,52 +21,32 @@ class DataExtractingWidget(QFrame):
     pass
 
 
-class DatasetWidget(QFrame):
-    pass
-
-
-class ManageDatasetsWidget(QFrame):
-    pass
-
-
-class TableView(QTableView):
-    """Interface for the display of the table of extracted data points."""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # style = "::section {""background-color: lightgray; }"
-        # font = QFont()
-        # font.setPointSize(9)
-        # self.setFont(font)
-        # self.horizontalHeader().setStyleSheet(style)
-        # self.verticalHeader().setStyleSheet(style)
-        self.setItemDelegate(EditDelegate())
-
-
 class ListView(QListView):
+    """
+    A QListView: 
+     - a custom signal: focusChanged. When user clicks on an item
+     in the list, the row number of the clicked item is emitted.
+     - a custom method: selectItem. Select (highlight) the item at the given index.
+    """
+
     focusChanged = Signal(int)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # font = QFont()
-        # font.setPointSize(9)
-        # self.setFont(font)
         self.setSelectionRectVisible(True)
 
     def setModel(self, model):
+        """
+        Set the model for the view and select the first item.
+        """
         result = super().setModel(model)
         self.setCurrentIndex(model.index(0, 0))
-        # self.setCurrentToLast()
         return result
-
-    # def setCurrentToLast(self):
-    #     """
-    #     Set the current index to the last row of the list.
-    #     """
-    #     maxRowIndex = self.model().rowCount() - 1
-    #     self.setCurrentIndex(self.model().index(maxRowIndex, 0))
-
+    
     def currentChanged(self, current, previous):
+        """
+        When the current item changes, emit the focusChanged signal.
+        """
         result = super().currentChanged(current, previous)
         self.focusChanged.emit(current.row())
         return result
