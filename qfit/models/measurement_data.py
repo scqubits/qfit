@@ -571,6 +571,10 @@ class NumericalMeasurementData(MeasurementData):
         # all zCandidates must have the same shape
         if len(set([z.shape for z in zCandidates.values()])) > 1:
             raise ValueError("zCandidates must have the same shape")
+        
+        # if there are no zCandidates, raise an error
+        if not zCandidates:
+            raise ValueError("No suitable zData candidates found")
 
         return zCandidates
 

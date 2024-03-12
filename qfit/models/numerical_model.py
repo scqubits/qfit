@@ -109,9 +109,7 @@ class QuantumModel(QObject):
         """
         self.hilbertspace = hilbertspace
 
-        if self.sweepUsage == "prefit":
-            # automatically update the calculation when prefit
-            self.updateCalc()
+        self.updateCalc()
 
     @Slot(FullExtr)
     def updateExtractedData(self, fullExtr: FullExtr):
@@ -149,9 +147,7 @@ class QuantumModel(QObject):
         """
         self._sweepParamSets = sweepParamSets
 
-        if self.sweepUsage == "prefit":
-            # automatically update the calculation when prefit
-            self.updateCalc()
+        self.updateCalc()
 
     @Slot(object, object)  # can't use Callable here in the initialization
     # because Argument of type "type[Callable]" cannot be assigned to parameter of type "type"
@@ -208,12 +204,10 @@ class QuantumModel(QObject):
         # set the value
         setattr(self, "_" + attrName, value)
 
-        if self.sweepUsage == "prefit":
-            # automatically update the calculation when prefit
-            if attrName in ["subsysToPlot", "initialState", "photons"]:
-                self.sweep2SpecMSE()
-            elif attrName in ["evalsCount", "pointsAdded", "autoRun"]:
-                self.updateCalc()
+        if attrName in ["subsysToPlot", "initialState", "photons"]:
+            self.sweep2SpecMSE()
+        elif attrName in ["evalsCount", "pointsAdded", "autoRun"]:
+            self.updateCalc()
 
     @Slot(np.ndarray, np.ndarray)
     def relimX(self, x: np.ndarray, y: np.ndarray):
@@ -375,7 +369,6 @@ class QuantumModel(QObject):
                 x_coordinates_all = np.concatenate([extrX, x_coordinates_uniform])
                 sweptX[figName] = np.sort(x_coordinates_all)
             else:
-                print(f"\t number of x: {len(extrX)}")
                 # only calculate the spectrum for the extracted data x coordinates
                 sweptX[figName] = extrX
 
@@ -460,7 +453,6 @@ class QuantumModel(QObject):
         """
         Create a new ParameterSweep object based on the stored data.
         """
-        print("\tnew sweep")
         try:
             self._sweeps = self._generateSweep(
                 sweptX=self._prefitSweptX(
@@ -499,7 +491,6 @@ class QuantumModel(QObject):
             # manually turn off the warning message
             sweep._out_of_sync_warning_issued = True
             try:
-                print("\trunning sweep")
                 sweep.run()
             except Exception as e:
                 status = Status(
@@ -510,9 +501,14 @@ class QuantumModel(QObject):
                 self.updateStatus.emit(status)
 
     def _sweepInThread(self):
+        """
+        Run sweep in a separate thread. After finished, _postSweepInThread 
+        will be called, which will handle errors and call sweep2SpecMSE.
+        """
         runner = SweepRunner(self._sweeps)
         self._sweepThreadPool.start(runner)
 
+    @Slot(object)
     def _postSweepInThread(
         self, 
         result: Union[Dict[str, ParameterSweep], str]
@@ -573,23 +569,19 @@ class QuantumModel(QObject):
         and MSE.
         """
         if self.sweepUsage != "prefit" and not forced:
-            print("\tupdateCalc called, no action")
             # only in prefit mode, this method will be activated as a slot
             # function
             return
         
         if self._autoRun and self.sweepUsage == "prefit":
-            print("\tupdateCalc called, prefit")
             self._newSweep()
             self._sweepInThread()
 
         elif forced and self.sweepUsage in ["prefit", "fit-result"]:
-            print("\tupdateCalc called, prefit and forced")
             self._newSweep()
             self._sweepInThread()
 
         elif forced and self.sweepUsage == "fit":
-            print("\tupdateCalc called, fit and forced")
             self._newSweep()
             self._runSweep()
             return self.sweep2SpecMSE(forced=forced)

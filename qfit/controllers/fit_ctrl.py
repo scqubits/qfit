@@ -192,6 +192,11 @@ class FitCtrl(QObject):
         self.prefitView.setEnabled(enabled)
         self.pageView.setEnabled(enabled)
 
+        # if not blocking the signal, the fit computation time will be 
+        # significantly longer
+        self.caliParamModel.blockSignals(not enabled)
+
+    @Slot()
     def userTerminateOptimization(self):
         self.OptTerminated = True
         # disable the fit button, keep the mode to be stop
@@ -241,7 +246,6 @@ class FitCtrl(QObject):
         """
         Cook up a cost function for the optimization
         """
-        print("cost function called")
         if self.OptTerminated:
             raise Exception("Opt terminated by the user.")
 
