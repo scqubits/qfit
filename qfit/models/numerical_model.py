@@ -109,9 +109,7 @@ class QuantumModel(QObject):
         """
         self.hilbertspace = hilbertspace
 
-        if self.sweepUsage == "prefit":
-            # automatically update the calculation when prefit
-            self.updateCalc()
+        self.updateCalc()
 
     @Slot(FullExtr)
     def updateExtractedData(self, fullExtr: FullExtr):
@@ -149,9 +147,7 @@ class QuantumModel(QObject):
         """
         self._sweepParamSets = sweepParamSets
 
-        if self.sweepUsage == "prefit":
-            # automatically update the calculation when prefit
-            self.updateCalc()
+        self.updateCalc()
 
     @Slot(object, object)  # can't use Callable here in the initialization
     # because Argument of type "type[Callable]" cannot be assigned to parameter of type "type"
@@ -208,12 +204,10 @@ class QuantumModel(QObject):
         # set the value
         setattr(self, "_" + attrName, value)
 
-        if self.sweepUsage == "prefit":
-            # automatically update the calculation when prefit
-            if attrName in ["subsysToPlot", "initialState", "photons"]:
-                self.sweep2SpecMSE()
-            elif attrName in ["evalsCount", "pointsAdded", "autoRun"]:
-                self.updateCalc()
+        if attrName in ["subsysToPlot", "initialState", "photons"]:
+            self.sweep2SpecMSE()
+        elif attrName in ["evalsCount", "pointsAdded", "autoRun"]:
+            self.updateCalc()
 
     @Slot(np.ndarray, np.ndarray)
     def relimX(self, x: np.ndarray, y: np.ndarray):
@@ -510,9 +504,14 @@ class QuantumModel(QObject):
                 self.updateStatus.emit(status)
 
     def _sweepInThread(self):
+        """
+        Run sweep in a separate thread. After finished, _postSweepInThread 
+        will be called, which will handle errors and call sweep2SpecMSE.
+        """
         runner = SweepRunner(self._sweeps)
         self._sweepThreadPool.start(runner)
 
+    @Slot(object)
     def _postSweepInThread(
         self, 
         result: Union[Dict[str, ParameterSweep], str]
