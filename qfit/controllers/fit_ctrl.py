@@ -187,6 +187,10 @@ class FitCtrl(QObject):
         self.prefitView.setEnabled(enabled)
         self.pageView.setEnabled(enabled)
 
+        # if not blocking the signal, the fit computation time will be 
+        # significantly longer
+        self.caliParamModel.blockSignals(not enabled)
+
     @Slot()
     def userTerminateOptimization(self):
         self.userTerminateOpt = True
