@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject, Signal, Slot, Qt
+from PySide6.QtCore import QObject, Signal, Slot
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QComboBox,
 )
+from PySide6.QtGui import QIcon
 
 from qfit.widgets.custom_table import (
     FoldableTable,
@@ -17,8 +18,6 @@ from qfit.models.data_structures import ParamAttr
 from qfit.utils.helpers import clearChildren
 
 from typing import Dict, List, Any
-
-from qfit.utils.helpers import modifyStyleSheet
 
 
 class FitParamView(QObject):
@@ -164,8 +163,8 @@ class FitView(QObject):
         if mode == "run":
             self.fitButtonMode = "run"
             self.runFit.setText("   Run Fit")
-            modifyStyleSheet(self.runFit, "icon", "url(:/icons/svg/play.svg)")
+            self.runFit.setIcon(QIcon(":/icons/svg/play.svg"))
         elif mode == "stop":
             self.fitButtonMode = "stop"
             self.runFit.setText("   Stop Fit")
-            modifyStyleSheet(self.runFit, "icon", "url(:/icons/svg/stop.svg)")
+            self.runFit.setIcon(QIcon(":/icons/svg/stop.svg"))
