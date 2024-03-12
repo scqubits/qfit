@@ -27,7 +27,8 @@ from qfit.models.measurement_data import (
 
 def readMeasurementFile(fileName) -> MeasurementDataType:
     """
-    Read experimental data from file.
+    Read experimental data from file. It supports .h5, .mat, .csv, .jpg, 
+    .jpeg, .png files.
 
     Parameters
     ----------
@@ -36,8 +37,8 @@ def readMeasurementFile(fileName) -> MeasurementDataType:
 
     Returns
     -------
-    Serializable
-        class instance initialized with the data from the file
+    MeasurementDataType
+        The data read from the file.
     """
     _, suffix = os.path.splitext(fileName)
 
@@ -61,7 +62,9 @@ class MeasFileReader:
 
     @staticmethod
     def isLikelyLabberFile(h5File):
-        # Heuristic inspection to determine whether the h5 file might be from Labber
+        """
+        Heuristic inspection to determine whether the h5 file might be from Labber.
+        """
         if {"Data", "Instrument config", "Settings", "Step config"}.issubset(set(h5File)):
             return True
         return False
@@ -76,6 +79,9 @@ class MeasFileReader:
 
 class ImageFileReader(MeasFileReader):
     def fromFile(self, fileName):
+        """
+        Use matplotlib to read image data from file.
+        """
         _, fileStr = os.path.split(fileName)
         imageData = imread(fileName)
         
@@ -84,6 +90,11 @@ class ImageFileReader(MeasFileReader):
 
 class GenericH5Reader(MeasFileReader):
     def fromFile(self, fileName) -> NumericalMeasurementData:
+        """
+        Read numerical data from h5 file. If the file is likely to be from Labber,
+        use the LabberH5Reader. Otherwise, load all of the non-scalar datasets
+        from the file.
+        """
         with h5py.File(fileName, "r") as h5File:
             if self.isLikelyLabberFile(h5File):
                 labberReader = LabberH5Reader()
@@ -107,6 +118,11 @@ class GenericH5Reader(MeasFileReader):
 
 class LabberH5Reader(MeasFileReader):
     def fromFile(self, fileName) -> NumericalMeasurementData:
+        """
+        Read numerical data from Labber h5 file. The file is assumed to have
+        a specific structure, with the data stored in a dataset named "Data".
+        The channel names are stored in a dataset named "Channel names".
+        """
         with h5py.File(fileName, "r") as h5File:
             dataEntries = ["Data"]
             dataEntries += [name + "/Data" for name in h5File if name[0:4] == "Log_"]
@@ -151,6 +167,9 @@ class LabberH5Reader(MeasFileReader):
 
 class MatlabReader(MeasFileReader):
     def fromFile(self, fileName) -> NumericalMeasurementData:
+        """
+        Read numerical data from .mat file, using scipy.io.loadmat.
+        """
         dataCollection = loadmat(fileName)
         
         _, fileStr = os.path.split(fileName)
@@ -159,6 +178,9 @@ class MatlabReader(MeasFileReader):
 
 class CSVReader(MeasFileReader):
     def fromFile(self, fileName):
+        """
+        Read numerical data from .csv file, using numpy.loadtxt.
+        """
         _, fileStr = os.path.split(fileName)
         return NumericalMeasurementData(
             fileStr,

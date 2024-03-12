@@ -29,7 +29,7 @@ from matplotlib.figure import Figure
 from matplotlib.widgets import Cursor
 import matplotlib.cm as cm
 
-from qfit.utils.helpers import y_snap
+from qfit.utils.helpers import ySnap
 
 from qfit.models.data_structures import PlotElement
 from qfit.settings import color_dict
