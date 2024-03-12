@@ -26,6 +26,24 @@ from typing import Dict, List, Any
 
 
 class PrefitParamView(QObject):
+    """
+    A view for the prefit parameters. This view is a widget that contains
+    a set of sliders and a min max table for the prefit parameters. 
+    It is responsible for displaying the parameters and their values, and
+    also for emitting signals when the parameters are changed.
+
+    Parameters
+    ----------
+    parent : QObject
+        The parent object.
+    prefitScrollAreaWidget : QWidget
+        The widget that contains the prefit parameters.
+    prefitMinmaxScrollAreaWidget : QWidget
+        The widget that contains the prefit min max table.
+    prefitMinMaxFrame : QFrame
+        The frame that contains the prefit min max table, which can be
+        folded. 
+    """
     HSSliderChanged = Signal(ParamAttr)
     HSTextChanged = Signal(ParamAttr)
     HSEditingFinished = Signal(str, str)
@@ -74,9 +92,16 @@ class PrefitParamView(QObject):
         self, paramNameDict: Dict[str, List[str]], removeExisting: bool = True
     ):
         """
-        View init: pre-fit sliders
+        Initialize the prefit sliders by a dictionary of parameter names.
 
-        Insert a set of sliders for the prefit parameters according to the parameter set
+        Parameters
+        ----------
+        paramNameDict : Dict[str, List[str]]
+            The names of the prefit parameters. The keys are the group names,
+            and the values are the parameter names in each group.
+        removeExisting : bool, optional
+            Whether to remove the existing widgets, by default True. For now,
+            it is not implemented to set to False.
         """
         # remove the existing widgets, if we somehow want to rebuild the sliders
         if removeExisting:
@@ -116,7 +141,16 @@ class PrefitParamView(QObject):
         self, paramNameDict: Dict[str, List[str]], removeExisting: bool = True
     ):
         """
-        View init: pre-fit min max table
+        Initialize the minmax table by a dictionary of parameter names.
+
+        Parameters
+        ----------
+        paramNameDict : Dict[str, List[str]]
+            The names of the prefit parameters. The keys are the group names,
+            and the values are the parameter names in each group.
+        removeExisting : bool, optional
+            Whether to remove the existing widgets, by default True. For now,
+            it is not implemented to set to False.
         """
         # remove the existing widgets, if we somehow want to rebuild the sliders
         if removeExisting:
@@ -159,6 +193,23 @@ class PrefitParamView(QObject):
         caliParamNames: Dict[str, List[str]],
         removeExisting: bool = True,
     ):
+        """ 
+        Given the dictionaries of parameter names, it will initialize 
+        the sliders and minmax table for the prefit parameters. Note that 
+        we distinguish and keep track of the HilbertSpace parameters and
+        the calibration model parameters. It's important as we need to
+        emit different signals for the two types of parameters.
+
+        Parameters
+        ----------
+        HSParamNames : Dict[str, List[str]]
+            The names of the prefit parameters for the HilbertSpace.
+        caliParamNames : Dict[str, List[str]]
+            The names of the prefit parameters for the calibration model.
+        removeExisting : bool, optional
+            Whether to remove the existing widgets, by default True. For now,
+            it is not implemented to set to False.
+        """
         self.HSNames = list(HSParamNames.keys())
 
         paramNameDict = HSParamNames | caliParamNames
@@ -177,6 +228,9 @@ class PrefitParamView(QObject):
         Collect the signals from the sliders and minmax table, and emit
         in one connection. It should be called whenver the sliders and minmax
         table are re-initialized.
+
+        Note that different signals are emitted for the HilbertSpace parameters
+        and the calibration model parameters.
         """
         for groupName, group in self.sliderSet.items():
             for name, slider in group.items():
@@ -239,6 +293,9 @@ class PrefitParamView(QObject):
     # slots ==========================================================
     @Slot(ParamAttr)
     def setByParamAttr(self, paramAttr: ParamAttr, toSlider: bool = True):
+        """
+        Set the value of the parameter from the model using ParamAttr.
+        """
         if paramAttr.attr == "value":
             labeledSlider: LabeledSlider = self.sliderSet[paramAttr.parentName][
                 paramAttr.name
@@ -257,6 +314,9 @@ class PrefitParamView(QObject):
 
     @Slot(bool)
     def toggleMinMaxTableFrame(self, b: bool):
+        """
+        Toggle the visibility of the minmax table frame.
+        """
         if b:
             self.prefitMinMaxFrame.setMaximumHeight(400)
         else:
@@ -264,6 +324,23 @@ class PrefitParamView(QObject):
 
 
 class PrefitView(QObject):
+    """
+    A view for the prefit settings. This view is a widget that contains
+    settings for the prefit, such as the number of eigenvalues to calculate,
+    the initial state, the number of photons, etc. It also contains run 
+    sweep button and auto run checkbox. 
+
+    Parameters
+    ----------
+    parent : QObject
+        The parent object.
+    runSweep : QPushButton
+        The button to run the sweep.
+    options : Dict[str, Any]
+        The options for the prefit settings. The keys should be "evalsCount",
+        "subsysToPlot", "initialState", "photons", "pointsAdded" and "autoRun".
+        And the corresponding values should be the widgets for the options.
+    """
 
     optionUpdated = Signal(str, Any)
 
@@ -291,14 +368,19 @@ class PrefitView(QObject):
         self,
         subsysNames: List[str],
     ):
-        self.initializeOptions(subsysNames)
-
-    def initializeOptions(self, subsysNames: List[str]):
         """
-        Should be re-iniitalized when hilbert space changes
+        When the app is reloaded (new measurement data and hilbert space),
+        the view will reinitialized by this method.
+
+        Parameters
+        ----------
+        subsysNames : List[str]
+            The names of the subsystems in the Hilbert space.
         """
         self.blockAllSignals(True)
 
+        # evals count set to 1, which will be updated by the model as 
+        # a final part of the initialization in the controller.
         self.evalsCount.setText("1")
 
         # load subsystems
@@ -337,6 +419,16 @@ class PrefitView(QObject):
             option.blockSignals(b)
 
     def setOptions(self, option: str, value: Any):
+        """
+        Set the value of the option.
+
+        Parameters
+        ----------
+        option : str
+            The name of the option to set.
+        value : Any
+            The value to set.
+        """
         self.blockAllSignals(True)
         if option == "subsysToPlot":
             self.subsysToPlot.setCurrentText(value)
@@ -353,6 +445,10 @@ class PrefitView(QObject):
         self.blockAllSignals(False)
 
     def optionsConnects(self):
+        """
+        Collect the signals from the options, and emit as a optionUpdated
+        signal which contains the name of the option and the value.
+        """
         self.subsysToPlot.currentIndexChanged.connect(
             lambda: self.optionUpdated.emit(
                 "subsysToPlot", self.subsysToPlot.currentText()
