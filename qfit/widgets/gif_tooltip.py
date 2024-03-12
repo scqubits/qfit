@@ -5,10 +5,6 @@ from PySide6.QtWidgets import (
     QWidget,
     QDialog,
     QVBoxLayout,
-    QToolButton,
-    QHBoxLayout,
-    QSizePolicy,
-    QTextEdit,
 )
 from PySide6.QtCore import QEvent
 from PySide6.QtGui import QMovie, QPixmap, QTextBlockFormat
@@ -18,6 +14,14 @@ from typing import List, Tuple, Union
 
 
 class AnimatedToolTip(QLabel):
+    """
+    A QLabel that shows an animated tooltip (GIF).
+
+    Parameters
+    ----------
+    gif_path : str
+        The path to the GIF file.
+    """
     def __init__(self, gif_path):
         super().__init__()
         self.movie = QMovie(gif_path)
@@ -34,6 +38,9 @@ class AnimatedToolTip(QLabel):
 
 
 class ButtonWithAnimatedTooltip(QPushButton):
+    """
+    A QPushButton with an animated tooltip (GIF).
+    """
     def __init__(self, *args, gif_path, **kwargs):
         super().__init__(*args, **kwargs)
         self.tooltip_gif = AnimatedToolTip(gif_path)
@@ -52,24 +59,24 @@ class ButtonWithAnimatedTooltip(QPushButton):
 
 
 class DialogWindowWithMedia(QDialog):
+    """
+    A dialog window with text and media (GIF or image).
+
+    Parameters
+    ----------
+    text: str
+        text to be shown in the dialog window
+    media_list: Union[List[Tuple[str, Union[int, None]]], None]
+        list of media to be shown in the dialog window. Each element in the list is a tuple
+        of the media path and the width of the media. If the width is None, the media will
+        be shown in its original size. If the width is not None, the media will be scaled
+        down to the width. Can be set to None if no media is needed.
+    """
     def __init__(
         self,
         text: str,
         media_list: Union[List[Tuple[str, Union[int, None]]], None] = None,
     ):
-        """
-        A dialog window with text and media (GIF or image).
-
-        ARGUMENTS
-        ---------
-        text: str
-            text to be shown in the dialog window
-        media_list: Union[List[Tuple[str, Union[int, None]]], None]
-            list of media to be shown in the dialog window. Each element in the list is a tuple
-            of the media path and the width of the media. If the width is None, the media will
-            be shown in its original size. If the width is not None, the media will be scaled
-            down to the width. Can be set to None if no media is needed.
-        """
         super().__init__()
         self.setStyleSheet(
             "QDialog {\n"

@@ -21,7 +21,17 @@ class FoldPushButton(QPushButton):
     """
 
     def __init__(self, title="Foldable", parent=None):
-        super().__init__()
+        """
+        Create a push button with an icon.
+
+        Parameters
+        ----------
+        title : str
+            The title of the push button.
+        parent : QWidget
+            The parent widget.
+        """
+        super().__init__(parent)
 
         # icon
         self.icon = QIcon()
@@ -55,6 +65,10 @@ class FoldPushButton(QPushButton):
         self.setChecked(True)
 
     def setCheckable(self, value):
+        """
+        Set the checkable property of the push button, and remove the icon 
+        if the value is False.
+        """
         super().setCheckable(value)
 
         # remove the icon if false
@@ -68,6 +82,15 @@ class FoldableWidget(QGroupBox):
     """
     A widget that contains a title and a content widget. The content widget will be
     hidden when the widget is not checked.
+
+    Parameters
+    ----------
+    title : str
+        The title of the widget.
+    content_widget : QWidget
+        The content widget, which will be hidden when the widget is not checked.
+    parent : QWidget
+        The parent widget.
     """
 
     expandWidgetToggled = Signal(bool)
@@ -101,15 +124,24 @@ class FoldableWidget(QGroupBox):
 
     @Slot(bool)
     def _toggleContent(self, checked):
+        """
+        Toggle the visibility of the content widget.
+        """
         self.content_widget.setVisible(checked)
         # send a signal to expand the frame
         self.expandWidgetToggled.emit(checked)
 
     def toggle(self):
+        """
+        Toggle the visibility of the content widget.
+        """
         self.foldPushButton.toggle()
         self._toggleContent(self.foldPushButton.isChecked())
 
     def setConentWidget(self, content_widget):
+        """
+        Set the content widget.
+        """
         # remove
         self.boxLayout.removeWidget(self.content_widget)
 
