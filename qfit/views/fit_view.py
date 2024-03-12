@@ -18,6 +18,8 @@ from qfit.utils.helpers import clearChildren
 
 from typing import Dict, List, Any
 
+from qfit.utils.helpers import modifyStyleSheet
+
 
 class FitParamView(QObject):
     HSEditingFinished = Signal(ParamAttr)
@@ -147,10 +149,23 @@ class FitView(QObject):
         self.dataTransferButtons = dataTransferButtons
         self.tolLineEdit: FloatLineEdit = options["tol"]
         self.optimizerComboBox: QComboBox = options["optimizer"]
+        self.fitButtonMode: str = "run"
 
     def setEnabled(self, enabled: bool):
-        self.runFit.setEnabled(enabled)
         for button in self.dataTransferButtons.values():
             button.setEnabled(enabled)
         self.tolLineEdit.setEnabled(enabled)
         self.optimizerComboBox.setEnabled(enabled)
+
+    def setFitButtonEnabled(self, enabled: bool):
+        self.runFit.setEnabled(enabled)
+
+    def setFitButtonMode(self, mode: str):
+        if mode == "run":
+            self.fitButtonMode = "run"
+            self.runFit.setText("   Run Fit")
+            modifyStyleSheet(self.runFit, "icon", "url(:/icons/svg/play.svg)")
+        elif mode == "stop":
+            self.fitButtonMode = "stop"
+            self.runFit.setText("   Stop Fit")
+            modifyStyleSheet(self.runFit, "icon", "url(:/icons/svg/stop.svg)")

@@ -14,35 +14,46 @@ if TYPE_CHECKING:
     from qfit.views.prefit_view import PrefitParamView, PrefitView
     from qfit.views.paging_view import PageView
 
+
 class FitCtrl(QObject):
     OptTerminated = False
 
     def __init__(
-        self, 
+        self,
         parent: QObject,
         models: Tuple[
-            "FitModel", "FitHSParams", "FitCaliParams", 
-            "PrefitHSParams", "PrefitCaliParams", "QuantumModel",
-            "AllExtractedData", "CaliParamModel", 
-            "MeasDataSet"
-        ], 
+            "FitModel",
+            "FitHSParams",
+            "FitCaliParams",
+            "PrefitHSParams",
+            "PrefitCaliParams",
+            "QuantumModel",
+            "AllExtractedData",
+            "CaliParamModel",
+            "MeasDataSet",
+        ],
         views: Tuple[
-            "FitView", "FitParamView", 
-            "PrefitParamView", "PrefitView",
-            "PageView"
-        ]
+            "FitView", "FitParamView", "PrefitParamView", "PrefitView", "PageView"
+        ],
     ):
         super().__init__(parent)
         (
-            self.fitModel, self.fitHSParams, self.fitCaliParams, 
-            self.prefitHSParams, self.prefitCaliParams, self.quantumModel,
-            self.allDatasets, self.caliParamModel, 
-            self.measurementData, 
+            self.fitModel,
+            self.fitHSParams,
+            self.fitCaliParams,
+            self.prefitHSParams,
+            self.prefitCaliParams,
+            self.quantumModel,
+            self.allDatasets,
+            self.caliParamModel,
+            self.measurementData,
         ) = models
         (
-            self.fitView, self.fitParamView, 
-            self.prefitParamView, self.prefitView,
-            self.pageView
+            self.fitView,
+            self.fitParamView,
+            self.prefitParamView,
+            self.prefitView,
+            self.pageView,
         ) = views
 
         self._optionConnects()
@@ -107,22 +118,16 @@ class FitCtrl(QObject):
         3. parameters transfer: fit to prefit
         4. parameters transfer: fit result to fit
         """
-        # run optimization
-        self.fitView.runFit.clicked.connect(self.optimizeParams)
+        # on buggon clicked: either run optimization or stop
+        self.fitView.runFit.clicked.connect(self.onFitButtonClicked)
 
         # the prefit parameter export to fit
-        self.fitView.dataTransferButtons["fit"].clicked.connect(
-            self._prefitToFit
-        )
+        self.fitView.dataTransferButtons["fit"].clicked.connect(self._prefitToFit)
         # the fit parameter export to prefit
-        self.fitView.dataTransferButtons["prefit"].clicked.connect(
-            self._resultToPrefit
-        )
+        self.fitView.dataTransferButtons["prefit"].clicked.connect(self._resultToPrefit)
 
         # the final value to initial value
-        self.fitView.dataTransferButtons["init"].clicked.connect(
-            self._resultToInit
-        )
+        self.fitView.dataTransferButtons["init"].clicked.connect(self._resultToInit)
 
         # post optimization
         self.fitModel.optFinished.connect(self.postOptimization)
@@ -187,20 +192,29 @@ class FitCtrl(QObject):
         self.prefitView.setEnabled(enabled)
         self.pageView.setEnabled(enabled)
 
-    @Slot()
     def userTerminateOptimization(self):
         self.OptTerminated = True
+        # disable the fit button, keep the mode to be stop
+        self.fitView.setFitButtonEnabled(False)
 
     @Slot()
+    def onFitButtonClicked(self):
+        if self.fitView.fitButtonMode == "run":
+            self.optimizeParams()
+        else:
+            self.userTerminateOptimization()
+
     def optimizeParams(self):
         if not self.fitHSParams.isValid:
             return
-        
+
         if not self.quantumModel.readyToOpt:
             return
 
         # configure other models & views
         self._paramTuningEnabled(False)
+
+        self.fitView.setFitButtonMode(mode="stop")
 
         # store a copy of the calibration parameters as we will change them
         # during the optimization, and we want to restore them afterward
@@ -259,11 +273,9 @@ class FitCtrl(QObject):
     @Slot()
     def postOptimization(self):
         self.OptTerminated = False
-        
+
         # TODO: later, fit model will be able to update hspace
-        self.caliParamModel.setByFlattenedAttrDict(
-            self.tmpCaliParams, "value"
-        )
+        self.caliParamModel.setByFlattenedAttrDict(self.tmpCaliParams, "value")
 
         # plot the spectrum again with new parameters
         tmp = self.quantumModel.sweepUsage
@@ -272,3 +284,6 @@ class FitCtrl(QObject):
         self.quantumModel.sweepUsage = tmp
 
         self._paramTuningEnabled(True)
+        # enable the fit button, update the mode to be run
+        self.fitView.setFitButtonMode(mode="run")
+        self.fitView.setFitButtonEnabled(True)

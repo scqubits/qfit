@@ -2449,7 +2449,7 @@ class Ui_MainWindow(object):
         self.selectViewButton.setIcon(icon17)
         self.selectViewButton.setIconSize(QSize(20, 20))
         self.selectViewButton.setCheckable(True)
-        self.selectViewButton.setChecked(False)
+        self.selectViewButton.setChecked(True)
         self.selectViewButton.setAutoExclusive(True)
         self.verticalSnapButton = QPushButton(self.mplFigureButtons)
         self.verticalSnapButton.setObjectName(u"verticalSnapButton")

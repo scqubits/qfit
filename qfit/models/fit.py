@@ -26,20 +26,24 @@ class FitParamModelMixin(ParamModelMixin[FitParam]):
     def _isValid(self, paramSet: ParamSet[FitParam]) -> bool:
         for key, params in paramSet.flattenedParamDict().items():
             if params.min >= params.max:
-                self.updateStatus.emit(Status(
-                    statusSource="fit",
-                    statusType="error",
-                    message=f"For {key}, min value is greater than or equal to max value.",
-                ))
+                self.updateStatus.emit(
+                    Status(
+                        statusSource="fit",
+                        statusType="error",
+                        message=f"For {key}, min value is greater than or equal to max value.",
+                    )
+                )
                 return False
             if not params.isFixed and (
                 params.initValue < params.min or params.initValue > params.max
             ):
-                self.updateStatus.emit(Status(
-                    statusSource="fit",
-                    statusType="error",
-                    message=f"For {key}, initial value is out of range.",
-                ))
+                self.updateStatus.emit(
+                    Status(
+                        statusSource="fit",
+                        statusType="error",
+                        message=f"For {key}, initial value is out of range.",
+                    )
+                )
                 return False
         return True
 
@@ -87,13 +91,13 @@ class FitParamModelMixin(ParamModelMixin[FitParam]):
                     parent=param.parent,  # useless
                     paramType=param.paramType,  # useless
                     value=param.value,
-                    min=0,      # useless
-                    max=1,      # useless
+                    min=0,  # useless
+                    max=1,  # useless
                 )
                 prefitParamSet.insertParam(parentName, paramName, sliderParam)
 
         return prefitParamSet
-    
+
 
 class CombinedMeta(type(FitParamModelMixin), type(ParamSet)):
     pass
@@ -115,7 +119,7 @@ class FitHSParams(
     def dynamicalInit(self, hilbertspace: HilbertSpace):
         # override the parent method which also initialize the parameters
         self.hilbertspace = hilbertspace
-        
+
     def setParameter(
         self,
         parentName: str,
@@ -176,9 +180,7 @@ class FitHSParams(
 
     # hilbert space related methods ====================================
     def updateParamForHS(
-        self, 
-        parentName: str | None = None, 
-        paramName: str | None = None
+        self, parentName: str | None = None, paramName: str | None = None
     ):
         """
         Upd
@@ -398,12 +400,11 @@ class FitModel(QObject):
                 statusSource="fit",
                 statusType="error",
                 message="Fail to optimize the parameter. Due to the "
-                        "following reason: " + result,
+                "following reason: " + result,
                 mse=np.nan,
             )
             self.updateStatus.emit(status)
             return
-        
 
         if self._paramHitBound(result):
             status = Status(
@@ -477,4 +478,3 @@ class FitRunner(QRunnable):
             self.signalHost.optFinished.emit(traj)
         except Exception as e:
             self.signalHost.optFinished.emit(str(e))
-
