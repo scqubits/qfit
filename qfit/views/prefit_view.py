@@ -28,7 +28,7 @@ from typing import Dict, List, Any
 class PrefitParamView(QObject):
     """
     A view for the prefit parameters. This view is a widget that contains
-    a set of sliders and a min max table for the prefit parameters. 
+    a set of sliders and a min max table for the prefit parameters.
     It is responsible for displaying the parameters and their values, and
     also for emitting signals when the parameters are changed.
 
@@ -42,8 +42,9 @@ class PrefitParamView(QObject):
         The widget that contains the prefit min max table.
     prefitMinMaxFrame : QFrame
         The frame that contains the prefit min max table, which can be
-        folded. 
+        folded.
     """
+
     HSSliderChanged = Signal(ParamAttr)
     HSTextChanged = Signal(ParamAttr)
     HSEditingFinished = Signal(str, str)
@@ -193,9 +194,9 @@ class PrefitParamView(QObject):
         caliParamNames: Dict[str, List[str]],
         removeExisting: bool = True,
     ):
-        """ 
-        Given the dictionaries of parameter names, it will initialize 
-        the sliders and minmax table for the prefit parameters. Note that 
+        """
+        Given the dictionaries of parameter names, it will initialize
+        the sliders and minmax table for the prefit parameters. Note that
         we distinguish and keep track of the HilbertSpace parameters and
         the calibration model parameters. It's important as we need to
         emit different signals for the two types of parameters.
@@ -271,7 +272,7 @@ class PrefitParamView(QObject):
                     signalSet = self.HSSignals
                 else:
                     signalSet = self.caliSignals
-                    
+
                 item.minValue.editingFinished.connect(
                     lambda item=item, name=name, groupName=groupName, signalSet=signalSet: signalSet[
                         "rangeEditingFinished"
@@ -327,8 +328,8 @@ class PrefitView(QObject):
     """
     A view for the prefit settings. This view is a widget that contains
     settings for the prefit, such as the number of eigenvalues to calculate,
-    the initial state, the number of photons, etc. It also contains run 
-    sweep button and auto run checkbox. 
+    the initial state, the number of photons, etc. It also contains run
+    sweep button and auto run checkbox.
 
     Parameters
     ----------
@@ -379,7 +380,7 @@ class PrefitView(QObject):
         """
         self.blockAllSignals(True)
 
-        # evals count set to 1, which will be updated by the model as 
+        # evals count set to 1, which will be updated by the model as
         # a final part of the initialization in the controller.
         self.evalsCount.setText("1")
 
@@ -387,6 +388,7 @@ class PrefitView(QObject):
         self.subsysToPlot.clear()
         for subsys_name in subsysNames:
             self.subsysToPlot.insertItem(0, subsys_name)
+        self.subsysToPlot.insertItem(0, "none selected")
 
         # initial state
         self.initialState.setTupleLength(len(subsysNames))
