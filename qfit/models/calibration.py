@@ -35,6 +35,45 @@ class CaliParamModel(
     ParamModelMixin[CaliTableRowParam],  # ordering matters
     metaclass=CombinedMeta,
 ):
+    """
+    Store calibration data for x and y axes, and provide methods to 
+    transform between uncalibrated (raw) and calibrated (mapped) data.
+    The transformation is either a complete one, where rawVecX is the
+    experimental parameter (i.e. voltage) and mapVecX is the calibrated
+    parameter (i.e. flux or ng). 
+    
+    If sufficient number of figures are provided, the full relation 
+    between the two can be fully determined as follows:
+        mapVecX = M @ rawVecX + offsetVecX
+    assume mapVecX has N components, rawVecX has L components, then M
+    is a N x L matrix and offsetVecX is a N-component vector. M and
+    offsetVecX are determined by providing L+1 pairs of (rawVecX, mapVecX)
+    data points. 
+
+    If insufficient number of figures are provided, the calibration is
+    partial. In this case, the calibration is done for each figure
+    separately. For each figure, the relation between the rawVecX and 
+    mapVecX is:
+        rawVecX = rawVecX2 + tX * (rawVecX2 - rawVecX2)  \\
+        mapVecX = mapVecX2 + tX * (mapVecX2 - mapVecX2)
+    Here the rawVecX is the voltage vector in a figure that one wants to
+    calibrate, and mapVecX is the calibrated vector. The tX is the
+    parameter that determines the position of the rawVecX in the figure.
+    The calibration is done by providing 2 pairs of (rawVecX, mapVecX) data
+    points for each figure. 
+
+    When the calibration is done, signals containing the calibration data
+    will be emitted (xCaliUpdated, yCaliUpdated).
+
+    The model also communicates with PrefitCaliModel as they share the same
+    calibration data. The prefit model is used to fine-tune the calibration
+    parameters. 
+
+    Parameters
+    ----------
+    parent: QObject
+        The parent object.
+    """
     plotCaliPtExtractStart = Signal(str)
     plotCaliPtExtractFinished = Signal(str, dict)
     plotCaliPtExtractInterrupted = Signal()
@@ -101,6 +140,21 @@ class CaliParamModel(
         rawYName: str,
         figName: List[str],
     ):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the model will reinitialized by this method.
+
+        Parameters
+        ----------
+        hilbertSpace: HilbertSpace
+            The hilbert space object.
+        rawXVecNameList: List[str]
+            The names of the raw vector components.
+        rawYName: str
+            The name of the raw Y component.
+        figName: List[str]
+            The names of the figures.
+        """
         self.hilbertSpace = hilbertSpace
         self.rawXVecNameList = rawXVecNameList
         self.rawYName = rawYName
@@ -148,6 +202,14 @@ class CaliParamModel(
         ]
 
     def insertAllParams(self):
+        """
+        Insert all calibration table parameters as a part of the initialization.
+
+        The calibration table parameters contains:
+            - raw vector components, determined by the raw values from the two-tone data
+            - mapped vector components, given by sweep parameters in the HilbertSpace
+            - point pair source (if the raw vector comes from clicking on the plot)
+        """
         if self.parameters != {}:
             self.clear()
 
@@ -299,8 +361,17 @@ class CaliParamModel(
         scale: float = 0.2,
     ) -> Tuple[float, float]:
         """
-        Prefit parameters' min and max are determined by the range of the
-        existed mapped values, for fine-tuning the cali parameters.
+        In prefit, the same calibration parameters can be tuned by 
+        sliders, and the min and max of the sliders are determined here.
+
+        Parameters
+        ----------
+        rowName: str
+            The row name of the parameter.
+        colName: str
+            The column name.
+        scale: float = 0.2
+            The scaling factor for the range.
         """
         # obtain a list of values that has the same column name
         existedValue = []
@@ -333,6 +404,15 @@ class CaliParamModel(
     def toPrefitParams(
         self,
     ) -> ParamSet[SliderParam]:
+        """
+        Create a set of prefit parameters. It will be accepted by the 
+        prefitCaliParams using setAttrByParamDict method.
+
+        Returns
+        -------
+        ParamSet[SliderParam]
+            The prefit parameters with proper min, max, and value.
+        """
         # create the prefit parameters
         paramSet = ParamSet[SliderParam](SliderParam)
         for rowName, paramDictByParent in self.items():
@@ -359,6 +439,15 @@ class CaliParamModel(
     def toFitParams(
         self,
     ) -> ParamSet[FitParam]:
+        """
+        Create a set of fit parameters. It will be accepted by the
+        FitCaliParam using setAttrByParamDict method.
+
+        Returns
+        -------
+        ParamSet[FitParam]
+            The fit parameters with proper min, max, initValue and isFixed.
+        """
         # create the prefit parameters
         paramSet = ParamSet[FitParam](FitParam)
         for rowName, paramDictByParent in self.items():
@@ -385,9 +474,14 @@ class CaliParamModel(
         return paramSet
 
     # calibrate the raw vector to the mapped vector ====================
-    def YCalibration(self) -> Callable:
+    def YCalibration(self) -> Callable[[Union[float, np.ndarray]], Union[float, np.ndarray]]:
         """
         Generate a function that applies the calibration to the raw Y value.
+
+        Returns
+        -------
+        Callable[[Union[float, np.ndarray]], Union[float, np.ndarray]]
+            The calibration function that maps the raw vector to the mapped vector.
         """
         alphaVec = self._getYAlphaVec()
 
@@ -410,9 +504,14 @@ class CaliParamModel(
 
         return YCalibration
 
-    def invYCalibration(self) -> Callable:
+    def invYCalibration(self) -> Callable[[Union[float, np.ndarray]], Union[float, np.ndarray]]:
         """
         Generate a function that applies the inverse calibration to the mapped Y value.
+
+        Returns
+        -------
+        Callable[[Union[float, np.ndarray]], Union[float, np.ndarray]]
+            The calibration function that maps the mapped vector to the raw vector.
         """
         alphaVec = self._getYAlphaVec()
 
@@ -437,7 +536,8 @@ class CaliParamModel(
 
     def _getYAlphaVec(self) -> np.ndarray:
         """
-        Solve the alpha vector for the Y calibration.
+        Solve the alpha vector for the Y calibration, which contains
+        the offset and the slope of the calibration line.
         """
         # gather all the point pair raw value and construct the augmented rawMat
         augRawYMat = np.zeros((2, 2))
@@ -455,12 +555,22 @@ class CaliParamModel(
         """
         Generate a function that applies the full calibration to the raw X vector.
 
-        The full calibration takes form of
+        The full calibration takes the form of:
         mapVecComp = alphaVec . [1, rawVec]^T
-        for each mapped vector component. To solve for alphaVec, we need to gather all the
-        point pair rawVec and construct the augmented rawMat ([rawMat]_ji = i-th
-        component of the j-th vector [1, rawVec]). For each mapped vector component, we
-        gather all the point pair mapVec and solve alphaVec by inversion.
+        alphaVec is the "slope" and "offset" of the calibration line. 
+        To solve it, we need to gather all the point pairs of 
+        rawVec and construct the augmented rawMat, where [rawMat]_ji is 
+        the i-th component of the j-th vector [1, rawVec]. Then alphaVec
+        can be solved by inverting the rawMat.
+
+        Mapped vector components can be obtained by applying the calibration
+        function to the raw vector components.
+
+        Returns
+        -------
+        Dict[str, SweepParamSet]
+            In each figure, the sweep parameter set contains the calibration
+            function that maps the raw vector to the mapped vector.
         """
         # gather all the point pair rawVec and construct the augmented rawMat
         augRawXMat = np.zeros((self.caliTableXRowNr, self.rawXVecDim + 1))
@@ -519,7 +629,23 @@ class CaliParamModel(
 
     def _partialXCalibration(self) -> Dict[str, SweepParamSet]:
         """
-        Generate a function that applies the partial calibration to the raw vector.
+        Generate a function that applies the partial calibration to the raw X vector.
+
+        The partial calibration takes the form of:
+        mapVecComp = (mapVecComp2 - mapVecComp1)*x + mapVecComp1
+        rawVecComp = (rawVecComp2 - rawVecComp1)*x + rawVecComp1
+        Here x is the parameter that determines the position of the 
+        rawVecComp in the figure. The calibration is done by providing
+        2 pairs of (rawVecComp, mapVecComp) data points for each figure.
+
+        Mapped vector components can be obtained by applying the calibration
+        function to the raw vector components.
+
+        Returns
+        -------
+        Dict[str, SweepParamSet]
+            In each figure, the sweep parameter set contains the calibration
+            function that maps the raw vector to the mapped vector.
         """
         sweepParamSetByFig: Dict[str, SweepParamSet] = {}
         # loop over all the figures
@@ -589,6 +715,10 @@ class CaliParamModel(
         return sweepParamSetByFig
 
     def XCalibration(self) -> Dict[str, SweepParamSet]:
+        """
+        Generate a function that applies the calibration to the raw X vector,
+        based on the type of calibration.
+        """
         if self.isFullCalibration:
             return self._fullXCalibration()
         else:
@@ -596,13 +726,29 @@ class CaliParamModel(
 
     # slots & public interface ================================================
     @Slot()
-    def updateStatusFromCaliView(self, status: Union[str, Literal[False]]):
+    def updateStatusFromCaliView(
+        self, 
+        status: Union[str, Literal[False]]
+    ):
+        """
+        When the user clicks the raw vector extraction button, the status
+        will be updated. 
+
+        Parameters
+        ----------
+        status: Union[str, Literal[False]]
+            The status of the calibration. If it's a string, calibration
+            asis can be inferred from the first character (X or Y). If it's
+            False, the calibration is off.
+        """
         self.caliStatus = status
         if type(status) is str:
             if status[0] == "X":
                 destination = "CALI_X"
             elif status[0] == "Y":
                 destination = "CALI_Y"
+            else:
+                raise ValueError("Invalid status.")
             self.plotCaliPtExtractStart.emit(destination)
         else:
             self.plotCaliPtExtractInterrupted.emit()
@@ -632,6 +778,17 @@ class CaliParamModel(
         Not only set the parameter, but also emit the signal to update the view.
 
         A key method in updating the model by the internal processes.
+
+        Parameters
+        ----------
+        rowIdx: str
+            The row index of the parameter.
+        colName: str
+            The column name of the parameter.
+        attr: str
+            The attribute of the parameter.
+        value: Union[int, float, str, None]
+            The value to be set.    
         """
         super().setParameter(rowIdx, colName, attr, value)
 
@@ -645,6 +802,13 @@ class CaliParamModel(
     def processSelectedPtFromPlot(self, data: Dict[str, float], figName: str):
         """
         Called by the canvas click event. Process and store the calibration data.
+
+        Parameters
+        ----------
+        data: Dict[str, float]
+            The raw vector data.
+        figName: str
+            The name of the figure.
         """
         # get current label
         caliLabel = self.caliStatus  # can be int or str
@@ -678,22 +842,21 @@ class CaliParamModel(
 
     @Slot()
     def interruptCali(self):
+        """
+        Interrupt the calibration process, it will be called either by the
+        user clicking the calibration button again, or by other events like
+        page change.
+        """
         if self.caliStatus:
             self.caliStatus = False
             self.plotCaliPtExtractInterrupted.emit()
 
-        # if self.caliStatus:
-        #     self.caliStatus = False
-        #     self.plotCaliPtExtractEnd.emit()
-        # else:
-        #     # if the calibration is not on, it's likely triggered by
-        #     # other events like page change,
-        #     # we should not trigger the plotCaliPtExtractEnd signal in this case
-        #     pass
-
     def registerAll(
         self,
     ) -> Dict[str, RegistryEntry]:
+        """
+        Register all the parameters in the model.
+        """
         return self._registerAll(self)
 
     @Slot()
@@ -703,9 +866,16 @@ class CaliParamModel(
         **kwargs,
     ):
         """
-        Store attr from view.
+        Store attr from view. It also updates the prefit model if the 
+        parameter is a prefit parameter.
 
-        It also updates the prefit model if the parameter is a prefit parameter.
+        Parameters
+        ----------
+        paramAttr: ParamAttr
+            The parameter attribute.
+        kwargs: Dict[str, Any]
+            The keyword arguments for setting the parameter attribute in 
+            view.storeAttr method.
         """
         super()._storeParamAttr(self, paramAttr, **kwargs)
         rowIdx = paramAttr.parentName
@@ -737,6 +907,10 @@ class CaliParamModel(
                 )
 
     def updateCaliModelRawVecNameListForSwapXY(self):
+        """
+        Update the raw vector names for the calibration model when the XY data
+        is swapped.
+        """
         self.rawYName, self.rawXVecNameList = self.rawXVecNameList[0], [self.rawYName]
         self.insertAllParams()
         self._updateXRowIdxBySourceDict()
@@ -826,23 +1000,35 @@ class CaliParamModel(
         colName: Optional[str] = None,
         attr: Optional[str] = None,
     ):
+        """
+        Emit the signal to update the view.
+
+        Parameters
+        ----------
+        rowIdx: Optional[str]
+            The row index of the parameter.
+        colName: Optional[str]
+            The column name of the parameter.
+        attr: Optional[str]
+            The attribute of the parameter.
+        """
         self._emitUpdateBox(self, parentName=rowIdx, paramName=colName, attr=attr)
 
     def sendXCaliFunc(self):
         """
         The function that updates the calibration function. Triggers when:
-        * line editing acction triggers storeParamAttr
-        * XY swap triggers swapXYData
-        * entering raw X by clicking on the plot triggers processSelectedPtFromPlot
+            - line editing acction triggers storeParamAttr
+            - XY swap triggers swapXYData
+            - entering raw X by clicking on the plot triggers processSelectedPtFromPlot
         """
         self.xCaliUpdated.emit(self.XCalibration())
 
     def sendYCaliFunc(self):
         """
         The function that updates the calibration function. Triggers when:
-        * line editing acction triggers storeParamAttr
-        * XY swap triggers swapXYData
-        * entering raw Y by clicking on the plot triggers processSelectedPtFromPlot
+            - line editing acction triggers storeParamAttr
+            - XY swap triggers swapXYData
+            - entering raw Y by clicking on the plot triggers processSelectedPtFromPlot
         """
         self.yCaliUpdated.emit(self.YCalibration(), self.invYCalibration())
 

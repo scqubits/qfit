@@ -17,11 +17,11 @@ from PySide6 import QtGui
 
 from PySide6.QtCore import (
     QAbstractListModel,
-    QAbstractTableModel,
     QModelIndex,
     Qt,
     Slot,
     Signal,
+    QObject,
 )
 
 from qfit.models.data_structures import (
@@ -41,22 +41,24 @@ if TYPE_CHECKING:
     from qfit.utils.helpers import OrderedDictMod
 
 
-class ActiveExtractedData(QAbstractTableModel):
-    """This class holds one data set, as extracted by markers on the canvas."""
+class ActiveExtractedData(QObject):
+    """
+    This class holds one extracted transition, as a series of markers on 
+    the canvas. User can add, remove, and replace the data points, and 
+    the view will change correspondingly.
 
-    dataUpdated = Signal(ExtrTransition)
-    dataSwitched = Signal(ExtrTransition)
+    Parameters
+    ----------
+    parent: QObject
+        The parent QObject of this model.
+    """
+    dataUpdated = Signal(ExtrTransition)    # when user add or remove data points
+    dataSwitched = Signal(ExtrTransition)   # when user select and focus on a new row
     readyToPlot = Signal(
         ScatterElement
-    )  # the above two signals are connected to this signal
+    )  # send the plot element to the mpl canvas
 
     def __init__(self, parent):
-        """
-        Parameters
-        ----------
-        data: np.ndarray
-            numpy array of floats, shape=(2, N)
-        """
         super().__init__(parent)
 
         self._transition = ExtrTransition()
@@ -98,30 +100,6 @@ class ActiveExtractedData(QAbstractTableModel):
     def isEmpty(self) -> bool:
         return self._transition.count() == 0
 
-    def headerData(
-        self, section: int, orientation: Qt.Orientation, role=Qt.DisplayRole
-    ):
-        """
-        Obtain table header info in string format
-
-        Parameters
-        ----------
-        section: int
-        orientation: Qt.Orientation
-        role: int
-
-        Returns
-        -------
-        str
-            String for the label of the horizontal or vertical header of the table.
-        """
-        # section is the index of the column/row.
-        if role == Qt.DisplayRole:
-            if orientation == Qt.Vertical:
-                return str(["x", "y"][section])
-            elif orientation == Qt.Horizontal:
-                return str(section)
-
     # Data manipulation ================================================
     def remove(self, index: int):
         """
@@ -142,7 +120,9 @@ class ActiveExtractedData(QAbstractTableModel):
     @Slot(ExtrTransition)
     def replaceAllData(self, newTransition: ExtrTransition):
         """
-        Replaces the current table of extracted data points with a new dataset of points
+        Replaces the current table of extracted data points with a new 
+        dataset of points. It's used when user clicks on a new row in the
+        list view.
 
         Parameters
         ----------
@@ -164,6 +144,11 @@ class ActiveExtractedData(QAbstractTableModel):
         self.emitDataUpdated()
 
     def generatePlotElement(self) -> ScatterElement:
+        """
+        Generate a plot element and send it to the mpl canvas through the
+        readyToPlot signal. For the active extracted data, it's a scatter
+        plot of the data points with a larger marker.
+        """
         # tag mode
         scat_active = ScatterElement(
             "active_extractions",
@@ -204,10 +189,20 @@ class ListModelMeta(type(QAbstractListModel), type(Registrable)):
 
 
 class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta):
-    dataUpdated = Signal(FullExtr)
+    """
+    This class holds all extracted transitions for all figures, and each
+    figure has a list of transitions. User can add, remove, and replace
+    the transitions, and the view will change correspondingly.
 
+    Parameters
+    ----------
+    parent: QObject
+        The parent QObject of this model.
+    """
+
+    dataUpdated = Signal(FullExtr)  # when user add or remove data points
     focusChanged = Signal(ExtrTransition)  # when user select and focus on a new row
-    readyToPlot = Signal(ScatterElement)  # connected to the above signal
+    readyToPlot = Signal(ScatterElement)  # send the plot element to the mpl canvas
 
     distinctXUpdated = Signal(np.ndarray)  # when user extract (remove) data points
     readyToPlotX = Signal(VLineElement)  # connected to the above signal
@@ -221,12 +216,21 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
 
         self._fullSpectra = FullExtr()
 
-        self.connects()
+        self._signalProcessing()
 
     def dynamicalInit(
         self,
         figNames: List[str],
     ):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the model will reinitialized by this method.
+
+        Parameters
+        ----------
+        figNames: List[str]
+            The names of the figures.
+        """
         self._figNames = figNames
         self._initFullSpectra()
 
@@ -234,6 +238,9 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         self._currentRow = 0
 
     def _initSpectra(self, figName: str):
+        """
+        Initialize a new spectra (list of transitions) for a new figure.
+        """
         transition = ExtrTransition()
         transition.name = "Transition 1"
         spectra = ExtrSpectra(
@@ -242,6 +249,9 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         self._fullSpectra[figName] = spectra
 
     def _initFullSpectra(self):
+        """
+        Initialize the FullExtr for all figures.
+        """
         for name in self._figNames:
             self._initSpectra(name)
 
@@ -301,6 +311,9 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
 
     # Signal processing ================================================
     def emitFocusChanged(self, *args):
+        """
+        Emit focusChanged signal with the current transition
+        """
         self.focusChanged.emit(self.currentTransition())
 
     def emitXUpdated(self, *args):
@@ -310,15 +323,24 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         self.distinctXUpdated.emit(self._currentSpectrum.distinctSortedX())
 
     def emitReadyToPlot(self, *args):
+        """
+        Emit readyToPlot signal with the plot element
+        """
         self.readyToPlot.emit(self.generatePlotElement())
 
     def emitReadyToPlotX(self, *args):
+        """
+        Emit readyToPlotX signal with the plot element
+        """
         self.readyToPlotX.emit(self.generatePlotElementX())
 
     def emitDataUpdated(self):
+        """
+        Emit dataUpdated signal with the current full spectra
+        """
         self.dataUpdated.emit(self._fullSpectra)
 
-    def connects(self):
+    def _signalProcessing(self):
         # focus changed --> update plot
         self.focusChanged.connect(self.emitReadyToPlot)
 
@@ -331,6 +353,9 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
 
     # Internal data manipulation methods ===============================
     def insertRow(self, row, parent=QModelIndex(), *args, **kwargs):
+        """
+        Insert a new row at the end of the table.
+        """
         self.beginInsertRows(parent, row, row)
         transition = ExtrTransition()
         self._currentSpectrum.insert(row, transition)
@@ -344,6 +369,9 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         return True
 
     def removeRow(self, row, parent=QModelIndex(), *args, **kwargs):
+        """
+        Remove a row from the table.
+        """
         if self.rowCount() == 1:
             transition = ExtrTransition()
             transition.name = "Transition 1"
@@ -380,12 +408,18 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         return True
 
     def swapXY(self):
+        """
+        Swap the x and y values of the current transition.
+        """
         self._fullSpectra.swapXY()
         self.emitXUpdated()
         self.emitReadyToPlot()
 
     @Slot(str)
     def switchFig(self, figName: str):
+        """
+        Switch to a new figure.
+        """
         self._currentFigName = figName
         self.emitXUpdated()
         self.emitFocusChanged()
@@ -411,6 +445,9 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
 
     @Slot(str)
     def newRow(self, str_value=None):
+        """
+        Add a new row to the table with name `transition_x`
+        """
         rowCount = self.rowCount()
 
         # find a unique name for the new row
@@ -425,14 +462,17 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
 
     @Slot()
     def removeCurrentRow(self):
+        """
+        Remove the current row from the table and emit the xUpdated signal.
+        """
         self.removeRow(self.currentRow)
         self.emitXUpdated()
 
     @Slot(ExtrTransition)
     def updateCurrentTransition(self, transition: ExtrTransition):
         """
-        TODO
-        Associted extracted data and tag updated from the active extracted data
+        Update the current transition with a new transition, and emit the
+        dataUpdated and xUpdated signals.
         """
         self._currentSpectrum[self.currentRow] = transition
         self.emitDataUpdated()
@@ -440,10 +480,18 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
 
     @Slot(int)
     def setCurrentRow(self, row: int):
+        """
+        Set the current row and emit the focusChanged signal.
+        """
         self._currentRow = row
         self.emitFocusChanged()
 
     def generatePlotElement(self) -> ScatterElement:
+        """
+        Generate a plot element and send it to the mpl canvas through the
+        readyToPlot signal. For the inactive extracted data, it's a scatter
+        plot of the data points with a "x" marker.
+        """
         spectra = copy(self._currentSpectrum)
         spectra.pop(self.currentRow)
         all_data = spectra.allDataConcated()
@@ -460,6 +508,11 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         return scat_all
 
     def generatePlotElementX(self) -> VLineElement:
+        """
+        Generate a plot element representing the distinct x coordinates
+        of the current spectra, and send it to the mpl canvas through the
+        readyToPlotX signal.  
+        """
         vline_data = self._currentSpectrum.distinctSortedX()
         vline = VLineElement("extraction_vlines", vline_data, alpha=0.5)
 
@@ -467,8 +520,7 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
 
     def registerAll(self):
         """
-        Register necessary data for extracted data; these data are used to reconstruct the
-        extracted data when loading a project file.
+        Register the fullSpectra data to the registry.
         """
 
         def setter(initdata):
