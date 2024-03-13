@@ -380,27 +380,11 @@ class PrefitView(QObject):
         """
         self.blockAllSignals(True)
 
-        # evals count set to 1, which will be updated by the model as
-        # a final part of the initialization in the controller.
-        self.evalsCount.setText("1")
-
         # load subsystems
         self.subsysToPlot.clear()
         for subsys_name in subsysNames:
             self.subsysToPlot.insertItem(0, subsys_name)
-        self.subsysToPlot.insertItem(0, "none selected")
-
-        # initial state
-        self.initialState.setTupleLength(len(subsysNames))
-
-        # photons
-        self.photons.setValue(1)
-
-        # points added
-        self.pointsAdded.setText("10")
-
-        # auto run
-        self.autoRun.setChecked(True)
+        self.subsysToPlot.insertItem(0, "None Selected")
 
         self.blockAllSignals(False)
 

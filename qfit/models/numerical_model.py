@@ -187,7 +187,7 @@ class QuantumModel(QObject):
         """
         # process the raw value from UI
         if attrName == "subsysToPlot":
-            if value != "none selected":
+            if value != "None Selected":
                 id_str = SweepParamSet.parentSystemIdstrByName(value)
                 value = self.hilbertspace.subsys_by_id_str(id_str)
         elif attrName == "initialState":
@@ -261,10 +261,11 @@ class QuantumModel(QObject):
             initialState = self._initialState
 
         # spectrum data for highlighting
-        if self._subsysToPlot == "none selected":
+        if self._subsysToPlot == "None Selected":
             subsystems = None
         else:
             subsystems = self._subsysToPlot
+            
         highlight_specdata = self._currentSweep.transitions(
             as_specdata=True,
             subsystems=subsystems,

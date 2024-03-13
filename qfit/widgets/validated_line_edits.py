@@ -185,11 +185,11 @@ class StateLineEdit(ValidatedLineEdit):
         number of integers separated by commas.
         """
         if tupleLength is None:
-            # integer tuple with any length
-            regEx = QRegExp("^([1-9]\d*|0)(, ?([1-9]\d*|0))*$")
+            # integer tuple with any length or empty string
+            regEx = QRegExp("^$|^([1-9]\d*|0)(, ?([1-9]\d*|0))*$")
         else:
-            # integer or a tuple with length tupleLength
-            regEx = QRegExp("^([1-9]\d*|0)(, ?([1-9]\d*|0)){0,%d}$" % (tupleLength - 1))
+            # integer or a tuple with length tupleLength or empty string
+            regEx = QRegExp("^$|^([1-9]\d*|0)(, ?([1-9]\d*|0)){0,%d}$" % (tupleLength - 1))
         self._validator = QRegExpValidator(regEx)
         self.setValidator(self._validator)
 
