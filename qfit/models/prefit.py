@@ -13,6 +13,11 @@ from qfit.models.registry import RegistryEntry
 
 
 class SliderModelMixin(ParamModelMixin[SliderParam]):
+    """
+    Mixin class for the parameters that are connected to sliders, value text 
+    boxes and min/max text boxes. 
+    """
+
     updateSlider = Signal(ParamAttr)
 
     def _emitUpdateSlider(
@@ -21,6 +26,18 @@ class SliderModelMixin(ParamModelMixin[SliderParam]):
         parentName: Optional[str] = None,
         paramName: Optional[str] = None,
     ):
+        """
+        Emit updateSlider signal.
+
+        Parameters
+        ----------
+        paramSet: ParamSet
+            The parameter set.
+        parentName: str
+            The name of the parent parameter.
+        paramName: str
+            The name of the parameter.
+        """
         self._emitAttrByName(
             paramSet,
             self.updateSlider,
@@ -37,6 +54,19 @@ class SliderModelMixin(ParamModelMixin[SliderParam]):
         paramAttr: ParamAttr,
         fromSlider: bool = False,
     ):
+        """
+        Store the data from the view (slider or text box) and emit the signal
+        to update its counterparts if necessary.
+
+        Parameters
+        ----------
+        paramSet: ParamSet
+            The parameter set.
+        paramAttr: ParamAttr
+            The parameter attribute.
+        fromSlider: bool
+            If the data comes from the slider.
+        """
         super()._storeParamAttr(paramSet, paramAttr, fromSlider=fromSlider)
 
         if paramAttr.attr == "value":
@@ -59,6 +89,16 @@ class PrefitHSParams(
     SliderModelMixin,  # ordering matters
     metaclass=CombinedMeta,
 ):
+    """
+    The model for the HilbertSpace parameters in the prefit stage. Those
+    parameters are connected to sliders, value text boxes and min/max text
+    boxes.
+
+    Parameters
+    ----------
+    parent: QObject 
+        The parent object.
+    """
     attrs = SliderParam.dataAttr
 
     updateSlider = Signal(ParamAttr)
@@ -75,6 +115,18 @@ class PrefitHSParams(
         paramName: Union[str, None] = None, 
         attr: Union[str, None] = None
     ):
+        """
+        Emit updateBox signal.
+
+        Parameters
+        ----------
+        parentName: str
+            The name of the parent parameter.
+        paramName: str
+            The name of the parameter.
+        attr: str
+            The attribute to be updated.
+        """
         self._emitUpdateBox(self, parentName=parentName, paramName=paramName, attr=attr)
 
     def emitUpdateSlider(
@@ -82,6 +134,16 @@ class PrefitHSParams(
         parentName: Union[str, None] = None, 
         paramName: Union[str, None] = None
     ):
+        """
+        Emit updateSlider signal.
+
+        Parameters
+        ----------
+        parentName: str
+            The name of the parent parameter.
+        paramName: str
+            The name of the parameter.
+        """
         self._emitUpdateSlider(self, parentName=parentName, paramName=paramName)
 
     def setParameter(
@@ -92,7 +154,19 @@ class PrefitHSParams(
         value: Union[int, float],
     ):
         """
-        Set the parameter, emit the signal to update the box and sliders.
+        Set the parameter from the other part of the backend, and then
+        emit the signal to update the view.
+
+        Parameters
+        ----------
+        parentName: str
+            The name of the parent parameter.
+        name: str
+            The name of the parameter.
+        attr: str
+            The attribute to be updated.
+        value: int | float
+            The value to be set.
         """
         super().setParameter(parentName, name, attr, value)
 
@@ -107,10 +181,25 @@ class PrefitHSParams(
     ):
         """
         Store the data from the view
+
+        Parameters
+        ----------
+        paramAttr: ParamAttr
+            The parameter attribute.
+        fromSlider: bool
+            If the data comes from the slider.
         """
         super()._storeParamAttr(self, paramAttr, fromSlider=fromSlider)
 
     def registerAll(self) -> Dict[str, RegistryEntry]:
+        """
+        Register all the parameters.
+
+        Returns
+        -------
+        Dict[str, RegistryEntry]
+            The registry entries.
+        """
         return self._registerAll(self)
 
     # HilbertSpace related methods, could be a mixin class =============
@@ -118,6 +207,10 @@ class PrefitHSParams(
 
     # Signals 
     def emitHSUpdated(self):
+        """
+        In the prefit stage, send the updated HilbertSpace to the numerical
+        model when updated.
+        """
         self.hilbertSpaceUpdated.emit(self.hilbertspace)
         
     # Slots 
@@ -127,11 +220,36 @@ class PrefitHSParams(
         parentName: str | None = None, 
         paramName: str | None = None
     ):
+        """
+        Update the HilbertSpace when the parameters are updated.
+
+        Parameters
+        ----------
+        parentName: str | None
+            The name of the parent parameter.
+        paramName: str | None
+            The name of the parameter.
+        """
         super().updateParamForHS(parentName, paramName)
         self.emitHSUpdated()
 
     # general model methods ============================================
-    def toFitParams(self, scale: float = 0.1) -> ParamSet[FitParam]:
+    def toFitParams(self, scale: float = 0.15) -> ParamSet[FitParam]:
+        """
+        Prepare for the data transfer from the prefit parameters to the 
+        fitting parameters.
+
+        Parameters
+        ----------
+        scale: float
+            The scale factor that determines the range of the fitting
+            parameters.
+
+        Returns
+        -------
+        ParamSet[FitParam]
+            The fitting parameters.
+        """
         paramSet = ParamSet[FitParam](FitParam)
         for parentName, parent in self.items():
             for paramName, param in parent.items():
@@ -165,6 +283,16 @@ class PrefitCaliParams(
     SliderModelMixin,  # ordering matters
     metaclass=CombinedMeta,
 ):
+    """
+    The model for the calibration parameters in the prefit stage. Those
+    parameters are connected to sliders, value text boxes and min/max text
+    boxes.
+
+    Parameters
+    ----------
+    parent: QObject
+        The parent object.
+    """
     attrs = SliderParam.dataAttr
 
     updateSlider = Signal(ParamAttr)
@@ -181,6 +309,16 @@ class PrefitCaliParams(
         paramName: Union[str, None] = None, 
         attr: Union[str, None] = None
     ):
+        """
+        Emit updateBox signal.
+
+        Parameters
+        ----------
+        parentName: str
+            The name of the parent parameter.
+        paramName: str
+            The name of the parameter.
+        """
         self._emitUpdateBox(self, parentName=parentName, paramName=paramName, attr=attr)
 
     def emitUpdateSlider(
@@ -188,6 +326,16 @@ class PrefitCaliParams(
         parentName: Union[str, None] = None, 
         paramName: Union[str, None] = None, 
     ):
+        """
+        Emit updateSlider signal.
+        
+        Parameters
+        ----------
+        parentName: str
+            The name of the parent parameter.
+        paramName: str
+            The name of the parameter.
+        """
         self._emitUpdateSlider(self, parentName=parentName, paramName=paramName)
 
     def setParameter(
@@ -198,7 +346,18 @@ class PrefitCaliParams(
         value: Union[int, float],
     ):
         """
-        Set the parameter, emit the signal to update the box and sliders.
+        Set the parameter, emit the signal to update the view.
+
+        Parameters
+        ----------
+        parentName: str
+            The name of the parent parameter.
+        name: str
+            The name of the parameter.
+        attr: str
+            The attribute to be updated.
+        value: int | float
+            The value to be set.
         """
         super().setParameter(parentName, name, attr, value)
 
@@ -212,11 +371,26 @@ class PrefitCaliParams(
         fromSlider: bool = False,
     ):
         """
-        Store the data from the view
+        Store the data from the view.
+
+        Parameters
+        ----------
+        paramAttr: ParamAttr
+            The parameter attribute.
+        fromSlider: bool
+            If the data comes from the slider.
         """
         super()._storeParamAttr(self, paramAttr, fromSlider=fromSlider)
 
     def registerAll(self) -> Dict[str, RegistryEntry]:
+        """
+        Register all the parameters.
+        
+        Returns
+        -------
+        Dict[str, RegistryEntry]
+            The registry entries.
+        """
         return self._registerAll(self)
 
     # Cailibration related methods =====================================
@@ -227,8 +401,7 @@ class PrefitCaliParams(
         paramFromCaliModel: "ParamSet",
     ):
         """
-        Used for put all the parameters from the calibration model to the prefit
-        model.
+        Replace all the parameters with the ones from the calibration model.
         """
         self.parameters = paramFromCaliModel.parameters
         self.emitUpdateBox()
@@ -240,7 +413,17 @@ class PrefitCaliParams(
         parentName: str,
         paramName: str,
     ):
-        # send the calibration model the updated parameters
+        """
+        Send the calibration model the updated parameters so that the
+        calibration function can be updated while prefitting.
+
+        Parameters
+        ----------
+        parentName: str
+            The name of the parent parameter.
+        paramName: str
+            The name of the parameter.
+        """
         self.updateCaliModel.emit(ParamAttr(
             parentName,
             paramName,

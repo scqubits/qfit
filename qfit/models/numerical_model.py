@@ -34,6 +34,10 @@ class QuantumModel(QObject):
     - "prefit": the sweep is automatically calculated once the ingredients are updated
     - "fit": the sweep can be manually calculated during the fitting process
     - "fit-result": calculate a one-time sweep after the fitting process is finished
+
+    Parameters
+    ----------
+    parent: QObject
     """
     _sweeps: Dict[str, ParameterSweep]
 
@@ -54,6 +58,17 @@ class QuantumModel(QObject):
         SweepRunner.signalHost.sweepFinished.connect(self._postSweepInThread)
 
     def dynamicalInit(self, hilbertspace: HilbertSpace, figNames: List[str]):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the model will reinitialized by this method.
+
+        Parameters
+        ----------
+        hilbertspace: HilbertSpace
+            HilbertSpace object
+        figNames: List[str]
+            The names of the figures to be plotted.
+        """
         self.hilbertspace = hilbertspace
         self._figNames = figNames
         self._currentFigName = self._figNames[0]
@@ -61,6 +76,14 @@ class QuantumModel(QObject):
         self._initializeSweepIngredients()
 
     def _initializeSweepIngredients(self):
+        """
+        Initialize the ingredients for the sweep:
+        - extracted data
+        - calibration
+        - options when generating the parameter sweep
+        - options when plotting the spectrum
+        - option and status when running
+        """
         # extracted data
         self._fullExtr = FullExtr()
 
@@ -91,6 +114,9 @@ class QuantumModel(QObject):
     # Signals and Slots ========================================================
     @Slot(str)
     def switchFig(self, figName: str):
+        """
+        Switch the current figure name.
+        """
         self._currentFigName = figName
         self.updateCalc()
 
@@ -100,7 +126,7 @@ class QuantumModel(QObject):
         hilbertspace: HilbertSpace,
     ):
         """
-        Update the HilbertSpace object.
+        Update the HilbertSpace object and update the calculation.
 
         Parameters
         ----------
@@ -113,13 +139,12 @@ class QuantumModel(QObject):
     @Slot(FullExtr)
     def updateExtractedData(self, fullExtr: FullExtr):
         """
-        Update the extracted data.
+        Update the extracted data and update the calculation.
 
         Parameters
         ----------
-        dataNames: List[str]
-        data: List[ndarray]
-        tags: List[Tag]
+        fullExtr: FullExtr
+            Full extracted data for all figures.
         """
         self._fullExtr = fullExtr
         # at the moment we don't update the calculation after the extracted data is updated
@@ -127,25 +152,32 @@ class QuantumModel(QObject):
     @Slot(dict)
     def updateRawXMap(self, rawXByX: Dict[str, Callable[[float], Dict[str, float]]]):
         """
-        Update the rawXByX dictionary.
+        Update the rawXByX dictionary. For each figure, there is a function 
+        which maps the extracted x coordinate
+        to the raw x (all of the control knobs) coordinates. 
 
         Parameters
         ----------
-        rawXByX: Dict[str, ndarray]
+        rawXByX: Dict[str, Callable[[float], Dict[str, float]]]
+            Key: figure name
+            Value: a function that maps the extracted x coordinate to the raw x 
+            coordinate
         """
         self._rawXByX = rawXByX
 
     @Slot(dict)
     def updateXCaliFunc(self, sweepParamSets: Dict[str, SweepParamSet]):
         """
-        Update the parameter sets for the sweeps.
+        Update the x calibration function that is stored in the sweepParamSets.
+        It also updates the calculation.
 
         Parameters
         ----------
         sweepParamSets: Dict[str, SweepParamSet]
+            Key: figure name
+            Value: SweepParamSet
         """
         self._sweepParamSets = sweepParamSets
-
         self.updateCalc()
 
     @Slot(object, object)  # can't use Callable here in the initialization
@@ -157,6 +189,11 @@ class QuantumModel(QObject):
         Parameters
         ----------
         yCaliFunc: Callable
+            The calibration function that maps the raw y to the calibrated 
+            y.
+        invYCaliFunc: Callable
+            The inverse calibration function that maps the calibrated y to the 
+            raw y.
         """
         self._yCaliFunc = yCaliFunc
         self._yInvCaliFunc = invYCaliFunc
@@ -176,7 +213,9 @@ class QuantumModel(QObject):
         value: Any,
     ):
         """
-        Set the sweep options.
+        Set the sweep options including the subsystems to plot, the initial state,
+        the photon number, the number of eigenenergies to be calculated, the number
+        of points added to the x coordinate, and the auto run option.
 
         Parameters
         ----------
@@ -211,11 +250,15 @@ class QuantumModel(QObject):
 
     @Slot(np.ndarray, np.ndarray)
     def relimX(self, x: np.ndarray, y: np.ndarray):
+        """
+        Update the x limit of the plot, so that the sweep runs from one
+        end to the other.
+        """
         self._xLim = (np.min(x), np.max(x))
 
     def exportSweepOption(self) -> Dict[str, Any]:
         """
-        Export the sweep options to view
+        Export the sweep options to view.
 
         Returns
         -------
@@ -242,7 +285,7 @@ class QuantumModel(QObject):
         self, currentPage: Literal["calibrate", "extract", "prefit", "fit"]
     ):
         """
-        Update the disableSweep attribute when the page changes.
+        Update the mode of the sweep based on the current page.
         """
         if currentPage == "prefit":
             self.sweepUsage = currentPage
@@ -253,6 +296,9 @@ class QuantumModel(QObject):
 
     # signals =================================================================
     def emitReadyToPlot(self):
+        """
+        Emit the signal to update the spectrum plot.
+        """
         # since we always specify the subsystems to plot, we need change the
         # default setting for initial state: None means (0, 0, ...)
         if self._initialState is None:
@@ -314,7 +360,10 @@ class QuantumModel(QObject):
 
     # tools ===================================================================
     def _stateStr2Label(self, state_str: str):
-        # convert string to state label
+        """
+        Convert a label in string (something like "0, 1, 2")
+        to a numerical label, which is a tuple or an integer.
+        """
 
         # empty string means None
         if state_str == "":
@@ -359,9 +408,10 @@ class QuantumModel(QObject):
     def _prefitSweptX(self, addPoints: bool = True) -> Dict[str, np.ndarray]:
         """
         Generate a list of x coordinates for the prefit. The x coordinates are
-        currently made of (1) a uniformly distributed list of x coordinates in
-        between the min and max of the x-coordinates of the extracted data, and
-        (2) the x-coordinates of the extracted data.
+        currently made of 
+        1. a uniformly distributed list of x coordinates in
+        between the min and max of the x-coordinates of the extracted data
+        2. the x-coordinates of the extracted data.
         """
         sweptX = {}
         for figName, extracted_data_set in self._fullExtr.items():
@@ -423,15 +473,25 @@ class QuantumModel(QObject):
 
         Parameters
         ----------
-        x_coordinate_list: ndarray
-            The x coordinate of the transition plot.
-        sweep_parameter_set: QuantumModelParameterSet
-            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object.
-            All the parameters in the parameter set must have the calibration_func attribute.
+        sweptX: Dict[str, np.ndarray]
+            Key: figure name
+            Value: a list of x coordinates for sweeping, which is a direct 
+            argument to the ParameterSweep object.
+        updateHS: Dict[str, Callable[[float], None]]
+            Key: figure name
+            Value: a function that updates the HilbertSpace object, which 
+            is a direct argument to the ParameterSweep object.
+        subsysUpdateInfo: Dict[str, List]
+            Key: figure name
+            Value: a list of subsystems that need to be updated when the 
+            x-coordinate is changed, which is a direct argument to the
+            ParameterSweep object.
 
         Returns
         -------
-        A ParameterSweep object.
+        Dict[str, ParameterSweep]
+            Key: figure name
+            Value: ParameterSweep object for each figure.
         """
         sweeps = {}
 
@@ -504,10 +564,25 @@ class QuantumModel(QObject):
                 )
                 self.updateStatus.emit(status)
 
-    def _sweepInThread(self, forced: bool = False, sweepUsage: str = "prefit") -> None:
+    def _runSweepInThread(
+        self, 
+        forced: bool = False, 
+        sweepUsage: str = "prefit"
+    ) -> None:
         """
         Run sweep in a separate thread. After finished, _postSweepInThread
         will be called, which will handle errors and call sweep2SpecMSE.
+
+        Parameters
+        ----------
+        forced: bool
+            If True, the sweep will be run and the spectrum will be calculated
+            regardless of the sweepUsage and autoRun settings.
+        sweepUsage: str
+            The usage of the sweep. It can be "prefit", "fit", or "fit-result".
+            It helps to determine how and whether the spectrum will be calculated.
+            It's not used in the running process, but it's passed to the
+            _postSweepInThread method.
         """
         runner = SweepRunner(self._sweeps, forced=forced, sweepUsage=sweepUsage)
         self._sweepThreadPool.start(runner)
@@ -519,6 +594,21 @@ class QuantumModel(QObject):
         forced: bool,
         sweepUsage: str,
     ):
+        """
+        This method is called after the sweep in the thread is finished. It
+        handles errors and calls sweep2SpecMSE if the sweep is successful.
+
+        Parameters
+        ----------
+        result: Union[Dict[str, ParameterSweep], str]
+            The result of the sweep. If it's a string, it's an error message.
+            If it's a dictionary, it's the sweep object.
+        forced: bool
+            It's passed to the sweep2SpecMSE method, so that the spectrum will
+            be calculated if it's True regardless of the sweepUsage and autoRun.
+        sweepUsage: str
+            The usage of the sweep. It's passed to the sweep2SpecMSE method.
+        """
         if isinstance(result, str):
             status = Status(
                 statusSource=sweepUsage,
@@ -534,14 +624,29 @@ class QuantumModel(QObject):
     @Slot(bool, str)
     def sweep2SpecMSE(self, forced: bool = False, sweepUsage: str = "prefit") -> float:
         """
-        It is connected to the signal emitted by the UI when the user clicks the plot button
-        for the prefit stage. It make use of the existing sweep object to
-        get a spectrum data and MSE.
+        Given the existing sweeps, calculate and emit the spectrum and the 
+        mean square error
+        between the extracted data and the simulated data. 
+
+        Parameters
+        ----------
+        forced: bool
+            If True, the spectrum will be calculated regardless of the sweepUsage
+            and autoRun settings.
+        sweepUsage: str
+            The usage of the sweep. It can be "prefit", "fit", or "fit-result".
+            It helps to determine how and whether the spectrum will be calculated.
+
+        Returns
+        -------
+        float
+            The mean square error between the extracted data and the simulated data.
         """
         if sweepUsage != "prefit" and not forced:
             # only in prefit mode, this method will be activated as a slot
             # function
             return 0.0
+        
         try:
             self._sweeps
         except AttributeError:
@@ -555,6 +660,7 @@ class QuantumModel(QObject):
                 )
                 self.updateStatus.emit(status)
                 raise e
+            
         if sweepUsage in ["prefit", "fit-result"]:
             self.emitReadyToPlot()
 
@@ -565,12 +671,16 @@ class QuantumModel(QObject):
     @Slot()
     def updateCalc(self, forced: bool = False) -> Union[None, float]:
         """
-        newSweep + sweep2SpecMSE (when autoRun is on / fit / called by plot button)
+        newSweep + sweep2SpecMSE. This method is called when the ingredients
+        for the sweep are updated. It will generate a new sweep and calculate
+        the spectrum and the mean square error between the extracted data and
+        the simulated data.
 
-        It is connected to the signal emitted by the UI when the user changes the slider
-        of a parameter. It receives a QuantumModelParameterSet object and updates the
-        the HilbertSpace object. If auto run is on, it will also compute the spectrum
-        and MSE.
+        Parameters
+        ----------
+        forced: bool
+            If True, the spectrum will be calculated regardless of the sweepUsage
+            and autoRun settings.
         """
         if (self.sweepUsage != "prefit") and (not forced):
             # only in prefit mode, this method will be activated as a slot
@@ -579,10 +689,10 @@ class QuantumModel(QObject):
 
         if self._autoRun and (self.sweepUsage == "prefit"):
             self._newSweep()
-            self._sweepInThread(forced=forced, sweepUsage=self.sweepUsage)
+            self._runSweepInThread(forced=forced, sweepUsage=self.sweepUsage)
         elif forced and (self.sweepUsage in ["prefit", "fit-result"]):
             self._newSweep()
-            self._sweepInThread(forced=forced, sweepUsage=self.sweepUsage)
+            self._runSweepInThread(forced=forced, sweepUsage=self.sweepUsage)
         elif forced and (self.sweepUsage == "fit"):
             self._newSweep()
             self._runSweep()
@@ -598,6 +708,19 @@ class QuantumModel(QObject):
     ) -> float:
         """
         Given a list of eigenenergies, find the closest transition frequency.
+
+        Parameters
+        ----------
+        dataFreq: float
+            The transition frequency from the extracted data.
+        evals: ndarray
+            The eigenenergies of the system.
+        initial: Optional[int]
+            The initial state index. If None, transitions starting
+            from the ground states will be used.
+        final: Optional[int]
+            The final state index. If None, transitions ending
+            at all different states will be enumerated.
         """
         if initial is not None and final is not None:
             assert initial < final
@@ -607,17 +730,14 @@ class QuantumModel(QObject):
             possible_transitions = evals[initial + 1 :] - evals[initial]
 
         elif initial is None and final is not None:
-            possible_transitions = evals[final] - evals[:final]
+            possible_transitions = evals[final] - evals[0]
 
         else:
             # enumerate all possible transitions starting from all different states
-            possible_transitions = np.array(
-                [
-                    evals[final] - evals[initial]
-                    for initial in range(len(evals))
-                    for final in range(initial + 1, len(evals))
-                ]
-            )
+            possible_transitions = np.array([
+                evals[final] - evals[0]
+                for final in range(0, len(evals))
+            ])
 
         closest_idx = (np.abs(possible_transitions - dataFreq)).argmin()
 
@@ -625,10 +745,10 @@ class QuantumModel(QObject):
 
     def _numericalSpecByTag(
         self,
-        x_coord: float,
-        sweep: ParameterSweep,
+        xData: float,
+        yDataFreq: float,
         tag: Tag,
-        dataFreq: float,
+        sweep: ParameterSweep,
     ) -> Tuple[
         float,
         Literal[
@@ -641,11 +761,40 @@ class QuantumModel(QObject):
         ],
     ]:
         """
-        Obtain the cooresponding transition frequency provided by the tag from a ParameterSweep
-        instance. If the tag is not provided or can not identify states,
-        the closest transition frequency is returned.
+        Given a extractred data point, obtain the cooresponding transition frequency
+        provided by the tag from a ParameterSweep instance. If the tag is not 
+        provided or we can not identify dressed states' bare label via overlap,
+        the closest transition frequency starting from the ground state will be
+        returned.
+
+        Parameters
+        ----------
+        xData: float
+            The x coordinate of the extracted data.
+        yDataFreq: float
+            The transition frequency (y coordinate) of the extracted data.
+        tag: Tag
+            The tag of the extracted data - user's input on which transition 
+            to calculate.
+        sweep: ParameterSweep
+            The parameter sweep object, which stores the eigenenergies and the 
+            labels of the dressed states.
+
+        Returns
+        -------
+        float
+            The transition frequency that matches the tag.
+        Literal[
+            "SUCCESS",
+            "DRESSED_OUT_OF_RANGE",
+            "NO_TAG",
+            "NO_MATCHED_BARE_INITIAL",
+            "NO_MATCHED_BARE_FINAL",
+            "NO_MATCHED_BARE_INITIAL_AND_FINAL",
+        ]
+            The status of the calculation.
         """
-        eigenenergies = sweep["evals"]["x":x_coord]
+        eigenenergies = sweep["evals"]["x":xData]
 
         # if provided dressed label
         if tag.tagType == "NO_TAG":
@@ -663,8 +812,8 @@ class QuantumModel(QObject):
 
         # if provided bare label
         elif tag.tagType == "DISPERSIVE_BARE":
-            initial_energy = sweep.energy_by_bare_index(tag.initial)["x":x_coord]
-            final_energy = sweep.energy_by_bare_index(tag.final)["x":x_coord]
+            initial_energy = sweep.energy_by_bare_index(tag.initial)["x":xData]
+            final_energy = sweep.energy_by_bare_index(tag.final)["x":xData]
 
             # when we can identify both initial and final states
             if not np.isnan(initial_energy) and not np.isnan(final_energy):
@@ -675,13 +824,13 @@ class QuantumModel(QObject):
             # when some of the states are not identifiable
             elif np.isnan(initial_energy) and not np.isnan(final_energy):
                 status = "NO_MATCHED_BARE_INITIAL"
-                final_energy_dressed_label = sweep.dressed_index(tag.final)["x":x_coord]
+                final_energy_dressed_label = sweep.dressed_index(tag.final)["x":xData]
                 availableLabels = {"final": final_energy_dressed_label}
 
             elif not np.isnan(initial_energy) and np.isnan(final_energy):
                 status = "NO_MATCHED_BARE_FINAL"
                 initial_energy_dressed_label = sweep.dressed_index(tag.initial)[
-                    "x":x_coord
+                    "x":xData
                 ]
                 availableLabels = {"initial": initial_energy_dressed_label}
 
@@ -690,7 +839,7 @@ class QuantumModel(QObject):
                 availableLabels = {}
 
         simulation_freq = self._closestTransFreq(
-            dataFreq=dataFreq,
+            dataFreq=yDataFreq,
             evals=eigenenergies,
             **availableLabels,
         )
@@ -703,7 +852,17 @@ class QuantumModel(QObject):
         dataNameWOlabel: List[str],
     ) -> float:
         """
-        Calculate the mean square error between the extracted data and the simulated data.
+        Calculate the mean square error for a single transition.
+
+        Parameters
+        ----------
+        sweep: ParameterSweep
+            The parameter sweep object.
+        transition: ExtrTransition
+            The extracted transition data.
+        dataNameWOlabel: List[str]
+            The list of data names that do not have identifiable state labels.
+            It will be updated in this method.
         """
         mse = 0.0
 
@@ -716,10 +875,10 @@ class QuantumModel(QObject):
                 transition_freq,
                 get_transition_freq_status,
             ) = self._numericalSpecByTag(
-                x_coord=xData,
-                sweep=sweep,
+                xData=xData,
+                yDataFreq=yData,
                 tag=tag,
-                dataFreq=yData,
+                sweep=sweep,
             )
 
             # process the status
@@ -753,10 +912,8 @@ class QuantumModel(QObject):
     def _calculateMSE(self) -> float:
         """
         Calculate the mean square error between the extracted data and the simulated data
-        from the parameter sweep. Currently, the MSE is calculated from the transition
-        spectrum of the self.sweep attribute (i.e. the ParameterSweep object is stored in
-        the controller). This method is supposed to be called after running the parameter
-        sweep.
+        from the parameter sweep. It is calculated for each transition
+        and then averaged.
 
         """
         if self._fullExtr.count() == 0:
@@ -815,6 +972,17 @@ class sweepSignalHost(QObject):
 
 
 class SweepRunner(QRunnable):
+    """
+    A QRunnable class that runs the sweep in a separate thread. It emits the
+    signal when the sweep is finished.
+
+    Parameters
+    ----------
+    sweeps: Dict[str, ParameterSweep]
+        The parameter sweep objects.
+    forced: bool
+        It will be passed to the _postSweepInThread method.
+    """
 
     signalHost = sweepSignalHost()
 

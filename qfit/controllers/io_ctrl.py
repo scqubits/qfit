@@ -125,7 +125,7 @@ class IOCtrl(QObject):
         Serves as a convenient way to call
         `qfit.models.registry.Registry.fromFile`.
         """
-        return Registry.fromFile(fileName)
+        return Registry.dictFromFile(fileName)
 
     def _measurementDataFromDialog(
         self,

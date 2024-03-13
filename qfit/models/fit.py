@@ -38,7 +38,7 @@ class FitParamModelMixin(ParamModelMixin[FitParam]):
         If the parameters are not valid, emit the signal to update the status
         and return False. Otherwise, return True.
         """
-        for key, params in paramSet.flattenedParamDict().items():
+        for key, params in paramSet.getFlattenedParamDict().items():
             if params.min >= params.max:
                 self.updateStatus.emit(
                     Status(
@@ -67,7 +67,7 @@ class FitParamModelMixin(ParamModelMixin[FitParam]):
         """
         return {
             key: params.initValue
-            for key, params in paramSet.flattenedParamDict().items()
+            for key, params in paramSet.getFlattenedParamDict().items()
             if params.isFixed
         }
 
@@ -77,7 +77,7 @@ class FitParamModelMixin(ParamModelMixin[FitParam]):
         """
         return {
             key: [params.min, params.max]
-            for key, params in paramSet.flattenedParamDict().items()
+            for key, params in paramSet.getFlattenedParamDict().items()
             if not params.isFixed
         }
 
@@ -87,7 +87,7 @@ class FitParamModelMixin(ParamModelMixin[FitParam]):
         """
         return {
             key: params.initValue
-            for key, params in paramSet.flattenedParamDict().items()
+            for key, params in paramSet.getFlattenedParamDict().items()
             if not params.isFixed
         }
 

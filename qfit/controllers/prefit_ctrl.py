@@ -196,7 +196,7 @@ class PrefitCtrl(QObject):
             self.mainWindow.close()
 
         # initialize calibration sliders
-        self.prefitCaliParams.setAttrByParamDict(
+        self.prefitCaliParams.setAttrByParamSet(
             self.caliParamModel.toPrefitParams(),
             insertMissing=True,
         )

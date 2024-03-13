@@ -63,7 +63,7 @@ class FitCtrl(QObject):
     def dynamicalInit(self, hilbertSpace: "HilbertSpace"):
         # build paramset
         self.fitHSParams.dynamicalInit(hilbertSpace)
-        self.fitHSParams.setAttrByParamDict(
+        self.fitHSParams.setAttrByParamSet(
             self.prefitHSParams.toFitParams(),
             insertMissing=True,
         )
@@ -71,7 +71,7 @@ class FitCtrl(QObject):
         self.fitHSParams.parentNameByObj = self.prefitHSParams.parentNameByObj
         self.fitHSParams.parentObjByName = self.prefitHSParams.parentObjByName
 
-        self.fitCaliParams.setAttrByParamDict(
+        self.fitCaliParams.setAttrByParamSet(
             self.caliParamModel.toFitParams(),
             insertMissing=True,
         )
@@ -135,12 +135,12 @@ class FitCtrl(QObject):
     # slots ============================================================
     @Slot()
     def _prefitToFit(self):
-        self.fitHSParams.setAttrByParamDict(
+        self.fitHSParams.setAttrByParamSet(
             self.prefitHSParams.toFitParams(),
             attrsToUpdate=["min", "max", "initValue"],
             insertMissing=False,
         )
-        self.fitCaliParams.setAttrByParamDict(
+        self.fitCaliParams.setAttrByParamSet(
             self.caliParamModel.toFitParams(),
             attrsToUpdate=["min", "max", "initValue", "isFixed"],
             insertMissing=False,
@@ -151,17 +151,17 @@ class FitCtrl(QObject):
         self.caliParamModel.blockSignals(True)
         self.prefitHSParams.blockSignals(True)
 
-        self.prefitHSParams.setAttrByParamDict(
+        self.prefitHSParams.setAttrByParamSet(
             self.fitHSParams.toPrefitParams(),
             attrsToUpdate=["value"],
             insertMissing=False,
         )
-        self.prefitCaliParams.setAttrByParamDict(
+        self.prefitCaliParams.setAttrByParamSet(
             self.fitCaliParams.toPrefitParams(),
             attrsToUpdate=["value"],
             insertMissing=False,
         )
-        self.caliParamModel.setAttrByParamDict(
+        self.caliParamModel.setAttrByParamSet(
             self.fitCaliParams.toPrefitParams(),
             attrsToUpdate=["value"],
             insertMissing=False,
@@ -174,12 +174,12 @@ class FitCtrl(QObject):
 
     @Slot()
     def _resultToInit(self):
-        self.fitHSParams.setAttrByParamDict(
+        self.fitHSParams.setAttrByParamSet(
             self.fitHSParams.toInitParams(),
             attrsToUpdate=["initValue"],
             insertMissing=False,
         )
-        self.fitCaliParams.setAttrByParamDict(
+        self.fitCaliParams.setAttrByParamSet(
             self.fitCaliParams.toInitParams(),
             attrsToUpdate=["initValue"],
             insertMissing=False,
