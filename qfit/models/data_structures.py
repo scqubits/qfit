@@ -21,13 +21,25 @@ from qfit.utils.helpers import OrderedDictMod
 from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.qubit_base import QuantumSystem
 
-ParentType = Union[QuantumSystem, HilbertSpace]
-
 
 # Status ===============================================================
 class Status:
     """
-    Store the status of the application.
+    Status of the fit, it is accepted by the StatusModel and displayed
+    in the StatusBarView.
+
+    Parameters
+    ----------
+    statusSource: Optional[str]
+        The source of the status message
+    statusType: str
+        The type of the status message, e.g. "info", "warning", "error"
+    message: Optional[str]
+        The status message
+    mse: Optional[float]
+        The mean squared error in the prefit ot fit stage
+    messageTime: Optional[float]
+        The time the message is displayed
     """
 
     def __init__(
@@ -139,6 +151,19 @@ class Tag:
             and self.final == __value.final 
             and self.photons == __value.photons
         )
+    
+    def transitionStr(self) -> str:
+        """
+        Return the transition string
+        """
+        if self.tagType == "NO_TAG":
+            return ""
+        elif self.tagType == "DISPERSIVE_DRESSED":
+            return f"{self.initial} - {self.final}"
+        elif self.tagType == "DISPERSIVE_BARE":
+            return f"{self.initial} - {self.final}"
+        else:
+            raise ValueError(f"Unknown tag type: {self.tagType}")
 
 
 class ExtrTransition:
@@ -186,7 +211,17 @@ class ExtrTransition:
         self, data: OrderedDictMod[str, float], rawX: OrderedDictMod[str, float]
     ):
         """
+        Append the a new data point to the transition. 
         It always keeps the data sorted by the x value.
+
+        Parameters
+        ----------
+        data: OrderedDictMod[str, float]
+            The data point to be appended, should have two elements: x & y,
+            with the key being the name of the axis names
+        rawX: OrderedDictMod[str, float]
+            The raw x data point to be appended, where the key is the 
+            name of the raw x data
         """
         if self.count() == 0:
             # the first data
@@ -208,6 +243,14 @@ class ExtrTransition:
             self.rawX[key] = np.append(self.rawX[key], value)
 
     def remove(self, index: int):
+        """
+        Remove the data point at the given index.
+
+        Parameters
+        ----------
+        index: int
+            The index of the data point to be removed
+        """
         for key in self._data.keys():
             self._data[key] = np.delete(self._data[key], index)
         for key in self.rawX.keys():
@@ -245,6 +288,11 @@ class ExtrTransition:
 class ExtrSpectra(list[ExtrTransition]):
     """
     A bunch of transitions extracted from the same parameter sweep.
+
+    Parameters
+    ----------
+    args: ExtrTransition
+        The transitions to be stored in the spectra
     """
 
     def __init__(
@@ -254,6 +302,9 @@ class ExtrSpectra(list[ExtrTransition]):
         super().__init__(args)
 
     def count(self) -> int:
+        """
+        Return the total number of data points in the spectra
+        """
         return sum([transition.count() for transition in self])
 
     def isEmpty(self) -> bool:
@@ -263,17 +314,20 @@ class ExtrSpectra(list[ExtrTransition]):
         return True
 
     def allNames(self) -> List[str]:
+        """
+        All transition names
+        """
         return [transition.name for transition in self]
 
     def allData(self) -> List[np.ndarray]:
         """
-        Return all data sorted by the transition name.
+        All extracted data in a list
         """
         return [transition.data for transition in self]
 
     def allDataConcated(self) -> np.ndarray:
         """
-        Return all data concated
+        All extracted data concated
         """
         if self.count() == 0:
             return np.empty((2, 0), dtype=float)
@@ -281,6 +335,9 @@ class ExtrSpectra(list[ExtrTransition]):
         return np.concatenate(self.allData(), axis=1)
 
     def allRawXConcated(self) -> OrderedDictMod[str, np.ndarray]:
+        """
+        All raw x data concated
+        """
         concatedRawX = deepcopy(self[0].rawX)
 
         for transition in self[1:]:
@@ -325,6 +382,11 @@ class FullExtr(dict[str, ExtrSpectra]):
 class PlotElement:
     """
     A data structure for passing and plotting elements on the canvas.
+
+    Particularly, this class stores the artists on the canvas, enabling 
+    the removal of the elements from the canvas. In method ``canvasPlot``,
+    the artists are plotted on the canvas, and in method ``remove``, the
+    artists are removed from the canvas.
     """
 
     name: str
@@ -584,6 +646,23 @@ class ParamAttr:
 
 
 class ParamBase(ABC):
+    """
+    The base class for any parameters in qfit. It stores the parameter name,
+    parent name, parameter type, and value. It provides basic methods for 
+    converting the value to an integer following the parameter type. It also
+    provides the method for comparing two parameters based on dataAttr.
+
+    Parameters
+    ----------
+    name: str
+        The name of the parameter
+    parent: str
+        The parent of the parameter
+    paramType: ParameterType
+        The type of the parameter
+    value: Union[int, float]
+        The value of the parameter
+    """
     dataAttr: List[str] = ["value"]
     intergerParameterTypes = ["cutoff", "truncated_dim"]
 
@@ -617,6 +696,10 @@ class ParamBase(ABC):
         ])
 
 class DispParamBase(ParamBase):
+    """
+    A base class for parameters that are stored in a model connected to 
+    views. It provides methods for exporting and storing the parameter value. 
+    """
     def _toIntStrAsNeeded(self, value: Union[int, float], precision=4) -> str:
         """
         Convert the value to an integer if the parameter type is cutoff or truncated_dim.
@@ -643,7 +726,7 @@ class QMSweepParam(ParamBase):
     ----------
     name: str
         The name of the parameter
-    parent: Union[QuantumSystem, HilbertSpace]
+    parent: str
         The parent of the parameter
     value: Union[float, int]
         The value of the parameter
@@ -679,7 +762,9 @@ class QMSweepParam(ParamBase):
 
 class SliderParam(DispParamBase):
     """
-    A class for parameters that are adjusted by a slider.
+    A class for parameters that are adjusted by a slider (and a text box). 
+    It has three dataAttr: value, min, and max. It provides methods for 
+    exporting and storing the parameter value with the slider and the text box.
 
     Parameters
     ----------
@@ -691,18 +776,7 @@ class SliderParam(DispParamBase):
         The minimum value of the parameter
     max: Union[int, float]
         The maximum value of the parameter
-    param_type: Literal[
-        "EC",
-        "EJ",
-        "EL",
-        "E_osc",
-        "l_osc",
-        "ng",
-        "flux",
-        "cutoff",
-        "interaction_strength",
-        "truncated_dim",
-    ]
+    param_type: ParameterType
         The type of the parameter
     """
 
@@ -780,6 +854,31 @@ class SliderParam(DispParamBase):
 
 
 class FitParam(DispParamBase):
+    """
+    A class for parameters that are adjusted by a fit. It has five dataAttr:
+    initValue, value, min, max, and isFixed. It provides methods for exporting
+    and storing the parameter value with the fit.
+
+    Parameters
+    ----------
+    name: str
+        Name of the parameter
+    parent: Union[QuantumSystem, HilbertSpace]
+        The parent object of the parameter
+    paramType: ParameterType
+        The type of the parameter
+    value: Union[int, float]
+        The value of the parameter
+    min: Union[int, float]
+        The minimum value of the parameter
+    max: Union[int, float]
+        The maximum value of the parameter
+    initValue: Union[int, float]
+        The initial value of the parameter
+    isFixed: bool
+        Whether the parameter is fixed
+    """
+    
     dataAttr = ["initValue", "value", "min", "max", "isFixed"]
 
     def __init__(
@@ -836,7 +935,27 @@ class FitParam(DispParamBase):
 
 class CaliTableRowParam(DispParamBase):
     """
-    The updated class for calibration table parameters.
+    The updated class for calibration table parameters. It has three dataAttr:
+    value, sweepParamName, and parentSystemName. sweepParamName and parentSystemName
+    are matched with the names in other parameters. It provides methods for exporting
+    and storing the parameter value with the calibration table.
+
+    Parameters
+    ----------
+    colName: str
+        Name of the parameter
+    rowIdx: str
+        The row index of the parameter
+    paramType: ParameterType
+        The type of the parameter
+    value: float
+        The value of the parameter
+    parentSystemName: str
+        The name of the parent system
+    sweepParamName: str
+        The name of the sweep parameter
+    value: float
+        The value of the parameter
     """
 
     dataAttr = [
@@ -850,13 +969,13 @@ class CaliTableRowParam(DispParamBase):
         colName: str,
         rowIdx: str,
         paramType: ParameterType,
-        parentSystemName: Optional[str],
-        sweepParamName: Optional[str],
+        parentSystemName: str,
+        sweepParamName: str,
         value: float,
     ):
         super().__init__(name=colName, parent=rowIdx, paramType=paramType, value=value)
-        self.parentSystemName: Optional[str] = parentSystemName
-        self.sweepParamName: Optional[str] = sweepParamName
+        self.parentSystemName = parentSystemName
+        self.sweepParamName = sweepParamName
 
     # setter for UI ====================================================
     def storeAttr(self, attr: str, value: Union[str, bool]):

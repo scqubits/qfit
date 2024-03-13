@@ -18,22 +18,23 @@ from qfit.models.data_structures import (
     FullExtr,
     ExtrTransition,
 )
-from qfit.models.data_structures import Tag, SpectrumElement
-
-from qfit.models.data_structures import Status
+from qfit.models.data_structures import Tag, SpectrumElement, Status
 
 from typing import Dict, List, Tuple, Union, Callable, Any, Literal, Optional
 
 
 class QuantumModel(QObject):
     """
-    Generate and manipulate a parameter sweep for a quantum model.
+    QuantumModel updates the HilbertSpace object, the extracted data, the calibration data and 
+    the sweep options whenever they are updated. Using these ingedients,
+    QuantumModel generates a ParameterSweep object and calculates the
+    mean square error between the extracted data and the simulated data.
 
-    Parameters
-    ----------
-    hilbertspace: HilbertSpace
+    QuantumModel has three modes (sweepUsage):
+    - "prefit": the sweep is automatically calculated once the ingredients are updated
+    - "fit": the sweep can be manually calculated during the fitting process
+    - "fit-result": calculate a one-time sweep after the fitting process is finished
     """
-
     _sweeps: Dict[str, ParameterSweep]
 
     readyToPlot = Signal(SpectrumElement)

@@ -36,10 +36,10 @@ from qfit.models.data_structures import (
     FitParam,
     ParamAttr,
     CaliTableRowParam,
-    ParentType,
 )
 
 ParamCls = TypeVar("ParamCls", bound="ParamBase")
+ParentType = Union[HilbertSpace, QuantumSystem]
 
 
 class ParamSet(Registrable, Generic[ParamCls]):
@@ -674,6 +674,20 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
         paramName: Optional[str] = None,
         attr: Optional[str] = None,
     ):
+        """
+        Emit the updateBox signal to update the text box of the parameter.
+
+        Parameters
+        ----------
+        paramSet: ParamSet
+            The parameter set
+        parentName: str
+            The name of the parent system
+        paramName: str
+            The name of the parameter
+        attr: str
+            The name of the attribute
+        """
         self._emitAttrByName(
             paramSet,
             self.updateBox,
@@ -690,6 +704,19 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
         paramAttr: ParamAttr,
         **kwargs,
     ):
+        """
+        Store the attribute of the parameter to the parameter set. 
+
+        Parameters
+        ----------
+        paramSet: ParamSet
+            The parameter set
+        paramAttr: ParamAttr
+            The parameter attribute to be stored
+        kwargs: Dict
+            The other keyword arguments for the storeAttr method of the 
+            parameter
+        """
         param = paramSet[paramAttr.parentName][paramAttr.name]
         param.storeAttr(paramAttr.attr, paramAttr.value, **kwargs)
 
