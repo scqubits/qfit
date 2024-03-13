@@ -85,9 +85,7 @@ class QuantumModel(QObject):
 
         # options when running
         self._autoRun: bool = True
-        self.sweepUsage: Literal[
-            "none", "prefit", "fit", "fit-result"
-        ] = "none"
+        self.sweepUsage: Literal["none", "prefit", "fit", "fit-result"] = "none"
 
     # Signals and Slots ========================================================
     @Slot(str)
@@ -97,7 +95,7 @@ class QuantumModel(QObject):
 
     @Slot(HilbertSpace)
     def updateHilbertSpace(
-        self, 
+        self,
         hilbertspace: HilbertSpace,
     ):
         """
@@ -161,7 +159,7 @@ class QuantumModel(QObject):
         """
         self._yCaliFunc = yCaliFunc
         self._yInvCaliFunc = invYCaliFunc
-        self.sweep2SpecMSE()
+        self.sweep2SpecMSE(sweepUsage=self.sweepUsage)
 
     @Slot(str, Any)
     def storeSweepOption(
@@ -205,7 +203,7 @@ class QuantumModel(QObject):
         setattr(self, "_" + attrName, value)
 
         if attrName in ["subsysToPlot", "initialState", "photons"]:
-            self.sweep2SpecMSE()
+            self.sweep2SpecMSE(sweepUsage=self.sweepUsage)
         elif attrName in ["evalsCount", "pointsAdded", "autoRun"]:
             self.updateCalc()
 
@@ -293,7 +291,7 @@ class QuantumModel(QObject):
     @property
     def _currentSweep(self) -> ParameterSweep:
         return self._sweeps[self._currentFigName]
-    
+
     @property
     def readyToOpt(self) -> bool:
         if self._fullExtr.count() == 0:
@@ -306,7 +304,7 @@ class QuantumModel(QObject):
             return False
 
         return True
-    
+
     # tools ===================================================================
     def _stateStr2Label(self, state_str: str):
         # convert string to state label
@@ -371,7 +369,6 @@ class QuantumModel(QObject):
             else:
                 # only calculate the spectrum for the extracted data x coordinates
                 sweptX[figName] = extrX
-
         return sweptX
 
     def _updateHSForSweep(
@@ -402,9 +399,9 @@ class QuantumModel(QObject):
         that need to be updated when the x-coordinate is changed.
         """
         return {
-            figName: list(set(sweepParamSet.parentObjByName[
-                key
-            ] for key in sweepParamSet.keys()))
+            figName: list(
+                set(sweepParamSet.parentObjByName[key] for key in sweepParamSet.keys())
+            )
             for figName, sweepParamSet in self._sweepParamSets.items()
         }
 
@@ -440,7 +437,7 @@ class QuantumModel(QObject):
                 hilbertspace=self.hilbertspace,
                 paramvals_by_name=paramvals_by_name,
                 update_hilbertspace=update_hilbertspace,
-                evals_count=self._evalsCount, 
+                evals_count=self._evalsCount,
                 subsys_update_info=subsys_update_info,
                 autorun=False,
                 num_cpus=1,  # change this later to connect to the number from the view
@@ -484,7 +481,7 @@ class QuantumModel(QObject):
 
     def _runSweep(self) -> None:
         """
-        Run the existing sweeps. This method must be called after calling 
+        Run the existing sweeps. This method must be called after calling
         the _newSweep method.
         """
         for sweep in self._sweeps.values():
@@ -500,43 +497,44 @@ class QuantumModel(QObject):
                 )
                 self.updateStatus.emit(status)
 
-    def _sweepInThread(self):
+    def _sweepInThread(self, forced: bool = False, sweepUsage: str = "prefit") -> None:
         """
-        Run sweep in a separate thread. After finished, _postSweepInThread 
+        Run sweep in a separate thread. After finished, _postSweepInThread
         will be called, which will handle errors and call sweep2SpecMSE.
         """
-        runner = SweepRunner(self._sweeps)
+        runner = SweepRunner(self._sweeps, forced=forced, sweepUsage=sweepUsage)
         self._sweepThreadPool.start(runner)
 
-    @Slot(object)
+    @Slot(object, bool, str)
     def _postSweepInThread(
-        self, 
-        result: Union[Dict[str, ParameterSweep], str]
+        self,
+        result: Union[Dict[str, ParameterSweep], str],
+        forced: bool,
+        sweepUsage: str,
     ):
         if isinstance(result, str):
             status = Status(
-                statusSource=self.sweepUsage,
+                statusSource=sweepUsage,
                 statusType="error",
                 message=result,
             )
             self.updateStatus.emit(status)
         else:
             self._sweeps = result
-            self.sweep2SpecMSE()
+            self.sweep2SpecMSE(forced=forced, sweepUsage=sweepUsage)
 
     # public methods ===========================================================
-    @Slot()
-    def sweep2SpecMSE(self, forced: bool = False) -> float:
+    @Slot(bool, str)
+    def sweep2SpecMSE(self, forced: bool = False, sweepUsage: str = "prefit") -> float:
         """
         It is connected to the signal emitted by the UI when the user clicks the plot button
         for the prefit stage. It make use of the existing sweep object to
         get a spectrum data and MSE.
         """
-        if self.sweepUsage != "prefit" and not forced:
+        if sweepUsage != "prefit" and not forced:
             # only in prefit mode, this method will be activated as a slot
             # function
             return 0.0
-        
         try:
             self._sweeps
         except AttributeError:
@@ -544,14 +542,13 @@ class QuantumModel(QObject):
                 self._newSweep()
             except Exception as e:
                 status = Status(
-                    statusSource=self.sweepUsage,
+                    statusSource=sweepUsage,
                     statusType="error",
                     message=f"{e}",
                 )
                 self.updateStatus.emit(status)
                 raise e
-
-        if self.sweepUsage in ["prefit", "fit-result"]:
+        if sweepUsage in ["prefit", "fit-result"]:
             self.emitReadyToPlot()
 
         # mse calculation
@@ -568,23 +565,21 @@ class QuantumModel(QObject):
         the HilbertSpace object. If auto run is on, it will also compute the spectrum
         and MSE.
         """
-        if self.sweepUsage != "prefit" and not forced:
+        if (self.sweepUsage != "prefit") and (not forced):
             # only in prefit mode, this method will be activated as a slot
             # function
             return
-        
-        if self._autoRun and self.sweepUsage == "prefit":
-            self._newSweep()
-            self._sweepInThread()
 
-        elif forced and self.sweepUsage in ["prefit", "fit-result"]:
+        if self._autoRun and (self.sweepUsage == "prefit"):
             self._newSweep()
-            self._sweepInThread()
-
-        elif forced and self.sweepUsage == "fit":
+            self._sweepInThread(forced=forced, sweepUsage=self.sweepUsage)
+        elif forced and (self.sweepUsage in ["prefit", "fit-result"]):
+            self._newSweep()
+            self._sweepInThread(forced=forced, sweepUsage=self.sweepUsage)
+        elif forced and (self.sweepUsage == "fit"):
             self._newSweep()
             self._runSweep()
-            return self.sweep2SpecMSE(forced=forced)
+            return self.sweep2SpecMSE(forced=forced, sweepUsage=self.sweepUsage)
 
     # calculate MSE ===========================================================
     @staticmethod
@@ -809,16 +804,23 @@ class QuantumModel(QObject):
 
 
 class sweepSignalHost(QObject):
-    sweepFinished = Signal(object)
+    sweepFinished = Signal(object, bool, str)
 
 
 class SweepRunner(QRunnable):
 
     signalHost = sweepSignalHost()
 
-    def __init__(self, sweeps: Dict[str, ParameterSweep]):
+    def __init__(
+        self,
+        sweeps: Dict[str, ParameterSweep],
+        forced: bool = False,
+        sweepUsage: str = "prefit",
+    ):
         super().__init__()
         self.sweeps = sweeps
+        self.forced = forced
+        self.sweepUsage = sweepUsage
 
     def run(self):
         for sweep in self.sweeps.values():
@@ -827,6 +829,6 @@ class SweepRunner(QRunnable):
             try:
                 sweep.run()
             except Exception as e:
-                self.signalHost.sweepFinished.emit(str(e))
+                self.signalHost.sweepFinished.emit(str(e), self.forced, self.sweepUsage)
 
-        self.signalHost.sweepFinished.emit(self.sweeps)
+        self.signalHost.sweepFinished.emit(self.sweeps, self.forced, self.sweepUsage)

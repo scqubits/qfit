@@ -192,7 +192,7 @@ class FitCtrl(QObject):
         self.prefitView.setEnabled(enabled)
         self.pageView.setEnabled(enabled)
 
-        # if not blocking the signal, the fit computation time will be 
+        # if not blocking the signal, the fit computation time will be
         # significantly longer
         self.caliParamModel.blockSignals(not enabled)
 
@@ -272,7 +272,7 @@ class FitCtrl(QObject):
 
     def _optCallback(self, *args, **kwargs):
         self.quantumModel.emitReadyToPlot()
-        return self.quantumModel.sweep2SpecMSE(forced=True)
+        return self.quantumModel.sweep2SpecMSE(forced=True, sweepUsage="fit")
 
     @Slot()
     def postOptimization(self):
