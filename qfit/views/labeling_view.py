@@ -11,7 +11,25 @@ from qfit.widgets.data_extracting import ListView
 from qfit.widgets.validated_line_edits import IntTupleLineEdit, IntLineEdit
     
 
-class ExtractingView(QObject):
+class LabelingView(QObject):
+    """
+    View for the labeling panels.
+
+    Parameters
+    ----------
+    parent: QObject
+        parent object
+    uiGroups: Tuple[  
+        Dict[str, QGroupBox], Dict[str, QRadioButton],  
+        Dict[str, IntTupleLineEdit], Dict[str, QSpinBox],  
+        Dict[str, QPushButton], ListView,  
+        QLabel  
+        ]
+        All widgets related to the labeling panel, including the group boxes, 
+        label mode radio buttons, bare and dressed label line edits, 
+        extraction controls (new, delete, clear), and the list view for
+        transitions, and the label for the bare label order.
+    """
     tagChanged = Signal(Tag)
 
     def __init__(
@@ -24,9 +42,6 @@ class ExtractingView(QObject):
             QLabel
         ],
     ):
-        """
-        All widgets related to tagging.
-        """
         super().__init__(parent)
 
         (
@@ -42,6 +57,15 @@ class ExtractingView(QObject):
 
     # Initialization ===================================================
     def dynamicalInit(self, subsysNames: List[str]):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the view will reinitialized by this method.
+
+        Parameters  
+        ----------
+        subsysNames: List[str]
+            names of the subsystems in the HilbertSpace object
+        """
         self.subsysNames = subsysNames
         self._initializeUI()
 
@@ -49,7 +73,7 @@ class ExtractingView(QObject):
         """
         Set up the UI for the tagging panel:
         - In NO_TAG mode, switch off (hide) the bare and dressed tagging panels
-        - Set the number of subsystems
+        - Set the number and names of subsystems
         """
         self.groupBox["bare"].setVisible(False)
         self.groupBox["dressed"].setVisible(False)
@@ -76,7 +100,7 @@ class ExtractingView(QObject):
 
     def _modeSwitchSignalsConnects(self):
         """
-        respond to the user switching between the three modes (no tag, bare tag, dressed tag)
+        Respond to the user switching between the three modes (no tag, bare tag, dressed tag)
         """
         # connect the radio buttons to the corresponding tagging panels
         # one for each mode
@@ -119,6 +143,9 @@ class ExtractingView(QObject):
 
     # ------------------------------------------------------------------
     def _tagChangedSignalConnects(self):
+        """
+        Connect the signals for the bare and dressed tagging panels to the tagChanged signal.
+        """
         self.bareLabels["initial"].editingFinished.connect(self._emitTagChangedSignal)
         self.bareLabels["final"].editingFinished.connect(self._emitTagChangedSignal)
         self.bareLabels["photons"].valueChanged.connect(lambda: self._emitTagChangedSignal())
@@ -130,6 +157,9 @@ class ExtractingView(QObject):
 
     # settings =========================================================
     def blockAllSignals(self, block: bool):
+        """
+        For all widgets in the view, block or unblock the signals.
+        """
         super().blockSignals(block)
 
         for values in self.radioButtons.values():

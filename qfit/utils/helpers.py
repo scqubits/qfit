@@ -31,37 +31,25 @@ from typing import Dict, List, Literal, Optional, Tuple, Union
 from typing import TypeVar, Generic
 
 
-class EditDelegate(QStyledItemDelegate):
-    def createEditor(self, parent, option, index):
-        editor = DoubleLineEdit(parent)
-        return editor
-
-    def setEditorData(self, editor, index):
-        editor.setText(index.model().data(index, role=QtCore.Qt.DisplayRole))
-
-
-class DoubleLineEdit(QLineEdit):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setValidator(DoubleValidator())
-
-    def value(self):
-        return float(self.text())
-
-
-class DoubleValidator(QDoubleValidator):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        localeSetting = QLocale()
-        localeSetting.setNumberOptions(QLocale.RejectGroupSeparator)
-        self.setLocale(localeSetting)
-
-
-
 Key = TypeVar('Key')
 Value = TypeVar('Value')
 
 class DictItem(Generic[Key, Value]):
+    """
+    A class to represent a dictionary item with name and data.
+
+    DictItem objects can be compared with each other using "==". However, 
+    the comparison is not recursive. It only compares the keys and values 
+    of the first level. For numpy arrays, it uses np.array_equal to compare
+    the arrays so that it returns a single boolean value.
+
+    Parameters
+    ----------
+    name: Key
+        The name of the item.
+    data: Value
+        The data of the item.
+    """
     def __init__(self, name: Key, data: Value):
         self.name: Key = name
         self.data: Value = data
@@ -88,13 +76,15 @@ class OrderedDictMod(OrderedDict[Key, Value], Generic[Key, Value]):
     Mofiied OrderedDict with additional methods:
 
     Faster access to the keys and values of the dictionary:
-    * valList: returns a list of the values
-    * keyList: returns a list of the keys
-    * itemByIndex: returns a DictItem by index
-    * itemList: returns a list of DictItems
+        - valList: returns a list of the values
+        - keyList: returns a list of the keys
+        - itemByIndex: returns a DictItem by index
+        - itemList: returns a list of DictItems
 
     Compare two dictionaries:
-    * __eq__: compares two dictionaries. It only compares the keys and values of the first level. 
+        - __eq__: compares two dictionaries. It only compares the keys 
+        and values of the first level, and does not compare nested
+        dictionaries or numpy arrays.
     """
     @property
     def valList(self) -> List[Value]:
@@ -105,15 +95,24 @@ class OrderedDictMod(OrderedDict[Key, Value], Generic[Key, Value]):
         return list(self.keys())
 
     def itemByIndex(self, itemIndex: int) -> DictItem[Key, Value]:
+        """
+        Returns a DictItem by index. DictItem is a class to represent 
+        a dictionary item with name and data.
+        """
         return DictItem(self.keyList[itemIndex], self.valList[itemIndex])
 
     def itemList(self) -> List[DictItem[Key, Value]]:
+        """
+        Returns a list of DictItems. DictItem is a class to represent
+        a dictionary item with name and data.
+        """
         return [DictItem(key, val) for key, val in self.items()]
     
     def __eq__(self, __value: object) -> bool:
         """
-        Compare two dictionaries. It only compares the keys and values of the first level. It does not compare nested   
-        dictionaries or numpy arrays. 
+        Compare two dictionaries. It only compares the keys and values 
+        of the first level. It does not compare nested dictionaries or 
+        numpy arrays.   -
 
         Parameters
         ----------
@@ -150,9 +149,11 @@ class OrderedDictMod(OrderedDict[Key, Value], Generic[Key, Value]):
 def isValid2dArray(array):
     """
     Checks whether the given array has the following properties:
-    * Array entries must be real-valued
-    * The array is strictly two-dimensional, i.e., number of rows>1 and number of cols>1
-    * The array does not merely repeat a single row or a single column n times
+        - Array entries must be real-valued
+        - The array is strictly two-dimensional, i.e., number of rows>1 
+        and number of cols>1
+        - The array does not merely repeat a single row or a single column 
+        n times
 
     Parameters
     ----------
@@ -175,9 +176,9 @@ def isValid2dArray(array):
 def isValid1dArray(array):
     """
     A valid 1d array must satisfy the following conditions:
-    * Array entries must be real-valued
-    * The array is strictly one-dimensional, i.e., number of rows=1 or number of cols=1
-    * The array increases monotonically
+        - Array entries must be real-valued
+        - The array is strictly one-dimensional, i.e., number of rows=1 or number of cols=1
+        - The array increases monotonically
     """
     if array.dtype not in [float, np.float_, np.float64, np.float32]:
         return False
@@ -220,6 +221,13 @@ def remove_nones(dict_data):
 
 # widgets ######################################################################
 def clearChildren(widget: QWidget):
+    """
+    Clear all children of the given widget.
+
+    Parameters
+    ----------
+    widget: QWidget
+    """
     layout = widget.layout()
     if layout is None:
         return
@@ -230,7 +238,18 @@ def clearChildren(widget: QWidget):
             widget.deleteLater()
 
 
-def modifyStyleSheet(widget, property_name, new_value):
+def modifyStyleSheet(widget: QWidget, property_name: str, new_value: str):
+    """
+    Modify a particular stylesheet property of the given widget.
+
+    Parameters
+    ----------
+    widget: QWidget
+    property_name: str
+        The name of the property to be modified.
+    new_value: str
+        The new value of the property.
+    """
     # Get the current stylesheet
     current_style = widget.styleSheet()
 
@@ -251,6 +270,9 @@ def modifyStyleSheet(widget, property_name, new_value):
 
 # Plot #########################################################################
 def filter(c, filter_name):
+    """
+    Apply a filter to the color.
+    """
     if filter_name in ["translucent", "trans"]:
         r, g, b, a = c
         return [r, g, b, a * 0.2]
@@ -261,6 +283,20 @@ def filter(c, filter_name):
 
 
 class Cmap:
+    """
+    A wrapped class to represent a mpl colormap. It's kind of useless now,
+    only used in the wrapped optimizer class, in a function that we don't
+    use in QFit.
+
+    Parameters
+    ----------
+    upper: float
+        The upper limit of the colormap.
+    lower: float
+        The lower limit of the colormap.
+    cmap_name: str
+        The name of the colormap.
+    """
     def __init__(self, upper: float, lower: float = 0, cmap_name="rainbow"):
         self.upper = upper
         self.lower = lower
@@ -276,8 +312,6 @@ class Cmap:
 
 
 # Save csv ######################################################################
-
-
 def datetime_dir(
     save_dir="./",
     dir_suffix=None,
@@ -322,7 +356,15 @@ def datetime_dir(
 
 
 # Function checking whether code is run from a jupyter notebook or inside ipython
-def executed_in_ipython():
+def executed_in_ipython() -> bool:
+    """
+    Check if the code is executed in an IPython environment (e.g. Jupyter 
+    notebook or qtconsole of IPython).
+
+    Returns
+    -------
+    bool
+    """
     try:  # inside ipython, the function get_ipython is always in globals()
         shell = get_ipython().__class__.__name__
         if shell in ["ZMQInteractiveShell", "TerminalInteractiveShell"]:
@@ -344,11 +386,19 @@ def _closest_idx(arr, val):
     """
     return np.argmin(np.abs(arr - val))
 
-def _find_lorentzian_peak(data: np.ndarray, gamma_guess=5) -> int:
+def _find_lorentzian_peak(data: np.ndarray, gamma_guess=5.0) -> int:
     """
     fit the data with a Lorentzian function. The data is supposed to be taken from
     the two-tone spectroscopy, which is a 1D array of S21 values at selected freq
     range and a fixed voltage parameter.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        The 1D data to be fitted.
+    gamma_guess : float
+        The initial guess of the gamma parameter (the width of the Lorentzian)
+        in the unit of the index of the data.
     """
     freq_list_length = len(data)
     idx_list = np.arange(freq_list_length)
@@ -382,10 +432,32 @@ def _find_lorentzian_peak(data: np.ndarray, gamma_guess=5) -> int:
     return np.round(popt[0]).astype(int)
 
 def _extract_data_for_peak_finding(
-    x_list, y_list, z_data, user_selected_xy, half_y_range: float = 0.1
+    x_list: np.ndarray, y_list: np.ndarray, z_data: np.ndarray, 
+    user_selected_xy: Tuple[float, float],
+    half_y_range: float = 0.1,
+    min_points: int = 6
 ):
     """
-    extract data for peak finding
+    Slice the 2D z_data and obtain a 1D array of z_data for fitting 
+    a Lorentzian peak. The length of the 1D array is determined by
+    the half_y_range (minimal min_points in each direction).
+
+    Parameters
+    ----------
+    x_list : np.ndarray
+        The 1D x-axis data.
+    y_list : np.ndarray
+        The 1D y-axis data.
+    z_data : np.ndarray
+        The 2D z-axis data, containing the data to be sliced and fitted.
+    user_selected_xy : Tuple[float, float]
+        The x and y values of the point, near which the data will be sliced,
+        and a Lorentzian peak will be found.
+    half_y_range : float
+        The half range of the y-axis data to be sliced.
+    min_points : int
+        The minimal number of points in each direction. It should be larger 
+        than 4, as we need at least 4 points to fit a Lorentzian peak.
     """
     x_val = user_selected_xy[0]
     y_val = user_selected_xy[1]
@@ -403,7 +475,7 @@ def _extract_data_for_peak_finding(
         min(
             y_min_idx,
             y_max_idx,
-            y_idx - 6
+            y_idx - min_points,
         ), 
         0
     )
@@ -411,7 +483,7 @@ def _extract_data_for_peak_finding(
         max(
             y_min_idx,
             y_max_idx,
-            y_idx + 6
+            y_idx + min_points,
         ),
         len(y_list) - 1,
     )
@@ -422,27 +494,40 @@ def _extract_data_for_peak_finding(
     return y_start, y_end, data_for_fitting
 
 
-def y_snap(
-    x_list, y_list, z_data, user_selected_xy, half_y_range=0.1, mode="lorentzian"
-) -> Tuple[int, int]:
+def ySnap(
+    x_list: np.ndarray, y_list: np.ndarray, z_data: np.ndarray, 
+    user_selected_xy: Tuple[float, float],
+    half_y_range=0.1, 
+    mode="lorentzian"
+) -> float:
     """
-    perform the y-snap for a selected point, such that the nearest peak in
-    the vicinity will be selected instead.
+    Perform the y-snap for a selected point. A peak will be found in the
+    vicinity of the selected point.
 
     Parameters
     ----------
-    y_list : List
-        the y_list of the data
-    data : List
-        the data
-    peak_tuple : Tuple
-        the peak (x, y) indexes that will be polished
-    index_range : int
-        a new peak will be found within the range of the index
+    x_list : np.ndarray
+        The 1D x-axis data.
+    y_list : np.ndarray
+        The 1D y-axis data.
+    z_data : np.ndarray
+        The 2D z-axis data, containing the data to be sliced and fitted.    
+    user_selected_xy : Tuple[float, float]
+        The x and y values of the point, near which the data will be sliced,
+        and a Lorentzian peak will be found.
+    half_y_range : float
+        The half range of the y-axis data to be sliced.
+    mode : str
+        The mode of the peak finding. It can be "lorentzian" or "extremum".
+        For "lorentzian", the peak will be found by fitting a Lorentzian function
+        to the data. For "extremum", the peak will be found by finding the maximum
+        value of the data.
 
     Returns
     -------
-        (x, y), new peak
+    y: float
+        The y value of the peak. If the peak finding fails, the y value of the
+        selected point will be returned.
     """
     # translate range to left and right index
     y_min_idx, y_max_idx, data_for_peak_finding = _extract_data_for_peak_finding(

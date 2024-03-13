@@ -7,6 +7,16 @@ from PySide6.QtWidgets import QStatusBar, QLabel, QSizePolicy
 
 
 class StatusBarView(QObject):
+    """
+    A view for the status bar.
+
+    Parameters
+    ----------
+    parent : QObject
+        The parent object.
+    statusBar : QStatusBar
+        The status bar.
+    """
     def __init__(
         self,
         parent: QObject,

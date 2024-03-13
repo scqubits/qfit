@@ -35,7 +35,7 @@ from qfit.controllers.calibration_ctrl import CalibrationCtrl
 # extract
 from qfit.models.extracted_data import ActiveExtractedData, AllExtractedData
 from qfit.controllers.extracting_ctrl import ExtractingCtrl
-from qfit.views.extracting_view import ExtractingView
+from qfit.views.labeling_view import LabelingView
 
 # status bar
 from qfit.models.status import StatusModel
@@ -445,7 +445,7 @@ class Fit:
         self._activeDataset = ActiveExtractedData(self._mainWindow)
         self._allDatasets = AllExtractedData(self._mainWindow)
 
-        self._extractingView = ExtractingView(
+        self._labelingView = LabelingView(
             self._mainWindow,
             (
                 self._uiLabelBoxes,
@@ -461,7 +461,7 @@ class Fit:
         self._extractingCtrl = ExtractingCtrl(
             self._mainWindow,
             (self._allDatasets, self._activeDataset),
-            self._extractingView,
+            self._labelingView,
         )
 
     # Pre-fit ##########################################################

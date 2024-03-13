@@ -21,6 +21,19 @@ from typing import Dict, List, Any
 
 
 class FitParamView(QObject):
+    """
+    A view for the fitting parameters. This view is a widget that contains
+    a set of tables for the fitting parameters. It is responsible for
+    displaying the parameters and their values, and also for emitting
+    signals when the parameters are changed.
+
+    Parameters
+    ----------
+    parent : QObject
+        The parent object.
+    fitScrollAreaWidget : QWidget
+        The widget that contains the fitting parameters.
+    """
     HSEditingFinished = Signal(ParamAttr)
     CaliEditingFinished = Signal(ParamAttr)
 
@@ -39,6 +52,9 @@ class FitParamView(QObject):
         self.HSNames: List[str] = []
 
     def _configureLayout(self):
+        """
+        Configure the layout of the widget.
+        """
         fitScrollArea = self.fitScrollWidget.parent()
         fitScrollArea.setStyleSheet(f"background-color: rgb(33, 33, 33);")
         self.fitScrollWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -50,7 +66,17 @@ class FitParamView(QObject):
         removeExisting: bool = True,
     ):
         """
-        Insert a set of tables for the fitting parameters
+        Insert parameters to the table and each of the parameter 
+        is corresponding to a FittingParameterItems.
+
+        Parameters
+        ----------
+        HSParamNames : Dict[str, List[str]]
+            The names of the fitting parameters for the HilbertSpace.  
+        caliParamNames : Dict[str, List[str]]
+            The names of the fitting parameters for the calibration model.
+        removeExisting : bool, optional
+            Whether to remove the existing widgets, by default True.
         """
 
         self.HSNames = list(HSParamNames.keys())
@@ -83,6 +109,9 @@ class FitParamView(QObject):
 
     # Signal processing ================================================
     def _signalProcessing(self):
+        """
+        Emit signals when the parameters are changed.
+        """
         for groupName, group in self.fitTableSet.items():
             for name, item in group.items():
                 item: FittingParameterItems
@@ -118,6 +147,9 @@ class FitParamView(QObject):
     # Setters ==========================================================
     @Slot(ParamAttr)
     def setBoxValue(self, paramAttr: ParamAttr):
+        """
+        Set the value of the parameter from the model using ParamAttr.
+        """
         item: FittingParameterItems = self.fitTableSet[paramAttr.parentName][
             paramAttr.name
         ]
@@ -136,6 +168,9 @@ class FitParamView(QObject):
 
 
 class FitView(QObject):
+    """
+    A view for the fit settings. 
+    """
     def __init__(
         self,
         parent: QObject,

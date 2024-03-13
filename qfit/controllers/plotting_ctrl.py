@@ -5,7 +5,7 @@ from qfit.widgets.mpl_canvas import MplFigureCanvas
 import numpy as np
 import matplotlib as mpl
 import scqubits as scq
-from qfit.utils.helpers import y_snap, OrderedDictMod
+from qfit.utils.helpers import ySnap, OrderedDictMod
 from qfit.models.measurement_data import (
     NumericalMeasurementData,
     ImageMeasurementData,
@@ -509,7 +509,7 @@ class PlottingCtrl(QObject):
                 half_y_range = self.invYCaliFunc(linewidth * 5) - self.invYCaliFunc(0)
 
                 # snap the y value
-                snapped_y1 = y_snap(
+                snapped_y1 = ySnap(
                     x_list=x_list,
                     y_list=y_list,
                     z_data=z_data,
