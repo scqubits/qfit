@@ -176,6 +176,11 @@ class NavigationHidden(NavigationToolbar2QT):
         See release_zoom
         """
         super().home()
+        for ax in self.canvas.figure.get_axes():
+            ax.view_init()
+            ax.autoscale_view()
+        self.canvas.draw_idle()
+        
         self.parent()._recordXYLim()
 
 
