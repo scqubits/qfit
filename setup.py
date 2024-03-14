@@ -60,7 +60,6 @@ PACKAGES = [
     "qfit/controllers",
     "qfit/models",
     "qfit/ui_designer",
-    "qfit/ui_views",
     "qfit/utils",
     "qfit/views",
     "qfit/widgets",
