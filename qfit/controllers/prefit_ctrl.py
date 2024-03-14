@@ -19,6 +19,32 @@ if TYPE_CHECKING:
 
 
 class PrefitCtrl(QObject):
+    """
+    Controller for the prefit view. This class is responsible for
+    connecting the prefit view with the quantum model and the prefit
+    parameter model. 
+
+    Relevant UI elements:
+    - prefitView: the main prefit view
+    - prefitParamView: the parameter view
+    - pageView: the page view
+
+    Relevant models:
+    - quantumModel: the quantum model
+    - prefitHSParams: the prefit Hilbert space parameter model
+    - prefitCaliParams: the prefit calibration parameter model
+    - allDatasets: the extracted data model
+    - caliParamModel: the calibration parameter model
+    - measurementData: the measurement data model
+    - mainWindow: the main window
+
+    Parameters
+    ----------
+    parent : QObject
+        The parent object
+    models : Tuple[QuantumModel, PrefitHSParams, PrefitCaliParams, AllExtractedData, CaliParamModel, MeasDataSet, MainWindow]
+    Views : Tuple[PrefitView, PrefitParamView, PageView]
+    """
     def __init__(
         self, 
         parent: QObject,
@@ -46,6 +72,21 @@ class PrefitCtrl(QObject):
         hilbertspace: "HilbertSpace", 
         measurementData: List["MeasurementDataType"]
     ):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        reinitialize the all relevant models and views. In particular,
+        parameter sets are built based on the HilbertSpace and the
+        calibration model.
+
+        Finally, it updates the view and the quantum model.
+        
+        Parameters
+        ----------
+        hilbertSpace : HilbertSpace
+            The HilbertSpace object.
+        measurementData : List[MeasurementDataType]
+            The measurement data.
+        """
         self._buildParamSet(hilbertspace)
         self.prefitView.dynamicalInit(
             subsysNames=[
@@ -78,6 +119,9 @@ class PrefitCtrl(QObject):
         self.caliParamModel.sendYCaliFunc()
 
     def _quantumModelConnects(self):
+        """
+        Feed ingredients to the quantum model and update calculations.
+        """
         self.prefitHSParams.hilbertSpaceUpdated.connect(
             self.quantumModel.updateHilbertSpace
         )
@@ -91,6 +135,9 @@ class PrefitCtrl(QObject):
         self.pageView.pageChanged.connect(self.quantumModel.updateModeOnPageChange)
 
     def _buttonConnects(self):
+        """
+        Prefit option, the run sweep button --> quantum model.
+        """
         self.prefitView.optionUpdated.connect(self.quantumModel.storeSweepOption)
 
         self.prefitView.runSweep.clicked.connect(
@@ -99,10 +146,8 @@ class PrefitCtrl(QObject):
 
     def _sliderParamConnects(self):
         """
-        View --> model: slider --> parameter
-
-        Note that in the current implementation, main window is both the
-        controller and the model (hosting the parameterset)
+        Prefit parameter view --> prefit parameter model.
+        (--> update HilbertSpace & calibration function in the quantum model)
         """
         # connect the HS & Cali parameters separately
         for signalSet, model in [
@@ -151,8 +196,12 @@ class PrefitCtrl(QObject):
 
     def _buildParamSet(self, hilbertspace: "HilbertSpace"):
         """
-        identify prefit slider parameters. A temporary solution for the
-        prefit slider parameter.
+        Identify prefit slider parameters for the HilbertSpace object. For 
+        now, we only accept one tunable parameter (flux or ng) in the
+        HilbertSpace object. If one flux and one ng are found, we assume
+        that the flux is swept.
+
+        A temporary solution for the prefit slider parameter.
         """
         # check how many sweep parameters are found and create sliders
         # for the remaining parameters

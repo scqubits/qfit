@@ -41,21 +41,29 @@ class IOCtrl(QObject):
     - close app
 
     It will run the register() when created.
+    
+    Relevant UI elements:
+    - menu button
+    - menu widget
+
+    Relevant model:
+    - hilbertspace
+    - measurement data
 
     Parameters
     ----------
-    menu : MenuWidget
-        The menu widget that provides the buttons, including:
-        - toggleMenuButton
-        - menuQuitButton
-        - menuOpenButton
-        - menuNewButton
-        - menuSaveButton
-        - menuSaveAsButton
+    parent : QObject
+        parent object
+    menuButton : QPushButton
+        button to open the menu
+    menuUi : MenuWidget
+        the menu widget
     registry : Registry
-        The registry object.
+        the registry object
     mainWindow : MainWindow
-        The main window object.
+        the main window
+    fullDynamicalInit : Callable[[HilbertSpace, List[MeasurementDataType]], None]
+        The function that dynamically initializes ALL of the MVC components
     """
 
     def __init__(
@@ -78,7 +86,13 @@ class IOCtrl(QObject):
 
     def dynamicalInit(self, hilbertspace: "HilbertSpace"):
         """
-        Dynamically initialize the main window with the hilbertspace and measurement data.
+        When the app is reloaded (new measurement data and hilbert space),
+        reinitialize the all relevant models and views.
+
+        Parameters
+        ----------
+        hilbertspace : HilbertSpace
+            the HilbertSpace object
         """
         self.hilbertSpace = hilbertspace
 
@@ -86,7 +100,7 @@ class IOCtrl(QObject):
         """
         Connect the buttons to the corresponding functions, including
         - toggle
-        - quit
+        - quit (via menu or "x" button)
         - open
         - new
         - save
@@ -103,37 +117,21 @@ class IOCtrl(QObject):
         self.mainWindow.closeWindow.connect(self.closeByMainWindow)
 
     # load data from file #####################################################
-    @staticmethod
-    def _measurementDataFromFile(
-        fileName: str,
-    ) -> "MeasurementDataType":
-        """
-        Read the measurement data from the given file.
-
-        Serves as a convenient way to call
-        `qfit.io_utils.measurement_file_readers.readMeasurementFile`.
-        """
-        return readMeasurementFile(fileName)
-
-    @staticmethod
-    def _registryDictFromFile(
-        fileName: str,
-    ) -> Union[Dict[str, Any], None]:
-        """
-        Read the registryDict from the given file.
-
-        Serves as a convenient way to call
-        `qfit.models.registry.Registry.fromFile`.
-        """
-        return Registry.dictFromFile(fileName)
-
     def _measurementDataFromDialog(
         self,
         home=None,
-        window_initialized=False,
+        windowInitialized=False,
     ) -> Union["MeasurementDataType", None]:
         """
         Open a dialog to select a file, then read the measurement data from the file.
+
+        Parameters
+        ----------
+        home : str
+            the home directory to start the dialog
+        windowInitialized : bool
+            whether the main window is initialized. If not, the app will close 
+            if the user cancels the dialog.
         """
         if home is None:
             home = os.path.expanduser("~")
@@ -144,13 +142,13 @@ class IOCtrl(QObject):
                 self.mainWindow, "Open", home, fileCategories
             )
             if not fileName:
-                if not window_initialized:
+                if not windowInitialized:
                     self._closeAppAfterSaving()
                     raise StopExecution
                 else:
                     return None
 
-            measurementData = self._measurementDataFromFile(fileName)
+            measurementData = readMeasurementFile(fileName)
 
             if measurementData is None:
                 msg = QMessageBox()
@@ -177,6 +175,14 @@ class IOCtrl(QObject):
     ) -> Union[Dict[str, Any], None]:
         """
         Open a dialog to select a file, then read the registryDict from the file.
+
+        Parameters
+        ----------
+        home : str
+            the home directory to start the dialog
+        windowInitialized : bool
+            whether the main window is initialized. If not, the app will close
+            if the user cancels the dialog.
         """
         if home is None:
             home = os.path.expanduser("~")
@@ -193,7 +199,7 @@ class IOCtrl(QObject):
                 else:
                     return None
 
-            registryDict = self._registryDictFromFile(fileName)
+            registryDict = Registry.dictFromFile(fileName)
 
             if registryDict is None:
                 msg = QMessageBox()
@@ -215,6 +221,22 @@ class IOCtrl(QObject):
         self, 
         registryDict: Dict[str, Any], 
     ) -> Tuple[Dict[str, Any], "HilbertSpace", List["MeasurementDataType"]]:
+        """
+        Parse the registry dictionary from different versions of the app 
+        and return the up-to-date registry dictionary, HilbertSpace, and
+        measurementData.
+
+        Internal note: 
+        When a micro version is updated, the way of storing and reading the 
+        data should not be changed. Otherwise, when the mjor or minor version
+        is updated, we will need to write a new function to parse the registry
+        dictionary.
+
+        Parameters
+        ----------
+        registryDict : Dict[str, Any]
+            the registry dictionary
+        """
         try:
             version = registryDict["version"]
         except KeyError:
@@ -239,6 +261,13 @@ class IOCtrl(QObject):
     ):
         """
         Open a dialog to select a file, then save the project to the file.
+
+        Parameters
+        ----------
+        home : str
+            the home directory to start the dialog
+        save_as : bool
+            whether to save the project as a new file
         """
         # choose a home directory
         if self.mainWindow.projectFile is not None:
@@ -275,14 +304,21 @@ class IOCtrl(QObject):
 
     # quit / close ############################################################
     def _closeAppAfterSaving(self) -> bool:
-        """End the application"""
+        """
+        Close the app after asking the user whether to save the changes.
+
+        Returns
+        -------
+        bool
+            whether the app is closed
+        """
         # first, if the project is open from a file, check the registry dict of the old file
         # with that obtained from the current session, if something changed, ask the user
         # whether to save the changes
         if self.mainWindow.projectFile is not None:
             registryDict = copy.deepcopy(self.registry.exportDict())
             registryDictFromFile = copy.deepcopy(
-                self._registryDictFromFile(self.mainWindow.projectFile)
+                Registry.dictFromFile(self.mainWindow.projectFile)
             )
             assert registryDictFromFile is not None, "File not found"
 
@@ -333,6 +369,9 @@ class IOCtrl(QObject):
             return True
         
     def _closeApp(self):
+        """
+        Close the window.
+        """
         if settings.EXECUTED_IN_IPYTHON:
             self.mainWindow.close()
             self.mainWindow.deleteLater()
@@ -351,7 +390,18 @@ class IOCtrl(QObject):
         measurementFileName: Optional[str] = None,
     ):
         """
-        Open a dialog to select a measurement file, then create a new project
+        Open a dialog to select a measurement file, then create a new project.
+        It is a slot for the new project button in the menu.
+
+        Parameters
+        ----------
+        from_menu : bool
+            whether the function is called from the menu. If Truem the menu 
+            will be closed after the function is called.
+        hilbertSpace : HilbertSpace
+            the HilbertSpace object
+        measurementFileName : str
+            the measurement file name
         """
         if from_menu:
             self.menu.toggle()
@@ -363,14 +413,12 @@ class IOCtrl(QObject):
 
         # ask for a measurement file from dialog
         if measurementFileName is None:
-            measurementData = self._measurementDataFromDialog(window_initialized=from_menu)
+            measurementData = self._measurementDataFromDialog(windowInitialized=from_menu)
             if measurementData is None:
                 # dialog will handle this and we just do nothing
                 return
         else:
-            measurementData = self._measurementDataFromFile(
-                measurementFileName
-            )
+            measurementData = readMeasurementFile(measurementFileName)
             if measurementData is None:
                 raise FileNotFoundError(f"Can't load file '{measurementFileName}'.")
 
@@ -387,7 +435,16 @@ class IOCtrl(QObject):
         fileName: Optional[str] = None,
     ):
         """
-        Open a dialog to select a project file, then open the project
+        Open a dialog to select a project file, then open the project.
+        It is a slot for the open file button in the menu.
+
+        Parameters
+        ----------
+        from_menu : bool
+            whether the function is called from the menu. If Truem the menu 
+            will be closed after the function is called.
+        fileName : str
+            the project file name
         """
         if from_menu:
             self.menu.toggle()
@@ -402,7 +459,7 @@ class IOCtrl(QObject):
                 window_initialized=from_menu
             )
         else:
-            registryDict = self._registryDictFromFile(fileName)
+            registryDict = Registry.dictFromFile(fileName)
             if registryDict is None:
                 raise FileNotFoundError(f"Can't load file '{fileName}'.")
 
@@ -447,6 +504,11 @@ class IOCtrl(QObject):
 
     @Slot()
     def closeByMainWindow(self, event):
+        """
+        When user click the "x" button, mainWinow will emit the closeWindow 
+        signal and this function will be called. It will ask the user whether
+        to save the changes before closing the app.
+        """
         status = self._closeAppAfterSaving()
 
         if status:

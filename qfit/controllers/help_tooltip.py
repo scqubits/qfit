@@ -11,28 +11,30 @@ from qfit.widgets.gif_tooltip import DialogWindowWithMedia
 
 
 class HelpButtonCtrl(QObject):
+    """
+    Controller for the helper push buttons. Once clicked, a window will pop up to show
+    the corresponding help message. The help message is hard coded in the controller
+    here.
+
+    Relevant UI elements:
+    - help buttons
+
+    Relevant model:
+    - None
+
+    Parameters
+    ----------
+    parent : QObject
+        parent object
+    helpButtons : Dict[str, QPushButton]
+        dictionary of help buttons with the key being the name of the button
+    """
+
     def __init__(
         self,
         parent: QObject,    
         helpButtons: Dict[str, "QPushButton"],
     ):
-        """
-        Controller for the helper push buttons. Once clicked, a window will pop up to show
-        the corresponding help message. The help message is hard coded in the controller
-        here.
-
-        Relevant UI elements:
-        - help buttons
-
-        Relevant model:
-        - None
-
-        ARGUMENTS
-        ---------
-        helpbuttons: Dict[str, QPushButton]
-            dictionary of help buttons
-        additional arguments are passed to QObject.__init__()
-        """
         super().__init__(parent)
 
         self.helpButtons = helpButtons
@@ -44,6 +46,9 @@ class HelpButtonCtrl(QObject):
 
     @Slot()
     def calibrationHelp(self):
+        """
+        Show the help message for the calibration stage
+        """
         help_text = "<p style='line-height: 150%'>"
         help_text += "<b>Calibrate axes in 4 steps</b><br>"
         help_text += "(1) Click the calibration point selection button for x1.<br>"
@@ -61,6 +66,9 @@ class HelpButtonCtrl(QObject):
 
     @Slot()
     def fitHelp(self):
+        """
+        Show the help message for the fitting stage
+        """
         help_text = "<p style='line-height: 150%'>"
         help_text += "<b>Name</b>: name of the parameter. <br>"
         help_text += "<b>Fix</b>: toggle on to fix the parameter at the initial value during the fitting process. <br>"
@@ -81,6 +89,9 @@ class HelpButtonCtrl(QObject):
 
     @Slot()
     def numericalSpectrumSettingsHelp(self):
+        """
+        Show the help message for the numerical spectrum settings
+        """
         help_text = "<p style='line-height: 150%'>"
         help_text += "<b>TRANSITIONS</b>: subsystem for which the simulated transition frequencies are to be extracted. <br>"
         help_text += "<b>INITIAL STATES</b>: the initial state to be considered for transitions. Dressed or bare labels are acceptable. <br>"

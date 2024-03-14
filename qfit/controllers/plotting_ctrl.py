@@ -4,15 +4,10 @@ from qfit.widgets.mpl_canvas import MplFigureCanvas
 
 import numpy as np
 import matplotlib as mpl
-import scqubits as scq
 from qfit.utils.helpers import ySnap, OrderedDictMod
 from qfit.models.measurement_data import (
-    NumericalMeasurementData,
-    ImageMeasurementData,
     MeasurementDataType,
 )
-
-from qfit.models.data_structures import QMSweepParam
 
 from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal, List, Callable
 
@@ -20,7 +15,6 @@ if TYPE_CHECKING:
     from qfit.models.calibration import CaliParamModel
 
     from qfit.models.parameter_set import SweepParamSet
-    # from qfit.models.calibration_data import CalibrationData
     from qfit.models.measurement_data import MeasDataSet
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
     from qfit.models.numerical_model import QuantumModel
@@ -33,23 +27,53 @@ mpl.use("qtagg")
 
 class PlottingCtrl(QObject):
     """
-    Establishes the connection among the mpl canvas, the mpl toolbar, and the
-    other user interfaces.
+    The controller for the plotting canvas. It is responsible for handling the
+    mouse click events and the UI elements for the canvas and connecting them
+    to the backend models.
+
+    Relevant UI elements:
+    - mplCanvas: the matplotlib canvas
+    - measComboBoxes: the combo boxes for the x, y, and z axes
+    - measPlotSettings: the check boxes and spin boxes for the plot settings
+    - swapXYButton: the button for swapping the x and y axes
+    - canvasTools: the buttons for reset, zoom, and pan functions of the canvas
+    - calibrationButtons: the buttons for calibrating the axes
+    - calibratedCheckBox: the check box for toggling the calibration status
+    - pageView: the view for switching between different pages
+
+    Relevant models:
+    - measurementData
+    - calibrationModel
+    - allDatasets: the model for all the extracted data
+    - activeDataset: the model for the currently selected data
+
+    Parameters
+    ----------
+    parent: QObject
+        The parent object
+    mplCanvas: MplFigureCanvas
+        The matplotlib canvas
+    models: Tuple[MeasDataSet, CaliParamModel, AllExtractedData, 
+        ActiveExtractedData, QuantumModel]
+    views: Tuple[Any, ...]
+        measComboBoxes, measPlotSettings, swapXYButton, canvasTools, 
+        calibrationButtons, calibratedCheckBox, pageView
     """
 
-    disconnectCanvas: bool
-    xSnapTool: bool
-    trans0Focused: bool
-    axisSnap: Literal["X", "Y", "OFF"]
-    clickResponse: Literal[
+    # state of the controller, determining the how things are plotted
+    disconnectCanvas: bool      # switch off canvas updates
+    xSnapTool: bool             # whether x snap tool is selected
+    trans0Focused: bool         # whether the first extracted transition is focused
+    axisSnap: Literal["X", "Y", "OFF"]  # whether to snap to one of the axes
+    clickResponse: Literal[     # the response to a mouse click
         "ZOOM",
         "PAN",
         "EXTRACT",
     ]
     dataDestination: Literal["CALI_X", "CALI_Y", "EXTRACT", "NONE"]
+                                # after a click, to where we send the click position
 
-    # other annotations
-    pageView: "PageView"
+    # calibration functions
     XCaliFuncDict: Dict[str, "SweepParamSet"]
     YCaliFunc: Callable
 
@@ -63,10 +87,8 @@ class PlottingCtrl(QObject):
             "AllExtractedData",
             "ActiveExtractedData",
             "QuantumModel",
-            # "ParamSet",
         ],
         views: Tuple[Any, ...],
-        # calibrationStates: Dict[str, Literal['CALIBRATE_X1', 'CALIBRATE_X2', 'CALIBRATE_Y1', 'CALIBRATE_Y2']],
     ):
         super().__init__(parent)
         (
@@ -88,9 +110,8 @@ class PlottingCtrl(QObject):
         ) = views
         self.mplCanvas = mplCanvas
         self.axes = mplCanvas.axes
-        self._staticInit()
 
-    def _staticInit(self):
+        # initialize the state of the controller
         self.disconnectCanvas = False  # used to temporarily switch off canvas updates
         self.xSnapTool = True  # whether the horizontal snap is on
         self.trans0Focused = True  # whether the first transition is focused
@@ -99,8 +120,9 @@ class PlottingCtrl(QObject):
         self.dataDestination = "NONE"  # the destination of the data after a click
         self.calibrateAxes = False  # whether the ticklabels are calibrated
 
+        # connects
         self.canvasToolConnects()
-        self.staticPlotElementsConnects()
+        self.plotElementsConnects()
         self.mouseClickConnects()
         self.plottingModeConnects()
         self.caliConnects()
@@ -113,12 +135,20 @@ class PlottingCtrl(QObject):
         # previously in dynamicalInit
         self.measPlotSettingConnects()
         # self.uiXYZComboBoxesConnects()
-        self.dynamicalPlotElementsConnects()
 
     def dynamicalInit(
         self,
         measurementData: List["MeasurementDataType"],
     ):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        reinitialize the all relevant models and views.
+
+        Parameters
+        ----------
+        measurementData: List[MeasurementDataType]
+            The new measurement data
+        """
         self.measurementData.dynamicalInit(measurementData)
         self.measDataComboBoxesInit()
 
@@ -146,7 +176,7 @@ class PlottingCtrl(QObject):
         # self.setupXYDataBoxes()
 
     def measPlotSettingConnects(self):
-        """Connect the UI elements related to display of data"""
+        """Connect the options related to display of measurement data"""
         self.measPlotSettings["topHat"].toggled.connect(
             self.measurementData.toggleTopHatFilter
         )
@@ -173,6 +203,9 @@ class PlottingCtrl(QObject):
         )
 
     def uiXYZComboBoxesConnects(self):
+        """
+        Connect the combo boxes for the x, y, and z axes to the measurement data.
+        """
         self.measComboBoxes["z"].activated.connect(self.zDataUpdate)
         # self.measComboBoxes["x"].activated.connect(self.xAxisUpdate)
         # self.measComboBoxes["y"].activated.connect(self.yAxisUpdate)
@@ -193,6 +226,9 @@ class PlottingCtrl(QObject):
 
     @Slot(int)
     def zDataUpdate(self, itemIndex: int):
+        """
+        Update the z axis of the measurement data. 
+        """
         self.measurementData.setCurrentZ(itemIndex)
         # self.setupXYDataBoxes()
 
@@ -233,23 +269,29 @@ class PlottingCtrl(QObject):
 
     # calibration ======================================================
     def caliConnects(self):
+        """
+        Connect the "view calibrated axes" check box.
+        Connect the calibration model to the canvas.
+        """
         self.calibratedCheckBox.toggled.connect(self.toggleCalibrateAxes)
         self.calibrationModel.xCaliUpdated.connect(self.onXCaliFuncUpdated)
         self.calibrationModel.yCaliUpdated.connect(self.onYCaliFuncUpdated)
 
     @Slot(bool)
     def toggleCalibrateAxes(self, checked: bool):
-        """If calibration check box is changed, toggle the calibration status of the
+        """
+        If calibration check box is changed, toggle the calibration status of the
         calibrationData. Also induce change at the level of the displayed data of
-        selected points."""
+        selected points.
+        """
 
         self.calibrateAxes = checked
         self.setXYAxes()
 
     def setXYAxes(self):
         """
-        Toggle the labels on the canvas.
-        TODO: more bugs to fix on zooming, swapping xy, etc.
+        Update the x and y axes of the canvas based on the current measurement data
+        and the calibration functions.
         """
 
         if self.measurementData.rowCount() == 0:
@@ -296,9 +338,10 @@ class PlottingCtrl(QObject):
         self.mplCanvas.updateYAxes(mappedYName, mappedYLim)
 
     # plotting =========================================================
-    def staticPlotElementsConnects(self):
+    def plotElementsConnects(self):
         """
-        Should be done at the end and will emit all readyToPlot signal
+        Connect the all of the models's readyToPlot signals to the canvas 
+        for plotting the data.
         """
         self.activeDataset.readyToPlot.connect(self.mplCanvas.updateElement)
         self.allDatasets.readyToPlot.connect(self.mplCanvas.updateElement)
@@ -308,33 +351,39 @@ class PlottingCtrl(QObject):
             self.mplCanvas.updateCursorXSnapValues
         )
 
-    def dynamicalPlotElementsConnects(self):
-        """
-        Should be done at the end and will emit all readyToPlot signal
-        """
         self.measurementData.readyToPlot.connect(self.mplCanvas.updateElement)
         self.measurementData.relimCanvas.connect(self.mplCanvas.relim)
         self.quantumModel.readyToPlot.connect(self.mplCanvas.updateElement)
-        return
 
     def mouseClickConnects(self):
-        """Set up the matplotlib canvas and start monitoring for mouse click events in the canvas area."""
-        self.cidCanvas = self.mplCanvas.canvas.mpl_connect(
+        """
+        Set up the matplotlib canvas and start monitoring for mouse click 
+        events in the canvas area.
+        """
+        self.mplCanvas.canvas.mpl_connect(
             "button_press_event", self.canvasClickMonitoring
         )
 
-        self.cidMove = self.mplCanvas.canvas.mpl_connect(
-            "motion_notify_event", self.canvasMouseMonitoring
-        )
+        # self.mplCanvas.canvas.mpl_connect(
+        #     "motion_notify_event", self.canvasMouseMonitoring
+        # )
 
     def canvasToolConnects(self):
-        """Connect the UI buttons for reset, zoom, and pan functions of the matplotlib canvas."""
+        """
+        Connect the UI buttons for reset, zoom, and pan functions of the 
+        matplotlib canvas.
+        """
         self.canvasTools["reset"].clicked.connect(self.mplCanvas.resetView)
         self.canvasTools["zoom"].clicked.connect(self.toggleZoom)
         self.canvasTools["pan"].clicked.connect(self.togglePan)
         self.canvasTools["select"].clicked.connect(self.toggleSelect)
 
     def plottingModeConnects(self):
+        """
+        The state of the controller is updated by calibrating, switching pages,
+        and turning on the x snap tool.
+        """
+
         # calibration --> data destination
         self.calibrationModel.plotCaliPtExtractStart.connect(self.setDataDestAxisSnap)
         self.calibrationModel.plotCaliPtExtractFinished.connect(
@@ -359,14 +408,20 @@ class PlottingCtrl(QObject):
 
     @Slot()
     def setXSnapTool(self, checked: bool):
+        """
+        Update the x snap tool state when toggling the UI button.
+        """
         self.xSnapTool = checked
         self.updateCursor()
 
     @property
     def xSnap(self) -> Literal["MeasData", "ExtrX", "OFF"]:
         """
-        Only in the extract mode, focusing on a transition other than 
-        the first one, x snap can be turned on.
+        X snap helps to align the x value of the selected point to the x value of
+        the data points / measurement data grid.
+
+        Combining the information of the x snap tool and the data destination,
+        we determine the x snap mode.
         """
         if self.dataDestination == "EXTRACT":
             if (
@@ -382,10 +437,20 @@ class PlottingCtrl(QObject):
             return "OFF"
 
     def setTrans0Focused(self, checked: bool):
+        """
+        Update the trans0Focused when the user changes the focus of the extracted
+        data.
+        """
         self.trans0Focused = checked
         self.updateCursor()
 
     def setClickResponse(self, response: Literal["ZOOM", "PAN", "EXTRACT"]):
+        """
+        Set the response to a mouse click. The response can be one of the following:
+        - ZOOM: zoom in the canvas
+        - PAN: pan the canvas
+        - EXTRACT: select a point from the canvas
+        """
         self.clickResponse = response
         self.updateCursor()
 
@@ -394,6 +459,16 @@ class PlottingCtrl(QObject):
         self,
         destination: Literal["CALI_X", "CALI_Y", "EXTRACT", "NONE"],
     ):
+        """
+        Set the data (click's position) destination after a mouse click.  
+        The destination can be one of the following:
+        - CALI_X: calibration model, update x raw data
+        - CALI_Y: calibration model, update y raw data
+        - EXTRACT: extracted data, add a point
+        - NONE: do nothing
+
+        It also update the axis snap mode and the cursor.
+        """
         self.dataDestination = destination
 
         if destination == "CALI_X":
@@ -407,24 +482,36 @@ class PlottingCtrl(QObject):
 
     @Slot()
     def toggleSelect(self):
+        """
+        Toggle the selection mode. When the selection mode is on, the user can
+        select a point from the canvas for calibration or extraction.
+        """
         self.setClickResponse("EXTRACT")
         self.mplCanvas.selectOn()
 
     @Slot()
     def toggleZoom(self):
+        """
+        Toggle the zoom mode. When the zoom mode is on, the user can zoom in
+        the canvas.
+        """
         self.setClickResponse("ZOOM")
         self.mplCanvas.zoomView()
 
     @Slot()
     def togglePan(self):
+        """
+        Toggle the pan mode. When the pan mode is on, the user can pan the
+        canvas.
+        """
         self.setClickResponse("PAN")
         self.mplCanvas.panView()
 
     def updateCursor(self):
         """
-        Callback for updating the matching mode and the cursor.
+        Callback for updating the matching mode and crosshair for the cursor.
 
-        When will this method be called?
+        Update cursor will be called when:
         1. Page switch --> Calibration & Selecting page have different crosshair
         2. Calibration mode on / off --> Crosshair is partially on for axis snap
         3. X Snap on / off --> Crosshair updated
@@ -450,7 +537,20 @@ class PlottingCtrl(QObject):
 
     @Slot()
     def canvasClickMonitoring(self, event):
-        """Main loop for acting on mouse events occurring in the canvas area."""
+        """
+        Main loop for acting on mouse events occurring in the canvas area.
+
+        Based on the dataDestination and clickResponse, the controller will
+        process the data and send it to the appropriate model.
+
+        dataDestination == "EXTRACT" & clickResponse == "EXTRACT": 
+            - add a point to the active dataset
+        dataDestination == "CALI_X" & clickResponse == "EXTRACT":
+            - update the x calibration data
+        dataDestination == "CALI_Y" & clickResponse == "EXTRACT":
+            - update the y calibration data
+        
+        """
 
         if self.dataDestination == "NONE":
             return
@@ -521,14 +621,15 @@ class PlottingCtrl(QObject):
 
             self.activeDataset.append(xyDict, rawX)
 
-    @Slot()
-    def canvasMouseMonitoring(self, event):
-        self.axes.figure.canvas.flush_events()
-        if not self.xSnapTool:
-            return
+    # @Slot()
+    # def canvasMouseMonitoring(self, event):
+    #     self.axes.figure.canvas.flush_events()
+    #     print(event.xdata, event.ydata)
+    #     if not self.xSnapTool:
+    #         return
 
-        if event.xdata is None or event.ydata is None:
-            return
+    #     if event.xdata is None or event.ydata is None:
+    #         return
 
     def onXCaliFuncUpdated(self, XCaliFuncDict: Dict[str, "SweepParamSet"]):
         """Update the X calibration function and the labels on the canvas."""

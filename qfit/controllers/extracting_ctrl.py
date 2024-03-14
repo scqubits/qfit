@@ -14,38 +14,37 @@ if TYPE_CHECKING:
 
 
 class ExtractingCtrl(QObject):
+    """
+    Controller for the extraction of transitions. This controller serves as a 
+    transmittor between the extracted data (model) and the extraction & tagging panel (view).
+
+    Notice that the connections that transport selected transitions from the
+    canvas to the extraction model are done in the plotting controller instead 
+    of here.
+
+    Relevant UI elements:
+    - tagging section (title, radio buttons for the three modes and options for each mode)
+    - extraction section (a table of extracted transitions, and associated buttons for extraction)
+
+    Relevant model:
+    - extracted data (all and active)
+
+    Parameters
+    ----------
+    parent : QObject
+        The parent QObject.
+    dataSets : Tuple[AllExtractedData, ActiveExtractedData]
+        The extracted data model (all and active).
+    labelingView : LabelingView
+        The extraction & tagging view.
+    """
     def __init__(
         self,
         parent: QObject,
         dataSets: Tuple["AllExtractedData", "ActiveExtractedData"],
         labelingView: "LabelingView",
     ):
-        """
-        Controller for the tagging panel (not for the tag data itself). This controller serves as a
-        transmittor between the tag data (model) and the tag panel (view). User interact with the
-        tag panel and the model will be updated accordingly, meanwhile, changes in the model (e.g.
-        a different dataset is selected) will be reflected in the tag panel.
-
-        Relevant UI elements:
-        - tagging section (title, radio buttons for the three modes and options for each mode)
-
-        Relevant model:
-        - extracted data (all and active)
-
-        Parameters
-        ----------
-        subsysCount: int
-            number of subsystems in the system
-        dataSets: Tuple[AllExtractedData, ActiveExtractedData]
-            all extracted datasets and the currently active dataset
-            we need the active dataset to update the tag panel when the dataset is changed
-        ui: Ui_MainWindow
-            the main window UI
-        ui_groups:
-            A tuple of UI dictionaries: uiLabelBoxes, uiLabelRadioButtons, uiBareLabelInputs 
-            and uiDressedLabelInputs
-        additional arguments are passed to QObject.__init__()
-        """
+        
         super().__init__(parent)
 
         self.allDatasets, self.activeDataset = dataSets
@@ -62,6 +61,17 @@ class ExtractingCtrl(QObject):
         hilbertspace: "HilbertSpace",
         measurementData: List["MeasurementDataType"]
     ):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        reinitialize the all relevant models and views.
+
+        Parameters
+        ----------
+        hilbertspace : HilbertSpace
+            The HilbertSpace object.
+        measurementData : List[MeasurementDataType]
+            The measurement data.
+        """
         self.allDatasets.dynamicalInit([data.name for data in measurementData])
         self.labelingView.dynamicalInit(
             [subsys.id_str for subsys in hilbertspace.subsystem_list],

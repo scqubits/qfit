@@ -16,6 +16,33 @@ if TYPE_CHECKING:
 
 
 class FitCtrl(QObject):
+    """
+    Controller for the fitting. This controller serves as a transmittor between 
+    the fitting parameters (model) and the fitting panel (view).
+
+    Relevant UI elements:
+    - fitting view 
+    - prefit view 
+    - page view 
+
+    Relevant model:
+    - fitting parameters
+    - prefit parameters
+    - calibration parameters
+    - quantum model
+    - all extracted data
+    - calibration parameter model
+    - measurement data
+
+    Parameters
+    ----------
+    parent : QObject
+        The parent QObject.
+    models : Tuple[FitModel, FitHSParams, FitCaliParams, PrefitHSParams,
+        PrefitCaliParams, QuantumModel, AllExtractedData, CaliParamModel,
+        MeasDataSet]
+    views : Tuple[FitView, FitParamView, PrefitParamView, PrefitView, PageView]
+    """
     OptTerminated = False
 
     def __init__(
@@ -61,6 +88,16 @@ class FitCtrl(QObject):
         self._fitCtrlConnects()
 
     def dynamicalInit(self, hilbertSpace: "HilbertSpace"):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        reinitialize the all relevant models and views. In particular, the
+        fitting parameters are initialized with the prefit parameters.
+        
+        Parameters
+        ----------
+        hilbertSpace : HilbertSpace
+            The HilbertSpace object.
+        """
         # build paramset
         self.fitHSParams.dynamicalInit(hilbertSpace)
         self.fitHSParams.setAttrByParamSet(
@@ -89,10 +126,7 @@ class FitCtrl(QObject):
     # connections ======================================================
     def _tableParamConnects(self):
         """
-        table --> parameter
-
-        Note that in the current implementation, main window is both the
-        controller and the model (hosting the parameterset)
+        table view --> parameter model
         """
         # update the value
         self.fitParamView.HSEditingFinished.connect(self.fitHSParams.storeParamAttr)
@@ -101,6 +135,9 @@ class FitCtrl(QObject):
         self.fitCaliParams.updateBox.connect(self.fitParamView.setBoxValue)
 
     def _optionConnects(self):
+        """
+        Connect the options for the fit
+        """
         self.fitView.tolLineEdit.editingFinished.connect(
             lambda: self.fitModel.updateTol(self.fitView.tolLineEdit.value())
         )
@@ -117,6 +154,7 @@ class FitCtrl(QObject):
         2. parameters transfer: prefit to fit
         3. parameters transfer: fit to prefit
         4. parameters transfer: fit result to fit
+        5. post optimization
         """
         # on buggon clicked: either run optimization or stop
         self.fitView.runFit.clicked.connect(self.onFitButtonClicked)
@@ -135,6 +173,9 @@ class FitCtrl(QObject):
     # slots ============================================================
     @Slot()
     def _prefitToFit(self):
+        """
+        Transfer the prefit parameters to fit parameters
+        """
         self.fitHSParams.setAttrByParamSet(
             self.prefitHSParams.toFitParams(),
             attrsToUpdate=["min", "max", "initValue"],
@@ -148,6 +189,9 @@ class FitCtrl(QObject):
 
     @Slot()
     def _resultToPrefit(self):
+        """
+        Transfer the fitting result to prefit parameters and calibration parameters
+        """
         self.caliParamModel.blockSignals(True)
         self.prefitHSParams.blockSignals(True)
 
@@ -174,6 +218,9 @@ class FitCtrl(QObject):
 
     @Slot()
     def _resultToInit(self):
+        """
+        Transfer the fitting result to initial parameters
+        """
         self.fitHSParams.setAttrByParamSet(
             self.fitHSParams.toInitParams(),
             attrsToUpdate=["initValue"],
@@ -187,6 +234,9 @@ class FitCtrl(QObject):
 
     # optimization =====================================================
     def _paramTuningEnabled(self, enabled: bool):
+        """
+        Enable or disable the parameter tuning during the optimization
+        """
         self.fitView.setEnabled(enabled)
         self.prefitParamView.sliderSet.setEnabled(enabled)
         self.prefitView.setEnabled(enabled)
@@ -198,18 +248,38 @@ class FitCtrl(QObject):
 
     @Slot()
     def userTerminateOptimization(self):
+        """
+        Terminate the optimization by the user. It is achieved by setting the
+        OptTerminated flag to be True and the cost function will raise an
+        exception.
+        """
         self.OptTerminated = True
-        # disable the fit button, keep the mode to be stop
+
+        # disable the fit button, forbid the user to click it again before
+        # the optimization is actually terminated
         self.fitView.setFitButtonEnabled(False)
 
     @Slot()
     def onFitButtonClicked(self):
+        """
+        The slot for the fit button. 
+        If the mode is "run", start the optimization.
+        If the mode is "stop", stop the optimization.
+        """
         if self.fitView.fitButtonMode == "run":
             self.optimizeParams()
         else:
             self.userTerminateOptimization()
 
     def optimizeParams(self):
+        """
+        Set up and start the optimization:
+        1. Check if the parameters are valid and the quantum model is ready
+        2. Configure the models and views so that user cannot interact with them
+        3. Set up the optimization with the fixed parameters, free parameter ranges,
+            and cost function
+        4. Start the optimization in a separate thread
+        """
         if not self.fitHSParams.isValid:
             return
 
@@ -218,7 +288,6 @@ class FitCtrl(QObject):
 
         # configure other models & views
         self._paramTuningEnabled(False)
-
         self.fitView.setFitButtonMode(mode="stop")
 
         # store a copy of the calibration parameters as we will change them
@@ -244,7 +313,9 @@ class FitCtrl(QObject):
         self, HSParams: Dict[str, float], caliParams: Dict[str, float]
     ) -> float:
         """
-        Cook up a cost function for the optimization
+        Cook up a cost function for the optimization. It updates the quantum
+        model and calibration model with the new parameters, and then returns
+        the mean squared error of the spectrum.
         """
         if self.OptTerminated:
             raise Exception("Opt terminated by the user.")
@@ -271,11 +342,22 @@ class FitCtrl(QObject):
         return mse
 
     def _optCallback(self, *args, **kwargs):
+        """
+        Callback for the optimization. It is called after each iteration of the
+        optimization. It updates the views with the current parameters,
+        current MSE and the current spectrum.
+        """
         self.quantumModel.emitReadyToPlot()
         return self.quantumModel.sweep2SpecMSE(forced=True, sweepUsage="fit")
 
     @Slot()
     def postOptimization(self):
+        """
+        After the optimization is finished, restore the calibration parameters 
+        (as we used it to store the temporary parameters and update calibration
+        functions), update the quantum model with the new parameters, and enable
+        the parameter tuning.
+        """
         self.OptTerminated = False
 
         # TODO: later, fit model will be able to update hspace
