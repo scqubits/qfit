@@ -183,7 +183,7 @@ def isValid1dArray(array):
     if array.dtype not in [float, np.float_, np.float64, np.float32]:
         return False
     if array.ndim == 1:
-        return np.all(np.diff(array) > 0)
+        return np.all(np.diff(array) > 0) and np.all(np.diff(array) < 0)
     if (array.ndim == 2) and (min(array.shape) == 1):
         return np.all(np.diff(array.flatten()) > 0)
     return False
