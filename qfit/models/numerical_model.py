@@ -917,7 +917,14 @@ class QuantumModel(QObject):
 
         """
         if self._fullExtr.count() == 0:
-            return 0.0
+            status = Status(
+                statusSource=self.sweepUsage,
+                message="Successful spectrum calculation.",
+                statusType="success",
+                mse=np.nan,
+            )
+            self.updateStatus.emit(status)
+            return np.nan
 
         mse = 0
         dataNameWOlabel = []
@@ -956,7 +963,7 @@ class QuantumModel(QObject):
             # else, send out the success status with the MSE
             else:
                 statusType = "success"
-                message = "MSE calculation successful."
+                message = "Successful spectrum and MSE calculation."
                 status = Status(
                     statusSource=self.sweepUsage,
                     message=message,
