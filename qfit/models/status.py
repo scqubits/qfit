@@ -13,18 +13,16 @@ DEFAULT_STATUS = Status(
 
 
 class StatusModel(QObject):
-    mse_change_ui_setter: Callable
-    status_type_ui_setter: Callable
-    status_text_ui_setter: Callable
-    normalStatusChanged = Signal(str)
-    tempStatusChanged = Signal(str, float)
+    """
+    Store and manage the status of the application. The status is divided into 
+    two types:
+        - normal status: the status of the application, which is displayed in the 
+        status bar. It is updated by the prefit and fit models.
+        - temporary status: the status of the application, which is displayed in the
+        temporary status bar. It is updated by the prefit and fit models.
+        (currently not implemented)
 
-    def __init__(
-        self,
-        parent: QObject,
-    ):
-        """
-        This model:
+    The model's main function:
         - receives status type (success, warning, error, computing) and status message
         - for prefit result, fit computing and fit result, receive MSE and compute its change
         - compile message and send to UI for display
@@ -33,14 +31,18 @@ class StatusModel(QObject):
           * for prefit result, fit computing and fit result, generate message based on the MSE change
             (i.e. prefit and fit model does not provide these messages)
 
-        Signals:
-        - status_changed: emitted when the status type and message are updated, once emitted, the UI
-          will be updated accordingly
+    Parameters
+    ----------
+    parent : QObject
+        The parent QObject.
+    """
+    normalStatusChanged = Signal(str)
+    tempStatusChanged = Signal(str, float)
 
-        Slots:
-        - update_status: receive the signal from prefit model when status is changed, the signal contains
-          a Status object.
-        """
+    def __init__(
+        self,
+        parent: QObject,
+    ):
         super().__init__(parent)
         self.statusStrForView: Optional[str] = None
         self.previousNormalStatus: Status = DEFAULT_STATUS
@@ -57,7 +59,7 @@ class StatusModel(QObject):
     @deltaMse.setter
     def deltaMse(self, value: Union[float, None]):
         """
-        assign delta_mse value and automatically compute the sign of the change
+        Assign deltaMse value and automatically compute the sign of the change
         to be displayed in the UI.
         """
         self._deltaMse = value
@@ -69,21 +71,20 @@ class StatusModel(QObject):
             else:
                 self._mseChangeSign = "+"
 
-    # # to be deleted
-    # @property
-    # def displayed_status_type(self):
-    #     if self.current_status_type is None:
-    #         return "STATUS:  -"
-    #     return f"STATUS:  {self.status_type}"
-
     @property
-    def displayed_status_text(self):
+    def displayedStatusText(self) -> str:
+        """
+        The status text to be displayed in the status bar.
+        """
         if self.statusStrForView is None:
             return "-"
         return self.statusStrForView
 
     @property
-    def displayed_MSE(self):
+    def displayedMSE(self) -> str:
+        """
+        The MSE to be displayed in the status bar, along with the change in MSE.
+        """
         if self.newMseForComputingDelta is None:
             return "MSE:  -  (- %)"
         elif self.oldMseForComputingDelta is None:
@@ -93,35 +94,23 @@ class StatusModel(QObject):
             return f"MSE:  {self.newMseForComputingDelta:.4f} GHz\u00B2  ({plus_minus}{self.deltaMse:.2f} %)"
 
     @property
-    def sourceChanged(self):
-        # treat fit/fit-result as the same source
-        # first rule out the case when the source is None
-        if (self.currentNormalStatus.statusSource is not None) and (
-            self.previousNormalStatus.statusSource is not None
+    def sourceChanged(self) -> bool:
+        """
+        Check if the source of the status is changed. 
+
+        Note: it treat fit/fit-result as the same source
+        """
+        if (
+            self.currentNormalStatus.statusSource in ["fit", "fit-result"] 
+            and self.previousNormalStatus.statusSource in ["fit", "fit-result"]
         ):
-            if (self.currentNormalStatus.statusSource == "fit") and (
-                self.currentNormalStatus.statusSource == "fit-result"
-            ):
-                return False
-            elif (self.currentNormalStatus.statusSource == "fit-result") and (
-                self.currentNormalStatus.statusSource == "fit"
-            ):
-                return False
+            return False
+            
         _sourceChanged = (
             self.currentNormalStatus.statusSource
             is not self.previousNormalStatus.statusSource
         )
         return _sourceChanged
-
-    def setupUISetters(
-        self,
-        mseChangeUISetter: Callable,
-        status_type_ui_setter: Callable,
-        status_text_ui_setter: Callable,
-    ):
-        self.mse_change_ui_setter = mseChangeUISetter
-        self.status_type_ui_setter = status_type_ui_setter
-        self.status_text_ui_setter = status_text_ui_setter
 
     @Slot(Status)
     def updateNormalStatus(
@@ -129,7 +118,7 @@ class StatusModel(QObject):
         status: Status,
     ):
         """
-        Update a normal status and send signal to the UI for display.
+        Receive a normal status and send signal to the UI for display.
 
         Parameters
         ----------
@@ -137,15 +126,19 @@ class StatusModel(QObject):
         """
         # update the status of the message
         self._updateCurrentPreviousNormalStatus(status)
+
         # get the date and time stamp for the current status
         dateTime = self.currentNormalStatus.timestamp.strftime("%H:%M:%S")
         self.statusStrForView = f"{dateTime}    "
+
+        # add the source of the status
         if self.currentNormalStatus.statusSource is not None:
             statusSource = self.currentNormalStatus.statusSource
             if statusSource == "fit-result":
                 statusSource = "fit"
             statusSource = statusSource.upper()
             self.statusStrForView += f"({statusSource}) "
+
         # parse and generate the message
         if self.currentNormalStatus.statusType == "ready":
             self.statusStrForView += f"{self.currentNormalStatus.message}"
@@ -165,7 +158,7 @@ class StatusModel(QObject):
             if self.currentNormalStatus.statusSource in ["fit", "prefit"]:
                 finalMse = self.currentNormalStatus.mse
                 self._updateMseForComputingDelta()
-                self.statusStrForView += f"WARNING: MSE = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)  |  {warningMessage}"
+                self.statusStrForView += f"WARNING: MSE = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)     |     {warningMessage}"
             else:
                 self.statusStrForView += f"WARNING: {warningMessage}"
 
@@ -186,7 +179,6 @@ class StatusModel(QObject):
 
         # emit the signal indicating the status is changed
         self.normalStatusChanged.emit(self.statusStrForView)
-        # print(self.statusStrForView)
 
     # @Slot(Status)
     # def updateTempStatus(
@@ -209,9 +201,13 @@ class StatusModel(QObject):
 
     def _updateMseForComputingDelta(self):
         """
-        function that updates the previous MSE and the MSE change. Only use when the MSE is supposed to be
-        updated, for example, when the status is computing in the prefit stage, the MSE is NONE and should
-        not be updated, however when the status is computing in the fit stage, the MSE should be updated.
+        Updates the previous Mean Squared Error (MSE) and the change in MSE. 
+
+        This function should only be used when an update to the MSE is expected. 
+        For instance, during the 'prefit' stage when the status is 'computing', 
+        the MSE is set to None and should not be updated. 
+        Conversely, during the 'fit' stage when the status is 
+        'computing', the MSE should be updated.
         """
         # erase the previous MSE if the source is changed
         if self.sourceChanged:
@@ -234,6 +230,13 @@ class StatusModel(QObject):
             self.deltaMseStr = self._mseChangeSign + f"{self.deltaMse:.2f}"
 
     def _updateCurrentPreviousNormalStatus(self, status: Status):
+        """
+        Update the current and previous normal status.
+
+        Parameters
+        ----------
+        status: Status
+        """
         self.previousNormalStatus = self.currentNormalStatus
         self.currentNormalStatus = status
 

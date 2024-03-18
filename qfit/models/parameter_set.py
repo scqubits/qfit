@@ -1,7 +1,3 @@
-from abc import ABC, abstractmethod, abstractproperty
-import numpy as np
-from copy import deepcopy
-
 from PySide6.QtCore import QObject, Signal, Slot, SignalInstance
 
 from scqubits.core.hilbert_space import HilbertSpace
@@ -10,17 +6,12 @@ from scqubits.core.circuit import Circuit
 
 from qfit.models.parameter_settings import ParameterType
 from qfit.models.registry import RegistryEntry, Registrable
-from qfit.widgets.grouped_sliders import SLIDER_RANGE
 from qfit.models.parameter_settings import QSYS_PARAM_NAMES, DEFAULT_PARAM_MINMAX
 
 from typing import (
     Dict,
     List,
     Union,
-    overload,
-    Tuple,
-    Callable,
-    Literal,
     Any,
     TypeVar,
     Generic,
@@ -35,16 +26,23 @@ from qfit.models.data_structures import (
     SliderParam,
     FitParam,
     ParamAttr,
-    CaliTableRowParam,
-    ParentType,
 )
 
 ParamCls = TypeVar("ParamCls", bound="ParamBase")
+ParentType = Union[HilbertSpace, QuantumSystem]
 
 
 class ParamSet(Registrable, Generic[ParamCls]):
     """
-    A class to store all the parameters of a general model
+    A class to store all the parameters of a general model. The parameters are
+    stored in a two-layer dictionary. The first layer is the parent system name
+    and the second layer is the parameter name. The value of the second layer
+    dictionary is a Parameter object.
+
+    Parameters
+    ----------
+    paramCls: Type[ParamCls]
+        The class of the parameter, which should be a subclass of ParamBase.
     """
 
     def __init__(self, paramCls: Type[ParamCls]):
@@ -79,7 +77,18 @@ class ParamSet(Registrable, Generic[ParamCls]):
         """
         Insert a parameter to the parameter set. When the parent system is
         not in the parameter set, create a new entry for the parent system.
+
+        Parameters
+        ----------
+        parentName: str
+            The name of the parent system
+        paramName: str
+            The name of the parameter
+        param: ParamCls
+            The parameter object
         """
+        assert param.__class__ == self.paramCls
+        
         if parentName not in self.parameters.keys():
             self.parameters[parentName] = {}
         self.parameters[parentName][paramName] = param
@@ -87,6 +96,11 @@ class ParamSet(Registrable, Generic[ParamCls]):
     def paramNamesDict(self) -> Dict[str, List[str]]:
         """
         Get a dictionary of parameter names for each parent system.
+
+        Returns
+        -------
+        Dict[str, List[str]]
+            Lists of parameter names for each parent system.
         """
         return {
             parentName: list(para_dict.keys())
@@ -106,20 +120,20 @@ class ParamSet(Registrable, Generic[ParamCls]):
         attr: str = "value",
     ) -> Union[Dict[str, Any], Any]:
         """
-        Get the value of the parameters of a parent system (either a QuantumSystem
-        object or a HilbertSpace object). If the name is of the parameter is not
-        provided, then return a dictionary of all the parameters of the parent system.
+        Get an attribute of a parameter.
 
         Parameters
         ----------
-        parent_system: Union[QuantumSystem, HilbertSpace]
-            The quantum model
+        parentName: str
+            The name of the parent system
         name: str
             The name of the parameter
+        attr: str
+            The name of the attribute
 
         Returns
         -------
-        The value of the parameter(s)
+            The attribute of the parameter
         """
         try:
             para_dict = self[parentName]
@@ -138,16 +152,18 @@ class ParamSet(Registrable, Generic[ParamCls]):
         value: Union[int, float, str, None],
     ):
         """
-        Set the value of the parameter of a parent system.
+        Set the attribute of a parameter.
 
         Parameters
         ----------
         parent_system: str
-            The parent
+            The name of the parent system
         name: str
             The name of the parameter
-        value: Union[float, int]
-            The value of the parameter
+        attr: str
+            The name of the attribute
+        value: Union[int, float, str, None]
+            The value of the attribute
         """
         try:
             para_dict = self[parentName]
@@ -162,7 +178,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
                 "the parameter {name}. Thus can't be set externally by "
                 "calling setParameter."
             )
-
+        
         try:
             setattr(para_dict[name], attr, value)
         except KeyError:
@@ -172,6 +188,9 @@ class ParamSet(Registrable, Generic[ParamCls]):
         self,
         paramAttr: ParamAttr,
     ):
+        """
+        Given a ParamAttr object, set the attribute of a parameter. 
+        """
         self.setParameter(
             paramAttr.parentName,
             paramAttr.name,
@@ -179,36 +198,22 @@ class ParamSet(Registrable, Generic[ParamCls]):
             paramAttr.value,
         )
 
-    def toParamDict(self) -> Dict[str, ParamCls]:
+    def getFlattenedAttrDict(self, attribute: str = "value") -> Dict[str, Any]:
         """
-        Provide a way to iterate through the parameter set. Used for fitting purposes
-        - as we need to provide a single-layer dictionary.
-
-        Return a dictionary of all the parameters in the parameter set. Keys are "<parent name>.<parameter name>"
-        """
-        param_dict = {}
-        for parent_name, para_dict in self.parameters.items():
-            for name, para in para_dict.items():
-                if "." in parent_name:
-                    raise ValueError(
-                        "The parent name should not contain the character '.'."
-                    )
-                
-                param_dict[f"{parent_name}.{name}"] = para
-
-        return param_dict
-
-    def getAttrDict(self, attribute: str = "value") -> Dict[str, Any]:
-        """
-        Provide a way to iterate through the parameter set. Used for fitting purposes
-        - as we need to provide a single-layer dictionary.
-
-        Convert the parameter set to a dictionary. Keys are "<parent name>.<parameter name>"
-        and values are the value of the parameter.
+        Provide a way to iterate through the parameter set via a single-layer
+        dictionary. Used for fitting purposes.
 
         Parameters
         ----------
         attribute: str
+            The name of the attribute to be extracted from the parameter object.
+
+        Returns
+        -------
+        Dict[str, Any]  
+            A dictionary of all the parameters in the set. 
+            Keys: "<parent name>.<parameter name>"
+            Values: The value of the attribute of the parameter.
         """
         paramval_dict = {}
         for parent_name, para_dict in self.parameters.items():
@@ -222,17 +227,24 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
         return paramval_dict
 
-    def setByAttrDict(
+    def setByFlattenedAttrDict(
         self,
         paramval_dict: Union[Dict[str, float], Dict[str, int]],
         attribute: str = "value",
     ):
         """
-        Provide a way to iterate through the parameter set. Used for fitting purposes
-        - as we need to provide a single-layer dictionary.
+        Set the whole parameter set by a single-layer dictionary of parameters.
+        Used for fitting purposes.
 
-        Update the parameter set from a dictionary. Keys are "<parent name>.<parameter name>"
-        and values are the value of the parameter.
+        Parameters
+        ----------
+        paramval_dict: Dict[str, float]
+            A dictionary of all the parameters in the set. 
+            Keys: "<parent name>.<parameter name>"
+            Values: The value of the attribute of the parameter.
+        attribute: str
+            The name of the attribute to be set for the parameter object.
+
         """
         for key, value in paramval_dict.items():
             splitted_key = key.split(".")
@@ -240,16 +252,53 @@ class ParamSet(Registrable, Generic[ParamCls]):
             name = ".".join(splitted_key[1:])   # str after the first "."
             self.setParameter(parent_name, name, attribute, value)
 
-    def setAttrByParamDict(
+    def getFlattenedParamDict(self) -> Dict[str, ParamCls]:
+        """
+        Provide a way to iterate through the parameter set via a single-layer 
+        dictionary. Used for fitting purposes.
+
+        Returns
+        -------
+        Dict[str, ParamCls]
+            A dictionary of all the parameters in the set. 
+            Keys: "<parent name>.<parameter name>"
+            Values: The parameter object
+        """
+        param_dict = {}
+        for parent_name, para_dict in self.parameters.items():
+            for name, para in para_dict.items():
+                if "." in parent_name:
+                    raise ValueError(
+                        "The parent name should not contain the character '.'."
+                    )
+                
+                param_dict[f"{parent_name}.{name}"] = para
+
+        return param_dict
+
+    def setAttrByParamSet(
         self,
-        paramSet: "ParamSet[ParamCls]",
+        paramSet: "ParamSet",
         attrsToUpdate: Optional[List[str]] = None,
         insertMissing: bool = False,
     ):
         """
-        Set the whole parameter set by a dictionary of parameters. The dictionary should
-        have the same structure as the parameters attribute of the ParamSet object.
+        Set the whole parameter set by another parameter set, which should have 
+        the same structure as the parameters attribute of the current set.
+
         setParameter/insertParam is called to update the parameter set.
+
+        Parameters
+        ----------
+        paramSet: ParamSet
+            The parameter set to be used to update the current parameter set.
+        attrsToUpdate: List[str]
+            The attributes to be updated. If None, all the dataAttr of the 
+            parameters will be updated.
+        insertMissing: bool
+            If True, insert the missing parameters in the paramSet to the
+            current parameter set. If False, raise an error when the parameter
+            is not in the current parameter set.
         """
         if attrsToUpdate is not None and insertMissing:
             raise ValueError(
@@ -288,7 +337,14 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
 class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
     """
-    A class to store all the parameters of a HilbertSpace object
+    A class to store all the parameters of a HilbertSpace object. It has 
+    additional methods to identify the parameters of a HilbertSpace object and
+    to update the HilbertSpace object based on the parameter set.
+
+    Parameters
+    ----------
+    paramCls: Type[ParamCls]
+        The class of the parameter, which should be a subclass of ParamBase.
     """
 
     hilbertspace: HilbertSpace
@@ -305,16 +361,35 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         included_parameter_type: Union[List[ParameterType], None] = None,
         excluded_parameter_type: Union[List[ParameterType], None] = None,
     ):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the model will reinitialized by this method. For HSParamSet, it will
+        insert all the parameters in the HilbertSpace object to the parameter 
+        set.
+
+        Parameters
+        ----------
+        hilbertspace: HilbertSpace
+            The HilbertSpace object
+        included_parameter_type: List[ParameterType]
+            When inserting parameters, only the parameters with the types in
+            this list will be inserted.
+        excluded_parameter_type: List[ParameterType]
+            When inserting parameters, the parameters with the types in this
+            list will be excluded.
+        """
         self.hilbertspace = hilbertspace
         self.insertAllParams(
             included_parameter_type=included_parameter_type,
             excluded_parameter_type=excluded_parameter_type,
         )
 
-    def _generateParamDictForCircuit(self, subsystem: Circuit) -> Dict[str, List[str]]:
+    def _paramDictForCircuit(self, subsystem: Circuit) -> Dict[str, List[str]]:
         """
-        generate parameter dict for a Circuit instance, conforming with those stored in
-        QSYS_PARAM_NAMES
+        The parameter dict is used to identify the parameters of a
+        Circuit object, which serves as QSYS_PARAM_NAMES for the Circuit object.
+            Keys: ParameterType for the Circuit object
+            Values: a list of circuit parameter names for the given type
         """
         parameters = {}
         # loop over branches to search for symbolic EJ, EC, EL
@@ -364,20 +439,16 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         excluded_parameter_type: Union[List[ParameterType], None] = None,
     ) -> None:
         """
-        Add parameters to a QuantumModelParameterSet object for the HilbertSpace object
-        for parameters that are supposed to be adjusted by using sliders or by using parameter sweeps.
+        Add parameters to a HSParamSet. Those parameters that are supposed to 
+        be adjusted by using sliders or by using parameter sweeps.
         User may optionally specify parameter types that are excluded/included.
 
         Parameters:
         -----------
-        parameter_set: QuantumModelParameterSet
-            A QuantumModelParameterSet object that stores the parameters in the HilbertSpace object.
-        parameter_type: Literal["slider", "sweep", "fit"]
-            The type of the parameter.
         included_parameter_type: List[ParameterType]
-            A list of parameter types that are included in the returned parameter set.
+            Only the parameters with the types in this list will be inserted.
         excluded_parameter_type: List[ParameterType]
-            A list of parameter types that are excluded in the returned parameter set.
+            The parameters with the types in this list will be excluded.
         """
 
         if self.parameters != {}:
@@ -390,20 +461,16 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
 
         # obtain all the parameters in the subsystems of the HilbertSpace object
         subsystems = self.hilbertspace.subsystem_list
-        for subsystem in subsystems:
+        for parentSys in subsystems:
             # obtain the available parameters in the subsystem
-            subsystem_type = subsystem.__class__
-            # if the subsystem is not a Circuit instance, look up parameters from
-            # QSYS_PARAM_NAMES
-            if subsystem_type is not Circuit:
-                parameters = QSYS_PARAM_NAMES[subsystem_type]
-            # else, generate parameter lookup dict for the circuit
+            if isinstance(parentSys, Circuit):
+                # for Circuit, we need to generate a lookup dict
+                parameters = self._paramDictForCircuit(parentSys)
             else:
-                parameters = self._generateParamDictForCircuit(subsystem)
-
+                parameters = QSYS_PARAM_NAMES[parentSys.__class__]
+                
             # loop over different types of the parameters
             for parameter_type, parameter_names in parameters.items():
-                # check if the parameter type is included or excluded
                 if (
                     (included_parameter_type is not None)
                     and (parameter_type not in included_parameter_type)
@@ -417,11 +484,11 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
                 for parameter_name in parameter_names:
                     range_dict = DEFAULT_PARAM_MINMAX[parameter_type]
                     # value = range_dict["min"] * 4/5 + range_dict["max"] * 1/5
-                    value = getattr(subsystem, parameter_name)
+                    value = getattr(parentSys, parameter_name)
 
                     self._insertParamByArgs(
+                        parent=parentSys,
                         paramName=parameter_name,
-                        parent=subsystem,
                         paramType=parameter_type,
                         value=value,
                         rangeDict=range_dict,
@@ -448,8 +515,8 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
                     )
 
                 self._insertParamByArgs(
-                    paramName=f"g{interaction_term_index+1}",
                     parent=self.hilbertspace,
+                    paramName=f"g{interaction_term_index+1}",
                     paramType="interaction_strength",
                     value=value,
                     rangeDict=DEFAULT_PARAM_MINMAX["interaction_strength"],
@@ -460,6 +527,19 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         parent: ParentType,
         with_type: bool = False,
     ) -> str:
+        """
+        Get the name of the parent system. 
+        The name is a key in the parameter set.
+
+        Parameters
+        ----------
+        parent: ParentType
+            The parent system object
+        with_type: bool = False
+            If False, the name will be the id_str of the parent system.
+            If True, the name will include the type of the parent system like 
+            "id_str (Fluxonium)".
+        """
         if isinstance(parent, HilbertSpace):
             return "Interactions"
         elif isinstance(parent, QuantumSystem):
@@ -475,7 +555,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
     @staticmethod
     def parentSystemIdstrByName(name: str, with_type: bool = False) -> str:
         """
-        An inverse function of parentSystemNames
+        An inverse function of parentSystemNames.
         """
         if with_type:
             return "".join(name.split(" ")[:-1])
@@ -483,6 +563,10 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
             return name
 
     def _updateNameMap(self, parent: ParentType):
+        """
+        Maintain the name to object and object to name maps for the parent
+        system.
+        """
         name = self.parentSystemNames(parent)
         if name not in self.parentObjByName.keys():
             self.parentNameByObj[parent] = name
@@ -490,20 +574,36 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
 
     def _insertParamByArgs(
         self,
-        paramName: str,
         parent: ParentType,
-        paramType: str,
+        paramName: str,
+        paramType: ParameterType,
         value: Union[int, float],
         rangeDict: Dict,
     ):
         """
         Create a Parameter object and add it to the parameter set.
+
+        Parameters
+        ----------
+        parent: ParentType
+            The parent system object
+        paramName: str
+            The name of the parameter
+        paramType: ParameterType
+            The type of the parameter
+        value: Union[int, float]
+            The value of the parameter
+        rangeDict: Dict
+            The range of the parameter, with keys "min" and "max"
         """
+        # update the name map
+        self._updateNameMap(parent)
+        parentName = self.parentNameByObj[parent]
 
         # process the keyword arguments based on the needed arguments for the parameter class
-        kwargs = {
+        kwargs: Dict[str, Any] = {
             "name": paramName,
-            "parent": parent,
+            "parent": parentName,
             "paramType": paramType,
         }
 
@@ -524,30 +624,59 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         param = self.paramCls(**kwargs)
 
         # insert the parameter object to the parameter set
-        self._updateNameMap(param.parent)
-        parentName = self.parentNameByObj[param.parent]
-
         self.insertParam(parentName, paramName, param)
 
     def clear(self):
         """
-        Clean the parameter set.
+        Clear the parameter set.
         """
         super().clear()
         self.parentNameByObj = {}
         self.parentObjByName = {}
 
-    def setParameterForParent(self):
+    def updateParamForHS(
+        self, 
+        parentName: Optional[str] = None,
+        paramName: Optional[str] = None,
+    ):
         """
-        To be updated - later param will not store a parent object internally
+        Update the HilbertSpace object based on the parameter set. 
+
+        Parameters
+        ----------
+        parentName: Optional[str]
+            The name of the parent system. If None, update all the parent
+            systems' parameters.
+        paramName: Optional[str]
+            The name of the parameter. If None, update all the parameters.
         """
-        for _, paramDictByParent in self.items():
-            for _, param in paramDictByParent.items():
-                # map rawX to the parameter values
-                param.setParameterForParent()
-    
+        for prtName, paramDict in self.items():
+            if parentName is not None and parentName != prtName:
+                continue
+            parentSys = self.parentObjByName[prtName]
+
+            for prName, param in paramDict.items():
+                if paramName is not None and paramName != prName:
+                    continue
+
+                if isinstance(parentSys, HilbertSpace):
+                    assert param.paramType == "interaction_strength"
+                    interaction_index = int(param.name[1:]) - 1
+                    interaction = parentSys.interaction_list[interaction_index]
+                    interaction.g_strength = param.value
+                else:
+                    setattr(parentSys, param.name, param.value)                
+
 
 class SweepParamSet(HSParamSet[QMSweepParam]):
+    """
+    A class to store all the experimentally tunable parameters of a 
+    HilbertSpace, which we call sweep parameters. 
+    
+    QMSweepParam stores calibration functions. The parameter set has additional 
+    methods to
+    map the raw data to the parameter values and to update the HilbertSpace.
+    """
 
     def __init__(self):
         super().__init__(QMSweepParam)
@@ -572,47 +701,13 @@ DispParamCls = TypeVar("DispParamCls", bound="DispParamBase")
 
 
 class ParamModelMixin(QObject, Generic[DispParamCls]):
+    """
+    When a parameter set is displayed in a view, it is promoted to a model. 
+    This class provides the methods to communicate with the view and register.
+    """
     attrs: List[str] = ["value"]
 
     updateBox = Signal(ParamAttr)
-
-    # def _registerAttr(
-    #     self,
-    #     paramSet: ParamSet[DispParamCls],
-    #     parentName: str,
-    #     paramName: str,
-    #     attr: str,
-    # ) -> RegistryEntry:
-    #     """
-    #     This method set
-    #     """
-    #     entryName = ".".join([type(self).__name__, parentName, paramName, attr])
-
-    #     return RegistryEntry(
-    #         name=entryName,
-    #         quantity_type="r+",
-    #         getter=lambda: paramSet.getParameter(parentName, paramName, attr),
-    #         setter=lambda value: paramSet.setParameter(
-    #             parentName, paramName, attr, value
-    #         ),
-    #     )
-
-    # def _registerAll(
-    #     self,
-    #     paramSet: ParamSet[DispParamCls],
-    # ) -> Dict[str, RegistryEntry]:
-    #     """
-    #     Register all the parameters in the parameter set
-    #     """
-    #     # start from an empty registry
-    #     registry = {}
-    #     for parentName, paraDict in paramSet.items():
-    #         for paraName, para in paraDict.items():
-    #             for attr in para.attrToRegister:
-    #                 print(f"parentName: {parentName}, paraName: {paraName}, attr: {attr}")
-    #                 entry = self._registerAttr(paramSet, parentName, paraName, attr)
-    #                 registry[entry.name] = entry
-    #     return registry
 
     def _registrySetter(
         self, 
@@ -620,9 +715,14 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
         paramSet: ParamSet[DispParamCls]
     ):
         """
-        It may be a little dangerous as the parameter may contain
-        some global variables (hilbertspace) that may be updated differently
-        when the parameter set is updated.
+        Set the parameter set by the value from the registry.
+
+        Parameters
+        ----------
+        value: Dict[str, Dict[str, DispParamCls]]
+            The value from the registry
+        paramSet: ParamSet
+            The parameter set
         """
         paramSet.parameters = value
 
@@ -636,7 +736,12 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
         paramSet: ParamSet[DispParamCls],
     ) -> Dict[str, RegistryEntry]:
         """
-        Register all the parameters in the parameter set
+        Register all the parameters in the parameter set. 
+
+        Parameters
+        ----------
+        paramSet: ParamSet
+            The parameter set
         """
 
         return {type(self).__name__: RegistryEntry(
@@ -645,7 +750,6 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
             getter=lambda: paramSet.parameters,
             setter=lambda value: self._registrySetter(value, paramSet),
         )}
-
 
     # Signals ==========================================================
     def _emitAttrByName(
@@ -658,10 +762,23 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
         **kwargs,
     ):
         """
-        Emit the signals to update the view. When the parentName, paramName,
-        and attr are not provided, emit the signals for all the parameters.
-        Especially, when the attr is not provided, emit the signals for all the
-        attributes (usually attr_to_register) of the parameter.
+        Emit the signals to update the view. 
+
+        Parameters
+        ----------
+        paramSet: ParamSet
+            The parameter set
+        signalToEmit: SignalInstance
+            The signal to emit, which will be connected to the view
+        parentName: str
+            The name of the parent system. If None, emit the signals for all
+            the parent systems.
+        paramName: str
+            The name of the parameter. If None, emit the signals for all the
+            parameters.
+        attr: str
+            The name of the attribute. If None, emit the signals for 
+            all attribute names stored in self.attr.
         """
         # select the parent system
         if parentName is None:
@@ -699,6 +816,20 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
         paramName: Optional[str] = None,
         attr: Optional[str] = None,
     ):
+        """
+        Emit the updateBox signal to update the text box of the parameter.
+
+        Parameters
+        ----------
+        paramSet: ParamSet
+            The parameter set
+        parentName: str
+            The name of the parent system
+        paramName: str
+            The name of the parameter
+        attr: str
+            The name of the attribute
+        """
         self._emitAttrByName(
             paramSet,
             self.updateBox,
@@ -715,6 +846,19 @@ class ParamModelMixin(QObject, Generic[DispParamCls]):
         paramAttr: ParamAttr,
         **kwargs,
     ):
+        """
+        Store the attribute of the parameter to the parameter set from the view.
+
+        Parameters
+        ----------
+        paramSet: ParamSet
+            The parameter set
+        paramAttr: ParamAttr
+            The parameter attribute to be stored
+        kwargs: Dict
+            The other keyword arguments for the storeAttr method of the 
+            parameter
+        """
         param = paramSet[paramAttr.parentName][paramAttr.name]
         param.storeAttr(paramAttr.attr, paramAttr.value, **kwargs)
 

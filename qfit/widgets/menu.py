@@ -16,6 +16,9 @@ from qfit.ui_designer.ui_menu import Ui_MenuWidget
 
 
 class MenuWidget(QWidget):
+    """
+    A floating menu widget that is shown when the user clicks the menu button.
+    """
     def __init__(self, parent):
         super(MenuWidget, self).__init__(parent)
         self.ui = Ui_MenuWidget()

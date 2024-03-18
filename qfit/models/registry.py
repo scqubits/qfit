@@ -1,5 +1,6 @@
 from typing import Callable, Any, Dict, Literal, Union
 import pickle
+from qfit.version import version
 
 from abc import ABC
 
@@ -7,16 +8,31 @@ QuantityType = Union[Literal["r+"], Literal["r"]]
 
 
 def READONLY_SETTER(*args, **kwargs):
-    raise ValueError("Cannot set value to read-only entry.")
+    raise ValueError("Cannot set value to a read-only entry.")
 
 
 class Registrable(ABC):
-    """Mix-in class that makes descendant classes registerable."""
+    """
+    Mix-in class that makes descendant classes registerable.
+
+    The descendant class should implement the registerAll() method, which
+    returns a dictionary of RegistryEntry objects. 
+    """
 
     def _toRegistryEntry(self, attribute: str = "value") -> "RegistryEntry":
         """
         Convert an attribute to a RegistryEntry object. The name of the
         RegistryEntry object is not complete, and should be updated later.
+
+        Parameters
+        ----------
+        attribute : str
+            Name of the attribute to be registered.  
+
+        Returns
+        -------
+        RegistryEntry
+            The RegistryEntry object.
         """
 
         def setter_func(value):
@@ -38,8 +54,9 @@ class Registrable(ABC):
 
 class RegistryEntry:
     """
-    Registry entry for a single quantity, storing the name, type, getter,
-    and setter.
+    Registry entry is connected to a single quantity/object in the application.
+    It stores the name, type, getter and setter for the quantity, and provides
+    methods to store and load the quantity.
 
     Parameters
     ----------
@@ -81,27 +98,41 @@ class RegistryEntry:
         return f"RegistryEntry({self.name}, {self.getter()}, {self.quantity_type})"
 
     def export(self) -> Dict[str, Any]:
-        return {self.name: self.getter()}
+        """
+        Grab the value of the entry and export it as a dictionary.
 
-    def _processValue(self, value):
+        Returns
+        -------
+        Dict[str, Any]
+            A length-one dictionary containing the name and value of the entry.
         """
-        Based on the type of the entry, process the value.
-        Currently, we do no processing.
-        """
-        return value
+        return {self.name: self.getter()}
 
     def load(self, value):
         """Load the entry from existed entry. They should have the same
         and the same type.
         """
-        self.setter(self._processValue(value))
+        self.setter(value)
 
 
 class Registry:
-    _registry: Dict[str, RegistryEntry] = {}
+    """
+    The Registry is a singleton object. It is "connected" the global
+    quantities and objects in the application. It can grab the current 
+    state & data of the application and export them to a dictionary or a file. 
+    And in the same way, it can load the state & data from a dictionary or a 
+    file.
 
-    def __init__(self):
-        pass
+    It is a collection of RegistryEntry objects and provides methods to
+    register, export, and load the entries.
+    """
+    _registry: Dict[str, RegistryEntry] = {
+        "version": RegistryEntry(
+            "version",
+            "r",
+            lambda: version,
+        ),
+    }
 
     def __getitem__(self, key: str) -> Any:
         return self._registry[key].getter()
@@ -127,6 +158,11 @@ class Registry:
         registerAll() method will be called.
         2. The object is not a Registrable object. In this case, the object
         will be directly saved and this entry will be read-only.
+
+        Parameters
+        ----------
+        obj : Any
+            The object to be registered.
         """
         try:
             reg_dict = obj.registerAll()
@@ -142,6 +178,15 @@ class Registry:
             self._registry[name] = entry
 
     def exportDict(self) -> Dict[str, Any]:
+        """
+        Grab the current state & data of the application and export them as a 
+        dictionary.
+
+        Returns
+        -------
+        Dict[str, Any]
+            A dictionary of the current state & data of the application.
+        """
         full_dict: Dict[str, Any] = {}
         for entry in self._registry.values():
             full_dict.update(entry.export())
@@ -149,6 +194,14 @@ class Registry:
         return full_dict
 
     def exportPkl(self, filename: str) -> None:
+        """
+        Export the current state & data of the application to a file.
+
+        Parameters
+        ----------
+        filename : str
+            Name of the file to be exported.
+        """
         try:
             with open(filename, "wb") as f:
                 pickle.dump(self.exportDict(), f)
@@ -156,16 +209,25 @@ class Registry:
             print(f"Error: File '{filename}' not found. Cannot export data.")
 
     @staticmethod
-    def fromFile(filename: str) -> Union[Dict[str, Any], None]:
+    def dictFromFile(filename: str) -> Union[Dict[str, Any], None]:
+        """
+        Load the state & data of the application from a file.
+
+        Parameters
+        ----------
+        filename : str
+            Name of the file to be loaded.
+        """
         try:
             with open(filename, "rb") as f:
                 return pickle.load(f)
         except FileNotFoundError:
-            # print(f"Error: File '{filename}' not found. Cannot load data.")
             return None  # indicate that the file is not found
 
     def setByDict(self, registryDict: Dict[str, Any]):
         """
+        Load the state & data of the application from a dictionary.
+
         Skip the entries that are
         - neither in the file nor in the current registry
         - read-only
@@ -186,8 +248,11 @@ class Registry:
                     continue
                 self._registry[name].load(value)
             except KeyError:
-                print(f"Key {name} not found in registry. Skipping.")
+                print(f"Key {name} not found in registry. Skipping. "
+                      "We apologize that it's usually due to the version mismatch. "
+                      "Please contact the developer for retrieving the data.")
                 continue
 
     def clear(self):
+        """Clear the registry."""
         self._registry.clear()

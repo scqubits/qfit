@@ -647,7 +647,6 @@ class Optimization():
         and fixed variables are changed.
         """
         self.free_name_list = list(self.free_variables.keys())
-        # print(f"Current order of input: {self.free_name_list}")
 
     def _check_exist(
         self,

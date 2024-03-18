@@ -10,46 +10,45 @@ if TYPE_CHECKING:
     from scqubits.core.hilbert_space import HilbertSpace
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
     from qfit.models.measurement_data import MeasurementDataType
-    from qfit.views.extracting_view import ExtractingView
+    from qfit.views.labeling_view import LabelingView
 
 
 class ExtractingCtrl(QObject):
+    """
+    Controller for the extraction of transitions. This controller serves as a 
+    transmittor between the extracted data (model) and the extraction & tagging panel (view).
+
+    Notice that the connections that transport selected transitions from the
+    canvas to the extraction model are done in the plotting controller instead 
+    of here.
+
+    Relevant UI elements:
+    - tagging section (title, radio buttons for the three modes and options for each mode)
+    - extraction section (a table of extracted transitions, and associated buttons for extraction)
+
+    Relevant model:
+    - extracted data (all and active)
+
+    Parameters
+    ----------
+    parent : QObject
+        The parent QObject.
+    dataSets : Tuple[AllExtractedData, ActiveExtractedData]
+        The extracted data model (all and active).
+    labelingView : LabelingView
+        The extraction & tagging view.
+    """
     def __init__(
         self,
         parent: QObject,
         dataSets: Tuple["AllExtractedData", "ActiveExtractedData"],
-        extractingView: "ExtractingView",
+        labelingView: "LabelingView",
     ):
-        """
-        Controller for the tagging panel (not for the tag data itself). This controller serves as a
-        transmittor between the tag data (model) and the tag panel (view). User interact with the
-        tag panel and the model will be updated accordingly, meanwhile, changes in the model (e.g.
-        a different dataset is selected) will be reflected in the tag panel.
-
-        Relevant UI elements:
-        - tagging section (title, radio buttons for the three modes and options for each mode)
-
-        Relevant model:
-        - extracted data (all and active)
-
-        Parameters
-        ----------
-        subsysCount: int
-            number of subsystems in the system
-        dataSets: Tuple[AllExtractedData, ActiveExtractedData]
-            all extracted datasets and the currently active dataset
-            we need the active dataset to update the tag panel when the dataset is changed
-        ui: Ui_MainWindow
-            the main window UI
-        ui_groups:
-            A tuple of UI dictionaries: uiLabelBoxes, uiLabelRadioButtons, uiBareLabelInputs 
-            and uiDressedLabelInputs
-        additional arguments are passed to QObject.__init__()
-        """
+        
         super().__init__(parent)
 
         self.allDatasets, self.activeDataset = dataSets
-        self.extractingView = extractingView
+        self.labelingView = labelingView
 
         self._viewUpdatedConnects()
         self._modelUpdatedConnects()
@@ -62,28 +61,39 @@ class ExtractingCtrl(QObject):
         hilbertspace: "HilbertSpace",
         measurementData: List["MeasurementDataType"]
     ):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        reinitialize the all relevant models and views.
+
+        Parameters
+        ----------
+        hilbertspace : HilbertSpace
+            The HilbertSpace object.
+        measurementData : List[MeasurementDataType]
+            The measurement data.
+        """
         self.allDatasets.dynamicalInit([data.name for data in measurementData])
-        self.extractingView.dynamicalInit(
+        self.labelingView.dynamicalInit(
             [subsys.id_str for subsys in hilbertspace.subsystem_list],
         )
 
         # mainly for cync the transition list with the model
-        self.extractingView.extractionList.setModel(self.allDatasets)
-        self.extractingView.extractionList.selectItem(0, blockSignals=True) # select the first row
+        self.labelingView.extractionList.setModel(self.allDatasets)
+        self.labelingView.extractionList.selectItem(0, blockSignals=True) # select the first row
 
     # Connections ======================================================
     def _uiExtractedDataControlConnects(self):
         """Connect buttons for inserting and deleting a data set, or clearing all data sets"""
         # update the backend model
-        self.extractingView.extractionCtrls["new"].clicked.connect(self.allDatasets.newRow)
-        self.extractingView.extractionCtrls["delete"].clicked.connect(self.allDatasets.removeCurrentRow)
-        self.extractingView.extractionCtrls["clear"].clicked.connect(self.allDatasets.removeAll)
+        self.labelingView.extractionCtrls["new"].clicked.connect(self.allDatasets.newRow)
+        self.labelingView.extractionCtrls["delete"].clicked.connect(self.allDatasets.removeCurrentRow)
+        self.labelingView.extractionCtrls["clear"].clicked.connect(self.allDatasets.removeAll)
 
     def _uiExtractedDataConnects(self):
         """Make connections for changes in extracted data."""
 
         # UI selection --> Model selection
-        self.extractingView.extractionList.focusChanged.connect(
+        self.labelingView.extractionList.focusChanged.connect(
             self.allDatasets.setCurrentRow
         )
 
@@ -103,10 +113,10 @@ class ExtractingCtrl(QObject):
         # in the view VISUALLY. It comlete a loop from the view to model 
         # and back to view. To avoid infinite loop, block the signal
         self.allDatasets.rowsInserted.connect(
-            lambda: self.extractingView.extractionList.selectItem(self.allDatasets.currentRow, blockSignals=True)
+            lambda: self.labelingView.extractionList.selectItem(self.allDatasets.currentRow, blockSignals=True)
         )
         self.allDatasets.rowsRemoved.connect(
-            lambda: self.extractingView.extractionList.selectItem(self.allDatasets.currentRow, blockSignals=True)
+            lambda: self.labelingView.extractionList.selectItem(self.allDatasets.currentRow, blockSignals=True)
         )
 
     def _viewUpdatedConnects(self):
@@ -115,7 +125,7 @@ class ExtractingCtrl(QObject):
         slots that update the model accordingly.
         """
         # Once the user has finished editing the tag, update the AllExtractedData data
-        self.extractingView.tagChanged.connect(self.activeDataset.updateTag)
+        self.labelingView.tagChanged.connect(self.activeDataset.updateTag)
 
     def _modelUpdatedConnects(self):
         """
@@ -123,5 +133,5 @@ class ExtractingCtrl(QObject):
         correspondingly
         """
         self.activeDataset.dataSwitched.connect(
-            lambda transition: self.extractingView.replaceTag(transition.tag)
+            lambda transition: self.labelingView.replaceTag(transition.tag)
         )

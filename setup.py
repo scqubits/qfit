@@ -6,10 +6,11 @@ provides a GUI tool for loading and displaying data, for example from spectrosco
 extraction of data points from measurement results, as required for fitting experimental data to theoretical qubit
 models.
 """
+
 #
 # This file is part of qfit.
 #
-#    Copyright (c) 2020, Jens Koch
+#    Copyright (c) 2023, Tianpu Zhao, Danyang Chen, Jens Koch
 #    All rights reserved.
 #
 #    This source code is licensed under the BSD-style license found in the
@@ -43,7 +44,7 @@ EXTRA_KWARGS = {}
 # all information about scqubits goes here
 MAJOR = 1
 MINOR = 0
-MICRO = 0
+MICRO = 1
 ISRELEASED = True
 
 
@@ -56,14 +57,12 @@ with open(os.path.join(CURDIR, "requirements.txt")) as requirements:
 PACKAGES = [
     "qfit",
     "qfit/core",
-    "qfit/models",
     "qfit/controllers",
-    "qfit/widgets",
-    "qfit/views",
-    "qfit/utils",
-    "qfit/io_utils",
+    "qfit/models",
     "qfit/ui_designer",
-    "qfit/ui_views",
+    "qfit/utils",
+    "qfit/views",
+    "qfit/widgets",
 ]
 
 PYTHON_VERSION = ">=3.10"
@@ -75,7 +74,7 @@ AUTHOR_EMAIL = "jens-koch@northwestern.edu"
 LICENSE = "BSD"
 DESCRIPTION = DOCLINES[0]
 LONG_DESCRIPTION = "\n".join(DOCLINES[2:])
-KEYWORDS = "data extraction, superconducting qubits"
+KEYWORDS = "parameter extraction, superconducting qubits"
 
 # URL = "https://scqubits.readthedocs.io"
 

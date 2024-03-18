@@ -29,7 +29,7 @@ from matplotlib.figure import Figure
 from matplotlib.widgets import Cursor
 import matplotlib.cm as cm
 
-from qfit.utils.helpers import y_snap
+from qfit.utils.helpers import ySnap
 
 from qfit.models.data_structures import PlotElement
 from qfit.settings import color_dict
@@ -41,7 +41,23 @@ class MplNavButtons(QFrame):
 
 class NavigationHidden(NavigationToolbar2QT):
     """
-    Helper class to realize a MPL navigation toolbar without the buttons.
+    This class extends the NavigationToolbar2QT class from Matplotlib to 
+    create a custom navigation toolbar for a Matplotlib figure.
+
+    The toolbar is designed to be hidden, with only the "Home", "Pan", 
+    and "Zoom" buttons connected to external buttons. 
+
+    The class overrides several methods from the parent class to customize 
+    the behavior of the toolbar. It provides methods to set the pan and 
+    zoom modes, set the cursor, and handle the release of the zoom and 
+    pan buttons, as well as the home button.
+
+    Parameters
+    ----------
+    canvas : FigureCanvasQTAgg
+        The canvas on which the figure is drawn.
+    parent : MplFigureCanvas
+        The parent widget.
     """
 
     # only connect to external buttons
@@ -164,11 +180,47 @@ class NavigationHidden(NavigationToolbar2QT):
 
 
 class SpecialCursor(Cursor):
+    """
+    This class extends the Cursor class from Matplotlib:
+        - It draws a cursor (a scatter plot) with x/y/axis snapping and
+        visibility control.
+        - It draws a vertical and horizontal line (crosshair) with visibility
+        control.
+        - It uses blitting for faster drawing.
+
+    Parameters
+    ----------
+    ax: Axes
+        A list of Axes that the cursor is attached to, these axes share 
+        the same x-axis or y-axis.
+    xSnapMode: Literal["MeasData", "ExtrX", "OFF"]
+        Whether to snap the cursor to the closest x value in a list.
+        - "MeasData": snap to the closest x value in the x values of the 
+        measurement data
+        - "ExtrX": snap to the closest x value in the extracted data points
+        - "OFF": do not snap to any x value
+    distinctExtrX: np.ndarray
+        The list of all x values in the extracted data points
+    measX: np.ndarray
+        The list of all x values in the measurement data
+    axisSnapMode: Literal["X", "Y", "OFF"]
+        Whether to snap the cursor to the minimum x or y value (edge of the plot).
+        It overrides xSnapMode.
+    horizOn: bool
+        Whether to show the horizontal line
+    vertOn: bool
+        Whether to show the vertical line
+    useblit: bool
+        Whether to use blitting for faster drawing
+    **lineprops: Any
+        Additional properties for the lines and the cursor
+    """
     def __init__(
         self,
         axes: List[Axes],
-        xSnapMode: bool,
-        xSnapValues: np.ndarray,
+        xSnapMode: Literal["MeasData", "ExtrX", "OFF"],
+        distinctExtrX: np.ndarray,
+        measX: np.ndarray,
         xyMin: Tuple[float, float],
         axisSnapMode: Literal["X", "Y", "OFF"] = "OFF",
         horizOn=True,
@@ -176,33 +228,13 @@ class SpecialCursor(Cursor):
         useblit=False,
         **lineprops,
     ):
-        """
-        Parameters:
-        -----------
-        ax: Axes
-            The Axes to attach the cursor to.
-        xSnapMode: bool
-            Whether to snap the cursor to the closest x value in the list of all x values
-        xSnapValues: np.ndarray
-            The list of all x values
-        axisSnapMode: Literal["X", "Y", "OFF"]
-            Whether to snap the cursor to the minimum x or y value (edge of the plot).
-            It overrides xSnapMode.
-        xyMin: Tuple[float, float]
-            The minimum x and y values
-        horizOn: bool
-            Whether to show the horizontal line
-        vertOn: bool
-            Whether to show the vertical line
-        useblit: bool
-            Whether to use blitting for faster drawing
-        """
         super().__init__(
             axes[0], horizOn=horizOn, vertOn=vertOn, useblit=useblit, **lineprops
         )
         self.allAxes = axes
         self.xSnapMode = xSnapMode
-        self.xSnapValues = xSnapValues
+        self.distinctExtrX = distinctExtrX
+        self.measX = measX
 
         self.axis_snap_mode = axisSnapMode
         self.xyMin = xyMin
@@ -212,48 +244,47 @@ class SpecialCursor(Cursor):
         Internal event handler to draw the cursor when the mouse moves.
 
         When the mouse moves, the cursor (a scatter plot) is drawn at the
-        closest x value in the list of all x values.
+        calculated coordinates. The vertical and horizontal lines (crosshair)
+        are also drawn at the calculated coordinates. 
         """
+        # Do nothing if the event is ignored or the widget is locked 
+        # or the cursor is not visible
         if self.ignore(event):
             return
-
         if not self.canvas.widgetlock.available(self):
             return
+        if not self.visible:
+            return
         
+        # Hide the vertical and horizontal lines when the mouse is outside the axes
         if event.inaxes not in self.allAxes:
-            # Hide the vertical and horizontal lines when the mouse is outside the axes
             self.linev.set_visible(False)
             self.lineh.set_visible(False)
-
             if self.needclear:
                 self.canvas.draw()
                 self.needclear = False
             return
-
         self.needclear = True
 
-        if not self.visible:
-            return
-
-        # Update the vertical line position based on the mouse x-coordinate
-        self.linev.set_xdata((event.xdata, event.xdata))
-
-        # Update the horizontal line position based on the mouse y-coordinate
-        self.lineh.set_ydata((event.ydata, event.ydata))
+        # convert the mouse x and y coordinates to the data coordinates
+        xdata, ydata = self.allAxes[0].transData.inverted().transform((event.x, event.y))
 
         # Calculate the x-coordinate of the point based on the snapping mode and axis snap mode
         if self.axis_snap_mode == "Y":
             point_x_coordinate = self.xyMin[0]
-        elif self.xSnapMode == True:
-            point_x_coordinate = self.closest_line(event.xdata)
         else:
-            point_x_coordinate = event.xdata
+            point_x_coordinate = self.snapToProperX(xdata)
 
         # Calculate the y-coordinate of the point based on the axis snap mode
         if self.axis_snap_mode == "X":
             point_y_coordinate = self.xyMin[1]
         else:
-            point_y_coordinate = event.ydata
+            point_y_coordinate = ydata
+
+        # Update the vertical line position based on the mouse x-coordinate
+        self.linev.set_xdata((point_x_coordinate, point_x_coordinate))
+        # Update the horizontal line position based on the mouse y-coordinate
+        self.lineh.set_ydata((point_y_coordinate, point_y_coordinate))
 
         # remove the old cursor
         if hasattr(self, "cross"):
@@ -278,20 +309,49 @@ class SpecialCursor(Cursor):
         # Update the canvas to reflect the changes
         self._update()
 
-    def closest_line(self, xdat):
+    def _closestX(self, xdat: float, xArray: np.ndarray):
         """
         Find the closest x value in the list of all x values
         """
-        if self.xSnapValues is None or len(self.xSnapValues) == 0:
-            return xdat
-
-        allxdiff = {np.abs(xdat - i): i for i in self.xSnapValues}
+        allxdiff = {np.abs(xdat - i): i for i in xArray}
         if allxdiff:
             return allxdiff[min(allxdiff.keys())]
         else:
             return xdat
 
+    def _snapToMeasDataGrid(self, xdat):
+        """
+        Find the closest x value in the list of all x values in the measurement data
+        """
+        if self.measX is None or len(self.measX) == 0:
+            return xdat
+
+        return self._closestX(xdat, self.measX)
+
+    def _snapToExtrX(self, xdat):
+        """
+        Find the closest x value in the list of all x values in the extracted data points
+        """
+        if self.distinctExtrX is None or len(self.distinctExtrX) == 0:
+            return xdat
+
+        return self._closestX(xdat, self.distinctExtrX)
+    
+    def snapToProperX(self, xdat):
+        """
+        Snap the cursor to the closest x value if the xSnapMode is not "OFF".
+        """
+        if self.xSnapMode == "ExtrX":
+            return self._snapToExtrX(xdat)
+        elif self.xSnapMode == "MeasData":
+            return self._snapToMeasDataGrid(xdat)
+        else:
+            return xdat
+
     def _update(self):
+        """
+        Update the canvas to reflect the changes
+        """
         if self.useblit:
             if self.background is not None:
                 self.canvas.restore_region(self.background)
@@ -317,6 +377,20 @@ class SpecialCursor(Cursor):
 
 
 class MplFigureCanvas(QFrame):
+    """
+    This class extends the QFrame class from PySide6 to create a custom
+    widget for a Matplotlib figure.
+
+    The widget contains a Matplotlib canvas and a custom navigation toolbar.
+    It provides methods to update the x- and y-axes, the cursor, and the
+    plotting elements. It also provides methods to reset the view, zoom in,
+    and pan.
+
+    Parameters
+    ----------
+    parent : QWidget
+        The parent widget.
+    """
 
     specialCursor: SpecialCursor
 
@@ -324,7 +398,6 @@ class MplFigureCanvas(QFrame):
         QFrame.__init__(self, parent)
 
         # View elements
-        self.cursorXSnapValues = np.array([])
         self.canvas = FigureCanvasQTAgg(Figure())
         self.toolbar = NavigationHidden(self.canvas, self)
 
@@ -338,6 +411,10 @@ class MplFigureCanvas(QFrame):
         self.initializeProperties()
 
     def initializeProperties(self):
+        """
+        Initialize the properties of the widget, including the axes, the
+        plotting elements, the cursor, and the view limits.
+        """
         # change background color
         self.canvas.figure.patch.set_facecolor("#B8B8B8")
         self.canvas.figure.patch.set_facecolor("#B8B8B8")
@@ -353,24 +430,26 @@ class MplFigureCanvas(QFrame):
         self.axes.set_yticklabels([])
 
         # the axes for displaying the x & y values
-        self.xAxes: List[Axes] = []
-        self.yAxes: List[Axes] = []
+        self._xAxes: List[Axes] = []
+        self._yAxes: List[Axes] = []
         self._plottingElements: Dict[str, PlotElement] = {}
 
         self.plottingDisabled: bool = False
 
-        self.xSnapMode: bool = False
-        self.crosshairHorizOn: bool = False
-        self.crosshairVertOn: bool = False
-        self.axisSnapMode: Literal["X", "Y", "OFF"] = "OFF"
+        self._xSnapMode: Literal["MeasData", "ExtrX", "OFF"] = "OFF"
+        self._distinctExtrX = np.array([])
+        self._crosshairHorizOn: bool = False
+        self._crosshairVertOn: bool = False
+        self._axisSnapMode: Literal["X", "Y", "OFF"] = "OFF"
 
-        self.colorMapStr: str = "PuOr"
+        self._colorMapStr: str = "PuOr"
         self._updateElementColors()
 
-        self.xLim: Tuple[float, float] = (0, 1)
-        self.yLim: Tuple[float, float] = (0, 1)
-        self.measXLim: Tuple[float, float] = (0, 1)
-        self.measYLim: Tuple[float, float] = (0, 1)
+        self._xLim: Tuple[float, float] = (0, 1)
+        self._yLim: Tuple[float, float] = (0, 1)
+        self._measXLim: Tuple[float, float] = (0, 1)
+        self._measYLim: Tuple[float, float] = (0, 1)
+        self._measXList = np.ndarray(self._measXLim)
 
         # should be call at the end - it will make use of other properties like
         # coloring
@@ -382,7 +461,10 @@ class MplFigureCanvas(QFrame):
 
     @Slot()
     def updateColorMap(self, colorMap: str):
-        self.colorMapStr = colorMap
+        """
+        Update the color map of the plotting elements. 
+        """
+        self._colorMapStr = colorMap
         self._updateElementColors()
         self.plotAllElements()
 
@@ -391,20 +473,29 @@ class MplFigureCanvas(QFrame):
         According to the color map, update the colors of the elements.
         It won't redraw the elements, but wait for the next updateAllElements() call.
         """
-        self.crossColor = color_dict[self.colorMapStr]["Cross"]
-        self.lineColor = color_dict[self.colorMapStr]["line"]
-        self.scatterColor = color_dict[self.colorMapStr]["Scatter"]
-        self.cmap = copy.copy(getattr(cm, self.colorMapStr))
+        self.crossColor = color_dict[self._colorMapStr]["Cross"]
+        self.lineColor = color_dict[self._colorMapStr]["line"]
+        self.scatterColor = color_dict[self._colorMapStr]["Scatter"]
+        self.cmap = copy.copy(getattr(cm, self._colorMapStr))
 
     # View Manipulation: Axes ==========================================
+    def _setMeasXList(self, xList: np.ndarray):
+        """
+        When the measurement data is loaded, we want to record the x values
+        of the measurement data. This method records the x values of the
+        measurement data.
+        """
+        self._measXList = xList
+        self.updateCursor()
+
     def _setMeasXYLim(self, xLim: Tuple[float, float], yLim: Tuple[float, float]):
         """
         When click the reset button, we want to reset to the previous x
         and y limits determined by the measurement data. This method records
         the x and y limits of the axes when the measurement data is loaded.
         """
-        self.measXLim = xLim
-        self.measYLim = yLim
+        self._measXLim = xLim
+        self._measYLim = yLim
 
     def _recordXYLim(self):
         """
@@ -417,8 +508,8 @@ class MplFigureCanvas(QFrame):
             when the measurement data is loaded / transposed
         2. the view's x and y limits are zoomed/panned/reset externally
         """
-        self.xLim = self.axes.get_xlim()
-        self.yLim = self.axes.get_ylim()
+        self._xLim = self.axes.get_xlim()
+        self._yLim = self.axes.get_ylim()
 
     def _restoreXYLim(self, byMeasData: bool = False):
         """
@@ -427,18 +518,22 @@ class MplFigureCanvas(QFrame):
         are automatically changed by matplotlib.
         """
         if byMeasData:
-            self.axes.set_xlim(*self.measXLim)
-            self.axes.set_ylim(*self.measYLim)
+            self.axes.set_xlim(*self._measXLim)
+            self.axes.set_ylim(*self._measYLim)
         else:
-            self.axes.set_xlim(*self.xLim)
-            self.axes.set_ylim(*self.yLim)
+            self.axes.set_xlim(*self._xLim)
+            self.axes.set_ylim(*self._yLim)
 
-    @Slot()
-    def relim(self, xLim: Tuple[float, float], yLim: Tuple[float, float]):
+    @Slot(np.ndarray, np.ndarray)
+    def relim(self, x: np.ndarray, y: np.ndarray):
         """
         Set the x and y limits of the axes to fit the measurement data
         """        
+        xLim = (np.min(x), np.max(x))
+        yLim = (np.min(y), np.max(y))
         self._setMeasXYLim(xLim, yLim)
+        self._setMeasXList(x)
+
         self._restoreXYLim(byMeasData=True)
         self._recordXYLim()
 
@@ -446,7 +541,7 @@ class MplFigureCanvas(QFrame):
         """
         Update the x-axes value. 
         """
-        for ax in self.xAxes:
+        for ax in self._xAxes:
             self.canvas.figure.delaxes(ax)
 
         # Create a new axes for each x-values in the dictionary
@@ -460,7 +555,7 @@ class MplFigureCanvas(QFrame):
             ax.spines['bottom'].set_position(('outward', 40 * i))
             # ax.xaxis.set_label_coords(1.05, -0.08 * (i))  # set label position
             new_axes.append(ax)
-        self.xAxes = new_axes
+        self._xAxes = new_axes
 
         # self.canvas.figure.tight_layout()
         self.updateCursor()
@@ -470,7 +565,7 @@ class MplFigureCanvas(QFrame):
         """
         Update the y-axes. (there is only one y-axis)
         """
-        for ax in self.yAxes:
+        for ax in self._yAxes:
             self.canvas.figure.delaxes(ax)
 
         # Create a new axes for each x-values in the dictionary
@@ -481,7 +576,7 @@ class MplFigureCanvas(QFrame):
         ax.yaxis.set_label_position('left')
         ax.spines['left'].set_position(('outward', 40 * 0))
         # ax.yaxis.set_label_coords(1.05, -0.08 * (i))  # set label position
-        self.yAxes = [ax]
+        self._yAxes = [ax]
 
         # self.canvas.figure.tight_layout()
         self.updateCursor()
@@ -490,7 +585,7 @@ class MplFigureCanvas(QFrame):
     # View Manipulation: Cursor ========================================
     def updateCursor(
         self,
-        xSnapMode: Union[bool, None] = None,
+        xSnapMode: Literal["MeasData", "ExtrX", "OFF", None] = None,
         axisSnapMode: Literal["X", "Y", "OFF"] = "OFF",
         horizOn: Union[bool, None] = None,
         vertOn: Union[bool, None] = None,
@@ -501,45 +596,60 @@ class MplFigureCanvas(QFrame):
 
         Parameters:
         -----------
-        x_snap_mode: Union[bool, None]
-            Whether to snap the cursor to the closest x value in the list of all x values
-        axis_snap_mode: Union[None, Literal["X", "Y"]]
-            Whether to snap the cursor to the minimum x or y value (edge of the plot),
-            it overrides x_snap_mode
-        horizOn: Union[bool, None]
-            whether to show the horizontal line
-        vertOn: Union[bool, None]
-            whether to show the vertical line
+        xSnapMode: Literal["MeasData", "ExtrX", "OFF"] = None
+            Whether to snap the cursor to the closest x value in a list.
+            - "MeasData": snap to the closest x value in the x values of the measurement data
+            - "ExtrX": snap to the closest x value in the extracted data points
+            - "OFF": do not snap to any x value
+            - None: keep the current state
+        axisSnapMode: Literal["X", "Y", "OFF"] = "OFF"
+            Whether to snap the cursor to the minimum x or y value (edge of the plot).
+            It overrides xSnapMode.
+        horizOn: bool = None
+            Whether to show the horizontal line. If None, keep the current state.
+        vertOn: bool = None
+            Whether to show the vertical line. If None, keep the current state.
         """
         # memorize the state of the crosshair cursor
         if xSnapMode is not None:
-            self.xSnapMode = xSnapMode
+            self._xSnapMode = xSnapMode
         if horizOn is not None:
-            self.crosshairHorizOn = horizOn
+            self._crosshairHorizOn = horizOn
         if vertOn is not None:
-            self.crosshairVertOn = vertOn
-        self.axisSnapMode = axisSnapMode
+            self._crosshairVertOn = vertOn
+        self._axisSnapMode = axisSnapMode
 
         # remove the old cursor
         if hasattr(self, "specialCursor"):
             self.specialCursor.remove()
 
         self.specialCursor = SpecialCursor(
-            [self.axes] + self.xAxes + self.yAxes,
-            xSnapMode = self.xSnapMode,
-            xSnapValues = self.cursorXSnapValues,
+            [self.axes] + self._xAxes + self._yAxes,
+            xSnapMode = self._xSnapMode,
+            distinctExtrX = self._distinctExtrX,
+            measX=self._measXList,
             xyMin = (self.axes.get_xlim()[0], self.axes.get_ylim()[0]),
-            axisSnapMode = self.axisSnapMode,
+            axisSnapMode = self._axisSnapMode,
             useblit = True,
-            horizOn = self.crosshairHorizOn,
-            vertOn = self.crosshairVertOn,
+            horizOn = self._crosshairHorizOn,
+            vertOn = self._crosshairVertOn,
             color = self.crossColor,
             alpha = 0.5,
         )
         self.canvas.draw()
         self.specialCursor.line_blit_on()
 
+    @Slot()
+    def updateCursorXSnapValues(self, newCursorXSnapValues: np.ndarray):
+        self._distinctExtrX = newCursorXSnapValues
+        self.updateCursor()
+
+    # View Manipulation: Navigation ====================================
+
     def zoomOn(self):
+        """
+        Enable zoom mode and remove the cursor crosshair.
+        """
         self.toolbar.setZoomMode(
             on=True
         )  # toggle zoom at the level of the NavigationToolbar2QT, enabling actual
@@ -547,6 +657,9 @@ class MplFigureCanvas(QFrame):
         self.updateCursor(horizOn=False, vertOn=False)
 
     def panOn(self):
+        """
+        Enable pan mode and remove the cursor crosshair.
+        """
         self.toolbar.setPanMode(
             on=True
         )  # toggle pan at the level of the NavigationToolbar2QT, enabling actual
@@ -554,6 +667,9 @@ class MplFigureCanvas(QFrame):
         self.updateCursor(horizOn=False, vertOn=False)
 
     def selectOn(self):
+        """
+        Enable select mode.
+        """
         self.toolbar.setZoomMode(on=False)
         self.toolbar.setPanMode(on=False)
 
@@ -568,11 +684,6 @@ class MplFigureCanvas(QFrame):
     @Slot()
     def panView(self):
         self.panOn()
-
-    @Slot()
-    def updateCursorXSnapValues(self, newCursorXSnapValues: np.ndarray):
-        self.cursorXSnapValues = newCursorXSnapValues
-        self.updateCursor()
 
     # View Manipulation: Plotting ======================================
     # toolbox
@@ -627,19 +738,6 @@ class MplFigureCanvas(QFrame):
             dummy_element = PlotElement(elementName)
             dummy_element.set_visible(visible)
             self.updateElement(dummy_element)
-
-    # @Slot()
-    # def relimByMeasData(self):
-    #     """
-    #     Set the x and y limits of the axes to fit the measurement data
-    #     """
-    #     if not self._hasElement("measurement"):
-    #         # measurement data not loaded
-    #         return
-
-    #     self.axes.set_xlim(self._plottingElements["measurement"].xLim)
-    #     self.axes.set_ylim(self._plottingElements["measurement"].yLim)
-    #     self._recordXYLim()
 
     # manipulate plotting elements        
     @Slot()
@@ -735,5 +833,3 @@ class MplFigureCanvas(QFrame):
             self._restoreXYLim(byMeasData=True)
 
         self.canvas.draw()
-
-    # Signal Processing ================================================

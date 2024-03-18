@@ -28,6 +28,20 @@ from qfit.models.data_structures import QMSweepParam, ParamAttr
 
 
 class CalibrationView(QObject):
+    """
+    The view for the calibration table, manipulating the raw vector and 
+    the mapped vector. It receives the data from the user typing and the
+    clicking on the canvas, and communicates with the corresponding model.
+
+    Parameters
+    ----------
+    rawLineEdits : Dict[str, "CalibrationLineEdit"]
+        The line edits for the raw vectors.
+    mapLineEdits : Dict[str, "CalibrationLineEdit"]
+        The line edits for the mapped vectors.
+    calibrationButtons : Dict[str, QPushButton]
+        The buttons for the calibration status.
+    """
     caliStatusChangedByButtonClicked = Signal(object)
     dataEditingFinished = Signal(ParamAttr)
     caliViewRawVecUpdatedForSwapXY = Signal()
@@ -61,7 +75,7 @@ class CalibrationView(QObject):
         caliYButtons: Dict[str, QPushButton],
     ):
         """
-        In the future, all the line edits and buttons should be generated
+        Note: In the future, all the line edits and buttons should be generated
         dynamically based on the number of calibration rows.
         """
         super().__init__(parent)
@@ -82,8 +96,23 @@ class CalibrationView(QObject):
         sweepParamSet: ParamSet[QMSweepParam],
     ):
         """
-        dynamically initialize the calibration view. Dynamically generate the line edits
-        and buttons based on the number of calibration rows and columns.
+        When the app is reloaded (new measurement data and hilbert space),
+        the calibration view will reinitialized by this method.
+
+        Parameters
+        ----------
+        rawXVecNameList : List[str]
+            The names of the raw vector components, from the measurement datas'
+            x axis.
+        rawYName : str
+            The name of the raw vector component, from the measurement datas'
+            y axis.
+        caliTableXRowNr : int
+            The number of rows in the calibration table. It is determined in
+            the calibration model based on the number of raw vector components,
+            number of figures and the number of sweep parameters.
+        sweepParamSet : ParamSet[QMSweepParam]
+            The sweep parameters for the calibration. 
         """
         self.sweepParamSet = sweepParamSet
         self.caliTableXRowNr = caliTableXRowNr
@@ -115,10 +144,16 @@ class CalibrationView(QObject):
         )
 
         # connects
-        self.setupEditingFinishedSignalEmit()
+        self._setupEditingFinishedSignalEmit()
         self.caliButtonGroup.idClicked.connect(self.onCaliButtonClicked)
 
     def _generateCaliTableSet(self):
+        """
+        Generate the calibration table set, which is a dictionary of dictionaries.
+
+        In the future, the line edits and buttons should be generated dynamically
+        based on the number of raw and mapped vector components.
+        """
         if self.caliTableSet != {}:
             self.caliTableSet.clear()
         self.caliTableSet: Dict[str, Dict[str, "CalibrationLineEdit"]] = {
@@ -170,8 +205,7 @@ class CalibrationView(QObject):
         """
         Maintain a dictionary to translate the row index to the button group id.
 
-        generalize to functions in the future
-
+        Note: we should generalize to functions in the future.
         """
         self.rowIdxToButtonGroupId: Dict[str, int] = {}
         for rowIdx in range(self.caliTableXRowNr):
@@ -183,21 +217,9 @@ class CalibrationView(QObject):
             v: k for k, v in self.rowIdxToButtonGroupId.items()
         }
 
-    # def _highlightCaliButton(self, button: QPushButton, reset: bool = False):
-    #     """Highlight the button by changing its stylesheet."""
-    #     if reset:
-    #         button.setStyleSheet("")
-    #     else:
-    #         button.setStyleSheet("QPushButton {background-color: #BE82FA}")
-
-    # def _resetHighlightButtons(self):
-    #     """Reset the highlighting of all calibration buttons."""
-    #     for label in self.calibrationButtons:
-    #         self._highlightCaliButton(self.calibrationButtons[label], reset=True)
-
-    def setupEditingFinishedSignalEmit(self):
+    def _setupEditingFinishedSignalEmit(self):
         """
-        Equivalent to _signalProcessing()
+        Equivalent to _signalProcessing() in other views.
         Signal emitting when the data in the line edits are changed.
         """
         for rowIdx in self.caliTableSet:
@@ -221,6 +243,9 @@ class CalibrationView(QObject):
 
     @Slot(ParamAttr)
     def setBoxValue(self, paramAttr: ParamAttr):
+        """
+        Update the view when the model emits the signal to update the view.
+        """
         # if pointPairSource, no such view available currently
         if paramAttr.name == "pointPairSource":
             return
@@ -266,22 +291,25 @@ class CalibrationView(QObject):
     @Slot(str, dict)
     def postCaliPointSelectedOnCanvas(self, rowIdx: str, data: Dict[str, float]):
         """
-        CALIBRATION VIEW
+        After the user clicking on the canvas, and model processing the data,
+        update the view:
+            - Uncheck the calibration buttons
+            - Automatically focus on the line edit for the user to type in 
+            the mapped value 
+        
+        Note that the view data is updated through setBoxValue signal. 
         """
         # if x axis is calibrated, update the raw line edits by the value of the clicked point
         if rowIdx[0] == "X":
             for rawXVecCompName in self.rawXVecNameList:
-                self.caliTableSet[rowIdx][rawXVecCompName].setText(
-                    str(data[rawXVecCompName])
-                )
                 self.caliTableSet[rowIdx][rawXVecCompName].home(False)
             colName = f"{self.sweepParamParentName}.{self.sweepParamName}"
         # if y axis is calibrated, update the raw line edits by the value of the clicked point
         elif rowIdx[0] == "Y":
-            self.caliTableSet[rowIdx][self.rawYName].setText(str(data[self.rawYName]))
             self.caliTableSet[rowIdx][self.rawYName].home(False)
             colName = "mappedY"
-        # highlight the map line edit
+
+        # focus on the line edit so that the user can type in the value
         self.caliTableSet[rowIdx][colName].selectAll()
         self.caliTableSet[rowIdx][colName].setFocus()
         self.uncheckAllCaliButtons()
@@ -295,7 +323,7 @@ class CalibrationView(QObject):
         # regenerate calibration table set
         self._generateCaliTableSet()
         # re setup the signal emitting
-        self.setupEditingFinishedSignalEmit()
+        self._setupEditingFinishedSignalEmit()
         self.caliViewRawVecUpdatedForSwapXY.emit()
 
     #     self.msg = None
@@ -314,6 +342,10 @@ class CalibrationView(QObject):
 
 
 class CalibrationLineEdit(FloatLineEdit):
+    """
+    A line edit that accepts a float as input, providing validation and
+    warning on invalid input.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # self.editingFinished.connect(self.processUpdate)

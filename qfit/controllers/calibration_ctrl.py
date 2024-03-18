@@ -1,7 +1,5 @@
 from PySide6.QtCore import (
     QObject,
-    Signal,
-    Slot,
 )
 from PySide6.QtWidgets import QPushButton
 
@@ -12,7 +10,6 @@ from typing import TYPE_CHECKING, Tuple, Dict, Any, List
 if TYPE_CHECKING:
     from scqubits.core.hilbert_space import HilbertSpace
     from qfit.models.calibration import CaliParamModel
-    from qfit.models.data_structures import QMSweepParam
     from qfit.models.measurement_data import MeasurementDataType
     from qfit.views.calibration_view import CalibrationView
 
@@ -44,6 +41,17 @@ class CalibrationCtrl(QObject):
 
         Relevant model:
         - calibration model
+
+        Parameters
+        ----------
+        parent : QObject
+            The parent QObject.
+        caliParamModel : CaliParamModel
+            The calibration parameter model.
+        calibrationView : CalibrationView
+            The calibration view.
+        pageButtons : Dict[str, QPushButton]
+            The page buttons.
         """
         super().__init__(parent)
 
@@ -57,6 +65,17 @@ class CalibrationCtrl(QObject):
         hilbertspace: "HilbertSpace",
         measurementData: List["MeasurementDataType"],
     ):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        reinitialize the all relevant models and views.
+
+        Parameters
+        ----------
+        hilbertspace : HilbertSpace
+            The HilbertSpace object.
+        measurementData : List[MeasurementDataType]
+            The measurement data.
+        """
         self.caliParamModel.dynamicalInit(
             hilbertSpace=hilbertspace,
             rawXVecNameList=measurementData[0].rawXNames,

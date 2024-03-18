@@ -14,6 +14,30 @@ if TYPE_CHECKING:
 
 
 class StatusCtrl(QObject):
+    """
+    Controller for the status bar. This controller serves as a transmittor between the status bar
+    (view) and models that may produce signals that inform user about state of the app (such as
+    completion of calculation, MSE report, etc.). The status bar will be updated accordingly.
+
+    Relevant UI elements:
+    - status bar
+
+    Relevant model:
+    - quantum model
+    - fit param model
+    - status model
+
+    Parameters
+    ----------
+    parent : QObject
+        The parent object
+    models : Tuple[QuantumModel, FitModel, FitHSParams, FitCaliParams]
+        The relevant models
+    statusModel : StatusModel
+        The status model
+    statusBarView : StatusBarView
+        The status bar view
+    """
     def __init__(
         self,
         parent: QObject,
@@ -23,23 +47,6 @@ class StatusCtrl(QObject):
         statusModel: "StatusModel",
         statusBarView: "StatusBarView",
     ):
-        """
-        Controller for the status bar. This controller serves as a transmittor between the status bar
-        (view) and models that may produce signals that inform user about state of the app (such as
-        completion of calculation, MSE report, etc.). The status bar will be updated accordingly.
-
-        Relevant UI elements:
-        - status bar
-
-        Relevant model:
-        - fit
-        - prefit
-        - status model
-
-        Parameters
-        ----------
-        statusBarView: StatusBarView
-        """
         super().__init__(parent)
 
         self.statusModel = statusModel
