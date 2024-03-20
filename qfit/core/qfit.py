@@ -294,8 +294,8 @@ class Fit:
             self._mainUi.clearAllButton,
             self._mainUi.horizontalSnapButton,
             self._mainUi.verticalSnapButton,
-            self._mainUi.calibrateX1Button,
-            self._mainUi.calibrateX2Button,
+            # self._mainUi.calibrateX1Button,
+            # self._mainUi.calibrateX2Button,
             self._mainUi.calibrateY1Button,
             self._mainUi.calibrateY2Button,
         ]:
@@ -376,31 +376,27 @@ class Fit:
         Set up an instance of CalibrationData and CalibrationView.
         """
         # ui grouping
-        self._rawLineEdits = {
-            "X1": self._mainUi.rawX1LineEdit,
-            "X2": self._mainUi.rawX2LineEdit,
+        self._rawYLineEdits = {
             "Y1": self._mainUi.rawY1LineEdit,
             "Y2": self._mainUi.rawY2LineEdit,
         }
-        self._mapLineEdits = {
-            "X1": self._mainUi.mapX1LineEdit,
-            "X2": self._mainUi.mapX2LineEdit,
+        self._mapYLineEdits = {
             "Y1": self._mainUi.mapY1LineEdit,
             "Y2": self._mainUi.mapY2LineEdit,
         }
-        self._calibrationButtons = {
-            "X1": self._mainUi.calibrateX1Button,
-            "X2": self._mainUi.calibrateX2Button,
+        self._caliYButtons = {
             "Y1": self._mainUi.calibrateY1Button,
             "Y2": self._mainUi.calibrateY2Button,
         }
 
         self._caliParamModel = CaliParamModel(self._mainWindow)
         self._calibrationView = CalibrationView(
-            self._mainWindow,
-            rawYLineEdits=self._rawLineEdits,
-            mapYLineEdits=self._mapLineEdits,
-            caliYButtons=self._calibrationButtons,
+            parent=self._mainWindow,
+            caliXScrollAreaWidget=self._mainUi.calibrateXScrollAreaWidget,
+            caliXFrame=self._mainUi.calibrationFrame,
+            rawYLineEdits=self._rawYLineEdits,
+            mapYLineEdits=self._mapYLineEdits,
+            caliYButtons=self._caliYButtons,
         )
 
         self._calibrationCtrl = CalibrationCtrl(
@@ -592,7 +588,7 @@ class Fit:
                 self._measPlotSettings,
                 self._mainUi.swapXYButton,
                 self._canvasTools,
-                self._calibrationButtons,
+                # self._calibrationButtons,
                 self._mainUi.calibratedCheckBox,
                 self._pageView,
             ),

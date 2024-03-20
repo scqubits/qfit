@@ -104,7 +104,7 @@ class PlottingCtrl(QObject):
             self.measPlotSettings,
             self.swapXYButton,
             self.canvasTools,
-            self.calibrationButtons,
+            # self.calibrationButtons,
             self.calibratedCheckBox,
             self.pageView,
         ) = views

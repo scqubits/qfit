@@ -243,9 +243,9 @@ class CaliParamModel(
             # insert the point pair source
             if self.isFullCalibration:
                 self._insertParamByArgs(
-                    colName="pointPairSource",
+                    colName="dataSource",
                     rowName=XRowIdxName,
-                    paramType="point_pair_source",
+                    paramType="data_source",
                     parentSystemName=None,
                     sweepParamName=None,
                     value=None,
@@ -253,9 +253,9 @@ class CaliParamModel(
             else:
                 # value is the figure name
                 self._insertParamByArgs(
-                    colName="pointPairSource",
+                    colName="dataSource",
                     rowName=XRowIdxName,
-                    paramType="point_pair_source",
+                    paramType="data_source",
                     parentSystemName=None,
                     sweepParamName=None,
                     value=self.figName[int(XRowIdxName[1:]) // 2],
@@ -282,9 +282,9 @@ class CaliParamModel(
                 parentSystemName=None,
             )
             self._insertParamByArgs(
-                colName="pointPairSource",
+                colName="dataSource",
                 rowName=YRowIdxName,
-                paramType="point_pair_source",
+                paramType="data_source",
                 sweepParamName=None,
                 value=None,
                 parentSystemName=None,
@@ -764,7 +764,7 @@ class CaliParamModel(
             self.xRowIdxBySourceDict[fig] = [
                 XRowIdx
                 for XRowIdx in self.caliTableXRowIdxList
-                if fig == self[XRowIdx]["pointPairSource"].value
+                if fig == self[XRowIdx]["dataSource"].value
             ]
 
     def setParameter(
@@ -835,7 +835,7 @@ class CaliParamModel(
                 )
             # update source for the point pair
             self.setParameter(
-                rowIdx=caliLabel, colName="pointPairSource", attr="value", value=figName
+                rowIdx=caliLabel, colName="dataSource", attr="value", value=figName
             )
             self.plotCaliPtExtractFinished.emit(caliLabel, data)
             self.caliStatus = False
@@ -990,7 +990,7 @@ class CaliParamModel(
         """
         for rowIdx, colDict in self.parameters.items():
             for colName, param in colDict.items():
-                if param.paramType not in ["point_pair_source"]:
+                if param.paramType not in ["data_source"]:
                     self.emitUpdateBox(rowIdx, colName, "value")
 
     # signals ==========================================================

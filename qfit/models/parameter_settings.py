@@ -24,7 +24,7 @@ ParameterType = Literal[
     "truncated_dim",
     "raw_X_vec_component",
     "raw_Y",
-    "point_pair_source",
+    "data_source",
 ]
 
 # default ranges for different types of parameters
