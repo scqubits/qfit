@@ -172,8 +172,8 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         which will be used to relim the canvas, set x snap values.
         """
         self.relimCanvas.emit(
-            self.currentMeasData.currentX.data,
-            self.currentMeasData.currentY.data,
+            self.currentMeasData.principalX.data,
+            self.currentMeasData.principalY.data,
         )
 
     def emitRawXMap(self):
@@ -333,12 +333,21 @@ class MeasurementData(Registrable):
     _zCandidates: OrderedDictMod[
         str, np.ndarray
     ] = OrderedDictMod()  # dict of 2d ndarrays
+    _xCandidates: OrderedDictMod[
+        str, np.ndarray
+    ] = OrderedDictMod()  # dict of 1d ndarrays
+    _yCandidates: OrderedDictMod[
+        str, np.ndarray
+    ] = OrderedDictMod()  # dict of 1d ndarrays
+
+    _rawXNames: List[str]
+    _rawYName: List[str]
     rawX: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
     rawY: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
 
-    _currentZ: DictItem
-    _currentX: DictItem
-    _currentY: DictItem
+    _principalZ: DictItem
+    _principalX: DictItem     # x axis that has the largest change
+    _principalY: DictItem     
 
     # filters
     _bgndSubtractX = False
@@ -359,7 +368,7 @@ class MeasurementData(Registrable):
 
     # properties =======================================================
     @property
-    def currentZ(self) -> DictItem:
+    def principalZ(self) -> DictItem:
         """
         Return current dataset describing the z values (measurement data) with all filters etc. applied.
 
@@ -367,7 +376,7 @@ class MeasurementData(Registrable):
         -------
         DataItem
         """
-        zData = copy.copy(self._currentZ)
+        zData = copy.copy(self._principalZ)
 
         if self._bgndSubtractX:
             zData.data = self._doBgndSubtraction(zData.data, axis=1)
@@ -385,7 +394,7 @@ class MeasurementData(Registrable):
         return zData
 
     @property
-    def currentX(self) -> DictItem:
+    def principalX(self) -> DictItem:
         """
         Return current dataset describing the x-axis values, taking into account the possibility of an x-y swap.
 
@@ -393,10 +402,10 @@ class MeasurementData(Registrable):
         -------
         ndarray, ndim=1
         """
-        return self._currentX
+        return self._principalX
 
     @property
-    def currentY(self) -> DictItem:
+    def principalY(self) -> DictItem:
         """
         Return current dataset describing the y-axis values, taking into account the possibility of an x-y swap.
 
@@ -404,13 +413,13 @@ class MeasurementData(Registrable):
         -------
         ndarray, ndim=1
         """
-        return self._currentY
+        return self._principalY
 
     def setCurrentZ(self, itemIndex):
         """
         Set the current z dataset by index.
         """
-        self._currentZ = self._zCandidates.itemByIndex(itemIndex)
+        self._principalZ = self._zCandidates.itemByIndex(itemIndex)
 
     @property
     def rawXNames(self) -> List[str]:
@@ -428,11 +437,15 @@ class MeasurementData(Registrable):
             "name",
             "rawData",
             "_zCandidates",
+            "_xCandidates",
+            "_yCandidates",
+            "_rawXNames",
+            "_rawYName",
             "rawX",
             "rawY",
-            "_currentZ",
-            "_currentX",
-            "_currentY",
+            "_principalZ",
+            "_principalX",
+            "_principalY",
             "_bgndSubtractX",
             "_bgndSubtractY",
             "_topHatFilter",
@@ -485,10 +498,10 @@ class MeasurementData(Registrable):
             key: self._transposeZ(array) for key, array in self._zCandidates.items()
         }
         self._zCandidates = OrderedDictMod(swappedZCandidates)
-        self._currentZ.data = self._transposeZ(self._currentZ.data)
+        self._principalZ.data = self._transposeZ(self._principalZ.data)
 
         self.rawX, self.rawY = self.rawY, self.rawX
-        self._currentX, self._currentY = self._currentY, self._currentX
+        self._principalX, self._principalY = self._principalY, self._principalX
 
     def rawXByCurrentX(self, currentX: float) -> OrderedDictMod[str, float]:
         """
@@ -503,8 +516,8 @@ class MeasurementData(Registrable):
         -------
         OrderedDictMod[str, float]
         """
-        fraction = (currentX - self.currentX.data[0]) / (
-            self.currentX.data[-1] - self.currentX.data[0]
+        fraction = (currentX - self.principalX.data[0]) / (
+            self.principalX.data[-1] - self.principalX.data[0]
         )
         rawX = OrderedDictMod()
         for name, data in self.rawX.items():
@@ -665,6 +678,21 @@ class NumericalMeasurementData(MeasurementData):
         super().__init__(name, rawData)
         self._initXYZ()
 
+    # properties =======================================================
+    @property
+    def rawX(self):
+        return OrderedDictMod({
+            key: value for key, value in self._xCandidates.items() 
+            if key in self._rawXNames
+        })
+    
+    @property
+    def rawY(self):
+        return OrderedDictMod({
+            key: value for key, value in self._yCandidates.items()
+            if key in self._rawYName
+        })
+
     # initialization ===================================================
     @staticmethod
     def _findZCandidates(rawData: Union[OrderedDictMod, Dict]):
@@ -689,7 +717,7 @@ class NumericalMeasurementData(MeasurementData):
 
         return zCandidates
 
-    def _findRawXY(self):
+    def _findXYCandidates(self):
         """
         By trying to match the dimensions of the zData with the x and y axis candidates,
         find the x and y axis candidates that are compatible with the zData.
@@ -706,40 +734,52 @@ class NumericalMeasurementData(MeasurementData):
                     xyCandidates[name] = theObject[:, 0]
 
         # based on the shape, find the compatible x and y axis candidates
-        self.rawX = OrderedDictMod()
-        self.rawY = OrderedDictMod()
-        ydim, xdim = self._currentZ.data.shape
+        self._xCandidates = OrderedDictMod()
+        self._yCandidates = OrderedDictMod()
+        ydim, xdim = self._principalZ.data.shape
+
+        # Case 1: length of x and y axis are equal, x and y share the same
+        # compatible candidates
         if ydim == xdim:
-            raise NotImplementedError(
-                "x and y dimensions are equal and currently not supported"
-            )
+            compatibleCandidates = OrderedDictMod({
+                key: value for key, value in xyCandidates.items()
+                if len(value) == xdim
+            })
+            self._xCandidates = self._yCandidates = compatibleCandidates
+        
+        # Case 2: length of x and y axis are not equal, the x and y axis can 
+        # be distinguished by the length of the data
+        else:
+            for name, data in xyCandidates.items():
+                if len(data) == xdim:
+                    self._xCandidates[name] = data
+                if len(data) == ydim:
+                    self._yCandidates[name] = data
 
-        # insert the compatible x and y axis candidates into the respective dicts
-        for name, data in xyCandidates.items():
-            if len(data) == xdim:
-                self.rawX[name] = data
-            if len(data) == ydim:
-                self.rawY[name] = data
-        if not self.rawX:
-            self.rawX = OrderedDictMod(pixel_x=np.arange(xdim))
-        if not self.rawY:
-            self.rawY = OrderedDictMod(pixel_y=np.arange(ydim))
+        # finally, insert pixel coordinates as the last resort
+        self._xCandidates.update({"pixel_coord_1": np.arange(xdim)})
+        self._yCandidates.update({"pixel_coord_2": np.arange(ydim)})
 
-        # based on the number of the compatible x and y axis candidates
-        # determine the tuning axis and freq axis. Freq axis is the one
-        # with only one compatible candidate.
-        if len(self.rawY) == 1 and len(self.rawX) >= 1:
-            # do nothing
-            pass
-        elif len(self.rawX) == 1 and len(self.rawY) > 1:
-            self.swapXY()
-        elif len(self.rawX) > 1 or len(self.rawY) > 1:
-            raise NotImplementedError(
-                "Multiple compatible x or y-axis data found and currently "
-                "not supported. Will be supported in the next version."
-            )
+    def _initRawXY(self):
+        """
+        Initialize the raw x and y axis by the first compatible x and y axis.
+        """
+        self._rawXNames = self._xCandidates.keyList[:1]
+        self._rawYName = self._yCandidates.keyList[:1]
 
-        # finally, determine the principal x axis - largest change in the data
+        # if rawX and rawY are the same, set rawY to the next compatible y axis.
+        # It can always be done because there are pixel coordinates as the last 
+        # resort
+        if self._rawXNames == self._rawYName:
+            self._rawYName = self._yCandidates.keyList[1:2]
+
+    def _resetPrincipalXY(self):
+        """
+        The principal x axis corresponds to the x axis that has the
+        largest change in the data.
+        Since there should only be one y axis, the principal y axis is
+        the first y axis.
+        """
         if len(self.rawX) > 1:
             idx = np.argmax(
                 [
@@ -747,52 +787,67 @@ class NumericalMeasurementData(MeasurementData):
                     for data in self.rawX.values()
                 ]
             )
-            self._currentX = self.rawX.itemByIndex(idx)
+            self._principalX = self.rawX.itemByIndex(int(idx))
+        else:
+            self._principalX = self.rawX.itemByIndex(0)
+
+        self._principalY = self.rawY.itemByIndex(0)
 
     def _initXYZ(self):
         """
         From the raw data, find the zData, xData, and yData candidates and their compatibles.
         """
         self._zCandidates = self._findZCandidates(self.rawData)
-        self._currentZ = self._zCandidates.itemByIndex(0)
+        self._principalZ = self._zCandidates.itemByIndex(0)
 
-        self._findRawXY()
-        self._currentX = self.rawX.itemByIndex(0)
-        self._currentY = self.rawY.itemByIndex(0)
+        self._findXYCandidates()
+        self._initRawXY()
+        self._resetPrincipalXY()
 
-    def setCurrentZ(self, itemIndex):
-        self._currentZ = self._zCandidates.itemByIndex(itemIndex)
+    def setRawXY(
+        self, 
+        xNames: List[str],
+        yName: str,
+    ):
+        """
+        Given the names of the x axis candidates, set the raw x axis names and
+        the principal x axis.
+        """
+        # check if the names are valid
+        if not all([name in self._xCandidates.keyList for name in xNames]):
+            raise ValueError("Invalid raw x axis names as not all are in "
+                             "the x axis candidate list")
+        if yName not in self._yCandidates.keyList:
+            raise ValueError("Invalid raw y axis name as it is not in the y "
+                             "axis candidate list")
+        if yName in xNames:
+            raise ValueError("The raw x and y axis names must be different")
 
-    # def setCurrentX(self, itemIndex):
-    #     self._currentX = self.currentXCompatibles.itemByIndex(itemIndex)
-    #     self.emitReadyToPlot()
-    #     self.emitRelimCanvas()
-        # self.emitRawXMap()
+        self._rawXNames = xNames
+        self._rawYName = [yName]
+
+        # reset the principal x axis
+        self._resetPrincipalXY()
     
-    # def setCurrentY(self, itemIndex):
-    #     self._currentY = self.currentYCompatibles.itemByIndex(itemIndex)
-    #     self.emitReadyToPlot()
-    #     self.emitRelimCanvas()
-        # self.emitRawXMap()
-        
+    # plotting =========================================================
     def generatePlotElement(self) -> MeshgridElement:
         """
         Generate a plot element from the current data
         """
-        zData = self.currentZ.data
+        zData = self.principalZ.data
 
         if self._logColoring:
-            zMin, zMax = self.currentMinMax(zData)
+            zMin, zMax, _, _ = self.currentMinMax(zData)
             linthresh = max(abs(zMin), abs(zMax)) / 20.0
             norm = colors.SymLogNorm(
-                linthresh=linthresh,
+                linthresh=linthresh,    # the range within which the plot is linear (i.e. color map is linear)
                 vmin=zMin,
                 vmax=zMax,  # **add_on_mpl_3_2_0
             )
         else:
             norm = None
 
-        xData, yData = np.meshgrid(self.currentX.data, self.currentY.data)
+        xData, yData = np.meshgrid(self.principalX.data, self.principalY.data)
         return MeshgridElement(
             "measurement",
             xData,
@@ -826,14 +881,14 @@ class ImageMeasurementData(MeasurementData):
         """
         self.rawData = self._processRawZ(self.rawData)
         self._zCandidates = OrderedDictMod({self.name: self.rawData})
-        self._currentZ = self._zCandidates.itemByIndex(0)
+        self._principalZ = self._zCandidates.itemByIndex(0)
 
         # note that the x and y axis for images are swapped
-        ydim, xdim, _ = self._currentZ.data.shape
-        self.rawX = OrderedDictMod(pixel_x=np.arange(xdim))
-        self.rawY = OrderedDictMod(pixel_y=np.arange(ydim))
-        self._currentX = self.rawX.itemByIndex(0)
-        self._currentY = self.rawY.itemByIndex(0)
+        ydim, xdim, _ = self._principalZ.data.shape
+        self.rawX = OrderedDictMod(pixel_coord_1=np.arange(xdim))
+        self.rawY = OrderedDictMod(pixel_coord_2=np.arange(ydim))
+        self._principalX = self.rawX.itemByIndex(0)
+        self._principalY = self.rawY.itemByIndex(0)
 
     def _processRawZ(self, zData: np.ndarray) -> np.ndarray:
         """
@@ -852,7 +907,7 @@ class ImageMeasurementData(MeasurementData):
         """
         return ImageElement(
             "measurement",
-            self.currentZ.data,
+            self.principalZ.data,
             rasterized=True,
         )
 

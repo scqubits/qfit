@@ -171,7 +171,7 @@ class PlottingCtrl(QObject):
         self.measComboBoxes["z"].clear()
         self.measComboBoxes["z"].addItems(zDataNames)
         self.measComboBoxes["z"].setCurrentText(
-            self.measurementData.currentMeasData.currentZ.name
+            self.measurementData.currentMeasData.principalZ.name
         )
         # self.setupXYDataBoxes()
 
@@ -561,8 +561,8 @@ class PlottingCtrl(QObject):
 
         # process the data
         xdata, ydata = self.axes.transData.inverted().transform((event.x, event.y))
-        xName = self.measurementData.currentMeasData.currentX.name
-        yName = self.measurementData.currentMeasData.currentY.name
+        xName = self.measurementData.currentMeasData.principalX.name
+        yName = self.measurementData.currentMeasData.principalY.name
         xyDict = OrderedDictMod({xName: xdata, yName: ydata})
         rawX = self.measurementData.currentMeasData.rawXByCurrentX(xdata)
         rawXYDict = rawX | xyDict  # needed by calibration data
@@ -600,9 +600,9 @@ class PlottingCtrl(QObject):
 
             # y snap
             if self.canvasTools["snapY"].isChecked():
-                x_list = self.measurementData.currentMeasData.currentX.data
-                y_list = self.measurementData.currentMeasData.currentY.data
-                z_data = self.measurementData.currentMeasData.currentZ.data
+                x_list = self.measurementData.currentMeasData.principalX.data
+                y_list = self.measurementData.currentMeasData.principalY.data
+                z_data = self.measurementData.currentMeasData.principalZ.data
 
                 # calculate half index range as 5x linewidth
                 linewidth = 0.01  # GHz
