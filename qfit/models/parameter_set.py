@@ -379,7 +379,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
             list will be excluded.
         """
         self.hilbertspace = hilbertspace
-        self.insertAllParams(
+        self._insertAllParams(
             included_parameter_type=included_parameter_type,
             excluded_parameter_type=excluded_parameter_type,
         )
@@ -433,7 +433,7 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         parameters["truncated_dim"] = ["truncated_dim"]
         return parameters
 
-    def insertAllParams(
+    def _insertAllParams(
         self,
         included_parameter_type: Union[List[ParameterType], None] = None,
         excluded_parameter_type: Union[List[ParameterType], None] = None,

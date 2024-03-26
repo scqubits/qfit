@@ -94,7 +94,7 @@ class QuantumModel(QObject):
             The names of the figures to be plotted.
         """
         try:
-            self._currentFigName
+            self._figNames
         except AttributeError:
             raise AttributeError("Should call replaceMeasData first.")
         try:

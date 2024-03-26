@@ -92,7 +92,9 @@ class ExtractingCtrl(QObject):
         self.labelingView.dynamicalInit()
         self.allDatasets.dynamicalInit()
         
-        # select the first row
+        # select the first row. setModel should be called after dynamicalInit
+        # it requires the data to be loaded first
+        self.labelingView.extractionList.setModel(self.allDatasets)
         self.labelingView.extractionList.selectItem(0, blockSignals=True) 
 
     # Connections ======================================================
@@ -139,7 +141,6 @@ class ExtractingCtrl(QObject):
         slots that update the model accordingly.
         """
         # Once the user has finished editing the tag, update the AllExtractedData data
-        self.labelingView.extractionList.setModel(self.allDatasets)
         self.labelingView.tagChanged.connect(self.activeDataset.updateTag)
 
     def _modelUpdatedConnects(self):

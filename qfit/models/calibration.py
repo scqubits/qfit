@@ -184,6 +184,7 @@ class CaliParamModel(
         self._figNames = figNames
         self._rawXVecNameList = rawXVecNameList
         self._rawYName = rawYNames
+        self._determineCaliMode(self.rawXVecDim, self.figNr)
 
     def dynamicalInit(self,):
         """
@@ -202,12 +203,8 @@ class CaliParamModel(
             raise AttributeError("Measurement data not yet inited. At the moment, "
                                  "this method should be called after replaceMeasData.")
         
-        # determine total calibration table row number and if the calibration 
-        # is a complete one
-        self._determineCaliMode(self.rawXVecDim, self.figNr)
-
         # initialize calibration table entries
-        self.insertAllParams()
+        self._insertAllParams()
         self._updateXRowIdxBySourceDict()
 
     def _determineCaliMode(self, rawVecDim: int, figNr: int):
@@ -236,7 +233,7 @@ class CaliParamModel(
             f"X{XRowIdx+1}" for XRowIdx in range(self.caliTableXRowNr)
         ]
 
-    def insertAllParams(self):
+    def _insertAllParams(self):
         """
         Insert all calibration table parameters as a part of the initialization.
 
@@ -947,7 +944,7 @@ class CaliParamModel(
         is swapped.
         """
         self._rawYName, self._rawXVecNameList = self._rawXVecNameList[0], [self._rawYName]
-        self.insertAllParams()
+        self._insertAllParams()
         self._updateXRowIdxBySourceDict()
         self.caliModelRawVecUpdatedForSwapXY.emit()
 
