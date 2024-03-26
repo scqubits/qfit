@@ -365,10 +365,7 @@ class PrefitView(QObject):
 
         self.optionsConnects()
 
-    def dynamicalInit(
-        self,
-        subsysNames: List[str],
-    ):
+    def replaceHS(self, subsysNames: List[str]):
         """
         When the app is reloaded (new measurement data and hilbert space),
         the view will reinitialized by this method.

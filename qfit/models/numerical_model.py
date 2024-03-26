@@ -57,7 +57,31 @@ class QuantumModel(QObject):
         self._sweepThreadPool = QThreadPool()
         SweepRunner.signalHost.sweepFinished.connect(self._postSweepInThread)
 
-    def dynamicalInit(self, hilbertspace: HilbertSpace, figNames: List[str]):
+    def replaceHS(self, hilbertspace: HilbertSpace):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the model will reinitialized by this method.
+
+        Parameters
+        ----------
+        hilbertspace: HilbertSpace
+            HilbertSpace object
+        """
+        self.hilbertspace = hilbertspace
+
+    def replaceMeasData(self, figNames: List[str]):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the model will reinitialized by this method.
+
+        Parameters
+        ----------
+        figNames: List[str]
+            The names of the figures to be plotted.
+        """
+        self._figNames = figNames
+
+    def dynamicalInit(self):
         """
         When the app is reloaded (new measurement data and hilbert space),
         the model will reinitialized by this method.
@@ -69,10 +93,16 @@ class QuantumModel(QObject):
         figNames: List[str]
             The names of the figures to be plotted.
         """
-        self.hilbertspace = hilbertspace
-        self._figNames = figNames
-        self._currentFigName = self._figNames[0]
+        try:
+            self._currentFigName
+        except AttributeError:
+            raise AttributeError("Should call replaceMeasData first.")
+        try:
+            self.hilbertspace
+        except AttributeError:
+            raise AttributeError("Should call replaceHS first.")
 
+        self._currentFigName = self._figNames[0]
         self._initializeSweepIngredients()
 
     def _initializeSweepIngredients(self):

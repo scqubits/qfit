@@ -162,7 +162,7 @@ class FitHSParams(
         HSParamSet.__init__(self, FitParam)
         FitParamModelMixin.__init__(self, parent)
 
-    def dynamicalInit(self, hilbertspace: HilbertSpace):
+    def replaceHS(self, hilbertspace: HilbertSpace):
         """
         When the app is reloaded (new measurement data and hilbert space),
         the model will reinitialized by this method. It overrides the parent 

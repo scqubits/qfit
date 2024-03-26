@@ -22,7 +22,7 @@ from PySide6.QtCore import (
 )
 from typing import Tuple, Dict, Any, List, Union, Literal
 
-from qfit.models.parameter_set import ParamSet
+from qfit.models.parameter_set import ParamSet, SweepParamSet
 from qfit.models.data_structures import QMSweepParam, ParamAttr
 
 
@@ -75,16 +75,39 @@ class CalibrationView(QObject):
         self.caliTableSet = {}
         self._previousCheckedButtonIdx = None
 
-    def dynamicalInit(
+    def replaceHS(self, sweepParamSet: SweepParamSet):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the model will reinitialized by this method. It updates the 
+        HilbertSpace object.
+
+        Parameters
+        ----------
+        sweepParamSet: SweepParamSet
+            The sweep parameter set for the HilbertSpace.
+        """
+        self.sweepParamSet = sweepParamSet
+        self.sweepParamParentName = list(self.sweepParamSet.keys())[0]
+        self.sweepParamName = list(
+            self.sweepParamSet[self.sweepParamParentName].keys()
+        )[0]
+
+    def replaceMeasData(
         self,
         rawXVecNameList: List[str],
         rawYName: str,
         caliTableXRowNr: int,
-        sweepParamSet: ParamSet[QMSweepParam],
     ):
         """
         When the app is reloaded (new measurement data and hilbert space),
-        the calibration view will reinitialized by this method.
+        the model will reinitialized by this method. It replaces the figure 
+        names, determine the calibration mode, and reinitialize
+        the calibration table entries.
+
+        Note: For the moment, when the measurement data is updated, all of the 
+        properties will be re-initialized. We also assume that this method is 
+        called after the dynamicalInit method, so the sweep parameters are already
+        initialized.
 
         Parameters
         ----------
@@ -98,18 +121,16 @@ class CalibrationView(QObject):
             The number of rows in the calibration table. It is determined in
             the calibration model based on the number of raw vector components,
             number of figures and the number of sweep parameters.
-        sweepParamSet : ParamSet[QMSweepParam]
-            The sweep parameters for the calibration. 
         """
-        self.sweepParamSet = sweepParamSet
         self.caliTableXRowNr = caliTableXRowNr
-        self.sweepParamParentName = list(self.sweepParamSet.keys())[0]
-        self.sweepParamName = list(
-            self.sweepParamSet[self.sweepParamParentName].keys()
-        )[0]
         self.rawXVecNameList = rawXVecNameList
         self.rawYName = rawYName
 
+    def dynamicalInit(self,):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the model will reinitialized by this method.
+        """
         self.caliButtonGroup = QButtonGroup()
         self._generateRowIdxToButtonGroupIdDict()
         for Idx, button in self.calibrationButtons.items():

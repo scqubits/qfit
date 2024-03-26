@@ -136,19 +136,12 @@ class PlottingCtrl(QObject):
         self.measPlotSettingConnects()
         # self.uiXYZComboBoxesConnects()
 
-    def dynamicalInit(
-        self,
-    ):
+    def dynamicalInit(self):
         """
         When the app is reloaded (new measurement data and hilbert space),
         reinitialize the all relevant models and views.
-
-        Parameters
-        ----------
-        measurementData: List[MeasurementDataType]
-            The new measurement data
         """
-        self.measDataComboBoxesInit()
+        self.zComboBoxReload()
 
         # plot everything available
         self.measurementData.emitReadyToPlot()
@@ -161,7 +154,7 @@ class PlottingCtrl(QObject):
         self.updateCursor()
 
     # measurement ======================================================
-    def measDataComboBoxesInit(self):
+    def zComboBoxReload(self):
         """
         Load the available data into the combo boxes for the x, y, and z axes.
         """
@@ -237,6 +230,25 @@ class PlottingCtrl(QObject):
     # @Slot(int)
     # def yAxisUpdate(self, itemIndex: int):
     #     self.measurementData.setCurrentY(itemIndex)
+        
+    def updateMeasData(self, measData: List[MeasurementDataType]):
+        """
+        Update the measurement data with the new data. It will update the combo
+        boxes for the x, y, and z axes and plot the new data.
+        """
+        self.measurementData.replaceMeasData(measData)
+        self.zComboBoxReload()
+        self.setXYAxes(self.measurementData.currentMeasData)    
+
+
+    def switchMeasData(self, figName: str):
+        """
+        Switch the measurement data to the one with the given figure name. It will
+        update the combo boxes for the x, y, and z axes and plot the new data.
+        """
+        self.measurementData.switchMeasData(figName)
+        self.zComboBoxReload()
+        self.setXYAxes(self.measurementData.currentMeasData)    
 
     @Slot()
     def swapXY(self):

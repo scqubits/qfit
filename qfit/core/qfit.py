@@ -298,14 +298,31 @@ class Fit:
         hilbertspace: HilbertSpace,
         measurementData: List[MeasurementDataType],
     ):
-        self._measurementData.dynamicalInit(measurementData)
+        """
+        A collection of methods to reinitialize the app when new measurement data
+        and HilbertSpace object are loaded.
+        """
+        self._measurementData.replaceMeasData(measurementData)
         
-        self._calibrationCtrl.dynamicalInit(hilbertspace, measurementData)
-        self._extractingCtrl.dynamicalInit(hilbertspace, measurementData)
-        self._prefitCtrl.dynamicalInit(hilbertspace, measurementData)
-        self._fitCtrl.dynamicalInit(hilbertspace)
+        self._calibrationCtrl.replaceHS(hilbertspace)
+        self._calibrationCtrl.replaceMeasData(measurementData)
+        self._calibrationCtrl.dynamicalInit()
+
+        self._extractingCtrl.replaceHS(hilbertspace)
+        self._extractingCtrl.replaceMeasData(measurementData)
+        self._extractingCtrl.dynamicalInit()
+
+        self._prefitCtrl.replaceHS(hilbertspace)
+        self._prefitCtrl.replaceMeasData(measurementData)
+        self._prefitCtrl.dynamicalInit()
+
+        self._fitCtrl.replaceHS(hilbertspace)
+        self._fitCtrl.dynamicalInit()
+
         self._plottingCtrl.dynamicalInit()
-        self._ioCtrl.dynamicalInit(hilbertspace)
+
+        self._ioCtrl.replaceHS(hilbertspace)
+
         self._register()
 
         self._mainWindow.raise_()

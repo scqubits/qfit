@@ -31,6 +31,7 @@ class LabelingView(QObject):
         transitions, and the label for the bare label order.
     """
     tagChanged = Signal(Tag)
+    subsysNames: List[str]
 
     def __init__(
         self,
@@ -56,10 +57,11 @@ class LabelingView(QObject):
         self._tagChangedSignalConnects()
 
     # Initialization ===================================================
-    def dynamicalInit(self, subsysNames: List[str]):
+    def updateHS(self, subsysNames: List[str]):
         """
         When the app is reloaded (new measurement data and hilbert space),
-        the view will reinitialized by this method.
+        the model will reinitialized by this method. It updates the 
+        HilbertSpace object.
 
         Parameters  
         ----------
@@ -67,6 +69,17 @@ class LabelingView(QObject):
             names of the subsystems in the HilbertSpace object
         """
         self.subsysNames = subsysNames
+
+    def dynamicalInit(self):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the view will reinitialized by this method.
+        """
+        try: 
+            self.subsysNames
+        except AttributeError:
+            raise AttributeError("subsysNames not set. Call updateHS before "
+                                 "dynamicalInit.")
         self._initializeUI()
 
     def _initializeUI(self):

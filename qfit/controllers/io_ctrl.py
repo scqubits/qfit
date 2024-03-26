@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 
 from qfit.models.registry import Registry
 from qfit.widgets.menu import MenuWidget
-from qfit.utils.helpers import StopExecution
+from qfit.utils.helpers import StopExecution, makeUnique
 from qfit.utils.measurement_file_readers import readMeasurementFile
 import qfit.settings as settings
 
@@ -84,7 +84,7 @@ class IOCtrl(QObject):
 
         self.setConnects()
 
-    def dynamicalInit(self, hilbertspace: "HilbertSpace"):
+    def replaceHS(self, hilbertspace: "HilbertSpace"):
         """
         When the app is reloaded (new measurement data and hilbert space),
         reinitialize the all relevant models and views.
@@ -411,6 +411,8 @@ class IOCtrl(QObject):
         if from_menu:
             self.menu.toggle()
 
+        # later all of the followings will be moved to the MeasDataImporter Model
+        # =====================================================================
         # check if file exists
         if measurementFileName is not None:
             if isinstance(measurementFileName, str):
@@ -423,7 +425,7 @@ class IOCtrl(QObject):
             else:
                 raise ValueError("measurementFileName must be a string or a list of strings.")
 
-        # ask for a measurement file from dialog
+        # ask for measurement files from dialog
         if measurementFileName is None:
             measurementData = self._measurementDataFromDialog(windowInitialized=from_menu)
             if measurementData is None:
@@ -441,10 +443,17 @@ class IOCtrl(QObject):
                     raise FileNotFoundError(f"Can't load file '{file}'.")
                 measurementData.append(measData)
 
+        # rename the measurement data with repeated names
+        names = [measData.name for measData in measurementData]
+        uniqueNames = makeUnique(names)
+        for measData, name in zip(measurementData, uniqueNames):
+            measData.name = name
+
         if hilbertSpace is not None:
             self.hilbertSpace = hilbertSpace
 
         self.fullDynamicalInit(self.hilbertSpace, measurementData)
+        # =====================================================================
 
     @Slot()
     def openFile(

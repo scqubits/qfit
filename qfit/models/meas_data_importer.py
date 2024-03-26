@@ -30,7 +30,7 @@ from qfit.models.measurement_data import (
 from typing import Dict, Tuple, Union, List
 
 
-class FileReader:
+class MeasFileReader:
     def fromFile(self, fileName):
         pass
 
@@ -51,7 +51,7 @@ class FileReader:
     #     return False
 
 
-class ImageFileReader(FileReader):
+class ImageFileReader(MeasFileReader):
     def fromFile(self, fileName):
         """
         Use matplotlib to read image data from file.
@@ -59,10 +59,10 @@ class ImageFileReader(FileReader):
         _, fileStr = os.path.split(fileName)
         imageData = imread(fileName)
         
-        return ImageMeasurementData(fileStr, imageData)
+        return ImageMeasurementData(fileStr, imageData, fileName)
 
 
-class GenericH5Reader(FileReader):
+class GenericH5Reader(MeasFileReader):
     def fromFile(self, fileName) -> NumericalMeasurementData:
         """
         Read numerical data from h5 file. If the file is likely to be from Labber,
@@ -87,10 +87,10 @@ class GenericH5Reader(FileReader):
 
         _, fileStr = os.path.split(fileName)
 
-        return NumericalMeasurementData(fileStr, dataCollection)
+        return NumericalMeasurementData(fileStr, dataCollection, fileName)
 
 
-class LabberH5Reader(FileReader):
+class LabberH5Reader(MeasFileReader):
     def fromFile(self, fileName) -> NumericalMeasurementData:
         """
         Read numerical data from Labber h5 file. The file is assumed to have
@@ -136,21 +136,21 @@ class LabberH5Reader(FileReader):
                     dataCollection[names[3] + " " + entry] = array[:, 3, :]
 
         _, fileStr = os.path.split(fileName)
-        return NumericalMeasurementData(fileStr, dataCollection)
+        return NumericalMeasurementData(fileStr, dataCollection, fileName)
 
 
-class MatlabReader(FileReader):
+class MatlabReader(MeasFileReader):
     def fromFile(self, fileName) -> NumericalMeasurementData:
         """
         Read numerical data from .mat file, using scipy.io.loadmat.
         """
-        dataCollection = loadmat(fileName)
+        dataCollection = OrderedDictMod(loadmat(fileName))
         
         _, fileStr = os.path.split(fileName)
-        return NumericalMeasurementData(fileStr, dataCollection)
+        return NumericalMeasurementData(fileStr, dataCollection, fileName)
 
 
-class CSVReader(FileReader):
+class CSVReader(MeasFileReader):
     def fromFile(self, fileName):
         """
         Read numerical data from .csv file, using numpy.loadtxt.
@@ -158,7 +158,8 @@ class CSVReader(FileReader):
         _, fileStr = os.path.split(fileName)
         return NumericalMeasurementData(
             fileStr,
-            {fileName: np.loadtxt(fileName)}
+            OrderedDictMod({fileName: np.loadtxt(fileName)}),
+            fileName,
         )
 
 

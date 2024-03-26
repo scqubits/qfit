@@ -87,19 +87,28 @@ class FitCtrl(QObject):
         self._tableParamConnects()
         self._fitCtrlConnects()
 
-    def dynamicalInit(self, hilbertSpace: "HilbertSpace"):
+    def replaceHS(
+        self,   
+        hilbertSpace: "HilbertSpace",
+    ):
         """
         When the app is reloaded (new measurement data and hilbert space),
-        reinitialize the all relevant models and views. In particular, the
-        fitting parameters are initialized with the prefit parameters.
+        reinitialize the all relevant models and views.
         
         Parameters
         ----------
         hilbertSpace : HilbertSpace
             The HilbertSpace object.
         """
+        self.fitHSParams.replaceHS(hilbertSpace)
+
+    def dynamicalInit(self):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        reinitialize the all relevant models and views. In particular, the
+        fitting parameters are initialized with the prefit parameters.
+        """
         # build paramset
-        self.fitHSParams.dynamicalInit(hilbertSpace)
         self.fitHSParams.setAttrByParamSet(
             self.prefitHSParams.toFitParams(),
             insertMissing=True,

@@ -219,6 +219,23 @@ def remove_nones(dict_data):
     return {key: value for key, value in dict_data.items() if value is not None}
 
 
+def makeUnique(names):
+    """
+    Given a list of strings, return a list of unique strings by appending
+    a number to the end of the string if the string is not unique.
+    """
+    unique_names = []
+    for name in names:
+        if name not in unique_names:
+            unique_names.append(name)
+        else:
+            i = 1
+            while f"{name} ({i})" in unique_names:
+                i += 1
+            unique_names.append(f"{name} ({i})")
+    return unique_names
+
+
 # widgets ######################################################################
 def clearChildren(widget: QWidget):
     """

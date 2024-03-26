@@ -60,35 +60,63 @@ class CalibrationCtrl(QObject):
         self.pageButtons = pageButtons
         self.uiCalibrationConnects()
 
-    def dynamicalInit(
+    def replaceHS(
         self,
         hilbertspace: "HilbertSpace",
-        measurementData: List["MeasurementDataType"],
     ):
         """
         When the app is reloaded (new measurement data and hilbert space),
-        reinitialize the all relevant models and views.
+        the model will reinitialized by this method. It updates the 
+        HilbertSpace object.
 
         Parameters
         ----------
         hilbertspace : HilbertSpace
             The HilbertSpace object.
-        measurementData : List[MeasurementDataType]
-            The measurement data.
         """
-        self.caliParamModel.dynamicalInit(
-            hilbertSpace=hilbertspace,
+        sweepParamSet = SweepParamSet.initByHS(hilbertspace)
+        self.caliParamModel.replaceHS(sweepParamSet=sweepParamSet)
+        self.calibrationView.replaceHS(sweepParamSet=sweepParamSet)
+
+    def replaceMeasData(
+        self, measurementData: List["MeasurementDataType"]
+    ):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the model will reinitialized by this method. It replaces the figure 
+        names, determine the calibration mode, and reinitialize
+        the calibration table entries.
+
+        Note: For the moment, when the measurement data is updated, all of the 
+        properties will be re-initialized. We also assume that this method is 
+        called after the dynamicalInit method, so the sweep parameters are already
+        initialized.
+
+        Parameters
+        ----------
+        measurementData : List[MeasurementDataType]
+            The measurement data
+        """
+        self.caliParamModel.replaceMeasData(
+            figNames=[data.name for data in measurementData],
             rawXVecNameList=measurementData[0].rawXNames,
-            rawYName=measurementData[0].rawYNames[0],
-            figName=[data.name for data in measurementData],
+            rawYNames=measurementData[0].rawYNames[0],
         )
-        self.calibrationView.dynamicalInit(
+        self.calibrationView.replaceMeasData(
             rawXVecNameList=measurementData[0].rawXNames,
             rawYName=measurementData[0].rawYNames[0],
             caliTableXRowNr=self.caliParamModel.caliTableXRowNr,
-            sweepParamSet=SweepParamSet.initByHS(hilbertspace),
         )
-        self.caliParamModel.updateAllBoxes()
+
+        self.caliParamModel.emitAllUpdateBoxes()
+
+    def dynamicalInit(self,):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the model will reinitialized by this method. 
+        """
+        self.caliParamModel.dynamicalInit()
+        self.calibrationView.dynamicalInit()
 
     def uiCalibrationConnects(self):
         """

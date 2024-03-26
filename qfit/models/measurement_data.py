@@ -75,20 +75,22 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self._currentRow: int = 0
 
     # inits ============================================================
-    def dynamicalInit(self, measDatas: List["MeasurementDataType"]):
+    def replaceMeasData(self, measData: List["MeasurementDataType"]):
         """
-        When the app is reloaded (new measurement data and hilbert space),
-        the model will reinitialized by this method.
+        Update the measurement data, and emit the readyToPlot, relimCanvas,
+        and updateRawXMap signals.
 
-        Parameters
-        ----------
-        measDatas: List[MeasurementDataType]
-            list of measurement data with type NumericalMeasurementData or 
-            ImageMeasurementData
+        Note: For the moment, when the measurement data is updated, all of the 
+        properties will be re-initialized.
         """
-        self._data = measDatas
+        self._data = measData
+        self._currentRow = 0
+
         self.checkValidity()
-        
+        self.emitRelimCanvas()
+        self.emitRawXMap()
+        self.emitReadyToPlot()
+
     def checkValidity(self):
         """
         Check if the data is valid:
@@ -261,6 +263,21 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.emitReadyToPlot()
         self.emitRelimCanvas()
 
+    @Slot(str)
+    def switchMeasData(self, figName: str):
+        """
+        Switch the current measurement data by the name, and emit the
+        readyToPlot, relimCanvas, and updateRawXMap signals.
+        """
+        for i, data in enumerate(self._data):
+            if data.name == figName:
+                self._currentRow = i
+                break
+
+        self.emitReadyToPlot()
+        self.emitRelimCanvas()
+        self.emitRawXMap()
+
     @Slot()
     def swapXY(self):
         """
@@ -364,11 +381,12 @@ class MeasurementData(Registrable):
     _zMin = 0.0
     _zMax = 1.0
 
-    def __init__(self, name: str, rawData):
+    def __init__(self, figName: str, rawData, file: str):
         super().__init__()
 
-        self.name: str = name
+        self.name: str = figName
         self.rawData = rawData
+        self.file = file
 
     # properties =======================================================
     @property
@@ -722,8 +740,9 @@ class NumericalMeasurementData(MeasurementData):
         self,
         name: str,
         rawData: OrderedDictMod[str, np.ndarray],
+        file: str,
     ):
-        super().__init__(name, rawData)
+        super().__init__(name, rawData, file)
         self._initXYZ()
 
     # properties =======================================================
@@ -874,8 +893,8 @@ class ImageMeasurementData(MeasurementData):
     """
     rawData: np.ndarray
 
-    def __init__(self, name: str, image: np.ndarray):
-        super().__init__(name, image)
+    def __init__(self, name: str, image: np.ndarray, file: str):
+        super().__init__(name, image, file)
         self._initXYZ()
 
     def _initXYZ(self):

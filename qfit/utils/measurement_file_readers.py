@@ -85,7 +85,7 @@ class ImageFileReader(MeasFileReader):
         _, fileStr = os.path.split(fileName)
         imageData = imread(fileName)
         
-        return ImageMeasurementData(fileStr, imageData)
+        return ImageMeasurementData(fileStr, imageData, fileName)
 
 
 class GenericH5Reader(MeasFileReader):
@@ -113,7 +113,7 @@ class GenericH5Reader(MeasFileReader):
 
         _, fileStr = os.path.split(fileName)
 
-        return NumericalMeasurementData(fileStr, dataCollection)
+        return NumericalMeasurementData(fileStr, dataCollection, fileName)
 
 
 class LabberH5Reader(MeasFileReader):
@@ -162,7 +162,7 @@ class LabberH5Reader(MeasFileReader):
                     dataCollection[names[3] + " " + entry] = array[:, 3, :]
 
         _, fileStr = os.path.split(fileName)
-        return NumericalMeasurementData(fileStr, dataCollection)
+        return NumericalMeasurementData(fileStr, dataCollection, fileName)
 
 
 class MatlabReader(MeasFileReader):
@@ -170,10 +170,10 @@ class MatlabReader(MeasFileReader):
         """
         Read numerical data from .mat file, using scipy.io.loadmat.
         """
-        dataCollection = loadmat(fileName)
+        dataCollection = OrderedDictMod(loadmat(fileName))
         
         _, fileStr = os.path.split(fileName)
-        return NumericalMeasurementData(fileStr, dataCollection)
+        return NumericalMeasurementData(fileStr, dataCollection, fileName)
 
 
 class CSVReader(MeasFileReader):
@@ -184,5 +184,6 @@ class CSVReader(MeasFileReader):
         _, fileStr = os.path.split(fileName)
         return NumericalMeasurementData(
             fileStr,
-            {fileName: np.loadtxt(fileName)}
+            OrderedDictMod({fileName: np.loadtxt(fileName)}),
+            fileName,
         )

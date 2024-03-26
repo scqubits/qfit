@@ -55,12 +55,8 @@ class ExtractingCtrl(QObject):
         self._uiExtractedDataConnects()
         self._uiExtractedDataControlConnects()
 
-    # # initialization ===================================================
-    def dynamicalInit(
-        self, 
-        hilbertspace: "HilbertSpace",
-        measurementData: List["MeasurementDataType"]
-    ):
+    # initialization ===================================================
+    def replaceHS(self, hilbertspace: "HilbertSpace"):
         """
         When the app is reloaded (new measurement data and hilbert space),
         reinitialize the all relevant models and views.
@@ -69,17 +65,35 @@ class ExtractingCtrl(QObject):
         ----------
         hilbertspace : HilbertSpace
             The HilbertSpace object.
-        measurementData : List[MeasurementDataType]
-            The measurement data.
         """
-        self.allDatasets.dynamicalInit([data.name for data in measurementData])
-        self.labelingView.dynamicalInit(
+        self.labelingView.updateHS(
             [subsys.id_str for subsys in hilbertspace.subsystem_list],
         )
 
-        # mainly for cync the transition list with the model
-        self.labelingView.extractionList.setModel(self.allDatasets)
-        self.labelingView.extractionList.selectItem(0, blockSignals=True) # select the first row
+    def replaceMeasData(self, measurementData: List["MeasurementDataType"]):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        reinitialize the all relevant models and views.
+
+        Parameters
+        ----------
+        measurementData : List[MeasurementDataType]
+            The measurement data.
+        """
+        self.allDatasets.updateMeasData(
+            [data.name for data in measurementData]
+        )
+
+    def dynamicalInit(self):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        reinitialize the all relevant models and views.
+        """
+        self.labelingView.dynamicalInit()
+        self.allDatasets.dynamicalInit()
+        
+        # select the first row
+        self.labelingView.extractionList.selectItem(0, blockSignals=True) 
 
     # Connections ======================================================
     def _uiExtractedDataControlConnects(self):
@@ -125,6 +139,7 @@ class ExtractingCtrl(QObject):
         slots that update the model accordingly.
         """
         # Once the user has finished editing the tag, update the AllExtractedData data
+        self.labelingView.extractionList.setModel(self.allDatasets)
         self.labelingView.tagChanged.connect(self.activeDataset.updateTag)
 
     def _modelUpdatedConnects(self):

@@ -218,7 +218,7 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
 
         self._signalProcessing()
 
-    def dynamicalInit(
+    def updateMeasData(
         self,
         figNames: List[str],
     ):
@@ -232,6 +232,17 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
             The names of the figures.
         """
         self._figNames = figNames
+
+    def dynamicalInit(self,):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the model will reinitialized by this method.
+        """
+        try:
+            self._figNames
+        except AttributeError:
+            raise AttributeError("Should call updateMeasData before dynamicalInit")
+
         self._initFullSpectra()
 
         self._currentFigName = self._figNames[0]
