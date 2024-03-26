@@ -182,7 +182,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         to the current x values.
         """
         self.updateRawXMap.emit({
-            data.name: data.rawXByCurrentX for data in self._data
+            data.name: data.rawXByPrincipalX for data in self._data
         })
 
     @Slot(bool)
@@ -252,12 +252,12 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.emitReadyToPlot()
 
     @Slot(int)
-    def setCurrentZ(self, itemIndex: int):
+    def setPrincipalZ(self, itemIndex: int):
         """
         Set the current measurement data, and emit the readyToPlot signal, 
         and relimCanvas signal.
         """
-        self.currentMeasData.setCurrentZ(itemIndex)
+        self.currentMeasData.setPrincipalZ(itemIndex)
         self.emitReadyToPlot()
         self.emitRelimCanvas()
 
@@ -330,6 +330,7 @@ class MeasurementData(Registrable):
         that rawY has only one element, which is the frequency axis.        
     """
 
+    # candidates: all possible x, y, and z data that are compatible in shape
     _zCandidates: OrderedDictMod[
         str, np.ndarray
     ] = OrderedDictMod()  # dict of 2d ndarrays
@@ -340,11 +341,15 @@ class MeasurementData(Registrable):
         str, np.ndarray
     ] = OrderedDictMod()  # dict of 1d ndarrays
 
+    # raw data: the selected x, y, and z data, indicating the actual tuning
+    # parameters and the measurement data
     _rawXNames: List[str]
     _rawYName: List[str]
     rawX: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
     rawY: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
 
+    # principal data: the z data that are used to plot and the x, y data that
+    # serves as coordinates in the plot
     _principalZ: DictItem
     _principalX: DictItem     # x axis that has the largest change
     _principalY: DictItem     
@@ -355,7 +360,6 @@ class MeasurementData(Registrable):
     _topHatFilter = False
     _waveletFilter = False
     _edgeFilter = False
-
     _logColoring = False
     _zMin = 0.0
     _zMax = 1.0
@@ -415,7 +419,7 @@ class MeasurementData(Registrable):
         """
         return self._principalY
 
-    def setCurrentZ(self, itemIndex):
+    def setPrincipalZ(self, itemIndex):
         """
         Set the current z dataset by index.
         """
@@ -483,16 +487,59 @@ class MeasurementData(Registrable):
             return array.transpose(1, 0, 2)
         else:
             raise ValueError("array must be 2D or 3D")
+    
+    def setRawXY(
+        self, 
+        xNames: List[str],
+        yName: str,
+    ):
+        """
+        Given the names of the x axis candidates, set the raw x axis names and
+        the principal x axis.
+        """
+        # check if the names are valid
+        if not all([name in self._xCandidates.keyList for name in xNames]):
+            raise ValueError("Invalid raw x axis names as not all are in "
+                             "the x axis candidate list")
+        if yName not in self._yCandidates.keyList:
+            raise ValueError("Invalid raw y axis name as it is not in the y "
+                             "axis candidate list")
+        if yName in xNames:
+            raise ValueError("The raw x and y axis names must be different")
 
+        self._rawXNames = xNames
+        self._rawYName = [yName]
+
+        # reset the principal x axis
+        self._resetPrincipalXY()
+        
+    def _resetPrincipalXY(self):
+        """
+        The principal x axis corresponds to the x axis that has the
+        largest change in the data.
+        Since there should only be one y axis, the principal y axis is
+        the first y axis.
+        """
+        if len(self.rawX) > 1:
+            idx = np.argmax(
+                [
+                    np.abs(data[-1] - data[0])
+                    for data in self.rawX.values()
+                ]
+            )
+            self._principalX = self.rawX.itemByIndex(int(idx))
+        else:
+            self._principalX = self.rawX.itemByIndex(0)
+
+        self._principalY = self.rawY.itemByIndex(0)
 
     def swapXY(self):
         """
         Swap the x and y axes and transpose the zData array.
         """
-        if len(self.rawX) > 1:
-            raise ValueError(
-                "Cannot swap x and y axes if there are multiple x-axis candidates"
-            )
+        # if the user have already selected multiple x axes, we will only
+        # keep the first one, as y axis is unique
+        self._rawXNames = self._rawXNames[:1]
 
         swappedZCandidates = {
             key: self._transposeZ(array) for key, array in self._zCandidates.items()
@@ -500,23 +547,24 @@ class MeasurementData(Registrable):
         self._zCandidates = OrderedDictMod(swappedZCandidates)
         self._principalZ.data = self._transposeZ(self._principalZ.data)
 
-        self.rawX, self.rawY = self.rawY, self.rawX
-        self._principalX, self._principalY = self._principalY, self._principalX
+        self._xCandidates, self._yCandidates = self._yCandidates, self._xCandidates
+        self._rawXNames, self._rawYName = self._rawYName, self._rawXNames
+        self._resetPrincipalXY()
 
-    def rawXByCurrentX(self, currentX: float) -> OrderedDictMod[str, float]:
+    def rawXByPrincipalX(self, principalX: float) -> OrderedDictMod[str, float]:
         """
         Return the raw x values corresponding to the current x values.
 
         Parameters
         ----------
-        currentX: float
-            current x value
+        principalX: float
+            the value of the principal x axis
 
         Returns
         -------
         OrderedDictMod[str, float]
         """
-        fraction = (currentX - self.principalX.data[0]) / (
+        fraction = (principalX - self.principalX.data[0]) / (
             self.principalX.data[-1] - self.principalX.data[0]
         )
         rawX = OrderedDictMod()
@@ -773,26 +821,6 @@ class NumericalMeasurementData(MeasurementData):
         if self._rawXNames == self._rawYName:
             self._rawYName = self._yCandidates.keyList[1:2]
 
-    def _resetPrincipalXY(self):
-        """
-        The principal x axis corresponds to the x axis that has the
-        largest change in the data.
-        Since there should only be one y axis, the principal y axis is
-        the first y axis.
-        """
-        if len(self.rawX) > 1:
-            idx = np.argmax(
-                [
-                    np.abs(data[-1] - data[0])
-                    for data in self.rawX.values()
-                ]
-            )
-            self._principalX = self.rawX.itemByIndex(int(idx))
-        else:
-            self._principalX = self.rawX.itemByIndex(0)
-
-        self._principalY = self.rawY.itemByIndex(0)
-
     def _initXYZ(self):
         """
         From the raw data, find the zData, xData, and yData candidates and their compatibles.
@@ -802,31 +830,6 @@ class NumericalMeasurementData(MeasurementData):
 
         self._findXYCandidates()
         self._initRawXY()
-        self._resetPrincipalXY()
-
-    def setRawXY(
-        self, 
-        xNames: List[str],
-        yName: str,
-    ):
-        """
-        Given the names of the x axis candidates, set the raw x axis names and
-        the principal x axis.
-        """
-        # check if the names are valid
-        if not all([name in self._xCandidates.keyList for name in xNames]):
-            raise ValueError("Invalid raw x axis names as not all are in "
-                             "the x axis candidate list")
-        if yName not in self._yCandidates.keyList:
-            raise ValueError("Invalid raw y axis name as it is not in the y "
-                             "axis candidate list")
-        if yName in xNames:
-            raise ValueError("The raw x and y axis names must be different")
-
-        self._rawXNames = xNames
-        self._rawYName = [yName]
-
-        # reset the principal x axis
         self._resetPrincipalXY()
     
     # plotting =========================================================
@@ -883,16 +886,18 @@ class ImageMeasurementData(MeasurementData):
         self._zCandidates = OrderedDictMod({self.name: self.rawData})
         self._principalZ = self._zCandidates.itemByIndex(0)
 
-        # note that the x and y axis for images are swapped
-        ydim, xdim, _ = self._principalZ.data.shape
-        self.rawX = OrderedDictMod(pixel_coord_1=np.arange(xdim))
-        self.rawY = OrderedDictMod(pixel_coord_2=np.arange(ydim))
-        self._principalX = self.rawX.itemByIndex(0)
-        self._principalY = self.rawY.itemByIndex(0)
+        # since there is no x and y axis data, we use pixel coordinates
+        ydim, xdim = self._principalZ.data.shape[:2]
+        self._xCandidates = OrderedDictMod(pixel_coord_1=np.arange(xdim))
+        self._yCandidates = OrderedDictMod(pixel_coord_2=np.arange(ydim))
+        self._rawXNames = ["pixel_coord_1"]
+        self._rawYName = ["pixel_coord_2"]
+        self._resetPrincipalXY()
 
     def _processRawZ(self, zData: np.ndarray) -> np.ndarray:
         """
-        Convert a 3d array to a 2d array by averaging over the third dimension.
+        Check the dimensions of the zData array and process it by
+        - inversing the y axis
         """
         assert zData.ndim in [2, 3], "zData must be a 2d or 3d array"
 

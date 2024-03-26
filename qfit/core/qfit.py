@@ -1,7 +1,7 @@
 import sys
 import os
 from copy import deepcopy as _deepcopy
-from typing import Union, Dict, Any, Dict, List
+from typing import Union, Dict, Any, Dict, List, Optional
 
 from PySide6.QtWidgets import QApplication
 
@@ -76,6 +76,24 @@ else:
 
 
 class Fit:
+    """
+    The main class to run the qfit application. 
+
+    Parameters
+    ----------
+    hilbertSpace: HilbertSpace
+        The superconducting circuit model you want to fit with, should be 
+        a `HilbertSpace` object from `scqubits`
+    measurementFileName: Optional[str | List[str]]
+        The names of the measurement files you want to load. If left blank,
+        a window will pop up to ask for files.
+
+    Returns
+    -------
+    Fit
+        A `Fit` object. You can export the parameters and the HilbertSpace object
+        after fitting by calling `exportParameters` and `exportHilbertSpace` methods.
+    """
     app: Union[QApplication, None] = None
     _mainWindow: MainWindow
 
@@ -102,7 +120,9 @@ class Fit:
         return instance
 
     def __init__(
-        self, hilbertSpace: HilbertSpace, measurementFileName: Union[str, None] = None
+        self, 
+        hilbertSpace: HilbertSpace, 
+        measurementFileName: Optional[str | List[str]] = None
     ):
         self._mainWindow: MainWindow
             
@@ -278,11 +298,13 @@ class Fit:
         hilbertspace: HilbertSpace,
         measurementData: List[MeasurementDataType],
     ):
+        self._measurementData.dynamicalInit(measurementData)
+        
         self._calibrationCtrl.dynamicalInit(hilbertspace, measurementData)
         self._extractingCtrl.dynamicalInit(hilbertspace, measurementData)
         self._prefitCtrl.dynamicalInit(hilbertspace, measurementData)
         self._fitCtrl.dynamicalInit(hilbertspace)
-        self._plottingCtrl.dynamicalInit(measurementData)
+        self._plottingCtrl.dynamicalInit()
         self._ioCtrl.dynamicalInit(hilbertspace)
         self._register()
 

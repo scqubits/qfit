@@ -138,7 +138,6 @@ class PlottingCtrl(QObject):
 
     def dynamicalInit(
         self,
-        measurementData: List["MeasurementDataType"],
     ):
         """
         When the app is reloaded (new measurement data and hilbert space),
@@ -149,7 +148,6 @@ class PlottingCtrl(QObject):
         measurementData: List[MeasurementDataType]
             The new measurement data
         """
-        self.measurementData.dynamicalInit(measurementData)
         self.measDataComboBoxesInit()
 
         # plot everything available
@@ -159,7 +157,7 @@ class PlottingCtrl(QObject):
         self.activeDataset.emitReadyToPlot()
         self.allDatasets.emitReadyToPlot()
         self.allDatasets.emitFocusChanged()  # update the snapX
-        self.setXYAxes()
+        self.setXYAxes(self.measurementData.currentMeasData)
         self.updateCursor()
 
     # measurement ======================================================
@@ -229,7 +227,7 @@ class PlottingCtrl(QObject):
         """
         Update the z axis of the measurement data. 
         """
-        self.measurementData.setCurrentZ(itemIndex)
+        self.measurementData.setPrincipalZ(itemIndex)
         # self.setupXYDataBoxes()
 
     # @Slot(int)
@@ -286,9 +284,9 @@ class PlottingCtrl(QObject):
         """
 
         self.calibrateAxes = checked
-        self.setXYAxes()
+        self.setXYAxes(self.measurementData.currentMeasData)
 
-    def setXYAxes(self):
+    def setXYAxes(self, measData: MeasurementDataType):
         """
         Update the x and y axes of the canvas based on the current measurement data
         and the calibration functions.
@@ -298,8 +296,8 @@ class PlottingCtrl(QObject):
             # not yet initialized
             return
 
-        rawX = self.measurementData.currentMeasData.rawX
-        rawY = self.measurementData.currentMeasData.rawY
+        rawX = measData.rawX
+        rawY = measData.rawY
         rawXLim = {key: (val[0], val[-1]) for key, val in rawX.items()}
         rawYLim = rawY.itemByIndex(0)   # only have one key
         
@@ -336,6 +334,117 @@ class PlottingCtrl(QObject):
 
         self.mplCanvas.updateXAxes(mappedXLim)
         self.mplCanvas.updateYAxes(mappedYName, mappedYLim)
+
+    def onXCaliFuncUpdated(self, XCaliFuncDict: Dict[str, "SweepParamSet"]):
+        """Update the X calibration function and the labels on the canvas."""
+        self.XCaliFuncDict = XCaliFuncDict
+        self.setXYAxes(self.measurementData.currentMeasData)
+
+    def onYCaliFuncUpdated(self, YCaliFunc: Callable, invYCaliFunc: Callable):
+        """Update the Y calibration function and the labels on the canvas."""
+        self.YCaliFunc = YCaliFunc
+        self.invYCaliFunc = invYCaliFunc
+        self.setXYAxes(self.measurementData.currentMeasData)
+
+    def storeCalibrationPoint(self, xName, yName, xData, yData):
+        """
+        Store the calibration point to the calibration model. Perform the following:
+        - snap the x value
+        - update the calibration data
+
+        """
+        rawX = self.measurementData.currentMeasData.rawXByPrincipalX(xData)
+        rawXYDict = rawX | {yName: yData}
+
+        # model: update the calibration data
+        self.calibrationModel.processSelectedPtFromPlot(
+                data=rawXYDict, figName=self.measurementData.currentMeasData.name
+            )
+        # the above will then trigger the update the view:
+        # turn off highlighting, set value, etc
+
+        # controller: update the status
+        self.dataDestination = "NONE"
+
+    # extracted data ==================================================
+    def storeExtractedPoint(
+        self, xName: str, yName: str, xData: float, yData: float
+    ):
+        """
+        Store the extracted point to the active dataset. Perform the following:
+        - snap the x value
+        - remove the point if it is close to another point
+        - snap the y value
+
+        Parameters
+        ----------
+        xName: str
+            The name of the x axis
+        yName: str
+            The name of the y axis
+        xData: float
+            The x value of the extracted point
+        yData: float
+            The y value of the extracted point
+        """
+        allPoints = self.activeDataset.allPoints()
+
+        # x snap
+        xData = self.mplCanvas.specialCursor.snapToProperX(xData)
+        rawX = self.measurementData.currentMeasData.rawXByPrincipalX(xData)
+        if not self.xSnapTool:
+            # turn on the horizontal snap automatically, if the user turned it off
+            self.canvasTools["snapX"].setChecked(True)
+
+        # remove the point if it is close to another point
+        for index, x2y2 in enumerate(allPoints.transpose()):
+            if self.isRelativelyClose(np.array([xData, yData]), x2y2):
+                self.activeDataset.remove(index)
+                return
+
+        # y snap
+        if self.canvasTools["snapY"].isChecked():
+            x_list = self.measurementData.currentMeasData.principalX.data
+            y_list = self.measurementData.currentMeasData.principalY.data
+            z_data = self.measurementData.currentMeasData.principalZ.data
+
+            # calculate half index range as 5x linewidth
+            linewidth = 0.01  # GHz
+            half_y_range = self.invYCaliFunc(linewidth * 5) - self.invYCaliFunc(0)
+
+            # snap the y value
+            yData = ySnap(
+                    x_list=x_list,
+                    y_list=y_list,
+                    z_data=z_data,
+                    user_selected_xy=(xData, yData),
+                    half_y_range=half_y_range,
+                    mode="lorentzian",
+                )
+
+        self.activeDataset.append(
+            OrderedDictMod({xName: xData, yName: yData}),
+            rawX,
+        )
+
+    def isRelativelyClose(self, x1y1: np.ndarray, x2y2: np.ndarray):
+        """Check whether the point x1y1 is relatively close to x2y2, given the current
+        field of view on the canvas."""
+        xlim = self.axes.get_xlim()
+        ylim = self.axes.get_ylim()
+
+        xmin, xmax = xlim
+        ymin, ymax = ylim
+        xrange = xmax - xmin
+        yrange = ymax - ymin
+        x1y1 = x1y1 / [xrange, yrange]
+        x2y2 = x2y2 / [xrange, yrange]
+
+        distance = np.linalg.norm(x1y1 - x2y2)
+        if distance < 0.025:
+            return True
+
+        return False
 
     # plotting =========================================================
     def plotElementsConnects(self):
@@ -563,100 +672,11 @@ class PlottingCtrl(QObject):
         xdata, ydata = self.axes.transData.inverted().transform((event.x, event.y))
         xName = self.measurementData.currentMeasData.principalX.name
         yName = self.measurementData.currentMeasData.principalY.name
-        xyDict = OrderedDictMod({xName: xdata, yName: ydata})
-        rawX = self.measurementData.currentMeasData.rawXByCurrentX(xdata)
-        rawXYDict = rawX | xyDict  # needed by calibration data
-
-        # calibration mode
-        if self.dataDestination in ["CALI_X", "CALI_Y"]:
-            # model: update the calibration data
-            self.calibrationModel.processSelectedPtFromPlot(
-                data=rawXYDict, figName=self.measurementData.currentMeasData.name
-            )
-            # the above will then trigger the update the view:
-            # turn off highlighting, set value, etc
-
-            # controller: update the status
-            self.dataDestination = "NONE"
-            return
 
         # select mode
         if self.dataDestination == "EXTRACT":
-            current_data = self.activeDataset.allPoints()
-
-            # x snap
-            snappedX = self.mplCanvas.specialCursor.snapToProperX(xdata)
-            xyDict[xName] = snappedX
-            rawX = self.measurementData.currentMeasData.rawXByCurrentX(snappedX)
-            if not self.xSnapTool:
-                # turn on the horizontal snap automatically, if the user turned it off
-                self.canvasTools["snapX"].setChecked(True)
-
-            # remove the point if it is close to another point
-            for index, x2y2 in enumerate(current_data.transpose()):
-                if self.isRelativelyClose(np.array(xyDict.valList), x2y2):
-                    self.activeDataset.remove(index)
-                    return
-
-            # y snap
-            if self.canvasTools["snapY"].isChecked():
-                x_list = self.measurementData.currentMeasData.principalX.data
-                y_list = self.measurementData.currentMeasData.principalY.data
-                z_data = self.measurementData.currentMeasData.principalZ.data
-
-                # calculate half index range as 5x linewidth
-                linewidth = 0.01  # GHz
-                half_y_range = self.invYCaliFunc(linewidth * 5) - self.invYCaliFunc(0)
-
-                # snap the y value
-                snapped_y1 = ySnap(
-                    x_list=x_list,
-                    y_list=y_list,
-                    z_data=z_data,
-                    user_selected_xy=xyDict.valList,
-                    half_y_range=half_y_range,
-                    mode="lorentzian",
-                )
-                xyDict[yName] = snapped_y1
-
-            self.activeDataset.append(xyDict, rawX)
-
-    # @Slot()
-    # def canvasMouseMonitoring(self, event):
-    #     self.axes.figure.canvas.flush_events()
-    #     print(event.xdata, event.ydata)
-    #     if not self.xSnapTool:
-    #         return
-
-    #     if event.xdata is None or event.ydata is None:
-    #         return
-
-    def onXCaliFuncUpdated(self, XCaliFuncDict: Dict[str, "SweepParamSet"]):
-        """Update the X calibration function and the labels on the canvas."""
-        self.XCaliFuncDict = XCaliFuncDict
-        self.setXYAxes()
-
-    def onYCaliFuncUpdated(self, YCaliFunc: Callable, invYCaliFunc: Callable):
-        """Update the Y calibration function and the labels on the canvas."""
-        self.YCaliFunc = YCaliFunc
-        self.invYCaliFunc = invYCaliFunc
-        self.setXYAxes()
-
-    def isRelativelyClose(self, x1y1: np.ndarray, x2y2: np.ndarray):
-        """Check whether the point x1y1 is relatively close to x2y2, given the current
-        field of view on the canvas."""
-        xlim = self.axes.get_xlim()
-        ylim = self.axes.get_ylim()
-
-        xmin, xmax = xlim
-        ymin, ymax = ylim
-        xrange = xmax - xmin
-        yrange = ymax - ymin
-        x1y1 = x1y1 / [xrange, yrange]
-        x2y2 = x2y2 / [xrange, yrange]
-
-        distance = np.linalg.norm(x1y1 - x2y2)
-        if distance < 0.025:
-            return True
-
-        return False
+            return self.storeExtractedPoint(xName, yName, xdata, ydata)
+        
+        # calibration mode
+        if self.dataDestination in ["CALI_X", "CALI_Y"]:
+            return self.storeCalibrationPoint(xName, yName, xdata, ydata)

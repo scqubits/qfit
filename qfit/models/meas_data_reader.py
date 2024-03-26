@@ -160,11 +160,14 @@ class CSVReader(FileReader):
             fileStr,
             {fileName: np.loadtxt(fileName)}
         )
- 
 
-class MeasDataReader(QObject):
+
+class MeasDataImporter(QObject):
     """
-    A class to load multiple data files and process their contents, including 
+    A class to load multiple data files. It is connected to a ListView in the 
+    GUI, which displays the list of data files to be loaded. The user can add 
+    or remove files from the list. 
+    Users can process these data, including 
     - select Z data, a two dimension array
     - select X and Y axis, they are one-dimension-like arrays that has 
         length compatible with Z data. Note that there may be multiple X axis 
@@ -179,12 +182,12 @@ class MeasDataReader(QObject):
     ) -> None:
         super().__init__(parent)
 
-        self._dataFiles = []
+        self._data: List[MeasurementDataType] = []
 
-        self._compatibleXNames = []
-        self._compatibleYNames = []
-        self._xNames = []
-        self._yNames = []
+        self._xCandidateNames: List[str] = []
+        self._yCandidateNames: List[str] = []
+        self._xNames: List[str] = []
+        self._yNames: List[str] = []
 
     # read ==============================================================
     @staticmethod
@@ -230,4 +233,17 @@ class MeasDataReader(QObject):
         fileName: str
             Name of the file to be loaded.
         """
-        rawData = self._rawDataFromFile(fileName)
+        pass
+
+    def removeDataFile(self, index: int) -> None:
+        """
+        Remove a data file from the list of files to be loaded.
+
+        Parameters
+        ----------
+        index: int
+            Index of the file to be removed.
+        """
+        pass
+
+    # process ===========================================================

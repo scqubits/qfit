@@ -121,7 +121,7 @@ class IOCtrl(QObject):
         self,
         home=None,
         windowInitialized=False,
-    ) -> Union["MeasurementDataType", None]:
+    ) -> List["MeasurementDataType"] | None:
         """
         Open a dialog to select a file, then read the measurement data from the file.
 
@@ -138,29 +138,34 @@ class IOCtrl(QObject):
 
         while True:
             fileCategories = "Data files (*.h5 *.mat *.csv *.jpg *.jpeg *.png *.hdf5)"
-            fileName, _ = QFileDialog.getOpenFileName(
+            fileNames, _ = QFileDialog.getOpenFileNames(
                 self.mainWindow, "Open", home, fileCategories
             )
-            if not fileName:
+            if not fileNames:
                 if not windowInitialized:
                     self._closeAppAfterSaving()
                     raise StopExecution
                 else:
                     return None
 
-            measurementData = readMeasurementFile(fileName)
+            measurementData = []
+            for fileName in fileNames:
+                measData = readMeasurementFile(fileName)
 
-            if measurementData is None:
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Warning)
-                msg.setText("Error opening file.")
-                msg.setInformativeText(
-                    "The selected file format is supported, but heuristic inspection "
-                    "failed to identify suitable data inside the file."
-                )
-                msg.setWindowTitle("Error")
-                _ = msg.exec_()
-            else:
+                if measData is None:
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Warning)
+                    msg.setText("Error opening file.")
+                    msg.setInformativeText(
+                        "The selected file format is supported, but heuristic inspection "
+                        "failed to identify suitable data inside the file."
+                    )
+                    msg.setWindowTitle("Error")
+                    _ = msg.exec_()
+                else:
+                    measurementData.append(measData)
+
+            if len(measurementData) == len(fileNames):
                 break
 
         # set the focus to the main window after opening a file
@@ -387,7 +392,7 @@ class IOCtrl(QObject):
         __value=None, 
         from_menu: bool = True, 
         hilbertSpace: Optional["HilbertSpace"] = None,
-        measurementFileName: Optional[str] = None,
+        measurementFileName: Optional[str | List[str]] = None,
     ):
         """
         Open a dialog to select a measurement file, then create a new project.
@@ -408,8 +413,15 @@ class IOCtrl(QObject):
 
         # check if file exists
         if measurementFileName is not None:
-            if not os.path.isfile(measurementFileName):
-                raise FileNotFoundError(f"File '{measurementFileName}' does not exist.")
+            if isinstance(measurementFileName, str):
+                if not os.path.isfile(measurementFileName):
+                    raise FileNotFoundError(f"File '{measurementFileName}' does not exist.")
+            elif isinstance(measurementFileName, list):
+                for file in measurementFileName:
+                    if not os.path.isfile(file):
+                        raise FileNotFoundError(f"File '{file}' does not exist.")
+            else:
+                raise ValueError("measurementFileName must be a string or a list of strings.")
 
         # ask for a measurement file from dialog
         if measurementFileName is None:
@@ -417,15 +429,22 @@ class IOCtrl(QObject):
             if measurementData is None:
                 # dialog will handle this and we just do nothing
                 return
-        else:
-            measurementData = readMeasurementFile(measurementFileName)
-            if measurementData is None:
+        elif isinstance(measurementFileName, str):
+            measurementData = [readMeasurementFile(measurementFileName)]
+            if measurementData[0] is None:
                 raise FileNotFoundError(f"Can't load file '{measurementFileName}'.")
+        else:
+            measurementData = []
+            for file in measurementFileName:
+                measData = readMeasurementFile(file)
+                if measData is None:
+                    raise FileNotFoundError(f"Can't load file '{file}'.")
+                measurementData.append(measData)
 
         if hilbertSpace is not None:
             self.hilbertSpace = hilbertSpace
 
-        self.fullDynamicalInit(self.hilbertSpace, [measurementData])
+        self.fullDynamicalInit(self.hilbertSpace, measurementData)
 
     @Slot()
     def openFile(
