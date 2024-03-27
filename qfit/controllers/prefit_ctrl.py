@@ -81,7 +81,7 @@ class PrefitCtrl(QObject):
         hilbertSpace : HilbertSpace
             The HilbertSpace object.
         """
-        self._buildParamSet(hilbertspace)
+        self._buildHSParamSet(hilbertspace)
         self.prefitView.replaceHS(
             subsysNames=[
                 SweepParamSet.parentSystemNames(subsys)
@@ -116,6 +116,8 @@ class PrefitCtrl(QObject):
 
         Finally, it updates the view and the quantum model.
         """
+        self._inheritCaliParams()
+        
         self.prefitParamView.insertSliderMinMax(
             self.prefitHSParams.paramNamesDict(),
             self.prefitCaliParams.paramNamesDict(),
@@ -220,7 +222,7 @@ class PrefitCtrl(QObject):
         self.prefitCaliParams.updateCaliModel.connect(self.caliParamModel.setParamByPA)
         self.caliParamModel.updatePrefitModel.connect(self.prefitCaliParams.setParamByPA)
 
-    def _buildParamSet(self, hilbertspace: "HilbertSpace"):
+    def _buildHSParamSet(self, hilbertspace: "HilbertSpace"):
         """
         Identify prefit slider parameters for the HilbertSpace object. For 
         now, we only accept one tunable parameter (flux or ng) in the
@@ -270,7 +272,9 @@ class PrefitCtrl(QObject):
             )
             self.mainWindow.close()
 
-        # initialize calibration sliders
+
+    def _inheritCaliParams(self,):
+        # initialize calibration parameters
         self.prefitCaliParams.setAttrByParamSet(
             self.caliParamModel.toPrefitParams(),
             insertMissing=True,

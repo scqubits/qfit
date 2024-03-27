@@ -296,39 +296,47 @@ class Fit:
         # set shadows for all buttons
         self._setShadows()
 
-    def _dynamicalInit(
-        self,
-        hilbertspace: HilbertSpace,
-        measurementData: List[MeasurementDataType],
-    ):
+    def _replaceHS(self, hilbertspace: HilbertSpace):
         """
-        A collection of methods to reinitialize the app when new measurement data
-        and HilbertSpace object are loaded.
+        A collection of methods to replace the HilbertSpace object in the app,
+        it is part of the initialization process.
+        """
+        self._quantumModel.replaceHS(hilbertspace)
+        self._calibrationCtrl.replaceHS(hilbertspace)
+        self._extractingCtrl.replaceHS(hilbertspace)
+        self._prefitCtrl.replaceHS(hilbertspace)
+        self._fitCtrl.replaceHS(hilbertspace)
+
+    def _replaceMeasData(self, measurementData: List[MeasurementDataType]):
+        """
+        A collection of methods to replace the measurement data in the app,
+        it is part of the initialization process.
         """
         self._measData.replaceMeasData(measurementData)
-        
-        self._calibrationCtrl.replaceHS(hilbertspace)
         self._calibrationCtrl.replaceMeasData(measurementData)
-        self._calibrationCtrl.dynamicalInit()
-
-        self._extractingCtrl.replaceHS(hilbertspace)
         self._extractingCtrl.replaceMeasData(measurementData)
-        self._extractingCtrl.dynamicalInit()
-
-        self._prefitCtrl.replaceHS(hilbertspace)
         self._prefitCtrl.replaceMeasData(measurementData)
+
+    def _dynamicalInit(self):
+        """
+        A collection of methods to reinitialize the app when new measurement data
+        and HilbertSpace object are loaded. It must be called after the 
+        `_replaceHS` and `_replaceMeasData` methods.
+        """
+        self._calibrationCtrl.dynamicalInit()
+        self._extractingCtrl.dynamicalInit()
         self._prefitCtrl.dynamicalInit()
-
-        self._fitCtrl.replaceHS(hilbertspace)
         self._fitCtrl.dynamicalInit()
-
         self._plottingCtrl.dynamicalInit()
-
-        self._ioCtrl.replaceHS(hilbertspace)
 
         self._register()
 
         self._mainWindow.raise_()
+
+    def _fullDynamicalInit(self, hilbertspace: HilbertSpace, measurementData: List[MeasurementDataType]):
+        self._replaceHS(hilbertspace)
+        self._replaceMeasData(measurementData)
+        self._dynamicalInit()
 
     def _register(self):
         """
@@ -660,7 +668,7 @@ class Fit:
             self._mainWindow,
             models = (self._measImporter, self._registry),
             views = (self._mainUi.toggleMenuButton, self._menuUi, self._mainWindow),
-            fullDynamicalInit=self._dynamicalInit,
+            fullDynamicalInit=self._fullDynamicalInit,
         )
 
     def _statusMVCInits(self):

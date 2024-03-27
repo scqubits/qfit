@@ -339,7 +339,6 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         """
         Emit readyToPlot signal with the plot element
         """
-        print("emitReadyToPlot")
         self.readyToPlot.emit(self.generatePlotElement())
 
     def emitReadyToPlotX(self, *args):
@@ -507,7 +506,6 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         readyToPlot signal. For the inactive extracted data, it's a scatter
         plot of the data points with a "x" marker.
         """
-        print(f"{len(self._currentSpectrum)}")
         spectra = copy(self._currentSpectrum)
         spectra.pop(self.currentRow)
         all_data = spectra.allDataConcated()
