@@ -100,7 +100,7 @@ class CalibrationView(QObject):
     def replaceHS(self, sweepParamSet: SweepParamSet):
         """
         When the app is reloaded (new measurement data and hilbert space),
-        the model will reinitialized by this method. It updates the 
+        the model will reinitialized by this method. It updates the
         HilbertSpace object.
 
         Parameters
@@ -109,10 +109,15 @@ class CalibrationView(QObject):
             The sweep parameter set for the HilbertSpace.
         """
         self.sweepParamSet = sweepParamSet
-        self.sweepParamParentName = list(self.sweepParamSet.keys())[0]
-        self.sweepParamName = list(
-            self.sweepParamSet[self.sweepParamParentName].keys()
-        )[0]
+        self.sweepParamParentNames: List[str] = []
+        self.sweepParamNames: List[str] = []
+        self.sweepParamCombinedNames: List[str] = []
+        # create a list for all sweep parameters and their parent names
+        for parentName, sweepParamDict in self.sweepParamSet.items():
+            for sweepParamName, sweepParam in sweepParamDict.items():
+                self.sweepParamParentNames.append(parentName)
+                self.sweepParamNames.append(sweepParamName)
+                self.sweepParamCombinedNames.append(f"{parentName}.{sweepParamName}")
 
     def replaceMeasData(
         self,
@@ -122,12 +127,12 @@ class CalibrationView(QObject):
     ):
         """
         When the app is reloaded (new measurement data and hilbert space),
-        the model will reinitialized by this method. It replaces the figure 
+        the model will reinitialized by this method. It replaces the figure
         names, determine the calibration mode, and reinitialize
         the calibration table entries.
 
-        Note: For the moment, when the measurement data is updated, all of the 
-        properties will be re-initialized. We also assume that this method is 
+        Note: For the moment, when the measurement data is updated, all of the
+        properties will be re-initialized. We also assume that this method is
         called after the dynamicalInit method, so the sweep parameters are already
         initialized.
 
@@ -148,11 +153,31 @@ class CalibrationView(QObject):
         self.rawXVecNameList = rawXVecNameList
         self.rawYName = rawYName
 
-    def dynamicalInit(self,):
+    def dynamicalInit(
+        self,
+    ):
         """
         When the app is reloaded (new measurement data and hilbert space),
         the model will reinitialized by this method.
         """
+        # generate the X calibration table
+        self.XParamItems = self._generateXParamItems()
+        self.caliXTable = FoldableTable(
+            self.XParamItems,
+            paramNumPerRow=1,
+            groupNames=["X"],
+        )
+        self.caliXTable.setCheckable(False)
+        self.caliXTable.setChecked(False)
+
+        # insert parameters
+        for rowIdx in range(self.caliTableXRowNr):
+            self.caliXTable.insertParams("X", f"X{rowIdx+1}")
+
+        # add the table to the scroll area
+        self.caliXScrollLayout.addWidget(self.caliXTable)
+
+        # set calibration button group
         self.caliButtonGroup = QButtonGroup()
         self._generateRowIdxToButtonGroupIdDict()
         # identify the buttons in the x calibration table
