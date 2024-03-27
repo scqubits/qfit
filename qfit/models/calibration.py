@@ -74,6 +74,13 @@ class CaliParamModel(
     parent: QObject
         The parent object.
     """
+    _figNames: List[str]
+    _rawXVecNameList: List[str]
+    _rawYName: str
+    _sweepParamSet: SweepParamSet
+    _sweepParamParentName: str
+    _sweepParamName: str
+
     plotCaliPtExtractStart = Signal(str)
     plotCaliPtExtractFinished = Signal(str, dict)
     plotCaliPtExtractInterrupted = Signal()
@@ -85,9 +92,9 @@ class CaliParamModel(
 
     isFullCalibration: bool
     caliTableXRowNr: int
-    caliTableXRowIdxList: List[str]
-    caliTableYRowIdxList: List[str] = ["Y1", "Y2"]
-    xRowIdxBySourceDict: Dict[str, List[str]] = {}
+    _caliTableXRowIdxList: List[str]
+    _caliTableYRowIdxList: List[str] = ["Y1", "Y2"]
+    _xRowIdxBySourceDict: Dict[str, List[str]] = {}
 
     parameters: Dict[str, Dict[str, CaliTableRowParam]]
 
@@ -133,49 +140,74 @@ class CaliParamModel(
         self.caliStatus = False
 
     # initialize =======================================================
-    def dynamicalInit(
-        self,
-        hilbertSpace: "HilbertSpace",
-        rawXVecNameList: List[str],
-        rawYName: str,
-        figName: List[str],
-    ):
+    def replaceHS(self, sweepParamSet: SweepParamSet):
         """
         When the app is reloaded (new measurement data and hilbert space),
-        the model will reinitialized by this method.
+        the model will reinitialized by this method. It updates the 
+        HilbertSpace object.
 
         Parameters
         ----------
-        hilbertSpace: HilbertSpace
-            The hilbert space object.
-        rawXVecNameList: List[str]
-            The names of the raw vector components.
-        rawYName: str
-            The name of the raw Y component.
-        figName: List[str]
-            The names of the figures.
+        sweepParamSet: SweepParamSet
+            The sweep parameter set for the HilbertSpace.
         """
-        self.hilbertSpace = hilbertSpace
-        self.rawXVecNameList = rawXVecNameList
-        self.rawYName = rawYName
-        self.figName = figName
-        self.sweepParamSet = SweepParamSet.initByHS(hilbertSpace)
-        self.sweepParamParentName = list(self.sweepParamSet.keys())[0]
-        self.sweepParamName = list(
-            self.sweepParamSet[self.sweepParamParentName].keys()
+        self._sweepParamSet = sweepParamSet
+        self._sweepParamParentName = list(self._sweepParamSet.keys())[0]
+        self._sweepParamName = list(
+            self._sweepParamSet[self._sweepParamParentName].keys()
         )[0]
 
-        # determine total calibration table row number and if the calibration is a complete one
+    def replaceMeasData(
+        self, 
+        figNames: List[str],
+        rawXVecNameList: List[str],
+        rawYNames: str,
+    ):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the model will reinitialized by this method. It replaces the figure 
+        names, determine the calibration mode, and reinitialize
+        the calibration table entries.
 
-        self._isSufficientForFullCalibration(self.rawXVecDim, self.figNr)
+        Note: For the moment, when the measurement data is updated, all of the 
+        properties will be re-initialized.
 
+        Parameters
+        ----------
+        figName: List[str]
+            The new figure names.
+        rawXVecNameList: List[str]
+            The new raw vector component names.
+        rawYNames: str
+            The new raw Y component name.
+        """
+        self._figNames = figNames
+        self._rawXVecNameList = rawXVecNameList
+        self._rawYName = rawYNames
+        self._determineCaliMode(self.rawXVecDim, self.figNr)
+
+    def dynamicalInit(self,):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the model will reinitialized by this method. It erase all the data
+        input from the user and reinitialize the calibration table entries.
+        """
+        try:
+            self._sweepParamSet
+        except AttributeError:
+            raise AttributeError("HilbertSpace not yet inited. At the moment, "
+                                 "this method should be called after replaceHS.")
+        try:
+            self._figNames
+        except AttributeError:
+            raise AttributeError("Measurement data not yet inited. At the moment, "
+                                 "this method should be called after replaceMeasData.")
+        
         # initialize calibration table entries
-        self.insertAllParams()
-
+        self._insertAllParams()
         self._updateXRowIdxBySourceDict()
-        # self.paramDict = self.toParamDict()
 
-    def _isSufficientForFullCalibration(self, rawVecDim: int, figNr: int):
+    def _determineCaliMode(self, rawVecDim: int, figNr: int):
         """
         Determine if the calibration data is sufficient for a full calibration. For a full
         calibration, the number of points required is equal to the number of voltages + 1.
@@ -197,11 +229,11 @@ class CaliParamModel(
         else:
             self.isFullCalibration = True
             self.caliTableXRowNr = pointsRequired
-        self.caliTableXRowIdxList = [
+        self._caliTableXRowIdxList = [
             f"X{XRowIdx+1}" for XRowIdx in range(self.caliTableXRowNr)
         ]
 
-    def insertAllParams(self):
+    def _insertAllParams(self):
         """
         Insert all calibration table parameters as a part of the initialization.
 
@@ -214,9 +246,9 @@ class CaliParamModel(
             self.clear()
 
         # insert calibration table parameters for each row for X
-        for XRowIdx, XRowIdxName in enumerate(self.caliTableXRowIdxList):
+        for XRowIdx, XRowIdxName in enumerate(self._caliTableXRowIdxList):
             # loop over the raw vector components
-            for rawVecCompIdx, rawVecCompName in enumerate(self.rawXVecNameList):
+            for rawVecCompIdx, rawVecCompName in enumerate(self._rawXVecNameList):
                 rawXValue = 1.0 if rawVecCompIdx == (XRowIdx - 1) else 0.0
                 self._insertParamByArgs(
                     colName=rawVecCompName,
@@ -228,7 +260,7 @@ class CaliParamModel(
                 )
             # loop over the mapped vector components (given by sweep parameters)
             mapXVecIdx = 0
-            for parentName, paramDictByParent in self.sweepParamSet.items():
+            for parentName, paramDictByParent in self._sweepParamSet.items():
                 for paramName, param in paramDictByParent.items():
                     mapXValue = 1.0 if mapXVecIdx == (XRowIdx - 1) else 0.0
                     self._insertParamByArgs(
@@ -258,15 +290,15 @@ class CaliParamModel(
                     paramType="data_source",
                     parentSystemName=None,
                     sweepParamName=None,
-                    value=self.figName[int(XRowIdxName[1:]) // 2],
+                    value=self._figNames[int(XRowIdxName[1:]) // 2],
                 )
         # insert calibration table parameters for Y: raw vector,
-        for YRowIdx, YRowIdxName in enumerate(self.caliTableYRowIdxList):
+        for YRowIdx, YRowIdxName in enumerate(self._caliTableYRowIdxList):
             # loop over 2 values only
             rawYValue = 0.0 if YRowIdx == 0 else 1.0
             mapYValue = rawYValue
             self._insertParamByArgs(
-                colName=self.rawYName,
+                colName=self._rawYName,
                 rowName=YRowIdxName,
                 paramType="raw_Y",
                 parentSystemName=None,
@@ -323,15 +355,15 @@ class CaliParamModel(
     # property =========================================================
     @property
     def rawXVecDim(self) -> int:
-        return len(self.rawXVecNameList)
+        return len(self._rawXVecNameList)
 
     @property
     def figNr(self) -> int:
-        return len(self.figName)
+        return len(self._figNames)
 
     @property
     def sweepParamNr(self) -> int:
-        return len(self.sweepParamSet)
+        return len(self._sweepParamSet)
 
     def _prefitHas(self, rowName: str, colName: str) -> bool:
         """
@@ -543,7 +575,7 @@ class CaliParamModel(
         augRawYMat = np.zeros((2, 2))
         for YRowIdx in range(2):
             augRawYMat[YRowIdx, 0] = 1
-            augRawYMat[YRowIdx, 1] = self[f"Y{YRowIdx+1}"][self.rawYName].value
+            augRawYMat[YRowIdx, 1] = self[f"Y{YRowIdx+1}"][self._rawYName].value
         # gather all the point pair mapped value and solve alphaVec by inversion
         mapCompVec = np.zeros(2)
         for YRowIdx in range(2):
@@ -574,19 +606,19 @@ class CaliParamModel(
         """
         # gather all the point pair rawVec and construct the augmented rawMat
         augRawXMat = np.zeros((self.caliTableXRowNr, self.rawXVecDim + 1))
-        for XRowIdx, xRowName in enumerate(self.caliTableXRowIdxList):
+        for XRowIdx, xRowName in enumerate(self._caliTableXRowIdxList):
 
             augRawXMat[XRowIdx, 0] = 1
-            for colIdx, rawXVecCompName in enumerate(self.rawXVecNameList):
+            for colIdx, rawXVecCompName in enumerate(self._rawXVecNameList):
                 augRawXMat[XRowIdx, colIdx + 1] = self[xRowName][rawXVecCompName].value
         # loop over sweep parameters
         # assemble sweep parameter set, add sweep parameters to the parameter set
 
         sweepParamSetFromCali = SweepParamSet()
-        for parentName, paramDictByParent in self.sweepParamSet.items():
+        for parentName, paramDictByParent in self._sweepParamSet.items():
             for paramName, param in paramDictByParent.items():
                 sweepParamSetFromCali._insertParamByArgs(
-                    parent=self.sweepParamSet.parentObjByName[parentName],
+                    parent=self._sweepParamSet.parentObjByName[parentName],
                     paramName=paramName,
                     value=param.value,
                     paramType=param.paramType,
@@ -594,7 +626,7 @@ class CaliParamModel(
                 )
                 # gather all the point pair mapVec and solve alphaVec by inversion
                 mapCompVec = np.zeros(self.caliTableXRowNr)
-                for XRowIdx, xRowName in enumerate(self.caliTableXRowIdxList):
+                for XRowIdx, xRowName in enumerate(self._caliTableXRowIdxList):
                     mapCompVec[XRowIdx] = self[xRowName][
                         f"{parentName}.{paramName}"
                     ].value
@@ -603,7 +635,7 @@ class CaliParamModel(
                 # first get the order of the raw vector components
                 rawVecCompIdxDict = {
                     Idx: rawVecCompName
-                    for Idx, rawVecCompName in enumerate(self.rawXVecNameList)
+                    for Idx, rawVecCompName in enumerate(self._rawXVecNameList)
                 }
 
                 def fullCalibration(rawXVecDict: Dict[str, float]) -> float:
@@ -623,7 +655,7 @@ class CaliParamModel(
                     fullCalibration
                 )
         sweepParamSetByFig: Dict[str, SweepParamSet] = {}
-        for fig in self.figName:
+        for fig in self._figNames:
             sweepParamSetByFig[fig] = sweepParamSetFromCali
         return sweepParamSetByFig
 
@@ -649,12 +681,12 @@ class CaliParamModel(
         """
         sweepParamSetByFig: Dict[str, SweepParamSet] = {}
         # loop over all the figures
-        for fig in self.figName:
+        for fig in self._figNames:
             # get the row indices for the figure
-            XRowIdxList = self.xRowIdxBySourceDict[fig]
+            XRowIdxList = self._xRowIdxBySourceDict[fig]
             # this row index list should have length 2; extract the two rows
             rawXVecPairValues = {}
-            for rawXVecCompName in self.rawXVecNameList:
+            for rawXVecCompName in self._rawXVecNameList:
                 rawXVecCompValue1 = self[XRowIdxList[0]][rawXVecCompName].value
                 rawXVecCompValue2 = self[XRowIdxList[1]][rawXVecCompName].value
                 rawXVecPairValues[rawXVecCompName] = [
@@ -668,7 +700,7 @@ class CaliParamModel(
             )
             # assemble sweep parameter set, add sweep parameters to the parameter set
             sweepParamSetFromCali = SweepParamSet()
-            for parentName, paramDictByParent in self.sweepParamSet.items():
+            for parentName, paramDictByParent in self._sweepParamSet.items():
                 for paramName, param in paramDictByParent.items():
                     # extract mapped vector pair values
                     mapXVecCompValue1 = self[XRowIdxList[0]][
@@ -678,7 +710,7 @@ class CaliParamModel(
                         f"{parentName}.{paramName}"
                     ].value
                     sweepParamSetFromCali._insertParamByArgs(
-                        parent=self.sweepParamSet.parentObjByName[parentName],
+                        parent=self._sweepParamSet.parentObjByName[parentName],
                         paramName=paramName,
                         value=param.value,
                         paramType=param.paramType,
@@ -758,10 +790,10 @@ class CaliParamModel(
         """
         Update the rowIdxSourceDict, which stores the row indices for each figure.
         """
-        self.xRowIdxBySourceDict = {}
+        self._xRowIdxBySourceDict = {}
 
-        for fig in self.figName:
-            self.xRowIdxBySourceDict[fig] = [
+        for fig in self._figNames:
+            self._xRowIdxBySourceDict[fig] = [
                 XRowIdx
                 for XRowIdx in self.caliTableXRowIdxList
                 if fig == self[XRowIdx]["dataSource"].value
@@ -817,7 +849,7 @@ class CaliParamModel(
         # if the current label is int, then it is for X
         if type(caliLabel) is str:
             if caliLabel[0] == "X":
-                for rawXVecCompName in self.rawXVecNameList:
+                for rawXVecCompName in self._rawXVecNameList:
                     # this contains updatebox
                     self.setParameter(
                         rowIdx=caliLabel,
@@ -829,9 +861,9 @@ class CaliParamModel(
                 # this contains updatebox
                 self.setParameter(
                     rowIdx=caliLabel,
-                    colName=self.rawYName,
+                    colName=self._rawYName,
                     attr="value",
-                    value=data[self.rawYName],
+                    value=data[self._rawYName],
                 )
             # update source for the point pair
             self.setParameter(
@@ -911,8 +943,8 @@ class CaliParamModel(
         Update the raw vector names for the calibration model when the XY data
         is swapped.
         """
-        self.rawYName, self.rawXVecNameList = self.rawXVecNameList[0], [self.rawYName]
-        self.insertAllParams()
+        self._rawYName, self._rawXVecNameList = self._rawXVecNameList[0], [self._rawYName]
+        self._insertAllParams()
         self._updateXRowIdxBySourceDict()
         self.caliModelRawVecUpdatedForSwapXY.emit()
 
@@ -927,47 +959,47 @@ class CaliParamModel(
         # will send the signals after the swap is done
         self.blockSignals(True)
 
-        oldX1RawValue = self.parameters["X1"][self.rawXVecNameList[0]].value
-        oldX2RawValue = self.parameters["X2"][self.rawXVecNameList[0]].value
+        oldX1RawValue = self.parameters["X1"][self._rawXVecNameList[0]].value
+        oldX2RawValue = self.parameters["X2"][self._rawXVecNameList[0]].value
         oldX1MapValue = self.parameters["X1"][
-            f"{self.sweepParamParentName}.{self.sweepParamName}"
+            f"{self._sweepParamParentName}.{self._sweepParamName}"
         ].value
         oldX2MapValue = self.parameters["X2"][
-            f"{self.sweepParamParentName}.{self.sweepParamName}"
+            f"{self._sweepParamParentName}.{self._sweepParamName}"
         ].value
-        oldY1RawValue = self.parameters["Y1"][self.rawYName].value
-        oldY2RawValue = self.parameters["Y2"][self.rawYName].value
+        oldY1RawValue = self.parameters["Y1"][self._rawYName].value
+        oldY2RawValue = self.parameters["Y2"][self._rawYName].value
         oldY1MapValue = self.parameters["Y1"]["mappedY"].value
         oldY2MapValue = self.parameters["Y2"]["mappedY"].value
         self.setParameter(
             rowIdx="X1",
-            colName=self.rawXVecNameList[0],
+            colName=self._rawXVecNameList[0],
             attr="value",
             value=oldY1RawValue,
         )
         self.setParameter(
             rowIdx="X2",
-            colName=self.rawXVecNameList[0],
+            colName=self._rawXVecNameList[0],
             attr="value",
             value=oldY2RawValue,
         )
         self.setParameter(
             rowIdx="X1",
-            colName=f"{self.sweepParamParentName}.{self.sweepParamName}",
+            colName=f"{self._sweepParamParentName}.{self._sweepParamName}",
             attr="value",
             value=oldY1MapValue,
         )
         self.setParameter(
             rowIdx="X2",
-            colName=f"{self.sweepParamParentName}.{self.sweepParamName}",
+            colName=f"{self._sweepParamParentName}.{self._sweepParamName}",
             attr="value",
             value=oldY2MapValue,
         )
         self.setParameter(
-            rowIdx="Y1", colName=self.rawYName, attr="value", value=oldX1RawValue
+            rowIdx="Y1", colName=self._rawYName, attr="value", value=oldX1RawValue
         )
         self.setParameter(
-            rowIdx="Y2", colName=self.rawYName, attr="value", value=oldX2RawValue
+            rowIdx="Y2", colName=self._rawYName, attr="value", value=oldX2RawValue
         )
         self.setParameter(
             rowIdx="Y1", colName="mappedY", attr="value", value=oldX1MapValue
@@ -983,7 +1015,7 @@ class CaliParamModel(
         self.sendYCaliFunc()
         self.emitUpdatePrefitModel()
 
-    def updateAllBoxes(self):
+    def emitAllUpdateBoxes(self):
         """
         need to be updated in the future to cope with case where the data source
         is provided as a table entry.

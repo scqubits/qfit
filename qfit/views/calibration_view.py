@@ -26,7 +26,7 @@ from PySide6.QtCore import QObject, Signal, Slot, Qt
 
 from typing import Tuple, Dict, Any, List, Union, Literal, Type
 
-from qfit.models.parameter_set import ParamSet
+from qfit.models.parameter_set import ParamSet, SweepParamSet
 from qfit.models.data_structures import QMSweepParam, ParamAttr
 
 from qfit.widgets.custom_table import FoldableTable, CollectionType, WidgetCollection
@@ -97,16 +97,39 @@ class CalibrationView(QObject):
         self.caliXScrollLayout = self.caliXScrollAreaWidget.layout()
         self.caliXScrollLayout.setAlignment(Qt.AlignTop)
 
-    def dynamicalInit(
+    def replaceHS(self, sweepParamSet: SweepParamSet):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the model will reinitialized by this method. It updates the 
+        HilbertSpace object.
+
+        Parameters
+        ----------
+        sweepParamSet: SweepParamSet
+            The sweep parameter set for the HilbertSpace.
+        """
+        self.sweepParamSet = sweepParamSet
+        self.sweepParamParentName = list(self.sweepParamSet.keys())[0]
+        self.sweepParamName = list(
+            self.sweepParamSet[self.sweepParamParentName].keys()
+        )[0]
+
+    def replaceMeasData(
         self,
         rawXVecNameList: List[str],
         rawYName: str,
         caliTableXRowNr: int,
-        sweepParamSet: ParamSet[QMSweepParam],
     ):
         """
         When the app is reloaded (new measurement data and hilbert space),
-        the calibration view will reinitialized by this method.
+        the model will reinitialized by this method. It replaces the figure 
+        names, determine the calibration mode, and reinitialize
+        the calibration table entries.
+
+        Note: For the moment, when the measurement data is updated, all of the 
+        properties will be re-initialized. We also assume that this method is 
+        called after the dynamicalInit method, so the sweep parameters are already
+        initialized.
 
         Parameters
         ----------
@@ -120,42 +143,16 @@ class CalibrationView(QObject):
             The number of rows in the calibration table. It is determined in
             the calibration model based on the number of raw vector components,
             number of figures and the number of sweep parameters.
-        sweepParamSet : ParamSet[QMSweepParam]
-            The sweep parameters for the calibration.
         """
-        # unload and process necessary attributes
-        self.sweepParamSet = sweepParamSet
         self.caliTableXRowNr = caliTableXRowNr
-        self.sweepParamParentNames: List[str] = []
-        self.sweepParamNames: List[str] = []
-        self.sweepParamCombinedNames: List[str] = []
-        # create a list for all sweep parameters and their parent names
-        for parentName, sweepParamDict in self.sweepParamSet.items():
-            for sweepParamName, sweepParam in sweepParamDict.items():
-                self.sweepParamParentNames.append(parentName)
-                self.sweepParamNames.append(sweepParamName)
-                self.sweepParamCombinedNames.append(f"{parentName}.{sweepParamName}")
         self.rawXVecNameList = rawXVecNameList
         self.rawYName = rawYName
 
-        # generate the X calibration table
-        self.XParamItems = self._generateXParamItems()
-        self.caliXTable = FoldableTable(
-            self.XParamItems,
-            paramNumPerRow=1,
-            groupNames=["X"],
-        )
-        self.caliXTable.setCheckable(False)
-        self.caliXTable.setChecked(False)
-
-        # insert parameters
-        for rowIdx in range(self.caliTableXRowNr):
-            self.caliXTable.insertParams("X", f"X{rowIdx+1}")
-
-        # add the table to the scroll area
-        self.caliXScrollLayout.addWidget(self.caliXTable)
-
-        # set calibration button group
+    def dynamicalInit(self,):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        the model will reinitialized by this method.
+        """
         self.caliButtonGroup = QButtonGroup()
         self._generateRowIdxToButtonGroupIdDict()
         # identify the buttons in the x calibration table

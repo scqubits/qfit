@@ -219,6 +219,35 @@ def remove_nones(dict_data):
     return {key: value for key, value in dict_data.items() if value is not None}
 
 
+def makeUnique(names: List[str]):
+    """
+    Given a list of strings, return a list of unique strings by appending
+    a number to the end of the string if the string is not unique.
+
+    Example: ["a", "b", "a", "b"] -> ["a", "b", "a (1)", "b (1)"]
+
+    Parameters
+    ----------
+    names: List[str]
+        A list of strings.
+
+    Returns
+    -------
+    List[str]
+        A list of unique strings in the same order as the input list.
+    """
+    unique_names = []
+    for name in names:
+        if name not in unique_names:
+            unique_names.append(name)
+        else:
+            i = 1
+            while f"{name} ({i})" in unique_names:
+                i += 1
+            unique_names.append(f"{name} ({i})")
+    return unique_names
+
+
 # widgets ######################################################################
 def clearChildren(widget: QWidget):
     """
@@ -422,7 +451,7 @@ def _find_lorentzian_peak(data: np.ndarray, gamma_guess=5.0) -> int:
         idx_list,
         data,
         p0=[mid_idx_guess, gamma_guess, amp_guess, bias_guess],
-        maxfev=1000,
+        maxfev=300,
     )
 
     if np.sum(pcov) == np.inf:

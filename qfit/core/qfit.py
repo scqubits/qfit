@@ -1,7 +1,7 @@
 import sys
 import os
 from copy import deepcopy as _deepcopy
-from typing import Union, Dict, Any, Dict, List
+from typing import Union, Dict, Any, Dict, List, Optional
 
 from PySide6.QtWidgets import QApplication
 
@@ -26,6 +26,11 @@ from qfit.widgets.settings import SettingsWidget
 
 # paging:
 from qfit.views.paging_view import PageView
+
+# measurement data
+from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
+from qfit.models.meas_data_importer import MeasDataImporter
+from qfit.controllers.meas_data_ctrl import MeasDataCtrl
 
 # calibration:
 from qfit.models.calibration import CaliParamModel
@@ -62,9 +67,6 @@ from qfit.models.registry import Registry
 # menu controller
 from qfit.controllers.io_ctrl import IOCtrl
 
-# measurement data
-from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
-
 import qfit.settings as settings
 if executed_in_ipython():
     # inside ipython, the function get_ipython is always in globals()
@@ -76,6 +78,24 @@ else:
 
 
 class Fit:
+    """
+    The main class to run the qfit application. 
+
+    Parameters
+    ----------
+    hilbertSpace: HilbertSpace
+        The superconducting circuit model you want to fit with, should be 
+        a `HilbertSpace` object from `scqubits`
+    measurementFileName: Optional[str | List[str]]
+        The names of the measurement files you want to load. If left blank,
+        a window will pop up to ask for files.
+
+    Returns
+    -------
+    Fit
+        A `Fit` object. You can export the parameters and the HilbertSpace object
+        after fitting by calling `exportParameters` and `exportHilbertSpace` methods.
+    """
     app: Union[QApplication, None] = None
     _mainWindow: MainWindow
 
@@ -102,7 +122,9 @@ class Fit:
         return instance
 
     def __init__(
-        self, hilbertSpace: HilbertSpace, measurementFileName: Union[str, None] = None
+        self, 
+        hilbertSpace: HilbertSpace, 
+        measurementFileName: Optional[str | List[str]] = None
     ):
         self._mainWindow: MainWindow
             
@@ -231,8 +253,6 @@ class Fit:
     # models, views and controllers ####################################
     # ##################################################################
     def _MVCInit(self):
-        self._measurementData = MeasDataSet([])
-
         # main ui
         self._mainUi = Ui_MainWindow()
         self._mainUi.setupUi(self._mainWindow)
@@ -246,6 +266,9 @@ class Fit:
 
         # help button
         self._helpButtonMVCInits()
+
+        # measurement data
+        self._measDataMVCInits()
 
         # calibration - should be inited after prefit, as it requires a sweep parameter set
         self._calibrationMVCInits()
@@ -276,15 +299,52 @@ class Fit:
         hilbertspace: HilbertSpace,
         measurementData: List[MeasurementDataType],
     ):
-        self._calibrationCtrl.dynamicalInit(hilbertspace, measurementData)
-        self._extractingCtrl.dynamicalInit(hilbertspace, measurementData)
-        self._prefitCtrl.dynamicalInit(hilbertspace, measurementData)
-        self._fitCtrl.dynamicalInit(hilbertspace)
-        self._plottingCtrl.dynamicalInit(measurementData)
-        self._ioCtrl.dynamicalInit(hilbertspace)
+        """
+        A collection of methods to reinitialize the app when new measurement data
+        and HilbertSpace object are loaded.
+        """
+        self._measData.replaceMeasData(measurementData)
+        
+        self._calibrationCtrl.replaceHS(hilbertspace)
+        self._calibrationCtrl.replaceMeasData(measurementData)
+        self._calibrationCtrl.dynamicalInit()
+
+        self._extractingCtrl.replaceHS(hilbertspace)
+        self._extractingCtrl.replaceMeasData(measurementData)
+        self._extractingCtrl.dynamicalInit()
+
+        self._prefitCtrl.replaceHS(hilbertspace)
+        self._prefitCtrl.replaceMeasData(measurementData)
+        self._prefitCtrl.dynamicalInit()
+
+        self._fitCtrl.replaceHS(hilbertspace)
+        self._fitCtrl.dynamicalInit()
+
+        self._plottingCtrl.dynamicalInit()
+
+        self._ioCtrl.replaceHS(hilbertspace)
+
         self._register()
 
         self._mainWindow.raise_()
+
+    def _register(self):
+        """
+        register the entire app
+        """
+        # clear the registry
+        self._registry.clear()
+
+        # register the models
+        self._registry.register(self._quantumModel.hilbertspace)
+        self._registry.register(self._measData)
+        self._registry.register(self._caliParamModel)
+        self._registry.register(self._allDatasets)
+        self._registry.register(self._prefitHSParams)
+        self._registry.register(self._fitHSParams)
+        self._registry.register(self._prefitCaliParams)
+        self._registry.register(self._fitCaliParams)
+        self._registry.register(self._mainWindow)
 
     # ui setup #########################################################
     def _setShadows(self):
@@ -325,7 +385,7 @@ class Fit:
             eff.setColor(QColor(0, 0, 0, 90))
             widget.setGraphicsEffect(eff)
 
-    # menu #############################################################
+    # MVC Inits for all components #####################################
     def _pagingMVCInits(self):
         """
         Set up an instance of PageView.
@@ -353,14 +413,12 @@ class Fit:
             self._pageStackedWidgets,
         )
 
-    # settings #########################################################
     def _settingsMVCInit(self):
         self._settingUi = SettingsWidget(self._mainWindow)
         self._settingsCtrl = SettingsCtrl(
             self._mainWindow, self._settingUi, self._mainUi.settingsPushButton
         )
 
-    # help button and gif tooltip ######################################
     def _helpButtonMVCInits(self):
         self._helpButtons = {
             "calibration": self._mainUi.calibrationHelpPushButton,
@@ -369,8 +427,18 @@ class Fit:
         }
         self._helpButtonCtrl = HelpButtonCtrl(self._mainWindow, self._helpButtons)
 
-    # calibration ####################################
-    ####################################################################
+    def _measDataMVCInits(self):
+        """
+        Set up an instance of MeasurementData.
+        """
+        self._measImporter = MeasDataImporter(self._mainWindow)
+        self._measData = MeasDataSet([])
+
+        self._measDataCtrl = MeasDataCtrl(
+            self._mainWindow,
+            (self._measImporter, self._measData),
+        )
+
     def _calibrationMVCInits(self):
         """
         Set up an instance of CalibrationData and CalibrationView.
@@ -406,7 +474,6 @@ class Fit:
             self._pageButtons,
         )
 
-    # extract and tag ##################################################
     def _extractingMVCInits(self):
         """Set up the main class instances holding the data extracted from placing
         markers on the canvas. The AllExtractedData instance holds all data, whereas the
@@ -456,11 +523,10 @@ class Fit:
 
         self._extractingCtrl = ExtractingCtrl(
             self._mainWindow,
-            (self._allDatasets, self._activeDataset),
+            (self._allDatasets, self._activeDataset, self._measData),
             self._labelingView,
         )
 
-    # Pre-fit ##########################################################
     def _prefitMVCInits(self):
         # UI grouping
         self._prefitOptions = {
@@ -491,18 +557,13 @@ class Fit:
         self._prefitCtrl = PrefitCtrl(
             self._mainWindow,
             (
-                self._quantumModel,
-                self._prefitHSParams,
-                self._prefitCaliParams,
-                self._allDatasets,
-                self._caliParamModel,
-                self._measurementData,
-                self._mainWindow,
+                self._quantumModel, self._prefitHSParams, self._prefitCaliParams,
+                self._allDatasets, self._caliParamModel, 
+                self._measData, self._mainWindow
             ),
             (self._prefitView, self._prefitParamView, self._pageView),
         )
 
-    # Fit ##############################################################
     def _fitMVCInits(self):
         # ui grouping
         self._fitOptions = {
@@ -528,15 +589,10 @@ class Fit:
         self._fitCtrl = FitCtrl(
             self._mainWindow,
             (
-                self._fitModel,
-                self._fitHSParams,
-                self._fitCaliParams,
-                self._prefitHSParams,
-                self._prefitCaliParams,
-                self._quantumModel,
-                self._allDatasets,
-                self._caliParamModel,
-                self._measurementData,
+                self._fitModel, self._fitHSParams, self._fitCaliParams,
+                self._prefitHSParams, self._prefitCaliParams, self._quantumModel,
+                self._allDatasets, self._caliParamModel,
+                self._measData
             ),
             (
                 self._fitView, self._fitParamView, 
@@ -545,7 +601,6 @@ class Fit:
             ),
         )
 
-    # plot #############################################################
     def _plottingMVCInits(self):
         # ui grouping
         self._measComboBoxes = {
@@ -577,7 +632,7 @@ class Fit:
             self._mainWindow,
             self._mainUi.mplFigureCanvas,
             (
-                self._measurementData,
+                self._measData,
                 self._caliParamModel,
                 self._allDatasets,
                 self._activeDataset,
@@ -594,38 +649,16 @@ class Fit:
             ),
         )
 
-    # IO ###############################################################
     def _IOMVCInits(self):
         self._registry = Registry()
         self._menuUi = MenuWidget(self._mainWindow)
         self._ioCtrl = IOCtrl(
             self._mainWindow,
-            menuButton=self._mainUi.toggleMenuButton,
-            menuUi=self._menuUi,
-            registry=self._registry,
-            mainWindow=self._mainWindow,
+            models = (self._measImporter, self._registry),
+            views = (self._mainUi.toggleMenuButton, self._menuUi, self._mainWindow),
             fullDynamicalInit=self._dynamicalInit,
         )
 
-    def _register(self):
-        """
-        register the entire app
-        """
-        # clear the registry
-        self._registry.clear()
-
-        # register the models
-        self._registry.register(self._quantumModel.hilbertspace)
-        self._registry.register(self._measurementData)
-        self._registry.register(self._caliParamModel)
-        self._registry.register(self._allDatasets)
-        self._registry.register(self._prefitHSParams)
-        self._registry.register(self._fitHSParams)
-        self._registry.register(self._prefitCaliParams)
-        self._registry.register(self._fitCaliParams)
-        self._registry.register(self._mainWindow)
-
-    # error message system #############################################
     def _statusMVCInits(self):
         self._statusModel = StatusModel(self._mainWindow)
         self._statusBarView = StatusBarView(self._mainWindow, self._mainUi.statusBar)

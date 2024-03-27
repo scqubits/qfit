@@ -63,15 +63,51 @@ class PrefitCtrl(QObject):
         ) = models
         self.prefitView, self.prefitParamView, self.pageView = views
 
+        self._switchFigConnects()
         self._quantumModelConnects()
         self._buttonConnects()
         self._sliderParamConnects()
 
-    def dynamicalInit(
+    def replaceHS(
         self, 
         hilbertspace: "HilbertSpace", 
+    ):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        reinitialize the all relevant models and views.
+        
+        Parameters
+        ----------
+        hilbertSpace : HilbertSpace
+            The HilbertSpace object.
+        """
+        self._buildParamSet(hilbertspace)
+        self.prefitView.replaceHS(
+            subsysNames=[
+                SweepParamSet.parentSystemNames(subsys)
+                for subsys in hilbertspace.subsystem_list[::-1]
+            ],
+        )
+        self.quantumModel.replaceHS(hilbertspace)
+
+    def replaceMeasData(
+        self, 
         measurementData: List["MeasurementDataType"]
     ):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        reinitialize the all relevant models and views. 
+
+        Parameters
+        ----------
+        measurementData : List[MeasurementDataType]
+            The measurement data.
+        """
+        self.quantumModel.replaceMeasData(
+            [data.name for data in measurementData]
+        )
+
+    def dynamicalInit(self,):
         """
         When the app is reloaded (new measurement data and hilbert space),
         reinitialize the all relevant models and views. In particular,
@@ -79,30 +115,13 @@ class PrefitCtrl(QObject):
         calibration model.
 
         Finally, it updates the view and the quantum model.
-        
-        Parameters
-        ----------
-        hilbertSpace : HilbertSpace
-            The HilbertSpace object.
-        measurementData : List[MeasurementDataType]
-            The measurement data.
         """
-        self._buildParamSet(hilbertspace)
-        self.prefitView.dynamicalInit(
-            subsysNames=[
-                SweepParamSet.parentSystemNames(subsys)
-                for subsys in hilbertspace.subsystem_list[::-1]
-            ],
-        )
         self.prefitParamView.insertSliderMinMax(
             self.prefitHSParams.paramNamesDict(),
             self.prefitCaliParams.paramNamesDict(),
             removeExisting=True,
         )
-
-        self.quantumModel.dynamicalInit(
-            hilbertspace, [data.name for data in measurementData]
-        )
+        self.quantumModel.dynamicalInit()
 
         # update everything in the view
         self.prefitHSParams.emitUpdateBox()
@@ -117,6 +136,13 @@ class PrefitCtrl(QObject):
         self.allDatasets.emitDataUpdated()
         self.caliParamModel.sendXCaliFunc()
         self.caliParamModel.sendYCaliFunc()
+
+    def _switchFigConnects(self):
+        """
+        When the user switches between different measurement data figures, 
+        the spectrum displayed should be updated accordingly.
+        """
+        self.measurementData.figSwitched.connect(self.quantumModel.switchFig)
 
     def _quantumModelConnects(self):
         """

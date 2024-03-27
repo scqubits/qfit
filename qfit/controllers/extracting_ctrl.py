@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Tuple, Dict, Any, List
 if TYPE_CHECKING:
     from scqubits.core.hilbert_space import HilbertSpace
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
-    from qfit.models.measurement_data import MeasurementDataType
+    from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
     from qfit.views.labeling_view import LabelingView
 
 
@@ -28,6 +28,7 @@ class ExtractingCtrl(QObject):
 
     Relevant model:
     - extracted data (all and active)
+    - measurement data
 
     Parameters
     ----------
@@ -41,26 +42,25 @@ class ExtractingCtrl(QObject):
     def __init__(
         self,
         parent: QObject,
-        dataSets: Tuple["AllExtractedData", "ActiveExtractedData"],
+        models: Tuple[
+            "AllExtractedData", "ActiveExtractedData", "MeasDataSet"
+        ],
         labelingView: "LabelingView",
     ):
         
         super().__init__(parent)
 
-        self.allDatasets, self.activeDataset = dataSets
+        self.allDatasets, self.activeDataset, self.measDataSet = models
         self.labelingView = labelingView
 
+        self._switchFigConnects()
         self._viewUpdatedConnects()
         self._modelUpdatedConnects()
         self._uiExtractedDataConnects()
         self._uiExtractedDataControlConnects()
 
-    # # initialization ===================================================
-    def dynamicalInit(
-        self, 
-        hilbertspace: "HilbertSpace",
-        measurementData: List["MeasurementDataType"]
-    ):
+    # initialization ===================================================
+    def replaceHS(self, hilbertspace: "HilbertSpace"):
         """
         When the app is reloaded (new measurement data and hilbert space),
         reinitialize the all relevant models and views.
@@ -69,19 +69,46 @@ class ExtractingCtrl(QObject):
         ----------
         hilbertspace : HilbertSpace
             The HilbertSpace object.
-        measurementData : List[MeasurementDataType]
-            The measurement data.
         """
-        self.allDatasets.dynamicalInit([data.name for data in measurementData])
-        self.labelingView.dynamicalInit(
+        self.labelingView.updateHS(
             [subsys.id_str for subsys in hilbertspace.subsystem_list],
         )
 
-        # mainly for cync the transition list with the model
+    def replaceMeasData(self, measurementData: List["MeasurementDataType"]):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        reinitialize the all relevant models and views.
+
+        Parameters
+        ----------
+        measurementData : List[MeasurementDataType]
+            The measurement data.
+        """
+        self.allDatasets.replaceMeasData(
+            [data.name for data in measurementData]
+        )
+
+    def dynamicalInit(self):
+        """
+        When the app is reloaded (new measurement data and hilbert space),
+        reinitialize the all relevant models and views.
+        """
+        self.labelingView.dynamicalInit()
+        self.allDatasets.dynamicalInit()
+        
+        # select the first row. setModel should be called after dynamicalInit
+        # it requires the data to be loaded first
         self.labelingView.extractionList.setModel(self.allDatasets)
-        self.labelingView.extractionList.selectItem(0, blockSignals=True) # select the first row
+        self.labelingView.extractionList.selectItem(0, blockSignals=True) 
 
     # Connections ======================================================
+    def _switchFigConnects(self):
+        """
+        When the user switches between different measurement data figures, 
+        the extracted transitions displayed should be updated accordingly.
+        """
+        self.measDataSet.figSwitched.connect(self.allDatasets.switchFig)
+
     def _uiExtractedDataControlConnects(self):
         """Connect buttons for inserting and deleting a data set, or clearing all data sets"""
         # update the backend model
