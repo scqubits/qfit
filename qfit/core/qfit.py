@@ -30,6 +30,7 @@ from qfit.views.paging_view import PageView
 # measurement data
 from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
 from qfit.models.meas_data_importer import MeasDataImporter
+from qfit.controllers.meas_data_ctrl import MeasDataCtrl
 
 # calibration:
 from qfit.models.calibration import CaliParamModel
@@ -435,6 +436,11 @@ class Fit:
         self._measImporter = MeasDataImporter(self._mainWindow)
         self._measData = MeasDataSet([])
 
+        self._measDataCtrl = MeasDataCtrl(
+            self._mainWindow,
+            (self._measImporter, self._measData),
+        )
+
     def _calibrationMVCInits(self):
         """
         Set up an instance of CalibrationData and CalibrationView.
@@ -521,7 +527,7 @@ class Fit:
 
         self._extractingCtrl = ExtractingCtrl(
             self._mainWindow,
-            (self._allDatasets, self._activeDataset),
+            (self._allDatasets, self._activeDataset, self._measData),
             self._labelingView,
         )
 

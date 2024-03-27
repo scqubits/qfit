@@ -63,6 +63,7 @@ class PrefitCtrl(QObject):
         ) = models
         self.prefitView, self.prefitParamView, self.pageView = views
 
+        self._switchFigConnects()
         self._quantumModelConnects()
         self._buttonConnects()
         self._sliderParamConnects()
@@ -135,6 +136,13 @@ class PrefitCtrl(QObject):
         self.allDatasets.emitDataUpdated()
         self.caliParamModel.sendXCaliFunc()
         self.caliParamModel.sendYCaliFunc()
+
+    def _switchFigConnects(self):
+        """
+        When the user switches between different measurement data figures, 
+        the spectrum displayed should be updated accordingly.
+        """
+        self.measurementData.figSwitched.connect(self.quantumModel.switchFig)
 
     def _quantumModelConnects(self):
         """

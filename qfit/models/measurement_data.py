@@ -67,6 +67,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     readyToPlot = Signal(PlotElement)
     relimCanvas = Signal(np.ndarray, np.ndarray)
     updateRawXMap = Signal(dict)
+    figSwitched = Signal(str)
 
     def __init__(self, measDatas: List["MeasurementDataType"]):
         super().__init__()
@@ -264,7 +265,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.emitRelimCanvas()
 
     @Slot(str)
-    def switchMeasData(self, figName: str):
+    def switchFig(self, figName: str):
         """
         Switch the current measurement data by the name, and emit the
         readyToPlot, relimCanvas, and updateRawXMap signals.
@@ -273,10 +274,12 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             if data.name == figName:
                 self._currentRow = i
                 break
-
+        
         self.emitReadyToPlot()
         self.emitRelimCanvas()
         self.emitRawXMap()
+        
+        self.figSwitched.emit(figName)
 
     @Slot()
     def swapXY(self):
@@ -877,8 +880,9 @@ class NumericalMeasurementData(MeasurementData):
             xData,
             yData,
             zData,
-            norm=norm,
-            rasterized=True,
+            norm = norm,
+            rasterized = True,
+            zorder = 0,
         )
 
 
@@ -934,7 +938,8 @@ class ImageMeasurementData(MeasurementData):
         return ImageElement(
             "measurement",
             self.principalZ.data,
-            rasterized=True,
+            rasterized = True,
+            zorder = 0,
         )
 
 

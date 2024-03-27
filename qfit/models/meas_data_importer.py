@@ -7,6 +7,8 @@ from scipy.io import loadmat
 
 from PySide6.QtCore import (
     QObject,
+    Signal,
+    Slot,
 )
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -180,7 +182,7 @@ class MeasDataImporter(QObject, Registrable, metaclass=CombinedMeta):
     - transpose Z. It's activated when only one X axis and one Y axis are
         selected.
     """
-
+    figSwitched = Signal(str)
     def __init__(
         self, 
         parent: QObject | None = None,
@@ -282,8 +284,6 @@ class MeasDataImporter(QObject, Registrable, metaclass=CombinedMeta):
             if len(measurementData) == len(fileNames):
                 break       # break the loop if all files are successfully read
 
-        
-
         return measurementData
     
     def loadMultiData(
@@ -376,4 +376,17 @@ class MeasDataImporter(QObject, Registrable, metaclass=CombinedMeta):
         """
         raise NotImplementedError
 
-    # process ===========================================================
+    # process ==========================================================
+    @Slot(str)
+    def switchFig(self, figName: str) -> None:
+        """
+        Switch the figure to be displayed.
+
+        Parameters
+        ----------
+        figName: str
+            Name of the figure to be displayed.
+        """
+        raise NotImplementedError
+    
+        self.figSwitched.emit(figName)

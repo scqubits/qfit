@@ -155,8 +155,9 @@ class ActiveExtractedData(QObject):
             self._transition.data[0],
             self._transition.data[1],
             marker=r"$\odot$",
-            s=130,
-            alpha=0.3,
+            s = 130,
+            alpha = 0.3,
+            zorder = 1,
         )
         return scat_active
 
@@ -218,7 +219,7 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
 
         self._signalProcessing()
 
-    def updateMeasData(
+    def replaceMeasData(
         self,
         figNames: List[str],
     ):
@@ -323,7 +324,8 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
     # Signal processing ================================================
     def emitFocusChanged(self, *args):
         """
-        Emit focusChanged signal with the current transition
+        Emit focusChanged signal with the current transition, indicating
+
         """
         self.focusChanged.emit(self.currentTransition())
 
@@ -337,6 +339,7 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         """
         Emit readyToPlot signal with the plot element
         """
+        print("emitReadyToPlot")
         self.readyToPlot.emit(self.generatePlotElement())
 
     def emitReadyToPlotX(self, *args):
@@ -433,8 +436,9 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         """
         self._currentFigName = figName
         self.emitXUpdated()
-        self.emitFocusChanged()
-        self.layoutChanged.emit()
+        self.emitDataUpdated()
+        self.setCurrentRow(0)
+        self.layoutChanged.emit() # update the list view to show the new data
 
     @Slot()
     def removeAll(self):
@@ -503,6 +507,7 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         readyToPlot signal. For the inactive extracted data, it's a scatter
         plot of the data points with a "x" marker.
         """
+        print(f"{len(self._currentSpectrum)}")
         spectra = copy(self._currentSpectrum)
         spectra.pop(self.currentRow)
         all_data = spectra.allDataConcated()
@@ -511,9 +516,10 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
             "all_extractions",
             all_data[0, :],
             all_data[1, :],
-            marker=r"$\times$",
-            s=70,
-            alpha=0.23,
+            marker = r"$\times$",
+            s = 70,
+            alpha = 0.23,
+            zorder = 1,
         )
 
         return scat_all
@@ -525,7 +531,12 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         readyToPlotX signal.  
         """
         vline_data = self._currentSpectrum.distinctSortedX()
-        vline = VLineElement("extraction_vlines", vline_data, alpha=0.5)
+        vline = VLineElement(
+            "extraction_vlines", 
+            vline_data, 
+            alpha = 0.5,
+            zorder = 1,
+        )
 
         return vline
 

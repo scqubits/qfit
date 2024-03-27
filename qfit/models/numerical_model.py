@@ -229,7 +229,7 @@ class QuantumModel(QObject):
         self._yInvCaliFunc = invYCaliFunc
         self.sweep2SpecMSE(sweepUsage=self.sweepUsage)
 
-    @Slot(str, Any)
+    @Slot(str, object)
     def storeSweepOption(
         self,
         attrName: Literal[

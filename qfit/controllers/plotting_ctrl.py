@@ -193,11 +193,15 @@ class PlottingCtrl(QObject):
             self.mplCanvas.updateColorMap
         )
 
-    def uiXYZComboBoxesConnects(self):
+    def dataSwitchConnects(self):
         """
         Connect the combo boxes for the x, y, and z axes to the measurement data.
         """
         self.measComboBoxes["z"].activated.connect(self.zDataUpdate)
+
+        self.measurementData.figSwitched.connect(self.switchFig)
+
+
         # self.measComboBoxes["x"].activated.connect(self.xAxisUpdate)
         # self.measComboBoxes["y"].activated.connect(self.yAxisUpdate)
 
@@ -240,13 +244,16 @@ class PlottingCtrl(QObject):
         self.zComboBoxReload()
         self.setXYAxes(self.measurementData.currentMeasData)    
 
-
-    def switchMeasData(self, figName: str):
+    @Slot(str)
+    def switchFig(self, figName: str):
         """
         Switch the measurement data to the one with the given figure name. It will
         update the combo boxes for the x, y, and z axes and plot the new data.
+
+        Note: The most of slots like this are connected in the MeasDataCtrl, not 
+        in models' corresponding controllers. Plotting related slots should be 
+        the only exception.
         """
-        self.measurementData.switchMeasData(figName)
         self.zComboBoxReload()
         self.setXYAxes(self.measurementData.currentMeasData)    
 
@@ -316,7 +323,6 @@ class PlottingCtrl(QObject):
         if not self.calibrateAxes:
             self.mplCanvas.updateXAxes(rawXLim)
             self.mplCanvas.updateYAxes(rawYLim.name, (rawYLim.data[0], rawYLim.data[-1]))
-
             return
 
         # when need to show the calibrated data

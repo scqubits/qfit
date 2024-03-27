@@ -451,7 +451,7 @@ def _find_lorentzian_peak(data: np.ndarray, gamma_guess=5.0) -> int:
         idx_list,
         data,
         p0=[mid_idx_guess, gamma_guess, amp_guess, bias_guess],
-        maxfev=1000,
+        maxfev=300,
     )
 
     if np.sum(pcov) == np.inf:
