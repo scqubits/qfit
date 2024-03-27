@@ -13,8 +13,7 @@ from PySide6.QtWidgets import (
 
 from qfit.models.registry import Registry
 from qfit.widgets.menu import MenuWidget
-from qfit.utils.helpers import StopExecution, makeUnique
-from qfit.utils.measurement_file_readers import readMeasurementFile
+from qfit.utils.helpers import StopExecution
 import qfit.settings as settings
 
 from typing import (
@@ -27,6 +26,7 @@ if TYPE_CHECKING:
     from qfit.models.measurement_data import (
         MeasurementDataType,
     )
+    from qfit.models.meas_data_importer import MeasDataImporter
     from scqubits.core.hilbert_space import HilbertSpace
 
 
@@ -48,7 +48,7 @@ class IOCtrl(QObject):
 
     Relevant model:
     - hilbertspace
-    - measurement data
+    - measurement data importer
 
     Parameters
     ----------
@@ -69,17 +69,13 @@ class IOCtrl(QObject):
     def __init__(
         self,
         parent: QObject,
-        menuButton: QPushButton,
-        menuUi: MenuWidget,
-        registry: Registry,
-        mainWindow: "MainWindow",  
+        models: Tuple["MeasDataImporter", "Registry"],
+        views: Tuple["QPushButton", "MenuWidget", "MainWindow"],
         fullDynamicalInit: Callable[["HilbertSpace", List["MeasurementDataType"]], None],
     ):
         super().__init__(parent)
-        self.menuButton = menuButton
-        self.menu = menuUi
-        self.registry = registry
-        self.mainWindow = mainWindow
+        self.measDataImporter, self.registry = models
+        self.menuButton, self.menu, self.mainWindow = views
         self.fullDynamicalInit = fullDynamicalInit
 
         self.setConnects()
@@ -87,7 +83,8 @@ class IOCtrl(QObject):
     def replaceHS(self, hilbertspace: "HilbertSpace"):
         """
         When the app is reloaded (new measurement data and hilbert space),
-        reinitialize the all relevant models and views.
+        reinitialize the all relevant models and views. HilbertSpace is used 
+        to help reload the app if it is not provided in the newProject function.
 
         Parameters
         ----------
@@ -117,62 +114,6 @@ class IOCtrl(QObject):
         self.mainWindow.closeWindow.connect(self.closeByMainWindow)
 
     # load data from file #####################################################
-    def _measurementDataFromDialog(
-        self,
-        home=None,
-        windowInitialized=False,
-    ) -> List["MeasurementDataType"] | None:
-        """
-        Open a dialog to select a file, then read the measurement data from the file.
-
-        Parameters
-        ----------
-        home : str
-            the home directory to start the dialog
-        windowInitialized : bool
-            whether the main window is initialized. If not, the app will close 
-            if the user cancels the dialog.
-        """
-        if home is None:
-            home = os.path.expanduser("~")
-
-        while True:
-            fileCategories = "Data files (*.h5 *.mat *.csv *.jpg *.jpeg *.png *.hdf5)"
-            fileNames, _ = QFileDialog.getOpenFileNames(
-                self.mainWindow, "Open", home, fileCategories
-            )
-            if not fileNames:
-                if not windowInitialized:
-                    self._closeAppAfterSaving()
-                    raise StopExecution
-                else:
-                    return None
-
-            measurementData = []
-            for fileName in fileNames:
-                measData = readMeasurementFile(fileName)
-
-                if measData is None:
-                    msg = QMessageBox()
-                    msg.setIcon(QMessageBox.Warning)
-                    msg.setText("Error opening file.")
-                    msg.setInformativeText(
-                        "The selected file format is supported, but heuristic inspection "
-                        "failed to identify suitable data inside the file."
-                    )
-                    msg.setWindowTitle("Error")
-                    _ = msg.exec_()
-                else:
-                    measurementData.append(measData)
-
-            if len(measurementData) == len(fileNames):
-                break
-
-        # set the focus to the main window after opening a file
-        self.mainWindow.activateWindow()
-
-        return measurementData
-
     def _registryDictFromDialog(
         self,
         home=None,
@@ -411,49 +352,25 @@ class IOCtrl(QObject):
         if from_menu:
             self.menu.toggle()
 
-        # later all of the followings will be moved to the MeasDataImporter Model
-        # =====================================================================
-        # check if file exists
-        if measurementFileName is not None:
-            if isinstance(measurementFileName, str):
-                if not os.path.isfile(measurementFileName):
-                    raise FileNotFoundError(f"File '{measurementFileName}' does not exist.")
-            elif isinstance(measurementFileName, list):
-                for file in measurementFileName:
-                    if not os.path.isfile(file):
-                        raise FileNotFoundError(f"File '{file}' does not exist.")
+        # load the measurement data
+        measurementData = self.measDataImporter.loadMultiData(measurementFileName)
+        # set the focus to the main window after opening a file
+        self.mainWindow.activateWindow()
+
+        if measurementData is None:
+            # the only reason is user canceled the dialog
+            if not from_menu:
+                self._closeAppAfterSaving()
+                raise StopExecution
             else:
-                raise ValueError("measurementFileName must be a string or a list of strings.")
-
-        # ask for measurement files from dialog
-        if measurementFileName is None:
-            measurementData = self._measurementDataFromDialog(windowInitialized=from_menu)
-            if measurementData is None:
-                # dialog will handle this and we just do nothing
+                # do nothing
                 return
-        elif isinstance(measurementFileName, str):
-            measurementData = [readMeasurementFile(measurementFileName)]
-            if measurementData[0] is None:
-                raise FileNotFoundError(f"Can't load file '{measurementFileName}'.")
-        else:
-            measurementData = []
-            for file in measurementFileName:
-                measData = readMeasurementFile(file)
-                if measData is None:
-                    raise FileNotFoundError(f"Can't load file '{file}'.")
-                measurementData.append(measData)
-
-        # rename the measurement data with repeated names
-        names = [measData.name for measData in measurementData]
-        uniqueNames = makeUnique(names)
-        for measData, name in zip(measurementData, uniqueNames):
-            measData.name = name
-
+            
+        # load or re-use the HilbertSpace object
         if hilbertSpace is not None:
             self.hilbertSpace = hilbertSpace
 
         self.fullDynamicalInit(self.hilbertSpace, measurementData)
-        # =====================================================================
 
     @Slot()
     def openFile(

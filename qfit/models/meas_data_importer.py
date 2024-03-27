@@ -7,12 +7,10 @@ from scipy.io import loadmat
 
 from PySide6.QtCore import (
     QObject,
-    Signal,
-    Slot,
-    QAbstractListModel,
-    Qt,
-    QAbstractListModel,
-    QModelIndex,
+)
+from PySide6.QtWidgets import (
+    QFileDialog,
+    QMessageBox,
 )
 
 from qfit.utils.helpers import (
@@ -22,12 +20,15 @@ from qfit.utils.helpers import (
     hasIdenticalRows,
     isValid1dArray,
     isValid2dArray,
+    makeUnique,
 )
 
 from qfit.models.measurement_data import (
-    ImageMeasurementData, NumericalMeasurementData, MeasurementDataType)
+    ImageMeasurementData, NumericalMeasurementData, MeasurementDataType
+)
+from qfit.models.registry import Registrable
 
-from typing import Dict, Tuple, Union, List
+from typing import Dict, Tuple, Union, List, Optional
 
 
 class MeasFileReader:
@@ -163,7 +164,10 @@ class CSVReader(MeasFileReader):
         )
 
 
-class MeasDataImporter(QObject):
+class CombinedMeta(type(QObject), type(Registrable)):
+    pass
+
+class MeasDataImporter(QObject, Registrable, metaclass=CombinedMeta):
     """
     A class to load multiple data files. It is connected to a ListView in the 
     GUI, which displays the list of data files to be loaded. The user can add 
@@ -179,7 +183,7 @@ class MeasDataImporter(QObject):
 
     def __init__(
         self, 
-        parent: QObject | None,
+        parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
 
@@ -222,7 +226,132 @@ class MeasDataImporter(QObject):
         data = reader.fromFile(fileName)
         return data
     
-    def addDataFile(self, fileName: str) -> None:
+    def _measDataFromDialog(
+        self, 
+        home: str | None = None,
+        multiple: bool = True,
+    ) -> List["MeasurementDataType"] | None:
+        """
+        Open a dialog to select a file, then read the measurement data from the file.
+
+        Parameters
+        ----------
+        home : str
+            the home directory to start the dialog
+        """
+        # configure the file dialog
+        if home is None:
+            home = os.path.expanduser("~")
+        fileCategories = "Data files (*.h5 *.mat *.csv *.jpg *.jpeg *.png *.hdf5)"
+
+        while True:
+            # start a loop of asking for files, only break the loop
+            # when the user selects a valid file
+            if multiple:
+                fileNames, _ = QFileDialog.getOpenFileNames(
+                    self.parent(), "Open", home, fileCategories
+                )
+            else:
+                fileName, _ = QFileDialog.getOpenFileName(
+                    self.parent(), "Open", home, fileCategories
+                )
+                fileNames = [fileName]
+
+            if not fileNames:
+                # user canceled the dialog
+                return None
+
+            measurementData = []
+            for fileName in fileNames:
+                measData = self._rawDataFromFile(fileName)
+
+                if measData is None:
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Warning)
+                    msg.setText("Error opening file.")
+                    msg.setInformativeText(
+                        "The selected file format is supported, but heuristic inspection "
+                        "failed to identify suitable data inside the file."
+                    )
+                    msg.setWindowTitle("Error")
+                    _ = msg.exec_()
+                    break  # break the loop and ask for files again
+                else:
+                    measurementData.append(measData)
+
+            if len(measurementData) == len(fileNames):
+                break       # break the loop if all files are successfully read
+
+        
+
+        return measurementData
+    
+    def loadMultiData(
+        self, 
+        measurementFileName: str | List[str] | None = None,
+    ) -> List[MeasurementDataType] | None:
+        """
+        Open a dialog to select a measurement file, then create a new project.
+        It is a slot for the new project button in the menu.
+
+        Note: At the moment, this method should only be called at the beginning 
+        of the app.
+
+        Parameters
+        ----------
+        measurementFileName : str | List[str] | None
+            The names of the files to be loaded. If None, open a dialog to select
+            a file. If a string or a list of strings, load the file with the 
+            file names. 
+
+        Returns
+        -------
+        List[MeasurementDataType] | None
+            A list o the measurement data read from the file. None if the dialog
+            is canceled.
+        """
+        if measurementFileName is not None:
+            if isinstance(measurementFileName, str):
+                if not os.path.isfile(measurementFileName):
+                    raise FileNotFoundError(f"File '{measurementFileName}' does not exist.")
+            elif isinstance(measurementFileName, list):
+                for file in measurementFileName:
+                    if not os.path.isfile(file):
+                        raise FileNotFoundError(f"File '{file}' does not exist.")
+            else:
+                raise ValueError("measurementFileName must be a string or a list of strings.")
+
+        # read measurement files from dialog
+        if measurementFileName is None:
+            measurementData = self._measDataFromDialog()
+            if measurementData is None:
+                # user canceled the dialog
+                return None
+            
+        # read measurement files from a single file name
+        elif isinstance(measurementFileName, str):
+            measurementData = [self._rawDataFromFile(measurementFileName)]
+            if measurementData[0] is None:
+                raise FileNotFoundError(f"Can't load file '{measurementFileName}'.")
+        
+        # read measurement files from a list of file names
+        else:
+            measurementData = []
+            for file in measurementFileName:
+                measData = self._rawDataFromFile(file)
+                if measData is None:
+                    raise FileNotFoundError(f"Can't load file '{file}'.")
+                measurementData.append(measData)
+
+        # rename the measurement data with repeated names
+        names = [measData.name for measData in measurementData]
+        uniqueNames = makeUnique(names)
+        for measData, name in zip(measurementData, uniqueNames):
+            measData.name = name
+
+        return measurementData
+    
+    def loadData(self, fileName: str) -> None:
         """
         Add a data file to the list of files to be loaded. Check if the file
         has X and Y axis names. If not, refresh _compatibleXNames and
@@ -234,7 +363,7 @@ class MeasDataImporter(QObject):
         fileName: str
             Name of the file to be loaded.
         """
-        pass
+        raise NotImplementedError
 
     def removeDataFile(self, index: int) -> None:
         """
@@ -245,6 +374,6 @@ class MeasDataImporter(QObject):
         index: int
             Index of the file to be removed.
         """
-        pass
+        raise NotImplementedError
 
     # process ===========================================================

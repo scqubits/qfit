@@ -219,10 +219,22 @@ def remove_nones(dict_data):
     return {key: value for key, value in dict_data.items() if value is not None}
 
 
-def makeUnique(names):
+def makeUnique(names: List[str]):
     """
     Given a list of strings, return a list of unique strings by appending
     a number to the end of the string if the string is not unique.
+
+    Example: ["a", "b", "a", "b"] -> ["a", "b", "a (1)", "b (1)"]
+
+    Parameters
+    ----------
+    names: List[str]
+        A list of strings.
+
+    Returns
+    -------
+    List[str]
+        A list of unique strings in the same order as the input list.
     """
     unique_names = []
     for name in names:
