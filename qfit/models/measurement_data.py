@@ -436,13 +436,7 @@ class MeasurementData(Registrable):
         ndarray, ndim=1
         """
         return self._principalY
-
-    def setPrincipalZ(self, itemIndex):
-        """
-        Set the current z dataset by index.
-        """
-        self._principalZ = self._zCandidates.itemByIndex(itemIndex)
-
+    
     @property
     def rawXNames(self) -> List[str]:
         return self.rawX.keyList
@@ -530,6 +524,14 @@ class MeasurementData(Registrable):
 
         # reset the principal x axis
         self._resetPrincipalXY()
+
+    def setPrincipalZ(self, item: int | str):
+        """
+        Set the principal z dataset by the index or the name of the data.
+        """
+        if isinstance(item, str):
+            itemIndex = self._zCandidates.keyList.index(item)
+        self._principalZ = self._zCandidates.itemByIndex(itemIndex)
         
     def _resetPrincipalXY(self):
         """
