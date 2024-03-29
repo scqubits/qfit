@@ -29,7 +29,6 @@ from qfit.views.paging_view import PageView
 
 # measurement data
 from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
-from qfit.models.meas_data_importer import MeasDataImporter
 from qfit.controllers.meas_data_ctrl import MeasDataCtrl
 
 # calibration:
@@ -312,7 +311,6 @@ class Fit:
         A collection of methods to replace the measurement data in the app,
         it is part of the initialization process.
         """
-        self._measData.replaceMeasData(measurementData)
         self._calibrationCtrl.replaceMeasData(measurementData)
         self._extractingCtrl.replaceMeasData(measurementData)
         self._prefitCtrl.replaceMeasData(measurementData)
@@ -333,10 +331,10 @@ class Fit:
 
         self._mainWindow.raise_()
 
-    def _fullDynamicalInit(self, hilbertspace: HilbertSpace, measurementData: List[MeasurementDataType]):
-        self._replaceHS(hilbertspace)
-        self._replaceMeasData(measurementData)
-        self._dynamicalInit()
+    # def _fullDynamicalInit(self, hilbertspace: HilbertSpace, measurementData: List[MeasurementDataType]):
+    #     self._replaceHS(hilbertspace)
+    #     self._replaceMeasData(measurementData)
+    #     self._dynamicalInit()
 
     def _register(self):
         """
@@ -441,12 +439,11 @@ class Fit:
         """
         Set up an instance of MeasurementData.
         """
-        self._measImporter = MeasDataImporter(self._mainWindow)
-        self._measData = MeasDataSet([])
+        self._measData = MeasDataSet()
 
         self._measDataCtrl = MeasDataCtrl(
             self._mainWindow,
-            (self._measImporter, self._measData),
+            (self._measData,),
         )
 
     def _calibrationMVCInits(self):
@@ -640,9 +637,10 @@ class Fit:
             "snapY": self._mainUi.verticalSnapButton,
         }
 
+        self._canvas = self._mainUi.mplFigureCanvas
         self._plottingCtrl = PlottingCtrl(
             self._mainWindow,
-            self._mainUi.mplFigureCanvas,
+            self._canvas,
             (
                 self._measData,
                 self._caliParamModel,
@@ -666,9 +664,11 @@ class Fit:
         self._menuUi = MenuWidget(self._mainWindow)
         self._ioCtrl = IOCtrl(
             self._mainWindow,
-            models = (self._measImporter, self._registry),
+            models = (self._measData, self._registry),
             views = (self._mainUi.toggleMenuButton, self._menuUi, self._mainWindow),
-            fullDynamicalInit=self._fullDynamicalInit,
+            fullReplaceHS=self._replaceHS,
+            fullReplaceMeasData=self._replaceMeasData,
+            fullDynamicalInit=self._dynamicalInit,
         )
 
     def _statusMVCInits(self):

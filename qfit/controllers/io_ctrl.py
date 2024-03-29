@@ -24,9 +24,8 @@ from typing import (
 if TYPE_CHECKING:
     from qfit.core.mainwindow import MainWindow
     from qfit.models.measurement_data import (
-        MeasurementDataType,
+        MeasurementDataType, MeasDataSet
     )
-    from qfit.models.meas_data_importer import MeasDataImporter
     from scqubits.core.hilbert_space import HilbertSpace
 
 
@@ -62,20 +61,30 @@ class IOCtrl(QObject):
         the registry object
     mainWindow : MainWindow
         the main window
-    fullDynamicalInit : Callable[[HilbertSpace, List[MeasurementDataType]], None]
-        The function that dynamically initializes ALL of the MVC components
+    fullReplaceHS : Callable[[HilbertSpace], None]
+        function to replace the HilbertSpace object for all components
+        in qfit. 
+    fullReplaceMeasData : Callable[[List[MeasurementDataType]], None]
+        function to replace the measurement data for all components in qfit
+    fullDynamicalInit : Callable[[], None]
+        function to reinitialize the dynamical elements in the main window,
+        once the fullReplaceHS and fullReplaceMeasData are called.
     """
 
     def __init__(
         self,
         parent: QObject,
-        models: Tuple["MeasDataImporter", "Registry"],
+        models: Tuple["MeasDataSet", "Registry"],
         views: Tuple["QPushButton", "MenuWidget", "MainWindow"],
-        fullDynamicalInit: Callable[["HilbertSpace", List["MeasurementDataType"]], None],
+        fullReplaceHS: Callable[["HilbertSpace"], None],
+        fullReplaceMeasData: Callable[[List["MeasurementDataType"]], None],
+        fullDynamicalInit: Callable[[], None],
     ):
         super().__init__(parent)
-        self.measDataImporter, self.registry = models
+        self.measDataSet, self.registry = models
         self.menuButton, self.menu, self.mainWindow = views
+        self.fullReplaceHS = fullReplaceHS
+        self.fullReplaceMeasData = fullReplaceMeasData
         self.fullDynamicalInit = fullDynamicalInit
 
         self.setConnects()
@@ -351,13 +360,18 @@ class IOCtrl(QObject):
         """
         if from_menu:
             self.menu.toggle()
+            
+        # load or re-use the HilbertSpace object
+        if hilbertSpace is not None:
+            self.hilbertSpace = hilbertSpace
+        self.fullReplaceHS(self.hilbertSpace)
 
-        # load the measurement data
-        measurementData = self.measDataImporter.loadMultiData(measurementFileName)
+        # feed the measurement data to the measDataSet
+        openWindow = self.measDataSet.initWithData(measurementFileName)
         # set the focus to the main window after opening a file
         self.mainWindow.activateWindow()
 
-        if measurementData is None:
+        if not openWindow:
             # the only reason is user canceled the dialog
             if not from_menu:
                 self._closeAppAfterSaving()
@@ -365,12 +379,6 @@ class IOCtrl(QObject):
             else:
                 # do nothing
                 return
-            
-        # load or re-use the HilbertSpace object
-        if hilbertSpace is not None:
-            self.hilbertSpace = hilbertSpace
-
-        self.fullDynamicalInit(self.hilbertSpace, measurementData)
 
     @Slot()
     def openFile(
@@ -414,10 +422,9 @@ class IOCtrl(QObject):
 
             # update the dynamical elements in the main window (i.e. load from the registry
             # the r entries)
-            self.fullDynamicalInit(
-                hilbertspace,
-                measurementData,
-            )
+            self.fullReplaceHS(hilbertspace)
+            self.fullReplaceMeasData(measurementData)
+            self.fullDynamicalInit()
 
             # update the rest of the registry (i.e. those entries with r+)
             self.registry.setByDict(parsedDict)

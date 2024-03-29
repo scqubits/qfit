@@ -215,6 +215,7 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
     def __init__(self, parent):
         super().__init__(parent)
 
+        self._figNames = []
         self._fullSpectra = FullExtr()
 
         self._signalProcessing()
@@ -239,15 +240,20 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         When the app is reloaded (new measurement data and hilbert space),
         the model will reinitialized by this method.
         """
-        try:
-            self._figNames
-        except AttributeError:
+        if self._figNames == []:
             raise AttributeError("Should call updateMeasData before dynamicalInit")
 
         self._initFullSpectra()
 
         self._currentFigName = self._figNames[0]
         self._currentRow = 0
+
+    def _initFullSpectra(self):
+        """
+        Initialize the FullExtr for all figures.
+        """
+        for name in self._figNames:
+            self._initSpectra(name)
 
     def _initSpectra(self, figName: str):
         """
@@ -259,13 +265,6 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
             transition,
         )
         self._fullSpectra[figName] = spectra
-
-    def _initFullSpectra(self):
-        """
-        Initialize the FullExtr for all figures.
-        """
-        for name in self._figNames:
-            self._initSpectra(name)
 
     # Properties =======================================================
     @property
@@ -433,6 +432,11 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         """
         Switch to a new figure.
         """
+        if figName not in self._figNames:
+            # this happens in the data importing stage, where the model is 
+            # not fully initialized by the measurement data
+            return 
+
         self._currentFigName = figName
         self.emitXUpdated()
         self.emitDataUpdated()

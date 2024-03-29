@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Tuple, Dict, Any, List
 if TYPE_CHECKING:
     from scqubits.core.hilbert_space import HilbertSpace
     from qfit.models.measurement_data import MeasDataSet
-    from qfit.models.meas_data_importer import MeasDataImporter
     from qfit.models.extracted_data import AllExtractedData
     from qfit.models.numerical_model import QuantumModel
 
@@ -18,12 +17,12 @@ class MeasDataCtrl(QObject):
         self, 
         parent: QObject | None,
         models: Tuple[
-            "MeasDataImporter", "MeasDataSet"
+            "MeasDataSet"
         ],
     ) -> None:
         super().__init__(parent)
         (
-            self.measImporter, self.measDataSet
+            self.measDataSet
         ) = models
 
         self.switchFigConnects()

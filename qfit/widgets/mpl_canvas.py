@@ -402,7 +402,10 @@ class MplFigureCanvas(QFrame):
     def __init__(self, parent=None):
         QFrame.__init__(self, parent)
 
-        # View elements
+        self.initViewElem()
+        self.initPlotting()
+
+    def initViewElem(self):
         self.canvas = FigureCanvasQTAgg(Figure())
         self.toolbar = NavigationHidden(self.canvas, self)
 
@@ -411,21 +414,17 @@ class MplFigureCanvas(QFrame):
         vertical_layout.addWidget(self.canvas)
         self.setLayout(vertical_layout)
 
-        # initialize the properties
-        
-        self.initializeProperties()
-
-    def initializeProperties(self):
-        """
-        Initialize the properties of the widget, including the axes, the
-        plotting elements, the cursor, and the view limits.
-        """
         # change background color
         self.canvas.figure.patch.set_facecolor("#B8B8B8")
         self.canvas.figure.patch.set_facecolor("#B8B8B8")
         self.canvas.figure.subplots()
         self.axes.autoscale(enable=False)
 
+    def initPlotting(self):
+        """
+        Initialize the properties of the widget, including the axes, the
+        plotting elements, the cursor, and the view limits.
+        """
         # remove the default x- and y-axis
         self.axes.spines['bottom'].set_visible(False)
         self.axes.xaxis.set_ticks([])
