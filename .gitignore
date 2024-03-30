@@ -59,3 +59,5 @@ media_raw_source/tag-question.cdr
 plot_data.ipynb
 .jupyter_ystore.db
 media_raw_source/stop.cdr
+example_data/spec_scan_v11_transposedspec_scan_v11_transposed.mat
+example_data/spec_scan_v11.mat
