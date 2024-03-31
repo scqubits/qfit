@@ -28,7 +28,7 @@ from qfit.widgets.settings import SettingsWidget
 from qfit.views.paging_view import PageView
 
 # measurement data
-from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
+from qfit.models.measurement_data import MeasDataType, MeasDataSet
 from qfit.controllers.meas_data_ctrl import MeasDataCtrl
 
 # calibration:
@@ -306,7 +306,7 @@ class Fit:
         self._prefitCtrl.replaceHS(hilbertspace)
         self._fitCtrl.replaceHS(hilbertspace)
 
-    def _replaceMeasData(self, measurementData: List[MeasurementDataType]):
+    def _replaceMeasData(self, measurementData: List[MeasDataType]):
         """
         A collection of methods to replace the measurement data in the app,
         it is part of the initialization process.

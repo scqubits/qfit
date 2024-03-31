@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib as mpl
 from qfit.utils.helpers import ySnap, OrderedDictMod
 from qfit.models.measurement_data import (
-    MeasurementDataType,
+    MeasDataType,
 )
 
 from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal, List, Callable
@@ -234,15 +234,14 @@ class PlottingCtrl(QObject):
     # @Slot(int)
     # def yAxisUpdate(self, itemIndex: int):
     #     self.measurementData.setCurrentY(itemIndex)
-        
-    def updateMeasData(self, measData: List[MeasurementDataType]):
+
+    @Slot(np.ndarray, np.ndarray)
+    def relimCanvas(self, xData: np.ndarray, yData: np.ndarray):
         """
-        Update the measurement data with the new data. It will update the combo
-        boxes for the x, y, and z axes and plot the new data.
+        Update the axes limits of the canvas based on the x and y data.
         """
-        self.measData.replaceMeasData(measData)
-        self.zComboBoxReload()
-        self.setXYAxes(self.measData.currentMeasData)    
+        self.mplCanvas.relim(xData, yData)
+        self.setXYAxes(self.measData.currentMeasData)
 
     @Slot(str)
     def switchFig(self, figName: str):
@@ -255,7 +254,7 @@ class PlottingCtrl(QObject):
         the only exception.
         """
         self.zComboBoxReload()
-        self.setXYAxes(self.measData.currentMeasData)    
+        # self.setXYAxes(self.measData.currentMeasData)  # will be called when relimCanvas  
 
     @Slot()
     def swapXY(self):
@@ -305,7 +304,7 @@ class PlottingCtrl(QObject):
         self.calibrateAxes = checked
         self.setXYAxes(self.measData.currentMeasData)
 
-    def setXYAxes(self, measData: MeasurementDataType):
+    def setXYAxes(self, measData: MeasDataType):
         """
         Update the x and y axes of the canvas based on the current measurement data
         and the calibration functions.
@@ -479,7 +478,7 @@ class PlottingCtrl(QObject):
         )
 
         self.measData.readyToPlot.connect(self.mplCanvas.updateElement)
-        self.measData.relimCanvas.connect(self.mplCanvas.relim)
+        self.measData.relimCanvas.connect(self.relimCanvas)
         self.quantumModel.readyToPlot.connect(self.mplCanvas.updateElement)
 
     def mouseClickConnects(self):

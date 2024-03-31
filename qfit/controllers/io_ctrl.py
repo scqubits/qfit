@@ -24,7 +24,7 @@ from typing import (
 if TYPE_CHECKING:
     from qfit.core.mainwindow import MainWindow
     from qfit.models.measurement_data import (
-        MeasurementDataType, MeasDataSet
+        MeasDataType, MeasDataSet
     )
     from scqubits.core.hilbert_space import HilbertSpace
 
@@ -77,7 +77,7 @@ class IOCtrl(QObject):
         models: Tuple["MeasDataSet", "Registry"],
         views: Tuple["QPushButton", "MenuWidget", "MainWindow"],
         fullReplaceHS: Callable[["HilbertSpace"], None],
-        fullReplaceMeasData: Callable[[List["MeasurementDataType"]], None],
+        fullReplaceMeasData: Callable[[List["MeasDataType"]], None],
         fullDynamicalInit: Callable[[], None],
     ):
         super().__init__(parent)
@@ -175,7 +175,7 @@ class IOCtrl(QObject):
     def _parseRegDict(
         self, 
         registryDict: Dict[str, Any], 
-    ) -> Tuple[Dict[str, Any], "HilbertSpace", List["MeasurementDataType"]]:
+    ) -> Tuple[Dict[str, Any], "HilbertSpace", List["MeasDataType"]]:
         """
         Parse the registry dictionary from different versions of the app 
         and return the up-to-date registry dictionary, HilbertSpace, and
@@ -367,7 +367,7 @@ class IOCtrl(QObject):
         self.fullReplaceHS(self.hilbertSpace)
 
         # feed the measurement data to the measDataSet
-        openWindow = self.measDataSet.initWithData(measurementFileName)
+        openWindow = self.measDataSet.loadData(measurementFileName)
         # set the focus to the main window after opening a file
         self.mainWindow.activateWindow()
 
