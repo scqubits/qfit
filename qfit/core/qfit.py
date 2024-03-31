@@ -128,9 +128,9 @@ class Fit:
         self._mainWindow: MainWindow
             
         self._ioCtrl.newProject(
-            from_menu=False, 
+            from_menu=False,
             hilbertSpace=hilbertSpace,
-            measurementFileName=measurementFileName
+            measurementFileName=measurementFileName,
         )
 
         if not settings.EXECUTED_IN_IPYTHON:
@@ -198,7 +198,7 @@ class Fit:
     # methods to export data ##################################################
     def exportParameters(self, fromFit: bool = True) -> Dict[str, Any]:
         """
-        Export the fit parameters to a file. 
+        Export the fit parameters to a file.
 
         Parameters
         ----------
@@ -219,9 +219,7 @@ class Fit:
             )
         
     def exportHilbertSpace(
-        self, 
-        deepcopy: bool = False,
-        fromFit: bool = True
+        self, deepcopy: bool = False, fromFit: bool = True
     ) -> HilbertSpace:
         """
         Export the HilbertSpace object.
@@ -250,7 +248,7 @@ class Fit:
             hilbertSpace = self._prefitHSParams.hilbertspace
 
         return _deepcopy(hilbertSpace) if deepcopy else hilbertSpace
-    
+
     # models, views and controllers ####################################
     # ##################################################################
     def _MVCInit(self):
@@ -362,8 +360,8 @@ class Fit:
             self._mainUi.clearAllButton,
             self._mainUi.horizontalSnapButton,
             self._mainUi.verticalSnapButton,
-            self._mainUi.calibrateX1Button,
-            self._mainUi.calibrateX2Button,
+            # self._mainUi.calibrateX1Button,
+            # self._mainUi.calibrateX2Button,
             self._mainUi.calibrateY1Button,
             self._mainUi.calibrateY2Button,
         ]:
@@ -399,6 +397,7 @@ class Fit:
         Set up an instance of PageView.
         """
         self._pageButtons = {
+            "setup": self._mainUi.modeSetupFigButton,
             "calibrate": self._mainUi.modeSelectButton,
             "extract": self._mainUi.modeTagButton,
             "prefit": self._mainUi.modePrefitButton,
@@ -416,15 +415,15 @@ class Fit:
 
         self._pageView = PageView(
             self._mainWindow,
-            self._pageButtons, self._dataTransferButtons, self._pageStackedWidgets
+            self._pageButtons,
+            self._dataTransferButtons,
+            self._pageStackedWidgets,
         )
 
     def _settingsMVCInit(self):
         self._settingUi = SettingsWidget(self._mainWindow)
         self._settingsCtrl = SettingsCtrl(
-            self._mainWindow,
-            self._settingUi, 
-            self._mainUi.settingsPushButton
+            self._mainWindow, self._settingUi, self._mainUi.settingsPushButton
         )
 
     def _helpButtonMVCInits(self):
@@ -451,36 +450,34 @@ class Fit:
         Set up an instance of CalibrationData and CalibrationView.
         """
         # ui grouping
-        self._rawLineEdits = {
-            "X1": self._mainUi.rawX1LineEdit,
-            "X2": self._mainUi.rawX2LineEdit,
+        self._rawYLineEdits = {
             "Y1": self._mainUi.rawY1LineEdit,
             "Y2": self._mainUi.rawY2LineEdit,
         }
-        self._mapLineEdits = {
-            "X1": self._mainUi.mapX1LineEdit,
-            "X2": self._mainUi.mapX2LineEdit,
+        self._mapYLineEdits = {
             "Y1": self._mainUi.mapY1LineEdit,
             "Y2": self._mainUi.mapY2LineEdit,
         }
-        self._calibrationButtons = {
-            "X1": self._mainUi.calibrateX1Button,
-            "X2": self._mainUi.calibrateX2Button,
+        self._caliYButtons = {
             "Y1": self._mainUi.calibrateY1Button,
             "Y2": self._mainUi.calibrateY2Button,
         }
 
         self._caliParamModel = CaliParamModel(self._mainWindow)
         self._calibrationView = CalibrationView(
-            self._mainWindow,
-            rawLineEdits=self._rawLineEdits,
-            mapLineEdits=self._mapLineEdits,
-            calibrationButtons=self._calibrationButtons,
+            parent=self._mainWindow,
+            caliXScrollAreaWidget=self._mainUi.calibrateXScrollAreaWidget,
+            caliXFrame=self._mainUi.calibrationFrame,
+            rawYLineEdits=self._rawYLineEdits,
+            mapYLineEdits=self._mapYLineEdits,
+            caliYButtons=self._caliYButtons,
         )
 
         self._calibrationCtrl = CalibrationCtrl(
             self._mainWindow,
-            self._caliParamModel, self._calibrationView, self._pageButtons
+            self._caliParamModel,
+            self._calibrationView,
+            self._pageButtons,
         )
 
     def _extractingMVCInits(self):
@@ -613,8 +610,6 @@ class Fit:
     def _plottingMVCInits(self):
         # ui grouping
         self._measComboBoxes = {
-            "x": self._mainUi.xComboBox,
-            "y": self._mainUi.yComboBox,
             "z": self._mainUi.zComboBox,
         }
         self._measPlotSettings = {
@@ -653,7 +648,7 @@ class Fit:
                 self._measPlotSettings,
                 self._mainUi.swapXYButton,
                 self._canvasTools,
-                self._calibrationButtons,
+                # self._calibrationButtons,
                 self._mainUi.calibratedCheckBox,
                 self._pageView,
             ),
@@ -673,15 +668,14 @@ class Fit:
 
     def _statusMVCInits(self):
         self._statusModel = StatusModel(self._mainWindow)
-        self._statusBarView = StatusBarView(
-            self._mainWindow,
-            self._mainUi.statusBar
-        )
+        self._statusBarView = StatusBarView(self._mainWindow, self._mainUi.statusBar)
         self._statusCtrl = StatusCtrl(
             self._mainWindow,
             (
-                self._quantumModel, self._fitModel, 
-                self._fitHSParams, self._fitCaliParams
+                self._quantumModel,
+                self._fitModel,
+                self._fitHSParams,
+                self._fitCaliParams,
             ),
             self._statusModel,
             self._statusBarView,

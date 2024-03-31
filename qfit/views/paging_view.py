@@ -2,8 +2,7 @@ from PySide6.QtCore import (
     QObject,
     Signal,
     Slot,
-
-)        
+)
 from PySide6.QtWidgets import QPushButton, QStackedWidget
 
 from typing import TYPE_CHECKING, Tuple, Dict, Any
@@ -19,20 +18,21 @@ class PageView(QObject):
     parent : QObject
         The parent object.
     pageButtons : Dict[str, QPushButton]
-        The buttons that switch between the pages. The keys should be 
+        The buttons that switch between the pages. The keys should be
         "calibrate", "extract", "prefit", "fit".
     dataTransferButtons : Dict[str, QPushButton]
-        The buttons that transfer data between pages. The keys should be 
+        The buttons that transfer data between pages. The keys should be
         the destination page names: "prefit", "fit".
     stackWidgets : Dict[str, QStackedWidget]
-        The stack widgets that contain the pages. The keys should be 
+        The stack widgets that contain the pages. The keys should be
         "calibrate", "extract", "prefit", "fit".
     """
-    pageNames = ["calibrate", "extract", "prefit", "fit"]
+
+    pageNames = ["setup", "calibrate", "extract", "prefit", "fit"]
     pageChanged = Signal(str)
 
     def __init__(
-        self, 
+        self,
         parent: QObject,
         pageButtons: Dict[str, QPushButton],
         dataTransferButtons: Dict[str, QPushButton],
@@ -45,7 +45,7 @@ class PageView(QObject):
         self.currentPage = "calibrate"
 
         self._staticInits()
-        
+
     def _staticInits(self):
         """
         Initialize the view: connect the buttons to the corresponding slots.

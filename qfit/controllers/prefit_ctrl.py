@@ -245,7 +245,7 @@ class PrefitCtrl(QObject):
             )
             self.mainWindow.close()
 
-        elif len(sweepParameterSet) == 1:
+        else:
             # only one sweep parameter is found, so we can create sliders
             # for the remaining parameters
             excluded: List[ParameterType] = ["cutoff", "truncated_dim", "l_osc"]
@@ -256,21 +256,21 @@ class PrefitCtrl(QObject):
                 ),
             )
 
-        elif len(sweepParameterSet) == 2 and param_types == set(["flux", "ng"]):
-            # a flux and ng are detected in the HilbertSpace object
-            # right now, we assume that the flux is always swept in this case
-            self.prefitHSParams.dynamicalInit(
-                hilbertspace=hilbertspace,
-                excluded_parameter_type=["flux", "cutoff", "truncated_dim", "l_osc"],
-            )
+        # elif len(sweepParameterSet) == 2 and param_types == set(["flux", "ng"]):
+        #     # a flux and ng are detected in the HilbertSpace object
+        #     # right now, we assume that the flux is always swept in this case
+        #     self.prefitHSParams.dynamicalInit(
+        #         hilbertspace=hilbertspace,
+        #         excluded_parameter_type=["flux", "cutoff", "truncated_dim", "l_osc"],
+        #     )
 
-        else:
-            print(
-                "Unfortunately, the current version of qfit does not support "
-                "multiple sweep parameters (flux / ng). This feature will be "
-                "available in the next release."
-            )
-            self.mainWindow.close()
+        # else:
+        #     print(
+        #         "Unfortunately, the current version of qfit does not support "
+        #         "multiple sweep parameters (flux / ng). This feature will be "
+        #         "available in the next release."
+        #     )
+        #     self.mainWindow.close()
 
 
     def _inheritCaliParams(self,):

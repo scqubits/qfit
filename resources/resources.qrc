@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="/">
+    <file>icons/svg/file-import-solid.svg</file>
     <file>icons/svg/stop.svg</file>
     <file>icons/svg/ruler-square.svg</file>
     <file>icons/svg/slider-horizontal.svg</file>

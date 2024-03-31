@@ -53,25 +53,25 @@ class PlottingCtrl(QObject):
         The parent object
     mplCanvas: MplFigureCanvas
         The matplotlib canvas
-    models: Tuple[MeasDataSet, CaliParamModel, AllExtractedData, 
+    models: Tuple[MeasDataSet, CaliParamModel, AllExtractedData,
         ActiveExtractedData, QuantumModel]
     views: Tuple[Any, ...]
-        measComboBoxes, measPlotSettings, swapXYButton, canvasTools, 
+        measComboBoxes, measPlotSettings, swapXYButton, canvasTools,
         calibrationButtons, calibratedCheckBox, pageView
     """
 
     # state of the controller, determining the how things are plotted
-    disconnectCanvas: bool      # switch off canvas updates
-    xSnapTool: bool             # whether x snap tool is selected
-    trans0Focused: bool         # whether the first extracted transition is focused
+    disconnectCanvas: bool  # switch off canvas updates
+    xSnapTool: bool  # whether x snap tool is selected
+    trans0Focused: bool  # whether the first extracted transition is focused
     axisSnap: Literal["X", "Y", "OFF"]  # whether to snap to one of the axes
-    clickResponse: Literal[     # the response to a mouse click
+    clickResponse: Literal[  # the response to a mouse click
         "ZOOM",
         "PAN",
         "EXTRACT",
     ]
     dataDestination: Literal["CALI_X", "CALI_Y", "EXTRACT", "NONE"]
-                                # after a click, to where we send the click position
+    # after a click, to where we send the click position
 
     # calibration functions
     XCaliFuncDict: Dict[str, "SweepParamSet"]
@@ -104,7 +104,7 @@ class PlottingCtrl(QObject):
             self.measPlotSettings,
             self.swapXYButton,
             self.canvasTools,
-            self.calibrationButtons,
+            # self.calibrationButtons,
             self.calibratedCheckBox,
             self.pageView,
         ) = views
@@ -222,7 +222,7 @@ class PlottingCtrl(QObject):
     @Slot(int)
     def zDataUpdate(self, itemIndex: int):
         """
-        Update the z axis of the measurement data. 
+        Update the z axis of the measurement data.
         """
         self.measData.setPrincipalZ(itemIndex)
         # self.setupXYDataBoxes()
@@ -249,8 +249,8 @@ class PlottingCtrl(QObject):
         Switch the measurement data to the one with the given figure name. It will
         update the combo boxes for the x, y, and z axes and plot the new data.
 
-        Note: The most of slots like this are connected in the MeasDataCtrl, not 
-        in models' corresponding controllers. Plotting related slots should be 
+        Note: The most of slots like this are connected in the MeasDataCtrl, not
+        in models' corresponding controllers. Plotting related slots should be
         the only exception.
         """
         self.zComboBoxReload()
@@ -317,37 +317,33 @@ class PlottingCtrl(QObject):
         rawX = measData.rawX
         rawY = measData.rawY
         rawXLim = {key: (val[0], val[-1]) for key, val in rawX.items()}
-        rawYLim = rawY.itemByIndex(0)   # only have one key
-        
+        rawYLim = rawY.itemByIndex(0)  # only have one key
+
         if not self.calibrateAxes:
             self.mplCanvas.updateXAxes(rawXLim)
-            self.mplCanvas.updateYAxes(rawYLim.name, (rawYLim.data[0], rawYLim.data[-1]))
+            self.mplCanvas.updateYAxes(
+                rawYLim.name, (rawYLim.data[0], rawYLim.data[-1])
+            )
             return
 
         # when need to show the calibrated data
         # x calibration
-        currentSweepParam = self.XCaliFuncDict[self.measData.currentMeasData.name]
+        currentSweepParam = self.XCaliFuncDict[
+            self.measData.currentMeasData.name
+        ]
 
-        currentSweepParam.setByRawX(
-            {key: rng[0] for key, rng in rawXLim.items()}
-        )
+        currentSweepParam.setByRawX({key: rng[0] for key, rng in rawXLim.items()})
         mappedXLeft = currentSweepParam.getFlattenedAttrDict("value")
-        currentSweepParam.setByRawX(
-            {key: rng[1] for key, rng in rawXLim.items()}
-        )
+        currentSweepParam.setByRawX({key: rng[1] for key, rng in rawXLim.items()})
         mappedXRight = currentSweepParam.getFlattenedAttrDict("value")
         mappedXLim = {
-            key: (mappedXLeft[key], mappedXRight[key]) 
-            for key in mappedXLeft.keys()
+            key: (mappedXLeft[key], mappedXRight[key]) for key in mappedXLeft.keys()
         }
 
         # y calibration
         mappedYName = f"Energy [GHz]"
         # ylabel = f"Energy [{scq.get_units()}]" # when we implement the units
-        mappedYLim = (
-            self.YCaliFunc(rawYLim.data[0]), 
-            self.YCaliFunc(rawYLim.data[-1])
-        )
+        mappedYLim = (self.YCaliFunc(rawYLim.data[0]), self.YCaliFunc(rawYLim.data[-1]))
 
         self.mplCanvas.updateXAxes(mappedXLim)
         self.mplCanvas.updateYAxes(mappedYName, mappedYLim)
@@ -384,9 +380,7 @@ class PlottingCtrl(QObject):
         self.dataDestination = "NONE"
 
     # extracted data ==================================================
-    def storeExtractedPoint(
-        self, xName: str, yName: str, xData: float, yData: float
-    ):
+    def storeExtractedPoint(self, xName: str, yName: str, xData: float, yData: float):
         """
         Store the extracted point to the active dataset. Perform the following:
         - snap the x value
@@ -431,13 +425,13 @@ class PlottingCtrl(QObject):
 
             # snap the y value
             yData = ySnap(
-                    x_list=x_list,
-                    y_list=y_list,
-                    z_data=z_data,
-                    user_selected_xy=(xData, yData),
-                    half_y_range=half_y_range,
-                    mode="lorentzian",
-                )
+                x_list=x_list,
+                y_list=y_list,
+                z_data=z_data,
+                user_selected_xy=(xData, yData),
+                half_y_range=half_y_range,
+                mode="lorentzian",
+            )
 
         self.activeDataset.append(
             OrderedDictMod({xName: xData, yName: yData}),
@@ -466,7 +460,7 @@ class PlottingCtrl(QObject):
     # plotting =========================================================
     def plotElementsConnects(self):
         """
-        Connect the all of the models's readyToPlot signals to the canvas 
+        Connect the all of the models's readyToPlot signals to the canvas
         for plotting the data.
         """
         self.activeDataset.readyToPlot.connect(self.mplCanvas.updateElement)
@@ -483,7 +477,7 @@ class PlottingCtrl(QObject):
 
     def mouseClickConnects(self):
         """
-        Set up the matplotlib canvas and start monitoring for mouse click 
+        Set up the matplotlib canvas and start monitoring for mouse click
         events in the canvas area.
         """
         self.mplCanvas.canvas.mpl_connect(
@@ -496,7 +490,7 @@ class PlottingCtrl(QObject):
 
     def canvasToolConnects(self):
         """
-        Connect the UI buttons for reset, zoom, and pan functions of the 
+        Connect the UI buttons for reset, zoom, and pan functions of the
         matplotlib canvas.
         """
         self.canvasTools["reset"].clicked.connect(self.mplCanvas.resetView)
@@ -550,10 +544,7 @@ class PlottingCtrl(QObject):
         we determine the x snap mode.
         """
         if self.dataDestination == "EXTRACT":
-            if (
-                self.xSnapTool 
-                and not self.trans0Focused
-            ):
+            if self.xSnapTool and not self.trans0Focused:
                 # In extracted mode, snap to the x values if tool is on
                 return "ExtrX"
             else:
@@ -586,7 +577,7 @@ class PlottingCtrl(QObject):
         destination: Literal["CALI_X", "CALI_Y", "EXTRACT", "NONE"],
     ):
         """
-        Set the data (click's position) destination after a mouse click.  
+        Set the data (click's position) destination after a mouse click.
         The destination can be one of the following:
         - CALI_X: calibration model, update x raw data
         - CALI_Y: calibration model, update y raw data
@@ -669,13 +660,13 @@ class PlottingCtrl(QObject):
         Based on the dataDestination and clickResponse, the controller will
         process the data and send it to the appropriate model.
 
-        dataDestination == "EXTRACT" & clickResponse == "EXTRACT": 
+        dataDestination == "EXTRACT" & clickResponse == "EXTRACT":
             - add a point to the active dataset
         dataDestination == "CALI_X" & clickResponse == "EXTRACT":
             - update the x calibration data
         dataDestination == "CALI_Y" & clickResponse == "EXTRACT":
             - update the y calibration data
-        
+
         """
 
         if self.dataDestination == "NONE":
@@ -693,7 +684,7 @@ class PlottingCtrl(QObject):
         # select mode
         if self.dataDestination == "EXTRACT":
             return self.storeExtractedPoint(xName, yName, xdata, ydata)
-        
+
         # calibration mode
         if self.dataDestination in ["CALI_X", "CALI_Y"]:
             return self.storeCalibrationPoint(xName, yName, xdata, ydata)

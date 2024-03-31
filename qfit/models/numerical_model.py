@@ -316,7 +316,7 @@ class QuantumModel(QObject):
 
     @Slot(str)
     def updateModeOnPageChange(
-        self, currentPage: Literal["calibrate", "extract", "prefit", "fit"]
+        self, currentPage: Literal["setup", "calibrate", "extract", "prefit", "fit"]
     ):
         """
         Update the mode of the sweep based on the current page.
