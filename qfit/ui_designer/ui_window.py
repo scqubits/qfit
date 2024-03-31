@@ -852,17 +852,17 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.modeSelectButton, 3, 0, 1, 2)
 
-        self.modeImportButton = QPushButton(self.menu_frame)
-        self.modeImportButton.setObjectName(u"modeImportButton")
+        self.modeSetupFigButton = QPushButton(self.menu_frame)
+        self.modeSetupFigButton.setObjectName(u"modeSetupFigButton")
         sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         sizePolicy6.setHorizontalStretch(0)
         sizePolicy6.setVerticalStretch(0)
-        sizePolicy6.setHeightForWidth(self.modeImportButton.sizePolicy().hasHeightForWidth())
-        self.modeImportButton.setSizePolicy(sizePolicy6)
-        self.modeImportButton.setMinimumSize(QSize(145, 70))
-        self.modeImportButton.setMaximumSize(QSize(145, 70))
-        self.modeImportButton.setFont(font4)
-        self.modeImportButton.setStyleSheet(u"QPushButton {	\n"
+        sizePolicy6.setHeightForWidth(self.modeSetupFigButton.sizePolicy().hasHeightForWidth())
+        self.modeSetupFigButton.setSizePolicy(sizePolicy6)
+        self.modeSetupFigButton.setMinimumSize(QSize(145, 70))
+        self.modeSetupFigButton.setMaximumSize(QSize(145, 70))
+        self.modeSetupFigButton.setFont(font4)
+        self.modeSetupFigButton.setStyleSheet(u"QPushButton {	\n"
 "	text-align: left;\n"
 "	color: white;\n"
 "	border: none;\n"
@@ -878,13 +878,13 @@ class Ui_MainWindow(object):
 "}")
         icon11 = QIcon()
         icon11.addFile(u":/icons/svg/file-import-solid.svg", QSize(), QIcon.Normal, QIcon.Off)
-        self.modeImportButton.setIcon(icon11)
-        self.modeImportButton.setIconSize(QSize(24, 24))
-        self.modeImportButton.setCheckable(True)
-        self.modeImportButton.setChecked(True)
-        self.modeImportButton.setAutoExclusive(True)
+        self.modeSetupFigButton.setIcon(icon11)
+        self.modeSetupFigButton.setIconSize(QSize(24, 24))
+        self.modeSetupFigButton.setCheckable(True)
+        self.modeSetupFigButton.setChecked(True)
+        self.modeSetupFigButton.setAutoExclusive(True)
 
-        self.gridLayout_2.addWidget(self.modeImportButton, 2, 0, 1, 1)
+        self.gridLayout_2.addWidget(self.modeSetupFigButton, 2, 0, 1, 1)
 
         self.modeFitButton = QPushButton(self.menu_frame)
         self.modeFitButton.setObjectName(u"modeFitButton")
@@ -998,11 +998,11 @@ class Ui_MainWindow(object):
         self.pagesStackedWidget.setFont(font5)
         self.pagesStackedWidget.setStyleSheet(u"")
         self.pagesStackedWidget.setFrameShadow(QFrame.Raised)
-        self.importFigsWidget = QWidget()
-        self.importFigsWidget.setObjectName(u"importFigsWidget")
-        self.verticalLayout_7 = QVBoxLayout(self.importFigsWidget)
+        self.setupFigsWidget = QWidget()
+        self.setupFigsWidget.setObjectName(u"setupFigsWidget")
+        self.verticalLayout_7 = QVBoxLayout(self.setupFigsWidget)
         self.verticalLayout_7.setObjectName(u"verticalLayout_7")
-        self.frame = QFrame(self.importFigsWidget)
+        self.frame = QFrame(self.setupFigsWidget)
         self.frame.setObjectName(u"frame")
         self.frame.setFrameShape(QFrame.StyledPanel)
         self.frame.setFrameShadow(QFrame.Raised)
@@ -1299,7 +1299,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_7.addWidget(self.frame)
 
-        self.pagesStackedWidget.addWidget(self.importFigsWidget)
+        self.pagesStackedWidget.addWidget(self.setupFigsWidget)
         self.extractPointsWidget = DataExtractingWidget()
         self.extractPointsWidget.setObjectName(u"extractPointsWidget")
         sizePolicy9.setHeightForWidth(self.extractPointsWidget.sizePolicy().hasHeightForWidth())
@@ -2839,7 +2839,7 @@ class Ui_MainWindow(object):
         self.settingsPushButton.setText("")
         self.modeTagButton.setText(QCoreApplication.translate("MainWindow", u"  EXTRACT", None))
         self.modeSelectButton.setText(QCoreApplication.translate("MainWindow", u"  CALIBRATE", None))
-        self.modeImportButton.setText(QCoreApplication.translate("MainWindow", u"  IMPORT FIGS", None))
+        self.modeSetupFigButton.setText(QCoreApplication.translate("MainWindow", u"  SETUP FIGS", None))
         self.modeFitButton.setText(QCoreApplication.translate("MainWindow", u"  FIT", None))
         self.toggleMenuButton.setText("")
         self.modePrefitButton.setText(QCoreApplication.translate("MainWindow", u"  PRE-FIT", None))

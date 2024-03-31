@@ -391,7 +391,7 @@ class Fit:
         Set up an instance of PageView.
         """
         self._pageButtons = {
-            "import": self._mainUi.modeImportButton,
+            "setup": self._mainUi.modeSetupFigButton,
             "calibrate": self._mainUi.modeSelectButton,
             "extract": self._mainUi.modeTagButton,
             "prefit": self._mainUi.modePrefitButton,

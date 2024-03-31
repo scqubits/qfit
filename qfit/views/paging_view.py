@@ -28,7 +28,7 @@ class PageView(QObject):
         "calibrate", "extract", "prefit", "fit".
     """
 
-    pageNames = ["import", "calibrate", "extract", "prefit", "fit"]
+    pageNames = ["setup", "calibrate", "extract", "prefit", "fit"]
     pageChanged = Signal(str)
 
     def __init__(

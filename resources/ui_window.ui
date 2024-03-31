@@ -1411,7 +1411,7 @@ QPushButton:checked {
            </widget>
           </item>
           <item row="2" column="0">
-           <widget class="QPushButton" name="modeImportButton">
+           <widget class="QPushButton" name="modeSetupFigButton">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -1454,7 +1454,7 @@ QPushButton:checked {
 }</string>
             </property>
             <property name="text">
-             <string>  IMPORT FIGS</string>
+             <string>  SETUP FIGS</string>
             </property>
             <property name="icon">
              <iconset resource="resources.qrc">
@@ -1726,7 +1726,7 @@ QPushButton:checked {
          <property name="currentIndex">
           <number>0</number>
          </property>
-         <widget class="QWidget" name="importFigsWidget">
+         <widget class="QWidget" name="setupFigsWidget">
           <layout class="QVBoxLayout" name="verticalLayout_7">
            <item>
             <widget class="QFrame" name="frame">

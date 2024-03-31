@@ -132,7 +132,7 @@ class CalibrationCtrl(QObject):
         # when menu switches to other pages, inform calibration model to turn off
         # the calibration
         # menu button clicks --> calibration parameter model
-        for pageStr in ["extract", "fit", "prefit", "import"]:
+        for pageStr in ["extract", "fit", "prefit", "setup"]:
             self.pageButtons[pageStr].clicked.connect(self.caliParamModel.interruptCali)
 
         # text edit for table entries --> calibration parameter model
