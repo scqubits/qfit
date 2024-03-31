@@ -391,6 +391,7 @@ class Fit:
         Set up an instance of PageView.
         """
         self._pageButtons = {
+            "import": self._mainUi.modeImportButton,
             "calibrate": self._mainUi.modeSelectButton,
             "extract": self._mainUi.modeTagButton,
             "prefit": self._mainUi.modePrefitButton,
@@ -604,8 +605,6 @@ class Fit:
     def _plottingMVCInits(self):
         # ui grouping
         self._measComboBoxes = {
-            "x": self._mainUi.xComboBox,
-            "y": self._mainUi.yComboBox,
             "z": self._mainUi.zComboBox,
         }
         self._measPlotSettings = {
