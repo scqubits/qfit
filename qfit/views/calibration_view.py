@@ -264,11 +264,11 @@ class CalibrationView(QObject):
     def _generateLineEditSet(self):
         if self.lineEditSet != {}:
             self.lineEditSet.clear()
-        self.lineEditSet: Dict[str, Dict[str, "CalibrationLineEdit"]] = {}
+        self.lineEditSet: Dict[str, Dict[str, "CalibrationLineEdit"]]
         # for each X row, create a dict for raw and mapped vectors to line edits
         for XRowIdx in range(self.caliTableXRowNr):
+            self.lineEditSet[f"X{XRowIdx+1}"] = {}
             for rawXVecName in self.rawXVecNameList:
-                self.lineEditSet[f"X{XRowIdx+1}"] = {}
                 self.lineEditSet[f"X{XRowIdx+1}"][rawXVecName] = self.caliXTable["X"][
                     f"X{XRowIdx+1}"
                 ].entriesDict[rawXVecName]

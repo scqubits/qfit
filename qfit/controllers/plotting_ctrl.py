@@ -703,7 +703,7 @@ class PlottingCtrl(QObject):
         if event.xdata is None or event.ydata is None:
             return
 
-        # process the data
+        # position of the click
         xdata, ydata = self.axes.transData.inverted().transform((event.x, event.y))
         xName = self.measData.currentMeasData.principalX.name
         yName = self.measData.currentMeasData.principalY.name

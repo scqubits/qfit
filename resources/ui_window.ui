@@ -1066,15 +1066,21 @@ QPushButton:checked {
                <widget class="QWidget" name="metadataTitleWidget" native="true">
                 <layout class="QHBoxLayout" name="horizontalLayout_3">
                  <property name="leftMargin">
-                  <number>12</number>
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
                  </property>
                  <property name="rightMargin">
-                  <number>12</number>
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
                  </property>
                  <item>
                   <widget class="QLabel" name="label_8">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                    <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -1082,7 +1088,7 @@ QPushButton:checked {
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
-                     <height>23</height>
+                     <height>0</height>
                     </size>
                    </property>
                    <property name="font">
@@ -1560,6 +1566,13 @@ QPushButton:checked {
               </item>
               <item>
                <widget class="QLabel" name="label_39">
+                <property name="font">
+                 <font>
+                  <family>Roboto Medium</family>
+                  <pointsize>-1</pointsize>
+                  <fontweight>Light</fontweight>
+                 </font>
+                </property>
                 <property name="styleSheet">
                  <string notr="true">QLabel {
     font-family: &quot;Roboto Medium&quot;;
@@ -2240,8 +2253,8 @@ background-color: #9163BF;
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>429</width>
-                   <height>24</height>
+                   <width>439</width>
+                   <height>167</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_5"/>
@@ -4196,8 +4209,8 @@ QPushButton: pressed{
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>431</width>
-                   <height>16</height>
+                   <width>441</width>
+                   <height>393</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -4947,8 +4960,8 @@ icon: url(:/icons/svg/copy-pressed.svg);
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>431</width>
-                   <height>16</height>
+                   <width>441</width>
+                   <height>471</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">

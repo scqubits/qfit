@@ -44,7 +44,7 @@ class PageView(QObject):
         self.pageButtons = pageButtons
         self.dataTransferButtons = dataTransferButtons
         self.stackWidgets = stackWidgets
-        self.currentPage = "calibrate"
+        self.currentPage = list(pageButtons.keys())[0]
 
         self._staticInits()
 
@@ -69,6 +69,7 @@ class PageView(QObject):
         """
         if page == self.currentPage:
             return
+        
         self.currentPage = page
 
         idx = self.pageNames.index(page)
