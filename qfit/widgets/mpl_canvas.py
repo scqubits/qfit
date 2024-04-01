@@ -17,13 +17,17 @@ from typing import Union, Literal, Tuple, Dict, Any, List
 
 from PySide6 import QtCore
 from PySide6.QtCore import Slot
-from PySide6.QtWidgets import QFrame, QVBoxLayout
+from PySide6.QtWidgets import (
+    QFrame, QVBoxLayout, QToolButton, QSizePolicy
+)
 
 from matplotlib.backend_bases import cursors
 from matplotlib.backends.backend_qtagg import (
+    # FigureCanvasQTAgg,
     FigureCanvas as FigureCanvasQTAgg,
     NavigationToolbar2QT,
 )
+
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.widgets import Cursor
@@ -71,6 +75,12 @@ class NavigationHidden(NavigationToolbar2QT):
         parent: "MplFigureCanvas",
     ):
         super().__init__(canvas, parent, coordinates=False)
+
+        # Hide all buttons.
+        for child in self.findChildren(QToolButton):
+            child.setVisible(False)
+        self.update()
+
         self.set_cursor(cursors.SELECT_REGION)
         self._idPress = None
         self._idRelease = None
@@ -411,11 +421,11 @@ class MplFigureCanvas(QFrame):
 
         # initialize the layout
         vertical_layout = QVBoxLayout()
+        vertical_layout.setContentsMargins(0, 0, 0, 0)
         vertical_layout.addWidget(self.canvas)
         self.setLayout(vertical_layout)
 
         # change background color
-        self.canvas.figure.patch.set_facecolor("#B8B8B8")
         self.canvas.figure.patch.set_facecolor("#B8B8B8")
         self.canvas.figure.subplots()
         self.axes.autoscale(enable=False)
@@ -432,6 +442,9 @@ class MplFigureCanvas(QFrame):
         self.axes.spines['left'].set_visible(False)
         self.axes.yaxis.set_ticks([])
         self.axes.set_yticklabels([])
+
+        # reduce the margin of the axes
+        self.canvas.figure.subplots_adjust(right=0.9, top=0.98)
 
         # the axes for displaying the x & y values
         self._xAxes: List[Axes] = []
@@ -557,8 +570,8 @@ class MplFigureCanvas(QFrame):
             ax.set_xlabel(xName)
             ax.xaxis.set_ticks_position('bottom')
             ax.xaxis.set_label_position('bottom')
-            ax.spines['bottom'].set_position(('outward', 40 * i))
-            # ax.xaxis.set_label_coords(1.05, -0.08 * (i))  # set label position
+            ax.spines['bottom'].set_position(('outward', 20 * i))
+            ax.xaxis.set_label_coords(1.08, -0.06 * (i + 0.5))  # set label position
             new_axes.append(ax)
         self._xAxes = new_axes
 
