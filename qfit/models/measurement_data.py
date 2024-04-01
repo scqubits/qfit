@@ -37,6 +37,7 @@ from qfit.models.data_structures import (
     PlotElement, 
     MeasMetaInfo, MeasRawXYConfig,
     NumMeasData, ImageMeasData, MeasDataType,
+    FilterConfig,
 )
 from qfit.models.registry import Registrable, RegistryEntry
 from qfit.utils.helpers import (
@@ -431,6 +432,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             self._currentRow = 0
 
         self.emitMetaInfo()
+        self.emitRawXYConfig()
         self.emitReadyToPlot()
         self.emitRelimCanvas()
         self.emitRawXMap()
@@ -783,20 +785,24 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         checkedX = rawXYConfig.checkedX
         checkedY = rawXYConfig.checkedY
         for data in self.fullData:
+            swap = False
             if self.isSubsetExclusively(
                 checkedX, 
                 data.yCandidates.keyList, 
                 data.xCandidates.keyList
             ):
-                data.swapXY()
-                continue
-
+                swap = True
             if self.isSubsetExclusively(
                 checkedY, 
                 data.xCandidates.keyList, 
                 data.yCandidates.keyList
             ):
+                swap = True 
+            
+            if swap:
                 data.swapXY()
+                if data is self.currentMeasData:
+                    self.emitMetaInfo()
         
         # store the raw X and Y axis names
         self._setRawXY(checkedX, checkedY)
@@ -842,74 +848,27 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             data.name: data.rawXByPrincipalX for data in self.fullData
         })
 
-    @Slot(bool)
-    def toggleBgndSubtractX(self, value: bool):
+    @Slot(FilterConfig)
+    def storeFilter(self, filterConfig: FilterConfig):
         """
-        Toggle the background subtraction for the x axis, and emit the
-        readyToPlot signal.
+        Store the filter configuration, and emit the readyToPlot signal.
         """
-        self.currentMeasData._bgndSubtractX = value
+        self.currentMeasData.setFilter(filterConfig)
         self.emitReadyToPlot()
 
-    @Slot(bool)
-    def toggleBgndSubtractY(self, value: bool):
+    def exportFilter(self) -> FilterConfig:
         """
-        Toggle the background subtraction for the y axis, and emit the
-        readyToPlot signal.
-        """
-        self.currentMeasData._bgndSubtractY = value
-        self.emitReadyToPlot()
+        Export the filter configuration to view.
 
-    @Slot(bool)
-    def toggleTopHatFilter(self, value: bool):
+        Returns
+        -------
+        FilterConfig
+            The filter configuration.
         """
-        Toggle the top hat filter, and emit the readyToPlot signal.
-        """
-        self.currentMeasData._topHatFilter = value
-        self.emitReadyToPlot()
-
-    @Slot(bool)
-    def toggleWaveletFilter(self, value: bool):
-        """
-        Toggle the wavelet filter, and emit the readyToPlot signal.
-        """
-        self.currentMeasData._waveletFilter = value
-        self.emitReadyToPlot()
-
-    @Slot(bool)
-    def toggleEdgeFilter(self, value: bool):
-        """
-        Toggle the edge filter, and emit the readyToPlot signal.
-        """
-        self.currentMeasData._edgeFilter = value
-        self.emitReadyToPlot()
-
-    @Slot(bool)
-    def toggleLogColoring(self, value: bool):
-        """
-        Toggle the log coloring, and emit the readyToPlot signal.
-        """
-        self.currentMeasData._logColoring = value
-        self.emitReadyToPlot()
-
-    @Slot(float)
-    def setZMin(self, value: float):
-        """
-        Set the minimum z value, and emit the readyToPlot signal.
-        """
-        self.currentMeasData._zMin = value / 100
-        self.emitReadyToPlot()
-
-    @Slot(float)
-    def setZMax(self, value: float):
-        """
-        Set the maximum z value, and emit the readyToPlot signal.
-        """
-        self.currentMeasData._zMax = value / 100
-        self.emitReadyToPlot()
+        return self.currentMeasData.getFilter()
 
     @Slot(int)
-    def setPrincipalZ(self, itemIndex: int):
+    def storePrincipalZ(self, itemIndex: int):
         """
         Set the current measurement data, and emit the readyToPlot signal, 
         and relimCanvas signal.

@@ -1091,6 +1091,30 @@ MeasRawXYConfig:
         return self.__str__()
     
 
+class FilterConfig:
+    def __init__(
+        self,
+        topHat: bool,
+        wavelet: bool,
+        edge: bool,
+        bgndX: bool,
+        bgndY: bool,
+        log: bool,
+        min: float,
+        max: float,
+        color: str,
+    ):
+        self.topHat = topHat
+        self.wavelet = wavelet
+        self.edge = edge
+        self.bgndX = bgndX
+        self.bgndY = bgndY
+        self.log = log
+        self.min = min
+        self.max = max
+        self.color = color
+    
+
 class MeasurementData:
     """
     Base class for storing and manipulating measurement data. The primary 
@@ -1150,7 +1174,11 @@ class MeasurementData:
     _edgeFilter = False
     _logColoring = False
     _zMin = 0.0
-    _zMax = 1.0
+    _zMax = 100.0
+    _colorMapStr = "PuOr"   # it's a property stored in each data, but won't 
+                            # be used in generatePlotElement. It's used in
+                            # the mpl canvas view to set the color map of the
+                            # entire canvas.
 
     def __init__(self, figName: str, rawData, file: str):
         super().__init__()
@@ -1469,6 +1497,36 @@ class MeasurementData:
         return rawX
 
     # filters =============================================================
+    def setFilter(self, config: FilterConfig):
+        """
+        Set the filter configuration
+        """
+        self._topHatFilter = config.topHat
+        self._waveletFilter = config.wavelet
+        self._edgeFilter = config.edge
+        self._bgndSubtractX = config.bgndX
+        self._bgndSubtractY = config.bgndY
+        self._logColoring = config.log
+        self._zMin = config.min
+        self._zMax = config.max
+        self._colorMapStr = config.color
+
+    def getFilter(self) -> FilterConfig:
+        """
+        Get the filter configuration
+        """
+        return FilterConfig(
+            topHat=self._topHatFilter,
+            wavelet=self._waveletFilter,
+            edge=self._edgeFilter,
+            bgndX=self._bgndSubtractX,
+            bgndY=self._bgndSubtractY,
+            log=self._logColoring,
+            min=self._zMin,
+            max=self._zMax,
+            color = self._colorMapStr,
+        )
+
     def currentMinMax(self, array2D: np.ndarray) -> Tuple[float, float, float, float]:
         """
         Return the clipped min max values of the current zData and the 
@@ -1485,8 +1543,8 @@ class MeasurementData:
         if array2D.ndim != 2:
             raise ValueError("array must be 2D")
         
-        normedMin = min(self._zMin, self._zMax)
-        normedMax = max(self._zMin, self._zMax)
+        normedMin = min(self._zMin, self._zMax) / 100
+        normedMax = max(self._zMin, self._zMax) / 100
 
         rawZMin = array2D.min()
         rawZMax = array2D.max()

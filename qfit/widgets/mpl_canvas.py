@@ -468,9 +468,10 @@ class MplFigureCanvas(QFrame):
         """
         Update the color map of the plotting elements. 
         """
-        self._colorMapStr = colorMap
-        self._updateElementColors()
-        self.plotAllElements()
+        if colorMap != self._colorMapStr:
+            self._colorMapStr = colorMap
+            self._updateElementColors()
+            self.plotAllElements()
 
     def _updateElementColors(self):
         """

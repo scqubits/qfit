@@ -8,6 +8,7 @@ from qfit.utils.helpers import ySnap, OrderedDictMod
 from qfit.models.measurement_data import (
     MeasDataType,
 )
+from qfit.models.data_structures import FilterConfig
 
 from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal, List, Callable
 
@@ -167,33 +168,58 @@ class PlottingCtrl(QObject):
         )
         # self.setupXYDataBoxes()
 
+    def _modelStoreFilter(self):
+        """
+        Update the filter for the measurement data.
+
+        Note: part of it should be a view method, but it is too much hassle
+        to implement it now.
+        """
+        fiter = FilterConfig(
+            topHat=self.measPlotSettings["topHat"].isChecked(),
+            wavelet=self.measPlotSettings["wavelet"].isChecked(),
+            edge=self.measPlotSettings["edge"].isChecked(),
+            bgndX=self.measPlotSettings["bgndX"].isChecked(),
+            bgndY=self.measPlotSettings["bgndY"].isChecked(),
+            log=self.measPlotSettings["log"].isChecked(),
+            min=self.measPlotSettings["min"].value(),
+            max=self.measPlotSettings["max"].value(),
+            color=self.measPlotSettings["color"].currentText(),
+        )
+        self.measData.storeFilter(fiter)
+
+    def _viewStoreFilter(self, filterConfig: FilterConfig):
+        """
+        Update the filter for the measurement data.
+
+        Note: part of it should be a view method, but it is too much hassle
+        to implement it now.
+        """
+        self.measPlotSettings["topHat"].setChecked(filterConfig.topHat)
+        self.measPlotSettings["wavelet"].setChecked(filterConfig.wavelet)
+        self.measPlotSettings["edge"].setChecked(filterConfig.edge)
+        self.measPlotSettings["bgndX"].setChecked(filterConfig.bgndX)
+        self.measPlotSettings["bgndY"].setChecked(filterConfig.bgndY)
+        self.measPlotSettings["log"].setChecked(filterConfig.log)
+        self.measPlotSettings["min"].setValue(filterConfig.min)
+        self.measPlotSettings["max"].setValue(filterConfig.max)
+        self.measPlotSettings["color"].setCurrentText(filterConfig.color)
+
     def measPlotSettingConnects(self):
         """Connect the options related to display of measurement data"""
-        self.measPlotSettings["topHat"].toggled.connect(
-            self.measData.toggleTopHatFilter
-        )
-        self.measPlotSettings["wavelet"].toggled.connect(
-            self.measData.toggleWaveletFilter
-        )
-        self.measPlotSettings["edge"].toggled.connect(
-            self.measData.toggleEdgeFilter
-        )
-        self.measPlotSettings["bgndX"].toggled.connect(
-            self.measData.toggleBgndSubtractX
-        )
-        self.measPlotSettings["bgndY"].toggled.connect(
-            self.measData.toggleBgndSubtractY
-        )
-        self.measPlotSettings["log"].toggled.connect(
-            self.measData.toggleLogColoring
-        )
-        self.measPlotSettings["min"].valueChanged.connect(self.measData.setZMin)
-        self.measPlotSettings["max"].valueChanged.connect(self.measData.setZMax)
-
+        self.measPlotSettings["topHat"].toggled.connect(self._modelStoreFilter)
+        self.measPlotSettings["wavelet"].toggled.connect(self._modelStoreFilter)
+        self.measPlotSettings["edge"].toggled.connect(self._modelStoreFilter)
+        self.measPlotSettings["bgndX"].toggled.connect(self._modelStoreFilter)
+        self.measPlotSettings["bgndY"].toggled.connect(self._modelStoreFilter)
+        self.measPlotSettings["log"].toggled.connect(self._modelStoreFilter)
+        self.measPlotSettings["min"].valueChanged.connect(self._modelStoreFilter)
+        self.measPlotSettings["max"].valueChanged.connect(self._modelStoreFilter)
+        self.measPlotSettings["color"].currentTextChanged.connect(self._modelStoreFilter)
         self.measPlotSettings["color"].currentTextChanged.connect(
-            self.mplCanvas.updateColorMap
+            lambda: self.mplCanvas.updateColorMap(self.measPlotSettings["color"].currentText())
         )
-
+        
     def dataSwitchConnects(self):
         """
         Connect the combo boxes for the x, y, and z axes to the measurement data.
@@ -224,7 +250,7 @@ class PlottingCtrl(QObject):
         """
         Update the z axis of the measurement data.
         """
-        self.measData.setPrincipalZ(itemIndex)
+        self.measData.storePrincipalZ(itemIndex)
         # self.setupXYDataBoxes()
 
     # @Slot(int)
@@ -254,6 +280,7 @@ class PlottingCtrl(QObject):
         the only exception.
         """
         self.zComboBoxReload()
+        self._viewStoreFilter(self.measData.exportFilter())
         # self.setXYAxes(self.measData.currentMeasData)  # will be called when relimCanvas  
 
     @Slot()
