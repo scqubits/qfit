@@ -1056,17 +1056,17 @@ MeasMetaInfo:
 class MeasRawXYConfig:
     def __init__(
         self,
-        xCandidates: List[str],
-        yCandidates: List[str],
-        checkedX: List[str],
-        checkedY: List[str],
-        grayedX: List[str],
-        grayedY: List[str],
-        allowTranspose: bool,
-        allowContinue: bool,
+        checkedX: List[str] = [],
+        checkedY: List[str] = [],
+        xCandidates: List[str] = [],
+        yCandidates: List[str] = [],
+        grayedX: List[str] = [],
+        grayedY: List[str] = [],
+        allowTranspose: bool = False,
+        allowContinue: bool = False,
     ):
-        self.xCandidates = xCandidates
-        self.yCandidates = yCandidates
+        self.xCandidates = sorted(xCandidates)
+        self.yCandidates = sorted(yCandidates)
         self.checkedX = checkedX
         self.checkedY = checkedY
         self.grayedX = grayedX

@@ -35,7 +35,7 @@ class Ui_MainWindow(object):
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.setWindowModality(Qt.NonModal)
         MainWindow.setEnabled(True)
-        MainWindow.resize(1394, 794)
+        MainWindow.resize(1394, 830)
         sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -799,15 +799,15 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_3.addWidget(self.label_8)
 
-        self.fileNameConfig = QLabel(self.metadataTitleWidget)
-        self.fileNameConfig.setObjectName(u"fileNameConfig")
+        self.fileNameInfo = QLabel(self.metadataTitleWidget)
+        self.fileNameInfo.setObjectName(u"fileNameInfo")
         sizePolicy6 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
         sizePolicy6.setHorizontalStretch(0)
         sizePolicy6.setVerticalStretch(0)
-        sizePolicy6.setHeightForWidth(self.fileNameConfig.sizePolicy().hasHeightForWidth())
-        self.fileNameConfig.setSizePolicy(sizePolicy6)
+        sizePolicy6.setHeightForWidth(self.fileNameInfo.sizePolicy().hasHeightForWidth())
+        self.fileNameInfo.setSizePolicy(sizePolicy6)
 
-        self.horizontalLayout_3.addWidget(self.fileNameConfig)
+        self.horizontalLayout_3.addWidget(self.fileNameInfo)
 
         self.horizontalSpacer_7 = QSpacerItem(302, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
@@ -852,16 +852,16 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_22.addWidget(self.label_42)
 
-        self.fileLocConfig = QLabel(self.widget_19)
-        self.fileLocConfig.setObjectName(u"fileLocConfig")
+        self.fileLocInfo = QLabel(self.widget_19)
+        self.fileLocInfo.setObjectName(u"fileLocInfo")
         sizePolicy9 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         sizePolicy9.setHorizontalStretch(0)
         sizePolicy9.setVerticalStretch(0)
-        sizePolicy9.setHeightForWidth(self.fileLocConfig.sizePolicy().hasHeightForWidth())
-        self.fileLocConfig.setSizePolicy(sizePolicy9)
-        self.fileLocConfig.setWordWrap(True)
+        sizePolicy9.setHeightForWidth(self.fileLocInfo.sizePolicy().hasHeightForWidth())
+        self.fileLocInfo.setSizePolicy(sizePolicy9)
+        self.fileLocInfo.setWordWrap(True)
 
-        self.horizontalLayout_22.addWidget(self.fileLocConfig)
+        self.horizontalLayout_22.addWidget(self.fileLocInfo)
 
 
         self.gridLayout_3.addWidget(self.widget_19, 0, 0, 1, 1)
@@ -878,13 +878,13 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_10.addWidget(self.label_4)
 
-        self.yCandConfig = QLabel(self.widget_15)
-        self.yCandConfig.setObjectName(u"yCandConfig")
-        sizePolicy9.setHeightForWidth(self.yCandConfig.sizePolicy().hasHeightForWidth())
-        self.yCandConfig.setSizePolicy(sizePolicy9)
-        self.yCandConfig.setWordWrap(True)
+        self.yCandInfo = QLabel(self.widget_15)
+        self.yCandInfo.setObjectName(u"yCandInfo")
+        sizePolicy9.setHeightForWidth(self.yCandInfo.sizePolicy().hasHeightForWidth())
+        self.yCandInfo.setSizePolicy(sizePolicy9)
+        self.yCandInfo.setWordWrap(True)
 
-        self.horizontalLayout_10.addWidget(self.yCandConfig)
+        self.horizontalLayout_10.addWidget(self.yCandInfo)
 
 
         self.gridLayout_3.addWidget(self.widget_15, 3, 0, 1, 1)
@@ -901,13 +901,13 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_6.addWidget(self.label_2)
 
-        self.dimConfig = QLabel(self.widget_2)
-        self.dimConfig.setObjectName(u"dimConfig")
-        sizePolicy9.setHeightForWidth(self.dimConfig.sizePolicy().hasHeightForWidth())
-        self.dimConfig.setSizePolicy(sizePolicy9)
-        self.dimConfig.setWordWrap(True)
+        self.dimInfo = QLabel(self.widget_2)
+        self.dimInfo.setObjectName(u"dimInfo")
+        sizePolicy9.setHeightForWidth(self.dimInfo.sizePolicy().hasHeightForWidth())
+        self.dimInfo.setSizePolicy(sizePolicy9)
+        self.dimInfo.setWordWrap(True)
 
-        self.horizontalLayout_6.addWidget(self.dimConfig)
+        self.horizontalLayout_6.addWidget(self.dimInfo)
 
 
         self.gridLayout_3.addWidget(self.widget_2, 1, 0, 1, 1)
@@ -924,13 +924,13 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_21.addWidget(self.label_43)
 
-        self.zCandConfig = QLabel(self.widget_20)
-        self.zCandConfig.setObjectName(u"zCandConfig")
-        sizePolicy9.setHeightForWidth(self.zCandConfig.sizePolicy().hasHeightForWidth())
-        self.zCandConfig.setSizePolicy(sizePolicy9)
-        self.zCandConfig.setWordWrap(True)
+        self.zCandInfo = QLabel(self.widget_20)
+        self.zCandInfo.setObjectName(u"zCandInfo")
+        sizePolicy9.setHeightForWidth(self.zCandInfo.sizePolicy().hasHeightForWidth())
+        self.zCandInfo.setSizePolicy(sizePolicy9)
+        self.zCandInfo.setWordWrap(True)
 
-        self.horizontalLayout_21.addWidget(self.zCandConfig)
+        self.horizontalLayout_21.addWidget(self.zCandInfo)
 
 
         self.gridLayout_3.addWidget(self.widget_20, 4, 0, 1, 1)
@@ -949,13 +949,13 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_19.addWidget(self.label_10)
 
-        self.discAxesConfig = QLabel(self.widget_16)
-        self.discAxesConfig.setObjectName(u"discAxesConfig")
-        sizePolicy9.setHeightForWidth(self.discAxesConfig.sizePolicy().hasHeightForWidth())
-        self.discAxesConfig.setSizePolicy(sizePolicy9)
-        self.discAxesConfig.setWordWrap(True)
+        self.discAxesInfo = QLabel(self.widget_16)
+        self.discAxesInfo.setObjectName(u"discAxesInfo")
+        sizePolicy9.setHeightForWidth(self.discAxesInfo.sizePolicy().hasHeightForWidth())
+        self.discAxesInfo.setSizePolicy(sizePolicy9)
+        self.discAxesInfo.setWordWrap(True)
 
-        self.horizontalLayout_19.addWidget(self.discAxesConfig)
+        self.horizontalLayout_19.addWidget(self.discAxesInfo)
 
 
         self.gridLayout_3.addWidget(self.widget_16, 5, 0, 1, 1)
@@ -975,13 +975,13 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_9.addWidget(self.label_3)
 
-        self.xCandConfig = QLabel(self.widget_14)
-        self.xCandConfig.setObjectName(u"xCandConfig")
-        sizePolicy9.setHeightForWidth(self.xCandConfig.sizePolicy().hasHeightForWidth())
-        self.xCandConfig.setSizePolicy(sizePolicy9)
-        self.xCandConfig.setWordWrap(True)
+        self.xCandInfo = QLabel(self.widget_14)
+        self.xCandInfo.setObjectName(u"xCandInfo")
+        sizePolicy9.setHeightForWidth(self.xCandInfo.sizePolicy().hasHeightForWidth())
+        self.xCandInfo.setSizePolicy(sizePolicy9)
+        self.xCandInfo.setWordWrap(True)
 
-        self.horizontalLayout_9.addWidget(self.xCandConfig)
+        self.horizontalLayout_9.addWidget(self.xCandInfo)
 
 
         self.gridLayout_3.addWidget(self.widget_14, 2, 0, 1, 1)
@@ -1021,17 +1021,13 @@ class Ui_MainWindow(object):
         self.yAxesScrollArea.setSizePolicy(sizePolicy11)
         self.yAxesScrollArea.setMinimumSize(QSize(0, 0))
         self.yAxesScrollArea.setMaximumSize(QSize(200, 16777215))
-        self.yAxesScrollArea.setStyleSheet(u"QFrame {\n"
-"	background-color: #2A2A2A;\n"
-"	border: 0px solid rgb(52, 59, 72);\n"
-"	border-top-right-radius: 6px;	\n"
-"	border-bottom-right-radius: 6px;	\n"
-"}\n"
-"")
+        self.yAxesScrollArea.setStyleSheet(u"QScrollArea {\n"
+"	background-color: #4B4B4B;\n"
+"}")
         self.yAxesScrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents_3 = QWidget()
         self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
-        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 188, 181))
+        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 186, 179))
         self.verticalLayout_19 = QVBoxLayout(self.scrollAreaWidgetContents_3)
         self.verticalLayout_19.setObjectName(u"verticalLayout_19")
         self.yAxesScrollArea.setWidget(self.scrollAreaWidgetContents_3)
@@ -1060,13 +1056,9 @@ class Ui_MainWindow(object):
         self.xAxesScrollArea.setSizePolicy(sizePolicy2)
         self.xAxesScrollArea.setMinimumSize(QSize(0, 0))
         self.xAxesScrollArea.setMaximumSize(QSize(200, 16777215))
-        self.xAxesScrollArea.setStyleSheet(u"QFrame {\n"
-"	background-color: #2A2A2A;\n"
-"	border: 0px solid rgb(52, 59, 72);\n"
-"	border-top-right-radius: 6px;	\n"
-"	border-bottom-right-radius: 6px;	\n"
-"}\n"
-"")
+        self.xAxesScrollArea.setStyleSheet(u"QScrollArea {\n"
+"	background-color: #4B4B4B;\n"
+"}")
         self.xAxesScrollArea.setFrameShape(QFrame.NoFrame)
         self.xAxesScrollArea.setFrameShadow(QFrame.Sunken)
         self.xAxesScrollArea.setWidgetResizable(True)
@@ -1317,7 +1309,7 @@ class Ui_MainWindow(object):
         self.calibrateXScrollArea.setWidgetResizable(True)
         self.calibrateXScrollAreaWidget = QWidget()
         self.calibrateXScrollAreaWidget.setObjectName(u"calibrateXScrollAreaWidget")
-        self.calibrateXScrollAreaWidget.setGeometry(QRect(0, 0, 439, 216))
+        self.calibrateXScrollAreaWidget.setGeometry(QRect(0, 0, 439, 179))
         self.verticalLayout_5 = QVBoxLayout(self.calibrateXScrollAreaWidget)
         self.verticalLayout_5.setObjectName(u"verticalLayout_5")
         self.calibrateXScrollArea.setWidget(self.calibrateXScrollAreaWidget)
@@ -2937,19 +2929,19 @@ class Ui_MainWindow(object):
         self.modeFitButton.setText(QCoreApplication.translate("MainWindow", u"  FIT", None))
         self.settingsPushButton.setText("")
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"METADATA:", None))
-        self.fileNameConfig.setText(QCoreApplication.translate("MainWindow", u"N/A", None))
+        self.fileNameInfo.setText(QCoreApplication.translate("MainWindow", u"N/A", None))
         self.label_42.setText(QCoreApplication.translate("MainWindow", u"File Location:   ", None))
-        self.fileLocConfig.setText(QCoreApplication.translate("MainWindow", u"N/A", None))
+        self.fileLocInfo.setText(QCoreApplication.translate("MainWindow", u"N/A", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Y Candidates:   ", None))
-        self.yCandConfig.setText(QCoreApplication.translate("MainWindow", u"N/A", None))
+        self.yCandInfo.setText(QCoreApplication.translate("MainWindow", u"N/A", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Dimension:   ", None))
-        self.dimConfig.setText(QCoreApplication.translate("MainWindow", u"N/A", None))
+        self.dimInfo.setText(QCoreApplication.translate("MainWindow", u"N/A", None))
         self.label_43.setText(QCoreApplication.translate("MainWindow", u"Z Candidates:   ", None))
-        self.zCandConfig.setText(QCoreApplication.translate("MainWindow", u"N/A", None))
+        self.zCandInfo.setText(QCoreApplication.translate("MainWindow", u"N/A", None))
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"Discarded axes:   ", None))
-        self.discAxesConfig.setText(QCoreApplication.translate("MainWindow", u"N/A", None))
+        self.discAxesInfo.setText(QCoreApplication.translate("MainWindow", u"N/A", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"X Candidates:   ", None))
-        self.xCandConfig.setText(QCoreApplication.translate("MainWindow", u"N/A", None))
+        self.xCandInfo.setText(QCoreApplication.translate("MainWindow", u"N/A", None))
         self.label_39.setText(QCoreApplication.translate("MainWindow", u"SELECT AXES", None))
         self.label_38.setText(QCoreApplication.translate("MainWindow", u"Y   [select one only]", None))
         self.label_11.setText(QCoreApplication.translate("MainWindow", u"X   [select at least one]", None))

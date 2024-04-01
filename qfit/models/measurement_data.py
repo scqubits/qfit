@@ -202,6 +202,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     """
     # data list management
     figSwitched = Signal(str)
+    metaInfoChanged = Signal(MeasMetaInfo)
     rawXYConfigChanged = Signal(MeasRawXYConfig)
 
     # single data processing
@@ -212,7 +213,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     def __init__(self, parent: QObject | None = None):
         super().__init__(parent)
 
-        self._data: List[MeasDataType] = []
+        self.fullData: List[MeasDataType] = []
         self._currentRow: int = 0
 
         self.checkedRawX: List[str] = []
@@ -391,16 +392,17 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
                 measurementData.append(measData)
 
         # add the measurement data to the list
-        self._data = self._data + measurementData
+        self.fullData = self.fullData + measurementData
 
         # rename the measurement data with repeated names
-        names = [measData.name for measData in self._data]
+        names = [measData.name for measData in self.fullData]
         uniqueNames = makeUnique(names)
-        for measData, name in zip(self._data, uniqueNames):
+        for measData, name in zip(self.fullData, uniqueNames):
             measData.name = name
 
         # if there are new data loaded, emit the signals
         if measurementData != []:
+            self.emitMetaInfo()
             self.emitReadyToPlot()
             self.emitRelimCanvas()
             self.emitRawXMap()
@@ -422,11 +424,13 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         index: int
             Index of the file to be removed.
         """
-        self._data.pop(index)
+        self.fullData.pop(index)
 
         # if the current row is removed, set the current row to the first row
-        if self._currentRow >= len(self._data):
+        if self._currentRow >= len(self.fullData):
             self._currentRow = 0
+
+        self.emitMetaInfo()
         self.emitReadyToPlot()
         self.emitRelimCanvas()
         self.emitRawXMap()
@@ -435,7 +439,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     # Qt view related ==================================================        
     @property
     def figNames(self) -> List[str]:
-        return [data.name for data in self._data]
+        return [data.name for data in self.fullData]
     
     @property
     def currentRow(self) -> int:
@@ -443,7 +447,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
 
     @property
     def currentMeasData(self) -> "MeasDataType":
-        return self._data[self._currentRow]
+        return self.fullData[self._currentRow]
     
     @property
     def currentFigName(self) -> str:
@@ -454,14 +458,14 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         The NAME & Icon of the measurement data set!
         """
         if role == Qt.DisplayRole:
-            str_value = self._data[index.row()].name
+            str_value = self.fullData[index.row()].name
             return str_value
 
     def rowCount(self, *args) -> int:
-        return len(self._data)
+        return len(self.fullData)
 
     def isEmpty(self) -> bool:
-        return self._data == []
+        return self.fullData == []
 
     def flags(self, index):
         flags = super(self.__class__, self).flags(index)
@@ -499,7 +503,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         row = self.currentRow
 
         self.beginRemoveRows(QModelIndex(), row, row)
-        self._data.pop(row)
+        self.fullData.pop(row)
 
         # update the current row before emitting the rowsRemoved signal
         # (which will be emitted by endRemoveRows)
@@ -562,12 +566,12 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         List[str]
             The candidates for raw X axis names.
         """
-        if not self._data:
+        if not self.fullData:
             return []
         
         candidates = [
             set(data.xCandidates.keyList + data.yCandidates.keyList) 
-            for data in self._data
+            for data in self.fullData
         ]
         candidates = set.intersection(*candidates)
 
@@ -608,7 +612,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         # the names that are checked for Y axis
         grayedX = set(self.checkedRawY)
 
-        for data in self._data:
+        for data in self.fullData:
             xCompatible = set(data.xCandidates.keyList)
             yCompatible = set(data.yCandidates.keyList)
 
@@ -646,7 +650,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             remainingCand = []
         grayedY = grayedY.union(set(remainingCand))
 
-        for data in self._data:
+        for data in self.fullData:
             xCompatible = set(data.xCandidates.keyList)
             yCompatible = set(data.yCandidates.keyList)
 
@@ -682,7 +686,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.checkedRawY = yNames
 
         if self._rawXYIsValid():
-            for data in self._data:
+            for data in self.fullData:
                 data.setRawXY(self.checkedRawX, self.checkedRawY)
 
     def _rawXYIsValid(self) -> bool:
@@ -725,15 +729,20 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         if isinstance(fig, int):
             self._currentRow = fig
         else:
-            for i, data in enumerate(self._data):
+            for i, data in enumerate(self.fullData):
                 if data.name == fig:
                     self._currentRow = i
                     break
         
+        self.emitMetaInfo()
+        self.emitRawXYConfig()      # update transpose button 
         self.emitReadyToPlot()
         self.emitRelimCanvas()
         self.emitRawXMap()
         self.emitFigSwitched()
+
+    def emitMetaInfo(self):
+        self.metaInfoChanged.emit(self.currentMeasData.generateMetaInfo())
 
     def emitFigSwitched(self):
         self.figSwitched.emit(self.currentFigName) 
@@ -750,14 +759,14 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             grayed out.
         """
         return MeasRawXYConfig(
-            self.xCandidates,
-            self.yCandidates,
-            self.checkedRawX,
-            self.checkedRawY,
-            self.grayedRawX,
-            self.grayedRawY,
-            self.currentMeasData.ambiguousZOrient,
-            self._rawXYIsValid(),
+            checkedX = self.checkedRawX, 
+            checkedY = self.checkedRawY,
+            xCandidates = self.xCandidates,
+            yCandidates = self.yCandidates,
+            grayedX = self.grayedRawX,
+            grayedY = self.grayedRawY,
+            allowTranspose = self.currentMeasData.ambiguousZOrient,
+            allowContinue = self._rawXYIsValid() and len(self.fullData) > 0,
         )
     
     @Slot()
@@ -773,7 +782,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         # note that it will re-init the stored raw XY info 
         checkedX = rawXYConfig.checkedX
         checkedY = rawXYConfig.checkedY
-        for data in self._data:
+        for data in self.fullData:
             if self.isSubsetExclusively(
                 checkedX, 
                 data.yCandidates.keyList, 
@@ -791,6 +800,9 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         
         # store the raw X and Y axis names
         self._setRawXY(checkedX, checkedY)
+
+        # gray out the X and Y axis names
+        self.emitRawXYConfig()
 
         if self._rawXYIsValid():
             # update view
@@ -827,7 +839,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         to the current x values.
         """
         self.updateRawXMap.emit({
-            data.name: data.rawXByPrincipalX for data in self._data
+            data.name: data.rawXByPrincipalX for data in self.fullData
         })
 
     @Slot(bool)
@@ -936,7 +948,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         """
 
         def dataSetter(value):
-            self._data = value
+            self.fullData = value
             self.emitReadyToPlot()
             self.emitRelimCanvas()
             self.emitRawXMap()
@@ -951,7 +963,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             "measDataSet.data": RegistryEntry(
                 name="measDataSet.data",
                 quantity_type="r+",
-                getter=lambda: self._data,
+                getter=lambda: self.fullData,
                 setter=dataSetter,
             ),
         }

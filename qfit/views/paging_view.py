@@ -81,8 +81,23 @@ class PageView(QObject):
 
         self.pageChanged.emit(page)
 
-    def setEnabled(self, enabled: bool):
-        for button in self.pageButtons.values():
-            button.setEnabled(enabled)
-        for button in self.dataTransferButtons.values():
-            button.setEnabled(enabled)
+    def setEnabled(self, enabled: bool, page: str | None = None):
+        """
+        Set whether the buttons are enabled or not. 
+
+        Parameters
+        ----------
+        enabled : bool
+            Whether the buttons are enabled or not.
+        page : str | None
+            The page to set the enabled state. If None, set all buttons.
+        """
+        if page is None:
+            for button in self.pageButtons.values():
+                button.setEnabled(enabled)
+            for button in self.dataTransferButtons.values():
+                button.setEnabled(enabled)
+        else:
+            self.pageButtons[page].setEnabled(enabled)
+            if page in self.dataTransferButtons:
+                self.dataTransferButtons[page].setEnabled(enabled)

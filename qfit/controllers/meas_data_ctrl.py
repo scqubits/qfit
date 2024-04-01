@@ -4,13 +4,12 @@ from PySide6.QtCore import (
     Slot,
 )
 
-from typing import TYPE_CHECKING, Tuple, Dict, Any, List
+from typing import TYPE_CHECKING, Tuple, Dict, Any, List, Callable
 
 if TYPE_CHECKING:
-    from scqubits.core.hilbert_space import HilbertSpace
-    from qfit.models.measurement_data import MeasDataSet
-    from qfit.models.extracted_data import AllExtractedData
-    from qfit.models.numerical_model import QuantumModel
+    from qfit.models.measurement_data import MeasDataSet, MeasDataType
+    from qfit.views.importer_view import ImporterView
+    from qfit.views.paging_view import PageView
 
 class MeasDataCtrl(QObject):
     def __init__(
@@ -19,20 +18,76 @@ class MeasDataCtrl(QObject):
         models: Tuple[
             "MeasDataSet"
         ],
+        views: Tuple[
+            "ImporterView", "PageView"
+        ],
+        fullReplaceMeasData: Callable[[List["MeasDataType"]], None],
+        fullDynamicalInit: Callable[[], None],
     ) -> None:
         super().__init__(parent)
         (
-            self.measDataSet
+            self.measDataSet,
         ) = models
+        (
+            self.importerView, self.pageView
+        ) = views
+        self.fullReplaceMeasData = fullReplaceMeasData
+        self.fullDynamicalInit = fullDynamicalInit
 
         self.switchFigConnects()
+        self.importFigConnects()
+        self.metaInfoConnects()
+        self.configConnects()
+        self.transposeConnects()
+        self.continueConnects()
 
     # connections ======================================================
+    def importFigConnects(self) -> None:
+        """
+        Import the figure from the importer page.
+        """
+        self.importerView.addFigClicked.connect(self.measDataSet.insertRow)
+        self.importerView.deleteFigClicked.connect(self.measDataSet.removeRow)
+
     def switchFigConnects(self) -> None:
-        # from view to model, depending on which page the user is in,
-        # switch the figure in the model
-        # if the user is in the importer page:
-        #     self.some_view_not_implemented_yet.switchFigSignal.connect(self.measImporter.switchFig)
-        # elif the user is in other page:
-        #     self.some_view_not_implemented_yet.switchFigSignal.connect(self.measDataSet.switchFig)
+        """
+        Switch the figure from the importer page.
+        """
+        # just like extracting view, we should have:
+        # view focus changed --> model switch fig
+        # model row removed / inserted --> view select item (change focus)
+        # (already in Qt if we use .setModel()) model row removed / inserted --> view add / remove item
         pass
+
+    def metaInfoConnects(self) -> None:
+        """
+        Show the meta info for the current measurement data.
+        """
+        self.measDataSet.metaInfoChanged.connect(self.importerView.setMetaInfo)
+    
+    def configConnects(self) -> None:
+        """
+        Connect the configuration panel between model and view.
+        """
+        self.importerView.configChanged.connect(self.measDataSet.storeRawXYConfig)
+        self.importerView.configChanged.connect(lambda config: print(config))
+
+        self.measDataSet.rawXYConfigChanged.connect(self.importerView.setConfig)
+
+    def transposeConnects(self) -> None:
+        """
+        Connect the transpose button between model and view.
+        """
+        self.importerView.transposeZClicked.connect(self.measDataSet.transposeZ)
+
+    def continueConnects(self) -> None:
+        """
+        Connect the continue button between model and view.
+        """
+        self.importerView.continueClicked.connect(
+            lambda: self.fullReplaceMeasData(self.measDataSet.fullData)
+        )
+        self.importerView.continueClicked.connect(self.fullDynamicalInit)
+        self.importerView.continueClicked.connect(
+            lambda: self.pageView.switchToPage("calibrate")
+        )

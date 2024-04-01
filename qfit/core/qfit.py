@@ -29,6 +29,7 @@ from qfit.views.paging_view import PageView
 
 # measurement data
 from qfit.models.measurement_data import MeasDataType, MeasDataSet
+from qfit.views.importer_view import ImporterView
 from qfit.controllers.meas_data_ctrl import MeasDataCtrl
 
 # calibration:
@@ -438,11 +439,41 @@ class Fit:
         """
         Set up an instance of MeasurementData.
         """
-        self._measData = MeasDataSet()
+        # ui grouping
+        self._metaInfo = {
+            "name": self._mainUi.fileNameInfo,
+            "file": self._mainUi.fileLocInfo,
+            "shape": self._mainUi.dimInfo,
+            "xCandidateNames": self._mainUi.xCandInfo,
+            "yCandidateNames": self._mainUi.yCandInfo,
+            "zCandidateNames": self._mainUi.zCandInfo,
+            "discardedKeys": self._mainUi.discAxesInfo,
+        }
+        self._importFigButtons = {
+            "new": self._mainUi.addFigPushButton,
+            "delete": self._mainUi.deleteFigPushButton,
+        }
+        self._axesSelectionArea = {
+            "x": self._mainUi.xAxesScrollArea,
+            "y": self._mainUi.yAxesScrollArea,
+        }
+
+        self._measData = MeasDataSet(self._mainWindow)
+        self._importerView = ImporterView(
+            self._mainWindow,
+            self._metaInfo,
+            self._importFigButtons,
+            self._axesSelectionArea,
+            self._mainUi.transposeButton,
+            self._mainUi.finalizeStep0Button,
+        )
 
         self._measDataCtrl = MeasDataCtrl(
             self._mainWindow,
             (self._measData,),
+            (self._importerView, self._pageView),
+            self._replaceMeasData,
+            self._dynamicalInit,
         )
 
     def _calibrationMVCInits(self):

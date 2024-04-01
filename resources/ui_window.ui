@@ -14,7 +14,7 @@
     <x>0</x>
     <y>0</y>
     <width>1394</width>
-    <height>794</height>
+    <height>830</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -1197,7 +1197,7 @@ QPushButton:checked {
                   </widget>
                  </item>
                  <item>
-                  <widget class="QLabel" name="fileNameConfig">
+                  <widget class="QLabel" name="fileNameInfo">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -1314,7 +1314,7 @@ QPushButton:checked {
                       </widget>
                      </item>
                      <item>
-                      <widget class="QLabel" name="fileLocConfig">
+                      <widget class="QLabel" name="fileLocInfo">
                        <property name="sizePolicy">
                         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                          <horstretch>0</horstretch>
@@ -1361,7 +1361,7 @@ QPushButton:checked {
                       </widget>
                      </item>
                      <item>
-                      <widget class="QLabel" name="yCandConfig">
+                      <widget class="QLabel" name="yCandInfo">
                        <property name="sizePolicy">
                         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                          <horstretch>0</horstretch>
@@ -1408,7 +1408,7 @@ QPushButton:checked {
                       </widget>
                      </item>
                      <item>
-                      <widget class="QLabel" name="dimConfig">
+                      <widget class="QLabel" name="dimInfo">
                        <property name="sizePolicy">
                         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                          <horstretch>0</horstretch>
@@ -1455,7 +1455,7 @@ QPushButton:checked {
                       </widget>
                      </item>
                      <item>
-                      <widget class="QLabel" name="zCandConfig">
+                      <widget class="QLabel" name="zCandInfo">
                        <property name="sizePolicy">
                         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                          <horstretch>0</horstretch>
@@ -1508,7 +1508,7 @@ QPushButton:checked {
                       </widget>
                      </item>
                      <item>
-                      <widget class="QLabel" name="discAxesConfig">
+                      <widget class="QLabel" name="discAxesInfo">
                        <property name="sizePolicy">
                         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                          <horstretch>0</horstretch>
@@ -1567,7 +1567,7 @@ QPushButton:checked {
                       </widget>
                      </item>
                      <item>
-                      <widget class="QLabel" name="xCandConfig">
+                      <widget class="QLabel" name="xCandInfo">
                        <property name="sizePolicy">
                         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                          <horstretch>0</horstretch>
@@ -1648,13 +1648,9 @@ QPushButton:checked {
                     </size>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">QFrame {
-	background-color: #2A2A2A;
-	border: 0px solid rgb(52, 59, 72);
-	border-top-right-radius: 6px;	
-	border-bottom-right-radius: 6px;	
-}
-</string>
+                    <string notr="true">QScrollArea {
+	background-color: #4B4B4B;
+}</string>
                    </property>
                    <property name="widgetResizable">
                     <bool>true</bool>
@@ -1664,8 +1660,8 @@ QPushButton:checked {
                      <rect>
                       <x>0</x>
                       <y>0</y>
-                      <width>188</width>
-                      <height>181</height>
+                      <width>186</width>
+                      <height>179</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_19"/>
@@ -1725,13 +1721,9 @@ QPushButton:checked {
                     </size>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">QFrame {
-	background-color: #2A2A2A;
-	border: 0px solid rgb(52, 59, 72);
-	border-top-right-radius: 6px;	
-	border-bottom-right-radius: 6px;	
-}
-</string>
+                    <string notr="true">QScrollArea {
+	background-color: #4B4B4B;
+}</string>
                    </property>
                    <property name="frameShape">
                     <enum>QFrame::NoFrame</enum>
@@ -2284,7 +2276,7 @@ background-color: #9163BF;
                    <x>0</x>
                    <y>0</y>
                    <width>439</width>
-                   <height>216</height>
+                   <height>179</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_5"/>
