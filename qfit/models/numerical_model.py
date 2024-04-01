@@ -979,6 +979,9 @@ class QuantumModel(QObject):
             # if there is no extracted data: do not calculate the MSE
             if sweep.parameters.counts == (0,):
                 continue
+            
+            # manually turn off the warning message
+            sweep._out_of_sync_warning_issued = True
 
             for transition in extrSpec:
                 mse += self._MSEByTransition(sweep, transition, dataNameWOlabel)
