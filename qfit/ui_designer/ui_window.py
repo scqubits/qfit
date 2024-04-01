@@ -1021,9 +1021,7 @@ class Ui_MainWindow(object):
         self.yAxesScrollArea.setSizePolicy(sizePolicy11)
         self.yAxesScrollArea.setMinimumSize(QSize(0, 0))
         self.yAxesScrollArea.setMaximumSize(QSize(200, 16777215))
-        self.yAxesScrollArea.setStyleSheet(u"QScrollArea {\n"
-"	background-color: #4B4B4B;\n"
-"}")
+        self.yAxesScrollArea.setStyleSheet(u"background-color: #2A2A2A;")
         self.yAxesScrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents_3 = QWidget()
         self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
@@ -1056,9 +1054,7 @@ class Ui_MainWindow(object):
         self.xAxesScrollArea.setSizePolicy(sizePolicy2)
         self.xAxesScrollArea.setMinimumSize(QSize(0, 0))
         self.xAxesScrollArea.setMaximumSize(QSize(200, 16777215))
-        self.xAxesScrollArea.setStyleSheet(u"QScrollArea {\n"
-"	background-color: #4B4B4B;\n"
-"}")
+        self.xAxesScrollArea.setStyleSheet(u"background-color: #2A2A2A;")
         self.xAxesScrollArea.setFrameShape(QFrame.NoFrame)
         self.xAxesScrollArea.setFrameShadow(QFrame.Sunken)
         self.xAxesScrollArea.setWidgetResizable(True)
@@ -2246,7 +2242,7 @@ class Ui_MainWindow(object):
         self.prefitScrollArea.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.prefitScrollAreaWidget = QWidget()
         self.prefitScrollAreaWidget.setObjectName(u"prefitScrollAreaWidget")
-        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 431, 16))
+        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 441, 418))
         self.verticalLayout_11 = QVBoxLayout(self.prefitScrollAreaWidget)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -2540,7 +2536,7 @@ class Ui_MainWindow(object):
         self.fitScrollArea.setWidgetResizable(True)
         self.fitScrollAreaWidget = QWidget()
         self.fitScrollAreaWidget.setObjectName(u"fitScrollAreaWidget")
-        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 431, 16))
+        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 441, 496))
         self.verticalLayout_4 = QVBoxLayout(self.fitScrollAreaWidget)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)

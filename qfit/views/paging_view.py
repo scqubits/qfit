@@ -5,6 +5,8 @@ from PySide6.QtCore import (
 )
 from PySide6.QtWidgets import QPushButton, QStackedWidget
 
+from qfit.utils.helpers import modifyStyleSheet
+
 from typing import TYPE_CHECKING, Tuple, Dict, Any
 
 

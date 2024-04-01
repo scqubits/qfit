@@ -1648,9 +1648,7 @@ QPushButton:checked {
                     </size>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">QScrollArea {
-	background-color: #4B4B4B;
-}</string>
+                    <string notr="true">background-color: #2A2A2A;</string>
                    </property>
                    <property name="widgetResizable">
                     <bool>true</bool>
@@ -1721,9 +1719,7 @@ QPushButton:checked {
                     </size>
                    </property>
                    <property name="styleSheet">
-                    <string notr="true">QScrollArea {
-	background-color: #4B4B4B;
-}</string>
+                    <string notr="true">background-color: #2A2A2A;</string>
                    </property>
                    <property name="frameShape">
                     <enum>QFrame::NoFrame</enum>
@@ -4231,8 +4227,8 @@ QPushButton: pressed{
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>431</width>
-                   <height>16</height>
+                   <width>441</width>
+                   <height>418</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -4982,8 +4978,8 @@ icon: url(:/icons/svg/copy-pressed.svg);
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>431</width>
-                   <height>16</height>
+                   <width>441</width>
+                   <height>496</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
