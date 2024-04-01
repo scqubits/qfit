@@ -1402,9 +1402,6 @@ QPushButton:checked {
             <property name="checkable">
              <bool>true</bool>
             </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
             <property name="autoExclusive">
              <bool>true</bool>
             </property>

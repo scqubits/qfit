@@ -847,7 +847,6 @@ class Ui_MainWindow(object):
         self.modeSelectButton.setIcon(icon10)
         self.modeSelectButton.setIconSize(QSize(24, 24))
         self.modeSelectButton.setCheckable(True)
-        self.modeSelectButton.setChecked(False)
         self.modeSelectButton.setAutoExclusive(True)
 
         self.gridLayout_2.addWidget(self.modeSelectButton, 3, 0, 1, 2)
