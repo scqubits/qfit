@@ -550,8 +550,10 @@ class FitModel(QObject):
             status = Status(
                 statusSource="fit",
                 statusType="error",
-                message="Fail to optimize the parameter. Due to the "
-                "following reason: " + result,
+                message=(
+                    "Optimization was interrupted. Due to the following reason: "
+                    + result
+                ),
                 mse=np.nan,
             )
             self.updateStatus.emit(status)
@@ -585,7 +587,15 @@ class FitModel(QObject):
         separate thread.
         """
         # initial parameter & calculate the current MSE
-        initMSE = self.opt.target_func(initParam)
+        try:
+            initMSE = self.opt.target_func(initParam)
+        except Exception as e:
+            self._postOptimization(
+                "Fail to calculate the MSE. Due to the following reason: " 
+                + str(e)
+            )
+            return
+        
         # status update
         status = Status(
             statusSource="fit",

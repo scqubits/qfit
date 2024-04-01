@@ -560,14 +560,17 @@ class QuantumModel(QObject):
                 subsysUpdateInfo=self._subsysUpdateInfo(),
             )
         except Exception as e:
-            # TODO: emit error message
-            status = Status(
-                statusSource=self.sweepUsage,
-                statusType="error",
-                message=f"{e}",
-            )
-            self.updateStatus.emit(status)
-            raise e
+            if self.sweepUsage == "fit":
+                # interrupt the fit process by the cost function, and such error
+                # will be handled in the fit model
+                raise e
+            else:
+                status = Status(
+                    statusSource=self.sweepUsage,
+                    statusType="error",
+                    message=f"Fail to generate sweep due to: {e}",
+                )
+                self.updateStatus.emit(status)
 
         # only issue computing status in the prefit stage
         # for fit, new sweep is generated at every iteration, so we don't issue the
@@ -584,19 +587,31 @@ class QuantumModel(QObject):
         """
         Run the existing sweeps. This method must be called after calling
         the _newSweep method.
+
+        Note that there is a twin method _runSweepInThread. If this method is
+        updated, the other method should be updated as well.
         """
         for sweep in self._sweeps.values():
+            # if there is no extracted data: do not run the sweep
+            if sweep.parameters.counts == (0,):
+                continue
+
             # manually turn off the warning message
             sweep._out_of_sync_warning_issued = True
             try:
                 sweep.run()
             except Exception as e:
-                status = Status(
-                    statusSource=self.sweepUsage,
-                    statusType="error",
-                    message=f"{e}",
-                )
-                self.updateStatus.emit(status)
+                if self.sweepUsage == "fit":
+                    # interrupt the fit process by the cost function, and such error
+                    # will be handled in the fit model
+                    raise e
+                else:
+                    status = Status(
+                        statusSource=self.sweepUsage,
+                        statusType="error",
+                        message=f"{e}",
+                    )
+                    self.updateStatus.emit(status)
 
     def _runSweepInThread(
         self, 
@@ -644,12 +659,17 @@ class QuantumModel(QObject):
             The usage of the sweep. It's passed to the sweep2SpecMSE method.
         """
         if isinstance(result, str):
-            status = Status(
-                statusSource=sweepUsage,
-                statusType="error",
-                message=result,
-            )
-            self.updateStatus.emit(status)
+            if self.sweepUsage == "fit":
+                # interrupt the fit process by the cost function, and such error
+                # will be handled in the fit model
+                raise Exception(result)
+            else:
+                status = Status(
+                    statusSource=sweepUsage,
+                    statusType="error",
+                    message=result,
+                )
+                self.updateStatus.emit(status)
         else:
             self._sweeps = result
             self.sweep2SpecMSE(forced=forced, sweepUsage=sweepUsage)
@@ -684,16 +704,7 @@ class QuantumModel(QObject):
         try:
             self._sweeps
         except AttributeError:
-            try:
-                self._newSweep()
-            except Exception as e:
-                status = Status(
-                    statusSource=sweepUsage,
-                    statusType="error",
-                    message=f"{e}",
-                )
-                self.updateStatus.emit(status)
-                raise e
+            self._newSweep()
             
         if sweepUsage in ["prefit", "fit-result"]:
             self.emitReadyToPlot()
@@ -953,7 +964,7 @@ class QuantumModel(QObject):
         if self._fullExtr.count() == 0:
             status = Status(
                 statusSource=self.sweepUsage,
-                message="Successful spectrum calculation.",
+                message="Successful spectrum calculation, while no extracted data is available.",
                 statusType="success",
                 mse=np.nan,
             )
@@ -965,6 +976,10 @@ class QuantumModel(QObject):
 
         for figName, extrSpec in self._fullExtr.items():
             sweep = self._sweeps[figName]
+            # if there is no extracted data: do not calculate the MSE
+            if sweep.parameters.counts == (0,):
+                continue
+
             for transition in extrSpec:
                 mse += self._MSEByTransition(sweep, transition, dataNameWOlabel)
 
@@ -1040,6 +1055,10 @@ class SweepRunner(QRunnable):
 
     def run(self):
         for sweep in self.sweeps.values():
+            # if there is no extracted data: do not run the sweep
+            if sweep.parameters.counts == (0,):
+                continue
+
             # manually turn off the warning message
             sweep._out_of_sync_warning_issued = True
             try:
