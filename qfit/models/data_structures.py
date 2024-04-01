@@ -1062,6 +1062,8 @@ class MeasRawXYConfig:
         checkedY: List[str],
         grayedX: List[str],
         grayedY: List[str],
+        allowTranspose: bool,
+        allowContinue: bool,
     ):
         self.xCandidates = xCandidates
         self.yCandidates = yCandidates
@@ -1069,6 +1071,8 @@ class MeasRawXYConfig:
         self.checkedY = checkedY
         self.grayedX = grayedX
         self.grayedY = grayedY
+        self.allowTranspose = allowTranspose
+        self.allowContinue = allowContinue
 
     def __str__(self) -> str:
         return f"""
@@ -1079,6 +1083,8 @@ MeasRawXYConfig:
 - Checked Y Axes: {", ".join(self.checkedY)}
 - Grayed X Axes: {", ".join(self.grayedX)}
 - Grayed Y Axes: {", ".join(self.grayedY)}
+- Transpose Allowed: {self.allowTranspose}
+- Continue Allowed: {self.allowContinue}
 """
     
     def __repr__(self) -> str:
@@ -1127,8 +1133,8 @@ class MeasurementData:
 
     # raw data: the selected x, y, and z data, indicating the actual tuning
     # parameters and the measurement data
-    _rawXNames: List[str]
-    _rawYName: List[str]
+    _rawXNames: List[str] = []
+    _rawYName: List[str] = []
 
     # principal data: the z data that are used to plot and the x, y data that
     # serves as coordinates in the plot
@@ -1224,6 +1230,16 @@ class MeasurementData:
             if key in self._rawYName
         })
     
+    @property
+    def ambiguousZOrient(self) -> bool:
+        """
+        Return True if the zData is ambiguous in orientation, even if specifying
+        the x and y axes. This can happen if the zData has the same number of
+        rows and columns.
+        """
+        return self.principalZ.data.shape[0] == self.principalZ.data.shape[1]
+    
+    # manipulation =====================================================
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, MeasurementData):
             return False
@@ -1268,7 +1284,6 @@ class MeasurementData:
             discardedKeys=self.discardedKeys,
         )
 
-    # manipulation =====================================================
     @abstractmethod
     def generatePlotElement(self) -> Union[ImageElement, MeshgridElement]:
         """
@@ -1326,6 +1341,55 @@ class MeasurementData:
         if isinstance(item, str):
             itemIndex = self.zCandidates.keyList.index(item)
         self._principalZ = self.zCandidates.itemByIndex(itemIndex)
+
+    def _initRawXY(self):
+        """
+        Initialize the raw x and y axis by the first compatible x and y axis.
+        """
+        self._rawXNames = self.xCandidates.keyList[:1]
+        self._rawYName = self.yCandidates.keyList[:1]
+
+        # if rawX and rawY are the same, set rawY to the next compatible y axis.
+        # It can always be done because there are pixel coordinates as the last 
+        # resort
+        if self._rawXNames == self._rawYName:
+            self._rawYName = self.yCandidates.keyList[1:2]
+
+    def _removePixelCoord(self):
+        """
+        Remove pixel coordinates from the x and y axis candidates. That is 
+        needed when we need to swap XY and regenerate a new set of pixel
+        coordinates.
+        """
+        self.xCandidates = OrderedDictMod({
+            key: value for key, value in self.xCandidates.items()
+            if not key.startswith("pixel_coord")
+        })
+        self.yCandidates = OrderedDictMod({
+            key: value for key, value in self.yCandidates.items()
+            if not key.startswith("pixel_coord")
+        })
+        
+        # if the pixel coordinates are chosen to be the raw x and y axis,
+        # reset the raw x and y axis
+        reset = False
+        for name in self._rawXNames:
+            if name.startswith("pixel_coord"):
+                reset = True
+        for name in self._rawYName:
+            if name.startswith("pixel_coord"):
+                reset = True
+        if reset:
+            self._initRawXY()
+            self._resetPrincipalXY()
+
+    def _addPixelCoord(self):
+        """
+        Add pixel coordinates as the last resort for x and y axis candidates.
+        """
+        ydim, xdim = self._principalZ.data.shape
+        self.xCandidates.update({"pixel_coord_x": np.arange(xdim)})
+        self.yCandidates.update({"pixel_coord_y": np.arange(ydim)})
         
     def _resetPrincipalXY(self):
         """
@@ -1351,6 +1415,8 @@ class MeasurementData:
         """
         Swap the x and y axes and transpose the zData array.
         """
+        self._removePixelCoord()
+
         # if the user have already selected multiple x axes, we will only
         # keep the first one, as y axis is unique
         self._rawXNames = self._rawXNames[:1]
@@ -1363,7 +1429,23 @@ class MeasurementData:
 
         self.xCandidates, self.yCandidates = self.yCandidates, self.xCandidates
         self._rawXNames, self._rawYName = self._rawYName, self._rawXNames
+
+        self._addPixelCoord()
         self._resetPrincipalXY()
+        
+    def transposeZ(self):
+        """
+        Transpose the zData array without swapping the x and y axes. It should 
+        be used when the zData array is ambiguous in orientation - when the
+        number of rows and columns are the same.
+        """
+        if not self.ambiguousZOrient:
+            raise ValueError("The zData array is not ambiguous in orientation")
+        
+        self.zCandidates = OrderedDictMod({
+            key: self._transposeZ(array) for key, array in self.zCandidates.items()
+        })
+        self._principalZ.data = self._transposeZ(self._principalZ.data)
 
     def rawXByPrincipalX(self, principalX: float) -> OrderedDictMod[str, float]:
         """
@@ -1618,21 +1700,7 @@ class NumMeasData(MeasurementData):
                     self.yCandidates[name] = data
 
         # finally, insert pixel coordinates as the last resort
-        self.xCandidates.update({"pixel_coord_1": np.arange(xdim)})
-        self.yCandidates.update({"pixel_coord_2": np.arange(ydim)})
-
-    def _initRawXY(self):
-        """
-        Initialize the raw x and y axis by the first compatible x and y axis.
-        """
-        self._rawXNames = self.xCandidates.keyList[:1]
-        self._rawYName = self.yCandidates.keyList[:1]
-
-        # if rawX and rawY are the same, set rawY to the next compatible y axis.
-        # It can always be done because there are pixel coordinates as the last 
-        # resort
-        if self._rawXNames == self._rawYName:
-            self._rawYName = self.yCandidates.keyList[1:2]
+        self._addPixelCoord()
 
     def _initXYZ(self):
         """
@@ -1704,8 +1772,8 @@ class ImageMeasData(MeasurementData):
         ydim, xdim = self._principalZ.data.shape[:2]
         self.xCandidates = OrderedDictMod(pixel_coord_1=np.arange(xdim))
         self.yCandidates = OrderedDictMod(pixel_coord_2=np.arange(ydim))
-        self._rawXNames = ["pixel_coord_1"]
-        self._rawYName = ["pixel_coord_2"]
+        self._addPixelCoord()
+        self._initRawXY()
         self._resetPrincipalXY()
 
     def _processRawZ(self, zData: np.ndarray) -> np.ndarray:

@@ -756,6 +756,8 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             self.checkedRawY,
             self.grayedRawX,
             self.grayedRawY,
+            self.currentMeasData.ambiguousZOrient,
+            self._rawXYIsValid(),
         )
     
     @Slot()
@@ -768,6 +770,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             those data files and transpose Z.
         """
         # swap the X and Y axis names if necessary
+        # note that it will re-init the stored raw XY info 
         checkedX = rawXYConfig.checkedX
         checkedY = rawXYConfig.checkedY
         for data in self._data:
@@ -910,6 +913,16 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         updateRawXMap signals.
         """
         self.currentMeasData.swapXY()
+        self.emitReadyToPlot()
+        self.emitRelimCanvas()
+        self.emitRawXMap()
+
+    @Slot()
+    def transposeZ(self):
+        """
+        Transpose the z axis, and emit the readyToPlot signal.
+        """
+        self.currentMeasData.transposeZ()
         self.emitReadyToPlot()
         self.emitRelimCanvas()
         self.emitRawXMap()

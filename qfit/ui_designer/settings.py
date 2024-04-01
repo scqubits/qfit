@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'settings.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.6.2
+## Created by: Qt User Interface Compiler version 6.6.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -28,7 +28,7 @@ class Ui_settingsWidget(object):
         if not settingsWidget.objectName():
             settingsWidget.setObjectName(u"settingsWidget")
         settingsWidget.resize(390, 470)
-        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(settingsWidget.sizePolicy().hasHeightForWidth())
@@ -199,13 +199,13 @@ class Ui_settingsWidget(object):
         self.gridLayout_3.setSpacing(0)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(12, 12, 12, -1)
-        self.verticalSpacer_3 = QSpacerItem(5, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_3 = QSpacerItem(5, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.gridLayout_3.addItem(self.verticalSpacer_3, 1, 1, 1, 1)
 
         self.tabWidget = QTabWidget(settingsWidget)
         self.tabWidget.setObjectName(u"tabWidget")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.tabWidget.sizePolicy().hasHeightForWidth())
@@ -358,7 +358,7 @@ class Ui_settingsWidget(object):
         self.gridLayout_2.setContentsMargins(0, 5, 0, 0)
         self.rangeSliderMin = QSlider(self.visualTabContainerWidget)
         self.rangeSliderMin.setObjectName(u"rangeSliderMin")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.rangeSliderMin.sizePolicy().hasHeightForWidth())
@@ -384,13 +384,13 @@ class Ui_settingsWidget(object):
 
         self.gridLayout_2.addWidget(self.rangeSliderMax, 4, 0, 1, 1)
 
-        self.verticalSpacer = QSpacerItem(20, 7, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer = QSpacerItem(20, 7, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.gridLayout_2.addItem(self.verticalSpacer, 9, 0, 1, 1)
 
         self.filterQFrame = QFrame(self.visualTabContainerWidget)
         self.filterQFrame.setObjectName(u"filterQFrame")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         sizePolicy3.setHorizontalStretch(0)
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.filterQFrame.sizePolicy().hasHeightForWidth())
@@ -470,7 +470,7 @@ class Ui_settingsWidget(object):
 
         self.label_39 = QLabel(self.visualTabContainerWidget)
         self.label_39.setObjectName(u"label_39")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         sizePolicy4.setHorizontalStretch(0)
         sizePolicy4.setVerticalStretch(0)
         sizePolicy4.setHeightForWidth(self.label_39.sizePolicy().hasHeightForWidth())
@@ -711,7 +711,7 @@ class Ui_settingsWidget(object):
 
         self.gridLayout.addWidget(self.label, 2, 0, 1, 1)
 
-        self.verticalSpacer_2 = QSpacerItem(20, 115, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_2 = QSpacerItem(20, 115, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.gridLayout.addItem(self.verticalSpacer_2, 6, 0, 1, 1)
 
@@ -767,13 +767,13 @@ class Ui_settingsWidget(object):
 
         self.gridLayout_4.addWidget(self.tolLineEdit, 1, 1, 1, 2)
 
-        self.verticalSpacer_4 = QSpacerItem(20, 240, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_4 = QSpacerItem(20, 240, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.gridLayout_4.addItem(self.verticalSpacer_4, 2, 0, 1, 1)
 
         self.label_47 = QLabel(self.fitTabContainerWidget)
         self.label_47.setObjectName(u"label_47")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
+        sizePolicy5 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
         sizePolicy5.setHorizontalStretch(0)
         sizePolicy5.setVerticalStretch(0)
         sizePolicy5.setHeightForWidth(self.label_47.sizePolicy().hasHeightForWidth())
