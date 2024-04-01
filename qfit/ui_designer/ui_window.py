@@ -2948,13 +2948,6 @@ class Ui_MainWindow(object):
         self.figureTabWidget.setTabPosition(QTabWidget.North)
         self.figureTabWidget.setTabShape(QTabWidget.Rounded)
         self.figureTabWidget.setUsesScrollButtons(True)
-        self.figureTab_0 = QWidget()
-        self.figureTab_0.setObjectName(u"figureTab_0")
-        sizePolicy14.setHeightForWidth(self.figureTab_0.sizePolicy().hasHeightForWidth())
-        self.figureTab_0.setSizePolicy(sizePolicy14)
-        self.figureTab_0.setMinimumSize(QSize(20, 0))
-        self.figureTab_0.setMaximumSize(QSize(20, 16777215))
-        self.figureTabWidget.addTab(self.figureTab_0, "")
 
         self.horizontalLayout.addWidget(self.figureTabWidget)
 
@@ -3022,7 +3015,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
 
         self.pagesStackedWidget.setCurrentIndex(4)
-        self.figureTabWidget.setCurrentIndex(0)
+        self.figureTabWidget.setCurrentIndex(-1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -3106,7 +3099,6 @@ class Ui_MainWindow(object):
         self.selectViewButton.setText("")
         self.verticalSnapButton.setText("")
         self.label_50.setText("")
-        self.figureTabWidget.setTabText(self.figureTabWidget.indexOf(self.figureTab_0), QCoreApplication.translate("MainWindow", u"Figure Name", None))
         self.addFigPushButton.setText("")
         self.deleteFigPushButton.setText("")
         pass

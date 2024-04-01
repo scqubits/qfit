@@ -5896,34 +5896,11 @@ QTabBar::tab:!selected {
                    <enum>QTabWidget::Rounded</enum>
                   </property>
                   <property name="currentIndex">
-                   <number>0</number>
+                   <number>-1</number>
                   </property>
                   <property name="usesScrollButtons">
                    <bool>true</bool>
                   </property>
-                  <widget class="QWidget" name="figureTab_0">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>20</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>20</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <attribute name="title">
-                    <string>Figure Name</string>
-                   </attribute>
-                  </widget>
                  </widget>
                 </item>
                 <item>
