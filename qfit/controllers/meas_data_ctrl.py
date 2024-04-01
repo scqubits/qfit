@@ -70,8 +70,6 @@ class MeasDataCtrl(QObject):
         Connect the configuration panel between model and view.
         """
         self.importerView.configChanged.connect(self.measDataSet.storeRawXYConfig)
-        self.importerView.configChanged.connect(lambda config: print(config))
-
         self.measDataSet.rawXYConfigChanged.connect(self.importerView.setConfig)
 
     def transposeConnects(self) -> None:
