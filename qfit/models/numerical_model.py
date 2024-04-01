@@ -53,6 +53,7 @@ class QuantumModel(QObject):
         parent: QObject,
     ):
         super().__init__(parent)
+        self._figNames: List[str] = []
 
         self._sweepThreadPool = QThreadPool()
         SweepRunner.signalHost.sweepFinished.connect(self._postSweepInThread)
@@ -93,9 +94,7 @@ class QuantumModel(QObject):
         figNames: List[str]
             The names of the figures to be plotted.
         """
-        try:
-            self._figNames
-        except AttributeError:
+        if self._figNames == []:
             raise AttributeError("Should call replaceMeasData first.")
         try:
             self.hilbertspace
@@ -147,6 +146,11 @@ class QuantumModel(QObject):
         """
         Switch the current figure name.
         """
+        if figName not in self._figNames:
+            # this happens in the data importing stage, where the model is 
+            # not fully initialized by the measurement data
+            return 
+        
         self._currentFigName = figName
         self.updateCalc()
 

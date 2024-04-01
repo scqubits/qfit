@@ -28,8 +28,8 @@ from qfit.widgets.settings import SettingsWidget
 from qfit.views.paging_view import PageView
 
 # measurement data
-from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
-from qfit.models.meas_data_importer import MeasDataImporter
+from qfit.models.measurement_data import MeasDataType, MeasDataSet
+from qfit.views.importer_view import ImporterView
 from qfit.controllers.meas_data_ctrl import MeasDataCtrl
 
 # calibration:
@@ -294,39 +294,46 @@ class Fit:
         # set shadows for all buttons
         self._setShadows()
 
-    def _dynamicalInit(
-        self,
-        hilbertspace: HilbertSpace,
-        measurementData: List[MeasurementDataType],
-    ):
+    def _replaceHS(self, hilbertspace: HilbertSpace):
+        """
+        A collection of methods to replace the HilbertSpace object in the app,
+        it is part of the initialization process.
+        """
+        self._quantumModel.replaceHS(hilbertspace)
+        self._calibrationCtrl.replaceHS(hilbertspace)
+        self._extractingCtrl.replaceHS(hilbertspace)
+        self._prefitCtrl.replaceHS(hilbertspace)
+        self._fitCtrl.replaceHS(hilbertspace)
+
+    def _replaceMeasData(self, measurementData: List[MeasDataType]):
+        """
+        A collection of methods to replace the measurement data in the app,
+        it is part of the initialization process.
+        """
+        self._calibrationCtrl.replaceMeasData(measurementData)
+        self._extractingCtrl.replaceMeasData(measurementData)
+        self._prefitCtrl.replaceMeasData(measurementData)
+
+    def _dynamicalInit(self):
         """
         A collection of methods to reinitialize the app when new measurement data
-        and HilbertSpace object are loaded.
+        and HilbertSpace object are loaded. It must be called after the 
+        `_replaceHS` and `_replaceMeasData` methods.
         """
-        self._measData.replaceMeasData(measurementData)
-        
-        self._calibrationCtrl.replaceHS(hilbertspace)
-        self._calibrationCtrl.replaceMeasData(measurementData)
         self._calibrationCtrl.dynamicalInit()
-
-        self._extractingCtrl.replaceHS(hilbertspace)
-        self._extractingCtrl.replaceMeasData(measurementData)
         self._extractingCtrl.dynamicalInit()
-
-        self._prefitCtrl.replaceHS(hilbertspace)
-        self._prefitCtrl.replaceMeasData(measurementData)
         self._prefitCtrl.dynamicalInit()
-
-        self._fitCtrl.replaceHS(hilbertspace)
         self._fitCtrl.dynamicalInit()
-
         self._plottingCtrl.dynamicalInit()
-
-        self._ioCtrl.replaceHS(hilbertspace)
 
         self._register()
 
         self._mainWindow.raise_()
+
+    # def _fullDynamicalInit(self, hilbertspace: HilbertSpace, measurementData: List[MeasurementDataType]):
+    #     self._replaceHS(hilbertspace)
+    #     self._replaceMeasData(measurementData)
+    #     self._dynamicalInit()
 
     def _register(self):
         """
@@ -432,12 +439,41 @@ class Fit:
         """
         Set up an instance of MeasurementData.
         """
-        self._measImporter = MeasDataImporter(self._mainWindow)
-        self._measData = MeasDataSet([])
+        # ui grouping
+        self._metaInfo = {
+            "name": self._mainUi.fileNameInfo,
+            "file": self._mainUi.fileLocInfo,
+            "shape": self._mainUi.dimInfo,
+            "xCandidateNames": self._mainUi.xCandInfo,
+            "yCandidateNames": self._mainUi.yCandInfo,
+            "zCandidateNames": self._mainUi.zCandInfo,
+            "discardedKeys": self._mainUi.discAxesInfo,
+        }
+        self._importFigButtons = {
+            "new": self._mainUi.addFigPushButton,
+            "delete": self._mainUi.deleteFigPushButton,
+        }
+        self._axesSelectionArea = {
+            "x": self._mainUi.xAxesScrollArea,
+            "y": self._mainUi.yAxesScrollArea,
+        }
+
+        self._measData = MeasDataSet(self._mainWindow)
+        self._importerView = ImporterView(
+            self._mainWindow,
+            self._metaInfo,
+            self._importFigButtons,
+            self._axesSelectionArea,
+            self._mainUi.transposeButton,
+            self._mainUi.finalizeStep0Button,
+        )
 
         self._measDataCtrl = MeasDataCtrl(
             self._mainWindow,
-            (self._measImporter, self._measData),
+            (self._measData,),
+            (self._importerView, self._pageView),
+            self._replaceMeasData,
+            self._dynamicalInit,
         )
 
     def _calibrationMVCInits(self):
@@ -627,9 +663,10 @@ class Fit:
             "snapY": self._mainUi.verticalSnapButton,
         }
 
+        self._canvas = self._mainUi.mplFigureCanvas
         self._plottingCtrl = PlottingCtrl(
             self._mainWindow,
-            self._mainUi.mplFigureCanvas,
+            self._canvas,
             (
                 self._measData,
                 self._caliParamModel,
@@ -653,8 +690,10 @@ class Fit:
         self._menuUi = MenuWidget(self._mainWindow)
         self._ioCtrl = IOCtrl(
             self._mainWindow,
-            models = (self._measImporter, self._registry),
+            models = (self._measData, self._registry),
             views = (self._mainUi.toggleMenuButton, self._menuUi, self._mainWindow),
+            fullReplaceHS=self._replaceHS,
+            fullReplaceMeasData=self._replaceMeasData,
             fullDynamicalInit=self._dynamicalInit,
         )
 

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Tuple, Dict, Any, List
 if TYPE_CHECKING:
     from scqubits.core.hilbert_space import HilbertSpace
     from qfit.models.extracted_data import AllExtractedData, ActiveExtractedData
-    from qfit.models.measurement_data import MeasurementDataType, MeasDataSet
+    from qfit.models.measurement_data import MeasDataType, MeasDataSet
     from qfit.views.labeling_view import LabelingView
 
 
@@ -74,7 +74,7 @@ class ExtractingCtrl(QObject):
             [subsys.id_str for subsys in hilbertspace.subsystem_list],
         )
 
-    def replaceMeasData(self, measurementData: List["MeasurementDataType"]):
+    def replaceMeasData(self, measurementData: List["MeasDataType"]):
         """
         When the app is reloaded (new measurement data and hilbert space),
         reinitialize the all relevant models and views.

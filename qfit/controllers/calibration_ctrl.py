@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Tuple, Dict, Any, List
 if TYPE_CHECKING:
     from scqubits.core.hilbert_space import HilbertSpace
     from qfit.models.calibration import CaliParamModel
-    from qfit.models.measurement_data import MeasurementDataType
+    from qfit.models.measurement_data import MeasDataType
     from qfit.views.calibration_view import CalibrationView
 
 
@@ -79,7 +79,7 @@ class CalibrationCtrl(QObject):
         self.calibrationView.replaceHS(sweepParamSet=sweepParamSet)
 
     def replaceMeasData(
-        self, measurementData: List["MeasurementDataType"]
+        self, measurementData: List["MeasDataType"]
     ):
         """
         When the app is reloaded (new measurement data and hilbert space),

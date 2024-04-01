@@ -23,9 +23,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colormaps
 
 from PySide6 import QtCore as QtCore
-from PySide6.QtCore import QLocale
-from PySide6.QtGui import QDoubleValidator
-from PySide6.QtWidgets import QLineEdit, QStyledItemDelegate, QWidget
+from PySide6.QtWidgets import QWidget, QPushButton
 
 from typing import Dict, List, Literal, Optional, Tuple, Union
 from typing import TypeVar, Generic
@@ -266,7 +264,6 @@ def clearChildren(widget: QWidget):
             widget.setParent(None)
             widget.deleteLater()
 
-
 def modifyStyleSheet(widget: QWidget, property_name: str, new_value: str):
     """
     Modify a particular stylesheet property of the given widget.
@@ -295,6 +292,23 @@ def modifyStyleSheet(widget: QWidget, property_name: str, new_value: str):
 
     # Set the modified stylesheet back to the widget
     widget.setStyleSheet(modified_style)
+
+def disableButton(button: QPushButton, disable=True):
+    """
+    Disable or enable the given button.
+
+    Parameters
+    ----------
+    button: QPushButton
+    disable: bool
+        Whether to disable the button or not.
+    """
+    button.setEnabled(not disable)
+
+    if disable:
+        modifyStyleSheet(button, "color", "gray")
+    else:
+        modifyStyleSheet(button, "color", "black")
 
 
 # Plot #########################################################################

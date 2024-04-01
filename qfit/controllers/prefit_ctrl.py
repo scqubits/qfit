@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from qfit.models.numerical_model import QuantumModel
     from qfit.models.status import StatusModel
     from qfit.models.extracted_data import AllExtractedData
-    from qfit.models.measurement_data import MeasDataSet, MeasurementDataType
+    from qfit.models.measurement_data import MeasDataSet, MeasDataType
     from qfit.models.parameter_settings import ParameterType
     from qfit.views.prefit_view import PrefitView, PrefitParamView
     from qfit.views.paging_view import PageView
@@ -81,7 +81,7 @@ class PrefitCtrl(QObject):
         hilbertSpace : HilbertSpace
             The HilbertSpace object.
         """
-        self._buildParamSet(hilbertspace)
+        self._buildHSParamSet(hilbertspace)
         self.prefitView.replaceHS(
             subsysNames=[
                 SweepParamSet.parentSystemNames(subsys)
@@ -92,7 +92,7 @@ class PrefitCtrl(QObject):
 
     def replaceMeasData(
         self, 
-        measurementData: List["MeasurementDataType"]
+        measurementData: List["MeasDataType"]
     ):
         """
         When the app is reloaded (new measurement data and hilbert space),
@@ -116,6 +116,8 @@ class PrefitCtrl(QObject):
 
         Finally, it updates the view and the quantum model.
         """
+        self._inheritCaliParams()
+        
         self.prefitParamView.insertSliderMinMax(
             self.prefitHSParams.paramNamesDict(),
             self.prefitCaliParams.paramNamesDict(),
@@ -220,7 +222,7 @@ class PrefitCtrl(QObject):
         self.prefitCaliParams.updateCaliModel.connect(self.caliParamModel.setParamByPA)
         self.caliParamModel.updatePrefitModel.connect(self.prefitCaliParams.setParamByPA)
 
-    def _buildParamSet(self, hilbertspace: "HilbertSpace"):
+    def _buildHSParamSet(self, hilbertspace: "HilbertSpace"):
         """
         Identify prefit slider parameters for the HilbertSpace object. For 
         now, we only accept one tunable parameter (flux or ng) in the
@@ -270,7 +272,9 @@ class PrefitCtrl(QObject):
         #     )
         #     self.mainWindow.close()
 
-        # initialize calibration sliders
+
+    def _inheritCaliParams(self,):
+        # initialize calibration parameters
         self.prefitCaliParams.setAttrByParamSet(
             self.caliParamModel.toPrefitParams(),
             insertMissing=True,
