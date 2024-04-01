@@ -283,8 +283,8 @@ class IOCtrl(QObject):
             # and the file name may be different for similar projects
             registryDict.pop("HilbertSpace")
             registryDictFromFile.pop("HilbertSpace")
-            registryDict.pop("projectFile")
-            registryDictFromFile.pop("projectFile")
+            registryDict.pop("MainWindow._projectFile")
+            registryDictFromFile.pop("MainWindow._projectFile")
 
             # compare the two dicts
             if registryDict != registryDictFromFile:
@@ -423,6 +423,8 @@ class IOCtrl(QObject):
             # update the dynamical elements in the main window (i.e. load from the registry
             # the r entries)
             self.fullReplaceHS(hilbertspace)
+            self.measDataSet.replaceMeasData(measurementData)   # it's not included 
+                                                                # in the fullReplaceMeasData
             self.fullReplaceMeasData(measurementData)
             self.fullDynamicalInit()
 

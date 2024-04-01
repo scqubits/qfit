@@ -34,7 +34,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     closeWindow = Signal(object)
     _projectFile: Union[str, None] = None
     _unsavedChanges: bool = False
-    attrToRegister: List[str] = ["projectFile"]
+    attrToRegister: List[str] = ["_projectFile"]
 
     def __init__(self):
         QMainWindow.__init__(self)
@@ -83,9 +83,10 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         After registering the models,
         Register the rest attribute of the mainWindow.
         """
-        registryDict = {
-            attr: self._toRegistryEntry(attr) for attr in self.attrToRegister
-        }
+        registryDict = {}
+        for attr in self.attrToRegister:
+            entry = self._toRegistryEntry(attr)
+            registryDict[entry.name] = entry
 
         return registryDict
     

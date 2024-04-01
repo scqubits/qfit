@@ -1133,7 +1133,7 @@ class MeasurementData:
         name of the measurement data, usually the name of the file
     rawData: Any
         the raw data extracted from a data file
-    _zCandidates: OrderedDictMod[str, ndarray]
+    zCandidates: OrderedDictMod[str, ndarray]
         A dictionary of 2d ndarrays, which may be suitable as zData candidates
     rawX: OrderedDictMod[str, ndarray]
         A dictionary of 1d ndarrays, which has the same length. They are
@@ -1274,10 +1274,12 @@ class MeasurementData:
 
         dataAttrs = [
             "name",
+            "file",
             "rawData",
-            "_zCandidates",
+            "zCandidates",
             "xCandidates",
             "yCandidates",
+            "discardedKeys",
             "_rawXNames",
             "_rawYName",
             "_principalZ",
@@ -1291,6 +1293,7 @@ class MeasurementData:
             "_logColoring",
             "_zMin",
             "_zMax",
+            "_colorMapStr",
         ]
         
         return all([

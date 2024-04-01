@@ -220,7 +220,21 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.checkedRawX: List[str] = []
         self.checkedRawY: List[str] = []
 
-    # init & load data list ============================================
+    # init & load data list ============================================   
+    def replaceMeasData(self, measData: List[MeasDataType]):
+        self.fullData = measData
+
+        # emit the signals to update the view
+        self.emitMetaInfo()
+        self.emitReadyToPlot()
+        self.emitRelimCanvas()
+        self.emitRawXMap()
+        self.emitFigSwitched()
+
+        # update the raw X and Y axis names
+        self._clearRawXY()
+        self.emitRawXYConfig()
+     
     @staticmethod
     def _rawDataFromFile(fileName) -> MeasDataType | None:
         """
@@ -401,16 +415,15 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         for measData, name in zip(self.fullData, uniqueNames):
             measData.name = name
 
-        # if there are new data loaded, emit the signals
         if measurementData != []:
+            # if there are new data loaded, emit the signals
             self.emitMetaInfo()
             self.emitReadyToPlot()
             self.emitRelimCanvas()
             self.emitRawXMap()
             self.emitFigSwitched()
 
-        # update the raw X and Y axis names
-        if measurementData != []:
+            # update the raw X and Y axis names
             self._clearRawXY()
             self.emitRawXYConfig()
 
@@ -899,26 +912,33 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.emitRawXMap()
 
     # registry =========================================================
+    attrToRegister = [
+        "_currentRow",
+        "checkedRawX",
+        "checkedRawY",
+    ]
+
     def registerAll(
         self,
     ) -> Dict[str, RegistryEntry]:
         """
         Register all of the measurement data.
         """
+        registryDict = {}
+        for attr in self.attrToRegister:
+            entry = self._toRegistryEntry(attr)
+            registryDict[entry.name] = entry
 
+        # full measurement data
         def dataSetter(value):
             self.fullData = value
+            self.emitMetaInfo()
+            self.emitRawXYConfig()
             self.emitReadyToPlot()
             self.emitRelimCanvas()
             self.emitRawXMap()
 
-        return {
-            "measDataSet.currentRow": RegistryEntry(
-                name="measDataSet.currentRow",
-                quantity_type="r+",
-                getter=lambda: self._currentRow,
-                setter=lambda value: setattr(self, "_currentRow", value),
-            ),
+        return registryDict | {
             "measDataSet.data": RegistryEntry(
                 name="measDataSet.data",
                 quantity_type="r+",

@@ -34,12 +34,13 @@ class Registrable(ABC):
         RegistryEntry
             The RegistryEntry object.
         """
+        name = self.__class__.__name__ + "." + attribute
 
         def setter_func(value):
             setattr(self, attribute, value)
 
         return RegistryEntry(
-            name=attribute,
+            name=name,
             quantity_type="r+",
             getter=lambda: getattr(self, attribute),
             setter=setter_func,
@@ -166,6 +167,7 @@ class Registry:
         """
         try:
             reg_dict = obj.registerAll()
+            print(f"Registering {obj.__class__.__name__} using registerAll().")
             self._registry.update(reg_dict)
         except AttributeError:
             name = obj.__class__.__name__
