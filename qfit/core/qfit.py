@@ -707,6 +707,7 @@ class Fit:
                 self._fitModel,
                 self._fitHSParams,
                 self._fitCaliParams,
+                self._measData,
             ),
             self._statusModel,
             self._statusBarView,

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Tuple, Dict, Any
 
 if TYPE_CHECKING:
     from qfit.views.status_bar import StatusBarView
+    from qfit.models.measurement_data import MeasDataSet
     from qfit.models.status import StatusModel
     from qfit.models.numerical_model import QuantumModel
     from qfit.models.fit import FitModel, FitHSParams, FitCaliParams
@@ -43,6 +44,7 @@ class StatusCtrl(QObject):
         parent: QObject,
         models: Tuple[
             "QuantumModel", "FitModel", "FitHSParams", "FitCaliParams",
+            "MeasDataSet"
         ],
         statusModel: "StatusModel",
         statusBarView: "StatusBarView",

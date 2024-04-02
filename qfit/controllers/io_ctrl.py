@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 from qfit.models.registry import Registry
 from qfit.widgets.menu import MenuWidget
 from qfit.utils.helpers import StopExecution
+from qfit.utils.load_reg_dict import parseRegDict
 import qfit.settings as settings
 
 from typing import (
@@ -171,42 +172,7 @@ class IOCtrl(QObject):
 
         return registryDict
     
-    # open ####################################################################
-    def _parseRegDict(
-        self, 
-        registryDict: Dict[str, Any], 
-    ) -> Tuple[Dict[str, Any], "HilbertSpace", List["MeasDataType"]]:
-        """
-        Parse the registry dictionary from different versions of the app 
-        and return the up-to-date registry dictionary, HilbertSpace, and
-        measurementData.
-
-        Internal note: 
-        When a micro version is updated, the way of storing and reading the 
-        data should not be changed. Otherwise, when the mjor or minor version
-        is updated, we will need to write a new function to parse the registry
-        dictionary.
-
-        Parameters
-        ----------
-        registryDict : Dict[str, Any]
-            the registry dictionary
-        """
-        try:
-            version = registryDict["version"]
-        except KeyError:
-            version = "1.0.0"   # the version that we haven't stored the version number
-            
-        major, minor, micro = version.split(".")
-        major, minor, micro = int(major), int(minor), int(micro)
-
-        if major == 1 and minor == 0:
-            hilbertSpace = registryDict["HilbertSpace"]
-            measurementData = registryDict["measDataSet.data"]
-            return registryDict, hilbertSpace, measurementData
-        else:
-            raise ValueError(f"File version {version} is no longer supported. "
-                             f"Please contact the developer for retrieving the data.")  
+    # open ####################################################################       
 
     # save ####################################################################
     def _saveProject(

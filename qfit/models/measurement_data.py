@@ -10,8 +10,9 @@
 ############################################################################
 
 import os
+from abc import abstractmethod
 import numpy as np
-from copy import copy
+from copy import copy, deepcopy
 
 from typing import Dict, Tuple, Union, List, Any, Set
 
@@ -21,6 +22,8 @@ from matplotlib import colors as colors
 
 from matplotlib.image import imread
 from scipy.io import loadmat
+from scipy.ndimage import gaussian_laplace
+from skimage.filters import threshold_otsu
 import h5py
 
 from PySide6.QtCore import (
@@ -36,12 +39,15 @@ from PySide6.QtWidgets import QFileDialog, QMessageBox
 from qfit.models.data_structures import (
     PlotElement, 
     MeasMetaInfo, MeasRawXYConfig,
-    NumMeasData, ImageMeasData, MeasDataType,
+    ImageElement, MeshgridElement,
     FilterConfig,
+    Status,
 )
 from qfit.models.registry import Registrable, RegistryEntry
 from qfit.utils.helpers import (
     OrderedDictMod,
+    DictItem,
+    isValid1dArray, isValid2dArray, hasIdenticalCols, hasIdenticalRows,
     makeUnique,
 )
 
@@ -74,11 +80,11 @@ class ImageFileReader(MeasFileReader):
         _, fileStr = os.path.split(fileName)
         imageData = imread(fileName)
         
-        return ImageMeasData(fileStr, imageData, fileName)
+        return ImageMeasurementData(fileStr, imageData, fileName)
 
 
 class GenericH5Reader(MeasFileReader):
-    def fromFile(self, fileName) -> NumMeasData:
+    def fromFile(self, fileName) -> "NumericalMeasurementData":
         """
         Read numerical data from h5 file. If the file is likely to be from Labber,
         use the LabberH5Reader. Otherwise, load all of the non-scalar datasets
@@ -102,11 +108,11 @@ class GenericH5Reader(MeasFileReader):
 
         _, fileStr = os.path.split(fileName)
 
-        return NumMeasData(fileStr, dataCollection, fileName)
+        return NumericalMeasurementData(fileStr, dataCollection, fileName)
 
 
 class LabberH5Reader(MeasFileReader):
-    def fromFile(self, fileName) -> NumMeasData:
+    def fromFile(self, fileName) -> "NumericalMeasurementData":
         """
         Read numerical data from Labber h5 file. The file is assumed to have
         a specific structure, with the data stored in a dataset named "Data".
@@ -151,18 +157,18 @@ class LabberH5Reader(MeasFileReader):
                     dataCollection[names[3] + " " + entry] = array[:, 3, :]
 
         _, fileStr = os.path.split(fileName)
-        return NumMeasData(fileStr, dataCollection, fileName)
+        return NumericalMeasurementData(fileStr, dataCollection, fileName)
 
 
 class MatlabReader(MeasFileReader):
-    def fromFile(self, fileName) -> NumMeasData:
+    def fromFile(self, fileName) -> "NumericalMeasurementData":
         """
         Read numerical data from .mat file, using scipy.io.loadmat.
         """
         dataCollection = OrderedDictMod(loadmat(fileName))
         
         _, fileStr = os.path.split(fileName)
-        return NumMeasData(fileStr, dataCollection, fileName)
+        return NumericalMeasurementData(fileStr, dataCollection, fileName)
 
 
 class CSVReader(MeasFileReader):
@@ -171,11 +177,761 @@ class CSVReader(MeasFileReader):
         Read numerical data from .csv file, using numpy.loadtxt.
         """
         _, fileStr = os.path.split(fileName)
-        return NumMeasData(
+        return NumericalMeasurementData(
             fileStr,
             OrderedDictMod({fileName: np.loadtxt(fileName)}),
             fileName,
         )
+    
+
+class MeasurementData:
+    """
+    Base class for storing and manipulating measurement data. The primary 
+    measurement data (zData) is expected to be a 2d or 3d float ndarray.
+
+    Parameters
+    ---------
+    name: str
+        name of the measurement data, usually the name of the file
+    rawData: Any
+        the raw data extracted from a data file
+
+    Attributes
+    ----------
+    name: str
+        name of the measurement data, usually the name of the file
+    rawData: Any
+        the raw data extracted from a data file
+    zCandidates: OrderedDictMod[str, ndarray]
+        A dictionary of 2d ndarrays, which may be suitable as zData candidates
+    rawX: OrderedDictMod[str, ndarray]
+        A dictionary of 1d ndarrays, which has the same length. They are
+        multiple tuning parameters.
+    rawY: OrderedDictMod[str, ndarray]
+        A dictionary of 1d ndarrays, which has the same length. We require
+        that rawY has only one element, which is the frequency axis.        
+    """
+
+    # candidates: all possible x, y, and z data that are compatible in shape
+    zCandidates: OrderedDictMod[
+        str, np.ndarray
+    ] = OrderedDictMod()  # dict of 2d ndarrays
+    xCandidates: OrderedDictMod[
+        str, np.ndarray
+    ] = OrderedDictMod()  # dict of 1d ndarrays
+    yCandidates: OrderedDictMod[
+        str, np.ndarray
+    ] = OrderedDictMod()  # dict of 1d ndarrays
+    discardedKeys: List[str] = []
+
+    # raw data: the selected x, y, and z data, indicating the actual tuning
+    # parameters and the measurement data
+    _rawXNames: List[str] = []
+    _rawYNames: List[str] = []
+
+    # principal data: the z data that are used to plot and the x, y data that
+    # serves as coordinates in the plot
+    _principalZ: DictItem
+    _principalX: DictItem     # x axis that has the largest change
+    _principalY: DictItem     
+
+    def __init__(self, figName: str, rawData, file: str):
+        super().__init__()
+
+        self.name: str = figName
+        self.rawData = rawData
+        self.file = file
+
+    def _initFilters(self):
+        self._bgndSubtractX = False
+        self._bgndSubtractY = False
+        self._topHatFilter = False
+        self._waveletFilter = False
+        self._edgeFilter = False
+        self._logColoring = False
+        self._zMin = 0.0
+        self._zMax = 100.0
+        self._colorMapStr = "PuOr"   # it's a property stored in each data, but won't 
+                                # be used in generatePlotElement. It's used in
+                                # the mpl canvas view to set the color map of the
+                                # entire canvas.
+
+    # properties =======================================================
+    @property
+    def principalZ(self) -> DictItem:
+        """
+        Return current dataset describing the z values (measurement data) with all filters etc. applied.
+
+        Returns
+        -------
+        DataItem
+        """
+        zData = deepcopy(self._principalZ)
+
+        if self._bgndSubtractX:
+            zData.data = self._doBgndSubtraction(zData.data, axis=1)
+        if self._bgndSubtractY:
+            zData.data = self._doBgndSubtraction(zData.data, axis=0)
+        if self._topHatFilter:
+            zData.data = self._applyTopHatFilter(zData.data)
+        if self._waveletFilter:
+            zData.data = self._applyWaveletFilter(zData.data)
+        if self._edgeFilter:
+            zData.data = gaussian_laplace(zData.data, 1.0)
+
+        zData.data = self._clip(zData.data)
+
+        return zData
+
+    @property
+    def principalX(self) -> DictItem:
+        """
+        Return current dataset describing the x-axis values, taking into account the possibility of an x-y swap.
+
+        Returns
+        -------
+        ndarray, ndim=1
+        """
+        return self._principalX
+
+    @property
+    def principalY(self) -> DictItem:
+        """
+        Return current dataset describing the y-axis values, taking into account the possibility of an x-y swap.
+
+        Returns
+        -------
+        ndarray, ndim=1
+        """
+        return self._principalY
+    
+    @property
+    def rawXNames(self) -> List[str]:
+        return self._rawXNames
+
+    @property
+    def rawYNames(self) -> List[str]:
+        return self._rawYNames
+    
+    @property
+    def rawX(self):
+        return OrderedDictMod({
+            key: value for key, value in self.xCandidates.items() 
+            if key in self._rawXNames
+        })
+    
+    @property
+    def rawY(self):
+        return OrderedDictMod({
+            key: value for key, value in self.yCandidates.items()
+            if key in self._rawYNames
+        })
+    
+    @property
+    def ambiguousZOrient(self) -> bool:
+        """
+        Return True if the zData is ambiguous in orientation, even if specifying
+        the x and y axes. This can happen if the zData has the same number of
+        rows and columns.
+        """
+        return self.principalZ.data.shape[0] == self.principalZ.data.shape[1]
+    
+    # manipulation =====================================================
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, MeasurementData):
+            return False
+
+        dataAttrs = [
+            "name",
+            "file",
+            "rawData",
+            "zCandidates",
+            "xCandidates",
+            "yCandidates",
+            "discardedKeys",
+            "_rawXNames",
+            "_rawYName",
+            "_principalZ",
+            "_principalX",
+            "_principalY",
+            "_bgndSubtractX",
+            "_bgndSubtractY",
+            "_topHatFilter",
+            "_waveletFilter",
+            "_edgeFilter",
+            "_logColoring",
+            "_zMin",
+            "_zMax",
+            "_colorMapStr",
+        ]
+        
+        return all([
+            getattr(self, attr) == getattr(__value, attr)
+            for attr in dataAttrs]
+        )
+    
+    def generateMetaInfo(self) -> MeasMetaInfo:
+        """
+        Generate the meta information of the measurement data
+        """
+        return MeasMetaInfo(
+            name=self.name,
+            file=self.file,
+            shape=self._principalZ.data.shape[:2],
+            xCandidateNames=self.xCandidates.keyList,
+            yCandidateNames=self.yCandidates.keyList,
+            zCandidateNames=self.zCandidates.keyList,
+            discardedKeys=self.discardedKeys,
+        )
+
+    @abstractmethod
+    def generatePlotElement(self) -> Union[ImageElement, MeshgridElement]:
+        """
+        Generate a plot element from the current data
+
+        Returns
+        -------
+        PlotElement
+        """
+        ...
+
+    def _transposeZ(self, array: np.ndarray) -> np.ndarray:
+        """
+        Transpose the zData array.
+        """
+        if array.ndim == 2:
+            return array.transpose()
+        elif array.ndim == 3:
+            return array.transpose(1, 0, 2)
+        else:
+            raise ValueError("array must be 2D or 3D")
+    
+    def setRawXY(
+        self, 
+        xNames: List[str],
+        yNames: List[str],
+    ):
+        """
+        Given the names of the x axis candidates, set the raw x axis names and
+        the principal x axis.
+        """
+        # check if the names are valid
+        if not all([name in self.xCandidates.keyList for name in xNames]):
+            raise ValueError("Invalid raw x axis names as not all are in "
+                             "the x axis candidate list")
+        if len(yNames) != 1:
+            raise ValueError("Invalid raw y axis names as there must be "
+                             "only one y axis")
+        if yNames[0] not in self.yCandidates.keyList:
+            raise ValueError("Invalid raw y axis name as it is not in the y "
+                             "axis candidate list")
+        if yNames[0] in xNames:
+            raise ValueError("The raw x and y axis names must be different")
+
+        self._rawXNames = xNames
+        self._rawYNames = yNames
+
+        # reset the principal x axis
+        self._resetPrincipalXY()
+
+    def setPrincipalZ(self, item: int | str):
+        """
+        Set the principal z dataset by the index or the name of the data.
+        """
+        if isinstance(item, str):
+            itemIndex = self.zCandidates.keyList.index(item)
+        self._principalZ = self.zCandidates.itemByIndex(itemIndex)
+
+    def _initRawXY(self):
+        """
+        Initialize the raw x and y axis by the first compatible x and y axis.
+        """
+        self._rawXNames = self.xCandidates.keyList[:1]
+        self._rawYNames = self.yCandidates.keyList[:1]
+
+        # if rawX and rawY are the same, set rawY to the next compatible y axis.
+        # It can always be done because there are pixel coordinates as the last 
+        # resort
+        if self._rawXNames == self._rawYNames:
+            self._rawYNames = self.yCandidates.keyList[1:2]
+
+    def _removePixelCoord(self):
+        """
+        Remove pixel coordinates from the x and y axis candidates. That is 
+        needed when we need to swap XY and regenerate a new set of pixel
+        coordinates.
+        """
+        self.xCandidates = OrderedDictMod({
+            key: value for key, value in self.xCandidates.items()
+            if not key.startswith("pixel_coord")
+        })
+        self.yCandidates = OrderedDictMod({
+            key: value for key, value in self.yCandidates.items()
+            if not key.startswith("pixel_coord")
+        })
+        
+        # if the pixel coordinates are chosen to be the raw x and y axis,
+        # reset the raw x and y axis
+        reset = False
+        for name in self._rawXNames:
+            if name.startswith("pixel_coord"):
+                reset = True
+        for name in self._rawYNames:
+            if name.startswith("pixel_coord"):
+                reset = True
+        if reset:
+            self._initRawXY()
+            self._resetPrincipalXY()
+
+    def _addPixelCoord(self):
+        """
+        Add pixel coordinates as the last resort for x and y axis candidates.
+        """
+        ydim, xdim = self._principalZ.data.shape
+        self.xCandidates.update({"pixel_coord_x": np.arange(xdim)})
+        self.yCandidates.update({"pixel_coord_y": np.arange(ydim)})
+        
+    def _resetPrincipalXY(self):
+        """
+        The principal x axis corresponds to the x axis that has the
+        largest change in the data.
+        Since there should only be one y axis, the principal y axis is
+        the first y axis.
+        """
+        if len(self.rawX) > 1:
+            idx = np.argmax(
+                [
+                    np.abs(data[-1] - data[0])
+                    for data in self.rawX.values()
+                ]
+            )
+            self._principalX = self.rawX.itemByIndex(int(idx))
+        else:
+            self._principalX = self.rawX.itemByIndex(0)
+
+        self._principalY = self.rawY.itemByIndex(0)
+
+    def swapXY(self):
+        """
+        Swap the x and y axes and transpose the zData array.
+        """
+        self._removePixelCoord()
+
+        # if the user have already selected multiple x axes, we will only
+        # keep the first one, as y axis is unique
+        self._rawXNames = self._rawXNames[:1]
+
+        swappedZCandidates = {
+            key: self._transposeZ(array) for key, array in self.zCandidates.items()
+        }
+        self.zCandidates = OrderedDictMod(swappedZCandidates)
+        self._principalZ.data = self._transposeZ(self._principalZ.data)
+
+        self.xCandidates, self.yCandidates = self.yCandidates, self.xCandidates
+        self._rawXNames, self._rawYNames = self._rawYNames, self._rawXNames
+
+        self._addPixelCoord()
+        self._resetPrincipalXY()
+        
+    def transposeZ(self):
+        """
+        Transpose the zData array without swapping the x and y axes. It should 
+        be used when the zData array is ambiguous in orientation - when the
+        number of rows and columns are the same.
+        """
+        if not self.ambiguousZOrient:
+            raise ValueError("The zData array is not ambiguous in orientation")
+        
+        self.zCandidates = OrderedDictMod({
+            key: self._transposeZ(array) for key, array in self.zCandidates.items()
+        })
+        self._principalZ.data = self._transposeZ(self._principalZ.data)
+
+    def rawXByPrincipalX(self, principalX: float) -> OrderedDictMod[str, float]:
+        """
+        Return the raw x values corresponding to the current x values.
+
+        Parameters
+        ----------
+        principalX: float
+            the value of the principal x axis
+
+        Returns
+        -------
+        OrderedDictMod[str, float]
+        """
+        fraction = (principalX - self.principalX.data[0]) / (
+            self.principalX.data[-1] - self.principalX.data[0]
+        )
+        rawX = OrderedDictMod()
+        for name, data in self.rawX.items():
+            rawX[name] = data[0] + fraction * (data[-1] - data[0])
+        return rawX
+
+    # filters =============================================================
+    def setFilter(self, config: FilterConfig):
+        """
+        Set the filter configuration
+        """
+        self._topHatFilter = config.topHat
+        self._waveletFilter = config.wavelet
+        self._edgeFilter = config.edge
+        self._bgndSubtractX = config.bgndX
+        self._bgndSubtractY = config.bgndY
+        self._logColoring = config.log
+        self._zMin = config.min
+        self._zMax = config.max
+        self._colorMapStr = config.color
+
+    def getFilter(self) -> FilterConfig:
+        """
+        Get the filter configuration
+        """
+        return FilterConfig(
+            topHat=self._topHatFilter,
+            wavelet=self._waveletFilter,
+            edge=self._edgeFilter,
+            bgndX=self._bgndSubtractX,
+            bgndY=self._bgndSubtractY,
+            log=self._logColoring,
+            min=self._zMin,
+            max=self._zMax,
+            color = self._colorMapStr,
+        )
+
+    def currentMinMax(self, array2D: np.ndarray) -> Tuple[float, float, float, float]:
+        """
+        Return the clipped min max values of the current zData and the 
+        unprocessed min max values.
+
+        Returns
+        -------
+        Tuple[float, float, float, float]
+            clipped minimum of the current zData by the range slider, 
+            clipped maximum of the current zData by the range slider, 
+            unprocessed minimum of the current zData, 
+            unprocessed maximum of the current zData
+        """
+        if array2D.ndim != 2:
+            raise ValueError("array must be 2D")
+        
+        normedMin = min(self._zMin, self._zMax) / 100
+        normedMax = max(self._zMin, self._zMax) / 100
+
+        rawZMin = array2D.min()
+        rawZMax = array2D.max()
+        # Choose Z value range according to the range slider values.
+        zMin = rawZMin + normedMin * (rawZMax - rawZMin)
+        zMax = rawZMin + normedMax * (rawZMax - rawZMin)
+
+        return zMin, zMax, rawZMin, rawZMax
+
+    def _doBgndSubtraction(self, array: np.ndarray, axis=0):
+        """
+        Subtract the background from the data and rescale the zData to the
+        range of the original data.
+        """
+        previousMin = np.nanmin(array)
+        previousMax = np.nanmax(array)
+        previousRange = previousMax - previousMin
+
+        # subtract the background
+        background = np.nanmedian(array, axis=axis, keepdims=True)
+        avgArray = array - background
+
+        # rescale the data to the range of the original data
+        currentMin = np.nanmin(avgArray)
+        currentMax = np.nanmax(avgArray)
+        currentRange = currentMax - currentMin
+        if currentRange == 0:
+            currentRange = previousRange = 1
+
+        avgArray = (avgArray - currentMin) / currentRange * previousRange + previousMin
+
+        if array.ndim == 3:
+            avgArray = np.round(avgArray, 0).astype(int)
+
+        return avgArray
+
+    def _applyWaveletFilter(self, array: np.ndarray):
+        """
+        Apply the wavelet filter to the data.
+        """
+        return skimage.restoration.denoise_wavelet(array, rescale_sigma=True)
+    
+    def _applyEdgeFilter(self, array: np.ndarray):
+        """
+        Apply the edge filter to the data.
+        """
+        # Check if the data is a 3D array
+        if len(array.shape) == 3:
+            # Apply the filter to each color channel separately
+            for i in range(array.shape[2]):
+                array[:, :, i] = gaussian_laplace(array[:, :, i], 1.0)
+        else:
+            array = gaussian_laplace(array, 1.0)
+
+        return array
+    
+    def _applyTopHatFilter(self, array: np.ndarray):
+        """
+        Apply the top hat filter to the data.
+        """
+        # Check if the array is 3D
+        if len(array.shape) == 3:
+            # Apply the filter to each color channel separately
+            result = np.zeros_like(array)
+            for i in range(array.shape[2]):
+                result[:, :, i] = self._applyTopHatFilter(array[:, :, i])
+            return result
+
+        # Original function for 1D or 2D arrays
+        array = array - np.mean(array)
+        stdvar = np.std(array)
+
+        histogram, bin_edges = np.histogram(
+            array, bins=30, range=(-1.5 * stdvar, 1.5 * stdvar)
+        )
+        max_index = np.argmax(histogram)
+        mid_value = (bin_edges[max_index + 1] + bin_edges[max_index]) / 2
+        array = array - mid_value
+        stdvar = np.std(array)
+        ones = np.ones_like(array)
+
+        return (
+            np.select(
+                [array > 1.5 * stdvar, array < -1.5 * stdvar, True],
+                [ones, ones, 0.0 * ones],
+            )
+            * array
+        )
+    
+    def _clip(self, array: np.ndarray):
+        """
+        Clip the data to the range of the slider and rescale the data to the
+        range of the original data.
+        """
+        # check if the array is 3D
+        if len(array.shape) == 3:
+            # Apply the filter to each color channel separately
+            result = np.zeros_like(array)
+            for i in range(array.shape[2]):
+                result[:, :, i] = self._clip(array[:, :, i])
+
+            return np.round(result, 0).astype(int)
+        
+        # Original function for 1D or 2D arrays
+        zMin, zMax, rawZMin, rawZMax = self.currentMinMax(array)
+
+        # Clip the data to the range of the slider
+        array = np.clip(array, zMin, zMax)
+
+        # Rescale the data to the range of the original data
+        array = (array - zMin) / (zMax - zMin) * (rawZMax - rawZMin) + rawZMin
+
+        return array
+
+
+class NumericalMeasurementData(MeasurementData):
+    """
+    Class for storing and manipulating measurement data. The primary 
+    measurement data (zData) is expected to be a 2d float ndarray, and the
+    x and y axis data are expected to be 1d float ndarrays.
+
+    Parameters
+    ---------
+    rawData: list of ndarray
+        list containing all 1d and 2d arrays (floats) extracted from a data file
+    """
+
+    def __init__(
+        self,
+        name: str,
+        rawData: OrderedDictMod[str, np.ndarray],
+        file: str,
+    ):
+        super().__init__(name, rawData, file)
+        self._initXYZ()
+
+    # properties =======================================================
+    @property
+    def discardedKeys(self) -> List[str]:
+        """
+        The keys that are discarded from the raw data
+        """
+        allKeys = self.rawData.keys()
+        acceptedKeys = self.zCandidates.keyList + self.xCandidates.keyList + self.yCandidates.keyList
+        return [
+            key for key in allKeys
+            if key not in acceptedKeys
+        ]
+
+    # initialization ===================================================
+    @staticmethod
+    def _findZCandidates(rawData: Union[OrderedDictMod, Dict]):
+        """
+        Find all 2d ndarrays in the rawData dict that are suitable as zData candidates. All of the zData candidates must have the same shape,
+        as they reperseent the data for the same measurement, usually the 
+        amplitude or phase of the signal.
+        """
+        zCandidates = OrderedDictMod()
+        for name, theObject in rawData.items():
+            if isinstance(theObject, np.ndarray) and isValid2dArray(theObject):
+                if not (hasIdenticalCols(theObject) or hasIdenticalRows(theObject)):
+                    zCandidates[name] = theObject
+
+        # all zCandidates must have the same shape
+        if len(set([z.shape for z in zCandidates.values()])) > 1:
+            raise ValueError("zCandidates must have the same shape")
+        
+        # if there are no zCandidates, raise an error
+        if not zCandidates:
+            raise ValueError("No suitable zData candidates found")
+
+        return zCandidates
+
+    def _findXYCandidates(self):
+        """
+        By trying to match the dimensions of the zData with the x and y axis candidates,
+        find the x and y axis candidates that are compatible with the zData.
+        """
+        # find xy candidates
+        xyCandidates = OrderedDictMod()
+        for name, theObject in self.rawData.items():
+            if isinstance(theObject, np.ndarray):
+                if isValid1dArray(theObject):
+                    xyCandidates[name] = theObject.flatten()
+                if isValid2dArray(theObject) and hasIdenticalRows(theObject):
+                    xyCandidates[name] = theObject[0]
+                if isValid2dArray(theObject) and hasIdenticalCols(theObject):
+                    xyCandidates[name] = theObject[:, 0]
+
+        # based on the shape, find the compatible x and y axis candidates
+        self.xCandidates = OrderedDictMod()
+        self.yCandidates = OrderedDictMod()
+        ydim, xdim = self._principalZ.data.shape
+
+        # Case 1: length of x and y axis are equal, x and y share the same
+        # compatible candidates
+        if ydim == xdim:
+            compatibleCandidates = OrderedDictMod({
+                key: value for key, value in xyCandidates.items()
+                if len(value) == xdim
+            })
+            self.xCandidates = self.yCandidates = compatibleCandidates
+        
+        # Case 2: length of x and y axis are not equal, the x and y axis can 
+        # be distinguished by the length of the data
+        else:
+            for name, data in xyCandidates.items():
+                if len(data) == xdim:
+                    self.xCandidates[name] = data
+                if len(data) == ydim:
+                    self.yCandidates[name] = data
+
+        # finally, insert pixel coordinates as the last resort
+        self._addPixelCoord()
+
+    def _initXYZ(self):
+        """
+        From the raw data, find the zData, xData, and yData candidates and their compatibles.
+        """
+        self.zCandidates = self._findZCandidates(self.rawData)
+        self._principalZ = self.zCandidates.itemByIndex(0)
+
+        self._findXYCandidates()
+        self._initRawXY()
+        self._resetPrincipalXY()
+    
+    # plotting =========================================================
+    def generatePlotElement(self) -> MeshgridElement:
+        """
+        Generate a plot element from the current data
+        """
+        zData = self.principalZ.data
+
+        if self._logColoring:
+            zMin, zMax, _, _ = self.currentMinMax(zData)
+            linthresh = max(abs(zMin), abs(zMax)) / 20.0
+            norm = colors.SymLogNorm(
+                linthresh=linthresh,    # the range within which the plot is linear (i.e. color map is linear)
+                vmin=zMin,
+                vmax=zMax,  # **add_on_mpl_3_2_0
+            )
+        else:
+            norm = None
+
+        xData, yData = np.meshgrid(self.principalX.data, self.principalY.data)
+        return MeshgridElement(
+            "measurement",
+            xData,
+            yData,
+            zData,
+            norm = norm,
+            rasterized = True,
+            zorder = 0,
+        )
+
+
+class ImageMeasurementData(MeasurementData):
+    """
+    Class for storing and manipulating measurement data. The primary
+    measurement data (zData) is expected to be a 3d float ndarray or a 2d
+    float ndarray.
+
+    Parameters
+    ---------
+    rawData: ndarray
+        the raw data extracted from a data file, either a 2d or 3d array
+    """
+    rawData: np.ndarray
+
+    def __init__(self, name: str, image: np.ndarray, file: str):
+        super().__init__(name, image, file)
+        self._initXYZ()
+
+    def _initXYZ(self):
+        """
+        Cook up the x and y axis data from the raw data.
+        """
+        self.rawData = self._processRawZ(self.rawData)
+        self.zCandidates = OrderedDictMod({self.name: self.rawData})
+        self._principalZ = self.zCandidates.itemByIndex(0)
+
+        # since there is no x and y axis data, we use pixel coordinates
+        ydim, xdim = self._principalZ.data.shape[:2]
+        self.xCandidates = OrderedDictMod(pixel_coord_1=np.arange(xdim))
+        self.yCandidates = OrderedDictMod(pixel_coord_2=np.arange(ydim))
+        self._addPixelCoord()
+        self._initRawXY()
+        self._resetPrincipalXY()
+
+    def _processRawZ(self, zData: np.ndarray) -> np.ndarray:
+        """
+        Check the dimensions of the zData array and process it by
+        - inversing the y axis
+        """
+        assert zData.ndim in [2, 3], "zData must be a 2d or 3d array"
+
+        # inverse the y axis
+        zData = np.flip(zData, axis=0)
+
+        return zData
+
+    def generatePlotElement(self, **kwargs) -> ImageElement:
+        """
+        Generate a plot element from the current data
+        """
+        return ImageElement(
+            "measurement",
+            self.principalZ.data,
+            rasterized = True,
+            zorder = 0,
+        )
+
+
+MeasDataType = Union[NumericalMeasurementData, ImageMeasurementData]
+
 
 
 class ListModelMeta(type(QAbstractListModel), type(Registrable)):
@@ -205,6 +961,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     figSwitched = Signal(str)
     metaInfoChanged = Signal(MeasMetaInfo)
     rawXYConfigChanged = Signal(MeasRawXYConfig)
+    updateStatus = Signal(Status)
 
     # single data processing
     readyToPlot = Signal(PlotElement)
@@ -365,18 +1122,27 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         if fileName is not None:
             if isinstance(fileName, str):
                 if not os.path.isfile(fileName):
-                    # TODO: show an error in the GUI instead of raising an error
-                    raise FileNotFoundError(f"File '{fileName}' does not exist.")
+                    self.updateStatus.emit(Status(
+                        statusSource = "import",
+                        statusType="error",
+                        message=f"File '{fileName}' does not exist.",
+                    ))
                     return True     # continue opening the gui, while data is not loaded
             elif isinstance(fileName, list):
                 for file in fileName:
                     if not os.path.isfile(file):
-                    # TODO: show an error in the GUI instead of raising an error
-                        raise FileNotFoundError(f"File '{file}' does not exist.")
+                        self.updateStatus.emit(Status(
+                            statusSource = "import",
+                            statusType="error",
+                            message=f"File '{file}' does not exist.",
+                        ))
                         return True
             else:
-                # TODO: show an error in the GUI instead of raising an error
-                raise ValueError("measurementFileName must be a string or a list of strings.")
+                self.updateStatus.emit(Status(
+                    statusSource = "import",
+                    statusType="error",
+                    message="measurementFileName must be a string or a list of strings.",
+                ))
                 return True
 
         # read measurement files from dialog
@@ -390,8 +1156,11 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         elif isinstance(fileName, str):
             data = self._rawDataFromFile(fileName)
             if data is None:
-                # TODO: show an error in the GUI instead of raising an error
-                raise FileNotFoundError(f"Can't load file '{fileName}'.")
+                self.updateStatus.emit(Status(
+                    statusSource = "import",
+                    statusType="error",
+                    message=f"Can't load file '{fileName}'.",
+                ))
                 return True
             measurementData = [data]
         
@@ -401,8 +1170,11 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             for file in fileName:
                 measData = self._rawDataFromFile(file)
                 if measData is None:
-                    # TODO: show an error in the GUI instead of raising an error
-                    raise FileNotFoundError(f"Can't load file '{file}'.")
+                    self.updateStatus.emit(Status(
+                        statusSource = "import",
+                        statusType="error",
+                        message=f"Can't load file '{file}'.",
+                    ))
                     return True
                 measurementData.append(measData)
 
