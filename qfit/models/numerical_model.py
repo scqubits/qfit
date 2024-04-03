@@ -152,7 +152,7 @@ class QuantumModel(QObject):
             return 
         
         self._currentFigName = figName
-        self.updateCalc()
+        self.updateCalc(forced=True)
 
     @Slot(HilbertSpace)
     def updateHilbertSpace(
@@ -888,6 +888,7 @@ class QuantumModel(QObject):
             evals=eigenenergies,
             **availableLabels,
         )
+        simulation_freq = np.abs(simulation_freq)
         return simulation_freq, status
 
     def _MSEByTransition(
