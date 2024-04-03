@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="/">
+    <file>icons/svg/plus-fig.svg</file>
+    <file>icons/svg/trash-fig.svg</file>
     <file>icons/svg/file-import-solid.svg</file>
     <file>icons/svg/stop.svg</file>
     <file>icons/svg/ruler-square.svg</file>

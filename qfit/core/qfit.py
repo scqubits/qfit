@@ -30,6 +30,7 @@ from qfit.views.paging_view import PageView
 # measurement data
 from qfit.models.measurement_data import MeasDataType, MeasDataSet
 from qfit.views.importer_view import ImporterView
+from qfit.views.meas_data_view import MeasDataView
 from qfit.controllers.meas_data_ctrl import MeasDataCtrl
 
 # calibration:
@@ -467,11 +468,15 @@ class Fit:
             self._mainUi.transposeButton,
             self._mainUi.finalizeStep0Button,
         )
+        self._measDataView = MeasDataView(
+            self._mainWindow,
+            self._mainUi.figureTabWidget,
+        )
 
         self._measDataCtrl = MeasDataCtrl(
             self._mainWindow,
             (self._measData,),
-            (self._importerView, self._pageView),
+            (self._importerView, self._pageView, self._measDataView),
             self._replaceMeasData,
             self._dynamicalInit,
         )
