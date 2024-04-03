@@ -1,6 +1,7 @@
 from typing import Callable, Any, Dict, Literal, Union
 import pickle
-from qfit.version import version
+# from qfit.version import version
+from setup import MAJOR, MICRO, MINOR
 
 from abc import ABC
 
@@ -131,7 +132,7 @@ class Registry:
         "version": RegistryEntry(
             "version",
             "r",
-            lambda: version,
+            lambda: f"{MAJOR}.{MINOR}.{MICRO}",
         ),
     }
 
