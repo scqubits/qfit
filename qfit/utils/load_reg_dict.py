@@ -3,7 +3,6 @@ from qfit.models.measurement_data import MeasDataType
 from scqubits.core.hilbert_space import HilbertSpace
 
 def parseRegDict(
-    self, 
     registryDict: Dict[str, Any], 
 ) -> Tuple[Dict[str, Any], "HilbertSpace", List["MeasDataType"]]:
     """
