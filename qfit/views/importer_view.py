@@ -99,6 +99,17 @@ class ImporterView(QObject):
             # configure the check box
             checkBox.setEnabled(True)
             checkBox.setCheckable(True)
+            checkBox.setStyleSheet("""
+QCheckBox:disabled {	
+	color: rgb(85, 85, 85);
+}
+QCheckBox::indicator:disabled {	
+	border: 1px solid rgb(85, 85, 85);
+   background: transparent;
+}
+""")
+
+            # connect to the signal
             checkBox.clicked.connect(self.emitConfigChanged)
 
             # insert the check box
@@ -145,6 +156,7 @@ class ImporterView(QObject):
 
         # other buttons
         self.transposeButton.setEnabled(config.allowTranspose)
+        self.transposeButton.setVisible(config.allowTranspose)
         self.continueButton.setEnabled(config.allowContinue)
 
     def getConfig(self) -> MeasRawXYConfig:
@@ -170,6 +182,12 @@ class ImporterView(QObject):
         self.configChanged.emit(self.getConfig())
 
     # other buttons ====================================================
+    def enableFigImport(self, enabled: bool):
+        self.importFigButtons["new"].setEnabled(enabled)
+        self.importFigButtons["new"].setVisible(enabled)
+        self.importFigButtons["delete"].setEnabled(enabled)
+        self.importFigButtons["delete"].setVisible(enabled)
+
     def onContinueClicked(self):
         """
         Emit a signal when the continue button is clicked.
@@ -189,6 +207,7 @@ class ImporterView(QObject):
         reply = msgBox.exec()
 
         if reply == QMessageBox.Yes:
+            self.enableFigImport(False)
             self.continueClicked.emit()
         else:
             pass

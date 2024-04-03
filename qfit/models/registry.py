@@ -165,11 +165,10 @@ class Registry:
         obj : Any
             The object to be registered.
         """
-        try:
+        if isinstance(obj, Registrable):
             reg_dict = obj.registerAll()
-            print(f"Registering {obj.__class__.__name__} using registerAll().")
             self._registry.update(reg_dict)
-        except AttributeError:
+        else:
             name = obj.__class__.__name__
             obj_wrap = [obj]    # list wrapper to make the object mutable
             entry = RegistryEntry(

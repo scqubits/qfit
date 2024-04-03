@@ -70,14 +70,30 @@ class MeasDataCtrl(QObject):
         """
         self.importerView.transposeZClicked.connect(self.measDataSet.transposeZ)
 
+    @Slot()
+    def continueToCalibrate(self) -> None:
+        """
+        Continue to the calibration page.
+        """
+        self.fullReplaceMeasData(self.measDataSet.fullData)
+        self.fullDynamicalInit()
+
+        self.importerView.enableFigImport(False)
+
+        self.pageView.switchToPage("calibrate")
+        self.pageView.setEnabled(False, "setup")
+        self.pageView.setEnabled(True, "calibrate")
+        self.pageView.setEnabled(True, "extract")
+        self.pageView.setEnabled(True, "prefit")
+        self.pageView.setEnabled(True, "fit")
+
     def continueConnects(self) -> None:
         """
         Connect the continue button between model and view.
         """
         self.importerView.continueClicked.connect(
-            lambda: self.fullReplaceMeasData(self.measDataSet.fullData)
+            self.continueToCalibrate
         )
-        self.importerView.continueClicked.connect(self.fullDynamicalInit)
-        self.importerView.continueClicked.connect(
-            lambda: self.pageView.switchToPage("calibrate")
+        self.measDataSet.dataLoaded.connect(
+            self.continueToCalibrate
         )

@@ -389,10 +389,7 @@ class IOCtrl(QObject):
             # update the dynamical elements in the main window (i.e. load from the registry
             # the r entries)
             self.fullReplaceHS(hilbertspace)
-            self.measDataSet.replaceMeasData(measurementData)   # it's not included 
-                                                                # in the fullReplaceMeasData
-            self.fullReplaceMeasData(measurementData)
-            self.fullDynamicalInit()
+            self.measDataSet.loadDataSet(measurementData)
 
             # update the rest of the registry (i.e. those entries with r+)
             self.registry.setByDict(parsedDict)
