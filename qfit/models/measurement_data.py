@@ -205,6 +205,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     figSwitched = Signal(str)
     metaInfoChanged = Signal(MeasMetaInfo)
     rawXYConfigChanged = Signal(MeasRawXYConfig)
+    newFigAdded = Signal(str)
 
     # single data processing
     readyToPlot = Signal(PlotElement)
@@ -476,6 +477,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         flags |= Qt.ItemIsEnabled
         return flags
     
+    @Slot()
     def insertRow(self):
         """
         Insert a new row at the end of the table.
@@ -489,20 +491,25 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
 
         # update the current row before emitting the rowsInserted signal
         # (which will be emitted by endInsertRows)
-        self.switchFig(-1)
+        # self.switchFig(-1)
+
+        self._currentRow = -1
+
+        self.newFigAdded.emit(self.currentFigName)
 
         self.endInsertRows()
 
         return True
 
-    def removeRow(self):
+    @Slot(int)
+    def removeRow(self, row: int):
         """
         Remove a row from the table.
         """
         if self.rowCount() == 0:
             return False
         
-        row = self.currentRow
+        # row = self.currentRow
 
         self.beginRemoveRows(QModelIndex(), row, row)
         self.fullData.pop(row)
@@ -511,10 +518,10 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         # (which will be emitted by endRemoveRows)
         if self.rowCount() == 0:
             self._currentRow = 0
-        elif row == self.rowCount():  # now row count is 1 less than before
-            self.switchFig(row - 1)
-        else:
-            self.switchFig(row)
+        # elif row == self.rowCount():  # now row count is 1 less than before
+        #     self.switchFig(row - 1)
+        # else:
+        #     self.switchFig(row)
 
         self.endRemoveRows()
 

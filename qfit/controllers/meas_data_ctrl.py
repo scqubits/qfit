@@ -10,27 +10,21 @@ if TYPE_CHECKING:
     from qfit.models.measurement_data import MeasDataSet, MeasDataType
     from qfit.views.importer_view import ImporterView
     from qfit.views.paging_view import PageView
+    from qfit.views.meas_data_view import MeasDataView
+
 
 class MeasDataCtrl(QObject):
     def __init__(
-        self, 
+        self,
         parent: QObject | None,
-        models: Tuple[
-            "MeasDataSet"
-        ],
-        views: Tuple[
-            "ImporterView", "PageView"
-        ],
+        models: Tuple["MeasDataSet"],
+        views: Tuple["ImporterView", "PageView", "MeasDataView"],
         fullReplaceMeasData: Callable[[List["MeasDataType"]], None],
         fullDynamicalInit: Callable[[], None],
     ) -> None:
         super().__init__(parent)
-        (
-            self.measDataSet,
-        ) = models
-        (
-            self.importerView, self.pageView
-        ) = views
+        (self.measDataSet,) = models
+        (self.importerView, self.pageView, self.measDataView) = views
         self.fullReplaceMeasData = fullReplaceMeasData
         self.fullDynamicalInit = fullDynamicalInit
 
@@ -47,24 +41,22 @@ class MeasDataCtrl(QObject):
         Import the figure from the importer page.
         """
         self.importerView.addFigClicked.connect(self.measDataSet.insertRow)
-        self.importerView.deleteFigClicked.connect(self.measDataSet.removeRow)
+        self.measDataSet.newFigAdded.connect(self.measDataView.addFig)
+        self.importerView.deleteFigClicked.connect(self.measDataView.deleteFig)
+        self.measDataView.figDeletedFromTab.connect(self.measDataSet.removeRow)
 
     def switchFigConnects(self) -> None:
         """
-        Switch the figure from the importer page.
+        Switch the figure
         """
-        # just like extracting view, we should have:
-        # view focus changed --> model switch fig
-        # model row removed / inserted --> view select item (change focus)
-        # (already in Qt if we use .setModel()) model row removed / inserted --> view add / remove item
-        pass
+        self.measDataView.figChanged.connect(self.measDataSet.switchFig)
 
     def metaInfoConnects(self) -> None:
         """
         Show the meta info for the current measurement data.
         """
         self.measDataSet.metaInfoChanged.connect(self.importerView.setMetaInfo)
-    
+
     def configConnects(self) -> None:
         """
         Connect the configuration panel between model and view.
