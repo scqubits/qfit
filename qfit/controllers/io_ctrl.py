@@ -18,15 +18,19 @@ from qfit.utils.load_reg_dict import parseRegDict
 import qfit.settings as settings
 
 from typing import (
-    TYPE_CHECKING, Union, Dict, Any, Optional, List,
-    Callable, Tuple,
+    TYPE_CHECKING,
+    Union,
+    Dict,
+    Any,
+    Optional,
+    List,
+    Callable,
+    Tuple,
 )
 
 if TYPE_CHECKING:
     from qfit.core.mainwindow import MainWindow
-    from qfit.models.measurement_data import (
-        MeasDataType, MeasDataSet
-    )
+    from qfit.models.measurement_data import MeasDataType, MeasDataSet
     from scqubits.core.hilbert_space import HilbertSpace
 
 
@@ -41,7 +45,7 @@ class IOCtrl(QObject):
     - close app
 
     It will run the register() when created.
-    
+
     Relevant UI elements:
     - menu button
     - menu widget
@@ -64,7 +68,7 @@ class IOCtrl(QObject):
         the main window
     fullReplaceHS : Callable[[HilbertSpace], None]
         function to replace the HilbertSpace object for all components
-        in qfit. 
+        in qfit.
     fullReplaceMeasData : Callable[[List[MeasurementDataType]], None]
         function to replace the measurement data for all components in qfit
     fullDynamicalInit : Callable[[], None]
@@ -93,7 +97,7 @@ class IOCtrl(QObject):
     def replaceHS(self, hilbertspace: "HilbertSpace"):
         """
         When the app is reloaded (new measurement data and hilbert space),
-        reinitialize the all relevant models and views. HilbertSpace is used 
+        reinitialize the all relevant models and views. HilbertSpace is used
         to help reload the app if it is not provided in the newProject function.
 
         Parameters
@@ -171,8 +175,8 @@ class IOCtrl(QObject):
         self.mainWindow.activateWindow()
 
         return registryDict
-    
-    # open ####################################################################       
+
+    # open ####################################################################
 
     # save ####################################################################
     def _saveProject(
@@ -275,9 +279,7 @@ class IOCtrl(QObject):
             reply = msgBox.exec_()
 
             if reply == QMessageBox.Save:
-                self.saveAndCloseApp(
-                    save_as = self.mainWindow.projectFile is None
-                )
+                self.saveAndCloseApp(save_as=self.mainWindow.projectFile is None)
                 return True
             elif reply == QMessageBox.Discard:
                 self._closeApp()
@@ -288,7 +290,7 @@ class IOCtrl(QObject):
         else:
             self._closeApp()
             return True
-        
+
     def _closeApp(self):
         """
         Close the window.
@@ -304,9 +306,9 @@ class IOCtrl(QObject):
     # slots ###################################################################
     @Slot()
     def newProject(
-        self, 
-        __value=None, 
-        from_menu: bool = True, 
+        self,
+        __value=None,
+        from_menu: bool = True,
         hilbertSpace: Optional["HilbertSpace"] = None,
         measurementFileName: Optional[str | List[str]] = None,
     ):
@@ -317,7 +319,7 @@ class IOCtrl(QObject):
         Parameters
         ----------
         from_menu : bool
-            whether the function is called from the menu. If Truem the menu 
+            whether the function is called from the menu. If Truem the menu
             will be closed after the function is called.
         hilbertSpace : HilbertSpace
             the HilbertSpace object
@@ -326,14 +328,14 @@ class IOCtrl(QObject):
         """
         if from_menu:
             self.menu.toggle()
-            
+
         # load or re-use the HilbertSpace object
         if hilbertSpace is not None:
             self.hilbertSpace = hilbertSpace
         self.fullReplaceHS(self.hilbertSpace)
 
         # feed the measurement data to the measDataSet
-        openWindow = self.measDataSet.loadData(measurementFileName)
+        openWindow = self.measDataSet.insertRow(measurementFileName)
         # set the focus to the main window after opening a file
         self.mainWindow.activateWindow()
 
@@ -348,8 +350,8 @@ class IOCtrl(QObject):
 
     @Slot()
     def openFile(
-        self, 
-        __value=None, 
+        self,
+        __value=None,
         from_menu: bool = True,
         fileName: Optional[str] = None,
     ):
@@ -360,7 +362,7 @@ class IOCtrl(QObject):
         Parameters
         ----------
         from_menu : bool
-            whether the function is called from the menu. If Truem the menu 
+            whether the function is called from the menu. If Truem the menu
             will be closed after the function is called.
         fileName : str
             the project file name
@@ -374,9 +376,7 @@ class IOCtrl(QObject):
                 raise FileNotFoundError(f"File '{fileName}' does not exist.")
 
         if fileName is None:
-            registryDict = self._registryDictFromDialog(
-                window_initialized=from_menu
-            )
+            registryDict = self._registryDictFromDialog(window_initialized=from_menu)
         else:
             registryDict = Registry.dictFromFile(fileName)
             if registryDict is None:
@@ -389,8 +389,8 @@ class IOCtrl(QObject):
             # update the dynamical elements in the main window (i.e. load from the registry
             # the r entries)
             self.fullReplaceHS(hilbertspace)
-            self.measDataSet.replaceMeasData(measurementData)   # it's not included 
-                                                                # in the fullReplaceMeasData
+            self.measDataSet.replaceMeasData(measurementData)  # it's not included
+            # in the fullReplaceMeasData
             self.fullReplaceMeasData(measurementData)
             self.fullDynamicalInit()
 
@@ -425,7 +425,7 @@ class IOCtrl(QObject):
     @Slot()
     def closeByMainWindow(self, event):
         """
-        When user click the "x" button, mainWinow will emit the closeWindow 
+        When user click the "x" button, mainWinow will emit the closeWindow
         signal and this function will be called. It will ask the user whether
         to save the changes before closing the app.
         """

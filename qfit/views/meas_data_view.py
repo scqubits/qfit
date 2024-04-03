@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QPushButton, QTabWidget
 
 from qfit.utils.helpers import modifyStyleSheet
 
-from typing import TYPE_CHECKING, Tuple, Dict, Any
+from typing import TYPE_CHECKING, Tuple, Dict, Any, List
 
 
 class MeasDataView(QObject):
@@ -31,8 +31,7 @@ class MeasDataView(QObject):
     """
 
     figChanged = Signal(str)
-    figAddedToTab = Signal(str)
-    figDeletedFromTab = Signal(str)
+    figDeletedFromTab = Signal(int)
 
     def __init__(
         self,
@@ -65,15 +64,15 @@ class MeasDataView(QObject):
         self.figChanged.emit(figName)
 
     @Slot(str)
-    def addFig(self, figName: str):
+    def addFig(self, figNameList: List[str]):
         """
         Add a figure to the tab.
         """
-        self.dataTab.addTab(QPushButton(""), figName)
-        # this changes the current index to the newly added tab
-        # triggers currentChanged signal
+        for figName in figNameList:
+            self.dataTab.addTab(QPushButton(""), figName)
+            # this changes the current index to the newly added tab
+            # triggers currentChanged signal
         self.dataTab.setCurrentIndex(self.dataTab.count() - 1)
-        self.figAddedToTab.emit(figName)
 
     @Slot()
     def deleteFig(self):

@@ -37,9 +37,11 @@ from PySide6.QtCore import (
 from PySide6.QtWidgets import QFileDialog, QMessageBox
 
 from qfit.models.data_structures import (
-    PlotElement, 
-    MeasMetaInfo, MeasRawXYConfig,
-    ImageElement, MeshgridElement,
+    PlotElement,
+    MeasMetaInfo,
+    MeasRawXYConfig,
+    ImageElement,
+    MeshgridElement,
     FilterConfig,
     Status,
 )
@@ -47,9 +49,13 @@ from qfit.models.registry import Registrable, RegistryEntry
 from qfit.utils.helpers import (
     OrderedDictMod,
     DictItem,
-    isValid1dArray, isValid2dArray, hasIdenticalCols, hasIdenticalRows,
+    isValid1dArray,
+    isValid2dArray,
+    hasIdenticalCols,
+    hasIdenticalRows,
     makeUnique,
 )
+
 
 class MeasFileReader:
     def fromFile(self, fileName):
@@ -60,7 +66,9 @@ class MeasFileReader:
         """
         Heuristic inspection to determine whether the h5 file might be from Labber.
         """
-        if {"Data", "Instrument config", "Settings", "Step config"}.issubset(set(h5File)):
+        if {"Data", "Instrument config", "Settings", "Step config"}.issubset(
+            set(h5File)
+        ):
             return True
         return False
 
@@ -79,7 +87,7 @@ class ImageFileReader(MeasFileReader):
         """
         _, fileStr = os.path.split(fileName)
         imageData = imread(fileName)
-        
+
         return ImageMeasurementData(fileStr, imageData, fileName)
 
 
@@ -94,7 +102,7 @@ class GenericH5Reader(MeasFileReader):
             if self.isLikelyLabberFile(h5File):
                 labberReader = LabberH5Reader()
                 return labberReader.fromFile(fileName)
-            
+
             # generic h5 file, attempt to read
             dataCollection = OrderedDictMod()
 
@@ -166,7 +174,7 @@ class MatlabReader(MeasFileReader):
         Read numerical data from .mat file, using scipy.io.loadmat.
         """
         dataCollection = OrderedDictMod(loadmat(fileName))
-        
+
         _, fileStr = os.path.split(fileName)
         return NumericalMeasurementData(fileStr, dataCollection, fileName)
 
@@ -182,11 +190,11 @@ class CSVReader(MeasFileReader):
             OrderedDictMod({fileName: np.loadtxt(fileName)}),
             fileName,
         )
-    
+
 
 class MeasurementData:
     """
-    Base class for storing and manipulating measurement data. The primary 
+    Base class for storing and manipulating measurement data. The primary
     measurement data (zData) is expected to be a 2d or 3d float ndarray.
 
     Parameters
@@ -209,19 +217,19 @@ class MeasurementData:
         multiple tuning parameters.
     rawY: OrderedDictMod[str, ndarray]
         A dictionary of 1d ndarrays, which has the same length. We require
-        that rawY has only one element, which is the frequency axis.        
+        that rawY has only one element, which is the frequency axis.
     """
 
     # candidates: all possible x, y, and z data that are compatible in shape
-    zCandidates: OrderedDictMod[
-        str, np.ndarray
-    ] = OrderedDictMod()  # dict of 2d ndarrays
-    xCandidates: OrderedDictMod[
-        str, np.ndarray
-    ] = OrderedDictMod()  # dict of 1d ndarrays
-    yCandidates: OrderedDictMod[
-        str, np.ndarray
-    ] = OrderedDictMod()  # dict of 1d ndarrays
+    zCandidates: OrderedDictMod[str, np.ndarray] = (
+        OrderedDictMod()
+    )  # dict of 2d ndarrays
+    xCandidates: OrderedDictMod[str, np.ndarray] = (
+        OrderedDictMod()
+    )  # dict of 1d ndarrays
+    yCandidates: OrderedDictMod[str, np.ndarray] = (
+        OrderedDictMod()
+    )  # dict of 1d ndarrays
     discardedKeys: List[str] = []
 
     # raw data: the selected x, y, and z data, indicating the actual tuning
@@ -232,8 +240,8 @@ class MeasurementData:
     # principal data: the z data that are used to plot and the x, y data that
     # serves as coordinates in the plot
     _principalZ: DictItem
-    _principalX: DictItem     # x axis that has the largest change
-    _principalY: DictItem     
+    _principalX: DictItem  # x axis that has the largest change
+    _principalY: DictItem
 
     def __init__(self, figName: str, rawData, file: str):
         super().__init__()
@@ -253,10 +261,10 @@ class MeasurementData:
         self._logColoring = False
         self._zMin = 0.0
         self._zMax = 100.0
-        self._colorMapStr = "PuOr"   # it's a property stored in each data, but won't 
-                                # be used in generatePlotElement. It's used in
-                                # the mpl canvas view to set the color map of the
-                                # entire canvas.
+        self._colorMapStr = "PuOr"  # it's a property stored in each data, but won't
+        # be used in generatePlotElement. It's used in
+        # the mpl canvas view to set the color map of the
+        # entire canvas.
 
     # properties =======================================================
     @property
@@ -306,7 +314,7 @@ class MeasurementData:
         ndarray, ndim=1
         """
         return self._principalY
-    
+
     @property
     def rawXNames(self) -> List[str]:
         return self._rawXNames
@@ -314,21 +322,27 @@ class MeasurementData:
     @property
     def rawYNames(self) -> List[str]:
         return self._rawYNames
-    
+
     @property
     def rawX(self):
-        return OrderedDictMod({
-            key: value for key, value in self.xCandidates.items() 
-            if key in self._rawXNames
-        })
-    
+        return OrderedDictMod(
+            {
+                key: value
+                for key, value in self.xCandidates.items()
+                if key in self._rawXNames
+            }
+        )
+
     @property
     def rawY(self):
-        return OrderedDictMod({
-            key: value for key, value in self.yCandidates.items()
-            if key in self._rawYNames
-        })
-    
+        return OrderedDictMod(
+            {
+                key: value
+                for key, value in self.yCandidates.items()
+                if key in self._rawYNames
+            }
+        )
+
     @property
     def ambiguousZOrient(self) -> bool:
         """
@@ -337,7 +351,7 @@ class MeasurementData:
         rows and columns.
         """
         return self.principalZ.data.shape[0] == self.principalZ.data.shape[1]
-    
+
     # manipulation =====================================================
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, MeasurementData):
@@ -346,7 +360,6 @@ class MeasurementData:
         dataAttrs = [
             "name",
             "file",
-            "rawData",
             "zCandidates",
             "xCandidates",
             "yCandidates",
@@ -366,12 +379,11 @@ class MeasurementData:
             "_zMax",
             "_colorMapStr",
         ]
-        
-        return all([
-            getattr(self, attr) == getattr(__value, attr)
-            for attr in dataAttrs]
+
+        return all(
+            [getattr(self, attr) == getattr(__value, attr) for attr in dataAttrs]
         )
-    
+
     def generateMetaInfo(self) -> MeasMetaInfo:
         """
         Generate the meta information of the measurement data
@@ -407,9 +419,9 @@ class MeasurementData:
             return array.transpose(1, 0, 2)
         else:
             raise ValueError("array must be 2D or 3D")
-    
+
     def setRawXY(
-        self, 
+        self,
         xNames: List[str],
         yNames: List[str],
     ):
@@ -419,14 +431,18 @@ class MeasurementData:
         """
         # check if the names are valid
         if not all([name in self.xCandidates.keyList for name in xNames]):
-            raise ValueError("Invalid raw x axis names as not all are in "
-                             "the x axis candidate list")
+            raise ValueError(
+                "Invalid raw x axis names as not all are in "
+                "the x axis candidate list"
+            )
         if len(yNames) != 1:
-            raise ValueError("Invalid raw y axis names as there must be "
-                             "only one y axis")
+            raise ValueError(
+                "Invalid raw y axis names as there must be " "only one y axis"
+            )
         if yNames[0] not in self.yCandidates.keyList:
-            raise ValueError("Invalid raw y axis name as it is not in the y "
-                             "axis candidate list")
+            raise ValueError(
+                "Invalid raw y axis name as it is not in the y " "axis candidate list"
+            )
         if yNames[0] in xNames:
             raise ValueError("The raw x and y axis names must be different")
 
@@ -452,26 +468,32 @@ class MeasurementData:
         self._rawYNames = self.yCandidates.keyList[:1]
 
         # if rawX and rawY are the same, set rawY to the next compatible y axis.
-        # It can always be done because there are pixel coordinates as the last 
+        # It can always be done because there are pixel coordinates as the last
         # resort
         if self._rawXNames == self._rawYNames:
             self._rawYNames = self.yCandidates.keyList[1:2]
 
     def _removePixelCoord(self):
         """
-        Remove pixel coordinates from the x and y axis candidates. That is 
+        Remove pixel coordinates from the x and y axis candidates. That is
         needed when we need to swap XY and regenerate a new set of pixel
         coordinates.
         """
-        self.xCandidates = OrderedDictMod({
-            key: value for key, value in self.xCandidates.items()
-            if not key.startswith("pixel_coord")
-        })
-        self.yCandidates = OrderedDictMod({
-            key: value for key, value in self.yCandidates.items()
-            if not key.startswith("pixel_coord")
-        })
-        
+        self.xCandidates = OrderedDictMod(
+            {
+                key: value
+                for key, value in self.xCandidates.items()
+                if not key.startswith("pixel_coord")
+            }
+        )
+        self.yCandidates = OrderedDictMod(
+            {
+                key: value
+                for key, value in self.yCandidates.items()
+                if not key.startswith("pixel_coord")
+            }
+        )
+
         # if the pixel coordinates are chosen to be the raw x and y axis,
         # reset the raw x and y axis
         reset = False
@@ -492,7 +514,7 @@ class MeasurementData:
         ydim, xdim = self._principalZ.data.shape
         self.xCandidates.update({"pixel_coord_x": np.arange(xdim)})
         self.yCandidates.update({"pixel_coord_y": np.arange(ydim)})
-        
+
     def _resetPrincipalXY(self):
         """
         The principal x axis corresponds to the x axis that has the
@@ -501,12 +523,7 @@ class MeasurementData:
         the first y axis.
         """
         if len(self.rawX) > 1:
-            idx = np.argmax(
-                [
-                    data.max() - data.min()
-                    for data in self.rawX.values()
-                ]
-            )
+            idx = np.argmax([data.max() - data.min() for data in self.rawX.values()])
             self._principalX = self.rawX.itemByIndex(int(idx))
         else:
             self._principalX = self.rawX.itemByIndex(0)
@@ -534,19 +551,19 @@ class MeasurementData:
 
         self._addPixelCoord()
         self._resetPrincipalXY()
-        
+
     def transposeZ(self):
         """
-        Transpose the zData array without swapping the x and y axes. It should 
+        Transpose the zData array without swapping the x and y axes. It should
         be used when the zData array is ambiguous in orientation - when the
         number of rows and columns are the same.
         """
         if not self.ambiguousZOrient:
             raise ValueError("The zData array is not ambiguous in orientation")
-        
-        self.zCandidates = OrderedDictMod({
-            key: self._transposeZ(array) for key, array in self.zCandidates.items()
-        })
+
+        self.zCandidates = OrderedDictMod(
+            {key: self._transposeZ(array) for key, array in self.zCandidates.items()}
+        )
         self._principalZ.data = self._transposeZ(self._principalZ.data)
 
     def rawXByPrincipalX(self, principalX: float) -> OrderedDictMod[str, float]:
@@ -598,25 +615,25 @@ class MeasurementData:
             log=self._logColoring,
             min=self._zMin,
             max=self._zMax,
-            color = self._colorMapStr,
+            color=self._colorMapStr,
         )
 
     def currentMinMax(self, array2D: np.ndarray) -> Tuple[float, float, float, float]:
         """
-        Return the clipped min max values of the current zData and the 
+        Return the clipped min max values of the current zData and the
         unprocessed min max values.
 
         Returns
         -------
         Tuple[float, float, float, float]
-            clipped minimum of the current zData by the range slider, 
-            clipped maximum of the current zData by the range slider, 
-            unprocessed minimum of the current zData, 
+            clipped minimum of the current zData by the range slider,
+            clipped maximum of the current zData by the range slider,
+            unprocessed minimum of the current zData,
             unprocessed maximum of the current zData
         """
         if array2D.ndim != 2:
             raise ValueError("array must be 2D")
-        
+
         normedMin = min(self._zMin, self._zMax) / 100
         normedMax = max(self._zMin, self._zMax) / 100
 
@@ -660,7 +677,7 @@ class MeasurementData:
         Apply the wavelet filter to the data.
         """
         return skimage.restoration.denoise_wavelet(array, rescale_sigma=True)
-    
+
     def _applyEdgeFilter(self, array: np.ndarray):
         """
         Apply the edge filter to the data.
@@ -674,7 +691,7 @@ class MeasurementData:
             array = gaussian_laplace(array, 1.0)
 
         return array
-    
+
     def _applyTopHatFilter(self, array: np.ndarray):
         """
         Apply the top hat filter to the data.
@@ -707,7 +724,7 @@ class MeasurementData:
             )
             * array
         )
-    
+
     def _clip(self, array: np.ndarray):
         """
         Clip the data to the range of the slider and rescale the data to the
@@ -721,7 +738,7 @@ class MeasurementData:
                 result[:, :, i] = self._clip(array[:, :, i])
 
             return np.round(result, 0).astype(int)
-        
+
         # Original function for 1D or 2D arrays
         zMin, zMax, rawZMin, rawZMax = self.currentMinMax(array)
 
@@ -736,7 +753,7 @@ class MeasurementData:
 
 class NumericalMeasurementData(MeasurementData):
     """
-    Class for storing and manipulating measurement data. The primary 
+    Class for storing and manipulating measurement data. The primary
     measurement data (zData) is expected to be a 2d float ndarray, and the
     x and y axis data are expected to be 1d float ndarrays.
 
@@ -762,18 +779,19 @@ class NumericalMeasurementData(MeasurementData):
         The keys that are discarded from the raw data
         """
         allKeys = self.rawData.keys()
-        acceptedKeys = self.zCandidates.keyList + self.xCandidates.keyList + self.yCandidates.keyList
-        return [
-            key for key in allKeys
-            if key not in acceptedKeys
-        ]
+        acceptedKeys = (
+            self.zCandidates.keyList
+            + self.xCandidates.keyList
+            + self.yCandidates.keyList
+        )
+        return [key for key in allKeys if key not in acceptedKeys]
 
     # initialization ===================================================
     @staticmethod
     def _findZCandidates(rawData: Union[OrderedDictMod, Dict]):
         """
         Find all 2d ndarrays in the rawData dict that are suitable as zData candidates. All of the zData candidates must have the same shape,
-        as they reperseent the data for the same measurement, usually the 
+        as they reperseent the data for the same measurement, usually the
         amplitude or phase of the signal.
         """
         zCandidates = OrderedDictMod()
@@ -785,7 +803,7 @@ class NumericalMeasurementData(MeasurementData):
         # all zCandidates must have the same shape
         if len(set([z.shape for z in zCandidates.values()])) > 1:
             raise ValueError("zCandidates must have the same shape")
-        
+
         # if there are no zCandidates, raise an error
         if not zCandidates:
             raise ValueError("No suitable zData candidates found")
@@ -816,13 +834,16 @@ class NumericalMeasurementData(MeasurementData):
         # Case 1: length of x and y axis are equal, x and y share the same
         # compatible candidates
         if ydim == xdim:
-            compatibleCandidates = OrderedDictMod({
-                key: value for key, value in xyCandidates.items()
-                if len(value) == xdim
-            })
+            compatibleCandidates = OrderedDictMod(
+                {
+                    key: value
+                    for key, value in xyCandidates.items()
+                    if len(value) == xdim
+                }
+            )
             self.xCandidates = self.yCandidates = compatibleCandidates
-        
-        # Case 2: length of x and y axis are not equal, the x and y axis can 
+
+        # Case 2: length of x and y axis are not equal, the x and y axis can
         # be distinguished by the length of the data
         else:
             for name, data in xyCandidates.items():
@@ -844,7 +865,7 @@ class NumericalMeasurementData(MeasurementData):
         self._findXYCandidates()
         self._initRawXY()
         self._resetPrincipalXY()
-    
+
     # plotting =========================================================
     def generatePlotElement(self) -> MeshgridElement:
         """
@@ -856,7 +877,7 @@ class NumericalMeasurementData(MeasurementData):
             zMin, zMax, _, _ = self.currentMinMax(zData)
             linthresh = max(abs(zMin), abs(zMax)) / 20.0
             norm = colors.SymLogNorm(
-                linthresh=linthresh,    # the range within which the plot is linear (i.e. color map is linear)
+                linthresh=linthresh,  # the range within which the plot is linear (i.e. color map is linear)
                 vmin=zMin,
                 vmax=zMax,  # **add_on_mpl_3_2_0
             )
@@ -869,9 +890,9 @@ class NumericalMeasurementData(MeasurementData):
             xData,
             yData,
             zData,
-            norm = norm,
-            rasterized = True,
-            zorder = 0,
+            norm=norm,
+            rasterized=True,
+            zorder=0,
         )
 
 
@@ -886,6 +907,7 @@ class ImageMeasurementData(MeasurementData):
     rawData: ndarray
         the raw data extracted from a data file, either a 2d or 3d array
     """
+
     rawData: np.ndarray
 
     def __init__(self, name: str, image: np.ndarray, file: str):
@@ -927,13 +949,12 @@ class ImageMeasurementData(MeasurementData):
         return ImageElement(
             "measurement",
             self.principalZ.data,
-            rasterized = True,
-            zorder = 0,
+            rasterized=True,
+            zorder=0,
         )
 
 
 MeasDataType = Union[NumericalMeasurementData, ImageMeasurementData]
-
 
 
 class ListModelMeta(type(QAbstractListModel), type(Registrable)):
@@ -944,11 +965,11 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     """
     Model for the list of measurement data sets. It manages the addition,
     removal, and selection of measurement data sets. It also provides
-    methods for manipulating the data sets, such as 
+    methods for manipulating the data sets, such as
     - select Z data, a two dimension array
-    - select X and Y axis, they are one-dimension-like arrays that has 
-        length compatible with Z data. Note that there may be multiple X axis 
-        while only one Y axis.    
+    - select X and Y axis, they are one-dimension-like arrays that has
+        length compatible with Z data. Note that there may be multiple X axis
+        while only one Y axis.
     - transpose Z. It's activated when only one X axis and one Y axis are
         selected.
     - apply filters and set the z value range.
@@ -956,15 +977,16 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     Parameters
     ----------
     measDatas: List[MeasurementDataType]
-        list of measurement data with type NumericalMeasurementData or 
+        list of measurement data with type NumericalMeasurementData or
         ImageMeasurementData
     """
+
     # data list management
     figSwitched = Signal(str)
     metaInfoChanged = Signal(MeasMetaInfo)
     rawXYConfigChanged = Signal(MeasRawXYConfig)
     updateStatus = Signal(Status)
-    newFigAdded = Signal(str)
+    newFigAdded = Signal(list)
 
     # single data processing
     readyToPlot = Signal(PlotElement)
@@ -980,7 +1002,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.checkedRawX: List[str] = []
         self.checkedRawY: List[str] = []
 
-    # init & load data list ============================================   
+    # init & load data list ============================================
     def replaceMeasData(self, measData: List[MeasDataType]):
         self.fullData = measData
 
@@ -994,11 +1016,11 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         # update the raw X and Y axis names
         self._clearRawXY()
         self.emitRawXYConfig()
-     
+
     @staticmethod
     def _rawDataFromFile(fileName) -> MeasDataType | None:
         """
-        Read experimental data from file. It supports .h5, .mat, .csv, .jpg, 
+        Read experimental data from file. It supports .h5, .mat, .csv, .jpg,
         .jpeg, .png files.
 
         Parameters
@@ -1023,22 +1045,22 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             reader = CSVReader()
         else:
             return None
-        
+
         try:
             data = reader.fromFile(fileName)
         except ValueError:
             # can't identify the relavant measurement data
             return None
-        
+
         return data
-    
+
     def _measDataFromDialog(
-        self, 
+        self,
         home: str | None = None,
         multiple: bool = True,
     ) -> List["MeasDataType"] | None:
         """
-        Open a dialog to select a file, and then read the measurement data from 
+        Open a dialog to select a file, and then read the measurement data from
         the file. It will keep asking for files until a valid file is selected.
         Only break the loop when the user selects a valid file or cancels the
         dialog.
@@ -1053,7 +1075,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         Returns
         -------
         List[MeasurementDataType] | None
-            The data read from the file. If the user canceled the dialog, 
+            The data read from the file. If the user canceled the dialog,
             return None.
         """
         # configure the file dialog
@@ -1097,90 +1119,106 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
                     measurementData.append(measData)
 
             if len(measurementData) == len(fileNames):
-                break       # break the loop if all files are successfully read
+                break  # break the loop if all files are successfully read
 
         return measurementData
-    
-    def loadData(
+
+    def _loadData(
         self,
         fileName: str | List[str] | None = None,
-    ) -> bool:
+    ) -> Tuple[bool, List[str]]:
         """
         Load the data from the file using the file name. If the file name is
-        not provided, open a dialog to select a file. 
+        not provided, open a dialog to select a file.
 
         Parameters
         ----------
         fileName: str | List[str] | None
             The name of the file to be loaded. If None, open a dialog to select
-            a file. If a string or a list of strings, load the file with the 
+            a file. If a string or a list of strings, load the file with the
             file names. Inside the GUI, the user always uses a dialog.
 
         Returns
         -------
         bool
-            False if user canceled the dialog, True otherwise. 
+            False if user canceled the dialog, True otherwise.
+        str | List[str] | None
+            The file name or a list of file names to be loaded.
 
         """
         if fileName is not None:
             if isinstance(fileName, str):
                 if not os.path.isfile(fileName):
-                    self.updateStatus.emit(Status(
-                        statusSource = "import",
-                        statusType="error",
-                        message=f"File '{fileName}' does not exist.",
-                    ))
-                    return True     # continue opening the gui, while data is not loaded
+                    self.updateStatus.emit(
+                        Status(
+                            statusSource="import",
+                            statusType="error",
+                            message=f"File '{fileName}' does not exist.",
+                        )
+                    )
+                    return (
+                        True,
+                        [],
+                    )  # continue opening the gui, while data is not loaded
             elif isinstance(fileName, list):
                 for file in fileName:
                     if not os.path.isfile(file):
-                        self.updateStatus.emit(Status(
-                            statusSource = "import",
-                            statusType="error",
-                            message=f"File '{file}' does not exist.",
-                        ))
-                        return True
+                        self.updateStatus.emit(
+                            Status(
+                                statusSource="import",
+                                statusType="error",
+                                message=f"File '{file}' does not exist.",
+                            )
+                        )
+                        return True, []
             else:
-                self.updateStatus.emit(Status(
-                    statusSource = "import",
-                    statusType="error",
-                    message="measurementFileName must be a string or a list of strings.",
-                ))
-                return True
+                self.updateStatus.emit(
+                    Status(
+                        statusSource="import",
+                        statusType="error",
+                        message="measurementFileName must be a string or a list of strings.",
+                    )
+                )
+                return True, []
 
         # read measurement files from dialog
         if fileName is None:
             measurementData = self._measDataFromDialog()
             if measurementData is None:
                 # user canceled the dialog, return False to close the GUI
-                return False
-            
+                return False, []
+
         # read measurement files from a single file name
         elif isinstance(fileName, str):
             data = self._rawDataFromFile(fileName)
             if data is None:
-                self.updateStatus.emit(Status(
-                    statusSource = "import",
-                    statusType="error",
-                    message=f"Can't load file '{fileName}'.",
-                ))
-                return True
+                self.updateStatus.emit(
+                    Status(
+                        statusSource="import",
+                        statusType="error",
+                        message=f"Can't load file '{fileName}'.",
+                    )
+                )
+                return True, []
             measurementData = [data]
-        
+
         # read measurement files from a list of file names
         else:
             measurementData = []
             for file in fileName:
                 measData = self._rawDataFromFile(file)
                 if measData is None:
-                    self.updateStatus.emit(Status(
-                        statusSource = "import",
-                        statusType="error",
-                        message=f"Can't load file '{file}'.",
-                    ))
-                    return True
+                    self.updateStatus.emit(
+                        Status(
+                            statusSource="import",
+                            statusType="error",
+                            message=f"Can't load file '{file}'.",
+                        )
+                    )
+                    return True, []
                 measurementData.append(measData)
 
+        oldDataNumber = len(self.fullData)
         # add the measurement data to the list
         self.fullData = self.fullData + measurementData
 
@@ -1189,6 +1227,9 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         uniqueNames = makeUnique(names)
         for measData, name in zip(self.fullData, uniqueNames):
             measData.name = name
+
+        # get the new data names
+        newDataNames = [measData.name for measData in self.fullData[oldDataNumber:]]
 
         if measurementData != []:
             # if there are new data loaded, emit the signals
@@ -1202,7 +1243,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             self._clearRawXY()
             self.emitRawXYConfig()
 
-        return True
+        return True, newDataNames
 
     def removeDataFile(self, index: int) -> None:
         """
@@ -1226,11 +1267,11 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.emitRawXMap()
         self.emitFigSwitched()
 
-    # Qt view related ==================================================        
+    # Qt view related ==================================================
     @property
     def figNames(self) -> List[str]:
         return [data.name for data in self.fullData]
-    
+
     @property
     def currentRow(self) -> int:
         return self._currentRow
@@ -1238,7 +1279,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     @property
     def currentMeasData(self) -> "MeasDataType":
         return self.fullData[self._currentRow]
-    
+
     @property
     def currentFigName(self) -> str:
         return self.currentMeasData.name
@@ -1263,28 +1304,21 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         flags |= Qt.ItemIsSelectable
         flags |= Qt.ItemIsEnabled
         return flags
-    
+
     @Slot()
-    def insertRow(self):
+    def insertRow(self, filename: str | List[str] | None = None):
         """
         Insert a new row at the end of the table.
         """
         row = self.rowCount()
-        self.beginInsertRows(QModelIndex(), row, row)
 
-        result = self.loadData()
+        result, newDataNames = self._loadData(fileName=filename)
         if not result:
             return False
 
-        # update the current row before emitting the rowsInserted signal
-        # (which will be emitted by endInsertRows)
-        # self.switchFig(-1)
-
         self._currentRow = -1
 
-        self.newFigAdded.emit(self.currentFigName)
-
-        self.endInsertRows()
+        self.newFigAdded.emit(newDataNames)
 
         return True
 
@@ -1295,22 +1329,12 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         """
         if self.rowCount() == 0:
             return False
-        
-        # row = self.currentRow
 
-        self.beginRemoveRows(QModelIndex(), row, row)
         self.fullData.pop(row)
 
-        # update the current row before emitting the rowsRemoved signal
-        # (which will be emitted by endRemoveRows)
+        # if all figures are deleted, set the current row to -1
         if self.rowCount() == 0:
-            self._currentRow = 0
-        # elif row == self.rowCount():  # now row count is 1 less than before
-        #     self.switchFig(row - 1)
-        # else:
-        #     self.switchFig(row)
-
-        self.endRemoveRows()
+            self._currentRow = -1
 
         return True
 
@@ -1323,7 +1347,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         otherCandidates: List[str] | Set[str],
     ) -> bool:
         """
-        Return True if the currently checked raw axes are exclusively 
+        Return True if the currently checked raw axes are exclusively
         conpatible with the candidates (not compatible with the other axes).
 
         Parameters
@@ -1335,19 +1359,18 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         otherCandidates: List[str]
             The candidates for the other axis.
 
-        Return 
+        Return
         ------
         bool
-            True if the currently checked raw axes are exclusively 
+            True if the currently checked raw axes are exclusively
             conpatible with the candidates (not compatible with the other axes).
         """
         if len(checkedAxes) == 0:
             return False
-        
+
         checkedSet = set(checkedAxes)
-        return (
-            checkedSet.issubset(candidates)
-            and not checkedSet.issubset(otherCandidates)
+        return checkedSet.issubset(candidates) and not checkedSet.issubset(
+            otherCandidates
         )
 
     @property
@@ -1355,7 +1378,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         """
         Get the raw X candidates from all data files. Currently, we show all
         of the X and Y axis candidates from all data files, and let the user
-        select the X names. 
+        select the X names.
 
         Returns
         -------
@@ -1364,15 +1387,15 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         """
         if not self.fullData:
             return []
-        
+
         candidates = [
-            set(data.xCandidates.keyList + data.yCandidates.keyList) 
+            set(data.xCandidates.keyList + data.yCandidates.keyList)
             for data in self.fullData
         ]
         candidates = set.intersection(*candidates)
 
         return list(candidates)
-    
+
     @property
     def yCandidates(self) -> List[str]:
         """
@@ -1386,7 +1409,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             The candidates for raw Y axis names -- the same as the X names.
         """
         return self.xCandidates
-    
+
     @property
     def grayedRawX(self) -> List[str]:
         """
@@ -1396,7 +1419,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
 
         For X axes, we should gray out:
         - the names that are checked for Y axis
-        - the names that are not compatible with the current selected X axis 
+        - the names that are not compatible with the current selected X axis
             names.
         """
         checkedX = set(self.checkedRawX)
@@ -1431,7 +1454,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
 
         For Y axes, we should gray out:
         - the names that are checked for X axis
-        - the rest of the names, if the user has checked a name 
+        - the rest of the names, if the user has checked a name
         """
         checkedX = set(self.checkedRawX)
 
@@ -1465,7 +1488,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.checkedRawX = []
         self.checkedRawY = []
         self.emitRawXYConfig()
-    
+
     def _setRawXY(self, xNames: List[str], yNames: List[str]) -> None:
         """
         Set the raw X and Y axis names without sending any signals.
@@ -1512,7 +1535,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             return False
         if len(yNames.intersection(self.grayedRawY)) > 0:
             return False
-        
+
         return True
 
     # Data list signals & slots ========================================
@@ -1529,9 +1552,9 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
                 if data.name == fig:
                     self._currentRow = i
                     break
-        
+
         self.emitMetaInfo()
-        self.emitRawXYConfig()      # update transpose button 
+        self.emitRawXYConfig()  # update transpose button
         self.emitReadyToPlot()
         self.emitRelimCanvas()
         self.emitRawXMap()
@@ -1541,7 +1564,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.metaInfoChanged.emit(self.currentMeasData.generateMetaInfo())
 
     def emitFigSwitched(self):
-        self.figSwitched.emit(self.currentFigName) 
+        self.figSwitched.emit(self.currentFigName)
 
     def exportRawXYConfig(self) -> MeasRawXYConfig:
         """
@@ -1550,21 +1573,21 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         Returns
         -------
         MeasRawXYConfig
-            The configuration of raw X and Y axis names, including all of the 
-            candidates, selected X and Y axis names, and the names to be 
+            The configuration of raw X and Y axis names, including all of the
+            candidates, selected X and Y axis names, and the names to be
             grayed out.
         """
         return MeasRawXYConfig(
-            checkedX = self.checkedRawX, 
-            checkedY = self.checkedRawY,
-            xCandidates = self.xCandidates,
-            yCandidates = self.yCandidates,
-            grayedX = self.grayedRawX,
-            grayedY = self.grayedRawY,
-            allowTranspose = self.currentMeasData.ambiguousZOrient,
-            allowContinue = self._rawXYIsValid() and len(self.fullData) > 0,
+            checkedX=self.checkedRawX,
+            checkedY=self.checkedRawY,
+            xCandidates=self.xCandidates,
+            yCandidates=self.yCandidates,
+            grayedX=self.grayedRawX,
+            grayedY=self.grayedRawY,
+            allowTranspose=self.currentMeasData.ambiguousZOrient,
+            allowContinue=self._rawXYIsValid() and len(self.fullData) > 0,
         )
-    
+
     @Slot()
     def storeRawXYConfig(self, rawXYConfig: MeasRawXYConfig) -> None:
         """
@@ -1575,29 +1598,25 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             those data files and transpose Z.
         """
         # swap the X and Y axis names if necessary
-        # note that it will re-init the stored raw XY info 
+        # note that it will re-init the stored raw XY info
         checkedX = rawXYConfig.checkedX
         checkedY = rawXYConfig.checkedY
         for data in self.fullData:
             swap = False
             if self.isSubsetExclusively(
-                checkedX, 
-                data.yCandidates.keyList, 
-                data.xCandidates.keyList
+                checkedX, data.yCandidates.keyList, data.xCandidates.keyList
             ):
                 swap = True
             if self.isSubsetExclusively(
-                checkedY, 
-                data.xCandidates.keyList, 
-                data.yCandidates.keyList
+                checkedY, data.xCandidates.keyList, data.yCandidates.keyList
             ):
-                swap = True 
-            
+                swap = True
+
             if swap:
                 data.swapXY()
                 if data is self.currentMeasData:
                     self.emitMetaInfo()
-        
+
         # store the raw X and Y axis names
         self._setRawXY(checkedX, checkedY)
 
@@ -1611,7 +1630,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             self.emitRawXMap()
         else:
             # some warning message?
-            pass 
+            pass
 
     def emitRawXYConfig(self):
         self.rawXYConfigChanged.emit(self.exportRawXYConfig())
@@ -1622,7 +1641,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         Emit the readyToPlot signal with the current plotting element.
         """
         self.readyToPlot.emit(self.currentMeasData.generatePlotElement())
-    
+
     def emitRelimCanvas(self):
         """
         Emit the relimCanvas signal with the current x and y axis data,
@@ -1638,9 +1657,9 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         Emit the updateRawXMap signal with the raw x values corresponding
         to the current x values.
         """
-        self.updateRawXMap.emit({
-            data.name: data.rawXByPrincipalX for data in self.fullData
-        })
+        self.updateRawXMap.emit(
+            {data.name: data.rawXByPrincipalX for data in self.fullData}
+        )
 
     @Slot(FilterConfig)
     def storeFilter(self, filterConfig: FilterConfig):
@@ -1664,7 +1683,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     @Slot(int)
     def storePrincipalZ(self, itemIndex: int):
         """
-        Set the current measurement data, and emit the readyToPlot signal, 
+        Set the current measurement data, and emit the readyToPlot signal,
         and relimCanvas signal.
         """
         self.currentMeasData.setPrincipalZ(itemIndex)
