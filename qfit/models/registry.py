@@ -1,8 +1,6 @@
 from typing import Callable, Any, Dict, Literal, Union
 import pickle
-# from qfit.version import version
-from setup import MAJOR, MICRO, MINOR
-
+from qfit.version import version
 from abc import ABC
 
 QuantityType = Union[Literal["r+"], Literal["r"]]
@@ -17,7 +15,7 @@ class Registrable(ABC):
     Mix-in class that makes descendant classes registerable.
 
     The descendant class should implement the registerAll() method, which
-    returns a dictionary of RegistryEntry objects. 
+    returns a dictionary of RegistryEntry objects.
     """
 
     def _toRegistryEntry(self, attribute: str = "value") -> "RegistryEntry":
@@ -28,7 +26,7 @@ class Registrable(ABC):
         Parameters
         ----------
         attribute : str
-            Name of the attribute to be registered.  
+            Name of the attribute to be registered.
 
         Returns
         -------
@@ -120,31 +118,32 @@ class RegistryEntry:
 class Registry:
     """
     The Registry is a singleton object. It is "connected" the global
-    quantities and objects in the application. It can grab the current 
-    state & data of the application and export them to a dictionary or a file. 
-    And in the same way, it can load the state & data from a dictionary or a 
+    quantities and objects in the application. It can grab the current
+    state & data of the application and export them to a dictionary or a file.
+    And in the same way, it can load the state & data from a dictionary or a
     file.
 
     It is a collection of RegistryEntry objects and provides methods to
     register, export, and load the entries.
     """
+
     _registry: Dict[str, RegistryEntry] = {
         "version": RegistryEntry(
             "version",
             "r",
-            lambda: f"{MAJOR}.{MINOR}.{MICRO}",
+            lambda: f"{version}",
         ),
     }
 
     def __getitem__(self, key: str) -> Any:
         return self._registry[key].getter()
-    
+
     def keys(self):
         return self._registry.keys()
-    
+
     def values(self):
         return self._registry.values()
-    
+
     def items(self):
         return self._registry.items()
 
@@ -154,7 +153,7 @@ class Registry:
     ):
         """
         Register the object to the registry.
-        
+
         There are two ways to register an object:
         1. The object is a Registrable object. In this case, the
         registerAll() method will be called.
@@ -171,7 +170,7 @@ class Registry:
             self._registry.update(reg_dict)
         else:
             name = obj.__class__.__name__
-            obj_wrap = [obj]    # list wrapper to make the object mutable
+            obj_wrap = [obj]  # list wrapper to make the object mutable
             entry = RegistryEntry(
                 name,
                 "r",
@@ -181,7 +180,7 @@ class Registry:
 
     def exportDict(self) -> Dict[str, Any]:
         """
-        Grab the current state & data of the application and export them as a 
+        Grab the current state & data of the application and export them as a
         dictionary.
 
         Returns
@@ -248,9 +247,11 @@ class Registry:
             try:
                 value = registryDict[name]
             except KeyError:
-                print(f"Key {name} not found in file. Skipping."
-                      "We apologize that it's usually due to the version mismatch. "
-                      "Please contact the developer for retrieving the data.")
+                print(
+                    f"Key {name} not found in file. Skipping."
+                    "We apologize that it's usually due to the version mismatch. "
+                    "Please contact the developer for retrieving the data."
+                )
                 continue
 
             try:
@@ -258,9 +259,11 @@ class Registry:
                     continue
                 self._registry[name].load(value)
             except KeyError:
-                print(f"Key {name} not found in the current app. Skipping. "
-                      "We apologize that it's usually due to the version mismatch. "
-                      "Please contact the developer for retrieving the data.")
+                print(
+                    f"Key {name} not found in the current app. Skipping. "
+                    "We apologize that it's usually due to the version mismatch. "
+                    "Please contact the developer for retrieving the data."
+                )
                 continue
 
     def clear(self):

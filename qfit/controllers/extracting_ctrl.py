@@ -15,11 +15,11 @@ if TYPE_CHECKING:
 
 class ExtractingCtrl(QObject):
     """
-    Controller for the extraction of transitions. This controller serves as a 
+    Controller for the extraction of transitions. This controller serves as a
     transmittor between the extracted data (model) and the extraction & tagging panel (view).
 
     Notice that the connections that transport selected transitions from the
-    canvas to the extraction model are done in the plotting controller instead 
+    canvas to the extraction model are done in the plotting controller instead
     of here.
 
     Relevant UI elements:
@@ -39,15 +39,14 @@ class ExtractingCtrl(QObject):
     labelingView : LabelingView
         The extraction & tagging view.
     """
+
     def __init__(
         self,
         parent: QObject,
-        models: Tuple[
-            "AllExtractedData", "ActiveExtractedData", "MeasDataSet"
-        ],
+        models: Tuple["AllExtractedData", "ActiveExtractedData", "MeasDataSet"],
         labelingView: "LabelingView",
     ):
-        
+
         super().__init__(parent)
 
         self.allDatasets, self.activeDataset, self.measDataSet = models
@@ -84,9 +83,7 @@ class ExtractingCtrl(QObject):
         measurementData : List[MeasurementDataType]
             The measurement data.
         """
-        self.allDatasets.replaceMeasData(
-            [data.name for data in measurementData]
-        )
+        self.allDatasets.replaceMeasData([data.name for data in measurementData])
 
     def dynamicalInit(self):
         """
@@ -95,26 +92,37 @@ class ExtractingCtrl(QObject):
         """
         self.labelingView.dynamicalInit()
         self.allDatasets.dynamicalInit()
-        
+
         # select the first row. setModel should be called after dynamicalInit
         # it requires the data to be loaded first
         self.labelingView.extractionList.setModel(self.allDatasets)
-        self.labelingView.extractionList.selectItem(0, blockSignals=True) 
+        self.labelingView.extractionList.selectItem(0, blockSignals=True)
 
     # Connections ======================================================
     def _switchFigConnects(self):
         """
-        When the user switches between different measurement data figures, 
+        When the user switches between different measurement data figures,
         the extracted transitions displayed should be updated accordingly.
         """
         self.measDataSet.figSwitched.connect(self.allDatasets.switchFig)
+        self.measDataSet.figSwitched.connect(
+            lambda: self.labelingView.extractionList.selectItem(
+                self.allDatasets.currentRow, blockSignals=True
+            )
+        )
 
     def _uiExtractedDataControlConnects(self):
         """Connect buttons for inserting and deleting a data set, or clearing all data sets"""
         # update the backend model
-        self.labelingView.extractionCtrls["new"].clicked.connect(self.allDatasets.newRow)
-        self.labelingView.extractionCtrls["delete"].clicked.connect(self.allDatasets.removeCurrentRow)
-        self.labelingView.extractionCtrls["clear"].clicked.connect(self.allDatasets.removeAll)
+        self.labelingView.extractionCtrls["new"].clicked.connect(
+            self.allDatasets.newRow
+        )
+        self.labelingView.extractionCtrls["delete"].clicked.connect(
+            self.allDatasets.removeCurrentRow
+        )
+        self.labelingView.extractionCtrls["clear"].clicked.connect(
+            self.allDatasets.removeAll
+        )
 
     def _uiExtractedDataConnects(self):
         """Make connections for changes in extracted data."""
@@ -125,25 +133,26 @@ class ExtractingCtrl(QObject):
         )
 
         # allDataset selection --> activeDataset update
-        self.allDatasets.focusChanged.connect(
-            self.activeDataset.replaceAllData
-        )
+        self.allDatasets.focusChanged.connect(self.activeDataset.replaceAllData)
 
         # If data in the TableView is changed manually through editing,
         # the 'dataChanged' signal will be emitted. The following connects the signal
         # to an update in th data stored in the AllExtractedData
-        self.activeDataset.dataUpdated.connect(
-            self.allDatasets.updateCurrentTransition
-        ) 
+        self.activeDataset.dataUpdated.connect(self.allDatasets.updateCurrentTransition)
 
-        # whenever a row is inserted or removed, select the current row 
-        # in the view VISUALLY. It comlete a loop from the view to model 
+        # whenever a row is inserted or removed, select the current row
+        # in the view VISUALLY. It comlete a loop from the view to model
         # and back to view. To avoid infinite loop, block the signal
+        # TODO need to implement a view update whenever model change (the currentRow)
         self.allDatasets.rowsInserted.connect(
-            lambda: self.labelingView.extractionList.selectItem(self.allDatasets.currentRow, blockSignals=True)
+            lambda: self.labelingView.extractionList.selectItem(
+                self.allDatasets.currentRow, blockSignals=True
+            )
         )
         self.allDatasets.rowsRemoved.connect(
-            lambda: self.labelingView.extractionList.selectItem(self.allDatasets.currentRow, blockSignals=True)
+            lambda: self.labelingView.extractionList.selectItem(
+                self.allDatasets.currentRow, blockSignals=True
+            )
         )
 
     def _viewUpdatedConnects(self):

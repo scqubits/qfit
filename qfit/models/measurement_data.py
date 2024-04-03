@@ -1010,7 +1010,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.checkedRawX: List[str] = []
         self.checkedRawY: List[str] = []
 
-    # init & load data list ============================================   
+    # init & load data list ============================================
     def loadDataSet(self, measData: List[MeasDataType]):
         """
         Replace all the measurement data with the new data. It will emit the
@@ -1027,11 +1027,10 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
 
         # update the raw X and Y axis names
         self._clearRawXY()
-        self.emitRawXYConfig()
 
         # emit to proceed to the next stage
         self.dataLoaded.emit()
-     
+
     @staticmethod
     def _rawDataFromFile(fileName) -> MeasDataType | None:
         """
@@ -1256,7 +1255,6 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
 
             # update the raw X and Y axis names
             self._clearRawXY()
-            self.emitRawXYConfig()
 
         return True, newDataNames
 
@@ -1350,6 +1348,8 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         # if all figures are deleted, set the current row to -1
         if self.rowCount() == 0:
             self._currentRow = -1
+
+        self.emitRawXYConfig()
 
         return True
 

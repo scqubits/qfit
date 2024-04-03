@@ -79,7 +79,6 @@ class MeasDataView(QObject):
         """
         Remove the current figure from the tab.
         """
-        removedFigName = self.dataTab.tabText(self.dataTab.currentIndex())
         removedFigIndex = self.dataTab.currentIndex()
         self.dataTab.removeTab(self.dataTab.currentIndex())
         # this changes the current index to the next tab
