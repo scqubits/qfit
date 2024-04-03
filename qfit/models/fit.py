@@ -39,7 +39,7 @@ class FitParamModelMixin(ParamModelMixin[FitParam]):
         and return False. Otherwise, return True.
         """
         for key, params in paramSet.getFlattenedParamDict().items():
-            if params.min >= params.max:
+            if not params.isFixed and params.min >= params.max:
                 self.updateStatus.emit(
                     Status(
                         statusSource="fit",

@@ -352,7 +352,7 @@ class MeasurementData:
             "yCandidates",
             "discardedKeys",
             "_rawXNames",
-            "_rawYName",
+            "_rawYNames",
             "_principalZ",
             "_principalX",
             "_principalY",
