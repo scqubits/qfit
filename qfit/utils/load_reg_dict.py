@@ -31,13 +31,7 @@ def parseRegDict(
     major, minor, micro = int(major), int(minor), int(micro)
 
     if major == 1 and minor == 0:
-        hilbertSpace = registryDict["HilbertSpace"]
-        measurementData: List[MeasDataType] = registryDict["measDataSet.data"]
-
-        for measData in measurementData:
-            self._parseRegDict10x_20x(measData)
-
-        return registryDict, hilbertSpace, measurementData
+        return _parseRegDict10x_20x(registryDict)
     
     elif major >= 2:
         hilbertSpace = registryDict["HilbertSpace"]
