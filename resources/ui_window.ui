@@ -207,6 +207,15 @@ QCheckBox::indicator:checked {
 	image: url(:/icons/svg/check.svg);
 }
 
+QCheckBox:disabled {	
+	color: rgb(60, 60, 60);
+}
+
+QCheckBox::indicator:disabled {	
+	border: 1px solid rgb(60, 60, 60);
+   background: transparent;
+}
+
 /* RADIO BUTTON */
 QRadioButton {
 	color: #AAAAAA;
@@ -582,9 +591,11 @@ ListView::item:selected {
 QPushButton:hover {
 	color: rgb(190, 130, 250);
 }
-
 QPushButton:checked {	
 	color: rgb(190, 130, 250);
+}
+QPushButton:disabled {	
+	color: rgb(128, 128, 128);
 }</string>
             </property>
             <property name="text">
@@ -705,9 +716,11 @@ QPushButton:checked {
 QPushButton:hover {
 	color: rgb(190, 130, 250);
 }
-
 QPushButton:checked {	
 	color: rgb(190, 130, 250);
+}
+QPushButton:disabled {	
+	color: rgb(128, 128, 128);
 }</string>
             </property>
             <property name="text">
@@ -776,9 +789,11 @@ QPushButton:checked {
 QPushButton:hover {
 	color: rgb(190, 130, 250);
 }
-
 QPushButton:checked {	
 	color: rgb(190, 130, 250);
+}
+QPushButton:disabled {	
+	color: rgb(128, 128, 128);
 }</string>
             </property>
             <property name="text">
@@ -804,6 +819,9 @@ QPushButton:checked {
           </item>
           <item row="3" column="0" colspan="2">
            <widget class="QPushButton" name="modeSelectButton">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
             <property name="minimumSize">
              <size>
               <width>145</width>
@@ -834,9 +852,11 @@ QPushButton:checked {
 QPushButton:hover {
 	color: rgb(190, 130, 250);
 }
-
 QPushButton:checked {	
 	color: rgb(190, 130, 250);
+}
+QPushButton:disabled {	
+	color: rgb(128, 128, 128);
 }</string>
             </property>
             <property name="text">
@@ -924,9 +944,11 @@ QPushButton:checked {
 QPushButton:hover {
 	color: rgb(190, 130, 250);
 }
-
 QPushButton:checked {	
 	color: rgb(190, 130, 250);
+}
+QPushButton:disabled {	
+	color: rgb(128, 128, 128);
 }</string>
             </property>
             <property name="text">
@@ -1043,7 +1065,7 @@ QPushButton:checked {
           <enum>QFrame::Raised</enum>
          </property>
          <property name="currentIndex">
-          <number>4</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="setupFigsWidget">
           <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -1638,7 +1660,7 @@ QPushButton:checked {
                       <x>0</x>
                       <y>0</y>
                       <width>186</width>
-                      <height>180</height>
+                      <height>177</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_19"/>
@@ -1715,7 +1737,7 @@ QPushButton:checked {
                       <x>0</x>
                       <y>0</y>
                       <width>188</width>
-                      <height>182</height>
+                      <height>179</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_18"/>
@@ -1742,6 +1764,9 @@ QPushButton:checked {
                  </property>
                  <item>
                   <widget class="QPushButton" name="transposeButton">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>208</width>
@@ -1771,6 +1796,10 @@ QPushButton:pressed {
 color: #A08CB5;
 background-color: #353535;
 icon: url(:/icons/svg/updown-pressed.svg);
+}
+
+QPushButton:disabled {	
+	color: rgb(128, 128, 128);
 }</string>
                    </property>
                    <property name="text">
@@ -1821,6 +1850,9 @@ icon: url(:/icons/svg/updown-pressed.svg);
                  </property>
                  <item>
                   <widget class="QPushButton" name="finalizeStep0Button">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                      <horstretch>0</horstretch>
@@ -1856,6 +1888,11 @@ font-size: 14px;
 
 QPushButton:pressed{
 background-color: #9163BF;
+}
+
+QPushButton:disabled {	
+background-color: #4B4B4B;
+	color: rgb(128, 128, 128);
 }</string>
                    </property>
                    <property name="text">
@@ -2250,8 +2287,8 @@ background-color: #9163BF;
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>439</width>
-                   <height>168</height>
+                   <width>98</width>
+                   <height>28</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_5"/>
@@ -4206,8 +4243,8 @@ QPushButton: pressed{
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>441</width>
-                   <height>393</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -4305,8 +4342,8 @@ border-bottom-right-radius: 6px;	</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>446</width>
-                   <height>100</height>
+                   <width>100</width>
+                   <height>60</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_16"/>

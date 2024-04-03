@@ -1,6 +1,7 @@
 from typing import Callable, Any, Dict, Literal, Union
 import pickle
-from qfit.version import version
+# from qfit.version import version
+from setup import MAJOR, MICRO, MINOR
 
 from abc import ABC
 
@@ -131,7 +132,7 @@ class Registry:
         "version": RegistryEntry(
             "version",
             "r",
-            lambda: version,
+            lambda: f"{MAJOR}.{MINOR}.{MICRO}",
         ),
     }
 
@@ -165,11 +166,10 @@ class Registry:
         obj : Any
             The object to be registered.
         """
-        try:
+        if isinstance(obj, Registrable):
             reg_dict = obj.registerAll()
-            print(f"Registering {obj.__class__.__name__} using registerAll().")
             self._registry.update(reg_dict)
-        except AttributeError:
+        else:
             name = obj.__class__.__name__
             obj_wrap = [obj]    # list wrapper to make the object mutable
             entry = RegistryEntry(
@@ -244,13 +244,21 @@ class Registry:
         Dict[str, Any]
             A dictionary of the loaded data.
         """
-        for name, value in registryDict.items():
+        for name in set(registryDict.keys()).union(self._registry.keys()):
+            try:
+                value = registryDict[name]
+            except KeyError:
+                print(f"Key {name} not found in file. Skipping."
+                      "We apologize that it's usually due to the version mismatch. "
+                      "Please contact the developer for retrieving the data.")
+                continue
+
             try:
                 if self._registry[name].quantity_type == "r":
                     continue
                 self._registry[name].load(value)
             except KeyError:
-                print(f"Key {name} not found in registry. Skipping. "
+                print(f"Key {name} not found in the current app. Skipping. "
                       "We apologize that it's usually due to the version mismatch. "
                       "Please contact the developer for retrieving the data.")
                 continue

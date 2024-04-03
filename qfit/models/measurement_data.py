@@ -987,11 +987,19 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     rawXYConfigChanged = Signal(MeasRawXYConfig)
     updateStatus = Signal(Status)
     newFigAdded = Signal(list)
+    dataLoaded = Signal()
 
     # single data processing
     readyToPlot = Signal(PlotElement)
     relimCanvas = Signal(np.ndarray, np.ndarray)
     updateRawXMap = Signal(dict)
+
+    # register
+    attrToRegister = [
+        "_currentRow",
+        "checkedRawX",
+        "checkedRawY",
+    ]
 
     def __init__(self, parent: QObject | None = None):
         super().__init__(parent)
@@ -1002,8 +1010,12 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.checkedRawX: List[str] = []
         self.checkedRawY: List[str] = []
 
-    # init & load data list ============================================
-    def replaceMeasData(self, measData: List[MeasDataType]):
+    # init & load data list ============================================   
+    def loadDataSet(self, measData: List[MeasDataType]):
+        """
+        Replace all the measurement data with the new data. It will emit the
+        signals to update the view and proceed to the next stage.
+        """
         self.fullData = measData
 
         # emit the signals to update the view
@@ -1017,6 +1029,9 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self._clearRawXY()
         self.emitRawXYConfig()
 
+        # emit to proceed to the next stage
+        self.dataLoaded.emit()
+     
     @staticmethod
     def _rawDataFromFile(fileName) -> MeasDataType | None:
         """
@@ -1712,12 +1727,6 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.emitRawXMap()
 
     # registry =========================================================
-    attrToRegister = [
-        "_currentRow",
-        "checkedRawX",
-        "checkedRawY",
-    ]
-
     def registerAll(
         self,
     ) -> Dict[str, RegistryEntry]:
@@ -1739,8 +1748,8 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             self.emitRawXMap()
 
         return registryDict | {
-            "measDataSet.data": RegistryEntry(
-                name="measDataSet.data",
+            "MeasDataSet.data": RegistryEntry(
+                name="MeasDataSet.data",
                 quantity_type="r+",
                 getter=lambda: self.fullData,
                 setter=dataSetter,
