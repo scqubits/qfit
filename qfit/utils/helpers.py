@@ -32,6 +32,7 @@ from typing import TypeVar, Generic
 Key = TypeVar('Key')
 Value = TypeVar('Value')
 
+
 class DictItem(Generic[Key, Value]):
     """
     A class to represent a dictionary item with name and data.
@@ -141,8 +142,7 @@ class OrderedDictMod(OrderedDict[Key, Value], Generic[Key, Value]):
                 if self[key] != __value[key]:
                     return False
         return True
-
-
+    
 
 def isValid2dArray(array):
     """
@@ -176,14 +176,15 @@ def isValid1dArray(array):
     A valid 1d array must satisfy the following conditions:
         - Array entries must be real-valued
         - The array is strictly one-dimensional, i.e., number of rows=1 or number of cols=1
-        - The array increases monotonically
     """
     if array.dtype not in [float, np.float_, np.float64, np.float32]:
         return False
     if array.ndim == 1:
-        return np.all(np.diff(array) > 0) or np.all(np.diff(array) < 0)
+        return True
+        # return np.all(np.diff(array) > 0) or np.all(np.diff(array) < 0)
     if (array.ndim == 2) and (min(array.shape) == 1):
-        return np.all(np.diff(array.flatten()) > 0)
+        return True
+        # return np.all(np.diff(array.flatten()) > 0)
     return False
 
 
@@ -192,6 +193,7 @@ def hasIdenticalRows(array):
 
 
 def hasIdenticalCols(array):
+
     return (array.transpose == array.transpose()[0]).all()
 
 

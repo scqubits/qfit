@@ -242,6 +242,8 @@ class MeasurementData:
         self.rawData = rawData
         self.file = file
 
+        self._initFilters()
+
     def _initFilters(self):
         self._bgndSubtractX = False
         self._bgndSubtractY = False
@@ -501,7 +503,7 @@ class MeasurementData:
         if len(self.rawX) > 1:
             idx = np.argmax(
                 [
-                    np.abs(data[-1] - data[0])
+                    data.max() - data.min()
                     for data in self.rawX.values()
                 ]
             )

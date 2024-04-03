@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Tuple
-from qfit.models.measurement_data import MeasDataType, 
+from qfit.models.measurement_data import MeasDataType
 from scqubits.core.hilbert_space import HilbertSpace
 
 def parseRegDict(
