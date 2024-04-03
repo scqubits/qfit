@@ -384,8 +384,11 @@ class IOCtrl(QObject):
 
         if registryDict is not None:
             # load the hilbertspace and measurementData
-            parsedDict, hilbertspace, measurementData = parseRegDict(registryDict)
-
+            parsedDict = parseRegDict(registryDict)
+            hilbertspace, measurementData = (
+                parsedDict["HilbertSpace"],
+                parsedDict["MeasDataSet.data"],
+            )
             # update the dynamical elements in the main window (i.e. load from the registry
             # the r entries)
             self.fullReplaceHS(hilbertspace)

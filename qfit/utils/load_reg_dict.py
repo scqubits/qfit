@@ -1,10 +1,13 @@
-from typing import Any, Dict, List, Tuple
-from qfit.models.measurement_data import MeasDataType
-from scqubits.core.hilbert_space import HilbertSpace
+from typing import Any, Dict, List, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from qfit.models.measurement_data import MeasDataType
+    from scqubits.core.hilbert_space import HilbertSpace
+    from qfit.models.data_structures import CaliTableRowParam
 
 def parseRegDict(
     registryDict: Dict[str, Any], 
-) -> Tuple[Dict[str, Any], "HilbertSpace", List["MeasDataType"]]:
+) -> Dict[str, Any]:
     """
     Parse the registry dictionary from different versions of the app 
     and return the up-to-date registry dictionary, HilbertSpace, and
@@ -35,7 +38,7 @@ def parseRegDict(
     elif major >= 2:
         hilbertSpace = registryDict["HilbertSpace"]
         measurementData = registryDict["measDataSet.data"]
-        return registryDict, hilbertSpace, measurementData
+        return registryDict
     
     else:
         raise ValueError(f"File version {version} is no longer supported. "
@@ -44,7 +47,7 @@ def parseRegDict(
 # 1.0.x --> 2.0.x =============================================================
 def _parseRegDict10x_20x(
     registryDict: Dict[str, Any]
-) -> Tuple[Dict[str, Any], "HilbertSpace", List["MeasDataType"]]:
+) -> Dict[str, Any]:
     """
     Parse the measurement data unpickled from the file with version 1.0.x.
 
@@ -53,17 +56,39 @@ def _parseRegDict10x_20x(
     measData : MeasDataType
         the measurement data un
     """
-    hilbertSpace = registryDict["HilbertSpace"]
-    measurementData: List[MeasDataType] = registryDict["measDataSet.data"]
 
-    for measData in measurementData:
+    # handles the missing keys
+    keyMap = [
+        ("measDataSet.data", "MeasDataSet.data"),
+        ("measDataSet.currentRow", "MeasDataSet._currentRow"),
+        ("projectFile", "MainWindow._projectFile")
+    ]
+    keysDeleted = []
+    dictAdded = {
+        "MeasDataSet.checkedRawX": [],
+        "MeasDataSet.checkedRawY": [],
+    }
+    for key, newKey in keyMap:
+        if key in registryDict:
+            registryDict[newKey] = registryDict[key]
+            keysDeleted.append(key)
+    for key, value in dictAdded.items():
+        if key not in registryDict:
+            registryDict[key] = value
+    for key in keysDeleted:
+        del registryDict[key]    
+
+    # change attributes of the measurement data
+    for measData in registryDict["MeasDataSet.data"]:
         _parseMeasData10x_20x(measData)
 
     # calibration data need point pair source?
+    calibParams = registryDict["CaliParamModel"]
+    _parseCalibParam10x_20x(calibParams)
 
-    return registryDict, hilbertSpace, measurementData
+    return registryDict
 
-def _parseMeasData10x_20x(measData: MeasDataType):
+def _parseMeasData10x_20x(measData: "MeasDataType"):
     measDict = measData.__dict__
 
     measData.file = "unKnown"
@@ -78,3 +103,21 @@ def _parseMeasData10x_20x(measData: MeasDataType):
     measData._principalY = measDict["_currentY"]
 
     measData._initFilters() 
+
+def _parseCalibParam10x_20x(caliParams: Dict[str, Dict[str, "CaliTableRowParam"]]):
+    nameMap = [
+        ("pointPairSource", "dataSource"),
+    ]
+    namesDeleted = []
+
+    parsedDict = {}
+    for parent, caliDict in caliParams.items():
+        parsedDict[parent] = {}
+        for key, newKey in nameMap:
+            if key in caliDict:
+                caliDict[newKey] = caliDict[key]
+                namesDeleted.append(key)
+
+        for key in set(namesDeleted):
+            del caliDict[key]
+            

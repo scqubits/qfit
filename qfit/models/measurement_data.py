@@ -959,8 +959,6 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         list of measurement data with type NumericalMeasurementData or 
         ImageMeasurementData
     """
-    importFinished = False
-
     # data list management
     figSwitched = Signal(str)
     metaInfoChanged = Signal(MeasMetaInfo)
@@ -976,7 +974,6 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
 
     # register
     attrToRegister = [
-        "importFinished",
         "_currentRow",
         "checkedRawX",
         "checkedRawY",
@@ -1732,8 +1729,8 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             self.emitRawXMap()
 
         return registryDict | {
-            "measDataSet.data": RegistryEntry(
-                name="measDataSet.data",
+            "MeasDataSet.data": RegistryEntry(
+                name="MeasDataSet.data",
                 quantity_type="r+",
                 getter=lambda: self.fullData,
                 setter=dataSetter,

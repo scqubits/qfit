@@ -243,13 +243,21 @@ class Registry:
         Dict[str, Any]
             A dictionary of the loaded data.
         """
-        for name, value in registryDict.items():
+        for name in set(registryDict.keys()).union(self._registry.keys()):
+            try:
+                value = registryDict[name]
+            except KeyError:
+                print(f"Key {name} not found in file. Skipping."
+                      "We apologize that it's usually due to the version mismatch. "
+                      "Please contact the developer for retrieving the data.")
+                continue
+
             try:
                 if self._registry[name].quantity_type == "r":
                     continue
                 self._registry[name].load(value)
             except KeyError:
-                print(f"Key {name} not found in registry. Skipping. "
+                print(f"Key {name} not found in the current app. Skipping. "
                       "We apologize that it's usually due to the version mismatch. "
                       "Please contact the developer for retrieving the data.")
                 continue
