@@ -271,7 +271,7 @@ class CaliParamModel(
                 for paramName, param in paramDictByParent.items():
                     mapXValue = 1.0 if mapXVecIdx == (XRowIdx - 1) else 0.0
                     self._insertParamByArgs(
-                        colName=f"{parentName}.{paramName}",
+                        colName=f"{paramName}<br>({parentName})",
                         rowName=XRowIdxName,
                         paramType=param.paramType,
                         sweepParamName=paramName,
@@ -640,7 +640,7 @@ class CaliParamModel(
                 mapCompVec = np.zeros(self.caliTableXRowNr)
                 for XRowIdx, xRowName in enumerate(self._caliTableXRowIdxList):
                     mapCompVec[XRowIdx] = self[xRowName][
-                        f"{parentName}.{paramName}"
+                        f"{paramName}<br>({parentName})"
                     ].value
                 alphaVec = np.linalg.solve(augRawXMat, mapCompVec)
                 # generate the calibration function
@@ -721,10 +721,10 @@ class CaliParamModel(
                 for paramName, param in paramDictByParent.items():
                     # extract mapped vector pair values
                     mapXVecCompValue1 = self[XRowIdxList[0]][
-                        f"{parentName}.{paramName}"
+                        f"{paramName}<br>({parentName})"
                     ].value
                     mapXVecCompValue2 = self[XRowIdxList[1]][
-                        f"{parentName}.{paramName}"
+                        f"{paramName}<br>({parentName})"
                     ].value
                     sweepParamSetFromCali._insertParamByArgs(
                         parent=self._sweepParamSet.parentObjByName[parentName],
@@ -985,10 +985,10 @@ class CaliParamModel(
         oldX1RawValue = self.parameters["X1"][self._rawXVecNameList[0]].value
         oldX2RawValue = self.parameters["X2"][self._rawXVecNameList[0]].value
         oldX1MapValue = self.parameters["X1"][
-            f"{self._sweepParamParentName}.{self._sweepParamName}"
+            f"{self._sweepParamName}<br>({self._sweepParamParentName})"
         ].value
         oldX2MapValue = self.parameters["X2"][
-            f"{self._sweepParamParentName}.{self._sweepParamName}"
+            f"{self._sweepParamName}<br>({self._sweepParamParentName})"
         ].value
         oldY1RawValue = self.parameters["Y1"][self._rawYName].value
         oldY2RawValue = self.parameters["Y2"][self._rawYName].value
@@ -1008,13 +1008,13 @@ class CaliParamModel(
         )
         self.setParameter(
             rowIdx="X1",
-            colName=f"{self._sweepParamParentName}.{self._sweepParamName}",
+            colName=f"{self._sweepParamName}<br>({self._sweepParamParentName})",
             attr="value",
             value=oldY1MapValue,
         )
         self.setParameter(
             rowIdx="X2",
-            colName=f"{self._sweepParamParentName}.{self._sweepParamName}",
+            colName=f"{self._sweepParamName}<br>({self._sweepParamParentName})",
             attr="value",
             value=oldY2MapValue,
         )

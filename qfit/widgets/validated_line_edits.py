@@ -20,15 +20,15 @@ from PySide6.QtWidgets import QLineEdit
 from typing import Optional, Tuple, Union
 
 
-
 # meta class for QLineEdits and ABC
 class CombinedMeta(type(QLineEdit), type(ABC)):
     pass
 
+
 class ValidatedLineEdit(QLineEdit, ABC, metaclass=CombinedMeta):
     """
     A base class for line edits that validate the input, if it's not valid
-    the line edit is highlighted in red. 
+    the line edit is highlighted in red.
 
     * A note to the developer: This class is a MV class, and the controller
     is also enbeded here.
@@ -39,7 +39,7 @@ class ValidatedLineEdit(QLineEdit, ABC, metaclass=CombinedMeta):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         # Model: Data and validation
         self._data: str = ""
         self._initializeValidator()
@@ -55,8 +55,7 @@ class ValidatedLineEdit(QLineEdit, ABC, metaclass=CombinedMeta):
 
     def isValid(self) -> bool:
         text = self.text()
-        return (self.validator().validate(text, 0)[0] 
-                == QValidator.State.Acceptable)
+        return self.validator().validate(text, 0)[0] == QValidator.State.Acceptable
 
     # View methods
     def setInvalidStyle(self):
@@ -89,14 +88,16 @@ class ValidatedLineEdit(QLineEdit, ABC, metaclass=CombinedMeta):
         super().focusOutEvent(event)
         self._validate()
 
+
 class FloatLineEdit(ValidatedLineEdit):
     """
-    A line edit that accepts a float as input, providing validation and 
+    A line edit that accepts a float as input, providing validation and
     warning on invalid input.
     """
+
     def _initializeValidator(self):
         """
-        Initialize the validator for the line edit. 
+        Initialize the validator for the line edit.
         When the tupleLength is not specified, the line edit accepts any
         number of integers separated by commas.
         """
@@ -106,12 +107,13 @@ class FloatLineEdit(ValidatedLineEdit):
 
 class PositiveFloatLineEdit(ValidatedLineEdit):
     """
-    A line edit that accepts a positive float as input, providing validation and 
+    A line edit that accepts a positive float as input, providing validation and
     warning on invalid input.
     """
+
     def _initializeValidator(self):
         """
-        Initialize the validator for the line edit. 
+        Initialize the validator for the line edit.
         When the tupleLength is not specified, the line edit accepts any
         number of integers separated by commas.
         """
@@ -122,12 +124,13 @@ class PositiveFloatLineEdit(ValidatedLineEdit):
 
 class IntLineEdit(ValidatedLineEdit):
     """
-    A line edit that accepts an integer as input, providing validation and 
+    A line edit that accepts an integer as input, providing validation and
     warning on invalid input.
     """
+
     def _initializeValidator(self):
         """
-        Initialize the validator for the line edit. 
+        Initialize the validator for the line edit.
         When the tupleLength is not specified, the line edit accepts any
         number of integers separated by commas.
         """
@@ -137,14 +140,14 @@ class IntLineEdit(ValidatedLineEdit):
 
 class IntTupleLineEdit(ValidatedLineEdit):
     """
-    A line edit that accepts a tuple of integers as input, providing 
+    A line edit that accepts a tuple of integers as input, providing
     validation and warning on invalid input.
     """
 
     # Model methods
     def _initializeValidator(self, tupleLength: Optional[int] = None):
         """
-        Initialize the validator for the line edit. 
+        Initialize the validator for the line edit.
         When the tupleLength is not specified, the line edit accepts any
         number of integers separated by commas.
         """
@@ -165,7 +168,7 @@ class IntTupleLineEdit(ValidatedLineEdit):
         if self.isValid():
             return tuple(int(x) for x in self.text().split(","))
         return None
-    
+
     def setFromTuple(self, tuple_: Tuple[int, ...]):
         """
         Set the line edit from a tuple of integers.
@@ -180,7 +183,7 @@ class StateLineEdit(ValidatedLineEdit):
 
     def _initializeValidator(self, tupleLength: Optional[int] = None):
         """
-        Initialize the validator for the line edit. 
+        Initialize the validator for the line edit.
         When the tupleLength is not specified, the line edit accepts any
         number of integers separated by commas.
         """
@@ -189,7 +192,9 @@ class StateLineEdit(ValidatedLineEdit):
             regEx = QRegExp("^$|^([1-9]\d*|0)(, ?([1-9]\d*|0))*$")
         else:
             # integer or a tuple with length tupleLength or empty string
-            regEx = QRegExp("^$|^([1-9]\d*|0)(, ?([1-9]\d*|0)){0,%d}$" % (tupleLength - 1))
+            regEx = QRegExp(
+                "^$|^([1-9]\d*|0)(, ?([1-9]\d*|0)){0,%d}$" % (tupleLength - 1)
+            )
         self._validator = QRegExpValidator(regEx)
         self.setValidator(self._validator)
 
@@ -201,13 +206,13 @@ class StateLineEdit(ValidatedLineEdit):
         Return True if the line edit contains a tuple of integers.
         """
         return "," in self.text() and self.isValid()
-    
+
     def isInt(self) -> bool:
         """
         Return True if the line edit contains a single integer.
         """
         return not self.isTuple() and self.isValid()
-    
+
     def getValue(self) -> Union[int, Tuple[int, ...], None]:
         """
         Return the value in the line edit. If the line edit contains a tuple,
@@ -217,5 +222,5 @@ class StateLineEdit(ValidatedLineEdit):
             return tuple(int(x) for x in self.text().split(","))
         elif self.isInt():
             return int(self.text())
-        else: 
+        else:
             return None
