@@ -697,6 +697,10 @@ class ParamBase(ABC):
             getattr(self, attr) == getattr(__value, attr) 
             for attr in self.dataAttr
         ])
+    
+    def __repr__(self) -> str:
+        data = ", ".join([f"{attr}: {getattr(self, attr)}" for attr in self.dataAttr])
+        return f"{self.parent}.{self.name}: {data}"
 
 class DispParamBase(ParamBase):
     """

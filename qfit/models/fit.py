@@ -129,6 +129,23 @@ class FitParamModelMixin(ParamModelMixin[FitParam]):
                 prefitParamSet.insertParam(parentName, paramName, sliderParam)
 
         return prefitParamSet
+    
+    def _initToFinalParams(self, paramSet: ParamSet[FitParam]) -> ParamSet[FitParam]:
+        """
+        Update the initial parameters to the final parameters.
+        """
+        finalParamSet = ParamSet[FitParam](FitParam)
+        for parentName, parent in paramSet.items():
+            for paramName, param in parent.items():
+                fitParam = FitParam(
+                    name=paramName,  # useless
+                    parent=param.parent,  # useless
+                    paramType=param.paramType,  # useless
+                    value=param.initValue,
+                )
+                finalParamSet.insertParam(parentName, paramName, fitParam)
+
+        return finalParamSet
 
 
 class CombinedMeta(type(FitParamModelMixin), type(ParamSet)):
@@ -232,6 +249,12 @@ class FitHSParams(
         This is used to accomplish the "result to prefit" feature.
         """
         return self._toPrefitParams(self)
+    
+    def initToFinalParams(self) -> ParamSet[FitParam]:
+        """
+        Update the final parameters (to be optimized) using the initial parameters.
+        """
+        return self._initToFinalParams(self)
 
     def registerAll(
         self,
@@ -337,6 +360,12 @@ class FitCaliParams(
         This is used to accomplish the "result to prefit" feature.
         """
         return self._toPrefitParams(self)
+    
+    def initToFinalParams(self) -> ParamSet[FitParam]:
+        """
+        Update the final parameters (to be optimized) using the initial parameters.
+        """
+        return self._initToFinalParams(self)
 
     def registerAll(
         self,
@@ -420,7 +449,7 @@ class FitModel(QObject):
             The wrapped cost function, which takes only one dictionary as
             input parameter.
         """
-        def costWrapper(
+        def wrappedCostFunc(
             paramDict: Dict[str, float],
         ) -> float:
             HSParams = {
@@ -436,7 +465,7 @@ class FitModel(QObject):
 
             return func(HSParams, caliParams)
 
-        return costWrapper
+        return wrappedCostFunc
 
     def _callbackWrapper(
         self,
@@ -651,6 +680,7 @@ class FitRunner(QRunnable):
         the optimization result.
         """
         try:
+            print(self.initParam)
             traj = self.opt.run(init_x=self.initParam, callback=self.callback)
             self.signalHost.optFinished.emit(traj)
         except Exception as e:

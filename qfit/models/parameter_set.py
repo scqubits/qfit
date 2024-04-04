@@ -67,6 +67,12 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
     def __len__(self):
         return sum([len(para_dict) for para_dict in self.parameters.values()])
+    
+    def __repr__(self) -> str:
+        return self.parameters.__repr__()
+    
+    def __str__(self) -> str:
+        return self.parameters.__str__()
 
     def insertParam(
         self,

@@ -131,7 +131,7 @@ class Registry:
         "version": RegistryEntry(
             "version",
             "r",
-            lambda: f"{version}",
+            lambda: version,
         ),
     }
 
@@ -244,23 +244,25 @@ class Registry:
             A dictionary of the loaded data.
         """
         for name in set(registryDict.keys()).union(self._registry.keys()):
+            # we don't need to set read-only entries
+            if self._registry[name].quantity_type == "r":
+                continue
+
             try:
                 value = registryDict[name]
             except KeyError:
                 print(
-                    f"Key {name} not found in file. Skipping."
+                    f"Key {name} not found in file. "
                     "We apologize that it's usually due to the version mismatch. "
                     "Please contact the developer for retrieving the data."
                 )
                 continue
 
             try:
-                if self._registry[name].quantity_type == "r":
-                    continue
                 self._registry[name].load(value)
             except KeyError:
                 print(
-                    f"Key {name} not found in the current app. Skipping. "
+                    f"Key {name} not found in the current app. "
                     "We apologize that it's usually due to the version mismatch. "
                     "Please contact the developer for retrieving the data."
                 )
@@ -273,6 +275,6 @@ class Registry:
             "version": RegistryEntry(
                 "version",
                 "r",
-                lambda: f"{MAJOR}.{MINOR}.{MICRO}",
+                lambda: version,
             ),
         })
