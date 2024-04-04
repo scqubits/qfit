@@ -36,8 +36,6 @@ def parseRegDict(
         return _parseRegDict10x_20x(registryDict)
     
     elif major >= 2:
-        hilbertSpace = registryDict["HilbertSpace"]
-        measurementData = registryDict["measDataSet.data"]
         return registryDict
     
     else:

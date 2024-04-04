@@ -987,7 +987,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     rawXYConfigChanged = Signal(MeasRawXYConfig)
     updateStatus = Signal(Status)
     newFigAdded = Signal(list)
-    dataLoaded = Signal()
+    dataLoaded = Signal(list)
 
     # single data processing
     readyToPlot = Signal(PlotElement)
@@ -1011,12 +1011,12 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.checkedRawY: List[str] = []
 
     # init & load data list ============================================
-    def loadDataSet(self, measData: List[MeasDataType]):
+    def loadDataSet(self, measDataList: List[MeasDataType]):
         """
         Replace all the measurement data with the new data. It will emit the
         signals to update the view and proceed to the next stage.
         """
-        self.fullData = measData
+        self.fullData = measDataList
 
         # emit the signals to update the view
         self.emitMetaInfo()
@@ -1028,8 +1028,11 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         # update the raw X and Y axis names
         self._clearRawXY()
 
+        # gather the data names
+        dataNames = [measData.name for measData in self.fullData]
+
         # emit to proceed to the next stage
-        self.dataLoaded.emit()
+        self.dataLoaded.emit(dataNames)
 
     @staticmethod
     def _rawDataFromFile(fileName) -> MeasDataType | None:

@@ -63,7 +63,7 @@ class MeasDataView(QObject):
 
         self.figChanged.emit(figName)
 
-    @Slot(str)
+    @Slot(list)
     def addFig(self, figNameList: List[str]):
         """
         Add a figure to the tab.
@@ -73,6 +73,14 @@ class MeasDataView(QObject):
             # this changes the current index to the newly added tab
             # triggers currentChanged signal
         self.dataTab.setCurrentIndex(self.dataTab.count() - 1)
+
+    @Slot(list)
+    def reloadFig(self, figNameList: List[str]):
+        """
+        Reload the figures in the tab by providing a figure name list.
+        """
+        self.dataTab.clear()
+        self.addFig(figNameList)
 
     @Slot()
     def deleteFig(self):

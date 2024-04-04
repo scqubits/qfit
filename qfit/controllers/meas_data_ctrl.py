@@ -34,6 +34,7 @@ class MeasDataCtrl(QObject):
         self.configConnects()
         self.transposeConnects()
         self.continueConnects()
+        self.dataLoadConnects()
 
     # connections ======================================================
     def importFigConnects(self) -> None:
@@ -71,7 +72,7 @@ class MeasDataCtrl(QObject):
         self.importerView.transposeZClicked.connect(self.measDataSet.transposeZ)
 
     @Slot()
-    def continueToCalibrate(self) -> None:
+    def continueToPostImportStages(self) -> None:
         """
         Continue to the calibration page.
         """
@@ -91,9 +92,11 @@ class MeasDataCtrl(QObject):
         """
         Connect the continue button between model and view.
         """
-        self.importerView.continueClicked.connect(
-            self.continueToCalibrate
-        )
-        self.measDataSet.dataLoaded.connect(
-            self.continueToCalibrate
-        )
+        self.importerView.continueClicked.connect(self.continueToPostImportStages)
+
+    def dataLoadConnects(self) -> None:
+        """
+        Establish connections for reading .qfit file.
+        """
+        self.measDataSet.dataLoaded.connect(lambda _: self.continueToPostImportStages())
+        self.measDataSet.dataLoaded.connect(self.measDataView.reloadFig)

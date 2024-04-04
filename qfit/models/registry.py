@@ -269,10 +269,12 @@ class Registry:
     def clear(self):
         """Clear the registry."""
         self._registry.clear()
-        self._registry.update({
-            "version": RegistryEntry(
-                "version",
-                "r",
-                lambda: f"{MAJOR}.{MINOR}.{MICRO}",
-            ),
-        })
+        self._registry.update(
+            {
+                "version": RegistryEntry(
+                    "version",
+                    "r",
+                    lambda: f"{version}",
+                ),
+            }
+        )
