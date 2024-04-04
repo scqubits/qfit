@@ -181,18 +181,6 @@ class NavigationHidden(NavigationToolbar2QT):
         super().release_pan(event)
         self.parent()._recordXYLim()
 
-    def home(self):
-        """
-        See release_zoom
-        """
-        super().home()
-        for ax in self.canvas.figure.get_axes():
-            ax.view_init()
-            ax.autoscale_view()
-        self.canvas.draw_idle()
-        
-        self.parent()._recordXYLim()
-
 
 class SpecialCursor(Cursor):
     """
@@ -693,7 +681,10 @@ class MplFigureCanvas(QFrame):
 
     @Slot()
     def resetView(self):
-        self.toolbar.home()
+        self.axes.set_xlim(*self._measXLim)
+        self.axes.set_ylim(*self._measYLim)
+        self.canvas.draw()
+        self._recordXYLim()
 
     @Slot()
     def zoomView(self):

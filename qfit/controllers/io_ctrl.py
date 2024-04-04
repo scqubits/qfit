@@ -82,15 +82,11 @@ class IOCtrl(QObject):
         models: Tuple["MeasDataSet", "Registry"],
         views: Tuple["QPushButton", "MenuWidget", "MainWindow"],
         fullReplaceHS: Callable[["HilbertSpace"], None],
-        fullReplaceMeasData: Callable[[List["MeasDataType"]], None],
-        fullDynamicalInit: Callable[[], None],
     ):
         super().__init__(parent)
         self.measDataSet, self.registry = models
         self.menuButton, self.menu, self.mainWindow = views
         self.fullReplaceHS = fullReplaceHS
-        self.fullReplaceMeasData = fullReplaceMeasData
-        self.fullDynamicalInit = fullDynamicalInit
 
         self.setConnects()
 

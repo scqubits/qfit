@@ -698,8 +698,6 @@ class Fit:
             models = (self._measData, self._registry),
             views = (self._mainUi.toggleMenuButton, self._menuUi, self._mainWindow),
             fullReplaceHS=self._replaceHS,
-            fullReplaceMeasData=self._replaceMeasData,
-            fullDynamicalInit=self._dynamicalInit,
         )
 
     def _statusMVCInits(self):

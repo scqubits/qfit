@@ -98,13 +98,23 @@ class ExtractingCtrl(QObject):
         self.labelingView.extractionList.setModel(self.allDatasets)
         self.labelingView.extractionList.selectItem(0, blockSignals=True)
 
+        self._mainSwitchFigConnects()
+
     # Connections ======================================================
     def _switchFigConnects(self):
         """
         When the user switches between different measurement data figures,
         the extracted transitions displayed should be updated accordingly.
+
+        This function connects to the slots for the import stage
         """
         self.measDataSet.figSwitched.connect(self.allDatasets.switchFig)
+
+    def _mainSwitchFigConnects(self):
+        """
+        Different from the switchFigConnects, this function connects to the slots
+        for the main stage. 
+        """
         self.measDataSet.figSwitched.connect(
             lambda: self.labelingView.extractionList.selectItem(
                 self.allDatasets.currentRow, blockSignals=True

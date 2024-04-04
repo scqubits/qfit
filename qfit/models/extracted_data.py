@@ -217,6 +217,7 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
 
         self._figNames = []
         self._fullSpectra = FullExtr()
+        self._currentRow = 0
 
         self._signalProcessing()
 
@@ -246,7 +247,6 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         self._initFullSpectra()
 
         self._currentFigName = self._figNames[0]
-        self._currentRow = 0
 
     def _initFullSpectra(self):
         """
