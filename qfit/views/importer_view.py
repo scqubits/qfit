@@ -196,11 +196,9 @@ QCheckBox::indicator:disabled {
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Question)
         msgBox.setText(
-            "In the current version of qfit, you can no longer "
-            "go back to this page after proceeding to the next page. "
-            "You must import all the data you have and configure"
-            "them correctly here.\n"
-            "Are you sure you want to continue?"
+            "After proceeding, you can no longer go back to this page "
+            "to import any data and update their configuration. \n"
+            "Are you sure to proceed?"
         )
         msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         msgBox.setDefaultButton(QMessageBox.No)

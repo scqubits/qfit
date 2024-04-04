@@ -304,6 +304,12 @@ class FitCtrl(QObject):
         self.tmpCaliParams = self.caliParamModel.getFlattenedAttrDict("value")
 
         # setup the optimization
+        self.fitHSParams.setAttrByParamSet(
+            self.fitHSParams.initToFinalParams(), attrsToUpdate=["value"]
+        )
+        self.fitCaliParams.setAttrByParamSet(
+            self.fitCaliParams.initToFinalParams(), attrsToUpdate=["value"]
+        )
         self.fitModel.setupOptimization(
             HSFixedParams=self.fitHSParams.fixedParams,
             HSFreeParamRanges=self.fitHSParams.freeParamRanges,

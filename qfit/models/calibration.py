@@ -904,6 +904,25 @@ class CaliParamModel(
             self.caliStatus = False
             self.plotCaliPtExtractInterrupted.emit()
 
+    def _registrySetter(
+        self, 
+        value: Dict[str, Dict[str, CaliTableRowParam]],
+        paramSet: ParamSet[CaliTableRowParam]
+    ):
+        """
+        Set the parameter set by the value from the registry.
+
+        Parameters
+        ----------
+        value: Dict[str, Dict[str, DispParamCls]]
+            The value from the registry
+        paramSet: ParamSet
+            The parameter set
+        """
+        super()._registrySetter(value, paramSet)
+        self.sendXCaliFunc()
+        self.sendYCaliFunc()
+
     def registerAll(
         self,
     ) -> Dict[str, RegistryEntry]:

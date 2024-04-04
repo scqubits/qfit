@@ -150,7 +150,7 @@ class IOCtrl(QObject):
             )
             if not fileName:
                 if not window_initialized:
-                    self._closeAppAfterSaving()
+                    self._closeApp()
                     raise StopExecution
                 else:
                     return None
@@ -242,6 +242,9 @@ class IOCtrl(QObject):
                 Registry.dictFromFile(self.mainWindow.projectFile)
             )
             assert registryDictFromFile is not None, "File not found"
+
+            # parse the registry dicts
+            registryDictFromFile = parseRegDict(registryDictFromFile)
 
             # remove HilbertSpace and file name from these dicts
             # we don't want to compare these two entries
@@ -338,8 +341,8 @@ class IOCtrl(QObject):
         if not openWindow:
             # the only reason is user canceled the dialog
             if not from_menu:
-                self._closeAppAfterSaving()
-                raise StopExecution
+                self._closeApp()
+                # raise StopExecution
             else:
                 # do nothing
                 return
