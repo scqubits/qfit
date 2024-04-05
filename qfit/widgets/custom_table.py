@@ -12,10 +12,13 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QStyleOptionHeader,
 )
-from PySide6.QtCore import (
-    Qt,
+from PySide6.QtCore import Qt, QRect
+from PySide6.QtGui import (
+    QColor,
+    QTextDocument,
+    QAbstractTextDocumentLayout,
+    QTextOption,
 )
-from PySide6.QtGui import QColor, QFontMetrics
 
 from qfit.widgets.foldable_widget import FoldPushButton
 from qfit.utils.helpers import modifyStyleSheet
@@ -95,29 +98,36 @@ class NoSeparatorHeaderView(QHeaderView):
                 painter.fillRect(rect, QColor(self.colorList[logicalIndex]))
             else:
                 painter.fillRect(rect, QColor(Qt.transparent))
-        # set the text color
-        painter.setPen(QColor(self.text_color))
 
-        # Set up the option
-        option = QStyleOptionHeader()
-        option.rect = rect
-        option.textAlignment = Qt.AlignCenter
-        option.text = self.model().headerData(logicalIndex, self.orientation())
+        # Initialize QTextDocument for rich text (HTML) support
+        textDocument = QTextDocument()
+        textDocument.setDefaultFont(painter.font())
 
-        # Draw the text
-        # Retrieve the text for the header section
-        text = self.model().headerData(logicalIndex, self.orientation(), Qt.DisplayRole)
-        # Draw the text manually
-        if text:
-            # text position is computed based on the font metrics
-            font_metrics = QFontMetrics(painter.font())
-            text_width = font_metrics.horizontalAdvance(str(text))
-            text_x = rect.x() + (rect.width() - text_width) / 2  # Center text
-            text_y = (
-                rect.y()
-                + (rect.height() + font_metrics.ascent() - font_metrics.descent()) / 2
-            )
-            painter.drawText(text_x, text_y, str(text))
+        # Disable word wrapping
+        textOption = QTextOption()
+        textOption.setAlignment(Qt.AlignCenter)  # Center alignment
+        textOption.setWrapMode(QTextOption.NoWrap)  # Disable word wrapping
+        textDocument.setDefaultTextOption(textOption)
+
+        # Use HTML to set text color and wrap content in a div with center alignment
+        headerText = self.model().headerData(
+            logicalIndex, self.orientation(), Qt.DisplayRole
+        )
+        textDocument.setHtml(
+            f'<div style="color: {self.text_color};">{headerText}</div>'
+        )
+        textDocument.setTextWidth(rect.width())  # Ensure adequate width
+
+        # Calculate yOffset for vertical centering
+        textHeight = textDocument.size().height()
+        yOffset = (rect.height() - textHeight) / 2
+
+        painter.translate(rect.left(), rect.top() + yOffset)
+
+        # Draw the document contents
+        textDocument.documentLayout().draw(
+            painter, QAbstractTextDocumentLayout.PaintContext()
+        )
 
         painter.restore()
 
@@ -156,6 +166,7 @@ class WidgetCollection:
 
         self.widgetForInserting[key] = CenteredItem(self.parent, widget)
 
+
 class FittingParameterItems(WidgetCollection):
     """
     A collection of widgets that represents a row in the FittingParameterTable.
@@ -165,7 +176,7 @@ class FittingParameterItems(WidgetCollection):
 
     Parameters
     ----------
-    parent : QWidget    
+    parent : QWidget
         The parent widget.
     name : str
         The name of the parameter.
@@ -239,7 +250,7 @@ class FittingParameterItems(WidgetCollection):
 
 class MinMaxItems(WidgetCollection):
     """
-    A collection of widgets that represents a row in the MinMaxTable. 
+    A collection of widgets that represents a row in the MinMaxTable.
     It contains the widgets for each slider parameter, namely the name, the
     minimum value, and the maximum value.
 
@@ -321,7 +332,7 @@ class FoldableTable(QTableWidget, Generic[CollectionType]):
     paramNumPerRow : int
         The number of parameters per row.
     groupNames : List[str]
-        The names of the groups, and contents in the same group can be 
+        The names of the groups, and contents in the same group can be
         folded and unfolded together.
     """
 
@@ -401,7 +412,7 @@ class FoldableTable(QTableWidget, Generic[CollectionType]):
 
     def _initGroupRows(self):
         """
-        Group rows are the rows that contain the group buttons, which do 
+        Group rows are the rows that contain the group buttons, which do
         not contain any parameters, and are used to fold and unfold the
         parameters below them.
         """
@@ -416,7 +427,7 @@ class FoldableTable(QTableWidget, Generic[CollectionType]):
 
     def _insertParamRow(self, row_position):
         """
-        Insert a row to the table after initialization. 
+        Insert a row to the table after initialization.
         """
         # insert a row at row_position
         self.insertRow(row_position)

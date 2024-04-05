@@ -117,7 +117,9 @@ class CalibrationView(QObject):
             for sweepParamName, sweepParam in sweepParamDict.items():
                 self.sweepParamParentNames.append(parentName)
                 self.sweepParamNames.append(sweepParamName)
-                self.sweepParamCombinedNames.append(f"{parentName}.{sweepParamName}")
+                self.sweepParamCombinedNames.append(
+                    f"{sweepParamName}<br>({parentName})"
+                )
 
     def replaceMeasData(
         self,
@@ -267,7 +269,7 @@ class CalibrationView(QObject):
                 for compName, lineEdit in self.lineEditSet[rowIdx].items():
                     lineEdit.editingFinished.disconnect()
                     lineEdit.deleteLater()
-            
+
             self.lineEditSet.clear()
 
         # for each X row, create a dict for raw and mapped vectors to line edits
@@ -398,7 +400,7 @@ class CalibrationView(QObject):
         if rowIdx[0] == "X":
             for rawXVecCompName in self.rawXVecNameList:
                 self.lineEditSet[rowIdx][rawXVecCompName].home(False)
-            colName = f"{self.sweepParamParentNames[0]}.{self.sweepParamNames[0]}"
+            colName = f"{self.sweepParamNames[0]}<br>({self.sweepParamParentNames[0]})"
         # if y axis is calibrated, update the raw line edits by the value of the clicked point
         elif rowIdx[0] == "Y":
             self.lineEditSet[rowIdx][self.rawYName].home(False)
