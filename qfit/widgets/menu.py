@@ -11,6 +11,8 @@
 
 
 from PySide6.QtWidgets import QWidget
+from PySide6.QtGui import QFocusEvent
+from PySide6.QtCore import Qt
 
 from qfit.ui_designer.ui_menu import Ui_MenuWidget
 
@@ -24,11 +26,19 @@ class MenuWidget(QWidget):
         self.ui = Ui_MenuWidget()
         self.ui.setupUi(self)
 
-        self.move(0, 32)
+        self.move(0, 60)
         self.hide()
 
     def toggle(self):
         if self.isHidden():
+            self.setFocus(Qt.OtherFocusReason)
             self.show()
         else:
+            self.hide()
+
+    def focusOutEvent(self, event: QFocusEvent) -> None:
+        """
+        Overriding the QFocusEvent handler to hide the widget when it loses focus.
+        """
+        if event.lostFocus():
             self.hide()
