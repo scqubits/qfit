@@ -621,6 +621,9 @@ class VLineElement(PlotElement):
         self.set_visible(self._visible)
 
 
+emptyPlotElement = lambda name: PlotElement(name)
+
+
 # Parameters ===========================================================
 class ParamAttr:
     """
@@ -1049,6 +1052,8 @@ MeasMetaInfo:
         return self.__str__()
     
 
+emptyMetaInfo = MeasMetaInfo("", "", (0, 0), [], [], [], [])
+
 class MeasRawXYConfig:
     def __init__(
         self,
@@ -1086,6 +1091,9 @@ MeasRawXYConfig:
     def __repr__(self) -> str:
         return self.__str__()
     
+    
+emptyConfig = MeasRawXYConfig()
+
 
 class FilterConfig:
     def __init__(

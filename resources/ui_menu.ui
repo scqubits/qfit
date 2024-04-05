@@ -119,7 +119,7 @@ QPushButton:checked {
       </font>
      </property>
      <property name="text">
-      <string>IMPORT FIT FILE</string>
+      <string>OPEN FIT FILE</string>
      </property>
     </widget>
    </item>

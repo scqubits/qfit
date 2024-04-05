@@ -44,6 +44,9 @@ from qfit.models.data_structures import (
     MeshgridElement,
     FilterConfig,
     Status,
+    emptyMetaInfo,
+    emptyConfig,
+    emptyPlotElement,
 )
 from qfit.models.registry import Registrable, RegistryEntry
 from qfit.utils.helpers import (
@@ -1123,8 +1126,8 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
                     msg.setIcon(QMessageBox.Warning)
                     msg.setText("Error opening file.")
                     msg.setInformativeText(
-                        "The selected file format is supported, but heuristic inspection "
-                        "failed to identify suitable data inside the file."
+                        "The heuristic inspection failed to identify suitable "
+                        f"data inside the file {fileName}"
                     )
                     msg.setWindowTitle("Error")
                     _ = msg.exec_()
@@ -1323,8 +1326,6 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         """
         Insert a new row at the end of the table.
         """
-        row = self.rowCount()
-
         result, newDataNames = self._loadData(fileName=filename)
         if not result:
             return False
@@ -1342,14 +1343,24 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         """
         if self.rowCount() == 0:
             return False
+        
+        print(row, self._currentRow, self.rowCount())
 
         self.fullData.pop(row)
 
-        # if all figures are deleted, set the current row to -1
         if self.rowCount() == 0:
-            self._currentRow = -1
+            pass
+        elif row > self._currentRow:
+            pass
+        elif row == self._currentRow:
+            self._currentRow = row
+        else:
+            self._currentRow -= 1
 
         self.emitRawXYConfig()
+        self.emitMetaInfo()
+        self.emitReadyToPlot()
+        self.emitRelimCanvas()
 
         return True
 
@@ -1568,6 +1579,8 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
                     self._currentRow = i
                     break
 
+        print("Fig switched to", self.currentFigName)
+
         self.emitMetaInfo()
         self.emitRawXYConfig()  # update transpose button
         self.emitReadyToPlot()
@@ -1576,7 +1589,10 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         self.emitFigSwitched()
 
     def emitMetaInfo(self):
-        self.metaInfoChanged.emit(self.currentMeasData.generateMetaInfo())
+        if self.rowCount() > 0:
+            self.metaInfoChanged.emit(self.currentMeasData.generateMetaInfo())
+        else:
+            self.metaInfoChanged.emit(emptyMetaInfo)
 
     def emitFigSwitched(self):
         self.figSwitched.emit(self.currentFigName)
@@ -1592,6 +1608,9 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
             candidates, selected X and Y axis names, and the names to be
             grayed out.
         """
+        if self.rowCount() == 0:
+            return emptyConfig
+        
         return MeasRawXYConfig(
             checkedX=self.checkedRawX,
             checkedY=self.checkedRawY,
@@ -1655,17 +1674,23 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         """
         Emit the readyToPlot signal with the current plotting element.
         """
-        self.readyToPlot.emit(self.currentMeasData.generatePlotElement())
+        if self.rowCount() > 0:
+            self.readyToPlot.emit(self.currentMeasData.generatePlotElement())
+        else:
+            self.readyToPlot.emit(emptyPlotElement("measurement"))
 
     def emitRelimCanvas(self):
         """
         Emit the relimCanvas signal with the current x and y axis data,
         which will be used to relim the canvas, set x snap values.
         """
-        self.relimCanvas.emit(
-            self.currentMeasData.principalX.data,
-            self.currentMeasData.principalY.data,
-        )
+        if self.rowCount() == 0:
+            self.relimCanvas.emit(np.array([0, 1]), np.array([0, 1]))
+        else:
+            self.relimCanvas.emit(
+                self.currentMeasData.principalX.data,
+                self.currentMeasData.principalY.data,
+            )
 
     def emitRawXMap(self):
         """

@@ -81,6 +81,7 @@ class MeasDataView(QObject):
         """
         removedFigIndex = self.dataTab.currentIndex()
         self.dataTab.removeTab(self.dataTab.currentIndex())
+
         # this changes the current index to the next tab
         # triggers currentChanged signal
         if self.dataTab.count() == 0:
@@ -89,6 +90,9 @@ class MeasDataView(QObject):
             removedFigIndex == self.dataTab.count()
         ):  # now row count is 1 less than before
             self.dataTab.setCurrentIndex(removedFigIndex - 1)
+            print("current index changed to", removedFigIndex - 1)
         else:
             self.dataTab.setCurrentIndex(removedFigIndex)
+            print("current index changed to", removedFigIndex)
+
         self.figDeletedFromTab.emit(removedFigIndex)

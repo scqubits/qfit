@@ -267,7 +267,8 @@ class PlottingCtrl(QObject):
         Update the axes limits of the canvas based on the x and y data.
         """
         self.mplCanvas.relim(xData, yData)
-        self.setXYAxes(self.measData.currentMeasData)
+        if self.measData.rowCount() > 0:
+            self.setXYAxes(self.measData.currentMeasData)
 
     @Slot(str)
     def switchFig(self, figName: str):

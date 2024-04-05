@@ -125,7 +125,7 @@ class Ui_MenuWidget(object):
     def retranslateUi(self, MenuWidget):
         MenuWidget.setWindowTitle("")
         self.menuNewButton.setText(QCoreApplication.translate("MenuWidget", u"CREATE NEW FIT FILE", None))
-        self.menuOpenButton.setText(QCoreApplication.translate("MenuWidget", u"IMPORT FIT FILE", None))
+        self.menuOpenButton.setText(QCoreApplication.translate("MenuWidget", u"OPEN FIT FILE", None))
         self.menuSaveButton.setText(QCoreApplication.translate("MenuWidget", u"SAVE", None))
         self.menuSaveAsButton.setText(QCoreApplication.translate("MenuWidget", u"SAVE AS", None))
         self.menuQuitButton.setText(QCoreApplication.translate("MenuWidget", u"QUIT", None))
