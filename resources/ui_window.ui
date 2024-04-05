@@ -2296,8 +2296,8 @@ background-color: #4B4B4B;
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>98</width>
-                   <height>28</height>
+                   <width>439</width>
+                   <height>180</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_5"/>
@@ -2852,62 +2852,7 @@ QPushButton:checked {
               </item>
               <item>
                <widget class="QWidget" name="widget_7" native="true">
-                <layout class="QHBoxLayout" name="horizontalLayout_14">
-                 <item>
-                  <widget class="QPushButton" name="swapXYButton">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>208</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <family>Roboto Medium</family>
-                     <bold>true</bold>
-                    </font>
-                   </property>
-                   <property name="cursor">
-                    <cursorShape>ArrowCursor</cursorShape>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">QPushButton {
-color: #DBBCFB;
-background-color: #4B4B4B;
-border-radius: 6px;
-}
-
-QPushButton:pressed {
-color: #A08CB5;
-background-color: #353535;
-icon: url(:/icons/svg/updown-pressed.svg);
-}</string>
-                   </property>
-                   <property name="text">
-                    <string>   Switch X And Y Axis</string>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/icons/svg/updown.svg</normaloff>:/icons/svg/updown.svg</iconset>
-                   </property>
-                   <property name="iconSize">
-                    <size>
-                     <width>14</width>
-                     <height>16</height>
-                    </size>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
+                <layout class="QHBoxLayout" name="horizontalLayout_14"/>
                </widget>
               </item>
               <item>

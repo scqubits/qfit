@@ -1316,7 +1316,7 @@ class Ui_MainWindow(object):
         self.calibrateXScrollArea.setWidgetResizable(True)
         self.calibrateXScrollAreaWidget = QWidget()
         self.calibrateXScrollAreaWidget.setObjectName(u"calibrateXScrollAreaWidget")
-        self.calibrateXScrollAreaWidget.setGeometry(QRect(0, 0, 98, 28))
+        self.calibrateXScrollAreaWidget.setGeometry(QRect(0, 0, 439, 180))
         self.verticalLayout_5 = QVBoxLayout(self.calibrateXScrollAreaWidget)
         self.verticalLayout_5.setObjectName(u"verticalLayout_5")
         self.calibrateXScrollArea.setWidget(self.calibrateXScrollAreaWidget)
@@ -1558,30 +1558,6 @@ class Ui_MainWindow(object):
         self.widget_7.setObjectName(u"widget_7")
         self.horizontalLayout_14 = QHBoxLayout(self.widget_7)
         self.horizontalLayout_14.setObjectName(u"horizontalLayout_14")
-        self.swapXYButton = QPushButton(self.widget_7)
-        self.swapXYButton.setObjectName(u"swapXYButton")
-        self.swapXYButton.setEnabled(True)
-        sizePolicy4.setHeightForWidth(self.swapXYButton.sizePolicy().hasHeightForWidth())
-        self.swapXYButton.setSizePolicy(sizePolicy4)
-        self.swapXYButton.setMinimumSize(QSize(208, 30))
-        self.swapXYButton.setFont(font3)
-        self.swapXYButton.setCursor(QCursor(Qt.ArrowCursor))
-        self.swapXYButton.setStyleSheet(u"QPushButton {\n"
-"color: #DBBCFB;\n"
-"background-color: #4B4B4B;\n"
-"border-radius: 6px;\n"
-"}\n"
-"\n"
-"QPushButton:pressed {\n"
-"color: #A08CB5;\n"
-"background-color: #353535;\n"
-"icon: url(:/icons/svg/updown-pressed.svg);\n"
-"}")
-        self.swapXYButton.setIcon(icon8)
-        self.swapXYButton.setIconSize(QSize(14, 16))
-
-        self.horizontalLayout_14.addWidget(self.swapXYButton)
-
 
         self.verticalLayout_17.addWidget(self.widget_7)
 
@@ -3090,7 +3066,6 @@ class Ui_MainWindow(object):
         self.label_23.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Raw Y</p></body></html>", None))
         self.label_24.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Calibrated Y [GHz]</p></body></html>", None))
         self.calibrateY1Button.setText("")
-        self.swapXYButton.setText(QCoreApplication.translate("MainWindow", u"   Switch X And Y Axis", None))
         self.label_32.setText(QCoreApplication.translate("MainWindow", u"EXTRACT", None))
         self.label_41.setText("")
         self.bareLabelOrder.setText(QCoreApplication.translate("MainWindow", u"Labels order by:", None))

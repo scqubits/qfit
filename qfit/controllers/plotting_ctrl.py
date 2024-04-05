@@ -103,7 +103,7 @@ class PlottingCtrl(QObject):
         (
             self.measComboBoxes,
             self.measPlotSettings,
-            self.swapXYButton,
+            # self.swapXYButton,
             self.canvasTools,
             # self.calibrationButtons,
             self.calibratedCheckBox,
@@ -132,7 +132,7 @@ class PlottingCtrl(QObject):
         # Although measurement data is updated when reloaded,
         # but swapXY only involves the "pointer" of measurement data,
         # so it only need to be connected once.
-        self.swapXYButton.clicked.connect(self.swapXY)
+        # self.swapXYButton.clicked.connect(self.swapXY)
 
         # previously in dynamicalInit
         self.measPlotSettingConnects()

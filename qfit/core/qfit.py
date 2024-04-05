@@ -378,7 +378,7 @@ class Fit:
             self._mainUi.resetViewButton,
             self._mainUi.panViewButton,
             self._mainUi.selectViewButton,
-            self._mainUi.swapXYButton,
+            # self._mainUi.swapXYButton,
         ]:
             eff = QGraphicsDropShadowEffect(button)
             eff.setOffset(2)
@@ -683,7 +683,7 @@ class Fit:
             (
                 self._measComboBoxes,
                 self._measPlotSettings,
-                self._mainUi.swapXYButton,
+                # self._mainUi.swapXYButton,
                 self._canvasTools,
                 # self._calibrationButtons,
                 self._mainUi.calibratedCheckBox,
