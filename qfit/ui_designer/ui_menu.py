@@ -35,18 +35,19 @@ class Ui_MenuWidget(object):
 "	background-color: rgb(18, 18, 18);\n"
 "	border: none;\n"
 "}\n"
-"\n"
 "QPushButton:hover {\n"
 "	background-color: rgb(52, 59, 72);\n"
 "}\n"
 "QPushButton:pressed {	\n"
 "	background-color: rgb(85, 170, 255);\n"
 "}\n"
-"\n"
 "QPushButton:checked {\n"
 "	border: 5px;\n"
 "	border-color: rgb(6, 50, 250);\n"
 "	border-right-style: inset;\n"
+"}\n"
+"QPushButton:disabled {	\n"
+"	color: rgb(60, 60, 60);\n"
 "}")
         self.verticalLayout = QVBoxLayout(MenuWidget)
         self.verticalLayout.setSpacing(0)
@@ -54,6 +55,7 @@ class Ui_MenuWidget(object):
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.menuNewButton = QPushButton(MenuWidget)
         self.menuNewButton.setObjectName(u"menuNewButton")
+        self.menuNewButton.setEnabled(True)
         sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -70,6 +72,7 @@ class Ui_MenuWidget(object):
 
         self.menuOpenButton = QPushButton(MenuWidget)
         self.menuOpenButton.setObjectName(u"menuOpenButton")
+        self.menuOpenButton.setEnabled(True)
         sizePolicy.setHeightForWidth(self.menuOpenButton.sizePolicy().hasHeightForWidth())
         self.menuOpenButton.setSizePolicy(sizePolicy)
         self.menuOpenButton.setMinimumSize(QSize(0, 45))
@@ -84,6 +87,7 @@ class Ui_MenuWidget(object):
 
         self.menuSaveButton = QPushButton(MenuWidget)
         self.menuSaveButton.setObjectName(u"menuSaveButton")
+        self.menuSaveButton.setEnabled(False)
         sizePolicy.setHeightForWidth(self.menuSaveButton.sizePolicy().hasHeightForWidth())
         self.menuSaveButton.setSizePolicy(sizePolicy)
         self.menuSaveButton.setMinimumSize(QSize(0, 45))
@@ -94,6 +98,7 @@ class Ui_MenuWidget(object):
 
         self.menuSaveAsButton = QPushButton(MenuWidget)
         self.menuSaveAsButton.setObjectName(u"menuSaveAsButton")
+        self.menuSaveAsButton.setEnabled(False)
         sizePolicy.setHeightForWidth(self.menuSaveAsButton.sizePolicy().hasHeightForWidth())
         self.menuSaveAsButton.setSizePolicy(sizePolicy)
         self.menuSaveAsButton.setMinimumSize(QSize(0, 45))

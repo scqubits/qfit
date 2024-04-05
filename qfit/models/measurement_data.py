@@ -983,6 +983,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         list of measurement data with type NumericalMeasurementData or
         ImageMeasurementData
     """
+    importFinished = False      # will be handled by MeasDataCtrl
 
     # data list management
     figSwitched = Signal(str)
@@ -1344,8 +1345,6 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         if self.rowCount() == 0:
             return False
         
-        print(row, self._currentRow, self.rowCount())
-
         self.fullData.pop(row)
 
         if self.rowCount() == 0:
@@ -1578,8 +1577,6 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
                 if data.name == fig:
                     self._currentRow = i
                     break
-
-        print("Fig switched to", self.currentFigName)
 
         self.emitMetaInfo()
         self.emitRawXYConfig()  # update transpose button

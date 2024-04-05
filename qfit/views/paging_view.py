@@ -52,12 +52,6 @@ class PageView(QObject):
         """
         Initialize the view: connect the buttons to the corresponding slots.
         """
-        self.setEnabled(True, "setup")
-        self.setEnabled(False, "calibrate")
-        self.setEnabled(False, "extract")
-        self.setEnabled(False, "prefit")
-        self.setEnabled(False, "fit")
-
         for key, button in self.pageButtons.items():
             button.clicked.connect(lambda *args, key=key: self.switchToPage(key))
 

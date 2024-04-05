@@ -190,6 +190,9 @@ class IOCtrl(QObject):
         save_as : bool
             whether to save the project as a new file
         """
+        if not self.measDataSet.importFinished:
+            raise ValueError("Import is not finished.")
+
         # choose a home directory
         if self.mainWindow.projectFile is not None:
             home = os.path.dirname(self.mainWindow.projectFile)
@@ -224,7 +227,27 @@ class IOCtrl(QObject):
         self.registry.exportPkl(fileName)
 
     # quit / close ############################################################
-    def _closeAppAfterSaving(self) -> bool:
+    def _closeApp(self):
+        """
+        Close the window.
+        """
+        if settings.EXECUTED_IN_IPYTHON:
+            self.mainWindow.close()
+            self.mainWindow.deleteLater()
+            self.mainWindow.destroy()
+            # raise StopExecution
+        else:
+            sys.exit()
+
+    def _saveAndCloseApp(self, save_as: bool = False):
+        """Save the extracted data and calibration information to file, then exit the
+        application."""
+        success = self._saveProject(save_as=save_as)
+        if not success:
+            return
+        self._closeApp()
+
+    def closeAppAfterSaving(self) -> bool:
         """
         Close the app after asking the user whether to save the changes.
 
@@ -264,7 +287,7 @@ class IOCtrl(QObject):
         else:
             self.mainWindow.unsavedChanges = True
 
-        if self.mainWindow.unsavedChanges:
+        if self.mainWindow.unsavedChanges and self.measDataSet.importFinished:
             msgBox = QMessageBox()
             msgBox.setWindowTitle("qfit")
             msgBox.setIcon(QMessageBox.Question)
@@ -278,7 +301,7 @@ class IOCtrl(QObject):
             reply = msgBox.exec_()
 
             if reply == QMessageBox.Save:
-                self.saveAndCloseApp(save_as=self.mainWindow.projectFile is None)
+                self._saveAndCloseApp(save_as=self.mainWindow.projectFile is None)
                 return True
             elif reply == QMessageBox.Discard:
                 self._closeApp()
@@ -289,18 +312,6 @@ class IOCtrl(QObject):
         else:
             self._closeApp()
             return True
-
-    def _closeApp(self):
-        """
-        Close the window.
-        """
-        if settings.EXECUTED_IN_IPYTHON:
-            self.mainWindow.close()
-            self.mainWindow.deleteLater()
-            self.mainWindow.destroy()
-            # raise StopExecution
-        else:
-            sys.exit()
 
     # slots ###################################################################
     @Slot()
@@ -413,22 +424,13 @@ class IOCtrl(QObject):
         self.menu.toggle()
 
     @Slot()
-    def saveAndCloseApp(self, save_as: bool = False):
-        """Save the extracted data and calibration information to file, then exit the
-        application."""
-        success = self._saveProject(save_as=save_as)
-        if not success:
-            return
-        self._closeApp()
-
-    @Slot()
     def closeByMainWindow(self, event):
         """
         When user click the "x" button, mainWinow will emit the closeWindow
         signal and this function will be called. It will ask the user whether
         to save the changes before closing the app.
         """
-        status = self._closeAppAfterSaving()
+        status = self.closeAppAfterSaving()
 
         if status:
             event.accept()

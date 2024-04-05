@@ -563,6 +563,7 @@ class Ui_MainWindow(object):
 
         self.modeTagButton = QPushButton(self.menu_frame)
         self.modeTagButton.setObjectName(u"modeTagButton")
+        self.modeTagButton.setEnabled(False)
         self.modeTagButton.setMinimumSize(QSize(145, 70))
         self.modeTagButton.setMaximumSize(QSize(145, 70))
         self.modeTagButton.setFont(font1)
@@ -597,6 +598,7 @@ class Ui_MainWindow(object):
 
         self.modePrefitButton = QPushButton(self.menu_frame)
         self.modePrefitButton.setObjectName(u"modePrefitButton")
+        self.modePrefitButton.setEnabled(False)
         self.modePrefitButton.setMinimumSize(QSize(145, 70))
         self.modePrefitButton.setMaximumSize(QSize(145, 70))
         self.modePrefitButton.setFont(font1)
@@ -627,7 +629,7 @@ class Ui_MainWindow(object):
 
         self.modeSelectButton = QPushButton(self.menu_frame)
         self.modeSelectButton.setObjectName(u"modeSelectButton")
-        self.modeSelectButton.setEnabled(True)
+        self.modeSelectButton.setEnabled(False)
         self.modeSelectButton.setMinimumSize(QSize(145, 70))
         self.modeSelectButton.setMaximumSize(QSize(145, 70))
         self.modeSelectButton.setFont(font1)
@@ -666,6 +668,7 @@ class Ui_MainWindow(object):
 
         self.modeFitButton = QPushButton(self.menu_frame)
         self.modeFitButton.setObjectName(u"modeFitButton")
+        self.modeFitButton.setEnabled(False)
         self.modeFitButton.setMinimumSize(QSize(145, 70))
         self.modeFitButton.setMaximumSize(QSize(145, 70))
         self.modeFitButton.setFont(font1)
@@ -2544,7 +2547,7 @@ class Ui_MainWindow(object):
         self.fitScrollArea.setWidgetResizable(True)
         self.fitScrollAreaWidget = QWidget()
         self.fitScrollAreaWidget.setObjectName(u"fitScrollAreaWidget")
-        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 441, 468))
+        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 100, 30))
         self.verticalLayout_4 = QVBoxLayout(self.fitScrollAreaWidget)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)

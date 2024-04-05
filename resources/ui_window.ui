@@ -686,6 +686,9 @@ QPushButton:checked {
           </item>
           <item row="4" column="0" colspan="2">
            <widget class="QPushButton" name="modeTagButton">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="minimumSize">
              <size>
               <width>145</width>
@@ -759,6 +762,9 @@ QPushButton:disabled {
           </item>
           <item row="5" column="0" colspan="2">
            <widget class="QPushButton" name="modePrefitButton">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="minimumSize">
              <size>
               <width>145</width>
@@ -820,7 +826,7 @@ QPushButton:disabled {
           <item row="3" column="0" colspan="2">
            <widget class="QPushButton" name="modeSelectButton">
             <property name="enabled">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="minimumSize">
              <size>
@@ -914,6 +920,9 @@ QPushButton:disabled {
           </item>
           <item row="6" column="0">
            <widget class="QPushButton" name="modeFitButton">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="minimumSize">
              <size>
               <width>145</width>
@@ -4994,8 +5003,8 @@ icon: url(:/icons/svg/copy-pressed.svg);
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>441</width>
-                   <height>468</height>
+                   <width>100</width>
+                   <height>30</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">

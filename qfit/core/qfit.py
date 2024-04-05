@@ -460,6 +460,7 @@ class Fit:
         }
 
         self._measData = MeasDataSet(self._mainWindow)
+        self._menuUi = MenuWidget(self._mainWindow)
         self._importerView = ImporterView(
             self._mainWindow,
             self._metaInfo,
@@ -476,7 +477,7 @@ class Fit:
         self._measDataCtrl = MeasDataCtrl(
             self._mainWindow,
             (self._measData,),
-            (self._importerView, self._pageView, self._measDataView),
+            (self._importerView, self._pageView, self._measDataView, self._menuUi),
             self._replaceMeasData,
             self._dynamicalInit,
         )
@@ -692,7 +693,6 @@ class Fit:
 
     def _IOMVCInits(self):
         self._registry = Registry()
-        self._menuUi = MenuWidget(self._mainWindow)
         self._ioCtrl = IOCtrl(
             self._mainWindow,
             models = (self._measData, self._registry),

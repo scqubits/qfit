@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from qfit.views.importer_view import ImporterView
     from qfit.views.paging_view import PageView
     from qfit.views.meas_data_view import MeasDataView
+    from qfit.widgets.menu import MenuWidget
 
 
 class MeasDataCtrl(QObject):
@@ -18,13 +19,13 @@ class MeasDataCtrl(QObject):
         self,
         parent: QObject | None,
         models: Tuple["MeasDataSet"],
-        views: Tuple["ImporterView", "PageView", "MeasDataView"],
+        views: Tuple["ImporterView", "PageView", "MeasDataView", "MenuWidget"],
         fullReplaceMeasData: Callable[[List["MeasDataType"]], None],
         fullDynamicalInit: Callable[[], None],
     ) -> None:
         super().__init__(parent)
         (self.measDataSet,) = models
-        (self.importerView, self.pageView, self.measDataView) = views
+        (self.importerView, self.pageView, self.measDataView, self.menu) = views
         self.fullReplaceMeasData = fullReplaceMeasData
         self.fullDynamicalInit = fullDynamicalInit
 
@@ -75,6 +76,8 @@ class MeasDataCtrl(QObject):
         """
         Continue to the calibration page.
         """
+        self.measDataSet.importFinished = True
+
         self.fullReplaceMeasData(self.measDataSet.fullData)
         self.fullDynamicalInit()
 
@@ -86,6 +89,9 @@ class MeasDataCtrl(QObject):
         self.pageView.setEnabled(True, "extract")
         self.pageView.setEnabled(True, "prefit")
         self.pageView.setEnabled(True, "fit")
+
+        self.menu.ui.menuSaveButton.setEnabled(True)
+        self.menu.ui.menuSaveAsButton.setEnabled(True)
 
     def continueConnects(self) -> None:
         """

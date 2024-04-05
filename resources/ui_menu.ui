@@ -28,18 +28,19 @@ QPushButton {
 	background-color: rgb(18, 18, 18);
 	border: none;
 }
-
 QPushButton:hover {
 	background-color: rgb(52, 59, 72);
 }
 QPushButton:pressed {	
 	background-color: rgb(85, 170, 255);
 }
-
 QPushButton:checked {
 	border: 5px;
 	border-color: rgb(6, 50, 250);
 	border-right-style: inset;
+}
+QPushButton:disabled {	
+	color: rgb(60, 60, 60);
 }</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -60,6 +61,9 @@ QPushButton:checked {
    </property>
    <item>
     <widget class="QPushButton" name="menuNewButton">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -92,6 +96,9 @@ QPushButton:checked {
    </item>
    <item>
     <widget class="QPushButton" name="menuOpenButton">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -125,6 +132,9 @@ QPushButton:checked {
    </item>
    <item>
     <widget class="QPushButton" name="menuSaveButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -157,6 +167,9 @@ QPushButton:checked {
    </item>
    <item>
     <widget class="QPushButton" name="menuSaveAsButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
        <horstretch>0</horstretch>
