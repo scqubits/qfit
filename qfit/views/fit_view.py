@@ -34,6 +34,7 @@ class FitParamView(QObject):
     fitScrollAreaWidget : QWidget
         The widget that contains the fitting parameters.
     """
+
     HSEditingFinished = Signal(ParamAttr)
     CaliEditingFinished = Signal(ParamAttr)
 
@@ -66,13 +67,13 @@ class FitParamView(QObject):
         removeExisting: bool = True,
     ):
         """
-        Insert parameters to the table and each of the parameter 
+        Insert parameters to the table and each of the parameter
         is corresponding to a FittingParameterItems.
 
         Parameters
         ----------
         HSParamNames : Dict[str, List[str]]
-            The names of the fitting parameters for the HilbertSpace.  
+            The names of the fitting parameters for the HilbertSpace.
         caliParamNames : Dict[str, List[str]]
             The names of the fitting parameters for the calibration model.
         removeExisting : bool, optional
@@ -104,6 +105,10 @@ class FitParamView(QObject):
                 self.fitTableSet.insertParams(group_name, name)
 
         fitScrollLayout.addWidget(self.fitTableSet)
+
+        # temporary fix for the height of the row - after addWidget the
+        # row height were reset to 30 - don't know why
+        self.fitTableSet.setHeightOfRow()
 
         self._signalProcessing()
 
@@ -169,8 +174,9 @@ class FitParamView(QObject):
 
 class FitView(QObject):
     """
-    A view for the fit settings. 
+    A view for the fit settings.
     """
+
     def __init__(
         self,
         parent: QObject,

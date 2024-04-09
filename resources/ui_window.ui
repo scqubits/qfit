@@ -13,7 +13,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1334</width>
+    <width>1361</width>
     <height>802</height>
    </rect>
   </property>
@@ -104,14 +104,14 @@ QScrollBar:horizontal {
 }
 
 QScrollBar::handle:horizontal {
-    background: rgb(85, 170, 255);
+    background: #64568e;
     min-width: 20px;
 	border-radius: 5px
 }
 
 QScrollBar::add-line:horizontal {
     border: none;
-    background: rgb(55, 63, 77);
+    background: #3b3940;
     width: 20px;
 	border-top-right-radius: 7px;
     border-bottom-right-radius: 7px;
@@ -121,7 +121,7 @@ QScrollBar::add-line:horizontal {
 
 QScrollBar::sub-line:horizontal {
     border: none;
-    background: rgb(55, 63, 77);
+    background: #3b3940;
     width: 20px;
 	border-top-left-radius: 7px;
     border-bottom-left-radius: 7px;
@@ -399,30 +399,6 @@ QComboBox QAbstractItemView {
 QComboBox QAbstractItemView::item{
     height: 50px;
 }
-
-/*
-QHeaderView::section{
-	Background-color: rgb(39, 44, 54);
-	max-width: 30px;
-	border: 1px solid rgb(44, 49, 60);
-	border-style: none;
-    border-bottom: 1px solid rgb(44, 49, 60);
-    border-right: 1px solid rgb(44, 49, 60);
-}
-
-QHeaderView::section:horizontal
-{
-    border: 1px solid rgb(32, 34, 42);
-	background-color: rgb(27, 29, 35);
-	padding: 3px;
-	border-top-left-radius: 7px;
-    border-top-right-radius: 7px;
-}
-QHeaderView::section:vertical
-{
-    border: 1px solid rgb(44, 49, 60);
-}
-*/
 
 ListView
 {
@@ -1669,7 +1645,7 @@ QPushButton:checked {
                       <x>0</x>
                       <y>0</y>
                       <width>186</width>
-                      <height>177</height>
+                      <height>180</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_19"/>
@@ -1688,7 +1664,7 @@ QPushButton:checked {
                     <string>Y   [select one only]</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -1704,7 +1680,7 @@ QPushButton:checked {
                     <string>X   [select at least one]</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -1746,7 +1722,7 @@ QPushButton:checked {
                       <x>0</x>
                       <y>0</y>
                       <width>188</width>
-                      <height>179</height>
+                      <height>182</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_18"/>
@@ -2285,8 +2261,15 @@ background-color: #4B4B4B;
               </item>
               <item>
                <widget class="QScrollArea" name="calibrateXScrollArea">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>250</height>
+                 </size>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">background-color: rgb(33,33,33);</string>
+                 <string notr="true">background-color: rgb(33,33,33);
+border: None;</string>
                 </property>
                 <property name="widgetResizable">
                  <bool>true</bool>
@@ -2296,9 +2279,15 @@ background-color: #4B4B4B;
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>439</width>
-                   <height>180</height>
+                   <width>441</width>
+                   <height>250</height>
                   </rect>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_5"/>
                 </widget>
@@ -2970,6 +2959,12 @@ QPushButton:checked {
                         <height>30</height>
                        </size>
                       </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>86</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
                       <property name="font">
                        <font>
                         <family>Roboto Medium</family>
@@ -3010,7 +3005,7 @@ icon: url(:/icons/svg/plus-pressed.svg);
                     <item>
                      <widget class="QPushButton" name="clearAllButton">
                       <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
@@ -4197,8 +4192,8 @@ QPushButton: pressed{
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>441</width>
+                   <height>390</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -4296,8 +4291,8 @@ border-bottom-right-radius: 6px;	</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>60</height>
+                   <width>446</width>
+                   <height>100</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_16"/>
@@ -5301,108 +5296,8 @@ QPushButton:checked {
                  <number>12</number>
                 </property>
                 <property name="horizontalSpacing">
-                 <number>17</number>
+                 <number>20</number>
                 </property>
-                <item row="1" column="6">
-                 <widget class="QLabel" name="label_37">
-                  <property name="font">
-                   <font>
-                    <family>Roboto Medium</family>
-                    <pointsize>-1</pointsize>
-                   </font>
-                  </property>
-                  <property name="styleSheet">
-                   <string notr="true">color: #DDDDDD; background-color: transparent;</string>
-                  </property>
-                  <property name="text">
-                   <string>X-snap</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="6">
-                 <widget class="QPushButton" name="horizontalSnapButton">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>40</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                  <property name="toolTip">
-                   <string notr="true">Dataset snapping: align the x-coordinates for datasets</string>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="resources.qrc">
-                    <normaloff>:/icons/svg/x-snap.svg</normaloff>
-                    <normalon>:/icons/svg/x-snap-on.svg</normalon>:/icons/svg/x-snap.svg</iconset>
-                  </property>
-                  <property name="iconSize">
-                   <size>
-                    <width>21</width>
-                    <height>24</height>
-                   </size>
-                  </property>
-                  <property name="checkable">
-                   <bool>true</bool>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                  <property name="autoExclusive">
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="3">
-                 <widget class="QLabel" name="label_34">
-                  <property name="styleSheet">
-                   <string notr="true">color: #DDDDDD; background-color: transparent;</string>
-                  </property>
-                  <property name="text">
-                   <string>Zoom</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="2">
-                 <widget class="QLabel" name="label_27">
-                  <property name="styleSheet">
-                   <string notr="true">color: #DDDDDD; background-color: transparent;</string>
-                  </property>
-                  <property name="text">
-                   <string>Pan</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="4">
-                 <widget class="QLabel" name="label_36">
-                  <property name="styleSheet">
-                   <string notr="true">color: #DDDDDD; background-color: transparent;</string>
-                  </property>
-                  <property name="text">
-                   <string>Extract</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignCenter</set>
-                  </property>
-                 </widget>
-                </item>
                 <item row="0" column="3">
                  <widget class="QPushButton" name="zoomViewButton">
                   <property name="sizePolicy">
@@ -5438,6 +5333,237 @@ QPushButton:checked {
                    </size>
                   </property>
                   <property name="checkable">
+                   <bool>true</bool>
+                  </property>
+                  <property name="autoExclusive">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="8">
+                 <widget class="QPushButton" name="verticalSnapButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>40</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                  <property name="toolTip">
+                   <string notr="true">Peak snapping: Locate the nearby peak along y axis</string>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="resources.qrc">
+                    <normaloff>:/icons/svg/y-snap.svg</normaloff>
+                    <normalon>:/icons/svg/y-snap-on.svg</normalon>:/icons/svg/y-snap.svg</iconset>
+                  </property>
+                  <property name="iconSize">
+                   <size>
+                    <width>23</width>
+                    <height>28</height>
+                   </size>
+                  </property>
+                  <property name="checkable">
+                   <bool>true</bool>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                  <property name="autoExclusive">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QPushButton" name="resetViewButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>40</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                  <property name="toolTip">
+                   <string notr="true">Reset plot area</string>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="resources.qrc">
+                    <normaloff>:/icons/svg/reset.svg</normaloff>:/icons/svg/reset.svg</iconset>
+                  </property>
+                  <property name="iconSize">
+                   <size>
+                    <width>20</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="8">
+                 <widget class="QLabel" name="label_35">
+                  <property name="styleSheet">
+                   <string notr="true">color: #DDDDDD; background-color: transparent;</string>
+                  </property>
+                  <property name="text">
+                   <string>Y-Snap</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QLabel" name="label_51">
+                  <property name="minimumSize">
+                   <size>
+                    <width>2</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>2</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">background-color: #4B4B4B</string>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="9">
+                 <spacer name="horizontalSpacer_8">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeType">
+                   <enum>QSizePolicy::MinimumExpanding</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>10</width>
+                    <height>10</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item row="1" column="4">
+                 <widget class="QLabel" name="label_36">
+                  <property name="styleSheet">
+                   <string notr="true">color: #DDDDDD; background-color: transparent;</string>
+                  </property>
+                  <property name="text">
+                   <string>Extract</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="3">
+                 <widget class="QLabel" name="label_34">
+                  <property name="styleSheet">
+                   <string notr="true">color: #DDDDDD; background-color: transparent;</string>
+                  </property>
+                  <property name="text">
+                   <string>Zoom</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="5">
+                 <widget class="QLabel" name="label_50">
+                  <property name="minimumSize">
+                   <size>
+                    <width>2</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>2</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">background-color: #4B4B4B</string>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="2">
+                 <widget class="QLabel" name="label_27">
+                  <property name="styleSheet">
+                   <string notr="true">color: #DDDDDD; background-color: transparent;</string>
+                  </property>
+                  <property name="text">
+                   <string>Pan</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="4">
+                 <widget class="QPushButton" name="selectViewButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>40</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                  <property name="cursor">
+                   <cursorShape>ArrowCursor</cursorShape>
+                  </property>
+                  <property name="toolTip">
+                   <string notr="true">Extract mode: Click to extract peaks</string>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="resources.qrc">
+                    <normaloff>:/icons/svg/extract.svg</normaloff>
+                    <normalon>:/icons/svg/extract-on.svg</normalon>:/icons/svg/extract.svg</iconset>
+                  </property>
+                  <property name="iconSize">
+                   <size>
+                    <width>20</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                  <property name="checkable">
+                   <bool>true</bool>
+                  </property>
+                  <property name="checked">
                    <bool>true</bool>
                   </property>
                   <property name="autoExclusive">
@@ -5490,6 +5616,48 @@ QPushButton:checked {
                   </property>
                  </widget>
                 </item>
+                <item row="0" column="6">
+                 <widget class="QPushButton" name="horizontalSnapButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>40</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                  <property name="toolTip">
+                   <string notr="true">Dataset snapping: align the x-coordinates for datasets</string>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="resources.qrc">
+                    <normaloff>:/icons/svg/x-snap.svg</normaloff>
+                    <normalon>:/icons/svg/x-snap-on.svg</normalon>:/icons/svg/x-snap.svg</iconset>
+                  </property>
+                  <property name="iconSize">
+                   <size>
+                    <width>21</width>
+                    <height>24</height>
+                   </size>
+                  </property>
+                  <property name="checkable">
+                   <bool>true</bool>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                  <property name="autoExclusive">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
                 <item row="1" column="0">
                  <widget class="QLabel" name="label_9">
                   <property name="font">
@@ -5510,73 +5678,6 @@ QPushButton:checked {
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="8">
-                 <widget class="QLabel" name="label_35">
-                  <property name="styleSheet">
-                   <string notr="true">color: #DDDDDD; background-color: transparent;</string>
-                  </property>
-                  <property name="text">
-                   <string>Y-Snap</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="0">
-                 <widget class="QPushButton" name="resetViewButton">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>40</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                  <property name="toolTip">
-                   <string notr="true">Reset plot area</string>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="resources.qrc">
-                    <normaloff>:/icons/svg/reset.svg</normaloff>:/icons/svg/reset.svg</iconset>
-                  </property>
-                  <property name="iconSize">
-                   <size>
-                    <width>20</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QLabel" name="label_51">
-                  <property name="minimumSize">
-                   <size>
-                    <width>2</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>2</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="styleSheet">
-                   <string notr="true">background-color: #4B4B4B</string>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                 </widget>
-                </item>
                 <item row="0" column="10" rowspan="2">
                  <widget class="QPushButton" name="calibratedCheckBox">
                   <property name="sizePolicy">
@@ -5588,13 +5689,13 @@ QPushButton:checked {
                   <property name="minimumSize">
                    <size>
                     <width>150</width>
-                    <height>50</height>
+                    <height>65</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
                     <width>200</width>
-                    <height>50</height>
+                    <height>65</height>
                    </size>
                   </property>
                   <property name="font">
@@ -5607,12 +5708,12 @@ QPushButton:checked {
                   <property name="styleSheet">
                    <string notr="true">QPushButton {
 color: #DDDDDD;
-background-color: transparent;
+background-color: #2A2A2A;
 font-size: 14px;
 }
 
 QPushButton::checked {
-background-color: transparent;
+background-color: #2A2A2A;
 }
 
 </string>
@@ -5638,130 +5739,24 @@ Axes</string>
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="4">
-                 <widget class="QPushButton" name="selectViewButton">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>40</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                  <property name="cursor">
-                   <cursorShape>ArrowCursor</cursorShape>
-                  </property>
-                  <property name="toolTip">
-                   <string notr="true">Extract mode: Click to extract peaks</string>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="resources.qrc">
-                    <normaloff>:/icons/svg/extract.svg</normaloff>
-                    <normalon>:/icons/svg/extract-on.svg</normalon>:/icons/svg/extract.svg</iconset>
-                  </property>
-                  <property name="iconSize">
-                   <size>
-                    <width>20</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                  <property name="checkable">
-                   <bool>true</bool>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                  <property name="autoExclusive">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="8">
-                 <widget class="QPushButton" name="verticalSnapButton">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>40</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                  <property name="toolTip">
-                   <string notr="true">Peak snapping: Locate the nearby peak along y axis</string>
-                  </property>
-                  <property name="text">
-                   <string/>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="resources.qrc">
-                    <normaloff>:/icons/svg/y-snap.svg</normaloff>
-                    <normalon>:/icons/svg/y-snap-on.svg</normalon>:/icons/svg/y-snap.svg</iconset>
-                  </property>
-                  <property name="iconSize">
-                   <size>
-                    <width>23</width>
-                    <height>28</height>
-                   </size>
-                  </property>
-                  <property name="checkable">
-                   <bool>true</bool>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                  <property name="autoExclusive">
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="5">
-                 <widget class="QLabel" name="label_50">
-                  <property name="minimumSize">
-                   <size>
-                    <width>2</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>2</width>
-                    <height>16777215</height>
-                   </size>
+                <item row="1" column="6">
+                 <widget class="QLabel" name="label_37">
+                  <property name="font">
+                   <font>
+                    <family>Roboto Medium</family>
+                    <pointsize>-1</pointsize>
+                   </font>
                   </property>
                   <property name="styleSheet">
-                   <string notr="true">background-color: #4B4B4B</string>
+                   <string notr="true">color: #DDDDDD; background-color: transparent;</string>
                   </property>
                   <property name="text">
-                   <string/>
+                   <string>X-Snap</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
                   </property>
                  </widget>
-                </item>
-                <item row="0" column="9">
-                 <spacer name="horizontalSpacer_8">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeType">
-                   <enum>QSizePolicy::MinimumExpanding</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>10</width>
-                    <height>10</height>
-                   </size>
-                  </property>
-                 </spacer>
                 </item>
                </layout>
               </widget>
@@ -5878,8 +5873,13 @@ QTabBar::tab {
     background: #171717;
 	border-left: 2px solid #4B4B4B;
 	border-right: 2px solid #4B4B4B;
+	border-bottom: 2px solid #4B4B4B;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
     min-width: 2ex;
-    padding: 20px;
+	padding: 10px;
+	padding-left: 10px;
+	padding-right: 10px;
 }
 
 QTabBar::tab:selected {
@@ -5891,6 +5891,10 @@ QTabBar::tab:selected {
 QTabBar::tab:!selected {
 	font: 13px &quot;Roboto Medium&quot;;
     color: #797979;
+	margin-bottom: 4px; 
+	border-left: 1px solid #2A2A2A;
+	border-right: 1px solid #2A2A2A;
+	border-bottom: 1px solid #2A2A2A;
 }</string>
                   </property>
                   <property name="tabPosition">

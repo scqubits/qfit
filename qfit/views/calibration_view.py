@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QFrame,
     QLabel,
+    QSizePolicy,
 )
 
 from qfit.widgets.validated_line_edits import FloatLineEdit
@@ -51,6 +52,7 @@ class CalibrationView(QObject):
 
     caliStatusChangedByButtonClicked = Signal(object)
     dataEditingFinished = Signal(ParamAttr)
+    clearDataSource = Signal(ParamAttr)
     caliViewRawVecUpdatedForSwapXY = Signal()
     _virtualButton: QPushButton
 
@@ -61,6 +63,7 @@ class CalibrationView(QObject):
     rawXVecNameList: List[str]
     rawYName: str
     lineEditSet: Dict[str, Dict[str, "CalibrationLineEdit"]]
+    XDataSourceSet: Dict[str, Dict[str, QLabel]]
     rowIdxToButtonGroupId: Dict[str, int]
     buttonGroupIdToRowIdx: Dict[int, str]
 
@@ -91,6 +94,7 @@ class CalibrationView(QObject):
         self.mapYLineEdits = mapYLineEdits
         self.caliYButtons = caliYButtons
         self.lineEditSet = {}
+        self.XDataSourceSet = {}
         self._previousCheckedButtonIdx = None
         self.caliXScrollAreaWidget = caliXScrollAreaWidget
         self.caliXFrame = caliXFrame
@@ -175,9 +179,20 @@ class CalibrationView(QObject):
         # insert parameters
         for rowIdx in range(self.caliTableXRowNr):
             self.caliXTable.insertParams("X", f"X{rowIdx+1}")
+        # sizepolicy = self.caliXTable.sizePolicy()
+        # sizepolicy.setVerticalPolicy(QSizePolicy.Fixed)
+        # self.caliXTable.setSizePolicy(sizepolicy)
 
         # add the table to the scroll area
         self.caliXScrollLayout.addWidget(self.caliXTable)
+
+        # temporary fix for the height of the row - after addWidget the
+        # row height were reset to 30 - don't know why
+        self.caliXTable.setHeightOfRow()
+        # hide the group line
+        self.caliXTable.hideGroupLine()
+        # adjust size of the scroll area to the content
+        self.caliXScrollAreaWidget.setMinimumHeight(self.caliXTable.sizeHint().height())
 
         # set calibration button group
         self.caliButtonGroup = QButtonGroup()
@@ -189,12 +204,40 @@ class CalibrationView(QObject):
                     XParamItems.extractRawPushButton,
                     self.rowIdxToButtonGroupId[XRowIdx],
                 )
+                # set stylesheet for each button
+                XParamItems.extractRawPushButton.setStyleSheet(
+                    """
+                    QPushButton {
+                    background-color: #4B4B4B;
+                    border-radius: 5px;	
+                    icon: url(:/icons/svg/target.svg);
+                    icon-size: 16px;
+                    }\n
+                    QPushButton:pressed {
+                    background-color: #363636;
+                    icon: url(:/icons/svg/target-pressed.svg)
+                    }\n
+                    QPushButton:checked {
+                    background-color: #5C3F83;
+                    }"""
+                )
+                # set push button size
+                XParamItems.extractRawPushButton.setMinimumSize(28, 28)
+                XParamItems.extractRawPushButton.setMaximumSize(28, 28)
+                # set size policy to fixed
+                sizePolicy = XParamItems.extractRawPushButton.sizePolicy()
+                sizePolicy.setHorizontalPolicy(QSizePolicy.Fixed)
+                sizePolicy.setVerticalPolicy(QSizePolicy.Fixed)
+                # set checkable and checked
+                XParamItems.extractRawPushButton.setCheckable(True)
+                XParamItems.extractRawPushButton.setChecked(False)
         for YRowIdx, button in self.caliYButtons.items():
             self.caliButtonGroup.addButton(button, self.rowIdxToButtonGroupId[YRowIdx])
         self.caliButtonGroup.setExclusive(False)
 
         # generate a set for all line edits
         self._generateLineEditSet()
+        self._generateXDataSourceSet()
 
         # connects
         self._setupEditingFinishedSignalEmit()
@@ -209,25 +252,28 @@ class CalibrationView(QObject):
         class XParamItems(WidgetCollection):
             rawXVecNameList = self.rawXVecNameList
             sweepParamCombinedNames = self.sweepParamCombinedNames
-            columns = ["EXTRACT RAW"]
+            columns = ["EXTRACT<br>RAW"]
             for rawXVecName in rawXVecNameList:
                 columns.append(rawXVecName)
             for sweepParamName in sweepParamCombinedNames:
                 columns.append(sweepParamName)
-            columns.append("DATA SOURCE")
+            columns.append("DATA<br>SOURCE")
             # column background colors
-            columnBackgroundColors = {
-                "EXTRACT RAW": None,
-                "DATA SOURCE": None,
+            columnBackgroundColors: Dict[str, None | str] = {
+                "EXTRACT<br>RAW": None,
             }
-            for rawXVecName in rawXVecNameList:
-                columnBackgroundColors[rawXVecName] = None
-            for sweepParamName in sweepParamCombinedNames:
-                columnBackgroundColors[sweepParamName] = None
+
+            for idx, rawXVecName in enumerate(
+                rawXVecNameList + sweepParamCombinedNames
+            ):
+                columnBackgroundColors[rawXVecName] = (
+                    "#292929" if idx % 2 == 0 else "#363636"
+                )
+            columnBackgroundColors["DATA<br>SOURCE"] = None
             # column widths
             columnWidths = {
-                "EXTRACT RAW": 100,
-                "DATA SOURCE": 100,
+                "EXTRACT<br>RAW": 100,
+                "DATA<br>SOURCE": 100,
             }
             for rawXVecName in rawXVecNameList:
                 columnWidths[rawXVecName] = 100
@@ -238,10 +284,27 @@ class CalibrationView(QObject):
             def __init__(self, parent, name: str):
                 super().__init__(parent, name)
                 self.extractRawPushButton = QPushButton()
+                # set style sheet
+                self.extractRawPushButton.setStyleSheet(
+                    """
+                    QPushButton {
+                    background-color: #4B4B4B;
+                    border-radius: 5px;	
+                    icon: url(:/icons/svg/target.svg)
+                    }\n
+                    QPushButton:pressed {
+                    background-color: #363636;
+                    icon: url(:/icons/svg/target-pressed.svg)
+                    }\n
+                    QPushButton:checked {
+                    background-color: #5C3F83;
+                    }"""
+                )
+
                 self.dataSourceLabel = QLabel()
                 self.entriesDict = {
-                    "EXTRACT RAW": self.extractRawPushButton,
-                    "DATA SOURCE": self.dataSourceLabel,
+                    "EXTRACT<br>RAW": self.extractRawPushButton,
+                    "DATA<br>SOURCE": self.dataSourceLabel,
                 }
                 for rawXVecName in self.rawXVecNameList:
                     self.entriesDict[rawXVecName] = CalibrationLineEdit()
@@ -285,10 +348,6 @@ class CalibrationView(QObject):
                         sweepParamCombinedName
                     ]
                 )
-            # self.lineEditSet[f"X{XRowIdx+1}"]["dataSource"] = self.caliXTable["X"][
-            #     f"X{XRowIdx+1}"
-            # ].entriesDict["DATA SOURCE"]
-        # for Y1 and Y2, create a dict for raw and mapped vectors to line edits
         self.lineEditSet["Y1"] = {
             self.rawYName: self.rawYLineEdits["Y1"],
             "mappedY": self.mapYLineEdits["Y1"],
@@ -297,6 +356,17 @@ class CalibrationView(QObject):
             self.rawYName: self.rawYLineEdits["Y2"],
             "mappedY": self.mapYLineEdits["Y2"],
         }
+
+    def _generateXDataSourceSet(self):
+        if self.XDataSourceSet != {}:
+            for XRowIdx in range(self.caliTableXRowNr):
+                self.XDataSourceSet[f"X{XRowIdx+1}"]["DATA<br>SOURCE"].setText("")
+            self.XDataSourceSet.clear()
+        for XRowIdx in range(self.caliTableXRowNr):
+            self.XDataSourceSet[f"X{XRowIdx+1}"] = {}
+            self.XDataSourceSet[f"X{XRowIdx+1}"]["DATA<br>SOURCE"] = self.caliXTable[
+                "X"
+            ][f"X{XRowIdx+1}"].entriesDict["DATA<br>SOURCE"]
 
     def _generateRowIdxToButtonGroupIdDict(self):
         """
@@ -337,18 +407,31 @@ class CalibrationView(QObject):
                         ParamAttr(rowIdx, compName, "value", lineEdit.text())
                     )
                 )
+            # in addition, if the raw X is modified by the user, then the data source
+            # should be cleared
+            if rowIdx[0] == "X":
+                for compName in self.rawXVecNameList:
+                    lineEdit = self.lineEditSet[rowIdx][compName]
+                    self.XDataSourceSet[rowIdx]["DATA<br>SOURCE"].setText("")
+                    lineEdit.editingFinished.connect(
+                        lambda rowIdx=rowIdx: self.clearDataSource.emit(
+                            ParamAttr(rowIdx, "DATA<br>SOURCE", "value", "")
+                        )
+                    )
 
     @Slot(ParamAttr)
     def setBoxValue(self, paramAttr: ParamAttr):
         """
         Update the view when the model emits the signal to update the view.
         """
-        # if dataSource, no such view available currently
-        if paramAttr.name == "dataSource":
-            return
+
         rowIdx = paramAttr.parentName
         colName = paramAttr.name
-        widget: QObject = self.lineEditSet[rowIdx][colName]
+        # if dataSource, the widget is the
+        if paramAttr.name == "DATA<br>SOURCE":
+            widget: QObject = self.XDataSourceSet[rowIdx][colName]
+        else:
+            widget: QObject = self.lineEditSet[rowIdx][colName]
         widget.setText(paramAttr.value)
 
     @Slot(int)
@@ -375,12 +458,15 @@ class CalibrationView(QObject):
 
     @Slot()
     def uncheckAllCaliButtons(self):
-        for button in self.caliYButtons.values():
+        for button in self.caliButtonGroup.buttons():
             button.setChecked(False)
         self._previousCheckedButtonIdx = None
 
     def calibrationStatus(self):
         for calibrationLabel, button in self.caliYButtons.items():
+            if button.isChecked():
+                return calibrationLabel
+        for calibrationLabel, button in self.caliXButtons.items():
             if button.isChecked():
                 return calibrationLabel
         return False
@@ -419,6 +505,7 @@ class CalibrationView(QObject):
         self.rawXVecNameList, self.rawYName = [self.rawYName], self.rawXVecNameList[0]
         # regenerate calibration table set
         self._generateLineEditSet()
+        self._generateXDataSourceSet()
         # re setup the signal emitting
         self._setupEditingFinishedSignalEmit()
         self.caliViewRawVecUpdatedForSwapXY.emit()

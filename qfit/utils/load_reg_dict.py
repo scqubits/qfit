@@ -116,7 +116,7 @@ def _parseMeasData10x_20x(measData: "MeasDataType"):
 
 def _parseCalibParam10x_20x(caliParams: Dict[str, Dict[str, "CaliTableRowParam"]]):
     nameMap = [
-        ("pointPairSource", "dataSource"),
+        ("pointPairSource", "DATA<br>SOURCE"),
     ]
 
     for parent, caliDict in caliParams.items():

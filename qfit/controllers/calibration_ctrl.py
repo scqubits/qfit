@@ -140,6 +140,9 @@ class CalibrationCtrl(QObject):
         self.calibrationView.dataEditingFinished.connect(
             self.caliParamModel.storeParamAttr
         )
+        self.calibrationView.clearDataSource.connect(
+            self.caliParamModel.clearDataSourceInModel
+        )
 
         # calibration model --> calibration view (updatebox signal)
         self.caliParamModel.updateBox.connect(self.calibrationView.setBoxValue)
