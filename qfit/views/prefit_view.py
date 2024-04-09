@@ -182,6 +182,10 @@ class PrefitParamView(QObject):
         self.foldable_widget = FoldableWidget("RANGES OF SLIDERS", self.minMaxTable)
         prefitMinmaxScrollLayout.addWidget(self.foldable_widget)
 
+        # temporary fix for the height of the row - after addWidget the
+        # row height were reset to 30 - don't know why
+        self.minMaxTable.setHeightOfRow()
+
         # default to fold the table
         self.foldable_widget.toggle()
 

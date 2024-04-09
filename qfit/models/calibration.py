@@ -282,7 +282,7 @@ class CaliParamModel(
             # insert the point pair source
             if self.isFullCalibration:
                 self._insertParamByArgs(
-                    colName="dataSource",
+                    colName="DATA<br>SOURCE",
                     rowName=XRowIdxName,
                     paramType="data_source",
                     parentSystemName=None,
@@ -292,7 +292,7 @@ class CaliParamModel(
             else:
                 # value is the figure name
                 self._insertParamByArgs(
-                    colName="dataSource",
+                    colName="DATA<br>SOURCE",
                     rowName=XRowIdxName,
                     paramType="data_source",
                     parentSystemName=None,
@@ -321,7 +321,7 @@ class CaliParamModel(
                 parentSystemName=None,
             )
             self._insertParamByArgs(
-                colName="dataSource",
+                colName="DATA<br>SOURCE",
                 rowName=YRowIdxName,
                 paramType="data_source",
                 sweepParamName=None,
@@ -817,7 +817,7 @@ class CaliParamModel(
             self._xRowIdxBySourceDict[fig] = [
                 XRowIdx
                 for XRowIdx in self._caliTableXRowIdxList
-                if fig == self[XRowIdx]["dataSource"].value
+                if fig == self[XRowIdx]["DATA<br>SOURCE"].value
             ]
 
     def setParameter(
@@ -888,7 +888,7 @@ class CaliParamModel(
                 )
             # update source for the point pair
             self.setParameter(
-                rowIdx=caliLabel, colName="dataSource", attr="value", value=figName
+                rowIdx=caliLabel, colName="DATA<br>SOURCE", attr="value", value=figName
             )
             self.plotCaliPtExtractFinished.emit(caliLabel, data)
             self.caliStatus = False
@@ -905,9 +905,9 @@ class CaliParamModel(
             self.plotCaliPtExtractInterrupted.emit()
 
     def _registrySetter(
-        self, 
+        self,
         value: Dict[str, Dict[str, CaliTableRowParam]],
-        paramSet: ParamSet[CaliTableRowParam]
+        paramSet: ParamSet[CaliTableRowParam],
     ):
         """
         Set the parameter set by the value from the registry.
@@ -977,6 +977,13 @@ class CaliParamModel(
                         self[paramAttr.parentName][paramAttr.name].value,
                     )
                 )
+
+    @Slot()
+    def clearDataSourceInModel(self, paramAttr: ParamAttr):
+        """
+        Clear the data source in the model.
+        """
+        self.setParameter(paramAttr.parentName, paramAttr.name, paramAttr.attr, None)
 
     def updateCaliModelRawVecNameListForSwapXY(self):
         """
@@ -1064,8 +1071,8 @@ class CaliParamModel(
         """
         for rowIdx, colDict in self.parameters.items():
             for colName, param in colDict.items():
-                if param.paramType not in ["data_source"]:
-                    self.emitUpdateBox(rowIdx, colName, "value")
+                # if param.paramType not in ["data_source"]:
+                self.emitUpdateBox(rowIdx, colName, "value")
 
     # signals ==========================================================
     def emitUpdateBox(
