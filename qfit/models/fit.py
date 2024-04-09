@@ -680,7 +680,6 @@ class FitRunner(QRunnable):
         the optimization result.
         """
         try:
-            print(self.initParam)
             traj = self.opt.run(init_x=self.initParam, callback=self.callback)
             self.signalHost.optFinished.emit(traj)
         except Exception as e:

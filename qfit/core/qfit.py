@@ -230,7 +230,8 @@ class Fit:
         ----------
         deepcope: bool
             If True, a deepcopy of the HilbertSpace object is returned.
-            If False, the original HilbertSpace object is returned.
+            If False, the original HilbertSpace object is returned. Either of 
+            them is updated with the latest parameters.
         fromFit: bool
             As we have two copies of parameters, one from prefit sliders and one from fit tables, please specify which one to export.
         """

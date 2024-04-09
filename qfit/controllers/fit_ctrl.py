@@ -249,7 +249,8 @@ class FitCtrl(QObject):
         self.fitView.setEnabled(enabled)
         self.prefitParamView.sliderSet.setEnabled(enabled)
         self.prefitView.setEnabled(enabled)
-        self.pageView.setEnabled(enabled)
+        for page in ["calibrate", "extract", "prefit", "fit"]:
+            self.pageView.setEnabled(enabled, page)
 
         # if not blocking the signal, the fit computation time will be
         # significantly longer
