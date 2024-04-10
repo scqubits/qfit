@@ -22,10 +22,12 @@ from qfit.models.data_structures import Tag, SpectrumElement, Status
 
 from typing import Dict, List, Tuple, Union, Callable, Any, Literal, Optional
 
+# scq.settings.MULTIPROC = "multiprocessing"
+
 
 class QuantumModel(QObject):
     """
-    QuantumModel updates the HilbertSpace object, the extracted data, the calibration data and 
+    QuantumModel updates the HilbertSpace object, the extracted data, the calibration data and
     the sweep options whenever they are updated. Using these ingedients,
     QuantumModel generates a ParameterSweep object and calculates the
     mean square error between the extracted data and the simulated data.
@@ -39,6 +41,7 @@ class QuantumModel(QObject):
     ----------
     parent: QObject
     """
+
     _sweeps: Dict[str, ParameterSweep]
 
     readyToPlot = Signal(SpectrumElement)
@@ -147,10 +150,10 @@ class QuantumModel(QObject):
         Switch the current figure name.
         """
         if figName not in self._figNames:
-            # this happens in the data importing stage, where the model is 
+            # this happens in the data importing stage, where the model is
             # not fully initialized by the measurement data
-            return 
-        
+            return
+
         self._currentFigName = figName
         self.updateCalc(forced=True)
 
@@ -186,15 +189,15 @@ class QuantumModel(QObject):
     @Slot(dict)
     def updateRawXMap(self, rawXByX: Dict[str, Callable[[float], Dict[str, float]]]):
         """
-        Update the rawXByX dictionary. For each figure, there is a function 
+        Update the rawXByX dictionary. For each figure, there is a function
         which maps the extracted x coordinate
-        to the raw x (all of the control knobs) coordinates. 
+        to the raw x (all of the control knobs) coordinates.
 
         Parameters
         ----------
         rawXByX: Dict[str, Callable[[float], Dict[str, float]]]
             Key: figure name
-            Value: a function that maps the extracted x coordinate to the raw x 
+            Value: a function that maps the extracted x coordinate to the raw x
             coordinate
         """
         self._rawXByX = rawXByX
@@ -223,10 +226,10 @@ class QuantumModel(QObject):
         Parameters
         ----------
         yCaliFunc: Callable
-            The calibration function that maps the raw y to the calibrated 
+            The calibration function that maps the raw y to the calibrated
             y.
         invYCaliFunc: Callable
-            The inverse calibration function that maps the calibrated y to the 
+            The inverse calibration function that maps the calibrated y to the
             raw y.
         """
         self._yCaliFunc = yCaliFunc
@@ -345,7 +348,7 @@ class QuantumModel(QObject):
             subsystems = None
         else:
             subsystems = self._subsysToPlot
-            
+
         highlight_specdata = self._currentSweep.transitions(
             as_specdata=True,
             subsystems=subsystems,
@@ -442,7 +445,7 @@ class QuantumModel(QObject):
     def _prefitSweptX(self, addPoints: bool = True) -> Dict[str, np.ndarray]:
         """
         Generate a list of x coordinates for the prefit. The x coordinates are
-        currently made of 
+        currently made of
         1. a uniformly distributed list of x coordinates in
         between the min and max of the x-coordinates of the extracted data
         2. the x-coordinates of the extracted data.
@@ -509,15 +512,15 @@ class QuantumModel(QObject):
         ----------
         sweptX: Dict[str, np.ndarray]
             Key: figure name
-            Value: a list of x coordinates for sweeping, which is a direct 
+            Value: a list of x coordinates for sweeping, which is a direct
             argument to the ParameterSweep object.
         updateHS: Dict[str, Callable[[float], None]]
             Key: figure name
-            Value: a function that updates the HilbertSpace object, which 
+            Value: a function that updates the HilbertSpace object, which
             is a direct argument to the ParameterSweep object.
         subsysUpdateInfo: Dict[str, List]
             Key: figure name
-            Value: a list of subsystems that need to be updated when the 
+            Value: a list of subsystems that need to be updated when the
             x-coordinate is changed, which is a direct argument to the
             ParameterSweep object.
 
@@ -614,9 +617,7 @@ class QuantumModel(QObject):
                     self.updateStatus.emit(status)
 
     def _runSweepInThread(
-        self, 
-        forced: bool = False, 
-        sweepUsage: str = "prefit"
+        self, forced: bool = False, sweepUsage: str = "prefit"
     ) -> None:
         """
         Run sweep in a separate thread. After finished, _postSweepInThread
@@ -678,9 +679,9 @@ class QuantumModel(QObject):
     @Slot(bool, str)
     def sweep2SpecMSE(self, forced: bool = False, sweepUsage: str = "prefit") -> float:
         """
-        Given the existing sweeps, calculate and emit the spectrum and the 
+        Given the existing sweeps, calculate and emit the spectrum and the
         mean square error
-        between the extracted data and the simulated data. 
+        between the extracted data and the simulated data.
 
         Parameters
         ----------
@@ -700,12 +701,12 @@ class QuantumModel(QObject):
             # only in prefit mode, this method will be activated as a slot
             # function
             return 0.0
-        
+
         try:
             self._sweeps
         except AttributeError:
             self._newSweep()
-            
+
         if sweepUsage in ["prefit", "fit-result"]:
             self.emitReadyToPlot()
 
@@ -779,10 +780,9 @@ class QuantumModel(QObject):
 
         else:
             # enumerate all possible transitions starting from all different states
-            possible_transitions = np.array([
-                evals[final] - evals[0]
-                for final in range(0, len(evals))
-            ])
+            possible_transitions = np.array(
+                [evals[final] - evals[0] for final in range(0, len(evals))]
+            )
 
         closest_idx = (np.abs(possible_transitions - dataFreq)).argmin()
 
@@ -807,7 +807,7 @@ class QuantumModel(QObject):
     ]:
         """
         Given a extractred data point, obtain the cooresponding transition frequency
-        provided by the tag from a ParameterSweep instance. If the tag is not 
+        provided by the tag from a ParameterSweep instance. If the tag is not
         provided or we can not identify dressed states' bare label via overlap,
         the closest transition frequency starting from the ground state will be
         returned.
@@ -819,10 +819,10 @@ class QuantumModel(QObject):
         yDataFreq: float
             The transition frequency (y coordinate) of the extracted data.
         tag: Tag
-            The tag of the extracted data - user's input on which transition 
+            The tag of the extracted data - user's input on which transition
             to calculate.
         sweep: ParameterSweep
-            The parameter sweep object, which stores the eigenenergies and the 
+            The parameter sweep object, which stores the eigenenergies and the
             labels of the dressed states.
 
         Returns
@@ -980,7 +980,7 @@ class QuantumModel(QObject):
             # if there is no extracted data: do not calculate the MSE
             if sweep.parameters.counts == (0,):
                 continue
-            
+
             # manually turn off the warning message
             sweep._out_of_sync_warning_issued = True
 

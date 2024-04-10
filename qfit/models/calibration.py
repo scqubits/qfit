@@ -297,7 +297,7 @@ class CaliParamModel(
                     paramType="data_source",
                     parentSystemName=None,
                     sweepParamName=None,
-                    value=self._figNames[int(XRowIdxName[1:]) // 2],
+                    value=self._figNames[XRowIdx // 2],
                 )
         # insert calibration table parameters for Y: raw vector,
         for YRowIdx, YRowIdxName in enumerate(self._caliTableYRowIdxList):
@@ -654,13 +654,15 @@ class CaliParamModel(
                 # so that whenever the function is defined, _alphaVec is set to alphaVec and is
                 # a local variable with scope restricted to the function.
                 def fullCalibration(
-                    rawXVecDict: Dict[str, float], _alphaVec=alphaVec
+                    rawXVecDict: Dict[str, float],
+                    _alphaVec=alphaVec,
+                    _rawXVecDim=self.rawXVecDim,
                 ) -> float:
                     """
                     The full calibration function that maps the raw vector to the mapped vector.
                     """
-                    rawXVec = np.zeros(self.rawXVecDim)
-                    for rawXVecCompIdx in range(self.rawXVecDim):
+                    rawXVec = np.zeros(_rawXVecDim)
+                    for rawXVecCompIdx in range(_rawXVecDim):
                         rawVecCompName = rawVecCompIdxDict[rawXVecCompIdx]
                         rawXVec[rawXVecCompIdx] = rawXVecDict[rawVecCompName]
                     # mapVecComp = alphaVec . [1, rawVec]^T

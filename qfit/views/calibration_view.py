@@ -427,9 +427,12 @@ class CalibrationView(QObject):
 
         rowIdx = paramAttr.parentName
         colName = paramAttr.name
-        # if dataSource, the widget is the
+        # if dataSource, the widget is the label in x-table
         if paramAttr.name == "DATA<br>SOURCE":
-            widget: QObject = self.XDataSourceSet[rowIdx][colName]
+            if rowIdx[0] == "X":
+                widget: QObject = self.XDataSourceSet[rowIdx][colName]
+            else:
+                return
         else:
             widget: QObject = self.lineEditSet[rowIdx][colName]
         widget.setText(paramAttr.value)
