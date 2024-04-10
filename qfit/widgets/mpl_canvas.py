@@ -181,7 +181,6 @@ class NavigationHidden(NavigationToolbar2QT):
         super().release_pan(event)
         self.parent()._recordXYLim()
 
-
 class SpecialCursor(Cursor):
     """
     This class extends the Cursor class from Matplotlib:
@@ -484,7 +483,7 @@ class MplFigureCanvas(QFrame):
         self.scatterColor = color_dict[self._colorMapStr]["Scatter"]
         self.cmap = copy.copy(getattr(cm, self._colorMapStr))
 
-    # View Manipulation: Axes ==========================================
+    # View: Coordinates ================================================
     def _adjustMargin(self, xAxisNum: int, ):
 
         # Calculate the desired margins in points
@@ -503,7 +502,7 @@ class MplFigureCanvas(QFrame):
         )
         self.canvas.draw() 
 
-    def _inchToRatio(self, inch: Tuple[float, float]):
+    def _inchToRatio(self, inch: Tuple[float, float]) -> np.ndarray:
         """
         Convert an xy vector in inches to a ratio of the figure size.
         """ 
@@ -511,18 +510,33 @@ class MplFigureCanvas(QFrame):
         inch = np.array(inch)
         return inch / figSizeInch
     
-    def _inchToPts(self, inch: Tuple[float, float]):
+    def _inchToPts(self, inch: Tuple[float, float]) -> np.ndarray:
         """
-        Convert an xy vector in inches to a ratio of the figure size.
+        Convert an xy vector in inches to the points.
+
+        Note that MPL will treat the dpi to be fixed at 100, and will 
+        automacally scale the points to the actual dpi of the figure.
         """ 
-        ratio = self._inchToRatio(inch)
-        figSizePts = self.canvas.figure.bbox.size
-        return ratio * figSizePts
+        return np.array(inch) * 100
+        # return np.array(inch) * self.canvas.figure.dpi    # wrong
+
+    def _distanceInPts(self, x1y1: np.ndarray, x2y2: np.ndarray) -> float:
+        """
+        Calculate the distance between two points in pts.
+        """
+        x1y1Pts = self.axes.transData.transform(x1y1)
+        x2y2Pts = self.axes.transData.transform(x2y2)
+
+        distance = np.sqrt(np.linalg.norm(x1y1Pts - x2y2Pts))
+
+        # as mpl treats the dpi to be fixed at 100, we need to scale the distance
+        return distance * 100 / self.canvas.figure.dpi
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self._adjustMargin(xAxisNum=len(self._xAxes))
 
+    # View Manipulation: Axes ==========================================
     def _setMeasXList(self, xList: np.ndarray):
         """
         When the measurement data is loaded, we want to record the x values
@@ -613,17 +627,20 @@ class MplFigureCanvas(QFrame):
             else:
                 ax.set_xlim(*xRange)
 
+            # label
             labelLoc = self._inchToPts((-0.05, -self._xAxesLoc(i + 0.5)))
             ax.annotate(
                 xName, xy=labelLoc, 
                 xycoords='axes points', 
                 ha='right', va='center'
             )
-            # layout 
-            self._adjustMargin(xAxisNum=len(xAxes))
 
             new_axes.append(ax)
+
         self._xAxes = new_axes
+
+        # layout 
+        self._adjustMargin(xAxisNum=len(self._xAxes))
 
         # self.canvas.figure.tight_layout()
         self.updateCursor()
@@ -743,10 +760,15 @@ class MplFigureCanvas(QFrame):
 
     @Slot()
     def resetView(self):
+
+        # set the x and y limits of the axes to fit the measurement data
         self.axes.set_xlim(*self._measXLim)
         self.axes.set_ylim(*self._measYLim)
         self.canvas.draw()
         self._recordXYLim()
+
+        # reset the margins
+        self._adjustMargin(xAxisNum=len(self._xAxes))
 
     @Slot()
     def zoomView(self):

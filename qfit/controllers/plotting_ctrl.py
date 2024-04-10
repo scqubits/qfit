@@ -467,23 +467,8 @@ class PlottingCtrl(QObject):
         )
 
     def isRelativelyClose(self, x1y1: np.ndarray, x2y2: np.ndarray):
-        """Check whether the point x1y1 is relatively close to x2y2, given the current
-        field of view on the canvas."""
-        xlim = self.axes.get_xlim()
-        ylim = self.axes.get_ylim()
-
-        xmin, xmax = xlim
-        ymin, ymax = ylim
-        xrange = xmax - xmin
-        yrange = ymax - ymin
-        x1y1 = x1y1 / [xrange, yrange]
-        x2y2 = x2y2 / [xrange, yrange]
-
-        distance = np.linalg.norm(x1y1 - x2y2)
-        if distance < 0.025:
-            return True
-
-        return False
+        distance = self.mplCanvas._distanceInPts(x1y1, x2y2)
+        return distance < 3.75
 
     # plotting =========================================================
     def plotElementsConnects(self):
