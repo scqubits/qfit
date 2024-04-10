@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'ui_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.6.0
+## Created by: Qt User Interface Compiler version 6.6.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -1004,7 +1004,7 @@ class Ui_MainWindow(object):
         self.yAxesScrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents_3 = QWidget()
         self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
-        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 187, 177))
+        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 187, 180))
         self.verticalLayout_19 = QVBoxLayout(self.scrollAreaWidgetContents_3)
         self.verticalLayout_19.setObjectName(u"verticalLayout_19")
         self.yAxesScrollArea.setWidget(self.scrollAreaWidgetContents_3)
@@ -1039,7 +1039,7 @@ class Ui_MainWindow(object):
         self.xAxesScrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 189, 179))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 189, 182))
         self.verticalLayout_18 = QVBoxLayout(self.scrollAreaWidgetContents_2)
         self.verticalLayout_18.setObjectName(u"verticalLayout_18")
         self.xAxesScrollArea.setWidget(self.scrollAreaWidgetContents_2)
@@ -1294,7 +1294,7 @@ class Ui_MainWindow(object):
         self.calibrateXScrollArea.setWidgetResizable(True)
         self.calibrateXScrollAreaWidget = QWidget()
         self.calibrateXScrollAreaWidget.setObjectName(u"calibrateXScrollAreaWidget")
-        self.calibrateXScrollAreaWidget.setGeometry(QRect(0, 0, 100, 250))
+        self.calibrateXScrollAreaWidget.setGeometry(QRect(0, 0, 441, 250))
         sizePolicy13.setHeightForWidth(self.calibrateXScrollAreaWidget.sizePolicy().hasHeightForWidth())
         self.calibrateXScrollAreaWidget.setSizePolicy(sizePolicy13)
         self.verticalLayout_5 = QVBoxLayout(self.calibrateXScrollAreaWidget)
@@ -2213,7 +2213,7 @@ class Ui_MainWindow(object):
         self.prefitScrollArea.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
         self.prefitScrollAreaWidget = QWidget()
         self.prefitScrollAreaWidget.setObjectName(u"prefitScrollAreaWidget")
-        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 100, 30))
+        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 441, 390))
         self.verticalLayout_11 = QVBoxLayout(self.prefitScrollAreaWidget)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -2250,7 +2250,7 @@ class Ui_MainWindow(object):
         self.scrollArea.setWidgetResizable(True)
         self.prefitMinmaxScrollAreaWidget = QWidget()
         self.prefitMinmaxScrollAreaWidget.setObjectName(u"prefitMinmaxScrollAreaWidget")
-        self.prefitMinmaxScrollAreaWidget.setGeometry(QRect(0, 0, 100, 60))
+        self.prefitMinmaxScrollAreaWidget.setGeometry(QRect(0, 0, 446, 100))
         self.verticalLayout_16 = QVBoxLayout(self.prefitMinmaxScrollAreaWidget)
         self.verticalLayout_16.setObjectName(u"verticalLayout_16")
         self.scrollArea.setWidget(self.prefitMinmaxScrollAreaWidget)
@@ -2504,7 +2504,7 @@ class Ui_MainWindow(object):
         self.fitScrollArea.setWidgetResizable(True)
         self.fitScrollAreaWidget = QWidget()
         self.fitScrollAreaWidget.setObjectName(u"fitScrollAreaWidget")
-        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 100, 30))
+        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 441, 468))
         self.verticalLayout_4 = QVBoxLayout(self.fitScrollAreaWidget)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -3045,10 +3045,10 @@ class Ui_MainWindow(object):
         self.label_42.setText(QCoreApplication.translate("MainWindow", u"File Location:   ", None))
         self.fileLocInfo.setText(QCoreApplication.translate("MainWindow", u"N/A", None))
         self.label_39.setText(QCoreApplication.translate("MainWindow", u"SELECT AXES", None))
-        self.label_38.setText(QCoreApplication.translate("MainWindow", u"Y axis: Frequency  ", None))
-        self.label_11.setText(QCoreApplication.translate("MainWindow", u"X axis: Tuning Parameters", None))
+        self.label_38.setText(QCoreApplication.translate("MainWindow", u"Y-Axis: Frequency  ", None))
+        self.label_11.setText(QCoreApplication.translate("MainWindow", u"X-Axis: Tuning Parameters", None))
         self.transposeButton.setText(QCoreApplication.translate("MainWindow", u"   Transpose Figure", None))
-        self.finalizeStep0Button.setText(QCoreApplication.translate("MainWindow", u"Proceed to calibrate", None))
+        self.finalizeStep0Button.setText(QCoreApplication.translate("MainWindow", u"Proceed To Calibrate", None))
         self.label_5.setText(QCoreApplication.translate("MainWindow", u"CALIBRATE", None))
         self.calibrationHelpPushButton.setText("")
         self.zComboBox.setCurrentText("")

@@ -1648,7 +1648,7 @@ QPushButton:checked {
                       <x>0</x>
                       <y>0</y>
                       <width>187</width>
-                      <height>177</height>
+                      <height>180</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_19"/>
@@ -1664,7 +1664,7 @@ QPushButton:checked {
                     </sizepolicy>
                    </property>
                    <property name="text">
-                    <string>Y axis: Frequency  </string>
+                    <string>Y-Axis: Frequency  </string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1680,7 +1680,7 @@ QPushButton:checked {
                     </sizepolicy>
                    </property>
                    <property name="text">
-                    <string>X axis: Tuning Parameters</string>
+                    <string>X-Axis: Tuning Parameters</string>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1725,7 +1725,7 @@ QPushButton:checked {
                       <x>0</x>
                       <y>0</y>
                       <width>189</width>
-                      <height>179</height>
+                      <height>182</height>
                      </rect>
                     </property>
                     <layout class="QVBoxLayout" name="verticalLayout_18"/>
@@ -1884,7 +1884,7 @@ background-color: #4B4B4B;
 }</string>
                    </property>
                    <property name="text">
-                    <string>Proceed to calibrate</string>
+                    <string>Proceed To Calibrate</string>
                    </property>
                   </widget>
                  </item>
@@ -2282,7 +2282,7 @@ border: None;</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
+                   <width>441</width>
                    <height>250</height>
                   </rect>
                  </property>
@@ -4195,8 +4195,8 @@ QPushButton: pressed{
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>441</width>
+                   <height>390</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -4294,8 +4294,8 @@ border-bottom-right-radius: 6px;	</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>60</height>
+                   <width>446</width>
+                   <height>100</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_16"/>
@@ -4946,8 +4946,8 @@ icon: url(:/icons/svg/copy-pressed.svg);
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
-                   <height>30</height>
+                   <width>441</width>
+                   <height>468</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
