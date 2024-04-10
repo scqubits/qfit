@@ -476,47 +476,47 @@ class MeasurementData:
         if self._rawXNames == self._rawYNames:
             self._rawYNames = self.yCandidates.keyList[1:2]
 
-    def _removePixelCoord(self):
-        """
-        Remove pixel coordinates from the x and y axis candidates. That is
-        needed when we need to swap XY and regenerate a new set of pixel
-        coordinates.
-        """
-        self.xCandidates = OrderedDictMod(
-            {
-                key: value
-                for key, value in self.xCandidates.items()
-                if not key.startswith("pixel_coord")
-            }
-        )
-        self.yCandidates = OrderedDictMod(
-            {
-                key: value
-                for key, value in self.yCandidates.items()
-                if not key.startswith("pixel_coord")
-            }
-        )
+    # def _removePixelCoord(self):
+    #     """
+    #     Remove pixel coordinates from the x and y axis candidates. That is
+    #     needed when we need to swap XY and regenerate a new set of pixel
+    #     coordinates.
+    #     """
+    #     self.xCandidates = OrderedDictMod(
+    #         {
+    #             key: value
+    #             for key, value in self.xCandidates.items()
+    #             if not key.startswith("pixel_coord")
+    #         }
+    #     )
+    #     self.yCandidates = OrderedDictMod(
+    #         {
+    #             key: value
+    #             for key, value in self.yCandidates.items()
+    #             if not key.startswith("pixel_coord")
+    #         }
+    #     )
 
-        # if the pixel coordinates are chosen to be the raw x and y axis,
-        # reset the raw x and y axis
-        reset = False
-        for name in self._rawXNames:
-            if name.startswith("pixel_coord"):
-                reset = True
-        for name in self._rawYNames:
-            if name.startswith("pixel_coord"):
-                reset = True
-        if reset:
-            self._initRawXY()
-            self._resetPrincipalXY()
+    #     # if the pixel coordinates are chosen to be the raw x and y axis,
+    #     # reset the raw x and y axis
+    #     reset = False
+    #     for name in self._rawXNames:
+    #         if name.startswith("pixel_coord"):
+    #             reset = True
+    #     for name in self._rawYNames:
+    #         if name.startswith("pixel_coord"):
+    #             reset = True
+    #     if reset:
+    #         self._initRawXY()
+    #         self._resetPrincipalXY()
 
     def _addPixelCoord(self):
         """
         Add pixel coordinates as the last resort for x and y axis candidates.
         """
         ydim, xdim = self._principalZ.data.shape
-        self.xCandidates.update({"pixel_coord_x": np.arange(xdim)})
-        self.yCandidates.update({"pixel_coord_y": np.arange(ydim)})
+        self.xCandidates.update({f"range({xdim})": np.arange(xdim)})
+        self.yCandidates.update({f"range({ydim})": np.arange(ydim)})
 
     def _resetPrincipalXY(self):
         """
@@ -537,7 +537,7 @@ class MeasurementData:
         """
         Swap the x and y axes and transpose the zData array.
         """
-        self._removePixelCoord()
+        # self._removePixelCoord()
 
         # if the user have already selected multiple x axes, we will only
         # keep the first one, as y axis is unique
@@ -552,7 +552,7 @@ class MeasurementData:
         self.xCandidates, self.yCandidates = self.yCandidates, self.xCandidates
         self._rawXNames, self._rawYNames = self._rawYNames, self._rawXNames
 
-        self._addPixelCoord()
+        # self._addPixelCoord()
         self._resetPrincipalXY()
 
     def transposeZ(self):
@@ -927,8 +927,10 @@ class ImageMeasurementData(MeasurementData):
 
         # since there is no x and y axis data, we use pixel coordinates
         ydim, xdim = self._principalZ.data.shape[:2]
-        self.xCandidates = OrderedDictMod(pixel_coord_1=np.arange(xdim))
-        self.yCandidates = OrderedDictMod(pixel_coord_2=np.arange(ydim))
+        self.xCandidates = OrderedDictMod({
+            f"range{xdim}": np.arange(xdim)})
+        self.yCandidates = OrderedDictMod({
+            f"range{ydim}": np.arange(ydim)})
         self._addPixelCoord()
         self._initRawXY()
         self._resetPrincipalXY()
@@ -1422,10 +1424,6 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         ]
         candidates = set.intersection(*candidates)
 
-        # exclude "pixel_coord_y"
-        if "pixel_coord_y" in candidates:
-            candidates.remove("pixel_coord_y")
-
         return list(candidates)
 
     @property
@@ -1440,20 +1438,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         List[str]
             The candidates for raw Y axis names -- the same as the X names.
         """
-        if not self.fullData:
-            return []
-
-        candidates = [
-            set(data.xCandidates.keyList + data.yCandidates.keyList)
-            for data in self.fullData
-        ]
-        candidates = set.intersection(*candidates)
-
-        # exclude "pixel_coord_x"
-        if "pixel_coord_x" in candidates:
-            candidates.remove("pixel_coord_x")
-
-        return list(candidates)
+        return self.xCandidates
 
     @property
     def grayedRawX(self) -> List[str]:
