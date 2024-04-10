@@ -486,40 +486,38 @@ class MplFigureCanvas(QFrame):
 
     # View Manipulation: Axes ==========================================
     def _adjustMargin(self, xAxisNum: int, ):
-        # xMargin = 0.05 * xAxisNum + 0.02
-
-        # self.canvas.figure.subplots_adjust(
-        #     right=0.98, # space for the x label
-        #     top=0.98, # no need for any space
-        #     bottom=xMargin, # space for the x axes   
-        #     left=0.12, # space for the y axes 
-        # )
-        # self.canvas.draw()
-
-        # Get the figure size in inches
-        fig_size_inches = self.canvas.figure.get_size_inches()
-        dpi = self.canvas.figure.dpi
-        fig_size_points = fig_size_inches * dpi
 
         # Calculate the desired margins in points
-        right_margin_points = 10
-        top_margin_points = 10
-        bottom_margin_points = self._xAxesLoc(xAxisNum + 1.2)
-        left_margin_points = self._xAxesLoc(4.2)   
+        rightTopMarginInch = (0.1, 0.1)
+        leftBottomMarginInch = (self._xAxesLoc(4.2), self._xAxesLoc(xAxisNum + 1.2))
 
         # Convert the margins to fractions of the figure size
-        right_margin = 1 - right_margin_points / fig_size_points[0]
-        top_margin = 1 - top_margin_points / fig_size_points[1]
-        bottom_margin = bottom_margin_points / fig_size_points[1]
-        left_margin = left_margin_points / fig_size_points[0]
+        topRightMargin = self._inchToRatio(rightTopMarginInch)[::-1]
+        bottomLeftMargin = self._inchToRatio(leftBottomMarginInch)[::-1]
 
         self.canvas.figure.subplots_adjust(
-            right=right_margin, # space for the x label
-            top=top_margin, # no need for any space
-            bottom=bottom_margin, # space for the x axes   
-            left=left_margin, # space for the y axes 
+            top = 1 - topRightMargin[0],
+            right = 1 - topRightMargin[1], 
+            bottom = bottomLeftMargin[0],
+            left = bottomLeftMargin[1],
         )
-        self.canvas.draw()  
+        self.canvas.draw() 
+
+    def _inchToRatio(self, inch: Tuple[float, float]):
+        """
+        Convert an xy vector in inches to a ratio of the figure size.
+        """ 
+        figSizeInch = self.canvas.figure.get_size_inches()
+        inch = np.array(inch)
+        return inch / figSizeInch
+    
+    def _inchToPts(self, inch: Tuple[float, float]):
+        """
+        Convert an xy vector in inches to a ratio of the figure size.
+        """ 
+        ratio = self._inchToRatio(inch)
+        figSizePts = self.canvas.figure.bbox.size
+        return ratio * figSizePts
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -585,8 +583,8 @@ class MplFigureCanvas(QFrame):
 
     @staticmethod
     def _xAxesLoc(which: int | float):
-        """The outwards location of the x-axes in points."""
-        return 20 * which
+        """The outwards location of the x-axes in inches."""
+        return 0.2 * which
 
     def updateXAxes(self, xAxes: Dict[str, Tuple[float, float]]):
         """
@@ -605,7 +603,8 @@ class MplFigureCanvas(QFrame):
                 xName = xName.replace("<br>", "\n")
 
             # ticks and spines
-            ax.spines['bottom'].set_position(('outward', self._xAxesLoc(i)))
+            _, spineLoc = self._inchToPts((0, self._xAxesLoc(i)))
+            ax.spines['bottom'].set_position(('outward', spineLoc))
             ax.xaxis.set_ticks_position('bottom')
             if xRange[0] == xRange[1]:
                 ax.set_xlim(xRange[0]*0.9 - 1, xRange[0]*1.1 + 1)
@@ -614,24 +613,12 @@ class MplFigureCanvas(QFrame):
             else:
                 ax.set_xlim(*xRange)
 
-            # label by annotate
-            # origin = ax.transAxes.inverted().transform((0, 0))
-            # locationInRatio = ax.transAxes.inverted().transform((-2, -20 * (i + 0.5)))
-            # print(locationInRatio - origin)
-
+            labelLoc = self._inchToPts((-0.05, -self._xAxesLoc(i + 0.5)))
             ax.annotate(
-                xName, xy=(-2, -self._xAxesLoc(i + 0.5)), 
+                xName, xy=labelLoc, 
                 xycoords='axes points', 
                 ha='right', va='center'
             )
-            # ax.annotate(xName, xy=(-0.01, -0.06 * (i + 0.5)), xycoords='axes fraction', ha='right', va='center')
-
-            # label by set_xlabel
-            # ax.set_xlabel(xName)
-            # ax.xaxis.set_label_position('bottom')
-            # ax.xaxis.set_label_coords(-0.06, -0.06 * (i + 0.4))  # left, bottom
-            # ax.xaxis.set_label_coords(1.08, -0.06 * (i + 0.5))  # right, bottom
-
             # layout 
             self._adjustMargin(xAxisNum=len(xAxes))
 
