@@ -290,7 +290,10 @@ class SpecialCursor(Cursor):
 
         # remove the old cursor
         if hasattr(self, "cross"):
-            self.cross.remove()
+            try:
+                self.cross.remove()
+            except ValueError:
+                pass
 
         # Draw the cursor (a scatter plot) at the calculated coordinates
         self.cross = self.ax.scatter(
