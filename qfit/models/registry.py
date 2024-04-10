@@ -1,5 +1,5 @@
 from typing import Callable, Any, Dict, Literal, Union
-import pickle
+import dill
 from qfit.version import version
 from abc import ABC
 
@@ -205,7 +205,7 @@ class Registry:
         """
         try:
             with open(filename, "wb") as f:
-                pickle.dump(self.exportDict(), f)
+                dill.dump(self.exportDict(), f)
         except FileNotFoundError:
             print(f"Error: File '{filename}' not found. Cannot export data.")
 
@@ -221,7 +221,7 @@ class Registry:
         """
         try:
             with open(filename, "rb") as f:
-                return pickle.load(f)
+                return dill.load(f)
         except FileNotFoundError:
             return None  # indicate that the file is not found
 
@@ -271,10 +271,12 @@ class Registry:
     def clear(self):
         """Clear the registry."""
         self._registry.clear()
-        self._registry.update({
-            "version": RegistryEntry(
-                "version",
-                "r",
-                lambda: version,
-            ),
-        })
+        self._registry.update(
+            {
+                "version": RegistryEntry(
+                    "version",
+                    "r",
+                    lambda: version,
+                ),
+            }
+        )
