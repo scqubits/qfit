@@ -67,10 +67,10 @@ class ParamSet(Registrable, Generic[ParamCls]):
 
     def __len__(self):
         return sum([len(para_dict) for para_dict in self.parameters.values()])
-    
+
     def __repr__(self) -> str:
         return self.parameters.__repr__()
-    
+
     def __str__(self) -> str:
         return self.parameters.__str__()
 
@@ -398,37 +398,43 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
             Values: a list of circuit parameter names for the given type
         """
         parameters = {}
-        # loop over branches to search for symbolic EJ, EC, EL
-        branches = subsystem.symbolic_circuit.branches
-        EJ_list = []
-        EC_list = []
-        EL_list = []
-        for branch in branches:
-            if branch.type == "L":
-                # check if the EL parameter is a symbol
-                if type(branch.parameters["EL"]) is not float:
-                    # get the parameter string
-                    param_name = branch.parameters["EL"].name
-                    # if the parameter is not in the list, append to the EL list
-                    if param_name not in EL_list:
-                        EL_list.append(param_name)
-            elif branch.type == "C":
-                if type(branch.parameters["EC"]) is not float:
-                    param_name = branch.parameters["EC"].name
-                    if param_name not in EC_list:
-                        EC_list.append(param_name)
-            elif branch.type == "JJ":
-                if type(branch.parameters["ECJ"]) is not float:
-                    param_name = branch.parameters["ECJ"].name
-                    if param_name not in EC_list:
-                        EC_list.append(param_name)
-                if type(branch.parameters["EJ"]) is not float:
-                    param_name = branch.parameters["EJ"].name
-                    if param_name not in EJ_list:
-                        EJ_list.append(param_name)
-        parameters["EL"] = EL_list
-        parameters["EJ"] = EJ_list
-        parameters["EC"] = EC_list
+        # check if the subsystem has symbolic circuit attribute
+        if not hasattr(subsystem, "symbolic_circuit"):
+            parameters["EJ"] = [
+                param.name for param in list(subsystem.symbolic_params.keys())
+            ]
+        else:
+            # loop over branches to search for symbolic EJ, EC, EL
+            branches = subsystem.symbolic_circuit.branches
+            EJ_list = []
+            EC_list = []
+            EL_list = []
+            for branch in branches:
+                if branch.type == "L":
+                    # check if the EL parameter is a symbol
+                    if type(branch.parameters["EL"]) is not float:
+                        # get the parameter string
+                        param_name = branch.parameters["EL"].name
+                        # if the parameter is not in the list, append to the EL list
+                        if param_name not in EL_list:
+                            EL_list.append(param_name)
+                elif branch.type == "C":
+                    if type(branch.parameters["EC"]) is not float:
+                        param_name = branch.parameters["EC"].name
+                        if param_name not in EC_list:
+                            EC_list.append(param_name)
+                elif branch.type == "JJ":
+                    if type(branch.parameters["ECJ"]) is not float:
+                        param_name = branch.parameters["ECJ"].name
+                        if param_name not in EC_list:
+                            EC_list.append(param_name)
+                    if type(branch.parameters["EJ"]) is not float:
+                        param_name = branch.parameters["EJ"].name
+                        if param_name not in EJ_list:
+                            EJ_list.append(param_name)
+            parameters["EL"] = EL_list
+            parameters["EJ"] = EJ_list
+            parameters["EC"] = EC_list
         parameters["flux"] = [
             external_flux.name for external_flux in subsystem.external_fluxes
         ]

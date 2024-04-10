@@ -61,3 +61,4 @@ plot_data.ipynb
 media_raw_source/stop.cdr
 example_data/spec_scan_v11_transposedspec_scan_v11_transposed.mat
 example_data/spec_scan_v11.mat
+.github/workflows/test_installation.yml
