@@ -432,7 +432,7 @@ class MplFigureCanvas(QFrame):
         self.axes.set_yticklabels([])
 
         # reduce the margin of the axes
-        self.canvas.figure.subplots_adjust(right=0.9, top=0.98)
+        self._adjust_margin(xAxisNum=1)
 
         # the axes for displaying the x & y values
         self._xAxes: List[Axes] = []
@@ -485,6 +485,17 @@ class MplFigureCanvas(QFrame):
         self.cmap = copy.copy(getattr(cm, self._colorMapStr))
 
     # View Manipulation: Axes ==========================================
+    def _adjust_margin(self, xAxisNum: int, ):
+        xMargin = 0.05 * xAxisNum + 0.02
+
+        self.canvas.figure.subplots_adjust(
+            right=0.98, # space for the x label
+            top=0.98, # no need for any space
+            bottom=xMargin, # space for the x axes   
+            left=0.12, # space for the y axes 
+        )
+        self.canvas.draw()
+
     def _setMeasXList(self, xList: np.ndarray):
         """
         When the measurement data is loaded, we want to record the x values
@@ -554,12 +565,27 @@ class MplFigureCanvas(QFrame):
         new_axes = []
         for i, (xName, xRange) in enumerate(xAxes.items()):
             ax = self.axes.twiny()
-            ax.set_xlim(*xRange)
-            ax.set_xlabel(xName)
-            ax.xaxis.set_ticks_position('bottom')
-            ax.xaxis.set_label_position('bottom')
+
+            # ticks and spines
             ax.spines['bottom'].set_position(('outward', 20 * i))
-            ax.xaxis.set_label_coords(1.08, -0.06 * (i + 0.5))  # set label position
+            ax.xaxis.set_ticks_position('bottom')
+            ax.set_xlim(*xRange)
+            if xRange[0] == xRange[1]:
+                ax.set_xticks([xRange[0]])
+                ax.set_xticklabels([f"Coordinate fixed at: {xRange[0]:.4e}"])
+
+            # label by annotate
+            ax.annotate(xName, xy=(-0.01, -0.06 * (i + 0.35)), xycoords='axes fraction', ha='right', va='top')
+
+            # label by set_xlabel
+            # ax.set_xlabel(xName)
+            # ax.xaxis.set_label_position('bottom')
+            # ax.xaxis.set_label_coords(-0.06, -0.06 * (i + 0.4))  # left, bottom
+            # ax.xaxis.set_label_coords(1.08, -0.06 * (i + 0.5))  # right, bottom
+
+            # layout 
+            self._adjust_margin(xAxisNum=len(xAxes))
+
             new_axes.append(ax)
         self._xAxes = new_axes
 

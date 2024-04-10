@@ -16,6 +16,7 @@ from PySide6.QtCore import (
     Qt,
     Signal,
 )
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QStyle, QApplication
 from PySide6.QtWidgets import QMainWindow
 from qfit.models.registry import Registrable
@@ -39,6 +40,7 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     def __init__(self):
         QMainWindow.__init__(self)
         self.setFocusPolicy(Qt.StrongFocus)
+        self.setWindowIcon(QIcon(':/icons/svg/qfit-icon.svg'))
 
     def resizeAndCenter(self, maxSize: QSize):
         newSize = QSize(maxSize.width() * 0.9, maxSize.height() * 0.9)
@@ -99,4 +101,3 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         """
         super().closeEvent(event)
         self.closeWindow.emit(event)
-
