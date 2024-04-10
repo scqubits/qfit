@@ -1422,6 +1422,10 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         ]
         candidates = set.intersection(*candidates)
 
+        # exclude "pixel_coord_y"
+        if "pixel_coord_y" in candidates:
+            candidates.remove("pixel_coord_y")
+
         return list(candidates)
 
     @property
@@ -1436,7 +1440,20 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         List[str]
             The candidates for raw Y axis names -- the same as the X names.
         """
-        return self.xCandidates
+        if not self.fullData:
+            return []
+
+        candidates = [
+            set(data.xCandidates.keyList + data.yCandidates.keyList)
+            for data in self.fullData
+        ]
+        candidates = set.intersection(*candidates)
+
+        # exclude "pixel_coord_x"
+        if "pixel_coord_x" in candidates:
+            candidates.remove("pixel_coord_x")
+
+        return list(candidates)
 
     @property
     def grayedRawX(self) -> List[str]:
