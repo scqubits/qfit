@@ -14,9 +14,9 @@ DEFAULT_STATUS = Status(
 
 class StatusModel(QObject):
     """
-    Store and manage the status of the application. The status is divided into 
+    Store and manage the status of the application. The status is divided into
     two types:
-        - normal status: the status of the application, which is displayed in the 
+        - normal status: the status of the application, which is displayed in the
         status bar. It is updated by the prefit and fit models.
         - temporary status: the status of the application, which is displayed in the
         temporary status bar. It is updated by the prefit and fit models.
@@ -36,6 +36,7 @@ class StatusModel(QObject):
     parent : QObject
         The parent QObject.
     """
+
     normalStatusChanged = Signal(str)
     tempStatusChanged = Signal(str, float)
 
@@ -96,16 +97,16 @@ class StatusModel(QObject):
     @property
     def sourceChanged(self) -> bool:
         """
-        Check if the source of the status is changed. 
+        Check if the source of the status is changed.
 
         Note: it treat fit/fit-result as the same source
         """
-        if (
-            self.currentNormalStatus.statusSource in ["fit", "fit-result"] 
-            and self.previousNormalStatus.statusSource in ["fit", "fit-result"]
-        ):
+        if self.currentNormalStatus.statusSource in [
+            "fit",
+            "fit-result",
+        ] and self.previousNormalStatus.statusSource in ["fit", "fit-result"]:
             return False
-            
+
         _sourceChanged = (
             self.currentNormalStatus.statusSource
             is not self.previousNormalStatus.statusSource
@@ -149,16 +150,14 @@ class StatusModel(QObject):
         elif self.currentNormalStatus.statusType == "success":
             finalMse = self.currentNormalStatus.mse
             self._updateMseForComputingDelta()
-            self.statusStrForView += (
-                f"SUCCESS: MSE = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)"
-            )
+            self.statusStrForView += f"SUCCESS: mean squared error = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)"
 
         elif self.currentNormalStatus.statusType == "warning":
             warningMessage = self.currentNormalStatus.message
             if self.currentNormalStatus.statusSource in ["fit", "prefit"]:
                 finalMse = self.currentNormalStatus.mse
                 self._updateMseForComputingDelta()
-                self.statusStrForView += f"WARNING: MSE = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)     |     {warningMessage}"
+                self.statusStrForView += f"WARNING: mean squared error = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)     |     {warningMessage}"
             else:
                 self.statusStrForView += f"WARNING: {warningMessage}"
 
@@ -166,7 +165,7 @@ class StatusModel(QObject):
             if self.currentNormalStatus.statusSource == "fit":
                 computingMse = self.currentNormalStatus.mse
                 self._updateMseForComputingDelta()
-                self.statusStrForView += f"COMPUTING: MSE = {computingMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)"
+                self.statusStrForView += f"COMPUTING: mean squred error = {computingMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)"
             elif self.currentNormalStatus.statusSource == "prefit":
                 self.statusStrForView += f"COMPUTING"
 
@@ -174,7 +173,7 @@ class StatusModel(QObject):
             initial_mse = self.currentNormalStatus.mse
             self._updateMseForComputingDelta()
             self.statusStrForView += (
-                f"INITIALIZE FITTING: MSE = {initial_mse:.4f} GHz\u00B2"
+                f"INITIALIZE FITTING: mean squared error = {initial_mse:.4f} GHz\u00B2"
             )
 
         # emit the signal indicating the status is changed
@@ -201,12 +200,12 @@ class StatusModel(QObject):
 
     def _updateMseForComputingDelta(self):
         """
-        Updates the previous Mean Squared Error (MSE) and the change in MSE. 
+        Updates the previous Mean Squared Error (MSE) and the change in MSE.
 
-        This function should only be used when an update to the MSE is expected. 
-        For instance, during the 'prefit' stage when the status is 'computing', 
-        the MSE is set to None and should not be updated. 
-        Conversely, during the 'fit' stage when the status is 
+        This function should only be used when an update to the MSE is expected.
+        For instance, during the 'prefit' stage when the status is 'computing',
+        the MSE is set to None and should not be updated.
+        Conversely, during the 'fit' stage when the status is
         'computing', the MSE should be updated.
         """
         # erase the previous MSE if the source is changed
