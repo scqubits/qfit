@@ -554,12 +554,20 @@ class MplFigureCanvas(QFrame):
         new_axes = []
         for i, (xName, xRange) in enumerate(xAxes.items()):
             ax = self.axes.twiny()
+
+            # ticks and spines
+            ax.spines['bottom'].set_position(('outward', 20 * i))
             ax.set_xlim(*xRange)
+            if xRange[0] == xRange[1]:
+                ax.set_xticks([xRange[0]])
+                ax.set_xticklabels([f"Coordinate fixed at: {xRange[0]:.4e}"])
+
+            # label
             ax.set_xlabel(xName)
             ax.xaxis.set_ticks_position('bottom')
             ax.xaxis.set_label_position('bottom')
-            ax.spines['bottom'].set_position(('outward', 20 * i))
             ax.xaxis.set_label_coords(1.08, -0.06 * (i + 0.5))  # set label position
+
             new_axes.append(ax)
         self._xAxes = new_axes
 
