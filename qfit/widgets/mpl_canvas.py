@@ -36,7 +36,7 @@ import matplotlib.cm as cm
 from qfit.utils.helpers import ySnap
 
 from qfit.models.data_structures import PlotElement
-from qfit.settings import color_dict
+from qfit.settings import color_dict, MARKER_SIZE
 
 
 class MplNavButtons(QFrame):
@@ -301,7 +301,7 @@ class SpecialCursor(Cursor):
             point_y_coordinate,
             c="red",
             marker=r"$\odot$",
-            s=130,
+            s=MARKER_SIZE,
             alpha=0.5,
             animated=True,
         )
@@ -530,10 +530,13 @@ class MplFigureCanvas(QFrame):
         x1y1Pts = self.axes.transData.transform(x1y1)
         x2y2Pts = self.axes.transData.transform(x2y2)
 
-        distance = np.sqrt(np.linalg.norm(x1y1Pts - x2y2Pts))
+        distance = np.linalg.norm(x1y1Pts - x2y2Pts)
 
         # as mpl treats the dpi to be fixed at 100, we need to scale the distance
-        return distance * 100 / self.canvas.figure.dpi
+        normed_dis = distance * 100 / self.canvas.figure.dpi
+
+        # print(x1y1Pts, x2y2Pts, x2y2Pts - x1y1Pts, distance, normed_dis)
+        return normed_dis
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

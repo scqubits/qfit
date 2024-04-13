@@ -7,4 +7,6 @@ color_dict = {
     "gray": {"Cross": "blue", "line": "green", "Scatter": "red"},
 }
 
+MARKER_SIZE = 130
+
 EXECUTED_IN_IPYTHON = False

@@ -9,6 +9,7 @@ from qfit.models.measurement_data import (
     MeasDataType,
 )
 from qfit.models.data_structures import FilterConfig
+from qfit.settings import MARKER_SIZE
 
 from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal, List, Callable
 
@@ -468,7 +469,7 @@ class PlottingCtrl(QObject):
 
     def isRelativelyClose(self, x1y1: np.ndarray, x2y2: np.ndarray):
         distance = self.mplCanvas._distanceInPts(x1y1, x2y2)
-        return distance < 3.75
+        return distance < np.sqrt(MARKER_SIZE)
 
     # plotting =========================================================
     def plotElementsConnects(self):
