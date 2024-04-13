@@ -22,7 +22,7 @@ from qfit.models.data_structures import Tag, SpectrumElement, Status
 
 from typing import Dict, List, Tuple, Union, Callable, Any, Literal, Optional
 
-# scq.settings.MULTIPROC = "multiprocessing"
+scq.settings.MULTIPROC = "pathos"
 
 
 class QuantumModel(QObject):
@@ -129,6 +129,7 @@ class QuantumModel(QObject):
         # options when generating the parameter sweep
         self._evalsCount: int = np.min([10, self.hilbertspace.dimension])
         self._pointsAdded: int = 10
+        self._numCPUs: int = 1
         self._rawXByX: Dict[str, Callable[[float], Dict[str, float]]] = {
             figName: lambda x: {} for figName in self._figNames
         }
@@ -245,6 +246,7 @@ class QuantumModel(QObject):
             "photons",
             "evalsCount",
             "pointsAdded",
+            "numCPUs",
             "autoRun",
         ],
         value: Any,
@@ -273,6 +275,8 @@ class QuantumModel(QObject):
         elif attrName == "evalsCount":
             value = int(value)
         elif attrName == "pointsAdded":
+            value = int(value)
+        elif attrName == "numCPUs":
             value = int(value)
         elif attrName == "autoRun":
             value = bool(value)
@@ -314,6 +318,7 @@ class QuantumModel(QObject):
             "photons": self._photons,
             "evalsCount": str(self._evalsCount),
             "pointsAdded": str(self._pointsAdded),
+            "numCPUs": str(self._numCPUs),
             "autoRun": self._autoRun,
         }
 
@@ -544,7 +549,7 @@ class QuantumModel(QObject):
                 evals_count=self._evalsCount,
                 subsys_update_info=subsys_update_info,
                 autorun=False,
-                num_cpus=1,  # change this later to connect to the number from the view
+                num_cpus=self._numCPUs,  # change this later to connect to the number from the view
             )
             sweeps[figName] = param_sweep
 

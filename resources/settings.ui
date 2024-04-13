@@ -375,7 +375,7 @@ QComboBox QAbstractItemView::item{
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideRight</enum>
@@ -890,6 +890,38 @@ QComboBox QAbstractItemView::item{
           <property name="bottomMargin">
            <number>0</number>
           </property>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_43">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">font-size: 13px</string>
+            </property>
+            <property name="text">
+             <string>POINTS ADDED</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">font-size: 13px</string>
+            </property>
+            <property name="text">
+             <string>INITIAL STATE</string>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="1" colspan="2">
            <widget class="StateLineEdit" name="initStateLineEdit">
             <property name="sizePolicy">
@@ -912,70 +944,6 @@ QComboBox QAbstractItemView::item{
             </property>
             <property name="placeholderText">
              <string>dressed or bare label</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_43">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">font-size: 13px</string>
-            </property>
-            <property name="text">
-             <string>POINTS ADDED</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_44">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">font-size: 13px</string>
-            </property>
-            <property name="text">
-             <string>TRANSITIONS</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_42">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">font-size: 13px</string>
-            </property>
-            <property name="text">
-             <string>EVALS COUNT</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_33">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">font-size: 13px</string>
-            </property>
-            <property name="text">
-             <string>PHOTONS</string>
             </property>
            </widget>
           </item>
@@ -1004,8 +972,24 @@ QComboBox QAbstractItemView::item{
             </property>
            </widget>
           </item>
-          <item row="4" column="1" colspan="2">
-           <widget class="IntLineEdit" name="pointsAddLineEdit">
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_42">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">font-size: 13px</string>
+            </property>
+            <property name="text">
+             <string>EVALS COUNT</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" colspan="2">
+           <widget class="QComboBox" name="subsysComboBox">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -1024,15 +1008,15 @@ QComboBox QAbstractItemView::item{
               <height>30</height>
              </size>
             </property>
-            <property name="text">
-             <string>10</string>
+            <property name="styleSheet">
+             <string notr="true"/>
             </property>
-            <property name="placeholderText">
-             <string># of x value for spectrum sweep</string>
+            <property name="sizeAdjustPolicy">
+             <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
             </property>
            </widget>
           </item>
-          <item row="5" column="1">
+          <item row="6" column="1">
            <widget class="QSpinBox" name="prefitPhotonSpinBox">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1118,8 +1102,36 @@ QSpinBox::down-button:pressed {
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label">
+          <item row="4" column="1" colspan="2">
+           <widget class="IntLineEdit" name="pointsAddLineEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>170</width>
+              <height>30</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>30</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>10</string>
+            </property>
+            <property name="placeholderText">
+             <string># of x value for spectrum sweep</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_44">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -1130,22 +1142,9 @@ QSpinBox::down-button:pressed {
              <string notr="true">font-size: 13px</string>
             </property>
             <property name="text">
-             <string>INITIAL STATE</string>
+             <string>TRANSITIONS</string>
             </property>
            </widget>
-          </item>
-          <item row="6" column="0">
-           <spacer name="verticalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>115</height>
-             </size>
-            </property>
-           </spacer>
           </item>
           <item row="1" column="3">
            <widget class="QPushButton" name="numericalSpectrumSettingsHelpPushButton">
@@ -1182,8 +1181,44 @@ QSpinBox::down-button:pressed {
             </property>
            </widget>
           </item>
-          <item row="1" column="1" colspan="2">
-           <widget class="QComboBox" name="subsysComboBox">
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_33">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">font-size: 13px</string>
+            </property>
+            <property name="text">
+             <string>PHOTONS</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <spacer name="verticalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>115</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>NUM CPUS</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="IntLineEdit" name="numCPUsLineEdit">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -1196,17 +1231,8 @@ QSpinBox::down-button:pressed {
               <height>30</height>
              </size>
             </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>30</height>
-             </size>
-            </property>
-            <property name="styleSheet">
-             <string notr="true"/>
-            </property>
-            <property name="sizeAdjustPolicy">
-             <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
+            <property name="text">
+             <string>1</string>
             </property>
            </widget>
           </item>

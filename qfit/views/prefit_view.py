@@ -365,6 +365,7 @@ class PrefitView(QObject):
         self.initialState: StateLineEdit = self.options["initialState"]
         self.photons: QSpinBox = self.options["photons"]
         self.pointsAdded: IntLineEdit = self.options["pointsAdded"]
+        self.numCPUs: IntLineEdit = self.options["numCPUs"]
         self.autoRun: QCheckBox = self.options["autoRun"]
 
         self.optionsConnects()
@@ -397,6 +398,7 @@ class PrefitView(QObject):
         self.pointsAdded.setEnabled(value)
         self.autoRun.setEnabled(value)
         self.runSweep.setEnabled(value)
+        self.numCPUs.setEnabled(value)
 
     # Signal processing ======================================================
     def blockAllSignals(self, b: bool):
@@ -427,6 +429,8 @@ class PrefitView(QObject):
             self.photons.setValue(value)
         elif option == "pointsAdded":
             self.pointsAdded.setText(value)
+        elif option == "numCPUs":
+            self.numCPUs.setText(value)
         elif option == "autoRun":
             self.autoRun.setChecked(value)
         self.blockAllSignals(False)
@@ -453,6 +457,10 @@ class PrefitView(QObject):
         self.pointsAdded.editingFinished.connect(
             lambda: self.optionUpdated.emit("pointsAdded", self.pointsAdded.text())
         )
+        self.numCPUs.editingFinished.connect(
+            lambda: self.optionUpdated.emit("numCPUs", self.numCPUs.text())
+        )
         self.autoRun.stateChanged.connect(
             lambda: self.optionUpdated.emit("autoRun", self.autoRun.isChecked())
         )
+        

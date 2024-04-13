@@ -571,15 +571,6 @@ class Ui_settingsWidget(object):
         self.gridLayout = QGridLayout(self.spectrumTabContainerWidget)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setContentsMargins(0, 5, 0, 0)
-        self.initStateLineEdit = StateLineEdit(self.spectrumTabContainerWidget)
-        self.initStateLineEdit.setObjectName(u"initStateLineEdit")
-        sizePolicy2.setHeightForWidth(self.initStateLineEdit.sizePolicy().hasHeightForWidth())
-        self.initStateLineEdit.setSizePolicy(sizePolicy2)
-        self.initStateLineEdit.setMinimumSize(QSize(170, 30))
-        self.initStateLineEdit.setMaximumSize(QSize(16777215, 30))
-
-        self.gridLayout.addWidget(self.initStateLineEdit, 2, 1, 1, 2)
-
         self.label_43 = QLabel(self.spectrumTabContainerWidget)
         self.label_43.setObjectName(u"label_43")
         sizePolicy2.setHeightForWidth(self.label_43.sizePolicy().hasHeightForWidth())
@@ -588,29 +579,22 @@ class Ui_settingsWidget(object):
 
         self.gridLayout.addWidget(self.label_43, 4, 0, 1, 1)
 
-        self.label_44 = QLabel(self.spectrumTabContainerWidget)
-        self.label_44.setObjectName(u"label_44")
-        sizePolicy2.setHeightForWidth(self.label_44.sizePolicy().hasHeightForWidth())
-        self.label_44.setSizePolicy(sizePolicy2)
-        self.label_44.setStyleSheet(u"font-size: 13px")
+        self.label = QLabel(self.spectrumTabContainerWidget)
+        self.label.setObjectName(u"label")
+        sizePolicy2.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy2)
+        self.label.setStyleSheet(u"font-size: 13px")
 
-        self.gridLayout.addWidget(self.label_44, 1, 0, 1, 1)
+        self.gridLayout.addWidget(self.label, 2, 0, 1, 1)
 
-        self.label_42 = QLabel(self.spectrumTabContainerWidget)
-        self.label_42.setObjectName(u"label_42")
-        sizePolicy2.setHeightForWidth(self.label_42.sizePolicy().hasHeightForWidth())
-        self.label_42.setSizePolicy(sizePolicy2)
-        self.label_42.setStyleSheet(u"font-size: 13px")
+        self.initStateLineEdit = StateLineEdit(self.spectrumTabContainerWidget)
+        self.initStateLineEdit.setObjectName(u"initStateLineEdit")
+        sizePolicy2.setHeightForWidth(self.initStateLineEdit.sizePolicy().hasHeightForWidth())
+        self.initStateLineEdit.setSizePolicy(sizePolicy2)
+        self.initStateLineEdit.setMinimumSize(QSize(170, 30))
+        self.initStateLineEdit.setMaximumSize(QSize(16777215, 30))
 
-        self.gridLayout.addWidget(self.label_42, 3, 0, 1, 1)
-
-        self.label_33 = QLabel(self.spectrumTabContainerWidget)
-        self.label_33.setObjectName(u"label_33")
-        sizePolicy2.setHeightForWidth(self.label_33.sizePolicy().hasHeightForWidth())
-        self.label_33.setSizePolicy(sizePolicy2)
-        self.label_33.setStyleSheet(u"font-size: 13px")
-
-        self.gridLayout.addWidget(self.label_33, 5, 0, 1, 1)
+        self.gridLayout.addWidget(self.initStateLineEdit, 2, 1, 1, 2)
 
         self.evalsCountLineEdit = IntLineEdit(self.spectrumTabContainerWidget)
         self.evalsCountLineEdit.setObjectName(u"evalsCountLineEdit")
@@ -621,14 +605,24 @@ class Ui_settingsWidget(object):
 
         self.gridLayout.addWidget(self.evalsCountLineEdit, 3, 1, 1, 2)
 
-        self.pointsAddLineEdit = IntLineEdit(self.spectrumTabContainerWidget)
-        self.pointsAddLineEdit.setObjectName(u"pointsAddLineEdit")
-        sizePolicy2.setHeightForWidth(self.pointsAddLineEdit.sizePolicy().hasHeightForWidth())
-        self.pointsAddLineEdit.setSizePolicy(sizePolicy2)
-        self.pointsAddLineEdit.setMinimumSize(QSize(170, 30))
-        self.pointsAddLineEdit.setMaximumSize(QSize(16777215, 30))
+        self.label_42 = QLabel(self.spectrumTabContainerWidget)
+        self.label_42.setObjectName(u"label_42")
+        sizePolicy2.setHeightForWidth(self.label_42.sizePolicy().hasHeightForWidth())
+        self.label_42.setSizePolicy(sizePolicy2)
+        self.label_42.setStyleSheet(u"font-size: 13px")
 
-        self.gridLayout.addWidget(self.pointsAddLineEdit, 4, 1, 1, 2)
+        self.gridLayout.addWidget(self.label_42, 3, 0, 1, 1)
+
+        self.subsysComboBox = QComboBox(self.spectrumTabContainerWidget)
+        self.subsysComboBox.setObjectName(u"subsysComboBox")
+        sizePolicy2.setHeightForWidth(self.subsysComboBox.sizePolicy().hasHeightForWidth())
+        self.subsysComboBox.setSizePolicy(sizePolicy2)
+        self.subsysComboBox.setMinimumSize(QSize(170, 30))
+        self.subsysComboBox.setMaximumSize(QSize(16777215, 30))
+        self.subsysComboBox.setStyleSheet(u"")
+        self.subsysComboBox.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+
+        self.gridLayout.addWidget(self.subsysComboBox, 1, 1, 1, 2)
 
         self.prefitPhotonSpinBox = QSpinBox(self.spectrumTabContainerWidget)
         self.prefitPhotonSpinBox.setObjectName(u"prefitPhotonSpinBox")
@@ -701,19 +695,24 @@ class Ui_settingsWidget(object):
         self.prefitPhotonSpinBox.setAlignment(Qt.AlignCenter)
         self.prefitPhotonSpinBox.setMinimum(1)
 
-        self.gridLayout.addWidget(self.prefitPhotonSpinBox, 5, 1, 1, 1)
+        self.gridLayout.addWidget(self.prefitPhotonSpinBox, 6, 1, 1, 1)
 
-        self.label = QLabel(self.spectrumTabContainerWidget)
-        self.label.setObjectName(u"label")
-        sizePolicy2.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy2)
-        self.label.setStyleSheet(u"font-size: 13px")
+        self.pointsAddLineEdit = IntLineEdit(self.spectrumTabContainerWidget)
+        self.pointsAddLineEdit.setObjectName(u"pointsAddLineEdit")
+        sizePolicy2.setHeightForWidth(self.pointsAddLineEdit.sizePolicy().hasHeightForWidth())
+        self.pointsAddLineEdit.setSizePolicy(sizePolicy2)
+        self.pointsAddLineEdit.setMinimumSize(QSize(170, 30))
+        self.pointsAddLineEdit.setMaximumSize(QSize(16777215, 30))
 
-        self.gridLayout.addWidget(self.label, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.pointsAddLineEdit, 4, 1, 1, 2)
 
-        self.verticalSpacer_2 = QSpacerItem(20, 115, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.label_44 = QLabel(self.spectrumTabContainerWidget)
+        self.label_44.setObjectName(u"label_44")
+        sizePolicy2.setHeightForWidth(self.label_44.sizePolicy().hasHeightForWidth())
+        self.label_44.setSizePolicy(sizePolicy2)
+        self.label_44.setStyleSheet(u"font-size: 13px")
 
-        self.gridLayout.addItem(self.verticalSpacer_2, 6, 0, 1, 1)
+        self.gridLayout.addWidget(self.label_44, 1, 0, 1, 1)
 
         self.numericalSpectrumSettingsHelpPushButton = QPushButton(self.spectrumTabContainerWidget)
         self.numericalSpectrumSettingsHelpPushButton.setObjectName(u"numericalSpectrumSettingsHelpPushButton")
@@ -731,16 +730,30 @@ class Ui_settingsWidget(object):
 
         self.gridLayout.addWidget(self.numericalSpectrumSettingsHelpPushButton, 1, 3, 1, 1)
 
-        self.subsysComboBox = QComboBox(self.spectrumTabContainerWidget)
-        self.subsysComboBox.setObjectName(u"subsysComboBox")
-        sizePolicy2.setHeightForWidth(self.subsysComboBox.sizePolicy().hasHeightForWidth())
-        self.subsysComboBox.setSizePolicy(sizePolicy2)
-        self.subsysComboBox.setMinimumSize(QSize(170, 30))
-        self.subsysComboBox.setMaximumSize(QSize(16777215, 30))
-        self.subsysComboBox.setStyleSheet(u"")
-        self.subsysComboBox.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self.label_33 = QLabel(self.spectrumTabContainerWidget)
+        self.label_33.setObjectName(u"label_33")
+        sizePolicy2.setHeightForWidth(self.label_33.sizePolicy().hasHeightForWidth())
+        self.label_33.setSizePolicy(sizePolicy2)
+        self.label_33.setStyleSheet(u"font-size: 13px")
 
-        self.gridLayout.addWidget(self.subsysComboBox, 1, 1, 1, 2)
+        self.gridLayout.addWidget(self.label_33, 6, 0, 1, 1)
+
+        self.verticalSpacer_2 = QSpacerItem(20, 115, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.gridLayout.addItem(self.verticalSpacer_2, 7, 0, 1, 1)
+
+        self.label_4 = QLabel(self.spectrumTabContainerWidget)
+        self.label_4.setObjectName(u"label_4")
+
+        self.gridLayout.addWidget(self.label_4, 5, 0, 1, 1)
+
+        self.numCPUsLineEdit = IntLineEdit(self.spectrumTabContainerWidget)
+        self.numCPUsLineEdit.setObjectName(u"numCPUsLineEdit")
+        sizePolicy2.setHeightForWidth(self.numCPUsLineEdit.sizePolicy().hasHeightForWidth())
+        self.numCPUsLineEdit.setSizePolicy(sizePolicy2)
+        self.numCPUsLineEdit.setMinimumSize(QSize(170, 30))
+
+        self.gridLayout.addWidget(self.numCPUsLineEdit, 5, 1, 1, 1)
 
 
         self.verticalLayout_3.addWidget(self.spectrumTabContainerWidget)
@@ -848,16 +861,17 @@ class Ui_settingsWidget(object):
         self.label_3.setText(QCoreApplication.translate("settingsWidget", u"MAX", None))
         self.label_40.setText(QCoreApplication.translate("settingsWidget", u"COLORING", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.visualTab), QCoreApplication.translate("settingsWidget", u"VISUAL", None))
-        self.initStateLineEdit.setPlaceholderText(QCoreApplication.translate("settingsWidget", u"dressed or bare label", None))
         self.label_43.setText(QCoreApplication.translate("settingsWidget", u"POINTS ADDED", None))
-        self.label_44.setText(QCoreApplication.translate("settingsWidget", u"TRANSITIONS", None))
-        self.label_42.setText(QCoreApplication.translate("settingsWidget", u"EVALS COUNT", None))
-        self.label_33.setText(QCoreApplication.translate("settingsWidget", u"PHOTONS", None))
+        self.label.setText(QCoreApplication.translate("settingsWidget", u"INITIAL STATE", None))
+        self.initStateLineEdit.setPlaceholderText(QCoreApplication.translate("settingsWidget", u"dressed or bare label", None))
         self.evalsCountLineEdit.setText(QCoreApplication.translate("settingsWidget", u"20", None))
+        self.label_42.setText(QCoreApplication.translate("settingsWidget", u"EVALS COUNT", None))
         self.pointsAddLineEdit.setText(QCoreApplication.translate("settingsWidget", u"10", None))
         self.pointsAddLineEdit.setPlaceholderText(QCoreApplication.translate("settingsWidget", u"# of x value for spectrum sweep", None))
-        self.label.setText(QCoreApplication.translate("settingsWidget", u"INITIAL STATE", None))
+        self.label_44.setText(QCoreApplication.translate("settingsWidget", u"TRANSITIONS", None))
         self.numericalSpectrumSettingsHelpPushButton.setText("")
+        self.label_33.setText(QCoreApplication.translate("settingsWidget", u"PHOTONS", None))
+        self.label_4.setText(QCoreApplication.translate("settingsWidget", u"NUM CPUS", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.spectrumTab), QCoreApplication.translate("settingsWidget", u"SPECTRUM", None))
         self.tolLineEdit.setStyleSheet(QCoreApplication.translate("settingsWidget", u"font-size: 13px", None))
         self.tolLineEdit.setText(QCoreApplication.translate("settingsWidget", u"1e-6", None))

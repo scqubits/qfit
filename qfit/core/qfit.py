@@ -578,6 +578,7 @@ class Fit:
             "initialState": self._settingUi.ui.initStateLineEdit,
             "photons": self._settingUi.ui.prefitPhotonSpinBox,
             "evalsCount": self._settingUi.ui.evalsCountLineEdit,
+            "numCPUs": self._settingUi.ui.numCPUsLineEdit,
             "pointsAdded": self._settingUi.ui.pointsAddLineEdit,
             "autoRun": self._mainUi.autoRunCheckBox,
         }
