@@ -32,8 +32,8 @@ from qfit.models.data_structures import (
     ScatterElement,
     VLineElement,
 )
-
 from qfit.models.registry import Registrable, RegistryEntry
+from qfit.settings import MARKER_SIZE
 
 from copy import deepcopy, copy
 
@@ -155,7 +155,7 @@ class ActiveExtractedData(QObject):
             self._transition.data[0],
             self._transition.data[1],
             marker=r"$\odot$",
-            s = 130,
+            s = MARKER_SIZE,
             alpha = 0.3,
             zorder = 1,
         )
