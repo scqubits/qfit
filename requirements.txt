@@ -8,4 +8,5 @@ scqubits>=3.0.0
 matplotlib-label-lines
 ipykernel
 jupyter
+pathos
 dill
