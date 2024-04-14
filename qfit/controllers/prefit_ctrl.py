@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from qfit.models.extracted_data import AllExtractedData
     from qfit.models.measurement_data import MeasDataSet, MeasDataType
     from qfit.models.parameter_settings import ParameterType
-    from qfit.views.prefit_view import PrefitView, PrefitParamView
+    from qfit.views.prefit_view import SweepSettingsView, PrefitParamView
     from qfit.views.paging_view import PageView
     from qfit.core.mainwindow import MainWindow
 
@@ -22,10 +22,10 @@ class PrefitCtrl(QObject):
     """
     Controller for the prefit view. This class is responsible for
     connecting the prefit view with the quantum model and the prefit
-    parameter model. 
+    parameter model.
 
     Relevant UI elements:
-    - prefitView: the main prefit view
+    - sweepSettingsBiew: the view for sweep settings
     - prefitParamView: the parameter view
     - pageView: the page view
 
@@ -43,25 +43,34 @@ class PrefitCtrl(QObject):
     parent : QObject
         The parent object
     models : Tuple[QuantumModel, PrefitHSParams, PrefitCaliParams, AllExtractedData, CaliParamModel, MeasDataSet, MainWindow]
-    Views : Tuple[PrefitView, PrefitParamView, PageView]
+    Views : Tuple[sweepSettingsView, PrefitParamView, PageView]
     """
+
     def __init__(
-        self, 
+        self,
         parent: QObject,
         models: Tuple[
-            "QuantumModel", "PrefitHSParams", "PrefitCaliParams",
-            "AllExtractedData", "CaliParamModel",
-            "MeasDataSet", "MainWindow"
+            "QuantumModel",
+            "PrefitHSParams",
+            "PrefitCaliParams",
+            "AllExtractedData",
+            "CaliParamModel",
+            "MeasDataSet",
+            "MainWindow",
         ],
-        views: Tuple["PrefitView", "PrefitParamView", "PageView"],
+        views: Tuple["SweepSettingsView", "PrefitParamView", "PageView"],
     ):
         super().__init__(parent)
         (
-            self.quantumModel, self.prefitHSParams, self.prefitCaliParams, 
-            self.allDatasets, self.caliParamModel,
-            self.measurementData, self.mainWindow
+            self.quantumModel,
+            self.prefitHSParams,
+            self.prefitCaliParams,
+            self.allDatasets,
+            self.caliParamModel,
+            self.measurementData,
+            self.mainWindow,
         ) = models
-        self.prefitView, self.prefitParamView, self.pageView = views
+        self.sweepSettingsView, self.prefitParamView, self.pageView = views
 
         self._switchFigConnects()
         self._quantumModelConnects()
@@ -69,20 +78,20 @@ class PrefitCtrl(QObject):
         self._sliderParamConnects()
 
     def replaceHS(
-        self, 
-        hilbertspace: "HilbertSpace", 
+        self,
+        hilbertspace: "HilbertSpace",
     ):
         """
         When the app is reloaded (new measurement data and hilbert space),
         reinitialize the all relevant models and views.
-        
+
         Parameters
         ----------
         hilbertSpace : HilbertSpace
             The HilbertSpace object.
         """
         self._buildHSParamSet(hilbertspace)
-        self.prefitView.replaceHS(
+        self.sweepSettingsView.replaceHS(
             subsysNames=[
                 SweepParamSet.parentSystemNames(subsys)
                 for subsys in hilbertspace.subsystem_list[::-1]
@@ -90,24 +99,21 @@ class PrefitCtrl(QObject):
         )
         self.quantumModel.replaceHS(hilbertspace)
 
-    def replaceMeasData(
-        self, 
-        measurementData: List["MeasDataType"]
-    ):
+    def replaceMeasData(self, measurementData: List["MeasDataType"]):
         """
         When the app is reloaded (new measurement data and hilbert space),
-        reinitialize the all relevant models and views. 
+        reinitialize the all relevant models and views.
 
         Parameters
         ----------
         measurementData : List[MeasurementDataType]
             The measurement data.
         """
-        self.quantumModel.replaceMeasData(
-            [data.name for data in measurementData]
-        )
+        self.quantumModel.replaceMeasData([data.name for data in measurementData])
 
-    def dynamicalInit(self,):
+    def dynamicalInit(
+        self,
+    ):
         """
         When the app is reloaded (new measurement data and hilbert space),
         reinitialize the all relevant models and views. In particular,
@@ -117,7 +123,7 @@ class PrefitCtrl(QObject):
         Finally, it updates the view and the quantum model.
         """
         self._inheritCaliParams()
-        
+
         self.prefitParamView.insertSliderMinMax(
             self.prefitHSParams.paramNamesDict(),
             self.prefitCaliParams.paramNamesDict(),
@@ -131,7 +137,7 @@ class PrefitCtrl(QObject):
         self.prefitCaliParams.emitUpdateBox()
         self.prefitCaliParams.emitUpdateSlider()
         for option, value in self.quantumModel.exportSweepOption().items():
-            self.prefitView.setOptions(option, value)
+            self.sweepSettingsView.setOptions(option, value)
 
         # update everything in the quantumModel
         self.prefitHSParams.emitHSUpdated()
@@ -141,7 +147,7 @@ class PrefitCtrl(QObject):
 
     def _switchFigConnects(self):
         """
-        When the user switches between different measurement data figures, 
+        When the user switches between different measurement data figures,
         the spectrum displayed should be updated accordingly.
         """
         self.measurementData.figSwitched.connect(self.quantumModel.switchFig)
@@ -166,9 +172,9 @@ class PrefitCtrl(QObject):
         """
         Prefit option, the run sweep button --> quantum model.
         """
-        self.prefitView.optionUpdated.connect(self.quantumModel.storeSweepOption)
+        self.sweepSettingsView.optionUpdated.connect(self.quantumModel.storeSweepOption)
 
-        self.prefitView.runSweep.clicked.connect(
+        self.sweepSettingsView.runSweep.clicked.connect(
             lambda: self.quantumModel.updateCalc(forced=True)
         )
 
@@ -185,7 +191,6 @@ class PrefitCtrl(QObject):
             signalSet: Dict[str, SignalInstance]
             model: Union[PrefitHSParams, PrefitCaliParams]
 
-            
             signalSet["sliderChanged"].connect(
                 lambda paramAttr, model=model: model.storeParamAttr(
                     paramAttr, fromSlider=True
@@ -220,11 +225,13 @@ class PrefitCtrl(QObject):
             self.prefitCaliParams.emitUpdateCaliModel
         )
         self.prefitCaliParams.updateCaliModel.connect(self.caliParamModel.setParamByPA)
-        self.caliParamModel.updatePrefitModel.connect(self.prefitCaliParams.setParamByPA)
+        self.caliParamModel.updatePrefitModel.connect(
+            self.prefitCaliParams.setParamByPA
+        )
 
     def _buildHSParamSet(self, hilbertspace: "HilbertSpace"):
         """
-        Identify prefit slider parameters for the HilbertSpace object. For 
+        Identify prefit slider parameters for the HilbertSpace object. For
         now, we only accept one tunable parameter (flux or ng) in the
         HilbertSpace object. If one flux and one ng are found, we assume
         that the flux is swept.
@@ -272,8 +279,9 @@ class PrefitCtrl(QObject):
         #     )
         #     self.mainWindow.close()
 
-
-    def _inheritCaliParams(self,):
+    def _inheritCaliParams(
+        self,
+    ):
         # initialize calibration parameters
         self.prefitCaliParams.setAttrByParamSet(
             self.caliParamModel.toPrefitParams(),

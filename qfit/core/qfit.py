@@ -49,7 +49,7 @@ from qfit.controllers.status import StatusCtrl
 from qfit.views.status_bar import StatusBarView
 
 # pre-fit
-from qfit.views.prefit_view import PrefitParamView, PrefitView
+from qfit.views.prefit_view import PrefitParamView, SweepSettingsView
 from qfit.models.prefit import PrefitHSParams, PrefitCaliParams
 from qfit.models.numerical_model import QuantumModel
 from qfit.controllers.prefit_ctrl import PrefitCtrl
@@ -69,6 +69,7 @@ from qfit.models.registry import Registry
 from qfit.controllers.io_ctrl import IOCtrl
 
 import qfit.settings as settings
+
 if executed_in_ipython():
     # inside ipython, the function get_ipython is always in globals()
     ipython = get_ipython()
@@ -80,12 +81,12 @@ else:
 
 class Fit:
     """
-    The main class to run the qfit application. 
+    The main class to run the qfit application.
 
     Parameters
     ----------
     hilbertSpace: HilbertSpace
-        The superconducting circuit model you want to fit with, should be 
+        The superconducting circuit model you want to fit with, should be
         a `HilbertSpace` object from `scqubits`
     measurementFileName: Optional[str | List[str]]
         The names of the measurement files you want to load. If left blank,
@@ -97,6 +98,7 @@ class Fit:
         A `Fit` object. You can export the parameters and the HilbertSpace object
         after fitting by calling `exportParameters` and `exportHilbertSpace` methods.
     """
+
     app: Union[QApplication, None] = None
     _mainWindow: MainWindow
 
@@ -123,12 +125,12 @@ class Fit:
         return instance
 
     def __init__(
-        self, 
-        hilbertSpace: HilbertSpace, 
-        measurementFileName: Optional[str | List[str]] = None
+        self,
+        hilbertSpace: HilbertSpace,
+        measurementFileName: Optional[str | List[str]] = None,
     ):
         self._mainWindow: MainWindow
-            
+
         self._ioCtrl.newProject(
             from_menu=False,
             hilbertSpace=hilbertSpace,
@@ -209,17 +211,17 @@ class Fit:
         """
         if fromFit:
             return (
-                self._fitHSParams.getFlattenedAttrDict("value") 
+                self._fitHSParams.getFlattenedAttrDict("value")
                 | self._caliParamModel.getFlattenedAttrDict("value")
                 | self._fitCaliParams.getFlattenedAttrDict("value")
             )
         else:
             return (
-                self._prefitHSParams.getFlattenedAttrDict("value") 
+                self._prefitHSParams.getFlattenedAttrDict("value")
                 | self._caliParamModel.getFlattenedAttrDict("value")
                 | self._prefitCaliParams.getFlattenedAttrDict("value")
             )
-        
+
     def exportHilbertSpace(
         self, deepcopy: bool = False, fromFit: bool = True
     ) -> HilbertSpace:
@@ -230,7 +232,7 @@ class Fit:
         ----------
         deepcope: bool
             If True, a deepcopy of the HilbertSpace object is returned.
-            If False, the original HilbertSpace object is returned. Either of 
+            If False, the original HilbertSpace object is returned. Either of
             them is updated with the latest parameters.
         fromFit: bool
             As we have two copies of parameters, one from prefit sliders and one from fit tables, please specify which one to export.
@@ -319,7 +321,7 @@ class Fit:
     def _dynamicalInit(self):
         """
         A collection of methods to reinitialize the app when new measurement data
-        and HilbertSpace object are loaded. It must be called after the 
+        and HilbertSpace object are loaded. It must be called after the
         `_replaceHS` and `_replaceMeasData` methods.
         """
         self._calibrationCtrl.dynamicalInit()
@@ -593,7 +595,7 @@ class Fit:
             self._mainUi.prefitMinmaxScrollAreaWidget,
             self._mainUi.frame_prefit_minmax,
         )
-        self._prefitView = PrefitView(
+        self._sweepSettingsView = SweepSettingsView(
             self._mainWindow,
             runSweep=self._mainUi.plotButton,
             options=self._prefitOptions,
@@ -602,11 +604,15 @@ class Fit:
         self._prefitCtrl = PrefitCtrl(
             self._mainWindow,
             (
-                self._quantumModel, self._prefitHSParams, self._prefitCaliParams,
-                self._allDatasets, self._caliParamModel, 
-                self._measData, self._mainWindow
+                self._quantumModel,
+                self._prefitHSParams,
+                self._prefitCaliParams,
+                self._allDatasets,
+                self._caliParamModel,
+                self._measData,
+                self._mainWindow,
             ),
-            (self._prefitView, self._prefitParamView, self._pageView),
+            (self._sweepSettingsView, self._prefitParamView, self._pageView),
         )
 
     def _fitMVCInits(self):
@@ -634,14 +640,21 @@ class Fit:
         self._fitCtrl = FitCtrl(
             self._mainWindow,
             (
-                self._fitModel, self._fitHSParams, self._fitCaliParams,
-                self._prefitHSParams, self._prefitCaliParams, self._quantumModel,
-                self._allDatasets, self._caliParamModel,
-                self._measData
+                self._fitModel,
+                self._fitHSParams,
+                self._fitCaliParams,
+                self._prefitHSParams,
+                self._prefitCaliParams,
+                self._quantumModel,
+                self._allDatasets,
+                self._caliParamModel,
+                self._measData,
             ),
             (
-                self._fitView, self._fitParamView, 
-                self._prefitParamView, self._prefitView,
+                self._fitView,
+                self._fitParamView,
+                self._prefitParamView,
+                self._sweepSettingsView,
                 self._pageView,
             ),
         )
@@ -697,8 +710,8 @@ class Fit:
         self._registry = Registry()
         self._ioCtrl = IOCtrl(
             self._mainWindow,
-            models = (self._measData, self._registry),
-            views = (self._mainUi.toggleMenuButton, self._menuUi, self._mainWindow),
+            models=(self._measData, self._registry),
+            views=(self._mainUi.toggleMenuButton, self._menuUi, self._mainWindow),
             fullReplaceHS=self._replaceHS,
         )
 

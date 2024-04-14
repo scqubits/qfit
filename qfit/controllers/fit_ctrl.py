@@ -11,19 +11,19 @@ if TYPE_CHECKING:
     from qfit.models.calibration import CaliParamModel
     from qfit.models.measurement_data import MeasDataSet
     from qfit.views.fit_view import FitView, FitParamView
-    from qfit.views.prefit_view import PrefitParamView, PrefitView
+    from qfit.views.prefit_view import PrefitParamView, SweepSettingsView
     from qfit.views.paging_view import PageView
 
 
 class FitCtrl(QObject):
     """
-    Controller for the fitting. This controller serves as a transmittor between 
+    Controller for the fitting. This controller serves as a transmittor between
     the fitting parameters (model) and the fitting panel (view).
 
     Relevant UI elements:
-    - fitting view 
-    - prefit view 
-    - page view 
+    - fitting view
+    - prefit view
+    - page view
 
     Relevant model:
     - fitting parameters
@@ -41,8 +41,9 @@ class FitCtrl(QObject):
     models : Tuple[FitModel, FitHSParams, FitCaliParams, PrefitHSParams,
         PrefitCaliParams, QuantumModel, AllExtractedData, CaliParamModel,
         MeasDataSet]
-    views : Tuple[FitView, FitParamView, PrefitParamView, PrefitView, PageView]
+    views : Tuple[FitView, FitParamView, PrefitParamView, SweepSettingsView, PageView]
     """
+
     OptTerminated = False
 
     def __init__(
@@ -60,7 +61,11 @@ class FitCtrl(QObject):
             "MeasDataSet",
         ],
         views: Tuple[
-            "FitView", "FitParamView", "PrefitParamView", "PrefitView", "PageView"
+            "FitView",
+            "FitParamView",
+            "PrefitParamView",
+            "SweepSettingsView",
+            "PageView",
         ],
     ):
         super().__init__(parent)
@@ -79,7 +84,7 @@ class FitCtrl(QObject):
             self.fitView,
             self.fitParamView,
             self.prefitParamView,
-            self.prefitView,
+            self.sweepSettingsView,
             self.pageView,
         ) = views
 
@@ -88,13 +93,13 @@ class FitCtrl(QObject):
         self._fitCtrlConnects()
 
     def replaceHS(
-        self,   
+        self,
         hilbertSpace: "HilbertSpace",
     ):
         """
         When the app is reloaded (new measurement data and hilbert space),
         reinitialize the all relevant models and views.
-        
+
         Parameters
         ----------
         hilbertSpace : HilbertSpace
@@ -248,7 +253,7 @@ class FitCtrl(QObject):
         """
         self.fitView.setEnabled(enabled)
         self.prefitParamView.sliderSet.setEnabled(enabled)
-        self.prefitView.setEnabled(enabled)
+        self.sweepSettingsView.setEnabled(enabled)
         for page in ["calibrate", "extract", "prefit", "fit"]:
             self.pageView.setEnabled(enabled, page)
 
@@ -272,7 +277,7 @@ class FitCtrl(QObject):
     @Slot()
     def onFitButtonClicked(self):
         """
-        The slot for the fit button. 
+        The slot for the fit button.
         If the mode is "run", start the optimization.
         If the mode is "stop", stop the optimization.
         """
@@ -369,7 +374,7 @@ class FitCtrl(QObject):
     @Slot()
     def postOptimization(self):
         """
-        After the optimization is finished, restore the calibration parameters 
+        After the optimization is finished, restore the calibration parameters
         (as we used it to store the temporary parameters and update calibration
         functions), update the quantum model with the new parameters, and enable
         the parameter tuning.

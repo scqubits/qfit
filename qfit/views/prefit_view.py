@@ -328,9 +328,9 @@ class PrefitParamView(QObject):
             self.prefitMinMaxFrame.setMaximumHeight(0)
 
 
-class PrefitView(QObject):
+class SweepSettingsView(QObject):
     """
-    A view for the prefit settings. This view is a widget that contains
+    A view for the sweep settings. This view is a widget that contains
     settings for the prefit, such as the number of eigenvalues to calculate,
     the initial state, the number of photons, etc. It also contains run
     sweep button and auto run checkbox.
@@ -463,4 +463,3 @@ class PrefitView(QObject):
         self.autoRun.stateChanged.connect(
             lambda: self.optionUpdated.emit("autoRun", self.autoRun.isChecked())
         )
-        
