@@ -94,7 +94,7 @@ class PlottingCtrl(QObject):
     ):
         super().__init__(parent)
         (
-            self.measData,
+            self.measDataSet,
             self.calibrationModel,
             self.allDatasets,
             self.activeDataset,
@@ -147,13 +147,13 @@ class PlottingCtrl(QObject):
         self.zComboBoxReload()
 
         # plot everything available
-        self.measData.emitReadyToPlot()
-        self.measData.emitRelimCanvas()
-        self.measData.emitRawXMap()
+        self.setXYAxes(self.measDataSet.currentMeasData)
+        self.measDataSet.emitReadyToPlot()
+        self.measDataSet.emitRelimCanvas()
+        self.measDataSet.emitRawXMap()
         self.activeDataset.emitReadyToPlot()
         self.allDatasets.emitReadyToPlot()
         self.allDatasets.emitFocusChanged()  # update the snapX
-        self.setXYAxes(self.measData.currentMeasData)
         self.updateCursor()
 
     # measurement ======================================================
@@ -161,11 +161,11 @@ class PlottingCtrl(QObject):
         """
         Load the available data into the combo boxes for the x, y, and z axes.
         """
-        zDataNames = self.measData.currentMeasData.zCandidates.keyList
+        zDataNames = self.measDataSet.currentMeasData.zCandidates.keyList
         self.measComboBoxes["z"].clear()
         self.measComboBoxes["z"].addItems(zDataNames)
         self.measComboBoxes["z"].setCurrentText(
-            self.measData.currentMeasData.principalZ.name
+            self.measDataSet.currentMeasData.principalZ.name
         )
         # self.setupXYDataBoxes()
 
@@ -187,7 +187,7 @@ class PlottingCtrl(QObject):
             max=self.measPlotSettings["max"].value(),
             color=self.measPlotSettings["color"].currentText(),
         )
-        self.measData.storeFilter(fiter)
+        self.measDataSet.storeFilter(fiter)
 
     def _viewStoreFilter(self, filterConfig: FilterConfig):
         """
@@ -227,7 +227,7 @@ class PlottingCtrl(QObject):
         """
         self.measComboBoxes["z"].activated.connect(self.zDataUpdate)
 
-        self.measData.figSwitched.connect(self.switchFig)
+        self.measDataSet.figSwitched.connect(self.switchFig)
 
         # self.measComboBoxes["x"].activated.connect(self.xAxisUpdate)
         # self.measComboBoxes["y"].activated.connect(self.yAxisUpdate)
@@ -251,7 +251,7 @@ class PlottingCtrl(QObject):
         """
         Update the z axis of the measurement data.
         """
-        self.measData.storePrincipalZ(itemIndex)
+        self.measDataSet.storePrincipalZ(itemIndex)
         # self.setupXYDataBoxes()
 
     # @Slot(int)
@@ -267,9 +267,9 @@ class PlottingCtrl(QObject):
         """
         Update the axes limits of the canvas based on the x and y data.
         """
-        self.mplCanvas.relim(xData, yData)
-        if self.measData.rowCount() > 0:
-            self.setXYAxes(self.measData.currentMeasData)
+        self.mplCanvas.relimPrincipalAxes(xData, yData)
+        if self.measDataSet.rowCount() > 0:
+            self.setXYAxes(self.measDataSet.currentMeasData)
 
     @Slot(str)
     def switchFig(self, figName: str):
@@ -282,7 +282,7 @@ class PlottingCtrl(QObject):
         the only exception.
         """
         self.zComboBoxReload()
-        self._viewStoreFilter(self.measData.exportFilter())
+        self._viewStoreFilter(self.measDataSet.exportFilter())
         # self.setXYAxes(self.measData.currentMeasData)  # will be called when relimCanvas  
 
     @Slot()
@@ -296,7 +296,7 @@ class PlottingCtrl(QObject):
 
         # maybe: self.calibrationData.swapXY()
 
-        self.measData.swapXY()
+        self.measDataSet.swapXY()
         # self.setupXYDataBoxes()
 
         self.allDatasets.swapXY()
@@ -331,7 +331,7 @@ class PlottingCtrl(QObject):
         """
 
         self.calibrateAxes = checked
-        self.setXYAxes(self.measData.currentMeasData)
+        self.setXYAxes(self.measDataSet.currentMeasData)
 
     def setXYAxes(self, measData: MeasDataType):
         """
@@ -339,7 +339,7 @@ class PlottingCtrl(QObject):
         and the calibration functions.
         """
 
-        if self.measData.rowCount() == 0:
+        if self.measDataSet.rowCount() == 0:
             # not yet initialized
             return
 
@@ -358,7 +358,7 @@ class PlottingCtrl(QObject):
         # when need to show the calibrated data
         # x calibration
         currentSweepParam = self.XCaliFuncDict[
-            self.measData.currentMeasData.name
+            self.measDataSet.currentMeasData.name
         ]
 
         currentSweepParam.setByRawX({key: rng[0] for key, rng in rawXLim.items()})
@@ -380,13 +380,13 @@ class PlottingCtrl(QObject):
     def onXCaliFuncUpdated(self, XCaliFuncDict: Dict[str, "SweepParamSet"]):
         """Update the X calibration function and the labels on the canvas."""
         self.XCaliFuncDict = XCaliFuncDict
-        self.setXYAxes(self.measData.currentMeasData)
+        self.setXYAxes(self.measDataSet.currentMeasData)
 
     def onYCaliFuncUpdated(self, YCaliFunc: Callable, invYCaliFunc: Callable):
         """Update the Y calibration function and the labels on the canvas."""
         self.YCaliFunc = YCaliFunc
         self.invYCaliFunc = invYCaliFunc
-        self.setXYAxes(self.measData.currentMeasData)
+        self.setXYAxes(self.measDataSet.currentMeasData)
 
     def storeCalibrationPoint(self, xName, yName, xData, yData):
         """
@@ -395,12 +395,12 @@ class PlottingCtrl(QObject):
         - update the calibration data
 
         """
-        rawX = self.measData.currentMeasData.rawXByPrincipalX(xData)
+        rawX = self.measDataSet.currentMeasData.rawXByPrincipalX(xData)
         rawXYDict = rawX | {yName: yData}
 
         # model: update the calibration data
         self.calibrationModel.processSelectedPtFromPlot(
-                data=rawXYDict, figName=self.measData.currentMeasData.name
+                data=rawXYDict, figName=self.measDataSet.currentMeasData.name
             )
         # the above will then trigger the update the view:
         # turn off highlighting, set value, etc
@@ -431,7 +431,7 @@ class PlottingCtrl(QObject):
 
         # x snap
         xData = self.mplCanvas.specialCursor.snapToProperX(xData)
-        rawX = self.measData.currentMeasData.rawXByPrincipalX(xData)
+        rawX = self.measDataSet.currentMeasData.rawXByPrincipalX(xData)
         if not self.xSnapTool:
             # turn on the horizontal snap automatically, if the user turned it off
             self.canvasTools["snapX"].setChecked(True)
@@ -444,9 +444,9 @@ class PlottingCtrl(QObject):
 
         # y snap
         if self.canvasTools["snapY"].isChecked():
-            x_list = self.measData.currentMeasData.principalX.data
-            y_list = self.measData.currentMeasData.principalY.data
-            z_data = self.measData.currentMeasData.principalZ.data
+            x_list = self.measDataSet.currentMeasData.principalX.data
+            y_list = self.measDataSet.currentMeasData.principalY.data
+            z_data = self.measDataSet.currentMeasData.principalZ.data
 
             # calculate half index range as 5x linewidth
             linewidth = 0.01  # GHz
@@ -485,8 +485,8 @@ class PlottingCtrl(QObject):
             self.mplCanvas.updateCursorXSnapValues
         )
 
-        self.measData.readyToPlot.connect(self.mplCanvas.updateElement)
-        self.measData.relimCanvas.connect(self.relimCanvas)
+        self.measDataSet.readyToPlot.connect(self.mplCanvas.updateElement)
+        self.measDataSet.relimCanvas.connect(self.relimCanvas)
         self.quantumModel.readyToPlot.connect(self.mplCanvas.updateElement)
 
     def mouseClickConnects(self):
@@ -692,8 +692,8 @@ class PlottingCtrl(QObject):
 
         # position of the click
         xdata, ydata = self.axes.transData.inverted().transform((event.x, event.y))
-        xName = self.measData.currentMeasData.principalX.name
-        yName = self.measData.currentMeasData.principalY.name
+        xName = self.measDataSet.currentMeasData.principalX.name
+        yName = self.measDataSet.currentMeasData.principalY.name
 
         # select mode
         if self.dataDestination == "EXTRACT":

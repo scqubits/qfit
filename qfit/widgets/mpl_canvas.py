@@ -436,11 +436,24 @@ class MplFigureCanvas(QFrame):
         # reduce the margin of the axes
         self._adjustMargin(xAxisNum=1)
 
+        # limits of the principal axes
+        self._currentPrcplXLim: Tuple[float, float] = (0, 1)    # x, y lims after zoom/pan
+        self._currentPrcplYLim: Tuple[float, float] = (0, 1)
+        self._measPrcplXLim: Tuple[float, float] = (0, 1)       # x, y lims after reset
+        self._measPrcplYLim: Tuple[float, float] = (0, 1)
+        self._measPrcplXList = np.ndarray(self._measPrcplXLim)
+
         # the axes for displaying the x & y values
         self._xAxes: List[Axes] = []
         self._yAxes: List[Axes] = []
-        self._plottingElements: Dict[str, PlotElement] = {}
+        # limits of the displayed spine, ticks, and labels
+        self._currentAllXLim: List[Tuple[float, float]] = []
+        self._currentAllYLim: List[Tuple[float, float]] = []
+        self._allXLim: List[Tuple[float, float]] = []
+        self._allYLim: List[Tuple[float, float]] = []
 
+        # plotting elements, settings, and colors
+        self._plottingElements: Dict[str, PlotElement] = {}
         self.plottingDisabled: bool = False
 
         self._xSnapMode: Literal["MeasData", "ExtrX", "OFF"] = "OFF"
@@ -452,14 +465,6 @@ class MplFigureCanvas(QFrame):
         self._colorMapStr: str = "PuOr"
         self._updateElementColors()
 
-        self._xLim: Tuple[float, float] = (0, 1)
-        self._yLim: Tuple[float, float] = (0, 1)
-        self._measXLim: Tuple[float, float] = (0, 1)
-        self._measYLim: Tuple[float, float] = (0, 1)
-        self._measXList = np.ndarray(self._measXLim)
-
-        # should be call at the end - it will make use of other properties like
-        # coloring
 
     # Properties =======================================================
     @property
@@ -546,10 +551,10 @@ class MplFigureCanvas(QFrame):
     def _setMeasXList(self, xList: np.ndarray):
         """
         When the measurement data is loaded, we want to record the x values
-        of the measurement data. This method records the x values of the
-        measurement data.
+        of the measurement data. This method records the principal x values 
+        of the measurement data.
         """
-        self._measXList = xList
+        self._measPrcplXList = xList
         self.updateCursor()
 
     def _setMeasXYLim(self, xLim: Tuple[float, float], yLim: Tuple[float, float]):
@@ -558,8 +563,8 @@ class MplFigureCanvas(QFrame):
         and y limits determined by the measurement data. This method records
         the x and y limits of the axes when the measurement data is loaded.
         """
-        self._measXLim = xLim
-        self._measYLim = yLim
+        self._measPrcplXLim = xLim
+        self._measPrcplYLim = yLim
 
     def _recordXYLim(self):
         """
@@ -572,8 +577,41 @@ class MplFigureCanvas(QFrame):
             when the measurement data is loaded / transposed
         2. the view's x and y limits are zoomed/panned/reset externally
         """
-        self._xLim = self.axes.get_xlim()
-        self._yLim = self.axes.get_ylim()
+        self._currentPrcplXLim = self.axes.get_xlim()
+        self._currentPrcplYLim = self.axes.get_ylim()
+
+        for xAx in self._xAxes:
+            self._currentAllXLim.append(xAx.get_xlim())
+        for yAx in self._yAxes:
+            self._currentAllYLim.append(yAx.get_ylim())
+
+    @staticmethod
+    def _dispLimByPrcplLim(
+        currentPrcplLim: Tuple[float, float], 
+        measPrcplLim: Tuple[float, float], 
+        originalLim: Tuple[float, float],
+    ) -> Tuple[float, float]:
+        """
+        Displayed axes' limits are simutaneously scaled with the principal axes' limits.
+
+        Parameters:
+        -----------
+        currentPrcplLim: Tuple[float, float]
+            The current principal limits of the axes (which was just set)
+        measPrcplLim: Tuple[float, float]
+            The original limits of the principal axes
+        originalLim: Tuple[float, float]
+            The original limits of the displayed axes
+        """
+        # determine the linear relationship between the principal limits 
+        # and the displayed limits. displayed = k * principal + b
+        k = (originalLim[1] - originalLim[0]) / (measPrcplLim[1] - measPrcplLim[0])
+        b = originalLim[0] - k * measPrcplLim[0]
+
+        # calculate the displayed limits
+        dispLim = (k * currentPrcplLim[0] + b, k * currentPrcplLim[1] + b)
+
+        return dispLim
 
     def _restoreXYLim(self, byMeasData: bool = False):
         """
@@ -582,16 +620,33 @@ class MplFigureCanvas(QFrame):
         are automatically changed by matplotlib.
         """
         if byMeasData:
-            self.axes.set_xlim(*self._measXLim)
-            self.axes.set_ylim(*self._measYLim)
+            self.axes.set_xlim(*self._measPrcplXLim)
+            self.axes.set_ylim(*self._measPrcplYLim)
+
+            for i, xAx in enumerate(self._xAxes):
+                xAx.set_xlim(*self._allXLim[i])
+            for i, yAx in enumerate(self._yAxes):
+                yAx.set_ylim(*self._allYLim[i])
+            
         else:
-            self.axes.set_xlim(*self._xLim)
-            self.axes.set_ylim(*self._yLim)
+            self.axes.set_xlim(*self._currentPrcplXLim)
+            self.axes.set_ylim(*self._currentPrcplYLim)
+
+            for i, xAx in enumerate(self._xAxes):
+                xAx.set_xlim(*self._dispLimByPrcplLim(
+                    self._currentPrcplXLim, self._measPrcplXLim, self._allXLim[i]
+                ))
+            for i, yAx in enumerate(self._yAxes):
+                yAx.set_ylim(*self._dispLimByPrcplLim(
+                    self._currentPrcplYLim, self._measPrcplYLim, self._allYLim[i]
+                ))
 
     @Slot(np.ndarray, np.ndarray)
-    def relim(self, x: np.ndarray, y: np.ndarray):
+    def relimPrincipalAxes(self, x: np.ndarray, y: np.ndarray):
         """
-        Set the x and y limits of the axes to fit the measurement data
+        Set the principal x and y limits of the axes to fit the measurement data.
+
+        This Slot should be called accopmanied with updateXAxes and updateYAxes.
         """        
         xLim = (np.min(x), np.max(x))
         yLim = (np.min(y), np.max(y))
@@ -608,8 +663,13 @@ class MplFigureCanvas(QFrame):
 
     def updateXAxes(self, xAxes: Dict[str, Tuple[float, float]]):
         """
-        Update the x-axes value. 
+        Update the displayed x-axes value.
+
+        This Slot should be called accopmanied with relim and updateYAxes.
         """
+        self._allXLim = list(xAxes.values())
+        self._currentAllXLim = copy.deepcopy(self._allXLim)
+
         for ax in self._xAxes:
             self.canvas.figure.delaxes(ax)
 
@@ -655,7 +715,12 @@ class MplFigureCanvas(QFrame):
     def updateYAxes(self, yName: str, yRange: Tuple[float, float]):
         """
         Update the y-axes. (there is only one y-axis)
+
+        This Slot should be called accopmanied with relim and updateXAxes.
         """
+        self._allYLim = [yRange]
+        self._currentAllYLim = copy.deepcopy(self._allYLim)
+        
         for ax in self._yAxes:
             self.canvas.figure.delaxes(ax)
 
@@ -718,7 +783,7 @@ class MplFigureCanvas(QFrame):
             [self.axes] + self._xAxes + self._yAxes,
             xSnapMode = self._xSnapMode,
             distinctExtrX = self._distinctExtrX,
-            measX=self._measXList,
+            measX=self._measPrcplXList,
             xyMin = (self.axes.get_xlim()[0], self.axes.get_ylim()[0]),
             axisSnapMode = self._axisSnapMode,
             useblit = True,
@@ -766,10 +831,10 @@ class MplFigureCanvas(QFrame):
 
     @Slot()
     def resetView(self):
-
+        self.toolbar.home()
         # set the x and y limits of the axes to fit the measurement data
-        self.axes.set_xlim(*self._measXLim)
-        self.axes.set_ylim(*self._measYLim)
+        self.axes.set_xlim(*self._measPrcplXLim)
+        self.axes.set_ylim(*self._measPrcplYLim)
         self.canvas.draw()
         self._recordXYLim()
 
