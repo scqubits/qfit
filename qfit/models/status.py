@@ -156,10 +156,10 @@ class StatusModel(QObject):
                 self.statusStrForView += f"SUCCESS: {successMessage}"
             else:
                 self._updateMseForComputingDelta()
-                self.statusStrForView += f"SUCCESS: "
-                self.statusStrForView += f"{successMessage}"
-                self.statusStrForView += f"     |     "
+                self.statusStrForView += f"SUCCESS"
                 self.statusStrForView += f"mean squared error = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)"
+                self.statusStrForView += f"     |     "
+                self.statusStrForView += f"MESSAGE: {successMessage}"
 
         elif self.currentNormalStatus.statusType == "warning":
             warningMessage = self.currentNormalStatus.message
@@ -167,9 +167,9 @@ class StatusModel(QObject):
                 finalMse = self.currentNormalStatus.mse
                 self._updateMseForComputingDelta()
                 self.statusStrForView += f"WARNING:"
-                self.statusStrForView += f"{warningMessage}"
-                self.statusStrForView += f"     |     "
                 self.statusStrForView += f"mean squared error = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)"
+                self.statusStrForView += f"     |     "
+                self.statusStrForView += f"MESSAGE: {warningMessage}"
             else:
                 self.statusStrForView += f"WARNING: {warningMessage}"
 

@@ -14,7 +14,6 @@ from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
 from matplotlib.artist import Artist
 
-import skimage.restoration
 from matplotlib import colors as colors
 
 from qfit.utils.helpers import (

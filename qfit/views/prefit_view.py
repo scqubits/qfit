@@ -307,11 +307,11 @@ class PrefitParamView(QObject):
             ]
             labeledSlider.setValue(paramAttr.value, toSlider=toSlider)
         elif paramAttr.attr == "min":
-            assert toSlider == False
+            assert toSlider is False
             item: MinMaxItems = self.minMaxTable[paramAttr.parentName][paramAttr.name]
             item.minValue.setText(paramAttr.value)
         elif paramAttr.attr == "max":
-            assert toSlider == False
+            assert toSlider is False
             item: MinMaxItems = self.minMaxTable[paramAttr.parentName][paramAttr.name]
             item.maxValue.setText(paramAttr.value)
         else:
