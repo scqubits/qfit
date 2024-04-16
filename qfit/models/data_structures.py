@@ -36,7 +36,8 @@ class Status:
     statusSource: Optional[str]
         The source of the status message
     statusType: str
-        The type of the status message, e.g. "info", "warning", "error"
+        The type of the status message, e.g. "ready", "error", "success",
+        "warning", "computing", "initializing"
     message: Optional[str]
         The status message
     mse: Optional[float]

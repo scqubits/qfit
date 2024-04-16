@@ -721,6 +721,7 @@ class Fit:
         self._statusCtrl = StatusCtrl(
             self._mainWindow,
             (
+                self._caliParamModel,
                 self._quantumModel,
                 self._fitModel,
                 self._fitHSParams,

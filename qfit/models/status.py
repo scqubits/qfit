@@ -23,13 +23,14 @@ class StatusModel(QObject):
         (currently not implemented)
 
     The model's main function:
-        - receives status type (success, warning, error, computing) and status message
+        - receives status type ("ready", "error", "success", "warning", 
+        "computing", "initializing") and status message
         - for prefit result, fit computing and fit result, receive MSE and compute its change
-        - compile message and send to UI for display
-          * for errors, add the (<source of error>) in the front of the message
-          * add current time in the front of the message
-          * for prefit result, fit computing and fit result, generate message based on the MSE change
-            (i.e. prefit and fit model does not provide these messages)
+        - compile message and send to UI for display  
+            - for errors, add the (<source of error>) in the front of the message
+            - add current time in the front of the message
+            - for prefit result, fit computing and fit result, generate message based on the MSE change
+                (i.e. prefit and fit model does not provide these messages)
 
     Parameters
     ----------
@@ -149,15 +150,26 @@ class StatusModel(QObject):
 
         elif self.currentNormalStatus.statusType == "success":
             finalMse = self.currentNormalStatus.mse
-            self._updateMseForComputingDelta()
-            self.statusStrForView += f"SUCCESS: mean squared error = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)"
+            successMessage = self.currentNormalStatus.message
+
+            if finalMse is None:
+                self.statusStrForView += f"SUCCESS: {successMessage}"
+            else:
+                self._updateMseForComputingDelta()
+                self.statusStrForView += f"SUCCESS: "
+                self.statusStrForView += f"{successMessage}"
+                self.statusStrForView += f"     |     "
+                self.statusStrForView += f"mean squared error = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)"
 
         elif self.currentNormalStatus.statusType == "warning":
             warningMessage = self.currentNormalStatus.message
             if self.currentNormalStatus.statusSource in ["fit", "prefit"]:
                 finalMse = self.currentNormalStatus.mse
                 self._updateMseForComputingDelta()
-                self.statusStrForView += f"WARNING: mean squared error = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)     |     {warningMessage}"
+                self.statusStrForView += f"WARNING:"
+                self.statusStrForView += f"{warningMessage}"
+                self.statusStrForView += f"     |     "
+                self.statusStrForView += f"mean squared error = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)"
             else:
                 self.statusStrForView += f"WARNING: {warningMessage}"
 

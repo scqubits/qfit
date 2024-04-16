@@ -18,6 +18,7 @@ from qfit.models.data_structures import (
     FitParam,
     ParamAttr,
     CaliTableRowParam,
+    Status,
 )
 from qfit.models.parameter_set import ParamSet, ParamModelMixin, SweepParamSet
 from qfit.models.registry import RegistryEntry
@@ -89,6 +90,7 @@ class CaliParamModel(
     yCaliUpdated = Signal(object, object)
     updatePrefitModel = Signal(ParamAttr)
     caliModelRawVecUpdatedForSwapXY = Signal()
+    updateStatus = Signal(Status)
     # calibrationIsOn: Literal["CALI_X2", "CALI_X2", "CALI_Y2", "CALI_Y2", False]
 
     isFullCalibration: bool
@@ -591,7 +593,24 @@ class CaliParamModel(
         mapCompVec = np.zeros(2)
         for YRowIdx in range(2):
             mapCompVec[YRowIdx] = self[f"Y{YRowIdx+1}"]["mappedY"].value
-        alphaVec = np.linalg.solve(augRawYMat, mapCompVec)
+        
+        try:
+            alphaVec = np.linalg.solve(augRawYMat, mapCompVec)
+        except np.linalg.LinAlgError:
+            status = Status(
+                statusSource="calibration",
+                statusType="error",
+                message="Invalid Y axes calibration parameters.",
+            )
+            self.updateStatus.emit(status)
+            return np.array([0, 0])
+        
+        status = Status(
+            statusSource="calibration",
+            statusType="success",
+            message="Y axes calibration parameters updated.",
+        )
+
         return alphaVec
 
     def _fullXCalibration(self) -> Dict[str, SweepParamSet]:
@@ -622,9 +641,10 @@ class CaliParamModel(
             augRawXMat[XRowIdx, 0] = 1
             for colIdx, rawXVecCompName in enumerate(self._rawXVecNameList):
                 augRawXMat[XRowIdx, colIdx + 1] = self[xRowName][rawXVecCompName].value
+
         # loop over sweep parameters
         # assemble sweep parameter set, add sweep parameters to the parameter set
-
+        hasError = False
         sweepParamSetFromCali = SweepParamSet()
         for parentName, paramDictByParent in self._sweepParamSet.items():
             for paramName, param in paramDictByParent.items():
@@ -642,7 +662,17 @@ class CaliParamModel(
                     mapCompVec[XRowIdx] = self[xRowName][
                         f"{paramName}<br>({parentName})"
                     ].value
-                alphaVec = np.linalg.solve(augRawXMat, mapCompVec)
+                try:
+                    alphaVec = np.linalg.solve(augRawXMat, mapCompVec)
+                except np.linalg.LinAlgError:
+                    hasError = True
+                    status = Status(
+                        statusSource="calibration",
+                        statusType="error",
+                        message="Invalid calibration parameters.",
+                    )
+                    self.updateStatus.emit(status)
+                    alphaVec = np.zeros(self.rawXVecDim + 1)
                 # generate the calibration function
                 # first get the order of the raw vector components
                 rawVecCompIdxDict = {
@@ -673,9 +703,19 @@ class CaliParamModel(
                 sweepParamSetFromCali[parentName][param.name].setCalibrationFunc(
                     fullCalibration
                 )
+
         sweepParamSetByFig: Dict[str, SweepParamSet] = {}
         for fig in self._figNames:
             sweepParamSetByFig[fig] = sweepParamSetFromCali
+
+        if not hasError:
+            status = Status(
+                statusSource="calibration",
+                statusType="success",
+                message="X axes calibration parameters updated.",
+            )
+            self.updateStatus.emit(status)
+
         return sweepParamSetByFig
 
     def _partialXCalibration(self) -> Dict[str, SweepParamSet]:

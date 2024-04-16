@@ -585,8 +585,8 @@ class MplFigureCanvas(QFrame):
         for yAx in self._yAxes:
             self._currentAllYLim.append(yAx.get_ylim())
 
-    @staticmethod
     def _dispLimByPrcplLim(
+        self,
         currentPrcplLim: Tuple[float, float], 
         measPrcplLim: Tuple[float, float], 
         originalLim: Tuple[float, float],
@@ -611,7 +611,17 @@ class MplFigureCanvas(QFrame):
         # calculate the displayed limits
         dispLim = (k * currentPrcplLim[0] + b, k * currentPrcplLim[1] + b)
 
-        return dispLim
+        return self._nonSignularLim(dispLim)
+    
+    @staticmethod
+    def _nonSignularLim(lim: Tuple[float, float]) -> Tuple[float, float]:
+        """
+        Process the limits of the axes, making it not to be a single point.
+        """
+        if lim[0] == lim[1]:
+            return lim[0]*0.9 - 1, lim[0]*1.1 + 1
+        else:
+            return lim
 
     def _restoreXYLim(self, byMeasData: bool = False):
         """
@@ -624,13 +634,13 @@ class MplFigureCanvas(QFrame):
             self.axes.set_ylim(*self._measPrcplYLim)
 
             for i, xAx in enumerate(self._xAxes):
-                xAx.set_xlim(*self._allXLim[i])
+                xAx.set_xlim(*self._nonSignularLim(self._allXLim[i]))
             for i, yAx in enumerate(self._yAxes):
-                yAx.set_ylim(*self._allYLim[i])
+                yAx.set_ylim(*self._nonSignularLim(self._allYLim[i]))
             
         else:
-            self.axes.set_xlim(*self._currentPrcplXLim)
-            self.axes.set_ylim(*self._currentPrcplYLim)
+            self.axes.set_xlim(*self._nonSignularLim(self._currentPrcplXLim))
+            self.axes.set_ylim(*self._nonSignularLim(self._currentPrcplYLim))
 
             for i, xAx in enumerate(self._xAxes):
                 xAx.set_xlim(*self._dispLimByPrcplLim(
@@ -687,7 +697,7 @@ class MplFigureCanvas(QFrame):
             ax.spines['bottom'].set_position(('outward', spineLoc))
             ax.xaxis.set_ticks_position('bottom')
             if xRange[0] == xRange[1]:
-                ax.set_xlim(xRange[0]*0.9 - 1, xRange[0]*1.1 + 1)
+                ax.set_xlim(*self._nonSignularLim(xRange))
                 ax.set_xticks([xRange[0]])
                 ax.set_xticklabels([f"Coordinate fixed at: {xRange[0]:.4e}"])
             else:
@@ -726,7 +736,7 @@ class MplFigureCanvas(QFrame):
 
         # Create a new axes for each x-values in the dictionary
         ax = self.axes.twinx()
-        ax.set_ylim(*yRange)
+        ax.set_ylim(*self._nonSignularLim(yRange))
         ax.set_ylabel(yName)
         ax.yaxis.set_ticks_position('left')
         ax.yaxis.set_label_position('left')
