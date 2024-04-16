@@ -517,7 +517,7 @@ class CaliParamModel(
     # calibrate the raw vector to the mapped vector ====================
     def YCalibration(
         self,
-    ) -> Callable[[Union[float, np.ndarray]], Union[float, np.ndarray]]:
+    ) -> Union[Callable[[Union[float, np.ndarray]], Union[float, np.ndarray]], None]:
         """
         Generate a function that applies the calibration to the raw Y value.
 
@@ -527,29 +527,34 @@ class CaliParamModel(
             The calibration function that maps the raw vector to the mapped vector.
         """
         alphaVec = self._getYAlphaVec()
+        if alphaVec is None:
+            return None
+        else:
 
-        def YCalibration(rawY: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
-            """
-            The full calibration function that maps the raw vector to the mapped vector.
+            def YCalibration(
+                rawY: Union[float, np.ndarray]
+            ) -> Union[float, np.ndarray]:
+                """
+                The full calibration function that maps the raw vector to the mapped vector.
 
-            Parameters
-            ----------
-            rawY: Union[float, np.ndarray]
-                The raw Y value, can either be an array of Y, or a single Y value.
+                Parameters
+                ----------
+                rawY: Union[float, np.ndarray]
+                    The raw Y value, can either be an array of Y, or a single Y value.
 
-            Returns
-            -------
-            The mapped Y value.
-            """
-            # mapY = alphaVec[0] + alphaVec[1]*rawY
-            mapY = alphaVec[0] + alphaVec[1] * rawY
-            return mapY
+                Returns
+                -------
+                The mapped Y value.
+                """
+                # mapY = alphaVec[0] + alphaVec[1]*rawY
+                mapY = alphaVec[0] + alphaVec[1] * rawY
+                return mapY
 
-        return YCalibration
+            return YCalibration
 
     def invYCalibration(
         self,
-    ) -> Callable[[Union[float, np.ndarray]], Union[float, np.ndarray]]:
+    ) -> Union[Callable[[Union[float, np.ndarray]], Union[float, np.ndarray]], None]:
         """
         Generate a function that applies the inverse calibration to the mapped Y value.
 
@@ -559,27 +564,31 @@ class CaliParamModel(
             The calibration function that maps the mapped vector to the raw vector.
         """
         alphaVec = self._getYAlphaVec()
+        if alphaVec is None:
+            return None
+        else:
 
-        def invYCalibration(mapY: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
-            """
-            The full calibration function that maps the raw vector to the mapped vector.
+            def invYCalibration(
+                mapY: Union[float, np.ndarray]
+            ) -> Union[float, np.ndarray]:
+                """
+                The full calibration function that maps the raw vector to the mapped vector.
 
-            Parameters
-            ----------
-            mapY: Union[float, np.ndarray]
-                The mapped Y value, can either be an array of Y, or a single Y value.
+                Parameters
+                ----------
+                mapY: Union[float, np.ndarray]
+                    The mapped Y value, can either be an array of Y, or a single Y value.
 
-            Returns
-            -------
-            The raw Y value.
-            """
-            # rawY = (mapY - alphaVec[0])/alphaVec[1]
-            rawY = (mapY - alphaVec[0]) / alphaVec[1]
-            return rawY
+                Returns
+                -------
+                The raw Y value.
+                """
+                rawY = (mapY - alphaVec[0]) / alphaVec[1]
+                return rawY
 
-        return invYCalibration
+            return invYCalibration
 
-    def _getYAlphaVec(self) -> np.ndarray:
+    def _getYAlphaVec(self) -> Union[np.ndarray, None]:
         """
         Solve the alpha vector for the Y calibration, which contains
         the offset and the slope of the calibration line.
@@ -593,7 +602,7 @@ class CaliParamModel(
         mapCompVec = np.zeros(2)
         for YRowIdx in range(2):
             mapCompVec[YRowIdx] = self[f"Y{YRowIdx+1}"]["mappedY"].value
-        
+
         try:
             alphaVec = np.linalg.solve(augRawYMat, mapCompVec)
         except np.linalg.LinAlgError:
@@ -603,8 +612,8 @@ class CaliParamModel(
                 message="Invalid Y axes calibration parameters.",
             )
             self.updateStatus.emit(status)
-            return np.array([0, 0])
-        
+            return None
+
         status = Status(
             statusSource="calibration",
             statusType="success",
@@ -613,7 +622,7 @@ class CaliParamModel(
 
         return alphaVec
 
-    def _fullXCalibration(self) -> Dict[str, SweepParamSet]:
+    def _fullXCalibration(self) -> Union[Dict[str, SweepParamSet], None]:
         """
         Generate a function that applies the full calibration to the raw X vector.
 
@@ -672,7 +681,7 @@ class CaliParamModel(
                         message="Invalid calibration parameters.",
                     )
                     self.updateStatus.emit(status)
-                    alphaVec = np.zeros(self.rawXVecDim + 1)
+                    return None
                 # generate the calibration function
                 # first get the order of the raw vector components
                 rawVecCompIdxDict = {
@@ -718,7 +727,7 @@ class CaliParamModel(
 
         return sweepParamSetByFig
 
-    def _partialXCalibration(self) -> Dict[str, SweepParamSet]:
+    def _partialXCalibration(self) -> Union[Dict[str, SweepParamSet], None]:
         """
         Generate a function that applies the partial calibration to the raw X vector.
 
@@ -768,6 +777,19 @@ class CaliParamModel(
                     mapXVecCompValue2 = self[XRowIdxList[1]][
                         f"{paramName}<br>({parentName})"
                     ].value
+
+                    # check if the denominator is zero
+                    if (
+                        rawXVecPairValues[maxDiffRawVecComp][0]
+                        == rawXVecPairValues[maxDiffRawVecComp][1]
+                    ):
+                        status = Status(
+                            statusSource="calibration",
+                            statusType="error",
+                            message="Invalid calibration parameters.",
+                        )
+                        self.updateStatus.emit(status)
+                        return None
                     sweepParamSetFromCali._insertParamByArgs(
                         parent=self._sweepParamSet.parentObjByName[parentName],
                         paramName=paramName,
@@ -812,7 +834,7 @@ class CaliParamModel(
             sweepParamSetByFig[fig] = sweepParamSetFromCali
         return sweepParamSetByFig
 
-    def XCalibration(self) -> Dict[str, SweepParamSet]:
+    def XCalibration(self) -> Union[Dict[str, SweepParamSet], None]:
         """
         Generate a function that applies the calibration to the raw X vector,
         based on the type of calibration.

@@ -204,7 +204,7 @@ class QuantumModel(QObject):
         self._rawXByX = rawXByX
 
     @Slot(dict)
-    def updateXCaliFunc(self, sweepParamSets: Dict[str, SweepParamSet]):
+    def updateXCaliFunc(self, sweepParamSets: Optional[Dict[str, SweepParamSet]]):
         """
         Update the x calibration function that is stored in the sweepParamSets.
         It also updates the calculation.
@@ -215,12 +215,26 @@ class QuantumModel(QObject):
             Key: figure name
             Value: SweepParamSet
         """
-        self._sweepParamSets = sweepParamSets
+        # check if the sweepParamSets is None
+        if sweepParamSets is None:
+            status = Status(
+                statusSource=self.sweepUsage,
+                statusType="error",
+                message="Calibration data is invalid.",
+            )
+            self.updateStatus.emit(status)
+            # print("emitted status, ready to raise error")
+            # raise ValueError("Calibration data is invalid.")
+            self._sweepParamSets = None
+        else:
+            self._sweepParamSets = sweepParamSets
         self.updateCalc()
 
     @Slot(object, object)  # can't use Callable here in the initialization
     # because Argument of type "type[Callable]" cannot be assigned to parameter of type "type"
-    def updateYCaliFunc(self, yCaliFunc: Callable, invYCaliFunc: Callable):
+    def updateYCaliFunc(
+        self, yCaliFunc: Optional[Callable], invYCaliFunc: Optional[Callable]
+    ):
         """
         Update the y calibration function.
 
@@ -233,6 +247,14 @@ class QuantumModel(QObject):
             The inverse calibration function that maps the calibrated y to the
             raw y.
         """
+        if (yCaliFunc is None) or (invYCaliFunc is None):
+            status = Status(
+                statusSource=self.sweepUsage,
+                statusType="error",
+                message="Calibration data is invalid.",
+            )
+            self.updateStatus.emit(status)
+            raise ValueError("Calibration data is invalid.")
         self._yCaliFunc = yCaliFunc
         self._yInvCaliFunc = invYCaliFunc
         self.sweep2SpecMSE(sweepUsage=self.sweepUsage)
@@ -733,6 +755,14 @@ class QuantumModel(QObject):
             If True, the spectrum will be calculated regardless of the sweepUsage
             and autoRun settings.
         """
+        if self._sweepParamSets is None:
+            status = Status(
+                statusSource=self.sweepUsage,
+                statusType="error",
+                message="X calibration data is invalid.",
+            )
+            self.updateStatus.emit(status)
+            return
         if (self.sweepUsage != "prefit") and (not forced):
             # only in prefit mode, this method will be activated as a slot
             # function
