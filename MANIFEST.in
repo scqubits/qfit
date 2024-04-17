@@ -1,0 +1,11 @@
+# includes
+include requirements.txt
+recursive-include qfit *.py
+include LICENSE
+include README.md
+recursive-include example_data *
+recursive-include resources *
+
+# excludes
+global-exclude *.pyc
+global-exclude __pycache__

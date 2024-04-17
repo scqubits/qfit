@@ -1,5 +1,6 @@
 /scratch/
 /docs/build/
+/dist/
 /qfit/.idea/
 /.idea/inspectionProfiles/Project_Default.xml
 /.idea/qfit.iml

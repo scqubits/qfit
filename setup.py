@@ -20,7 +20,7 @@ models.
 import os
 import sys
 
-import setuptools
+from setuptools import setup, find_packages
 
 DOCLINES = __doc__.split("\n")
 
@@ -54,29 +54,26 @@ CURDIR = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(CURDIR, "requirements.txt")) as requirements:
     INSTALL_REQUIRES = requirements.read().splitlines()
 
-PACKAGES = [
-    "qfit",
-    "qfit/core",
-    "qfit/controllers",
-    "qfit/models",
-    "qfit/ui_designer",
-    "qfit/utils",
-    "qfit/views",
-    "qfit/widgets",
-]
+
+PACKAGES = find_packages()
+
 
 PYTHON_VERSION = ">=3.10"
 
 
 NAME = "qfit"
 AUTHOR = "Tianpu Zhao, Danyang Chen, Jens Koch"
-AUTHOR_EMAIL = "jens-koch@northwestern.edu"
+AUTHOR_EMAIL = (
+    "tianpuzhao2022@u.northwestern.edu, "
+    "danyangchen2026@u.northwestern.edu, "
+    "jens-koch@northwestern.edu"
+)
 LICENSE = "BSD"
 DESCRIPTION = DOCLINES[0]
 LONG_DESCRIPTION = "\n".join(DOCLINES[2:])
 KEYWORDS = "parameter extraction, superconducting qubits"
 
-# URL = "https://scqubits.readthedocs.io"
+URL = "https://github.com/scqubits/qfit"
 
 CLASSIFIERS = [_f for _f in CLASSIFIERS.split("\n") if _f]
 PLATFORMS = ["Linux", "Mac OSX", "Unix", "Windows"]
@@ -105,8 +102,10 @@ short_version = '%(version)s'
 version = '%(fullversion)s'
 release = %(isrelease)s
 """
-    versionfile = open(filename, "w")
-    try:
+    base_dir = os.path.abspath(os.path.dirname(__file__))  # Absolute path to your project directory
+    version_path = os.path.join(base_dir, 'qfit', 'version.py')
+
+    with open(version_path, "w") as versionfile:
         versionfile.write(
             cnt
             % {
@@ -115,23 +114,12 @@ release = %(isrelease)s
                 "isrelease": str(ISRELEASED),
             }
         )
-    finally:
-        versionfile.close()
-
-
-local_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-os.chdir(local_path)
-sys.path.insert(0, local_path)
-sys.path.insert(0, os.path.join(local_path, "qfit"))  # to retrieve version
-
-# always rewrite _version
-if os.path.exists("qfit/version.py"):
-    os.remove("qfit/version.py")
 
 write_version_py()
 
+
 # Setup commands go here
-setuptools.setup(
+setup(
     name=NAME,
     version=FULLVERSION,
     packages=PACKAGES,
