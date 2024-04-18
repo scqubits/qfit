@@ -514,7 +514,7 @@ class MeasurementData:
         """
         Add pixel coordinates as the last resort for x and y axis candidates.
         """
-        ydim, xdim = self._principalZ.data.shape
+        ydim, xdim = self._principalZ.data.shape[:2]
         self.xCandidates.update({f"range({xdim})": np.arange(xdim)})
         self.yCandidates.update({f"range({ydim})": np.arange(ydim)})
 
