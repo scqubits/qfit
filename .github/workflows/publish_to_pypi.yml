@@ -114,7 +114,27 @@ jobs:
       with:
         name: python-package-distributions
         path: dist/
+
+    - name: Extract version from distribution 📦 file  
+      # assuming the version is in the format `<qfit>-<version>-<other>.whl`
+      id: get_version
+      run: |
+        FILENAME=$(ls dist/*.whl | head -n 1)
+        VERSION=$(echo $FILENAME | sed -n 's/^[^0-9]*-\([^-]*\)-.*/\1/p')
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "::set-output name=package_version::$VERSION"
+
+    - name: Check if version exists on TestPyPI
+      run: |
+        RESPONSE=$(curl -s https://test.pypi.org/pypi/qfit/json)
+        if echo "$RESPONSE" | grep -q "\"${{ env.VERSION }}\""; then
+          echo "VERSION_EXISTS=true" >> $GITHUB_ENV
+        else
+          echo "VERSION_EXISTS=false" >> $GITHUB_ENV
+        fi
+
     - name: Publish distribution 📦 to TestPyPI
+      if: env.VERSION_EXISTS == 'false'
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         repository-url: https://test.pypi.org/legacy/
