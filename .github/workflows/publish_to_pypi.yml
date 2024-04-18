@@ -35,20 +35,14 @@ jobs:
         python-version: ["3.10"]
     steps:
     - uses: actions/checkout@v2
-      with:
-        ref: 'master'
+      name: Checkout the repository
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Create and activate virtual environment
-      run: |
-        python -m venv venv
-        source venv/bin/activate
     - name: Install dependencies and QFit
       run: |
         pip install --upgrade pip
-        pip install -r requirements.txt
         pip install .
     - name: Test installation
       run: |
