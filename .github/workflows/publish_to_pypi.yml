@@ -29,6 +29,7 @@ jobs:
         name: python-package-distributions
         path: dist/
 
+
   test-installation:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -49,17 +50,24 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         sudo apt-get update
-        sudo apt-get install -y libegl1-mesa
+        sudo apt-get install -y libegl1-mesa    # missing libEGL.so.1
+        sudo apt-get install -y xvfb            # GUI backend for matplotlib (Ubuntu doesn't have a display)
 
     - name: Install dependencies and QFit
       run: |
         pip install --upgrade pip
         pip install .
 
-    - name: Test installation
+    - name: Test installation on Linux
+      if: startsWith(matrix.os, 'ubuntu')
       run: |
-        python -c "from qfit import Fit; print('Installation successful')"
-        
+        xvfb-run --auto-servernum python -c "from qfit import Fit; print('Installation successful')"
+    
+    - name: Test installation on macOS and Windows
+      if: startsWith(matrix.os, 'macos') || startsWith(matrix.os, 'windows')
+      run: python -c "from qfit import Fit; print('Installation successful')"
+    
+
   publish-to-pypi:
     name: >-
       Publish to PyPI
@@ -84,6 +92,7 @@ jobs:
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
+
 
   github-release:
     name: >-
@@ -127,6 +136,7 @@ jobs:
         '${{ github.ref_name }}' dist/**
         --repo '${{ github.repository }}'
 
+        
   publish-to-testpypi:
     name: Publish to TestPyPI
     needs:
