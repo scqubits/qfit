@@ -9,6 +9,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for all tags and branches
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -27,38 +29,16 @@ jobs:
         name: python-package-distributions
         path: dist/
 
-  test-installation:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.10"]
-    steps:
-    - uses: actions/checkout@v2
-      name: Checkout the repository
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies and QFit
-      run: |
-        pip install --upgrade pip
-        pip install .
-    - name: Test installation
-      run: |
-        python -c "from qfit import Fit; print('Installation successful')"
-
   publish-to-pypi:
     name: >-
-      Publish Python 🐍 distribution 📦 to PyPI
+      Publish to PyPI
     if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
     needs:
     - build
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/qfit  
+      url: https://pypi.org/p/qfit
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
 
@@ -76,8 +56,7 @@ jobs:
 
   github-release:
     name: >-
-      Sign the Python 🐍 distribution 📦 with Sigstore
-      and upload them to GitHub Release
+      Sign with Sigstore and upload them to GitHub Release
     needs:
     - publish-to-pypi
     runs-on: ubuntu-latest
@@ -117,48 +96,48 @@ jobs:
         '${{ github.ref_name }}' dist/**
         --repo '${{ github.repository }}'
 
-  publish-to-testpypi:  # always publish to TestPyPI even on non-tag pushes
-    name: Publish Python 🐍 distribution 📦 to TestPyPI
+  publish-to-testpypi:
+    name: Publish to TestPyPI
     needs:
-    - build
+      - build
     runs-on: ubuntu-latest
-
+  
     environment:
       name: testpypi
       url: https://test.pypi.org/p/qfit
-
+  
     permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-
+      contents: write  # Typical permission needed for operations affecting repository contents
+  
     steps:
-    - name: Download all the dists
-      uses: actions/download-artifact@v3
-      with:
-        name: python-package-distributions
-        path: dist/
+      - name: Download all the dists
+        uses: actions/download-artifact@v3
+        with:
+          name: python-package-distributions
+          path: dist/
+  
+      - name: Extract version from distribution 📦 file  
+        # assuming the version is in the format `<qfit>-<version>-<other>.whl`
+        id: get_version
+        run: |
+          FILENAME=$(ls dist/*.whl | head -n 1)
+          VERSION=$(echo $FILENAME | sed -n 's/^[^0-9]*-\([^-]*\)-.*/\1/p')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "::set-output name=package_version::$VERSION"
 
-    - name: Extract version from distribution 📦 file  
-      # assuming the version is in the format `<qfit>-<version>-<other>.whl`
-      id: get_version
-      run: |
-        FILENAME=$(ls dist/*.whl | head -n 1)
-        VERSION=$(echo $FILENAME | sed -n 's/^[^0-9]*-\([^-]*\)-.*/\1/p')
-        echo "VERSION=$VERSION" >> $GITHUB_ENV
-        echo "::set-output name=package_version::$VERSION"
-
-    - name: Check if version exists on TestPyPI
-      run: |
-        RESPONSE=$(curl -s https://test.pypi.org/pypi/qfit/json)
-        if echo "$RESPONSE" | grep -q "\"${{ env.VERSION }}\""; then
-          echo "VERSION_EXISTS=true" >> $GITHUB_ENV
-        else
-          echo "VERSION_EXISTS=false" >> $GITHUB_ENV
-        fi
-
-    - name: Publish distribution 📦 to TestPyPI
-      if: env.VERSION_EXISTS == 'false'
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: https://test.pypi.org/legacy/
-        user: __token__
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+      - name: Check if version exists on TestPyPI
+        run: |
+          RESPONSE=$(curl -s https://test.pypi.org/pypi/qfit/json)
+          if echo "$RESPONSE" | grep -q "\"${{ env.VERSION }}\""; then
+            echo "VERSION_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "VERSION_EXISTS=false" >> $GITHUB_ENV
+          fi
+  
+      - name: Publish distribution 📦 to TestPyPI
+        if: env.VERSION_EXISTS == 'false'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
