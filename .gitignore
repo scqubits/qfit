@@ -1,5 +1,6 @@
 /scratch/
 /docs/build/
+/dist/
 /qfit/.idea/
 /.idea/inspectionProfiles/Project_Default.xml
 /.idea/qfit.iml
@@ -7,6 +8,7 @@
 /.idea/workspace.xml
 /qfit/.ipynb_checkpoints/
 /qfit.egg-info/
+/qfit/version.py
 
 # Danyang's unwanted files
 .DS_Store

@@ -1,0 +1,17 @@
+# includes
+recursive-include qfit *.py
+recursive-include example_data *
+recursive-include resources *
+
+include LICENSE
+include README.md
+include QFit_Quick_Start.ipynb
+include QFit_Advanced_Tips.ipynb
+include requirements.txt
+include setup.py
+include MANIFEST.in
+include pyproject.toml
+
+# excludes
+global-exclude *.pyc
+global-exclude __pycache__
