@@ -1,27 +1,16 @@
-/scratch/
-/docs/build/
-/qfit/.idea/
-/.idea/inspectionProfiles/Project_Default.xml
-/.idea/qfit.iml
-/.idea/vcs.xml
-/.idea/workspace.xml
-/qfit/.ipynb_checkpoints/
+*.pyc
+**/.idea
+**/.ipynb_checkpoints/
 /qfit.egg-info/
 /qfit/version.py
+resources/resources_rc.py
+dist
+build
+qfit.egg-info
 
 # Danyang's unwanted files
 .DS_Store
-*.pyc
 /danyang_tests
-resources/resources_rc.py
-qfit.egg-info
-qfit/controllers/test.ipynb
-test.ipynb
-qfit/controllers/.jupyter_ystore.db
-qfit/controllers/.ipynb_checkpoints/test-checkpoint.ipynb
-build
-dist/qfit-0.1.0-py3.9.egg
-dist/qfit-0.1.0-py3.11.egg
 
 # Tianpu's unwanted files
 example_data/test.qfit
@@ -37,7 +26,6 @@ gif_raw_source/.$calibration_new.drawio.bkp
 gif_raw_source/calibration_new.drawio
 gif_raw_source/.$calibration_new.drawio.dtmp
 qfit_test.zip
-.ipynb_checkpoints/QFit_Quick_Start-checkpoint.ipynb
 media_raw_source/.$calibration_new.drawio.bkp
 media_raw_source/.$calibration_notebook_ver.drawio.bkp
 media_raw_source/.$calibration_with_step_notebook_ver.drawio.bkp
@@ -53,7 +41,6 @@ media_raw_source/calibration_x1x2y1y2.drawio
 media_raw_source/calibration.svg
 media_raw_source/Backup_of_tag-question.cdr
 media_raw_source/Backup_of_tag.cdr
-.gitignore
 .gitignore
 media_raw_source/tag.cdr
 media_raw_source/tag-question.cdr
