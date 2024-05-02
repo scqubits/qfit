@@ -28,24 +28,14 @@ Installation and Usage
 
 Follow these steps to install `QFit`:
 
-1a. Download source code from GitHub (through `Code` button on the top right), unzip the source code folder in a `<directory>`.
-
-OR 
-
-1b. Open a terminal, `cd <directory>` to the directory where you would like to store the source code of `QFit`, then
-```
-    git clone https://github.com/scqubits/qfit
-```
-2. (Optional but highly Recommended) Create a virtual environment with python (python 3.10 is recommended for satisfying the version requirement for both scqubits and QFit), e.g. run on terminal
+1. (Optional but highly Recommended) Create a virtual environment with python (version > 3.10). If you are using conda, run on terminal
 ```
     conda create -n <env name> python=3.10
     conda activate <env name>
 ```
-3. On terminal, install `QFit` by
+2. On terminal, install `QFit` by
 ```
-    cd <directory>/qfit
-    conda install  --file requirements.txt --yes -c conda-forge
-    pip install .
+    pip install qfit
 ```
 Once done, the application can be launched in a jupyter notebook session via
 ```
@@ -54,7 +44,7 @@ Once done, the application can be launched in a jupyter notebook session via
 ```
 where `<HilbertSpace>` is a `scqubits.HilbertSpace` object, the circuit model you want to fit against.
 
-Check out the notebook [QFit_Quick_Start.ipynb](./QFit_Quick_Start.ipynb) for a quick intro tutorial.
+Check out the notebook [QFit_Quick_Start.ipynb](./QFit_Quick_Start.ipynb) for a quick intro tutorial, and [QFit_Advanced_Tips.ipynb](./QFit_Advanced_Tips.ipynb) for further information.
 
 License
 -------
