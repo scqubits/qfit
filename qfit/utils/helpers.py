@@ -29,16 +29,16 @@ from typing import Dict, List, Literal, Optional, Tuple, Union
 from typing import TypeVar, Generic
 
 
-Key = TypeVar('Key')
-Value = TypeVar('Value')
+Key = TypeVar("Key")
+Value = TypeVar("Value")
 
 
 class DictItem(Generic[Key, Value]):
     """
     A class to represent a dictionary item with name and data.
 
-    DictItem objects can be compared with each other using "==". However, 
-    the comparison is not recursive. It only compares the keys and values 
+    DictItem objects can be compared with each other using "==". However,
+    the comparison is not recursive. It only compares the keys and values
     of the first level. For numpy arrays, it uses np.array_equal to compare
     the arrays so that it returns a single boolean value.
 
@@ -49,6 +49,7 @@ class DictItem(Generic[Key, Value]):
     data: Value
         The data of the item.
     """
+
     def __init__(self, name: Key, data: Value):
         self.name: Key = name
         self.data: Value = data
@@ -56,17 +57,16 @@ class DictItem(Generic[Key, Value]):
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, DictItem):
             return False
-        
-        if (
-            isinstance(self.data, np.ndarray | float) 
-            and isinstance(__value.data, np.ndarray | float)
+
+        if isinstance(self.data, np.ndarray | float) and isinstance(
+            __value.data, np.ndarray | float
         ):
             if not np.array_equal(self.data, __value.data):
                 return False
         else:
             if self.data != __value.data:
                 return False
-            
+
         return self.name == __value.name
 
 
@@ -81,10 +81,11 @@ class OrderedDictMod(OrderedDict[Key, Value], Generic[Key, Value]):
         - itemList: returns a list of DictItems
 
     Compare two dictionaries:
-        - __eq__: compares two dictionaries. It only compares the keys 
+        - __eq__: compares two dictionaries. It only compares the keys
         and values of the first level, and does not compare nested
         dictionaries or numpy arrays.
     """
+
     @property
     def valList(self) -> List[Value]:
         return list(self.values())
@@ -95,7 +96,7 @@ class OrderedDictMod(OrderedDict[Key, Value], Generic[Key, Value]):
 
     def itemByIndex(self, itemIndex: int) -> DictItem[Key, Value]:
         """
-        Returns a DictItem by index. DictItem is a class to represent 
+        Returns a DictItem by index. DictItem is a class to represent
         a dictionary item with name and data.
         """
         return DictItem(self.keyList[itemIndex], self.valList[itemIndex])
@@ -106,11 +107,11 @@ class OrderedDictMod(OrderedDict[Key, Value], Generic[Key, Value]):
         a dictionary item with name and data.
         """
         return [DictItem(key, val) for key, val in self.items()]
-    
+
     def __eq__(self, __value: object) -> bool:
         """
-        Compare two dictionaries. It only compares the keys and values 
-        of the first level. It does not compare nested dictionaries or 
+        Compare two dictionaries. It only compares the keys and values
+        of the first level. It does not compare nested dictionaries or
         numpy arrays.   -
 
         Parameters
@@ -127,14 +128,13 @@ class OrderedDictMod(OrderedDict[Key, Value], Generic[Key, Value]):
 
         if self.keyList != __value.keyList:
             return False
-        
+
         for key in self.keys():
             if type(self[key]) != type(__value[key]):
                 return False
 
-            if (
-                isinstance(self[key], np.ndarray | float) 
-                and isinstance(self[key], np.ndarray | float)
+            if isinstance(self[key], np.ndarray | float) and isinstance(
+                self[key], np.ndarray | float
             ):
                 if not np.array_equal(self[key], __value[key]):
                     return False
@@ -142,16 +142,14 @@ class OrderedDictMod(OrderedDict[Key, Value], Generic[Key, Value]):
                 if self[key] != __value[key]:
                     return False
         return True
-    
+
 
 def isValid2dArray(array):
     """
     Checks whether the given array has the following properties:
         - Array entries must be real-valued
-        - The array is strictly two-dimensional, i.e., number of rows>1 
+        - The array is strictly two-dimensional, i.e., number of rows>1
         and number of cols>1
-        - The array does not merely repeat a single row or a single column 
-        n times
 
     Parameters
     ----------
@@ -166,8 +164,7 @@ def isValid2dArray(array):
         return False
     if array.ndim == 2:
         if array.shape[0] > 1 and array.shape[1] > 1:
-            if (array[0] != array[1]).any() or (array[:, 0] != array[:, 1]).any():
-                return True
+            return True
     return False
 
 
@@ -266,6 +263,7 @@ def clearChildren(widget: QWidget):
             widget.setParent(None)
             widget.deleteLater()
 
+
 def modifyStyleSheet(widget: QWidget, property_name: str, new_value: str):
     """
     Modify a particular stylesheet property of the given widget.
@@ -294,6 +292,7 @@ def modifyStyleSheet(widget: QWidget, property_name: str, new_value: str):
 
     # Set the modified stylesheet back to the widget
     widget.setStyleSheet(modified_style)
+
 
 def disableButton(button: QPushButton, disable=True):
     """
@@ -342,6 +341,7 @@ class Cmap:
     cmap_name: str
         The name of the colormap.
     """
+
     def __init__(self, upper: float, lower: float = 0, cmap_name="rainbow"):
         self.upper = upper
         self.lower = lower
@@ -403,7 +403,7 @@ def datetime_dir(
 # Function checking whether code is run from a jupyter notebook or inside ipython
 def executed_in_ipython() -> bool:
     """
-    Check if the code is executed in an IPython environment (e.g. Jupyter 
+    Check if the code is executed in an IPython environment (e.g. Jupyter
     notebook or qtconsole of IPython).
 
     Returns
@@ -430,6 +430,7 @@ def _closest_idx(arr, val):
     find the index of the closest value in the array
     """
     return np.argmin(np.abs(arr - val))
+
 
 def _find_lorentzian_peak(data: np.ndarray, gamma_guess=5.0) -> int:
     """
@@ -471,19 +472,24 @@ def _find_lorentzian_peak(data: np.ndarray, gamma_guess=5.0) -> int:
     )
 
     if np.sum(pcov) == np.inf:
-        raise ValueError("Lorentzian fit failed, potentially due to the data is "
-                         "flat in this region.")
+        raise ValueError(
+            "Lorentzian fit failed, potentially due to the data is "
+            "flat in this region."
+        )
 
     return np.round(popt[0]).astype(int)
 
+
 def _extract_data_for_peak_finding(
-    x_list: np.ndarray, y_list: np.ndarray, z_data: np.ndarray, 
+    x_list: np.ndarray,
+    y_list: np.ndarray,
+    z_data: np.ndarray,
     user_selected_xy: Tuple[float, float],
     half_y_range: float = 0.1,
-    min_points: int = 6
+    min_points: int = 6,
 ):
     """
-    Slice the 2D z_data and obtain a 1D array of z_data for fitting 
+    Slice the 2D z_data and obtain a 1D array of z_data for fitting
     a Lorentzian peak. The length of the 1D array is determined by
     the half_y_range (minimal min_points in each direction).
 
@@ -501,7 +507,7 @@ def _extract_data_for_peak_finding(
     half_y_range : float
         The half range of the y-axis data to be sliced.
     min_points : int
-        The minimal number of points in each direction. It should be larger 
+        The minimal number of points in each direction. It should be larger
         than 4, as we need at least 4 points to fit a Lorentzian peak.
     """
     x_val = user_selected_xy[0]
@@ -521,8 +527,8 @@ def _extract_data_for_peak_finding(
             y_min_idx,
             y_max_idx,
             y_idx - min_points,
-        ), 
-        0
+        ),
+        0,
     )
     y_end = min(
         max(
@@ -540,10 +546,12 @@ def _extract_data_for_peak_finding(
 
 
 def ySnap(
-    x_list: np.ndarray, y_list: np.ndarray, z_data: np.ndarray, 
+    x_list: np.ndarray,
+    y_list: np.ndarray,
+    z_data: np.ndarray,
     user_selected_xy: Tuple[float, float],
-    half_y_range=0.1, 
-    mode="lorentzian"
+    half_y_range=0.1,
+    mode="lorentzian",
 ) -> float:
     """
     Perform the y-snap for a selected point. A peak will be found in the
@@ -556,7 +564,7 @@ def ySnap(
     y_list : np.ndarray
         The 1D y-axis data.
     z_data : np.ndarray
-        The 2D z-axis data, containing the data to be sliced and fitted.    
+        The 2D z-axis data, containing the data to be sliced and fitted.
     user_selected_xy : Tuple[float, float]
         The x and y values of the point, near which the data will be sliced,
         and a Lorentzian peak will be found.
