@@ -347,7 +347,7 @@ class SweepSettingsView(QObject):
         And the corresponding values should be the widgets for the options.
     """
 
-    optionUpdated = Signal(str, Any)
+    optionUpdated = Signal(str, object)
 
     def __init__(
         self,
