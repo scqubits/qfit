@@ -1,5 +1,6 @@
 QFit: Interactive Parameter Fitting for Superconducting Circuits
 ================================================================
+[<img src="https://github.com/scqubits/qfit/assets/68950614/514cc57c-675d-4aee-b902-0dda7ab14213" width="100">](https://designawards.core77.com/2024/Apps-Platforms)
 
 **Notice: This package is currently in beta testing. Bugs and issues are expected. We greatly appreciate your feedback and bug reports to help us improve.**
 
