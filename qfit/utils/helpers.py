@@ -32,6 +32,13 @@ from typing import TypeVar, Generic
 Key = TypeVar("Key")
 Value = TypeVar("Value")
 
+try:
+    # numpy < 2.0.0
+    float_types = [float, *np.sctypes['float']]
+except AttributeError:
+    # numpy > 2.0.0
+    float_types = [float, np.float64, np.float32]
+
 
 class DictItem(Generic[Key, Value]):
     """
@@ -160,7 +167,7 @@ def isValid2dArray(array):
     bool:
         True if all conditions above are satisfied.
     """
-    if array.dtype not in [float, np.float_, np.float64, np.float32]:
+    if array.dtype not in float_types:
         return False
     if array.ndim == 2:
         if array.shape[0] > 1 and array.shape[1] > 1:
@@ -174,7 +181,7 @@ def isValid1dArray(array):
         - Array entries must be real-valued
         - The array is strictly one-dimensional, i.e., number of rows=1 or number of cols=1
     """
-    if array.dtype not in [float, np.float_, np.float64, np.float32]:
+    if array.dtype not in float_types:
         return False
     if array.ndim == 1:
         return True

@@ -39,7 +39,6 @@ dependencies = [
     "matplotlib >= 3.1.2",
     "pyside6",
     "h5py >= 2.7.1",
-    "qutip < 5.0.0",
     "scikit-image",
     "scqubits >= 3.0.0",
     "matplotlib-label-lines",

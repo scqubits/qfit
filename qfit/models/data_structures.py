@@ -286,7 +286,12 @@ class ExtrTransition:
             and self.rawX == __value.rawX
             and self.tag == __value.tag
         )
-
+        
+    def __repr__(self) -> str:
+        return self.__str__()
+    
+    def __str__(self) -> str:
+        return f"ExtrTransition: {self.name}\n{self.data}"
 
 class ExtrSpectra(list[ExtrTransition]):
     """
