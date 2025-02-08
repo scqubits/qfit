@@ -11,6 +11,7 @@ qfit.egg-info
 # Danyang's unwanted files
 .DS_Store
 /danyang_tests
+qfit.code-workspace
 
 # Tianpu's unwanted files
 example_data/test.qfit

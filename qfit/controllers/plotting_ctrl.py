@@ -12,6 +12,7 @@ from qfit.models.data_structures import FilterConfig
 from qfit.settings import MARKER_SIZE
 
 from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal, List, Callable
+import warnings
 
 if TYPE_CHECKING:
     from qfit.models.calibration import CaliParamModel
@@ -24,7 +25,13 @@ if TYPE_CHECKING:
 
 
 mpl.rcParams["toolbar"] = "None"
-mpl.use("qtagg")
+try:
+    mpl.use("qtagg")
+except ImportError as e: 
+    warnings.warn(f"Recieving error {e} while importing matplotlib, indicating "
+                  "that the code is running in a headless environment. Using "
+                  "Agg backend instead.")
+    mpl.use("Agg")
 
 
 class PlottingCtrl(QObject):
