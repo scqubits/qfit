@@ -24,7 +24,7 @@ jobs:
           pip install requests 
 
       - name: Run meta.yaml updater
-        run: python ./github/workflows/update_meta_yaml.py
+        run: python .github/workflows/update_meta_yaml.py
 
       - name: Commit changes
         run: |
