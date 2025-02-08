@@ -46,7 +46,8 @@ def update_meta_yaml(new_version, new_sha256, filename="meta.yaml"):
 def main():
     new_version = get_latest_version()
     name = "qfit"  # This should match your meta.yaml definition
-    tarball_url = f"https://pypi.org/packages/source/{name[0]}/{name}/qfit-{new_version}.tar.gz"
+    tarball_url = f"https://pypi.org/packages/source/{name[0]}/{name}/qfit-2.0.5.tar.gz"
+    # tarball_url = f"https://pypi.org/packages/source/{name[0]}/{name}/qfit-{new_version}.tar.gz"
     new_sha256 = get_sha256(tarball_url)
     update_meta_yaml(new_version, new_sha256)
 
