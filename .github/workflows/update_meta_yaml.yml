@@ -7,6 +7,7 @@ jobs:
   update-meta:
     name: >-
       Update meta.yaml
+    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
 
     runs-on: ubuntu-latest
     steps:
