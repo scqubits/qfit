@@ -221,9 +221,10 @@ class IOCtrl(QObject):
 
         # update the project file name, must be done before saving the project,
         # as when loaded, the projectFile should be the same as the file name
+        self.forceSaveToFile(fileName)
+        
+    def forceSaveToFile(self, fileName: str):
         self.mainWindow.projectFile = fileName
-
-        # save the project
         self.registry.exportPkl(fileName)
 
     # quit / close ############################################################

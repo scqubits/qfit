@@ -380,6 +380,15 @@ class FitCaliParams(
     ):
         """Store the parameter attributes from the view."""
         super()._storeParamAttr(self, paramAttr, **kwargs)
+        
+    def emitUpdateBox(
+        self,
+        parentName: str | None = None,
+        paramName: str | None = None,
+        attr: str | None = None,
+    ):
+        """Emit the signal to update the text box."""
+        self._emitUpdateBox(self, parentName, paramName, attr)
 
 
 class FitModel(QObject):
