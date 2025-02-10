@@ -35,19 +35,20 @@ def update_meta_yaml(new_version, new_sha256, filename="meta.yaml"):
         content
     )
     content_new = re.sub(
-        r'{%\s*set\s+sha256\s*=\s*"[^"]+"\s*%}',
-        f'{{% set sha256 = "{new_sha256}" %}}',
-        content_new
+        r'(^\s*sha256:\s*)\S+',
+        lambda m: f"{m.group(1)}{new_sha256}",
+        content_new,
+        flags=re.MULTILINE
     )
     with open(filename, "w") as f:
         f.write(content_new)
     print(f"Updated {filename} with version {new_version} and sha256 {new_sha256}")
 
-def main():
-    new_version = get_latest_version()
-    name = "qfit"  # This should match your meta.yaml definition
-    tarball_url = f"https://pypi.org/packages/source/{name[0]}/{name}/qfit-2.0.5.tar.gz"
-    # tarball_url = f"https://pypi.org/packages/source/{name[0]}/{name}/qfit-{new_version}.tar.gz"
+def main(new_version: str | None = None):
+    if new_version is None:
+        new_version = get_latest_version()
+    name = "qfit"
+    tarball_url = f"https://pypi.org/packages/source/{name[0]}/{name}/qfit-{new_version}.tar.gz"
     new_sha256 = get_sha256(tarball_url)
     update_meta_yaml(new_version, new_sha256)
 
