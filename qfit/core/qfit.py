@@ -120,7 +120,6 @@ class Fit:
         # main window
         instance._mainWindow = MainWindow()
         instance._MVCInit()
-        instance._mainWindow.show()
 
         return instance
 
@@ -128,6 +127,7 @@ class Fit:
         self,
         hilbertSpace: HilbertSpace,
         measurementFileName: Optional[str | List[str]] = None,
+        **kwargs,
     ):
         self._mainWindow: MainWindow
 
@@ -136,6 +136,9 @@ class Fit:
             hilbertSpace=hilbertSpace,
             measurementFileName=measurementFileName,
         )
+        
+        if kwargs.get("show", True):
+            self.show()
 
         if not settings.EXECUTED_IN_IPYTHON:
             self.app.exec_()
@@ -146,6 +149,7 @@ class Fit:
         cls,
         hilbertSpace: HilbertSpace,
         measurementFileName: Union[str, None] = None,
+        **kwargs,
     ) -> "Fit":
         """
         Create a qfit project with a `HilbertSpace object` from `scqubits` and
@@ -164,7 +168,7 @@ class Fit:
         qfit project
         """
         instance = cls.__new__(cls)
-        instance.__init__(hilbertSpace, measurementFileName)
+        instance.__init__(hilbertSpace, measurementFileName, **kwargs)
 
         return instance
 
@@ -172,6 +176,7 @@ class Fit:
     def open(
         cls,
         fileName: Union[str, None] = None,
+        **kwargs,
     ) -> "Fit":
         """
         Open a qfit project from a file.
@@ -193,6 +198,9 @@ class Fit:
             from_menu=False,
             fileName=fileName,
         )
+
+        if kwargs.get("show", True):
+            instance.show()
 
         if not settings.EXECUTED_IN_IPYTHON:
             instance.app.exec_()
@@ -253,6 +261,19 @@ class Fit:
             hilbertSpace = self._prefitHSParams.hilbertspace
 
         return _deepcopy(hilbertSpace) if deepcopy else hilbertSpace
+    
+    # methods to controll the window ###################################
+    def close(self):
+        """Close the window and save the project."""
+        self._ioCtrl.closeAppAfterSaving()
+    
+    def show(self):
+        """Show the main window (if hidden)."""
+        self._mainWindow.show()
+        
+    def hide(self):
+        """Hide the main window."""
+        self._mainWindow.hide()
 
     # models, views and controllers ####################################
     # ##################################################################
