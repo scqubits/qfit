@@ -221,9 +221,18 @@ class IOCtrl(QObject):
 
         # update the project file name, must be done before saving the project,
         # as when loaded, the projectFile should be the same as the file name
-        self.forceSaveToFile(fileName)
+        self.forceSaveAs(fileName)
         
-    def forceSaveToFile(self, fileName: str):
+    def forceSaveAs(self, fileName: str):
+        """
+        Regardless of whether the project is saved or not before, save the project
+        as a new file indicated by `fileName`.
+
+        Parameters
+        ----------
+        fileName : str
+            the file name to save the project
+        """
         self.mainWindow.projectFile = fileName
         self.registry.exportPkl(fileName)
 
