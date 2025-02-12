@@ -23,6 +23,8 @@ from qfit.models.data_structures import Tag, SpectrumElement, Status
 from typing import Dict, List, Tuple, Union, Callable, Any, Literal, Optional
 
 scq.settings.MULTIPROC = "pathos"
+scq.settings.FUZZY_SLICING = True
+scq.settings.FUZZY_WARNING = False
 
 
 class QuantumModel(QObject):

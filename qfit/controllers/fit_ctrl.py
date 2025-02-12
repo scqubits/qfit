@@ -228,6 +228,10 @@ class FitCtrl(QObject):
         self.caliParamModel.blockSignals(False)
         self.prefitHSParams.blockSignals(False)
 
+        self.caliParamModel.emitUpdateBox()
+        self.prefitCaliParams.emitUpdateBox()
+        self.prefitHSParams.emitUpdateBox()
+
         self.quantumModel.updateCalc()
 
     @Slot()
