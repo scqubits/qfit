@@ -406,10 +406,13 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         return True
 
     # Public data manipulation =========================================
-    def updateName(self, index: QModelIndex, data, role=None):
+    def setData(self, index: QModelIndex, data, role=None):
         """
-        Set the data at index `index` to `data`. Note that right now
-        data in the table is the name of the transition.
+        Override Qt's native setData method to update the name of the transition.
+        
+        Update:
+        1. The name shown in the list view
+        2. The name of the currently selected spectrum
         """
         if not (index.isValid() and role == Qt.EditRole):
             return False

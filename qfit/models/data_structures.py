@@ -999,6 +999,10 @@ class CaliTableRowParam(DispParamBase):
         """
         if isinstance(value, str):
             convertedValue = self._toIntAsNeeded(float(value))
+        elif isinstance(value, bool):
+            convertedValue = value
+        else:
+            raise ValueError(f"Unknown type of value: {value}")
 
         setattr(self, attr, convertedValue)
 
@@ -1122,4 +1126,3 @@ class FilterConfig:
         self.min = min
         self.max = max
         self.color = color
-    
