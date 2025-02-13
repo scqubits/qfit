@@ -153,11 +153,11 @@ class StatusModel(QObject):
             successMessage = self.currentNormalStatus.message
 
             if finalMse is None:
-                self.statusStrForView += f"SUCCESS: {successMessage}"
+                self.statusStrForView += f"SUCCESS: {successMessage}. "
             else:
                 self._updateMseForComputingDelta()
-                self.statusStrForView += f"SUCCESS"
-                self.statusStrForView += f"mean squared error = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)"
+                self.statusStrForView += f"SUCCESS: "
+                self.statusStrForView += f"mean squared error = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %). "
                 self.statusStrForView += f"     |     "
                 self.statusStrForView += f"MESSAGE: {successMessage}"
 
@@ -166,8 +166,8 @@ class StatusModel(QObject):
             if self.currentNormalStatus.statusSource in ["fit", "prefit"]:
                 finalMse = self.currentNormalStatus.mse
                 self._updateMseForComputingDelta()
-                self.statusStrForView += f"WARNING:"
-                self.statusStrForView += f"mean squared error = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)"
+                self.statusStrForView += f"WARNING: "
+                self.statusStrForView += f"mean squared error = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %). "
                 self.statusStrForView += f"     |     "
                 self.statusStrForView += f"MESSAGE: {warningMessage}"
             else:
@@ -177,9 +177,9 @@ class StatusModel(QObject):
             if self.currentNormalStatus.statusSource == "fit":
                 computingMse = self.currentNormalStatus.mse
                 self._updateMseForComputingDelta()
-                self.statusStrForView += f"COMPUTING: mean squred error = {computingMse:.4f} GHz\u00B2 ({self.deltaMseStr} %)"
+                self.statusStrForView += f"COMPUTING: mean squred error = {computingMse:.4f} GHz\u00B2 ({self.deltaMseStr} %). "
             elif self.currentNormalStatus.statusSource == "prefit":
-                self.statusStrForView += f"COMPUTING"
+                self.statusStrForView += f"COMPUTING: "
 
         elif self.currentNormalStatus.statusType == "initializing":
             initial_mse = self.currentNormalStatus.mse
