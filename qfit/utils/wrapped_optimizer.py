@@ -996,19 +996,16 @@ class Optimization():
             )
         elif self.optimizer == "shgo":
             opt_options = self.opt_options.copy()
-            opt_options.update({"ftol": tol})
+            opt_options.update({"f_tol": opt_kwargs.pop("tol")})
             scipy_res = shgo(
                 self._opt_func,
                 **opt_kwargs,
-                **opt_options,
+                options=opt_options,
             )
         elif self.optimizer == "differential evolution":
-            opt_options = self.opt_options.copy()
-            opt_options.update({"tol": tol})
             scipy_res = differential_evolution(
                 self._opt_func,
                 **opt_kwargs,
-                **opt_options,
             )
         # elif self.optimizer == "bayesian optimization":
         #     bo_res = bayesian_optimization(
