@@ -145,6 +145,15 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
+      - name: Wait until the PyPi goes live
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          echo "Checking version: $version"
+          until curl --fail -s "https://pypi.org/project/qfit/${version}" > /dev/null; do
+            echo "Waiting for PyPi to be ready..."
+            sleep 10
+          done
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
