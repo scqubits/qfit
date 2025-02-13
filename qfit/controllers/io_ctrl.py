@@ -87,6 +87,7 @@ class IOCtrl(QObject):
         self.measDataSet, self.registry = models
         self.menuButton, self.menu, self.mainWindow = views
         self.fullReplaceHS = fullReplaceHS
+        self._appClosed = False
 
         self.setConnects()
 
@@ -122,7 +123,16 @@ class IOCtrl(QObject):
         self.menu.ui.menuSaveButton.clicked.connect(self.saveFile)
         self.menu.ui.menuSaveAsButton.clicked.connect(self.saveFileAs)
         self.mainWindow.closeWindow.connect(self.closeByMainWindow)
-
+        
+    # properties ##############################################################
+    @property
+    def appClosed(self):
+        return self._appClosed
+    
+    @appClosed.setter
+    def appClosed(self, value: bool):
+        raise ValueError("appClosed can't be set externally and is read-only.")
+    
     # load data from file #####################################################
     def _registryDictFromDialog(
         self,
@@ -241,6 +251,8 @@ class IOCtrl(QObject):
         """
         Close the window.
         """
+        self._appClosed = True
+        
         if settings.EXECUTED_IN_IPYTHON:
             self.mainWindow.close()
             self.mainWindow.deleteLater()

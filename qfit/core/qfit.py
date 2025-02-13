@@ -265,14 +265,20 @@ class Fit:
     # methods to controll the window ###################################
     def close(self):
         """Close the window and save the project."""
+        if self._ioCtrl.appClosed:
+            raise ValueError("QFit is already closed.")
         self._ioCtrl.closeAppAfterSaving()
     
     def show(self):
         """Show the main window (if hidden)."""
+        if self._ioCtrl.appClosed:
+            raise ValueError("QFit is already closed, can't show window.")
         self._mainWindow.show()
         
     def hide(self):
         """Hide the main window."""
+        if self._ioCtrl.appClosed:
+            raise ValueError("QFit is already closed, can't hide window.")
         self._mainWindow.hide()
 
     # models, views and controllers ####################################
