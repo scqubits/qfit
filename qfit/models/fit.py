@@ -418,8 +418,6 @@ class FitModel(QObject):
     def __init__(self, parent: QObject):
         super().__init__(parent)
 
-        FitRunner.signalHost.optFinished.connect(self._postOptimization)
-
     # signal & slots ===================================================
     @Slot()
     def updateOptimizer(self, optimizer: str):
@@ -648,6 +646,8 @@ class FitModel(QObject):
             initParam,
             self._callbackWrapper(callback),
         )
+        runner.signalHost.optFinished.connect(self._postOptimization)
+        
         self._fitThreadPool.start(runner)
 
 
@@ -669,8 +669,6 @@ class FitRunner(QRunnable):
         The callback function.
     """
 
-    signalHost = fitSignalHost()
-
     def __init__(
         self,
         opt: Optimization,
@@ -682,6 +680,7 @@ class FitRunner(QRunnable):
         self.opt = opt
         self.initParam = initParam
         self.callback = callback
+        self.signalHost = fitSignalHost()
 
     def run(self):
         """

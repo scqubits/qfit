@@ -59,7 +59,6 @@ class QuantumModel(QObject):
         self._figNames: List[str] = []
 
         self._sweepThreadPool = QThreadPool()
-        SweepRunner.signalHost.sweepFinished.connect(self._postSweepInThread)
 
     def replaceHS(self, hilbertspace: HilbertSpace):
         """
@@ -669,6 +668,7 @@ class QuantumModel(QObject):
             _postSweepInThread method.
         """
         runner = SweepRunner(self._sweeps, forced=forced, sweepUsage=sweepUsage)
+        runner.signalHost.sweepFinished.connect(self._postSweepInThread)  
         self._sweepThreadPool.start(runner)
 
     @Slot(object, bool, str)
@@ -1084,7 +1084,6 @@ class SweepRunner(QRunnable):
         It will be passed to the _postSweepInThread method.
     """
 
-    signalHost = sweepSignalHost()
 
     def __init__(
         self,
@@ -1096,6 +1095,7 @@ class SweepRunner(QRunnable):
         self.sweeps = sweeps
         self.forced = forced
         self.sweepUsage = sweepUsage
+        self.signalHost = sweepSignalHost()
 
     def run(self):
         for sweep in self.sweeps.values():
