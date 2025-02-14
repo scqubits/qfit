@@ -479,7 +479,7 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
             counter += 1
 
         self.insertRow(rowCount)
-        self.updateName(self.index(rowCount, 0), str_value, role=Qt.EditRole)
+        self.setData(self.index(rowCount, 0), str_value, role=Qt.EditRole)
 
     @Slot()
     def removeCurrentRow(self):
