@@ -514,7 +514,7 @@ class PlottingCtrl(QObject):
         Connect the UI buttons for reset, zoom, and pan functions of the
         matplotlib canvas.
         """
-        self.canvasTools["reset"].clicked.connect(self.mplCanvas.resetView)
+        self.canvasTools["reset"].clicked.connect(self.toggleReset)
         self.canvasTools["zoom"].clicked.connect(self.toggleZoom)
         self.canvasTools["pan"].clicked.connect(self.togglePan)
         self.canvasTools["select"].clicked.connect(self.toggleSelect)
@@ -644,6 +644,14 @@ class PlottingCtrl(QObject):
         """
         self.setClickResponse("PAN")
         self.mplCanvas.panView()
+        
+    @Slot()
+    def toggleReset(self):
+        """
+        Reset the zoom and pan of the canvas.
+        """
+        self.mplCanvas.resetView()
+        self.setXYAxes(self.measDataSet.currentMeasData)
 
     def updateCursor(self):
         """
