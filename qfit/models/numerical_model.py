@@ -834,6 +834,7 @@ class QuantumModel(QObject):
         yDataFreq: float,
         tag: Tag,
         sweep: ParameterSweep,
+        take_abs_freq: bool = True,
     ) -> Tuple[
         float,
         Literal[
@@ -904,6 +905,8 @@ class QuantumModel(QObject):
             if not np.isnan(initial_energy) and not np.isnan(final_energy):
                 simulation_freq = final_energy - initial_energy
                 status = "SUCCESS"
+                if take_abs_freq:
+                    simulation_freq = np.abs(simulation_freq)
                 return simulation_freq, status
 
             # when some of the states are not identifiable
@@ -928,7 +931,8 @@ class QuantumModel(QObject):
             evals=eigenenergies,
             **availableLabels,
         )
-        simulation_freq = np.abs(simulation_freq)
+        if take_abs_freq:
+            simulation_freq = np.abs(simulation_freq)
         return simulation_freq, status
 
     def _MSEByTransition(
