@@ -1,3 +1,4 @@
+import numpy as np
 from typing import List, Optional, Tuple, Union, Callable, Literal
 
 from PySide6.QtCore import QObject, Signal, Slot
@@ -40,6 +41,10 @@ class StatusModel(QObject):
 
     normalStatusChanged = Signal(str)
     tempStatusChanged = Signal(str, float)
+    
+    ROOT_MSE = True
+    MSE_UNIT: Literal["GHz", "MHz"] = "MHz"
+    MSE_DISPLAY_PRECISION = 2
 
     def __init__(
         self,
@@ -81,19 +86,46 @@ class StatusModel(QObject):
         if self.statusStrForView is None:
             return "-"
         return self.statusStrForView
-
+    
+    def _MSEString(self, mse: float | None) -> str:
+        if self.ROOT_MSE:
+            unit = self.MSE_UNIT
+            mse_name = "root mean square error"
+        else:
+            unit = self.MSE_UNIT + "\u00B2"
+            mse_name = "mean square error"
+        
+        if mse is None:
+            mse_str = "-"
+        elif np.isnan(mse):
+            mse_str = "-"
+        else: # mse is a float, process value
+            if self.MSE_UNIT == "GHz":
+                pass
+            elif self.MSE_UNIT == "MHz":
+                mse = mse * 1e6
+            else:
+                raise ValueError(f"Invalid MSE unit: {self.MSE_UNIT}")
+                
+            if self.ROOT_MSE:
+                mse = np.sqrt(mse)
+                
+            mse_str = f"{mse:.{self.MSE_DISPLAY_PRECISION}f} {unit}"
+        
+        return mse_name + ": " + mse_str
+    
     @property
     def displayedMSE(self) -> str:
         """
         The MSE to be displayed in the status bar, along with the change in MSE.
         """
         if self.newMseForComputingDelta is None:
-            return "MSE:  -  (- %)"
+            return f"{self._MSEString(None)}  (- %)"
         elif self.oldMseForComputingDelta is None:
-            return f"MSE:  {self.newMseForComputingDelta:.3f} GHz\u00B2  (- %)"
+            return f"{self._MSEString(self.newMseForComputingDelta)}  (- %)"
         else:
             plus_minus = "-" if self.deltaMse < 0 else "+"
-            return f"MSE:  {self.newMseForComputingDelta:.4f} GHz\u00B2  ({plus_minus}{self.deltaMse:.2f} %)"
+            return f"{self._MSEString(self.newMseForComputingDelta)}  ({plus_minus}{self.deltaMse:.2f} %)"
 
     @property
     def sourceChanged(self) -> bool:
@@ -157,7 +189,7 @@ class StatusModel(QObject):
             else:
                 self._updateMseForComputingDelta()
                 self.statusStrForView += f"SUCCESS: "
-                self.statusStrForView += f"mean squared error = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %). "
+                self.statusStrForView += f"{self._MSEString(finalMse)} ({self.deltaMseStr} %). "
                 self.statusStrForView += f"     |     "
                 self.statusStrForView += f"MESSAGE: {successMessage}"
 
@@ -167,7 +199,7 @@ class StatusModel(QObject):
                 finalMse = self.currentNormalStatus.mse
                 self._updateMseForComputingDelta()
                 self.statusStrForView += f"WARNING: "
-                self.statusStrForView += f"mean squared error = {finalMse:.4f} GHz\u00B2 ({self.deltaMseStr} %). "
+                self.statusStrForView += f"{self._MSEString(finalMse)} ({self.deltaMseStr} %). "
                 self.statusStrForView += f"     |     "
                 self.statusStrForView += f"MESSAGE: {warningMessage}"
             else:
@@ -177,7 +209,7 @@ class StatusModel(QObject):
             if self.currentNormalStatus.statusSource == "fit":
                 computingMse = self.currentNormalStatus.mse
                 self._updateMseForComputingDelta()
-                self.statusStrForView += f"COMPUTING: mean squred error = {computingMse:.4f} GHz\u00B2 ({self.deltaMseStr} %). "
+                self.statusStrForView += f"COMPUTING: {self._MSEString(computingMse)} ({self.deltaMseStr} %). "
             elif self.currentNormalStatus.statusSource == "prefit":
                 self.statusStrForView += f"COMPUTING: "
 
@@ -185,7 +217,7 @@ class StatusModel(QObject):
             initial_mse = self.currentNormalStatus.mse
             self._updateMseForComputingDelta()
             self.statusStrForView += (
-                f"INITIALIZE FITTING: mean squared error = {initial_mse:.4f} GHz\u00B2"
+                f"INITIALIZE FITTING: {self._MSEString(initial_mse)}"
             )
 
         # emit the signal indicating the status is changed

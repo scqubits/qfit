@@ -475,7 +475,7 @@ class QuantumModel(QObject):
         return True
 
     # generate sweep ==========================================================
-    def _prefitSweptX(self, addPoints: bool = True) -> Dict[str, np.ndarray]:
+    def _sweptX(self, addPoints: bool = True) -> Dict[str, np.ndarray]:
         """
         Generate a list of x coordinates for the prefit. The x coordinates are
         currently made of
@@ -566,6 +566,12 @@ class QuantumModel(QObject):
         sweeps = {}
 
         for figName, x_coordinate in sweptX.items():
+            if x_coordinate.size == 0:
+                # It happens when the user doesn't extract any date
+                # Either in the fit mode or the figure is not being plotted
+                sweeps[figName] = None
+                continue
+            
             paramvals_by_name = {"x": x_coordinate}
             update_hilbertspace = updateHS[figName]
             subsys_update_info = {"x": subsysUpdateInfo[figName]}
@@ -580,6 +586,9 @@ class QuantumModel(QObject):
                 num_cpus=self._numCPUs,  # change this later to connect to the number from the view
             )
             sweeps[figName] = param_sweep
+            
+        if all([sweep is None for sweep in sweeps.values()]):
+            raise ValueError("No extracted data is available to generate a parameter sweep.")
 
         return sweeps
 
@@ -589,7 +598,7 @@ class QuantumModel(QObject):
         """
         try:
             self._sweeps = self._generateSweep(
-                sweptX=self._prefitSweptX(
+                sweptX=self._sweptX(
                     addPoints=(self.sweepUsage in ["prefit", "fit-result"])
                 ),
                 updateHS=self._updateHSForSweep(),
@@ -629,7 +638,7 @@ class QuantumModel(QObject):
         """
         for sweep in self._sweeps.values():
             # if there is no extracted data: do not run the sweep
-            if sweep.parameters.counts == (0,):
+            if sweep is None:
                 continue
 
             # manually turn off the warning message
@@ -1022,7 +1031,7 @@ class QuantumModel(QObject):
         for figName, extrSpec in self._fullExtr.items():
             sweep = self._sweeps[figName]
             # if there is no extracted data: do not calculate the MSE
-            if sweep.parameters.counts == (0,):
+            if sweep is None:
                 continue
 
             # manually turn off the warning message
@@ -1104,7 +1113,7 @@ class SweepRunner(QRunnable):
     def run(self):
         for sweep in self.sweeps.values():
             # if there is no extracted data: do not run the sweep
-            if sweep.parameters.counts == (0,):
+            if sweep is None:
                 continue
 
             # manually turn off the warning message
