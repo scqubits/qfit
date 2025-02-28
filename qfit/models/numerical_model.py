@@ -1,4 +1,6 @@
-from PySide6.QtCore import Slot, Signal, QObject, QRunnable, QThreadPool
+from PySide6.QtCore import (
+    Slot, Signal, QObject, QRunnable, QThreadPool, SignalInstance
+)
 
 import numpy as np
 from numpy import ndarray
@@ -27,6 +29,39 @@ scq.settings.FUZZY_SLICING = True
 scq.settings.FUZZY_WARNING = False
 
 
+class StandaloneCanvasConfig(QObject):
+    """
+    Container for the data of a standalone canvas, as well as a signal to
+    update the canvas.
+
+    Parameters
+    ----------
+    pointsAdded: int, 
+        number of sweep points
+    xLim: Tuple[float, float], 
+        x limits
+    caliByFigName: str, 
+        the calibration function used for this figure
+        it must be the same as one of the figNames
+    """
+    readyToPlot = Signal(SpectrumElement)
+
+    def __init__(
+        self, 
+        pointsAdded: int, 
+        xLim: Tuple[float, float], 
+        caliByFigName: str, 
+        parent: QObject = None
+    ):
+        super().__init__(parent)
+        self.pointsAdded = pointsAdded
+        self.xLim = xLim
+        self.caliByFigName = caliByFigName
+        
+    def cleanup(self):
+        self.readyToPlot.disconnect()
+
+
 class QuantumModel(QObject):
     """
     QuantumModel updates the HilbertSpace object, the extracted data, the calibration data and
@@ -46,7 +81,7 @@ class QuantumModel(QObject):
 
     _sweeps: Dict[str, ParameterSweep]
 
-    readyToPlot = Signal(SpectrumElement)
+    readyToPlotMainCanvas = Signal(SpectrumElement)
     mseReadyToFit = Signal(float)
 
     updateStatus = Signal(Status)
@@ -57,6 +92,9 @@ class QuantumModel(QObject):
     ):
         super().__init__(parent)
         self._figNames: List[str] = []
+        
+        # standalone canvases and their configurations
+        self._standaloneCanvas: Dict[str, StandaloneCanvasConfig] = {}
 
         self._sweepThreadPool = QThreadPool()
 
@@ -338,10 +376,22 @@ class QuantumModel(QObject):
             self.sweepUsage = "none"
 
     # signals =================================================================
-    def emitReadyToPlot(self):
+    def emitReadyToPlot(
+        self,
+        sweepToPlot: str | None = None,
+        signalToEmit: SignalInstance | None = None,
+    ):
         """
         Emit the signal to update the spectrum plot.
         """
+        if sweepToPlot is None:
+            sweep = self._currentSweep
+        else:
+            sweep = self._sweeps[sweepToPlot]
+        
+        if signalToEmit is None:
+            signalToEmit = self.readyToPlotMainCanvas
+        
         # since we always specify the subsystems to plot, we need change the
         # default setting for initial state: None means (0, 0, ...)
         if self._initialState is None:
@@ -355,7 +405,7 @@ class QuantumModel(QObject):
         else:
             subsystems = self._subsysToPlot
 
-        highlight_specdata = self._currentSweep.transitions(
+        highlight_specdata = sweep.transitions(
             as_specdata=True,
             subsystems=subsystems,
             initial=initialState,
@@ -367,7 +417,7 @@ class QuantumModel(QObject):
 
         # overall data
         overall_specdata = copy.deepcopy(
-            self._currentSweep[(slice(None),)].dressed_specdata
+            sweep[(slice(None),)].dressed_specdata
         )
         overall_specdata.energy_table -= highlight_specdata.subtract
 
@@ -381,7 +431,7 @@ class QuantumModel(QObject):
             overall_specdata,
             highlight_specdata,
         )
-        self.readyToPlot.emit(spectrum_element)
+        signalToEmit.emit(spectrum_element)
 
     # properties ==============================================================
     @property
@@ -484,6 +534,8 @@ class QuantumModel(QObject):
         2. the x-coordinates of the extracted data.
         """
         sweptX = {}
+        
+        # for each figure
         for figName, extracted_data_set in self._fullExtr.items():
             extrX = extracted_data_set.distinctSortedX()
 
@@ -496,6 +548,14 @@ class QuantumModel(QObject):
             else:
                 # only calculate the spectrum for the extracted data x coordinates
                 sweptX[figName] = extrX
+                
+        # for each standalone canvas
+        for name, config in self._standaloneCanvas.items():
+            sweptX[name] = np.linspace(
+                *config.xLim, 
+                config.pointsAdded
+            )
+                
         return sweptX
 
     def _updateHSForSweep(
@@ -507,6 +567,8 @@ class QuantumModel(QObject):
         `update_hilbertspace` that is passed to the ParameterSweep object.
         """
         updateHSDict = {}
+        
+        # for each figure
         for figName, sweepParamSet in self._sweepParamSets.items():
             rawXByX = self._rawXByX[figName]
 
@@ -517,6 +579,11 @@ class QuantumModel(QObject):
                 sweepParamSet.updateParamForHS()
 
             updateHSDict[figName] = updateHilbertspace
+            
+        # for each standalone canvas
+        for name, config in self._standaloneCanvas.items():
+            caliByFigName = config.caliByFigName
+            updateHSDict[name] = updateHSDict[caliByFigName]
 
         return updateHSDict
 
@@ -525,12 +592,20 @@ class QuantumModel(QObject):
         Return a dictionary that maps the figure names to the list of subsystems
         that need to be updated when the x-coordinate is changed.
         """
-        return {
+        # for each figure
+        info = {
             figName: list(
                 set(sweepParamSet.parentObjByName[key] for key in sweepParamSet.keys())
             )
             for figName, sweepParamSet in self._sweepParamSets.items()
         }
+        
+        # for each standalone canvas
+        for name, config in self._standaloneCanvas.items():
+            caliByFigName = config.caliByFigName
+            info[name] = info[caliByFigName]
+            
+        return info
 
     def _generateSweep(
         self,
@@ -1078,6 +1153,52 @@ class QuantumModel(QObject):
                 )
                 self.updateStatus.emit(status)
             return mse
+        
+    # Plotting to a standalone canvas
+    # ==================================================================
+    def _newStandaloneCanvas(
+        self, 
+        name: str,
+        pointsAdded: int,
+        xLim: Tuple[float, float],
+        caliByFigName: str,
+    ):
+        """
+        Initialize a standalone canvas.
+        
+        Parameters
+        ----------
+        name: str
+            The name of the standalone canvas.
+        pointsAdded: int
+            The number of points for the sweep.
+        xLim: Tuple[float, float]
+            The x limits of the canvas, range of the sweeped x-axis.
+        caliByFigName: str
+            Calibration function. For a standalone canvas, it must contain the 
+            x, y axis that are colinear, so any of the calibration function 
+            associated with a figName in the canvas can be used.
+        """
+        assert caliByFigName in self._figNames, "Calibration function not found"
+        assert name not in self._standaloneCanvas, "Canvas already exists"
+        assert name not in self._figNames, "Canvas (Main canvas) already exists"
+        
+        self._standaloneCanvas[name] = StandaloneCanvasConfig(
+            pointsAdded=pointsAdded,
+            xLim=xLim,
+            caliByFigName=caliByFigName,
+        )
+        
+    def _removeStandaloneCanvas(self, name: str):
+        """
+        Garbage collection for removed standalone canvas.
+        """
+        self._standaloneCanvas[name].cleanup()
+        self._standaloneCanvas.pop(name)
+        
+        if name in self._sweeps:
+            self._sweeps.pop(name)
+        
 
 
 class sweepSignalHost(QObject):
@@ -1111,16 +1232,23 @@ class SweepRunner(QRunnable):
         self.signalHost = sweepSignalHost()
 
     def run(self):
+        print("SweepRunner.run()")
         for sweep in self.sweeps.values():
+            print("\t sweeping..") 
             # if there is no extracted data: do not run the sweep
             if sweep is None:
                 continue
 
+            print("\t turning off warning message")
             # manually turn off the warning message
             sweep._out_of_sync_warning_issued = True
             try:
+                print("\t running sweep")
                 sweep.run()
             except Exception as e:
+                print("\t error")
                 self.signalHost.sweepFinished.emit(str(e), self.forced, self.sweepUsage)
 
+        print("\t finished sweeping")
         self.signalHost.sweepFinished.emit(self.sweeps, self.forced, self.sweepUsage)
+        print("\t finished emitting")

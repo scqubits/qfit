@@ -464,10 +464,17 @@ class ImageElement(PlotElement):
 
     artists: AxesImage
 
-    def __init__(self, name: str, z: np.ndarray, **kwargs):
+    def __init__(
+        self, 
+        name: str, 
+        z: np.ndarray, 
+        fileName: str,
+        **kwargs
+    ):
         self.name = name
         self.z = z
         self.kwargs = kwargs
+        self.fileName = fileName
 
     def canvasPlot(self, axes: Axes, **kwargs) -> None:
         """
@@ -493,13 +500,20 @@ class MeshgridElement(PlotElement):
     artists: QuadMesh
 
     def __init__(
-        self, name: str, x: np.ndarray, y: np.ndarray, z: np.ndarray, **kwargs
+        self, 
+        name: str,
+        x: np.ndarray, 
+        y: np.ndarray, 
+        z: np.ndarray, 
+        fileName: str,
+        **kwargs
     ):
         self.name = name
         self.x = x
         self.y = y
         self.z = z
         self.kwargs = kwargs
+        self.fileName = fileName
 
     def canvasPlot(self, axes: Axes, **kwargs) -> None:
         """

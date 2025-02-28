@@ -64,11 +64,6 @@ class NavigationHidden(NavigationToolbar2QT):
         The parent widget.
     """
 
-    # only connect to external buttons
-    toolitems = [
-        t for t in NavigationToolbar2QT.toolitems if t[0] in ("Home", "Pan", "Zoom")
-    ]
-
     def __init__(
         self,
         canvas: FigureCanvasQTAgg,
@@ -80,6 +75,11 @@ class NavigationHidden(NavigationToolbar2QT):
         for child in self.findChildren(QToolButton):
             child.setVisible(False)
         self.update()
+        
+        # only connect to external buttons
+        self.toolitems = [
+            t for t in NavigationToolbar2QT.toolitems if t[0] in ("Home", "Pan", "Zoom")
+        ]
 
         self.set_cursor(cursors.SELECT_REGION)
         self._idPress = None
@@ -397,11 +397,13 @@ class MplFigureCanvas(QFrame):
         The parent widget.
     """
 
-    specialCursor: SpecialCursor
-
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, standalone: bool = False):
         QFrame.__init__(self, parent)
 
+        # this widget could be initialized outside of the main window
+        # and shown as a standalone plotting widget
+        self._standalone = standalone
+        
         self.initViewElem()
         self.initPlotting()
 
@@ -492,7 +494,7 @@ class MplFigureCanvas(QFrame):
         self.cmap = copy.copy(getattr(cm, self._colorMapStr))
 
     # View: Coordinates ================================================
-    def _adjustMargin(self, xAxisNum: int, ):
+    def _adjustMargin(self, xAxisNum: int):
 
         # Calculate the desired margins in points
         rightTopMarginInch = (0.1, 0.1)
@@ -776,6 +778,9 @@ class MplFigureCanvas(QFrame):
         vertOn: bool = None
             Whether to show the vertical line. If None, keep the current state.
         """
+        if self._standalone:
+            return  # do nothing in standalone mode
+        
         # memorize the state of the crosshair cursor
         if xSnapMode is not None:
             self._xSnapMode = xSnapMode
@@ -970,6 +975,10 @@ class MplFigureCanvas(QFrame):
         """
         name = element.name
         self._checkElementName(name)
+        
+        # We may have multiple MplFigureCanvas instances, 
+        # deepcopy the element to avoid reference issues
+        element = copy.deepcopy(element)
 
         # remove the old element and inherit its properties
         if name in self._plottingElements.keys():

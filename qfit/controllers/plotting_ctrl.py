@@ -154,7 +154,7 @@ class PlottingCtrl(QObject):
         self.zComboBoxReload()
 
         # plot everything available
-        self.setXYAxes(self.measDataSet.currentMeasData)
+        self.setXYAxesByCurrentMeasData()
         self.measDataSet.emitReadyToPlot()
         self.measDataSet.emitRelimCanvas()
         self.measDataSet.emitRawXMap()
@@ -276,7 +276,7 @@ class PlottingCtrl(QObject):
         """
         self.mplCanvas.relimPrincipalAxes(xData, yData)
         if self.measDataSet.rowCount() > 0:
-            self.setXYAxes(self.measDataSet.currentMeasData)
+            self.setXYAxesByCurrentMeasData()
 
     @Slot(str)
     def switchFig(self, figName: str):
@@ -290,7 +290,7 @@ class PlottingCtrl(QObject):
         """
         self.zComboBoxReload()
         self._viewStoreFilter(self.measDataSet.exportFilter())
-        # self.setXYAxes(self.measData.currentMeasData)  # will be called when relimCanvas  
+        # self.setXYAxesByCurrentMeasData() # will be called when relimCanvas
 
     @Slot()
     def swapXY(self):
@@ -338,35 +338,52 @@ class PlottingCtrl(QObject):
         """
 
         self.calibrateAxes = checked
-        self.setXYAxes(self.measDataSet.currentMeasData)
+        self.setXYAxesByCurrentMeasData()
+        
+    def setXYAxesByCurrentMeasData(self):
+        measData = self.measDataSet.currentMeasData
+        self.setXYAxes(
+            rawX=measData.rawX,
+            rawY=measData.rawY,
+            calibFuncName=measData.name,
+            canvas=self.mplCanvas
+        )
 
-    def setXYAxes(self, measData: MeasDataType):
+    def setXYAxes(
+        self, 
+        rawX: Dict[str, np.ndarray],
+        rawY: Dict[str, np.ndarray],
+        calibFuncName: str,
+        canvas: MplFigureCanvas | None = None
+    ):
         """
-        Update the x and y axes of the canvas based on the current measurement data
-        and the calibration functions.
+        Update the x and y axes of the canvas based on
+        - a given rawX and rawY axes to be shown / calibrated
+        - a calibration function (each figure gets its own calibration function,
+        so we need to put in the name of the figure)
+        
+        This function can be also used for standalone mplCanvas.
         """
+        if canvas is None:
+            canvas = self.mplCanvas
 
         if self.measDataSet.rowCount() == 0:
             # not yet initialized
             return
 
-        rawX = measData.rawX
-        rawY = measData.rawY
         rawXLim = {key: (val[0], val[-1]) for key, val in rawX.items()}
         rawYLim = rawY.itemByIndex(0)  # only have one key
 
         if not self.calibrateAxes:
-            self.mplCanvas.updateXAxes(rawXLim)
-            self.mplCanvas.updateYAxes(
+            canvas.updateXAxes(rawXLim)
+            canvas.updateYAxes(
                 rawYLim.name, (rawYLim.data[0], rawYLim.data[-1])
             )
             return
 
         # when need to show the calibrated data
         # x calibration
-        currentSweepParam = self.XCaliFuncDict[
-            self.measDataSet.currentMeasData.name
-        ]
+        currentSweepParam = self.XCaliFuncDict[calibFuncName]
 
         currentSweepParam.setByRawX({key: rng[0] for key, rng in rawXLim.items()})
         mappedXLeft = currentSweepParam.getFlattenedAttrDict("value")
@@ -381,19 +398,19 @@ class PlottingCtrl(QObject):
         # ylabel = f"Energy [{scq.get_units()}]" # when we implement the units
         mappedYLim = (self.YCaliFunc(rawYLim.data[0]), self.YCaliFunc(rawYLim.data[-1]))
 
-        self.mplCanvas.updateXAxes(mappedXLim)
-        self.mplCanvas.updateYAxes(mappedYName, mappedYLim)
+        canvas.updateXAxes(mappedXLim)
+        canvas.updateYAxes(mappedYName, mappedYLim)
 
     def onXCaliFuncUpdated(self, XCaliFuncDict: Dict[str, "SweepParamSet"]):
         """Update the X calibration function and the labels on the canvas."""
         self.XCaliFuncDict = XCaliFuncDict
-        self.setXYAxes(self.measDataSet.currentMeasData)
+        self.setXYAxesByCurrentMeasData()
 
     def onYCaliFuncUpdated(self, YCaliFunc: Callable, invYCaliFunc: Callable):
         """Update the Y calibration function and the labels on the canvas."""
         self.YCaliFunc = YCaliFunc
         self.invYCaliFunc = invYCaliFunc
-        self.setXYAxes(self.measDataSet.currentMeasData)
+        self.setXYAxesByCurrentMeasData()
 
     def storeCalibrationPoint(self, xName, yName, xData, yData):
         """
@@ -494,7 +511,7 @@ class PlottingCtrl(QObject):
 
         self.measDataSet.readyToPlot.connect(self.mplCanvas.updateElement)
         self.measDataSet.relimCanvas.connect(self.relimCanvas)
-        self.quantumModel.readyToPlot.connect(self.mplCanvas.updateElement)
+        self.quantumModel.readyToPlotMainCanvas.connect(self.mplCanvas.updateElement)
 
     def mouseClickConnects(self):
         """
@@ -651,7 +668,7 @@ class PlottingCtrl(QObject):
         Reset the zoom and pan of the canvas.
         """
         self.mplCanvas.resetView()
-        self.setXYAxes(self.measDataSet.currentMeasData)
+        self.setXYAxesByCurrentMeasData()
 
     def updateCursor(self):
         """
