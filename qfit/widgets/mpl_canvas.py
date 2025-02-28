@@ -16,7 +16,7 @@ import warnings
 from typing import Union, Literal, Tuple, Dict, Any, List
 
 from PySide6 import QtCore
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, Signal
 from PySide6.QtWidgets import (
     QFrame, QVBoxLayout, QToolButton, QSizePolicy
 )
@@ -68,13 +68,15 @@ class NavigationHidden(NavigationToolbar2QT):
         self,
         canvas: FigureCanvasQTAgg,
         parent: "MplFigureCanvas",
+        parentIsStandalone: bool = False,
     ):
         super().__init__(canvas, parent, coordinates=False)
 
         # Hide all buttons.
-        for child in self.findChildren(QToolButton):
-            child.setVisible(False)
-        self.update()
+        if not parentIsStandalone:
+            for child in self.findChildren(QToolButton):
+                child.setVisible(False)
+            self.update()
         
         # only connect to external buttons
         self.toolitems = [
@@ -396,6 +398,8 @@ class MplFigureCanvas(QFrame):
     parent : QWidget
         The parent widget.
     """
+    
+    canvasClosed = Signal()
 
     def __init__(self, parent=None, standalone: bool = False):
         QFrame.__init__(self, parent)
@@ -409,7 +413,11 @@ class MplFigureCanvas(QFrame):
 
     def initViewElem(self):
         self.canvas = FigureCanvasQTAgg(Figure())
-        self.toolbar = NavigationHidden(self.canvas, self)
+        self.toolbar = NavigationHidden(
+            self.canvas, 
+            self, 
+            parentIsStandalone=self._standalone,
+        )
 
         # initialize the layout
         vertical_layout = QVBoxLayout()
@@ -1016,3 +1024,7 @@ class MplFigureCanvas(QFrame):
             self._restoreXYLim(byMeasData=True)
 
         self.canvas.draw()
+        
+    def closeEvent(self, event):
+        self.canvasClosed.emit()
+        super().closeEvent(event)

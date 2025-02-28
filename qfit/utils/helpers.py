@@ -228,7 +228,7 @@ def makeUnique(names: List[str]):
     Given a list of strings, return a list of unique strings by appending
     a number to the end of the string if the string is not unique.
 
-    Example: ["a", "b", "a", "b"] -> ["a", "b", "a (1)", "b (1)"]
+    Example: ["a", "b", "a", "b", "a"] -> ["a", "b", "a (1)", "b (1)", "a (2)"]
 
     Parameters
     ----------

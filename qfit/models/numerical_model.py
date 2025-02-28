@@ -29,7 +29,7 @@ scq.settings.FUZZY_SLICING = True
 scq.settings.FUZZY_WARNING = False
 
 
-class StandaloneCanvasConfig(QObject):
+class SweepConfigForStandaloneCanvas(QObject):
     """
     Container for the data of a standalone canvas, as well as a signal to
     update the canvas.
@@ -94,7 +94,9 @@ class QuantumModel(QObject):
         self._figNames: List[str] = []
         
         # standalone canvases and their configurations
-        self._standaloneCanvas: Dict[str, StandaloneCanvasConfig] = {}
+        self._sweepConfigsForStandaloneCanvas: Dict[
+            str, SweepConfigForStandaloneCanvas
+        ] = {}
 
         self._sweepThreadPool = QThreadPool()
 
@@ -550,7 +552,7 @@ class QuantumModel(QObject):
                 sweptX[figName] = extrX
                 
         # for each standalone canvas
-        for name, config in self._standaloneCanvas.items():
+        for name, config in self._sweepConfigsForStandaloneCanvas.items():
             sweptX[name] = np.linspace(
                 *config.xLim, 
                 config.pointsAdded
@@ -585,7 +587,7 @@ class QuantumModel(QObject):
             updateHSDict[figName] = updateHilbertspace
             
         # for each standalone canvas
-        for name, config in self._standaloneCanvas.items():
+        for name, config in self._sweepConfigsForStandaloneCanvas.items():
             caliByFigName = config.caliByFigName
             updateHSDict[name] = updateHSDict[caliByFigName]
 
@@ -605,7 +607,7 @@ class QuantumModel(QObject):
         }
         
         # for each standalone canvas
-        for name, config in self._standaloneCanvas.items():
+        for name, config in self._sweepConfigsForStandaloneCanvas.items():
             caliByFigName = config.caliByFigName
             info[name] = info[caliByFigName]
             
@@ -834,6 +836,12 @@ class QuantumModel(QObject):
 
         if sweepUsage in ["prefit", "fit-result"]:
             self.emitReadyToPlot()
+            
+            for name, config in self._sweepConfigsForStandaloneCanvas.items():
+                self.emitReadyToPlot(
+                    sweepToPlot=name,
+                    signalToEmit=config.readyToPlot,
+                )
 
         # mse calculation
         mse = self._calculateMSE()
@@ -1184,21 +1192,21 @@ class QuantumModel(QObject):
             associated with a figName in the canvas can be used.
         """
         assert caliByFigName in self._figNames, "Calibration function not found"
-        assert name not in self._standaloneCanvas, "Canvas already exists"
+        assert name not in self._sweepConfigsForStandaloneCanvas, "Canvas already exists"
         assert name not in self._figNames, "Canvas (Main canvas) already exists"
         
-        self._standaloneCanvas[name] = StandaloneCanvasConfig(
+        self._sweepConfigsForStandaloneCanvas[name] = SweepConfigForStandaloneCanvas(
             pointsAdded=pointsAdded,
             xLim=xLim,
             caliByFigName=caliByFigName,
         )
         
-    def _removeStandaloneCanvas(self, name: str):
+    def _removeSweepForStandaloneCanvas(self, name: str):
         """
         Garbage collection for removed standalone canvas.
         """
-        self._standaloneCanvas[name].cleanup()
-        self._standaloneCanvas.pop(name)
+        self._sweepConfigsForStandaloneCanvas[name].cleanup()
+        self._sweepConfigsForStandaloneCanvas.pop(name)
         
         if name in self._sweeps:
             self._sweeps.pop(name)
@@ -1236,23 +1244,16 @@ class SweepRunner(QRunnable):
         self.signalHost = sweepSignalHost()
 
     def run(self):
-        print("SweepRunner.run()")
         for sweep in self.sweeps.values():
-            print("\t sweeping..") 
             # if there is no extracted data: do not run the sweep
             if sweep is None:
                 continue
 
-            print("\t turning off warning message")
             # manually turn off the warning message
             sweep._out_of_sync_warning_issued = True
             try:
-                print("\t running sweep")
                 sweep.run()
             except Exception as e:
-                print("\t error")
                 self.signalHost.sweepFinished.emit(str(e), self.forced, self.sweepUsage)
 
-        print("\t finished sweeping")
         self.signalHost.sweepFinished.emit(self.sweeps, self.forced, self.sweepUsage)
-        print("\t finished emitting")

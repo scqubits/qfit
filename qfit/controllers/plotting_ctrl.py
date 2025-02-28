@@ -3,6 +3,7 @@ from PySide6.QtCore import Slot, QObject, Signal
 from qfit.widgets.mpl_canvas import MplFigureCanvas
 
 import numpy as np
+import copy
 import matplotlib as mpl
 from qfit.utils.helpers import ySnap, OrderedDictMod
 from qfit.models.measurement_data import (
@@ -10,6 +11,7 @@ from qfit.models.measurement_data import (
 )
 from qfit.models.data_structures import FilterConfig
 from qfit.settings import MARKER_SIZE
+from qfit.utils.helpers import makeUnique
 
 from typing import TYPE_CHECKING, Union, Dict, Any, Tuple, Literal, List, Callable
 import warnings
@@ -29,9 +31,30 @@ try:
     mpl.use("qtagg")
 except ImportError as e: 
     warnings.warn(f"Recieving error {e} while importing matplotlib, indicating "
-                  "that the code is running in a headless environment. Using "
-                  "Agg backend instead.")
+                  "that the code is running in a headless environment for "
+                  "testing. Using Agg backend instead.")
     mpl.use("Agg")
+    
+
+
+class StandaloneCanvasAndConfigs:
+    """
+    It is a data structure that manages the dynamical view - standalone 
+    mplFigureCanvas and its configs.
+    """
+    def __init__(
+        self,
+        name: str,
+        rawX: Dict[str, np.ndarray],
+        rawY: Dict[str, np.ndarray],
+        figNames: List[str],
+        canvas: MplFigureCanvas,
+    ):
+        self.name = name
+        self.rawX = rawX
+        self.rawY = rawY
+        self.figNames = figNames
+        self.canvas = canvas
 
 
 class PlottingCtrl(QObject):
@@ -128,6 +151,7 @@ class PlottingCtrl(QObject):
         self.clickResponse = "EXTRACT"  # the response to a mouse click
         self.dataDestination = "NONE"  # the destination of the data after a click
         self.calibrateAxes = False  # whether the ticklabels are calibrated
+        self.standaloneCanvases: Dict[str, StandaloneCanvasAndConfigs] = {}
 
         # connects
         self.dataSwitchConnects()
@@ -154,7 +178,7 @@ class PlottingCtrl(QObject):
         self.zComboBoxReload()
 
         # plot everything available
-        self.setXYAxesByCurrentMeasData()
+        self.setXYAxesForAll()
         self.measDataSet.emitReadyToPlot()
         self.measDataSet.emitRelimCanvas()
         self.measDataSet.emitRawXMap()
@@ -276,7 +300,7 @@ class PlottingCtrl(QObject):
         """
         self.mplCanvas.relimPrincipalAxes(xData, yData)
         if self.measDataSet.rowCount() > 0:
-            self.setXYAxesByCurrentMeasData()
+            self._setXYAxesByCurrentMeasData()
 
     @Slot(str)
     def switchFig(self, figName: str):
@@ -338,18 +362,9 @@ class PlottingCtrl(QObject):
         """
 
         self.calibrateAxes = checked
-        self.setXYAxesByCurrentMeasData()
-        
-    def setXYAxesByCurrentMeasData(self):
-        measData = self.measDataSet.currentMeasData
-        self.setXYAxes(
-            rawX=measData.rawX,
-            rawY=measData.rawY,
-            calibFuncName=measData.name,
-            canvas=self.mplCanvas
-        )
+        self.setXYAxesForAll()
 
-    def setXYAxes(
+    def _setXYAxes(
         self, 
         rawX: Dict[str, np.ndarray],
         rawY: Dict[str, np.ndarray],
@@ -400,17 +415,40 @@ class PlottingCtrl(QObject):
 
         canvas.updateXAxes(mappedXLim)
         canvas.updateYAxes(mappedYName, mappedYLim)
+        
+    def _setXYAxesByCurrentMeasData(self):
+        measData = self.measDataSet.currentMeasData
+        self._setXYAxes(
+            rawX=measData.rawX,
+            rawY=measData.rawY,
+            calibFuncName=measData.name,
+            canvas=self.mplCanvas
+        )
+        
+    def _setXYAxesForStandaloneCanvas(self, canvasName: str):
+        canvasAndConfigs = self.standaloneCanvases[canvasName]
+        self._setXYAxes(
+            rawX=canvasAndConfigs.rawX,
+            rawY=canvasAndConfigs.rawY,
+            calibFuncName=canvasAndConfigs.figNames[0],
+            canvas=canvasAndConfigs.canvas
+        )
+        
+    def setXYAxesForAll(self):
+        self._setXYAxesByCurrentMeasData()
+        for canvasName in self.standaloneCanvases.keys():
+            self._setXYAxesForStandaloneCanvas(canvasName)
 
     def onXCaliFuncUpdated(self, XCaliFuncDict: Dict[str, "SweepParamSet"]):
         """Update the X calibration function and the labels on the canvas."""
         self.XCaliFuncDict = XCaliFuncDict
-        self.setXYAxesByCurrentMeasData()
+        self.setXYAxesForAll()
 
     def onYCaliFuncUpdated(self, YCaliFunc: Callable, invYCaliFunc: Callable):
         """Update the Y calibration function and the labels on the canvas."""
         self.YCaliFunc = YCaliFunc
         self.invYCaliFunc = invYCaliFunc
-        self.setXYAxesByCurrentMeasData()
+        self.setXYAxesForAll()
 
     def storeCalibrationPoint(self, xName, yName, xData, yData):
         """
@@ -668,7 +706,7 @@ class PlottingCtrl(QObject):
         Reset the zoom and pan of the canvas.
         """
         self.mplCanvas.resetView()
-        self.setXYAxesByCurrentMeasData()
+        self._setXYAxesByCurrentMeasData()
 
     def updateCursor(self):
         """
@@ -734,3 +772,132 @@ class PlottingCtrl(QObject):
         # calibration mode
         if self.dataDestination in ["CALI_X", "CALI_Y"]:
             return self.storeCalibrationPoint(xName, yName, xdata, ydata)
+
+    def createStandaloneCanvas(
+        self, 
+        selectedDataNames: List[str | int],
+        numericalPoints: int, 
+        xLim: Tuple[float, float] | None = None, 
+        yLim: Tuple[float, float] | None = None,
+    ):
+        """
+        Create a standalone canvas with multiple measurement data.
+        
+        Parameters
+        ----------
+        selectedDataNames: List[str | int]
+            The names (or indices) of the measurement data to be displayed.
+        numericalPoints: int
+            To plot the numerical calculation, the number of points to be 
+            swept over.
+        xLim: Tuple[float, float] | None
+            The x limits of the canvas. Currently not supported.
+        yLim: Tuple[float, float] | None
+            The y limits of the canvas. Currently not supported.
+        """
+        if xLim is not None or yLim is not None:
+            raise NotImplementedError("Setting a custom x or y limit is not implemented")
+        
+        # create a unique name for the canvas: e.g. "Collection (1)"
+        existingNames = list(self.standaloneCanvases.keys())
+        canvasName = makeUnique(existingNames + ["Collection"])[-1]
+        canvas = MplFigureCanvas(standalone=True)
+
+        # step 1: add the selected measurement data to the canvas -------------
+        fullData = self.measDataSet.fullData
+        selectedData = []
+        figNames = []
+        for idx, data in enumerate(fullData):
+            if idx in selectedDataNames or data.name in selectedDataNames:
+                selectedData.append(data)
+                figNames.append(data.name)
+
+        # all of the data must be collinear with each other
+        for data in selectedData[1:]:
+            assert selectedData[0].isCollinearWith(data), "data are not collinear"
+            
+        for data in selectedData:
+            elem = copy.deepcopy(data.generatePlotElement())
+            canvas._plottingElements[elem.fileName] = elem
+        canvas.plotAllElements()
+            
+        # step 2: relim the canvas --------------------------------------------
+        # collect all the rawX and rawY axes
+        allRawX = OrderedDictMod()
+        allRawY = OrderedDictMod()
+        for data in selectedData:
+            for key, val in data.rawX.items():
+                if key not in allRawX:
+                    allRawX[key] = val
+                else:
+                    allRawX[key] = np.concatenate([allRawX[key], val])
+            for key, val in data.rawY.items():
+                if key not in allRawY:
+                    allRawY[key] = val
+                else:
+                    allRawY[key] = np.concatenate([allRawY[key], val])
+                
+        # extract the min and max of each axis that enclose all the data
+        rawX = OrderedDictMod()
+        rawY = OrderedDictMod()
+        for key, val in allRawX.items():
+            rawX[key] = np.array([np.min(val), np.max(val)])
+        for key, val in allRawY.items():
+            rawY[key] = np.array([np.min(val), np.max(val)])
+            
+        # set the boundary of the measurement data
+        prcpXName = selectedData[0].principalX.name
+        prcpYName = selectedData[0].principalY.name
+        canvas.relimPrincipalAxes(
+            x=rawX[prcpXName],
+            y=rawY[prcpYName]
+        )
+        
+        # store the standalone canvas (used in setXYAxesForStandaloneCanvas)
+        self.standaloneCanvases[canvasName] = StandaloneCanvasAndConfigs(
+            name=canvasName,
+            rawX=rawX,
+            rawY=rawY,
+            canvas=canvas,
+            figNames=figNames,
+        )
+        
+        # set the axes
+        self._setXYAxesForStandaloneCanvas(canvasName)
+        
+        # step 3: add the numerical calculation -------------------------------
+        allPrcpX = np.array([])
+
+        for data in selectedData:
+            assert data.principalX.name == prcpXName, "principalX names are not the same"
+            
+            allPrcpX = np.concatenate([allPrcpX, data.principalX.data])
+            
+        self.quantumModel._newStandaloneCanvas(
+            name=canvasName,
+            pointsAdded=numericalPoints,
+            xLim=(np.min(allPrcpX), np.max(allPrcpX)),
+            caliByFigName=selectedData[0].name,
+        )
+        
+        # step 4: connect the signals -----------------------------------------
+        self.quantumModel._sweepConfigsForStandaloneCanvas[
+            canvasName
+        ].readyToPlot.connect(canvas.updateElement)
+        
+        canvas.canvasClosed.connect(
+            lambda canvasName=canvasName: self.removeStandaloneCanvas(canvasName)
+        )
+        
+        # step 5: show the canvas ---------------------------------------------
+        canvas.canvas.draw()
+        canvas.show()
+
+    def removeStandaloneCanvas(self, canvasName: str):
+        """
+        Remove a standalone canvas.
+        """
+        self.quantumModel._removeSweepForStandaloneCanvas(canvasName)
+        self.standaloneCanvases.pop(canvasName)
+        
+        

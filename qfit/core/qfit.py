@@ -1,7 +1,7 @@
 import sys
 import os
 from copy import deepcopy as _deepcopy
-from typing import Union, Dict, Any, Dict, List, Optional
+from typing import Union, Dict, Any, Dict, List, Optional, Tuple
 
 from PySide6.QtWidgets import QApplication
 
@@ -280,6 +280,33 @@ class Fit:
         if self._ioCtrl.appClosed:
             raise ValueError("QFit is already closed, can't hide window.")
         self._mainWindow.hide()
+        
+    # functionalities that does not involves the main window ###########
+    def createStandaloneCanvas(
+        self, 
+        selectedDataNames: List[str | int],
+        numericalPoints: int, 
+        xLim: Tuple[float, float] | None = None, 
+        yLim: Tuple[float, float] | None = None,
+    ):
+        """
+        Create a standalone canvas with multiple measurement data.
+        
+        Parameters
+        ----------
+        selectedDataNames: List[str | int]
+            The names (or indices) of the measurement data to be displayed.
+        numericalPoints: int
+            To plot the numerical calculation, the number of points to be 
+            swept over.
+        xLim: Tuple[float, float] | None
+            The x limits of the canvas. Currently not supported.
+        yLim: Tuple[float, float] | None
+            The y limits of the canvas. Currently not supported.
+        """
+        self._plottingCtrl.createStandaloneCanvas(
+            selectedDataNames, numericalPoints, xLim, yLim
+        )
 
     # models, views and controllers ####################################
     # ##################################################################
