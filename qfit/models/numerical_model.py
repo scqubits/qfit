@@ -572,7 +572,11 @@ class QuantumModel(QObject):
         for figName, sweepParamSet in self._sweepParamSets.items():
             rawXByX = self._rawXByX[figName]
 
-            def updateHilbertspace(x: float) -> None:
+            def updateHilbertspace(
+                x: float,
+                sweepParamSet = sweepParamSet,
+                rawXByX = rawXByX,
+            ) -> None:
                 # map x to the rawX (voltage vector)
                 rawX = rawXByX(x)
                 sweepParamSet.setByRawX(rawX)
