@@ -74,8 +74,9 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
         else:
             windowTitle = "qfit"
 
-        if self.unsavedChanges:
-            windowTitle += " *"
+        # it is useless now (as it will only be updated when user clicks "save" / "close"...)
+        # if self.unsavedChanges:
+        #     windowTitle += " *"
 
         self.setWindowTitle(windowTitle)
 

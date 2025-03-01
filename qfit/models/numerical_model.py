@@ -534,6 +534,9 @@ class QuantumModel(QObject):
         1. a uniformly distributed list of x coordinates in
         between the min and max of the x-coordinates of the extracted data
         2. the x-coordinates of the extracted data.
+        
+        For the standalone canvas, the x-coordinates are uniformly distributed
+        according to the sweepConfigForStandaloneCanvas.
         """
         sweptX = {}
         
@@ -555,7 +558,7 @@ class QuantumModel(QObject):
         for name, config in self._sweepConfigsForStandaloneCanvas.items():
             sweptX[name] = np.linspace(
                 *config.xLim, 
-                config.pointsAdded
+                config.pointsAdded if addPoints else 0
             )
                 
         return sweptX

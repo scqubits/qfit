@@ -851,8 +851,8 @@ class SliderParam(DispParamBase):
 
     def storeAttr(self, attr: str, value: Union[str, int], fromSlider: bool = False):
         """
-        Store the value of the parameter. If the source is a slider, the
-        value should be denormalized before being stored.
+        Store the value of the parameter from view. 
+        If the source is a slider, the value should be denormalized before being stored.
         """
         if fromSlider:
             convertedValue = self._denormalizeValue(value)
@@ -930,7 +930,7 @@ class FitParam(DispParamBase):
     # setter for UI ====================================================
     def storeAttr(self, attr: str, value: Union[str, bool]):
         """
-        Store the value of the parameter
+        Store the value of the parameter from view.
         """
         if isinstance(value, str):
             convertedValue = self._toIntAsNeeded(float(value))
@@ -1009,7 +1009,7 @@ class CaliTableRowParam(DispParamBase):
     # setter for UI ====================================================
     def storeAttr(self, attr: str, value: Union[str, bool]):
         """
-        Store the value of the parameter
+        Store the value of the parameter from view.
         """
         if isinstance(value, str):
             convertedValue = self._toIntAsNeeded(float(value))
