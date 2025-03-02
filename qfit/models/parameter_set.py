@@ -353,10 +353,10 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
         The class of the parameter, which should be a subclass of ParamBase.
     """
 
-    hilbertspace: HilbertSpace
-
     def __init__(self, paramCls: Type[ParamCls]):
         super().__init__(paramCls)
+        
+        self.hilbertspace: HilbertSpace
 
         self.parentNameByObj: Dict[ParentType, str] = {}
         self.parentObjByName: Dict[str, ParentType] = {}

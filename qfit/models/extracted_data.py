@@ -208,16 +208,12 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
     distinctXUpdated = Signal(np.ndarray)  # when user extract (remove) data points
     readyToPlotX = Signal(VLineElement)  # connected to the above signal
 
-    _figNames: List[str]
-    _currentFigName: str
-    _currentRow: int
-
     def __init__(self, parent):
         super().__init__(parent)
 
-        self._figNames = []
-        self._fullSpectra = FullExtr()
-        self._currentRow = 0
+        self._figNames: List[str] = []
+        self._fullSpectra: FullExtr = FullExtr()
+        self._currentRow: int = 0
 
         self._signalProcessing()
 

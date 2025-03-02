@@ -33,12 +33,15 @@ class MainWindow(QMainWindow, Registrable, metaclass=CombinedMeta):
     """Class for the main window of the app."""
 
     closeWindow = Signal(object)
-    _projectFile: Union[str, None] = None
-    _unsavedChanges: bool = False
     attrToRegister: List[str] = ["_projectFile"]
 
     def __init__(self):
         QMainWindow.__init__(self)
+        
+        
+        self._projectFile: Union[str, None] = None
+        self._unsavedChanges: bool = False
+        
         self.setFocusPolicy(Qt.StrongFocus)
         self.setWindowIcon(QIcon(':/icons/svg/qfit-icon.svg'))
 

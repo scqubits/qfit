@@ -115,6 +115,13 @@ class RegistryEntry:
         self.setter(value)
 
 
+version_entry = RegistryEntry(
+    "version",
+    "r",
+    lambda version=version: version,
+)
+
+
 class Registry:
     """
     The Registry is a singleton object. It is "connected" the global
@@ -127,13 +134,10 @@ class Registry:
     register, export, and load the entries.
     """
 
-    _registry: Dict[str, RegistryEntry] = {
-        "version": RegistryEntry(
-            "version",
-            "r",
-            lambda: version,
-        ),
-    }
+    def __init__(self):
+        self._registry: Dict[str, RegistryEntry] = {
+            "version": version_entry,
+        }
 
     def __getitem__(self, key: str) -> Any:
         return self._registry[key].getter()
@@ -271,12 +275,4 @@ class Registry:
     def clear(self):
         """Clear the registry."""
         self._registry.clear()
-        self._registry.update(
-            {
-                "version": RegistryEntry(
-                    "version",
-                    "r",
-                    lambda: version,
-                ),
-            }
-        )
+        self._registry.update({"version": version_entry})

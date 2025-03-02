@@ -41,10 +41,6 @@ class StatusModel(QObject):
 
     normalStatusChanged = Signal(str)
     tempStatusChanged = Signal(str, float)
-    
-    ROOT_MSE = True
-    MSE_UNIT: Literal["GHz", "MHz"] = "MHz"
-    MSE_DISPLAY_PRECISION = 2
 
     def __init__(
         self,
@@ -58,6 +54,13 @@ class StatusModel(QObject):
         self.oldMseForComputingDelta: Optional[float] = None
         self.newMseForComputingDelta: Optional[float] = None
         self._updateMseForComputingDelta()
+        
+        self._init_settings()
+        
+    def _init_settings(self):
+        self.ROOT_MSE = True
+        self.MSE_UNIT: Literal["GHz", "MHz"] = "MHz"
+        self.MSE_DISPLAY_PRECISION = 2
 
     @property
     def deltaMse(self) -> Union[float, None]:

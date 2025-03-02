@@ -44,7 +44,6 @@ class FitCtrl(QObject):
     views : Tuple[FitView, FitParamView, PrefitParamView, SweepSettingsView, PageView]
     """
 
-    OptTerminated = False
 
     def __init__(
         self,
@@ -87,6 +86,8 @@ class FitCtrl(QObject):
             self.sweepSettingsView,
             self.pageView,
         ) = views
+        
+        self.OptTerminated = False
 
         self._optionConnects()
         self._tableParamConnects()

@@ -403,20 +403,21 @@ class FitModel(QObject):
         The parent object of the model.
     """
 
-    _fitThreadPool = QThreadPool()
-
-    optimizer: str = "L-BFGS-B"
-    tol: float = 1e-6
-
     optFinished = Signal()  # signal to notify the controller
     updateStatus = Signal(Status)   # signal to update the status bar
 
-    HSParamNames: List[str] = []
-    iteration: int = 0
-    status: Status
-
     def __init__(self, parent: QObject):
         super().__init__(parent)
+        
+        self._fitThreadPool = QThreadPool()
+
+        self.optimizer: str = "L-BFGS-B"
+        self.tol: float = 1e-6
+        
+        self.HSParamNames: List[str] = []
+        self.iteration: int = 0
+        
+        self.status: Status
 
     # signal & slots ===================================================
     @Slot()

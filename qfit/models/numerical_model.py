@@ -79,8 +79,6 @@ class QuantumModel(QObject):
     parent: QObject
     """
 
-    _sweeps: Dict[str, ParameterSweep]
-
     readyToPlotMainCanvas = Signal(SpectrumElement)
     mseReadyToFit = Signal(float)
 
@@ -91,6 +89,8 @@ class QuantumModel(QObject):
         parent: QObject,
     ):
         super().__init__(parent)
+        
+        self._sweeps: Dict[str, ParameterSweep]
         self._figNames: List[str] = []
         
         # standalone canvases and their configurations

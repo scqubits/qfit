@@ -31,7 +31,6 @@ class LabelingView(QObject):
         transitions, and the label for the bare label order.
     """
     tagChanged = Signal(Tag)
-    subsysNames: List[str]
 
     def __init__(
         self,
@@ -44,6 +43,8 @@ class LabelingView(QObject):
         ],
     ):
         super().__init__(parent)
+        
+        self.subsysNames: List[str]
 
         (
             self.groupBox, self.radioButtons, 
