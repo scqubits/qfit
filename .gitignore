@@ -12,6 +12,7 @@
 .DS_Store
 *.pyc
 /danyang_tests
+qfit.code-workspace
 resources/resources_rc.py
 qfit.egg-info
 qfit/controllers/test.ipynb
