@@ -87,6 +87,7 @@ class IOCtrl(QObject):
         self.measDataSet, self.registry = models
         self.menuButton, self.menu, self.mainWindow = views
         self.fullReplaceHS = fullReplaceHS
+        self._appClosed = False
 
         self.setConnects()
 
@@ -122,6 +123,15 @@ class IOCtrl(QObject):
         self.menu.ui.menuSaveButton.clicked.connect(self.saveFile)
         self.menu.ui.menuSaveAsButton.clicked.connect(self.saveFileAs)
         self.mainWindow.closeWindow.connect(self.closeByMainWindow)
+
+    # properties ##############################################################
+    @property
+    def appClosed(self):
+        return self._appClosed
+
+    @appClosed.setter
+    def appClosed(self, value: bool):
+        raise ValueError("appClosed can't be set externally and is read-only.")
 
     # load data from file #####################################################
     def _registryDictFromDialog(
@@ -221,9 +231,19 @@ class IOCtrl(QObject):
 
         # update the project file name, must be done before saving the project,
         # as when loaded, the projectFile should be the same as the file name
-        self.mainWindow.projectFile = fileName
+        self.forceSaveAs(fileName)
 
-        # save the project
+    def forceSaveAs(self, fileName: str):
+        """
+        Regardless of whether the project is saved or not before, save the project
+        as a new file indicated by `fileName`.
+
+        Parameters
+        ----------
+        fileName : str
+            the file name to save the project
+        """
+        self.mainWindow.projectFile = fileName
         self.registry.exportPkl(fileName)
 
     # quit / close ############################################################
@@ -231,6 +251,8 @@ class IOCtrl(QObject):
         """
         Close the window.
         """
+        self._appClosed = True
+
         if settings.EXECUTED_IN_IPYTHON:
             self.mainWindow.close()
             self.mainWindow.deleteLater()
@@ -336,7 +358,7 @@ class IOCtrl(QObject):
         measurementFileName : str
             the measurement file name
         """
-        if from_menu:
+        if from_menu and self.menu.isVisible():
             self.menu.toggle()
 
         # load or re-use the HilbertSpace object
@@ -377,7 +399,7 @@ class IOCtrl(QObject):
         fileName : str
             the project file name
         """
-        if from_menu:
+        if from_menu and self.menu.isVisible():
             self.menu.toggle()
 
         # check if file exists
@@ -414,14 +436,16 @@ class IOCtrl(QObject):
         """Save the extracted data and calibration information to file."""
         self._saveProject(save_as=False)
 
-        self.menu.toggle()
+        if self.menu.isVisible():
+            self.menu.toggle()
 
     @Slot()
     def saveFileAs(self):
         """Save the extracted data and calibration information to file."""
         self._saveProject(save_as=True)
 
-        self.menu.toggle()
+        if self.menu.isVisible():
+            self.menu.toggle()
 
     @Slot()
     def closeByMainWindow(self, event):

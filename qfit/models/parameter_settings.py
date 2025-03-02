@@ -45,10 +45,10 @@ ParameterType = Literal[
 
 # for showcasing fluxonium fitting...
 DEFAULT_PARAM_MINMAX = {
-    "EJ": {"min": 1e-5, "max": 10.0},
-    "EC": {"min": 1e-5, "max": 2.0},
-    "EL": {"min": 1e-5, "max": 1.0},
-    "E_osc": {"min": 1e-5, "max": 10.0},
+    "EJ": {"min": 3.0, "max": 10.0},
+    "EC": {"min": 0.2, "max": 2.0},
+    "EL": {"min": 0.1, "max": 1.0},
+    "E_osc": {"min": 4, "max": 8.0},
     "E": {"min": 1e-5, "max": 10.0},
     "l_osc": {"min": 1e-5, "max": 1.0},
     "K": {"min": 1e-5, "max": 1.0},
@@ -118,3 +118,24 @@ QSYS_PARAM_NAMES = {
         "E": ["E"],
     },
 }
+
+
+# include FluxoniumHiHarm (not in scqubits main branch)
+try:
+    from scqubits import FluxoniumHiHarm    
+    DEFAULT_PARAM_MINMAX.update({
+        "EJ2": {"min": -0.5, "max": 0.5},  
+    })
+    QSYS_PARAM_NAMES.update({
+        FluxoniumHiHarm: {
+            "EJ": ["EJ"],
+            "EJ2": ["EJ2"],
+            "EC": ["EC"],
+            "EL": ["EL"],
+            "flux": ["flux"],
+            "cutoff": ["ncut"],
+            "truncated_dim": ["truncated_dim"],
+        },
+    })
+except ImportError:
+    pass

@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
 from qfit.widgets.validated_line_edits import FloatLineEdit
 
 
-from PySide6.QtCore import QObject, Signal, Slot, Qt
+from PySide6.QtCore import QObject, Signal, Slot, Qt, QMetaMethod
 
 from typing import Tuple, Dict, Any, List, Union, Literal, Type
 
@@ -392,12 +392,10 @@ class CalibrationView(QObject):
         for rowIdx in self.lineEditSet:
             for compName, lineEdit in self.lineEditSet[rowIdx].items():
                 # disconnect first if there is any connection
-                try:
+                editingFinishedSignal = QMetaMethod.fromSignal(lineEdit.editingFinished)
+                if lineEdit.isSignalConnected(editingFinishedSignal):
                     lineEdit.editingFinished.disconnect()
-                except RuntimeError:
-                    # if the line edit is not connected to any signal, then it will raise
-                    # a RuntimeError, and we can just pass it.
-                    pass
+                
                 # note: inclusion of lineEdit in the lambda function is necessary, otherwise
                 # the last lineEdit will be used for all the lambda functions
                 # The lambda function in the code doesn't capture the value of rowIdx and

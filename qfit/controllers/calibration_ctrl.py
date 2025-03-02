@@ -157,6 +157,7 @@ class CalibrationCtrl(QObject):
             self.calibrationView.uncheckAllCaliButtons
         )
 
+        # TODO: deprecated?
         # calibration model --> calibration view (update table signal when XY is swapped)
         # Notice that the swapXY is done in the plotting controller instead of here
         self.caliParamModel.caliModelRawVecUpdatedForSwapXY.connect(

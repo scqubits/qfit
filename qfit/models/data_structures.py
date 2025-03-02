@@ -286,7 +286,12 @@ class ExtrTransition:
             and self.rawX == __value.rawX
             and self.tag == __value.tag
         )
-
+        
+    def __repr__(self) -> str:
+        return self.__str__()
+    
+    def __str__(self) -> str:
+        return f"ExtrTransition: {self.name}\n{self.data}"
 
 class ExtrSpectra(list[ExtrTransition]):
     """
@@ -459,10 +464,17 @@ class ImageElement(PlotElement):
 
     artists: AxesImage
 
-    def __init__(self, name: str, z: np.ndarray, **kwargs):
+    def __init__(
+        self, 
+        name: str, 
+        z: np.ndarray, 
+        fileName: str,
+        **kwargs
+    ):
         self.name = name
         self.z = z
         self.kwargs = kwargs
+        self.fileName = fileName
 
     def canvasPlot(self, axes: Axes, **kwargs) -> None:
         """
@@ -488,13 +500,20 @@ class MeshgridElement(PlotElement):
     artists: QuadMesh
 
     def __init__(
-        self, name: str, x: np.ndarray, y: np.ndarray, z: np.ndarray, **kwargs
+        self, 
+        name: str,
+        x: np.ndarray, 
+        y: np.ndarray, 
+        z: np.ndarray, 
+        fileName: str,
+        **kwargs
     ):
         self.name = name
         self.x = x
         self.y = y
         self.z = z
         self.kwargs = kwargs
+        self.fileName = fileName
 
     def canvasPlot(self, axes: Axes, **kwargs) -> None:
         """
@@ -832,8 +851,8 @@ class SliderParam(DispParamBase):
 
     def storeAttr(self, attr: str, value: Union[str, int], fromSlider: bool = False):
         """
-        Store the value of the parameter. If the source is a slider, the
-        value should be denormalized before being stored.
+        Store the value of the parameter from view. 
+        If the source is a slider, the value should be denormalized before being stored.
         """
         if fromSlider:
             convertedValue = self._denormalizeValue(value)
@@ -911,7 +930,7 @@ class FitParam(DispParamBase):
     # setter for UI ====================================================
     def storeAttr(self, attr: str, value: Union[str, bool]):
         """
-        Store the value of the parameter
+        Store the value of the parameter from view.
         """
         if isinstance(value, str):
             convertedValue = self._toIntAsNeeded(float(value))
@@ -990,10 +1009,14 @@ class CaliTableRowParam(DispParamBase):
     # setter for UI ====================================================
     def storeAttr(self, attr: str, value: Union[str, bool]):
         """
-        Store the value of the parameter
+        Store the value of the parameter from view.
         """
         if isinstance(value, str):
             convertedValue = self._toIntAsNeeded(float(value))
+        elif isinstance(value, bool):
+            convertedValue = value
+        else:
+            raise ValueError(f"Unknown type of value: {value}")
 
         setattr(self, attr, convertedValue)
 
@@ -1117,4 +1140,3 @@ class FilterConfig:
         self.min = min
         self.max = max
         self.color = color
-    

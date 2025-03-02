@@ -1,0 +1,237 @@
+name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
+
+on: push
+
+jobs:
+  build:
+    name: Build distribution 📦
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for all tags and branches
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.x"
+    - name: Install pypa/build
+      run: >-
+        python3 -m
+        pip install
+        build
+        --user
+    - name: Build a binary wheel and a source tarball
+      run: python3 -m build
+    - name: Store the distribution packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+
+
+  test-installation:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.10"]
+    steps:
+    - uses: actions/checkout@v2
+      name: Checkout the repository
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Linux System Dependencies
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get update  # Update the package lists for upgrades and new package installations
+        sudo apt-get install -y libegl1  # Install the libegl1 package (Embedded-System Graphics Library)
+        sudo apt-get install -y xvfb  # Install the xvfb package for GUI backend
+
+    - name: Install dependencies and QFit
+      run: |
+        pip install --upgrade pip
+        pip install .
+
+    - name: Test installation on Linux
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        xvfb-run --auto-servernum python -c "from qfit import Fit; print('Installation successful')"
+    
+    - name: Test installation on macOS and Windows
+      if: startsWith(matrix.os, 'macos') || startsWith(matrix.os, 'windows')
+      run: python -c "from qfit import Fit; print('Installation successful')"
+    
+
+  publish-to-pypi:
+    name: >-
+      Publish to PyPI
+    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
+    needs:
+    - build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/qfit
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish distribution 📦 to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
+
+
+  github-release:
+    name: >-
+      Sign with Sigstore and upload them to GitHub Release
+    needs:
+    - publish-to-pypi
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # IMPORTANT: mandatory for making GitHub Releases
+      id-token: write  # IMPORTANT: mandatory for sigstore
+
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Sign the dists with Sigstore
+      uses: sigstore/gh-action-sigstore-python@v3.0.0
+      with:
+        inputs: >-
+          ./dist/*.tar.gz
+          ./dist/*.whl
+    - name: Create GitHub Release
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: >-
+        gh release create
+        '${{ github.ref_name }}'
+        --repo '${{ github.repository }}'
+        --notes ""
+    - name: Upload artifact signatures to GitHub Release
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      # Upload to GitHub Release using the `gh` CLI.
+      # `dist/` contains the built packages, and the
+      # sigstore-produced signatures and certificates.
+      run: >-
+        gh release upload
+        '${{ github.ref_name }}' dist/**
+        --repo '${{ github.repository }}'
+
+
+  update-meta:
+    name: >-
+      Update meta.yaml
+    needs:
+    - publish-to-pypi
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait until the PyPi goes live
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          echo "Checking version: $version"
+          until curl --fail -s "https://pypi.org/project/qfit/${version}" > /dev/null; do
+            echo "Waiting for PyPi to be ready..."
+            sleep 10
+          done
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests 
+
+      - name: Run meta.yaml updater
+        run: python .github/workflows/update_meta_yaml.py
+
+      - name: Commit changes
+        run: |
+          git config --global user.name "meta-yaml-updater[bot]"
+          git config --global user.email "meta-yaml-updater[bot]@users.noreply.github.com"
+          git checkout -b update-meta-${{ github.run_id }}
+          git add meta.yaml
+          git commit -m "Update meta.yaml for version update to ${GITHUB_REF}"
+          git push --set-upstream origin update-meta-${{ github.run_id }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Update meta.yaml for new version"
+          branch: update-meta-${{ github.run_id }}
+          base: master
+          title: "Update meta.yaml for new version"
+          body: "This PR was automatically generated by the update workflow."
+
+        
+  publish-to-testpypi:
+    name: Publish to TestPyPI
+    needs:
+      - build
+    runs-on: ubuntu-latest
+  
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/qfit
+  
+    permissions:
+      contents: write  # Typical permission needed for operations affecting repository contents
+  
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+  
+      - name: Extract version from distribution 📦 file  
+        # assuming the version is in the format `<qfit>-<version>-<other>.whl`
+        id: get_version
+        run: |
+          FILENAME=$(ls dist/*.whl | head -n 1)
+          VERSION=$(echo $FILENAME | sed -n 's/^[^0-9]*-\([^-]*\)-.*/\1/p')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "::set-output name=package_version::$VERSION"
+
+      - name: Check if version exists on TestPyPI
+        run: |
+          RESPONSE=$(curl -s https://test.pypi.org/pypi/qfit/json)
+          if echo "$RESPONSE" | grep -q "\"${{ env.VERSION }}\""; then
+            echo "VERSION_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "VERSION_EXISTS=false" >> $GITHUB_ENV
+          fi
+  
+      - name: Publish distribution 📦 to TestPyPI
+        if: env.VERSION_EXISTS == 'false'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}

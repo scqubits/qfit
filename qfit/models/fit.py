@@ -380,6 +380,15 @@ class FitCaliParams(
     ):
         """Store the parameter attributes from the view."""
         super()._storeParamAttr(self, paramAttr, **kwargs)
+        
+    def emitUpdateBox(
+        self,
+        parentName: str | None = None,
+        paramName: str | None = None,
+        attr: str | None = None,
+    ):
+        """Emit the signal to update the text box."""
+        self._emitUpdateBox(self, parentName, paramName, attr)
 
 
 class FitModel(QObject):
@@ -408,8 +417,6 @@ class FitModel(QObject):
 
     def __init__(self, parent: QObject):
         super().__init__(parent)
-
-        FitRunner.signalHost.optFinished.connect(self._postOptimization)
 
     # signal & slots ===================================================
     @Slot()
@@ -639,6 +646,8 @@ class FitModel(QObject):
             initParam,
             self._callbackWrapper(callback),
         )
+        runner.signalHost.optFinished.connect(self._postOptimization)
+        
         self._fitThreadPool.start(runner)
 
 
@@ -660,8 +669,6 @@ class FitRunner(QRunnable):
         The callback function.
     """
 
-    signalHost = fitSignalHost()
-
     def __init__(
         self,
         opt: Optimization,
@@ -673,6 +680,7 @@ class FitRunner(QRunnable):
         self.opt = opt
         self.initParam = initParam
         self.callback = callback
+        self.signalHost = fitSignalHost()
 
     def run(self):
         """

@@ -36,6 +36,9 @@ class MeasDataCtrl(QObject):
         self.transposeConnects()
         self.continueConnects()
         self.dataLoadConnects()
+        
+    def switchToFig(self, figIdx: int) -> None:
+        self.measDataView.switchToFig(figIdx)
 
     # connections ======================================================
     def importFigConnects(self) -> None:
@@ -81,6 +84,7 @@ class MeasDataCtrl(QObject):
 
         self.fullReplaceMeasData(self.measDataSet.fullData)
         self.fullDynamicalInit()
+        self.switchToFig(0)
 
         self.importerView.enableFigImport(False)
 

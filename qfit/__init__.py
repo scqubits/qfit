@@ -11,6 +11,7 @@
 
 import scqubits as scq
 from qfit.core.qfit import Fit
+from qfit.version import __version__, __version_tuple__
 
 scq.settings.PROGRESSBAR_DISABLED = True
 

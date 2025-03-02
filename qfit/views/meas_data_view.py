@@ -70,6 +70,8 @@ class MeasDataView(QObject):
         """
         for figName in figNameList:
             self.dataTab.addTab(QPushButton(""), figName)
+            # Set the tooltip for the newly added tab
+            self.dataTab.setTabToolTip(self.dataTab.count() - 1, figName)
             # this changes the current index to the newly added tab
             # triggers currentChanged signal
         self.dataTab.setCurrentIndex(self.dataTab.count() - 1)

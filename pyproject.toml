@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=64", "wheel", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "qfit/version.py"
+version_scheme = "post-release"
+local_scheme = "no-local-version"
+fallback_version = "0.0"
+
+[project]
+name = "qfit"
+description = "qfit: data extraction GUI tool for use with scQubits"
+readme = "README.md"
+dynamic = ["version"]
+authors = [
+    { name = "Tianpu Zhao", email = "tianpuzhao2022@u.northwestern.edu" },
+    { name = "Danyang Chen", email = "danyangchen2026@u.northwestern.edu" },
+    { name = "Jens Koch", email = "jens-koch@northwestern.edu" }
+]
+license = { file = "LICENSE" }
+keywords = ["parameter extraction", "superconducting qubits"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: Microsoft :: Windows"
+]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy >= 1.14.2",
+    "scipy >= 1.1.0",
+    "matplotlib >= 3.1.2",
+    "pyside6",
+    "h5py >= 2.7.1",
+    "scikit-image",
+    "scqubits >= 3.0.0",
+    "matplotlib-label-lines",
+    "ipykernel",
+    "jupyter",
+    "pathos",
+    "dill"
+]
+
+[project.urls]
+homepage = "https://github.com/scqubits/qfit"
+Repository = "https://github.com/scqubits/qfit"

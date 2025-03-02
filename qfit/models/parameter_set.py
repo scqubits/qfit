@@ -158,7 +158,7 @@ class ParamSet(Registrable, Generic[ParamCls]):
         value: Union[int, float, str, None],
     ):
         """
-        Set the attribute of a parameter.
+        Set the attribute of a parameter (and do nothing else for view / other models).
 
         Parameters
         ----------

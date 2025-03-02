@@ -32,7 +32,7 @@ def parseRegDict(
     except KeyError:
         version = "1.0.0"  # the version that we haven't stored the version number
 
-    major, minor, micro = version.split(".")
+    major, minor, micro = version.split(".")[:3]
     major, minor, micro = int(major), int(minor), int(micro)
 
     if major == 1 and minor == 0:

@@ -16,7 +16,7 @@ import warnings
 from typing import Union, Literal, Tuple, Dict, Any, List
 
 from PySide6 import QtCore
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, Signal
 from PySide6.QtWidgets import (
     QFrame, QVBoxLayout, QToolButton, QSizePolicy
 )
@@ -64,22 +64,24 @@ class NavigationHidden(NavigationToolbar2QT):
         The parent widget.
     """
 
-    # only connect to external buttons
-    toolitems = [
-        t for t in NavigationToolbar2QT.toolitems if t[0] in ("Home", "Pan", "Zoom")
-    ]
-
     def __init__(
         self,
         canvas: FigureCanvasQTAgg,
         parent: "MplFigureCanvas",
+        parentIsStandalone: bool = False,
     ):
         super().__init__(canvas, parent, coordinates=False)
 
         # Hide all buttons.
-        for child in self.findChildren(QToolButton):
-            child.setVisible(False)
-        self.update()
+        if not parentIsStandalone:
+            for child in self.findChildren(QToolButton):
+                child.setVisible(False)
+            self.update()
+        
+        # only connect to external buttons
+        self.toolitems = [
+            t for t in NavigationToolbar2QT.toolitems if t[0] in ("Home", "Pan", "Zoom")
+        ]
 
         self.set_cursor(cursors.SELECT_REGION)
         self._idPress = None
@@ -396,18 +398,26 @@ class MplFigureCanvas(QFrame):
     parent : QWidget
         The parent widget.
     """
+    
+    canvasClosed = Signal()
 
-    specialCursor: SpecialCursor
-
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, standalone: bool = False):
         QFrame.__init__(self, parent)
 
+        # this widget could be initialized outside of the main window
+        # and shown as a standalone plotting widget
+        self._standalone = standalone
+        
         self.initViewElem()
         self.initPlotting()
 
     def initViewElem(self):
         self.canvas = FigureCanvasQTAgg(Figure())
-        self.toolbar = NavigationHidden(self.canvas, self)
+        self.toolbar = NavigationHidden(
+            self.canvas, 
+            self, 
+            parentIsStandalone=self._standalone,
+        )
 
         # initialize the layout
         vertical_layout = QVBoxLayout()
@@ -492,7 +502,7 @@ class MplFigureCanvas(QFrame):
         self.cmap = copy.copy(getattr(cm, self._colorMapStr))
 
     # View: Coordinates ================================================
-    def _adjustMargin(self, xAxisNum: int, ):
+    def _adjustMargin(self, xAxisNum: int):
 
         # Calculate the desired margins in points
         rightTopMarginInch = (0.1, 0.1)
@@ -776,6 +786,9 @@ class MplFigureCanvas(QFrame):
         vertOn: bool = None
             Whether to show the vertical line. If None, keep the current state.
         """
+        if self._standalone:
+            return  # do nothing in standalone mode
+        
         # memorize the state of the crosshair cursor
         if xSnapMode is not None:
             self._xSnapMode = xSnapMode
@@ -970,6 +983,10 @@ class MplFigureCanvas(QFrame):
         """
         name = element.name
         self._checkElementName(name)
+        
+        # We may have multiple MplFigureCanvas instances, 
+        # deepcopy the element to avoid reference issues
+        element = copy.deepcopy(element)
 
         # remove the old element and inherit its properties
         if name in self._plottingElements.keys():
@@ -1007,3 +1024,7 @@ class MplFigureCanvas(QFrame):
             self._restoreXYLim(byMeasData=True)
 
         self.canvas.draw()
+        
+    def closeEvent(self, event):
+        self.canvasClosed.emit()
+        super().closeEvent(event)

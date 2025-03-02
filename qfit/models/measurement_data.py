@@ -354,7 +354,34 @@ class MeasurementData:
         rows and columns.
         """
         return self.principalZ.data.shape[0] == self.principalZ.data.shape[1]
-
+    
+    def isCollinearWith(self, other: "MeasurementData") -> bool:
+        """
+        Return True if the two measurement data are scanned through
+        collinear axes on the rawX space.
+        """
+        assert self.rawX.keyList == other.rawX.keyList, "can't compare data with different rawX dimensions"
+        
+        if len(self.rawX) == 1:
+            # 1D rawX space, always collinear
+            return True
+        
+        if self.principalX.name != other.principalX.name:
+            # as the principalX is the one with the largest change,
+            # they must be the same if two axes are collinear
+            return False
+        
+        # for the rest of the rawX, compute their linear function 
+        # of the principalX, and check if they are the same
+        for key in self.rawX.keyList:
+            if key == self.principalX.name:
+                continue
+            slope = (self.rawX[key][-1] - self.rawX[key][0]) / (self.principalX.data[-1] - self.principalX.data[0])
+            intercept = self.rawX[key][0] - slope * self.principalX.data[0]
+            if not np.allclose(other.rawX[key], slope * other.principalX.data + intercept):
+                return False
+        return True
+    
     # manipulation =====================================================
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, MeasurementData):
@@ -514,7 +541,7 @@ class MeasurementData:
         """
         Add pixel coordinates as the last resort for x and y axis candidates.
         """
-        ydim, xdim = self._principalZ.data.shape
+        ydim, xdim = self._principalZ.data.shape[:2]
         self.xCandidates.update({f"range({xdim})": np.arange(xdim)})
         self.yCandidates.update({f"range({ydim})": np.arange(ydim)})
 
@@ -893,6 +920,7 @@ class NumericalMeasurementData(MeasurementData):
             xData,
             yData,
             zData,
+            self.file,
             norm=norm,
             rasterized=True,
             zorder=0,
@@ -954,6 +982,7 @@ class ImageMeasurementData(MeasurementData):
         return ImageElement(
             "measurement",
             self.principalZ.data,
+            self.file,
             rasterized=True,
             zorder=0,
         )
