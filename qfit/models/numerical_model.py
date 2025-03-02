@@ -390,6 +390,11 @@ class QuantumModel(QObject):
             sweep = self._currentSweep
         else:
             sweep = self._sweeps[sweepToPlot]
+            
+        if sweep is None:
+            # this will only happen during the fit stage, where no sweep
+            # is generated for an empty figure
+            return
         
         if signalToEmit is None:
             signalToEmit = self.readyToPlotMainCanvas
