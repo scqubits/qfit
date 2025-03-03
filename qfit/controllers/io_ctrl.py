@@ -343,6 +343,7 @@ class IOCtrl(QObject):
         from_menu: bool = True,
         hilbertSpace: Optional["HilbertSpace"] = None,
         measurementFileName: Optional[str | List[str]] = None,
+        deepcopy: bool = False,
     ):
         """
         Open a dialog to select a measurement file, then create a new project.
@@ -357,6 +358,11 @@ class IOCtrl(QObject):
             the HilbertSpace object
         measurementFileName : str
             the measurement file name
+        deepcopy : bool
+            whether to use a deepcopy of the HilbertSpace object, instead of
+            referencing the original HilbertSpace object. The latter option
+            updates the original HilbertSpace object during any prefit / fit
+            operations.
         """
         if from_menu and self.menu.isVisible():
             self.menu.toggle()
@@ -364,6 +370,8 @@ class IOCtrl(QObject):
         # load or re-use the HilbertSpace object
         if hilbertSpace is not None:
             self.hilbertSpace = hilbertSpace
+        if deepcopy:
+            self.hilbertSpace = copy.deepcopy(self.hilbertSpace)
         self.fullReplaceHS(self.hilbertSpace)
 
         # feed the measurement data to the measDataSet
@@ -386,6 +394,7 @@ class IOCtrl(QObject):
         __value=None,
         from_menu: bool = True,
         fileName: Optional[str] = None,
+        deepcopy: bool = False,
     ):
         """
         Open a dialog to select a project file, then open the project.
@@ -398,6 +407,12 @@ class IOCtrl(QObject):
             will be closed after the function is called.
         fileName : str
             the project file name
+        deepcopy : bool
+            whether to use a deepcopy of the HilbertSpace object, instead of
+            referencing the original HilbertSpace object. Even when the HilbertSpace
+            object is serialized, the non-deepcopied HilbertSpace object may still
+            cause correlated updates to the original HilbertSpace object / other
+            HilbertSpace objects.
         """
         if from_menu and self.menu.isVisible():
             self.menu.toggle()
@@ -421,6 +436,8 @@ class IOCtrl(QObject):
                 parsedDict["HilbertSpace"],
                 parsedDict["MeasDataSet.data"],
             )
+            if deepcopy:
+                hilbertspace = copy.deepcopy(hilbertspace)
             # update the dynamical elements in the main window (i.e. load from the registry
             # the r entries)
             self.fullReplaceHS(hilbertspace)

@@ -91,6 +91,10 @@ class Fit:
     measurementFileName: Optional[str | List[str]]
         The names of the measurement files you want to load. If left blank,
         a window will pop up to ask for files.
+    deepcopy: bool
+        Whether to use a deepcopy of the HilbertSpace object, instead of
+        referencing the original HilbertSpace object. The latter option updates
+        the original HilbertSpace object during any prefit / fit operations.
 
     Returns
     -------
@@ -127,6 +131,7 @@ class Fit:
         self,
         hilbertSpace: HilbertSpace,
         measurementFileName: Optional[str | List[str]] = None,
+        deepcopy: bool = False,
         **kwargs,
     ):
         self._mainWindow: MainWindow
@@ -135,6 +140,7 @@ class Fit:
             from_menu=False,
             hilbertSpace=hilbertSpace,
             measurementFileName=measurementFileName,
+            deepcopy=deepcopy,
         )
         
         if kwargs.get("show", True):
@@ -149,6 +155,7 @@ class Fit:
         cls,
         hilbertSpace: HilbertSpace,
         measurementFileName: Union[str, None] = None,
+        deepcopy: bool = False,
         **kwargs,
     ) -> "Fit":
         """
@@ -162,13 +169,23 @@ class Fit:
         measurementFileName: str
             Name of measurement file to be loaded. If left blank, a window
             will pop up to ask for a file.
+        deepcopy: bool
+            Whether to use a deepcopy of the HilbertSpace object, instead of
+            referencing the original HilbertSpace object. The latter option
+            updates the original HilbertSpace object during any prefit / fit
+            operations.
 
         Returns
         -------
         qfit project
         """
         instance = cls.__new__(cls)
-        instance.__init__(hilbertSpace, measurementFileName, **kwargs)
+        instance.__init__(
+            hilbertSpace, 
+            measurementFileName, 
+            deepcopy=deepcopy, 
+            **kwargs
+        )
 
         return instance
 
@@ -176,6 +193,7 @@ class Fit:
     def open(
         cls,
         fileName: Union[str, None] = None,
+        deepcopy: bool = False,
         **kwargs,
     ) -> "Fit":
         """
@@ -185,6 +203,12 @@ class Fit:
         ----------
         fileName: str
             Name of file to be opened.
+        deepcopy: bool
+            Whether to use a deepcopy of the HilbertSpace object, instead of
+            referencing the original HilbertSpace object. Even when the HilbertSpace
+            object is serialized, the non-deepcopied HilbertSpace object may still
+            cause correlated updates to the original HilbertSpace object / other
+            HilbertSpace objects.
 
         Returns
         -------
@@ -197,6 +221,7 @@ class Fit:
         instance._ioCtrl.openFile(
             from_menu=False,
             fileName=fileName,
+            deepcopy=deepcopy,
         )
 
         if kwargs.get("show", True):
@@ -357,6 +382,7 @@ class Fit:
         A collection of methods to replace the HilbertSpace object in the app,
         it is part of the initialization process.
         """
+        self._ioCtrl.replaceHS(hilbertspace)
         self._quantumModel.replaceHS(hilbertspace)
         self._calibrationCtrl.replaceHS(hilbertspace)
         self._extractingCtrl.replaceHS(hilbertspace)
