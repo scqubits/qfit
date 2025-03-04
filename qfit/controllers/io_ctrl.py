@@ -1,5 +1,6 @@
 import sys
 import os
+import gc
 import numpy as np
 import copy
 
@@ -254,9 +255,12 @@ class IOCtrl(QObject):
         self._appClosed = True
 
         if settings.EXECUTED_IN_IPYTHON:
+            self.mainWindow.blockSignals(True)
             self.mainWindow.close()
+            self.mainWindow.blockSignals(False)
             self.mainWindow.deleteLater()
-            self.mainWindow.destroy()
+            # self.mainWindow.destroy()
+            gc.collect()
             # raise StopExecution
         else:
             sys.exit()
