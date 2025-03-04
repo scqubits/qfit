@@ -257,8 +257,6 @@ class MeasurementData:
         self._rawXNames = []
         self._rawYNames = []
 
-        self.discardedKeys = []
-
         self._initFilters()
 
     def _initFilters(self):
