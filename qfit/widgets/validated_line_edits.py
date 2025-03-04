@@ -34,7 +34,14 @@ class ValidatedLineEdit(QLineEdit, ABC, metaclass=CombinedMeta):
     is also enbeded here.
     """
 
+    # view-level validator, prevent impossible characters from being entered
+    # it will be set through the native instance.setValidator() method
     _validator: QValidator
+    
+    # model-level validator, check if the value is valid for the model
+    # to accept it   
+    _finalValidator: QValidator
+    
     _defaultStyle: str
 
     def __init__(self, *args, **kwargs):
@@ -54,16 +61,34 @@ class ValidatedLineEdit(QLineEdit, ABC, metaclass=CombinedMeta):
         pass
 
     def isValid(self) -> bool:
+        """
+        Return whether the text in the line edit is valid on the MODEL level. 
+        (or whether the text can be correctly parsed and accepted by the model)
+        In contrast, isAcceptedByValidator() checks whether the text can
+        be recognized by the validator. 
+        
+        isValid >= isAcceptedByValidator
+        """
         text = self.text()
-        return self.validator().validate(text, 0)[0] == QValidator.State.Acceptable
+        return self._finalValidator.validate(text, 0)[0] == QValidator.State.Acceptable
 
     # View methods
+    def isAcceptedByValidator(self) -> bool:
+        """
+        Return whether the text in the line edit is valid on the VIEW level.
+        (or whether the text can is recognized by the validator).
+        
+        isValid >= isAcceptedByValidator
+        """
+        text = self.text()
+        return self.validator().validate(text, 0)[0] == QValidator.State.Acceptable
+    
     def setInvalidStyle(self):
         self.setStyleSheet("border: 1.5px solid rgb(186, 40, 8);")
 
     def setDefaultStyle(self):
         self.setStyleSheet(self._defaultStyle)
-
+        
     # Controller method
     def _validate(self):
         text = self.text()
@@ -104,6 +129,8 @@ class FloatLineEdit(ValidatedLineEdit):
         self._validator = QDoubleValidator()
         self.setValidator(self._validator)
 
+        self._finalValidator = self._validator
+        
 
 class PositiveFloatLineEdit(ValidatedLineEdit):
     """
@@ -120,6 +147,8 @@ class PositiveFloatLineEdit(ValidatedLineEdit):
         self._validator = QDoubleValidator()
         self._validator.setBottom(0)
         self.setValidator(self._validator)
+        
+        self._finalValidator = self._validator
 
 
 class IntLineEdit(ValidatedLineEdit):
@@ -137,6 +166,8 @@ class IntLineEdit(ValidatedLineEdit):
         self._validator = QIntValidator()
         self.setValidator(self._validator)
 
+        self._finalValidator = self._validator
+
 
 class IntTupleLineEdit(ValidatedLineEdit):
     """
@@ -151,12 +182,21 @@ class IntTupleLineEdit(ValidatedLineEdit):
         When the tupleLength is not specified, the line edit accepts any
         number of integers separated by commas.
         """
-        if tupleLength is None:
-            regEx = QRegExp("^([1-9]\d*|0)(, ?([1-9]\d*|0))*$")
-        else:
-            regEx = QRegExp("^([1-9]\d*|0)(, ?([1-9]\d*|0)){%d}$" % (tupleLength - 1))
+        
+        # view-level validator: any possible partial input is accepted
+        # e.g. ",2", "02, 3", "02, ,4"
+        regEx = QRegExp("^[0-9,\s]*$")
         self._validator = QRegExpValidator(regEx)
         self.setValidator(self._validator)
+        
+        # model-level validator:
+        if tupleLength is None:
+            # integer tuple with any length
+            regEx = QRegExp("^([1-9]\d*|0)(, ?([1-9]\d*|0))*$")
+        else:
+            # integer tuple with length tupleLength
+            regEx = QRegExp("^([1-9]\d*|0)(, ?([1-9]\d*|0)){%d}$" % (tupleLength - 1))
+        self._finalValidator = QRegExpValidator(regEx)
 
     def setTupleLength(self, tupleLength: int):
         self._initializeValidator(tupleLength)
@@ -187,6 +227,14 @@ class StateLineEdit(ValidatedLineEdit):
         When the tupleLength is not specified, the line edit accepts any
         number of integers separated by commas.
         """
+        
+        # view-level validator: any possible partial input is accepted
+        # e.g. "", "02", ",2", "02, 3", "02, ,4"
+        regEx = QRegExp("^$|^[0-9,\s]*$")
+        self._validator = QRegExpValidator(regEx)
+        self.setValidator(self._validator)
+        
+        # model-level validator:
         if tupleLength is None:
             # integer tuple with any length or empty string
             regEx = QRegExp("^$|^([1-9]\d*|0)(, ?([1-9]\d*|0))*$")
@@ -195,8 +243,7 @@ class StateLineEdit(ValidatedLineEdit):
             regEx = QRegExp(
                 "^$|^([1-9]\d*|0)(, ?([1-9]\d*|0)){0,%d}$" % (tupleLength - 1)
             )
-        self._validator = QRegExpValidator(regEx)
-        self.setValidator(self._validator)
+        self._finalValidator = QRegExpValidator(regEx)
 
     def setTupleLength(self, tupleLength: int):
         self._initializeValidator(tupleLength)
