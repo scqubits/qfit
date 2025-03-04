@@ -118,16 +118,16 @@ class Tag:
     def __init__(
         self,
         tagType: Literal["DISPERSIVE_BARE"],
-        initial: Tuple[int, ...],
-        final: Tuple[int, ...],
+        initial: List[Tuple[int, ...] | None],
+        final: List[Tuple[int, ...] | None],
         photons: Optional[int] = None,
     ): ...
 
     def __init__(
         self,
         tagType: Literal["NO_TAG", "DISPERSIVE_DRESSED", "DISPERSIVE_BARE"] = "NO_TAG",
-        initial: Optional[Union[Tuple[int, ...], int]] = None,
-        final: Optional[Union[Tuple[int, ...], int]] = None,
+        initial: Optional[List[Tuple[int, ...] | None] | int] = None,
+        final: Optional[List[Tuple[int, ...] | None] | int] = None,
         photons: Optional[int] = None,
     ):
         self.tagType = tagType

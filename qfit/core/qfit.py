@@ -607,13 +607,13 @@ class Fit:
             "no tag": self._mainUi.noTagRadioButton,
         }
         self._uiBareLabelInputs = {
-            "initial": self._mainUi.initialStateLineEdit,
-            "final": self._mainUi.finalStateLineEdit,
+            "initial": self._mainUi.initialBareStateLineEdit,
+            "final": self._mainUi.finalBareStateLineEdit,
             "photons": self._mainUi.phNumberBareSpinBox,
         }
         self._uiDressedLabelInputs = {
-            "initial": self._mainUi.initialStateSpinBox,
-            "final": self._mainUi.finalStateSpinBox,
+            "initial": self._mainUi.initialDressedStateLineEdit,
+            "final": self._mainUi.finalDressedStateLineEdit,
             "photons": self._mainUi.phNumberDressedSpinBox,
         }
         # ui grouping: extracted data management

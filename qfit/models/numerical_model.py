@@ -1029,8 +1029,12 @@ class QuantumModel(QObject):
 
         # if provided bare label
         elif tag.tagType == "DISPERSIVE_BARE":
-            initial_energy = sweep.energy_by_bare_index(tag.initial)["x":xData]
-            final_energy = sweep.energy_by_bare_index(tag.final)["x":xData]
+            # a temporary change: slice and get the first element of the tuple
+            initial = tag.initial[0]
+            final = tag.final[0]
+            
+            initial_energy = sweep.energy_by_bare_index(initial)["x":xData]
+            final_energy = sweep.energy_by_bare_index(final)["x":xData]
 
             # when we can identify both initial and final states
             if not np.isnan(initial_energy) and not np.isnan(final_energy):
@@ -1043,12 +1047,12 @@ class QuantumModel(QObject):
             # when some of the states are not identifiable
             elif np.isnan(initial_energy) and not np.isnan(final_energy):
                 status = "NO_MATCHED_BARE_INITIAL"
-                final_energy_dressed_label = sweep.dressed_index(tag.final)["x":xData]
+                final_energy_dressed_label = sweep.dressed_index(final)["x":xData]
                 availableLabels = {"final": final_energy_dressed_label}
 
             elif not np.isnan(initial_energy) and np.isnan(final_energy):
                 status = "NO_MATCHED_BARE_FINAL"
-                initial_energy_dressed_label = sweep.dressed_index(tag.initial)[
+                initial_energy_dressed_label = sweep.dressed_index(initial)[
                     "x":xData
                 ]
                 availableLabels = {"initial": initial_energy_dressed_label}

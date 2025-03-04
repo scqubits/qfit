@@ -167,6 +167,9 @@ class IntLineEdit(ValidatedLineEdit):
         self.setValidator(self._validator)
 
         self._finalValidator = self._validator
+        
+        
+
 
 
 class IntTupleLineEdit(ValidatedLineEdit):
@@ -273,6 +276,48 @@ class StateLineEdit(ValidatedLineEdit):
         else:
             return None
         
+
+
+class MultiIntsLineEdit(ValidatedLineEdit):
+    """
+    A line edit that accepts semi-colon separated integers
+    """
+    def _initializeValidator(self):
+        """
+        Initialize the validators for the line edit.
+        """
+        # View-level validator: allows any partial input with digits, semicolons, and spaces
+        viewRegEx = QRegExp("^[0-9;\s]*$")
+        self._validator = QRegExpValidator(viewRegEx)
+        self.setValidator(self._validator)
+
+        # Model-level validator: ensures complete and valid input
+        # Accepts any number of integers separated by semicolons
+        modelRegEx = QRegExp("^$|^([1-9]\d*|0)(\s*;\s*([1-9]\d*|0))*$")
+        
+        self._finalValidator = QRegExpValidator(modelRegEx)
+        
+    def getInts(self) -> List[int | None]:
+        """
+        Return the integers in the line edit.
+        """
+        if not self.isValid():
+            return [None]
+
+        ints = []
+        for int_str in self.text().split(";"):
+            ints.append(int(int_str))
+        return ints
+    
+    def setFromInts(self, ints: List[int | None]):
+        strs = []
+        for int_ in ints:
+            if int_ is None:
+                strs.append("")
+            else:   
+                strs.append(str(int_))
+        self.setText("; ".join(strs))
+        
         
 class MultiIntTuplesLineEdit(ValidatedLineEdit):
     """
@@ -304,17 +349,26 @@ class MultiIntTuplesLineEdit(ValidatedLineEdit):
     def setTupleLength(self, tupleLength: int):
         self._initializeValidator(tupleLength)
         
-    def getTuples(self) -> List[Tuple[int, ...]] | None:
+    def getTuples(self) -> List[Tuple[int, ...] | None]:
         """
         Return the tuples in the line edit. Each tuple is a tuple of integers.
         """
         if not self.isValid():
-            return None
+            return [None]
         
         tuples = []
         for tuple_str in self.text().split(";"):
             tuples.append(tuple(int(x) for x in tuple_str.split(",")))
         return tuples
+    
+    def setFromTuples(self, tuples: List[Tuple[int, ...] | None]):
+        strs = []
+        for tuple_ in tuples:
+            if tuple_ is None:
+                strs.append("")
+            else:   
+                strs.append(", ".join(str(x) for x in tuple_))
+        self.setText("; ".join(strs))
 
 
 class MultiStatesLineEdit(ValidatedLineEdit):

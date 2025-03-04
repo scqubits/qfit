@@ -8,8 +8,9 @@ from typing import Tuple, Dict, Any, List
 
 from qfit.models.data_structures import Tag
 from qfit.widgets.data_extracting import ListView
-from qfit.widgets.validated_line_edits import IntTupleLineEdit, IntLineEdit
-    
+from qfit.widgets.validated_line_edits import (
+    MultiIntsLineEdit, MultiIntTuplesLineEdit
+)
 
 class LabelingView(QObject):
     """
@@ -38,7 +39,7 @@ class LabelingView(QObject):
         parent: QObject,
         uiGroups: Tuple[
             Dict[str, QGroupBox], Dict[str, QRadioButton],
-            Dict[str, IntTupleLineEdit], Dict[str, QSpinBox],
+            Dict[str, MultiIntTuplesLineEdit | QSpinBox], Dict[str, MultiIntsLineEdit| QSpinBox],
             Dict[str, QPushButton], ListView,
             QLabel
         ],
@@ -97,7 +98,7 @@ class LabelingView(QObject):
         self.bareLabels["final"].setTupleLength(self.subsysCount)
 
         self.bareLabelOrder.setText(
-            "Labels ordered by: <br>"  # Three space to align with the label title
+            "* Indices ordered by: <br>"  # Three space to align with the label title
             + ", ".join(self.subsysNames)
         )
 
@@ -162,8 +163,8 @@ class LabelingView(QObject):
         self.bareLabels["initial"].editingFinished.connect(self._emitTagChangedSignal)
         self.bareLabels["final"].editingFinished.connect(self._emitTagChangedSignal)
         self.bareLabels["photons"].valueChanged.connect(lambda: self._emitTagChangedSignal())
-        self.dressedLabels["initial"].valueChanged.connect(lambda: self._emitTagChangedSignal())
-        self.dressedLabels["final"].valueChanged.connect(lambda: self._emitTagChangedSignal())
+        self.dressedLabels["initial"].editingFinished.connect(lambda: self._emitTagChangedSignal())
+        self.dressedLabels["final"].editingFinished.connect(lambda: self._emitTagChangedSignal())
         self.dressedLabels["photons"].valueChanged.connect(
             self._emitTagChangedSignal
         )
@@ -188,7 +189,7 @@ class LabelingView(QObject):
         Check if the input initial state is valid for bare-states tagging.
         """
         if not self.groupBox["bare"].isVisible():
-            return True  # only bare-states tags require validation
+            return True  # not visible, so no validation required
         if not self.bareLabels["initial"].isValid():
             return False
         return True
@@ -198,8 +199,28 @@ class LabelingView(QObject):
         Check if the input final state is valid for bare-states tagging.
         """
         if not self.groupBox["bare"].isVisible():
-            return True  # only bare-states tags require validation
+            return True  # not visible, so no validation required
         if not self.bareLabels["final"].isValid():
+            return False
+        return True
+    
+    def _isValidInitialDressed(self):
+        """
+        Check if the input initial state is valid for dressed-states tagging.
+        """
+        if not self.groupBox["dressed"].isVisible():
+            return True  # not visible, so no validation required
+        if not self.dressedLabels["initial"].isValid():
+            return False
+        return True
+
+    def _isValidFinalDressed(self):
+        """
+        Check if the input final state is valid for dressed-states tagging.
+        """
+        if not self.groupBox["dressed"].isVisible():
+            return True  # not visible, so no validation required
+        if not self.dressedLabels["final"].isValid():
             return False
         return True
 
@@ -207,7 +228,12 @@ class LabelingView(QObject):
         """
         Check if the input tag is valid.
         """
-        return self._isValidInitialBare() and self._isValidFinalBare()
+        return (
+            self._isValidInitialBare() 
+            and self._isValidFinalBare()
+            and self._isValidInitialDressed()
+            and self._isValidFinalDressed()
+        )
     
     def _currentTag(self) -> Tag:
         """
@@ -226,13 +252,13 @@ class LabelingView(QObject):
             tag.tagType = "NO_TAG"
         elif self.radioButtons["bare"].isChecked():
             tag.tagType = "DISPERSIVE_BARE"
-            tag.initial = self.bareLabels["initial"].getTuple()
-            tag.final = self.bareLabels["final"].getTuple()
+            tag.initial = self.bareLabels["initial"].getTuples()
+            tag.final = self.bareLabels["final"].getTuples()
             tag.photons = self.bareLabels["photons"].value()
         elif self.radioButtons["dressed"].isChecked():
             tag.tagType = "DISPERSIVE_DRESSED"
-            tag.initial = self.dressedLabels["initial"].value()
-            tag.final = self.dressedLabels["final"].value()
+            tag.initial = self.dressedLabels["initial"].getInts()
+            tag.final = self.dressedLabels["final"].getInts()
             tag.photons = self.dressedLabels["photons"].value()
         return tag
     
@@ -271,8 +297,8 @@ class LabelingView(QObject):
             self.radioButtons["no tag"].toggle()
         elif tag.tagType == "DISPERSIVE_BARE":
             self.radioButtons["bare"].toggle()
-            self.bareLabels["initial"].setFromTuple(tag.initial)
-            self.bareLabels["final"].setFromTuple(tag.final)
+            self.bareLabels["initial"].setFromTuples(tag.initial)
+            self.bareLabels["final"].setFromTuples(tag.final)
             self.bareLabels["photons"].setValue(tag.photons)
         elif tag.tagType == "DISPERSIVE_DRESSED":
             self.radioButtons["dressed"].toggle()
