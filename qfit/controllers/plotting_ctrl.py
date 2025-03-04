@@ -91,7 +91,24 @@ class PlottingCtrl(QObject):
         measComboBoxes, measPlotSettings, swapXYButton, canvasTools,
         calibrationButtons, calibratedCheckBox, pageView
     """
-    
+
+    # state of the controller, determining the how things are plotted
+    disconnectCanvas: bool  # switch off canvas updates
+    xSnapTool: bool  # whether x snap tool is selected
+    trans0Focused: bool  # whether the first extracted transition is focused
+    axisSnap: Literal["X", "Y", "OFF"]  # whether to snap to one of the axes
+    clickResponse: Literal[  # the response to a mouse click
+        "ZOOM",
+        "PAN",
+        "EXTRACT",
+    ]
+    dataDestination: Literal["CALI_X", "CALI_Y", "EXTRACT", "NONE"]
+    # after a click, to where we send the click position
+
+    # calibration functions
+    XCaliFuncDict: Dict[str, "SweepParamSet"]
+    YCaliFunc: Callable
+
     def __init__(
         self,
         parent: QObject,
@@ -126,18 +143,14 @@ class PlottingCtrl(QObject):
         self.mplCanvas = mplCanvas
         self.axes = mplCanvas.axes
 
-        # calibration functions
-        self.XCaliFuncDict: Dict[str, "SweepParamSet"]
-        self.YCaliFunc: Callable
-
         # initialize the state of the controller
-        self.disconnectCanvas: bool = False  # used to temporarily switch off canvas updates
-        self.xSnapTool: bool = True  # whether the horizontal snap is on
-        self.trans0Focused: bool = True  # whether the first transition is focused
-        self.axisSnap: Literal["X", "Y", "OFF"] = "OFF"  # the axis snap mode, override xSnap when not "OFF"
-        self.clickResponse: Literal["ZOOM", "PAN", "EXTRACT"] = "EXTRACT"  # the response to a mouse click
-        self.dataDestination: Literal["CALI_X", "CALI_Y", "EXTRACT", "NONE"] = "NONE"  # the destination of the data after a click
-        self.calibrateAxes: bool = False  # whether the ticklabels are calibrated
+        self.disconnectCanvas = False  # used to temporarily switch off canvas updates
+        self.xSnapTool = True  # whether the horizontal snap is on
+        self.trans0Focused = True  # whether the first transition is focused
+        self.axisSnap = "OFF"  # the axis snap mode, override xSnap when not "OFF"
+        self.clickResponse = "EXTRACT"  # the response to a mouse click
+        self.dataDestination = "NONE"  # the destination of the data after a click
+        self.calibrateAxes = False  # whether the ticklabels are calibrated
         self.standaloneCanvases: Dict[str, StandaloneCanvasAndConfigs] = {}
 
         # connects

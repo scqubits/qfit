@@ -103,13 +103,13 @@ class Fit:
         after fitting by calling `exportParameters` and `exportHilbertSpace` methods.
     """
 
+    app: Union[QApplication, None]
+    _mainWindow: MainWindow
+
     # IOs ####################################################################
     def __new__(cls, *args, **kwargs) -> "Fit":
         # Create a new instance
         instance = object.__new__(cls)
-        
-        instance.app: Union[QApplication, None] = None
-        instance._mainWindow: MainWindow
 
         # Create a new QApplication if it does not exist
         if not settings.EXECUTED_IN_IPYTHON:
@@ -119,7 +119,7 @@ class Fit:
 
             instance.app = app
         else:
-            pass
+            instance.app = None
 
         # main window
         instance._mainWindow = MainWindow()

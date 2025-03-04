@@ -76,6 +76,12 @@ class CaliParamModel(
         The parent object.
     """
 
+    _figNames: List[str]
+    _rawXVecNameList: List[str]
+    _rawYName: str
+    _sweepParamSet: SweepParamSet
+    _sweepParamParentName: str
+    _sweepParamName: str
 
     plotCaliPtExtractStart = Signal(str)
     plotCaliPtExtractFinished = Signal(str, dict)
@@ -85,7 +91,13 @@ class CaliParamModel(
     updatePrefitModel = Signal(ParamAttr)
     caliModelRawVecUpdatedForSwapXY = Signal()
     updateStatus = Signal(Status)
+    # calibrationIsOn: Literal["CALI_X2", "CALI_X2", "CALI_Y2", "CALI_Y2", False]
 
+    isFullCalibration: bool
+    caliTableXRowNr: int
+    _caliTableXRowIdxList: List[str]
+    _caliTableYRowIdxList: List[str]
+    _xRowIdxBySourceDict: Dict[str, List[str]]
 
     def __init__(
         self,
@@ -127,19 +139,9 @@ class CaliParamModel(
         ParamModelMixin.__init__(self, parent)
 
         self.caliStatus = False
-        
-        self._figNames: List[str]
-        self._rawXVecNameList: List[str]
-        self._rawYName: str
-        self._sweepParamSet: SweepParamSet
-        self._sweepParamParentName: str
-        self._sweepParamName: str
-        
-        self.isFullCalibration: bool
-        self.caliTableXRowNr: int
-        self._caliTableXRowIdxList: List[str]
-        self._caliTableYRowIdxList: List[str] = ["Y1", "Y2"]
-        self._xRowIdxBySourceDict: Dict[str, List[str]] = {}
+
+        self._caliTableYRowIdxList = ["Y1", "Y2"]
+        self._xRowIdxBySourceDict = {}
 
     # initialize =======================================================
     def replaceHS(self, sweepParamSet: SweepParamSet):

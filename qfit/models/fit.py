@@ -405,20 +405,24 @@ class FitModel(QObject):
 
     optFinished = Signal()  # signal to notify the controller
     updateStatus = Signal(Status)   # signal to update the status bar
+    
+    optimizer: str
+    tol: float
+    HSParamNames: List[str]
+    iteration: int
+    status: Status
 
     def __init__(self, parent: QObject):
         super().__init__(parent)
         
         self._fitThreadPool = QThreadPool()
 
-        self.optimizer: str = "L-BFGS-B"
-        self.tol: float = 1e-6
+        self.optimizer = "L-BFGS-B"
+        self.tol = 1e-6
         
-        self.HSParamNames: List[str] = []
-        self.iteration: int = 0
+        self.HSParamNames = []
+        self.iteration = 0
         
-        self.status: Status
-
     # signal & slots ===================================================
     @Slot()
     def updateOptimizer(self, optimizer: str):

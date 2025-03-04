@@ -222,35 +222,42 @@ class MeasurementData:
         A dictionary of 1d ndarrays, which has the same length. We require
         that rawY has only one element, which is the frequency axis.
     """
-    
+
+    # candidates: all possible x, y, and z data that are compatible in shape
+    zCandidates: OrderedDictMod[str, np.ndarray]  # dict of 2d ndarrays
+    xCandidates: OrderedDictMod[str, np.ndarray]  # dict of 1d ndarrays
+    yCandidates: OrderedDictMod[str, np.ndarray]  # dict of 1d ndarrays
+    discardedKeys: List[str] = []
+
+    # raw data: the selected x, y, and z data, indicating the actual tuning
+    # parameters and the measurement data
+    _rawXNames: List[str]
+    _rawYNames: List[str]
+
+    # principal data: the z data that are used to plot and the x, y data that
+    # serves as coordinates in the plot
+    _principalZ: DictItem
+    _principalX: DictItem  # x axis that has the largest change
+    _principalY: DictItem
+
     def __init__(self, figName: str, rawData, file: str):
         super().__init__()
 
         self.name: str = figName
         self.rawData = rawData
         self.file = file
-        
+
         # candidates: all possible x, y, and z data that are compatible in shape
-        self.zCandidates: OrderedDictMod[str, np.ndarray] = (
-            OrderedDictMod()
-        )  # dict of 2d ndarrays
-        self.xCandidates: OrderedDictMod[str, np.ndarray] = (
-            OrderedDictMod()
-        )  # dict of 1d ndarrays
-        self.yCandidates: OrderedDictMod[str, np.ndarray] = (
-            OrderedDictMod()
-        )  # dict of 1d ndarrays
+        self.zCandidates = OrderedDictMod()  # dict of 2d ndarrays
+        self.xCandidates = OrderedDictMod()  # dict of 1d ndarrays
+        self.yCandidates = OrderedDictMod()  # dict of 1d ndarrays
 
         # raw data: the selected x, y, and z data, indicating the actual tuning
         # parameters and the measurement data
-        self._rawXNames: List[str] = []
-        self._rawYNames: List[str] = []
+        self._rawXNames = []
+        self._rawYNames = []
 
-        # principal data: the z data that are used to plot and the x, y data that
-        # serves as coordinates in the plot
-        self._principalZ: DictItem
-        self._principalX: DictItem  # x axis that has the largest change
-        self._principalY: DictItem
+        self.discardedKeys = []
 
         self._initFilters()
 
@@ -799,7 +806,6 @@ class NumericalMeasurementData(MeasurementData):
         file: str,
     ):
         super().__init__(name, rawData, file)
-        
         self._initXYZ()
 
     # properties =======================================================
@@ -938,11 +944,11 @@ class ImageMeasurementData(MeasurementData):
     rawData: ndarray
         the raw data extracted from a data file, either a 2d or 3d array
     """
+
+    rawData: np.ndarray
+
     def __init__(self, name: str, image: np.ndarray, file: str):
         super().__init__(name, image, file)
-        
-        self.rawData: np.ndarray
-        
         self._initXYZ()
 
     def _initXYZ(self):
@@ -1014,6 +1020,8 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         list of measurement data with type NumericalMeasurementData or
         ImageMeasurementData
     """
+    importFinished = False      # will be handled by MeasDataCtrl
+
     # data list management
     figSwitched = Signal(str)
     metaInfoChanged = Signal(MeasMetaInfo)
@@ -1042,9 +1050,6 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
 
         self.checkedRawX: List[str] = []
         self.checkedRawY: List[str] = []
-        
-        self.importFinished = False      # will be handled by MeasDataCtrl
-        
 
     # init & load data list ============================================
     def loadDataSet(self, measDataList: List[MeasDataType]):

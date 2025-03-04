@@ -56,6 +56,25 @@ class CalibrationView(QObject):
     caliViewRawVecUpdatedForSwapXY = Signal()
     _virtualButton: QPushButton
 
+    sweepParamSet: ParamSet[QMSweepParam]
+    caliTableXRowNr: int
+    sweepParamParentNames: List[str]
+    sweepParamNames: List[str]
+    rawXVecNameList: List[str]
+    rawYName: str
+    lineEditSet: Dict[str, Dict[str, "CalibrationLineEdit"]]
+    XDataSourceSet: Dict[str, Dict[str, QLabel]]
+    rowIdxToButtonGroupId: Dict[str, int]
+    buttonGroupIdToRowIdx: Dict[int, str]
+
+    rawYLineEdits: Dict[str, "CalibrationLineEdit"]
+    mapYLineEdits: Dict[str, "CalibrationLineEdit"]
+    caliYButtons: Dict[str, QPushButton]
+
+    rawXLineEdits: Dict[str, "CalibrationLineEdit"]
+    mapXLineEdits: Dict[str, "CalibrationLineEdit"]
+    caliXButtons: Dict[str, QPushButton]
+
     def __init__(
         self,
         parent: QObject,
@@ -70,28 +89,12 @@ class CalibrationView(QObject):
         dynamically based on the number of calibration rows.
         """
         super().__init__(parent)
-        
-        
-        self.sweepParamSet: ParamSet[QMSweepParam]
-        self.caliTableXRowNr: int
-        self.sweepParamParentNames: List[str]
-        self.sweepParamNames: List[str]
-        self.rawXVecNameList: List[str]
-        self.rawYName: str
-        # self.lineEditSet: Dict[str, Dict[str, "CalibrationLineEdit"]]
-        # self.XDataSourceSet: Dict[str, Dict[str, QLabel]]
-        self.rowIdxToButtonGroupId: Dict[str, int]
-        self.buttonGroupIdToRowIdx: Dict[int, str]
 
-        self.rawXLineEdits: Dict[str, "CalibrationLineEdit"]
-        self.mapXLineEdits: Dict[str, "CalibrationLineEdit"]
-        self.caliXButtons: Dict[str, QPushButton]
-
-        self.rawYLineEdits: Dict[str, "CalibrationLineEdit"] = rawYLineEdits
-        self.mapYLineEdits: Dict[str, "CalibrationLineEdit"] = mapYLineEdits
-        self.caliYButtons: Dict[str, QPushButton] = caliYButtons
-        self.lineEditSet: Dict[str, Dict[str, "CalibrationLineEdit"]] = {}
-        self.XDataSourceSet: Dict[str, Dict[str, QLabel]] = {}
+        self.rawYLineEdits = rawYLineEdits
+        self.mapYLineEdits = mapYLineEdits
+        self.caliYButtons = caliYButtons
+        self.lineEditSet = {}
+        self.XDataSourceSet = {}
         self._previousCheckedButtonIdx = None
         self.caliXScrollAreaWidget = caliXScrollAreaWidget
         self.caliXFrame = caliXFrame
