@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'ui_menu.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.6.1
+## Created by: Qt User Interface Compiler version 6.8.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -56,7 +56,7 @@ class Ui_MenuWidget(object):
         self.menuNewButton = QPushButton(MenuWidget)
         self.menuNewButton.setObjectName(u"menuNewButton")
         self.menuNewButton.setEnabled(True)
-        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.menuNewButton.sizePolicy().hasHeightForWidth())
@@ -117,7 +117,7 @@ class Ui_MenuWidget(object):
 
         self.verticalLayout.addWidget(self.menuQuitButton)
 
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout.addItem(self.verticalSpacer)
 

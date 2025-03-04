@@ -24,10 +24,6 @@ from qfit.models.data_structures import Tag, SpectrumElement, Status
 
 from typing import Dict, List, Tuple, Union, Callable, Any, Literal, Optional
 
-scq.settings.MULTIPROC = "pathos"
-scq.settings.FUZZY_SLICING = True
-scq.settings.FUZZY_WARNING = False
-
 
 class SweepConfigForStandaloneCanvas(QObject):
     """
@@ -174,7 +170,7 @@ class QuantumModel(QObject):
 
         # options when plotting the spectrum
         self._subsysToPlot: QuantumSystem = self.hilbertspace.subsystem_list[0]
-        self._initialState: Union[int, Tuple[int, ...], None] = None
+        self._initialStates: List[Union[int, Tuple[int, ...], None]] = [None]
         self._photons: int = 1
 
         # options when running
@@ -283,7 +279,7 @@ class QuantumModel(QObject):
         self,
         attrName: Literal[
             "subsysToPlot",
-            "initialState",
+            "initialStates",
             "photons",
             "evalsCount",
             "pointsAdded",
@@ -309,8 +305,8 @@ class QuantumModel(QObject):
             if value != "None Selected":
                 id_str = SweepParamSet.parentSystemIdstrByName(value)
                 value = self.hilbertspace.subsys_by_id_str(id_str)
-        elif attrName == "initialState":
-            value = self._stateStr2Label(value)
+        elif attrName == "initialStates":
+            value = self._multiStateStr2Label(value)
         elif attrName == "photons":
             value = int(value)
         elif attrName == "evalsCount":
@@ -325,7 +321,7 @@ class QuantumModel(QObject):
         # set the value
         setattr(self, "_" + attrName, value)
 
-        if attrName in ["subsysToPlot", "initialState", "photons"]:
+        if attrName in ["subsysToPlot", "initialStates", "photons"]:
             self.sweep2SpecMSE(sweepUsage=self.sweepUsage)
         elif attrName in ["evalsCount", "pointsAdded", "autoRun"]:
             self.updateCalc()
@@ -346,16 +342,19 @@ class QuantumModel(QObject):
         -------
         A tuple of the attribute name and the value.
         """
-        if isinstance(self._initialState, tuple):
-            initStateStr = str(self._initialState)[1:-1]  # remove the parentheses
-        elif isinstance(self._initialState, int):
-            initStateStr = str(self._initialState)
-        else:
-            initStateStr = ""
+        initStatesStr = ""
+        for state in self._initialStates:
+            if isinstance(state, tuple):
+                initStatesStr += str(state)[1:-1] + ";"  # remove the parentheses
+            elif isinstance(state, int):
+                initStatesStr += str(state) + ";"
+            else:
+                initStatesStr += ""
+        initStatesStr = initStatesStr[:-1]  # remove the last semicolon
 
         return {
             "subsysToPlot": SweepParamSet.parentSystemNames(self._subsysToPlot),
-            "initialState": initStateStr,
+            "initialState": initStatesStr,
             "photons": self._photons,
             "evalsCount": str(self._evalsCount),
             "pointsAdded": str(self._pointsAdded),
@@ -399,44 +398,22 @@ class QuantumModel(QObject):
         if signalToEmit is None:
             signalToEmit = self.readyToPlotMainCanvas
         
-        # since we always specify the subsystems to plot, we need change the
-        # default setting for initial state: None means (0, 0, ...)
-        if self._initialState is None:
-            initialState = (0,) * self.hilbertspace.subsystem_count
-        else:
-            initialState = self._initialState
-
-        # spectrum data for highlighting
-        if self._subsysToPlot == "None Selected":
-            subsystems = None
-        else:
-            subsystems = self._subsysToPlot
-
-        highlight_specdata = sweep.transitions(
-            as_specdata=True,
-            subsystems=subsystems,
-            initial=initialState,
-            final=None,
-            sidebands=True,
-            photon_number=self._photons,
-            make_positive=True,
-        )
-
-        # overall data
-        overall_specdata = copy.deepcopy(
-            sweep[(slice(None),)].dressed_specdata
-        )
-        overall_specdata.energy_table -= highlight_specdata.subtract
-
-        # scale the spectrum data accordingly, based on the calibration
-        self._invCaliSpec(overall_specdata)
-        self._invCaliSpec(highlight_specdata)
+        # compute the spectrum data for each initial state
+        overall_specdata_list = []
+        highlight_specdata_list = []
+        for initState in self._initialStates:
+            overall_specdata, highlight_specdata = self._specDataBySweep(
+                sweep,
+                initState,
+            )
+            overall_specdata_list.append(overall_specdata)
+            highlight_specdata_list.append(highlight_specdata)
 
         # emit the spectrum data to the plot view
         spectrum_element = SpectrumElement(
             "spectrum",
-            overall_specdata,
-            highlight_specdata,
+            overall_specdata_list,
+            highlight_specdata_list,
         )
         signalToEmit.emit(spectrum_element)
 
@@ -462,12 +439,11 @@ class QuantumModel(QObject):
         return True
 
     # tools ===================================================================
-    def _stateStr2Label(self, state_str: str):
+    def _stateStr2Label(self, state_str: str) -> int | Tuple[int, ...] | None:
         """
         Convert a label in string (something like "0, 1, 2")
         to a numerical label, which is a tuple or an integer.
         """
-
         # empty string means None
         if state_str == "":
             return None
@@ -498,7 +474,17 @@ class QuantumModel(QObject):
             raise ValueError(
                 f"Cannot convert {state_str} to a state label. Please check the format."
             )
-
+            
+    def _multiStateStr2Label(self, state_str: str) -> List[int | Tuple[int, ...] | None]:
+        """
+        Convert a multi-state label in string (something like "0, 1, 2; 1, 2, 3")
+        to a list of numerical labels, which is a list of tuples or integers.
+        """
+        states = []
+        for state_str in state_str.split(";"):
+            states.append(self._stateStr2Label(state_str))
+        return states
+            
     def _invCaliSpec(self, specData: SpectrumData):
         """
         scale the spectrum data accordingly, based on the calibration
@@ -506,6 +492,47 @@ class QuantumModel(QObject):
         in the calibration data
         """
         specData.energy_table = self._yInvCaliFunc(specData.energy_table)
+
+    def _specDataBySweep(
+        self,
+        sweep: ParameterSweep,
+        initState: int | Tuple[int, ...] | None,
+    ) -> Tuple[SpectrumData, SpectrumData]:
+        """
+        Calculate the spectrum data by the sweep.
+        """
+        # since we always specify the subsystems to plot, we need change the
+        # default setting for initial state: None means (0, 0, ...)
+        if initState is None:
+            initState = (0,) * self.hilbertspace.subsystem_count
+
+        # spectrum data for highlighting
+        if self._subsysToPlot == "None Selected":
+            subsystems = None
+        else:
+            subsystems = self._subsysToPlot
+
+        highlight_specdata = sweep.transitions(
+            as_specdata=True,
+            subsystems=subsystems,
+            initial=initState,
+            final=None,
+            sidebands=True,
+            photon_number=self._photons,
+            make_positive=True,
+        )
+
+        # overall data
+        overall_specdata = copy.deepcopy(
+            sweep[(slice(None),)].dressed_specdata
+        )
+        overall_specdata.energy_table -= highlight_specdata.subtract
+
+        # scale the spectrum data accordingly, based on the calibration
+        self._invCaliSpec(overall_specdata)
+        self._invCaliSpec(highlight_specdata)
+        
+        return overall_specdata, highlight_specdata
 
     def ingredientsReady(self) -> bool:
         """
@@ -530,7 +557,7 @@ class QuantumModel(QObject):
             return False
         
         return True
-
+    
     # generate sweep ==========================================================
     def _sweptX(self, addPoints: bool = True) -> Dict[str, np.ndarray]:
         """

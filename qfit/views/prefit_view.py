@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QFrame,
 )
-from qfit.widgets.validated_line_edits import IntLineEdit, StateLineEdit
+from qfit.widgets.validated_line_edits import IntLineEdit, MultiStatesLineEdit
 
 from qfit.widgets.grouped_sliders import (
     LabeledSlider,
@@ -343,7 +343,7 @@ class SweepSettingsView(QObject):
         The button to run the sweep.
     options : Dict[str, Any]
         The options for the prefit settings. The keys should be "evalsCount",
-        "subsysToPlot", "initialState", "photons", "pointsAdded" and "autoRun".
+        "subsysToPlot", "initialStates", "photons", "pointsAdded" and "autoRun".
         And the corresponding values should be the widgets for the options.
     """
 
@@ -362,7 +362,7 @@ class SweepSettingsView(QObject):
         self.options = options
         self.evalsCount: IntLineEdit = self.options["evalsCount"]
         self.subsysToPlot: QComboBox = self.options["subsysToPlot"]
-        self.initialState: StateLineEdit = self.options["initialState"]
+        self.initialStates: MultiStatesLineEdit = self.options["initialStates"]
         self.photons: QSpinBox = self.options["photons"]
         self.pointsAdded: IntLineEdit = self.options["pointsAdded"]
         self.numCPUs: IntLineEdit = self.options["numCPUs"]
@@ -393,7 +393,7 @@ class SweepSettingsView(QObject):
     def setEnabled(self, value: bool):
         self.evalsCount.setEnabled(value)
         self.subsysToPlot.setEnabled(value)
-        self.initialState.setEnabled(value)
+        self.initialStates.setEnabled(value)
         self.photons.setEnabled(value)
         self.pointsAdded.setEnabled(value)
         self.autoRun.setEnabled(value)
@@ -423,8 +423,8 @@ class SweepSettingsView(QObject):
             self.subsysToPlot.setCurrentText(value)
         elif option == "evalsCount":
             self.evalsCount.setText(value)
-        elif option == "initialState":
-            self.initialState.setText(value)
+        elif option == "initialStates":
+            self.initialStates.setText(value)
         elif option == "photons":
             self.photons.setValue(value)
         elif option == "pointsAdded":
@@ -445,8 +445,8 @@ class SweepSettingsView(QObject):
                 "subsysToPlot", self.subsysToPlot.currentText()
             )
         )
-        self.initialState.editingFinished.connect(
-            lambda: self.optionUpdated.emit("initialState", self.initialState.text())
+        self.initialStates.editingFinished.connect(
+            lambda: self.optionUpdated.emit("initialStates", self.initialStates.text())
         )
         self.photons.valueChanged.connect(
             lambda: self.optionUpdated.emit("photons", self.photons.value())

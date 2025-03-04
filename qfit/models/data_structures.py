@@ -13,8 +13,9 @@ from matplotlib.collections import PathCollection, QuadMesh
 from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
 from matplotlib.artist import Artist
-
 from matplotlib import colors as colors
+
+from labellines import labelLines
 
 from qfit.utils.helpers import (
     OrderedDictMod,
@@ -560,50 +561,98 @@ class SpectrumElement(PlotElement):
     def __init__(
         self,
         name: str,
-        overall_specdata: SpectrumData,
-        highlighted_specdata: SpectrumData,
+        overall_specdata: List[SpectrumData],
+        highlighted_specdata: List[SpectrumData],
     ):
         self.name = name
         self.overall_specdata = overall_specdata
         self.highlighted_specdata = highlighted_specdata
+        
+        assert len(self.overall_specdata) == len(self.highlighted_specdata)
+        
+    def __len__(self) -> int:
+        return len(self.overall_specdata)
+        
+    def _plotOverallData(
+        self, 
+        axes: Axes,
+        data: SpectrumData,
+        alpha_factor: float = 1.0,
+        zorder: float = -1,
+        **kwargs
+    ) -> None:
+        fig = axes.get_figure()
+        data.plot_evals_vs_paramvals(
+            color="black",
+            linewidth=2,
+            linestyle="--",
+            alpha=0.3 * alpha_factor,
+            fig_ax=(fig, axes),
+            zorder=zorder,
+            **kwargs,
+        )
+        
+    def _plotHighlightedData(
+        self, 
+        axes: Axes,
+        data: SpectrumData,
+        alpha_factor: float = 1.0,
+        zorder: float = 1.0,
+        **kwargs
+    ) -> None:
+        fig = axes.get_figure()
+        
+        artist_before = set(axes.get_children()) # help to get the Line2D artists
+        
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
 
+            if data.energy_table.size > 0:
+
+                # reset the cycler so that the colors are consistent
+                axes.set_prop_cycle(cycler(color=[
+                    '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
+                    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
+                ]))
+
+                data.plot_evals_vs_paramvals(
+                    label_list=data.labels,
+                    linewidth=2,
+                    fig_ax=(fig, axes),
+                    alpha=1.0 * alpha_factor,
+                    zorder=zorder,
+                    **kwargs,
+                )
+            else:
+                # no highlighted data (usually when evalsCount too small)
+                pass
+         
+        # get the line2D artists and label them
+        artist_after = set(axes.get_children())
+        new_artists = list(artist_after - artist_before)
+        line_artists = [artist for artist in new_artists if isinstance(artist, Line2D)]
+        labelLines(line_artists, zorder = zorder + 2.0, alpha = 1.0 * alpha_factor)
+        
     def canvasPlot(self, axes: Axes, **kwargs) -> None:
         """
         Plot the spectrum on the canvas
         """
         super().canvasPlot(axes, **kwargs)
 
-        fig = axes.get_figure()
-
         # since the scqubits backend do not return the artists, we need to
         # obtain the new artists by comparing the old and new artists
         artist_before = set(axes.get_children())
-
-        self.overall_specdata.plot_evals_vs_paramvals(
-            color="black",
-            linewidth=2,
-            linestyle="--",
-            alpha=0.3,
-            fig_ax=(fig, axes),
-            **kwargs,
-        )
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-
-            if self.highlighted_specdata.energy_table.size > 0:
-
-                # reset the cycler so that the colors are consistent
-                axes.set_prop_cycle(cycler(color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']))
-
-                self.highlighted_specdata.plot_evals_vs_paramvals(
-                    label_list=self.highlighted_specdata.labels,
-                    linewidth=2,
-                    fig_ax=(fig, axes),
-                    **kwargs,
-                )
-            else:
-                # no highlighted data (usually when evalsCount too small)
-                pass
+        
+        alpha_factor_list = np.logspace(0, len(self)-1, len(self), base=0.5)
+        zorder_list = np.linspace(3.0, len(self) * 3, len(self))    # spacing = 3 to fit in the labelLines
+        for ov_data, hl_data, alpha_factor, zorder in zip(
+            self.overall_specdata, 
+            self.highlighted_specdata, 
+            alpha_factor_list, 
+            zorder_list
+        ):
+            self._plotOverallData(axes, ov_data, alpha_factor, zorder=-1, **kwargs)
+            self._plotHighlightedData(axes, hl_data, alpha_factor, zorder=zorder, **kwargs)
 
         axes.set_xlabel("")
         axes.set_ylabel("")

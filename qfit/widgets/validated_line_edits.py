@@ -17,7 +17,7 @@ from PySide6.QtGui import QRegularExpressionValidator as QRegExpValidator
 from PySide6.QtGui import QValidator, QFocusEvent
 from PySide6.QtWidgets import QLineEdit
 
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, List
 
 
 # meta class for QLineEdits and ABC
@@ -240,34 +240,129 @@ class StateLineEdit(ValidatedLineEdit):
             regEx = QRegExp("^$|^([1-9]\d*|0)(, ?([1-9]\d*|0))*$")
         else:
             # integer or a tuple with length tupleLength or empty string
+            num_commas = tupleLength - 1
             regEx = QRegExp(
-                "^$|^([1-9]\d*|0)(, ?([1-9]\d*|0)){0,%d}$" % (tupleLength - 1)
+                "^$|^([1-9]\d*|0)(, ?([1-9]\d*|0)){0,%d}$" % num_commas
             )
         self._finalValidator = QRegExpValidator(regEx)
 
     def setTupleLength(self, tupleLength: int):
         self._initializeValidator(tupleLength)
 
-    def isTuple(self) -> bool:
+    def _isTuple(self) -> bool:
         """
         Return True if the line edit contains a tuple of integers.
         """
         return "," in self.text() and self.isValid()
 
-    def isInt(self) -> bool:
+    def _isInt(self) -> bool:
         """
         Return True if the line edit contains a single integer.
         """
-        return not self.isTuple() and self.isValid()
+        return not self._isTuple() and self.isValid()
 
     def getValue(self) -> Union[int, Tuple[int, ...], None]:
         """
         Return the value in the line edit. If the line edit contains a tuple,
         return a tuple of integers, otherwise return an integer.
         """
-        if self.isTuple():
+        if self._isTuple():
             return tuple(int(x) for x in self.text().split(","))
-        elif self.isInt():
+        elif self._isInt():
             return int(self.text())
         else:
             return None
+        
+        
+class MultiIntTuplesLineEdit(ValidatedLineEdit):
+    """
+    A line edit that accepts semi-colon separated tuples of integers, where each tuple
+    has a specified length.
+    """
+    def _initializeValidator(self, tupleLength: Optional[int] = None):
+        """
+        Initialize the validators for the line edit.
+        """
+        # View-level validator: allows any partial input with digits, commas, semicolons, and spaces
+        viewRegEx = QRegExp("^[0-9,;\s]*$")
+        self._validator = QRegExpValidator(viewRegEx)
+        self.setValidator(self._validator)
+
+        # Model-level validator: ensures complete and valid input
+        if tupleLength is None:
+            # Accepts any number of tuples, each being a tuple of any length
+            modelRegEx = QRegExp("^$|^([1-9]\d*|0)(\s*,\s*([1-9]\d*|0))*"
+                                 "(\s*;\s*([1-9]\d*|0)(\s*,\s*([1-9]\d*|0))*)*$")
+        else:
+            # Accepts any number of tuples, each being a tuple with the specified length
+            num_commas = tupleLength - 1
+            modelRegEx = QRegExp("^$|^([1-9]\d*|0)(\s*,\s*([1-9]\d*|0)){%d}"
+                                 "(\s*;\s*([1-9]\d*|0)(\s*,\s*([1-9]\d*|0)){%d})*$" % (num_commas, num_commas))
+        
+        self._finalValidator = QRegExpValidator(modelRegEx)
+        
+    def setTupleLength(self, tupleLength: int):
+        self._initializeValidator(tupleLength)
+        
+    def getTuples(self) -> List[Tuple[int, ...]] | None:
+        """
+        Return the tuples in the line edit. Each tuple is a tuple of integers.
+        """
+        if not self.isValid():
+            return None
+        
+        tuples = []
+        for tuple_str in self.text().split(";"):
+            tuples.append(tuple(int(x) for x in tuple_str.split(",")))
+        return tuples
+
+
+class MultiStatesLineEdit(ValidatedLineEdit):
+    """
+    A line edit that accepts semi-colon separated states, where each state
+    is either a single integer or a tuple of integers with a specified length
+    (each element is the same as StateLineEdit)
+    """
+
+    def _initializeValidator(self, tupleLength: Optional[int] = None):
+        """
+        Initialize the validators for the line edit.
+        """
+        # View-level validator: allows any partial input with digits, commas, semicolons, and spaces
+        viewRegEx = QRegExp("^[0-9,;\s]*$")
+        self._validator = QRegExpValidator(viewRegEx)
+        self.setValidator(self._validator)
+
+        # Model-level validator: ensures complete and valid input
+        if tupleLength is None:
+            # Accepts any number of states, each being an int or a tuple of any length
+            modelRegEx = QRegExp("^$|^([1-9]\d*|0)(\s*,\s*([1-9]\d*|0))*"
+                                 "(\s*;\s*([1-9]\d*|0)(\s*,\s*([1-9]\d*|0))*)*$")
+        else:
+            # Accepts any number of states, each being an int or a tuple with the specified length
+            num_commas = tupleLength - 1
+            modelRegEx = QRegExp("^$|^([1-9]\d*|0)(\s*,\s*([1-9]\d*|0)){0,%d}"
+                                 "(\s*;\s*([1-9]\d*|0)(\s*,\s*([1-9]\d*|0)){0,%d})*$" % (num_commas, num_commas))
+        
+        self._finalValidator = QRegExpValidator(modelRegEx)
+        
+    def setTupleLength(self, tupleLength: int):
+        self._initializeValidator(tupleLength)
+        
+    def getStates(self) -> List[int | Tuple[int, ...] | None]:
+        """
+        Return the states in the line edit. Each state is either an integer or a tuple of integers.
+        """
+        if not self.isValid():
+            return [None]
+        
+        states = []
+        for state in self.text().split(";"):
+            if state.strip() == "":
+                states.append(None)
+            elif "," in state:
+                states.append(tuple(int(x) for x in state.split(",")))
+            else:
+                states.append(int(state))
+        return states
+

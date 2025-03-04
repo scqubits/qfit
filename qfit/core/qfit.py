@@ -12,7 +12,6 @@ from PySide6.QtWidgets import (
 )
 
 from qfit.core.mainwindow import MainWindow
-from qfit.utils.helpers import executed_in_ipython
 
 from qfit.ui_designer.ui_window import Ui_MainWindow
 from qfit.widgets.menu import MenuWidget
@@ -68,15 +67,8 @@ from qfit.models.registry import Registry
 # menu controller
 from qfit.controllers.io_ctrl import IOCtrl
 
+# settings
 import qfit.settings as settings
-
-if executed_in_ipython():
-    # inside ipython, the function get_ipython is always in globals()
-    ipython = get_ipython()
-    ipython.run_line_magic("gui", "qt6")
-    settings.EXECUTED_IN_IPYTHON = True
-else:
-    settings.EXECUTED_IN_IPYTHON = False
 
 
 class Fit:
@@ -657,7 +649,7 @@ class Fit:
         # UI grouping
         self._prefitOptions = {
             "subsysToPlot": self._settingUi.ui.subsysComboBox,
-            "initialState": self._settingUi.ui.initStateLineEdit,
+            "initialStates": self._settingUi.ui.initStateLineEdit,
             "photons": self._settingUi.ui.prefitPhotonSpinBox,
             "evalsCount": self._settingUi.ui.evalsCountLineEdit,
             "numCPUs": self._settingUi.ui.numCPUsLineEdit,
