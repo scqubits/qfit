@@ -109,8 +109,8 @@ class Tag:
     def __init__(
         self,
         tagType: Literal["DISPERSIVE_DRESSED"],
-        initial: int,
-        final: int,
+        initial: List[int | None],
+        final: List[int | None],
         photons: Optional[int] = None,
     ): ...
 

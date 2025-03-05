@@ -17,10 +17,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
     QGridLayout, QGroupBox, QHBoxLayout, QLabel,
-    QLayout, QLineEdit, QMainWindow, QPushButton,
-    QRadioButton, QScrollArea, QSizePolicy, QSpacerItem,
-    QSpinBox, QStackedWidget, QStatusBar, QTabWidget,
-    QVBoxLayout, QWidget)
+    QLayout, QMainWindow, QPushButton, QRadioButton,
+    QScrollArea, QSizePolicy, QSpacerItem, QSpinBox,
+    QStackedWidget, QStatusBar, QTabWidget, QVBoxLayout,
+    QWidget)
 
 from qfit.views.calibration_view import CalibrationLineEdit
 from qfit.widgets.data_extracting import (DataExtractingWidget, ListView)
@@ -1294,7 +1294,7 @@ class Ui_MainWindow(object):
         self.calibrateXScrollArea.setWidgetResizable(True)
         self.calibrateXScrollAreaWidget = QWidget()
         self.calibrateXScrollAreaWidget.setObjectName(u"calibrateXScrollAreaWidget")
-        self.calibrateXScrollAreaWidget.setGeometry(QRect(0, 0, 441, 269))
+        self.calibrateXScrollAreaWidget.setGeometry(QRect(0, 0, 441, 250))
         sizePolicy13.setHeightForWidth(self.calibrateXScrollAreaWidget.sizePolicy().hasHeightForWidth())
         self.calibrateXScrollAreaWidget.setSizePolicy(sizePolicy13)
         self.verticalLayout_5 = QVBoxLayout(self.calibrateXScrollAreaWidget)
@@ -2099,7 +2099,7 @@ class Ui_MainWindow(object):
 
         self.gridLayout_13.addWidget(self.label, 7, 2, 1, 1)
 
-        self.finalDressedStateLineEdit = QLineEdit(self.tagDressedGroupBox)
+        self.finalDressedStateLineEdit = MultiIntsLineEdit(self.tagDressedGroupBox)
         self.finalDressedStateLineEdit.setObjectName(u"finalDressedStateLineEdit")
         self.finalDressedStateLineEdit.setMinimumSize(QSize(230, 30))
         self.finalDressedStateLineEdit.setMaximumSize(QSize(230, 30))
@@ -3034,7 +3034,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.pagesStackedWidget.setCurrentIndex(2)
+        self.pagesStackedWidget.setCurrentIndex(0)
         self.figureTabWidget.setCurrentIndex(-1)
 
 

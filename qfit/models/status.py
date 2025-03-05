@@ -4,6 +4,7 @@ from typing import List, Optional, Tuple, Union, Callable, Literal
 from PySide6.QtCore import QObject, Signal, Slot
 
 from qfit.models.data_structures import Status
+import qfit.settings as settings
 
 DEFAULT_STATUS = Status(
     statusSource=None,
@@ -54,13 +55,6 @@ class StatusModel(QObject):
         self.oldMseForComputingDelta: Optional[float] = None
         self.newMseForComputingDelta: Optional[float] = None
         self._updateMseForComputingDelta()
-        
-        self._init_settings()
-        
-    def _init_settings(self):
-        self.ROOT_MSE = True
-        self.MSE_UNIT: Literal["GHz", "MHz"] = "MHz"
-        self.MSE_DISPLAY_PRECISION = 2
 
     @property
     def deltaMse(self) -> Union[float, None]:
@@ -91,11 +85,11 @@ class StatusModel(QObject):
         return self.statusStrForView
     
     def _MSEString(self, mse: float | None) -> str:
-        if self.ROOT_MSE:
-            unit = self.MSE_UNIT
+        if settings.ROOT_MSE:
+            unit = settings.MSE_UNIT
             mse_name = "root mean square error"
         else:
-            unit = self.MSE_UNIT + "\u00B2"
+            unit = settings.MSE_UNIT + "\u00B2"
             mse_name = "mean square error"
         
         if mse is None:
@@ -103,17 +97,17 @@ class StatusModel(QObject):
         elif np.isnan(mse):
             mse_str = "-"
         else: # mse is a float, process value
-            if self.MSE_UNIT == "GHz":
+            if settings.MSE_UNIT == "GHz":
                 pass
-            elif self.MSE_UNIT == "MHz":
+            elif settings.MSE_UNIT == "MHz":
                 mse = mse * 1e6
             else:
-                raise ValueError(f"Invalid MSE unit: {self.MSE_UNIT}")
+                raise ValueError(f"Invalid MSE unit: {settings.MSE_UNIT}")
                 
-            if self.ROOT_MSE:
+            if settings.ROOT_MSE:
                 mse = np.sqrt(mse)
                 
-            mse_str = f"{mse:.{self.MSE_DISPLAY_PRECISION}f} {unit}"
+            mse_str = f"{mse:.{settings.MSE_DISPLAY_PRECISION}f} {unit}"
         
         return mse_name + ": " + mse_str
     

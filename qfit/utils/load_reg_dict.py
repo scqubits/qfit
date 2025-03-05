@@ -5,7 +5,12 @@ import re
 if TYPE_CHECKING:
     from qfit.models.measurement_data import MeasDataType
     from scqubits.core.hilbert_space import HilbertSpace
-    from qfit.models.data_structures import CaliTableRowParam, FitParam, SliderParam
+    from qfit.models.data_structures import (
+        CaliTableRowParam,
+        FitParam,
+        SliderParam,
+        Tag,
+    )
 
 
 def parseRegDict(
@@ -34,29 +39,29 @@ def parseRegDict(
 
     major, minor, micro = version.split(".")[:3]
     major, minor, micro = int(major), int(minor), int(micro)
-
-    if major == 1 and minor == 0:
-        return _parseRegDict10x_20x(registryDict)
-
-    elif major >= 2:
-        return registryDict
-
-    else:
+    
+    if major == 0:
         raise ValueError(
             f"File version {version} is no longer supported. "
             f"Please contact the developer for retrieving the data."
         )
 
+    if major == 1:
+        # 1.0.x --> 2.0.x
+        _parseRegDict10x_20x(registryDict)
+
+    if major == 2 and minor in [0, 1]:
+        # 2.0.x / 2.1.x --> 2.2.x
+        _parseRegDict2xx_22x(registryDict)
+        
+    # current: 2.2.x
+    return registryDict
+        
 
 # 1.0.x --> 2.0.x =============================================================
 def _parseRegDict10x_20x(registryDict: Dict[str, Any]) -> Dict[str, Any]:
     """
     Parse the measurement data unpickled from the file with version 1.0.x.
-
-    Parameters
-    ----------
-    measData : MeasDataType
-        the measurement data un
     """
 
     # handles the missing keys
@@ -148,3 +153,19 @@ def _parsePrefitCaliParam10x_20x(caliParams: Dict[str, Dict[str, "SliderParam"]]
             if re.match(r"^\w+\.\w+$", key):
                 newKey = f"{key.split('.')[1]}<br>({'.'.join(key.split('.')[:-1])})"
                 caliDict[newKey] = caliDict.pop(key)
+
+# 2.0.x / 2.1.x --> 2.2.x =============================================================
+def _parseRegDict2xx_22x(registryDict: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Parse the tags in the registry dictionary from version 2.0.x or 2.1.x to 2.2.x.
+    The main change is that in 2.2.x, we support uncertain tags, which are 
+    represented by a list of possible values.
+    """
+    for transitions in registryDict["allExtractedData"].values():
+        for trans in transitions:
+            _parseTag2xx_22x(trans.tag)
+        
+def _parseTag2xx_22x(tag: "Tag"):
+    if not tag.tagType == "NO_TAG":
+        tag.initial = [tag.initial]
+        tag.final = [tag.final]

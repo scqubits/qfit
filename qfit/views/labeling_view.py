@@ -270,8 +270,8 @@ class LabelingView(QObject):
         self.bareLabels["initial"].clear()
         self.bareLabels["final"].clear()
         self.bareLabels["photons"].setValue(1)
-        self.dressedLabels["initial"].setValue(0)
-        self.dressedLabels["final"].setValue(1)
+        self.dressedLabels["initial"].clear()
+        self.dressedLabels["final"].clear()
         self.dressedLabels["photons"].setValue(1)        
 
     @Slot(Tag)
@@ -302,8 +302,8 @@ class LabelingView(QObject):
             self.bareLabels["photons"].setValue(tag.photons)
         elif tag.tagType == "DISPERSIVE_DRESSED":
             self.radioButtons["dressed"].toggle()
-            self.dressedLabels["initial"].setValue(tag.initial)
-            self.dressedLabels["final"].setValue(tag.final)
+            self.dressedLabels["initial"].setFromInts(tag.initial)
+            self.dressedLabels["final"].setFromInts(tag.final)
             self.dressedLabels["photons"].setValue(tag.photons)
 
         self.blockAllSignals(False)

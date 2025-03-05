@@ -306,7 +306,14 @@ class MultiIntsLineEdit(ValidatedLineEdit):
 
         ints = []
         for int_str in self.text().split(";"):
-            ints.append(int(int_str))
+            if int_str.strip() == "":
+                ints.append(None)
+            else:
+                ints.append(int(int_str))
+                
+        assert not (None in ints and len(ints) > 1), "Impossible case, " \
+            "which should be already caught by the validator"  
+        
         return ints
     
     def setFromInts(self, ints: List[int | None]):
@@ -317,8 +324,8 @@ class MultiIntsLineEdit(ValidatedLineEdit):
             else:   
                 strs.append(str(int_))
         self.setText("; ".join(strs))
-        
-        
+
+
 class MultiIntTuplesLineEdit(ValidatedLineEdit):
     """
     A line edit that accepts semi-colon separated tuples of integers, where each tuple
@@ -358,7 +365,14 @@ class MultiIntTuplesLineEdit(ValidatedLineEdit):
         
         tuples = []
         for tuple_str in self.text().split(";"):
-            tuples.append(tuple(int(x) for x in tuple_str.split(",")))
+            if tuple_str.strip() == "":
+                tuples.append(None)
+            else:
+                tuples.append(tuple(int(x) for x in tuple_str.split(",")))
+                
+        assert not (None in tuples and len(tuples) > 1), "Impossible case, " \
+            "which should be already caught by the validator"  
+        
         return tuples
     
     def setFromTuples(self, tuples: List[Tuple[int, ...] | None]):

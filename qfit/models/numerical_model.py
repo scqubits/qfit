@@ -21,8 +21,9 @@ from qfit.models.data_structures import (
     ExtrTransition,
 )
 from qfit.models.data_structures import Tag, SpectrumElement, Status
+import qfit.settings as settings
 
-from typing import Dict, List, Tuple, Union, Callable, Any, Literal, Optional
+from typing import Dict, List, Tuple, Union, Callable, Any, Literal, Optional, Set
 
 
 class SweepConfigForStandaloneCanvas(QObject):
@@ -917,68 +918,82 @@ class QuantumModel(QObject):
 
     # calculate MSE ===========================================================
     @staticmethod
+    def _thermalInitialStates(
+        evals: ndarray,
+    ) -> List[int]:
+        """
+        Given the eigenenergies, find the possible initial states of the 
+        transition that is below POSSIBLE_INIT_STATE_FREQUENCY.
+        """
+        assert evals.ndim == 1, "evals must be a 1D array"
+        diff_evals = evals - evals[0]
+        return list(np.where(diff_evals < settings.POSSIBLE_INIT_STATE_FREQUENCY)[0])
+    
+    @staticmethod
     def _closestTransFreq(
         dataFreq: float,
         evals: ndarray,
-        initial: Optional[int] = None,
-        final: Optional[int] = None,
+        initial: List[int] | None = None,
+        final: List[int] | None = None,
     ) -> float:
         """
-        Given a list of eigenenergies, find the closest transition frequency.
+        Given a list of eigenenergies, find the closest transition frequency,
+        starting from the selected initial and ending at the selected final states.
 
         Parameters
         ----------
         dataFreq: float
-            The transition frequency from the extracted data.
+            The transition frequency from the extracted data. With that,
+            we can find the closest transition frequency if the initial 
+            and final states are uncertain.
         evals: ndarray
-            The eigenenergies of the system.
-        initial: Optional[int]
-            The initial state index. If None, transitions starting
-            from the ground states will be used.
-        final: Optional[int]
-            The final state index. If None, transitions ending
-            at all different states will be enumerated.
+            The eigenenergies of the system. (1D array)
+        initial: List[int] | None
+            The initial state indices. If None, transitions starting
+            every state will be used.
+        final: List[int]
+            The final state indices. If None, transitions ending
+            every state will be used.
         """
+        # compute all possible transition frequencies
+        # first index is the initial state, second index is the final state
+        allToAllFreqs = np.subtract.outer(evals, evals).T
+        # slice the possible transitions
         if initial is not None and final is not None:
-            assert initial < final
-            return evals[final] - evals[initial]
-
+            slc = np.ix_(initial, final)
         elif initial is not None and final is None:
-            possible_transitions = evals[initial + 1 :] - evals[initial]
-
+            slc = (initial, slice(None))
         elif initial is None and final is not None:
-            possible_transitions = evals[final] - evals[0]
-
+            slc = (slice(None), final)
         else:
-            # enumerate all possible transitions starting from all different states
-            possible_transitions = np.array(
-                [evals[final] - evals[0] for final in range(0, len(evals))]
-            )
-
-        closest_idx = (np.abs(possible_transitions - dataFreq)).argmin()
-
-        return possible_transitions[closest_idx]
-
+            slc = (slice(None), slice(None))
+        possibleTransitions = allToAllFreqs[slc]
+        possibleTransitions = possibleTransitions.flatten()
+        
+        # find the closest transition frequency
+        closestIdx = np.abs(np.abs(possibleTransitions) - dataFreq).argmin()
+        return possibleTransitions[closestIdx]
+    
     def _numericalSpecByTag(
         self,
         xData: float,
         yDataFreq: float,
         tag: Tag,
         sweep: ParameterSweep,
-        take_abs_freq: bool = True,
+        takeAbsFreq: bool = True,
     ) -> Tuple[
         float,
         Literal[
             "SUCCESS",
             "DRESSED_OUT_OF_RANGE",
             "NO_TAG",
-            "NO_MATCHED_BARE_INITIAL",
-            "NO_MATCHED_BARE_FINAL",
-            "NO_MATCHED_BARE_INITIAL_AND_FINAL",
+            "BARE_OUT_OF_RANGE",
+            "INCOMPLETE_TAG",
+            "BARE_UNIDENTIFIABLE",
         ],
     ]:
         """
-        Given a extractred data point, obtain the cooresponding transition frequency
+        Given ONE extractred data point, obtain the cooresponding transition frequency
         provided by the tag from a ParameterSweep instance. If the tag is not
         provided or we can not identify dressed states' bare label via overlap,
         the closest transition frequency starting from the ground state will be
@@ -1003,79 +1018,101 @@ class QuantumModel(QObject):
             The transition frequency that matches the tag.
         Literal[
             "SUCCESS",
-            "DRESSED_OUT_OF_RANGE",
+            "LABEL_OUT_OF_RANGE",
             "NO_TAG",
-            "NO_MATCHED_BARE_INITIAL",
-            "NO_MATCHED_BARE_FINAL",
-            "NO_MATCHED_BARE_INITIAL_AND_FINAL",
+            "INCOMPLETE_TAG",
+            "BARE_UNIDENTIFIABLE",
         ]
             The status of the calculation.
         """
         eigenenergies = sweep["evals"]["x":xData]
+        status = "SUCCESS"
 
-        # if provided dressed label
         if tag.tagType == "NO_TAG":
             status = "NO_TAG"
-            availableLabels = {}
+            # fiting to all possible transitions starting from the ground state
+            # and the any excited state that is below POSSIBLE_INIT_STATE_FREQUENCY
+            availableLabels = {
+                "initial": self._thermalInitialStates(eigenenergies),
+                "final": None,
+            }
 
         elif tag.tagType == "DISPERSIVE_DRESSED":
             # if the state is above evals_count, terminate the computation and return error status
-            if sweep.dressed_evals_count() < max(tag.initial, tag.final):
-                status = "DRESSED_OUT_OF_RANGE"
+            
+            if None in tag.initial:
+                status = "INCOMPLETE_TAG"
+                initial = self._thermalInitialStates(eigenenergies)
+            elif sweep.dressed_evals_count() < max(tag.initial):
+                status = "LABEL_OUT_OF_RANGE"
                 return np.nan, status
             else:
-                status = "SUCCESS"
-                availableLabels = {"initial": tag.initial, "final": tag.final}
+                initial = tag.initial
+                
+            if None in tag.final:
+                status = "INCOMPLETE_TAG"
+                final = None
+            elif sweep.dressed_evals_count() < max(tag.final):
+                status = "LABEL_OUT_OF_RANGE"
+                return np.nan, status
+            else:
+                final = tag.final
+            
+            availableLabels = {"initial": initial, "final": final}
 
         # if provided bare label
         elif tag.tagType == "DISPERSIVE_BARE":
-            # a temporary change: slice and get the first element of the tuple
-            initial = tag.initial[0]
-            final = tag.final[0]
-            
-            initial_energy = sweep.energy_by_bare_index(initial)["x":xData]
-            final_energy = sweep.energy_by_bare_index(final)["x":xData]
-
-            # when we can identify both initial and final states
-            if not np.isnan(initial_energy) and not np.isnan(final_energy):
-                simulation_freq = final_energy - initial_energy
-                status = "SUCCESS"
-                if take_abs_freq:
-                    simulation_freq = np.abs(simulation_freq)
-                return simulation_freq, status
-
-            # when some of the states are not identifiable
-            elif np.isnan(initial_energy) and not np.isnan(final_energy):
-                status = "NO_MATCHED_BARE_INITIAL"
-                final_energy_dressed_label = sweep.dressed_index(final)["x":xData]
-                availableLabels = {"final": final_energy_dressed_label}
-
-            elif not np.isnan(initial_energy) and np.isnan(final_energy):
-                status = "NO_MATCHED_BARE_FINAL"
-                initial_energy_dressed_label = sweep.dressed_index(initial)[
-                    "x":xData
-                ]
-                availableLabels = {"initial": initial_energy_dressed_label}
-
+            if None in tag.initial:
+                status = "INCOMPLETE_TAG"
+                initial = self._thermalInitialStates(eigenenergies)
+            elif not all([idx < tuple(self.hilbertspace.subsystem_dims) for idx in tag.initial]):
+                status = "LABEL_OUT_OF_RANGE"
+                return np.nan, status
             else:
-                status = "NO_MATCHED_BARE_INITIAL_AND_FINAL"
-                availableLabels = {}
+                initial = [sweep.dressed_index(idx)["x":xData] for idx in tag.initial]  
+                if None in initial:
+                    status = "BARE_UNIDENTIFIABLE"
+                    # when there is unidentifiable initial state,
+                    # remove the nan index, and add the thermal initial states
+                    initial = [idx for idx in initial if idx is not None]
+                    thermal_initial = self._thermalInitialStates(eigenenergies)
+                    initial = list(set(initial + thermal_initial))
+                
+            if None in tag.final:
+                status = "INCOMPLETE_TAG"
+                final = None
+            elif not all([idx < tuple(self.hilbertspace.subsystem_dims) for idx in tag.final]):
+                status = "LABEL_OUT_OF_RANGE"
+                return np.nan, status
+            else:
+                final = [sweep.dressed_index(idx)["x":xData] for idx in tag.final]
+                if None in final:
+                    status = "BARE_UNIDENTIFIABLE"
+                    # when there is unidentifiable final state,
+                    # we just compare it with the full eigenenergies
+                    final = None
+                
+            availableLabels = {"initial": initial, "final": final}
 
-        simulation_freq = self._closestTransFreq(
+        simulationFreq = self._closestTransFreq(
             dataFreq=yDataFreq,
             evals=eigenenergies,
             **availableLabels,
         )
-        if take_abs_freq:
-            simulation_freq = np.abs(simulation_freq)
-        return simulation_freq, status
+        if takeAbsFreq:
+            simulationFreq = np.abs(simulationFreq)
+        return simulationFreq, status
 
     def _MSEByTransition(
         self,
         sweep: ParameterSweep,
         transition: ExtrTransition,
-        dataNameWOlabel: List[str],
-    ) -> float:
+    ) -> Tuple[float, set[Literal[
+        "SUCCESS",
+        "INCOMPLETE_TAG",
+        "BARE_UNIDENTIFIABLE",
+        "NO_TAG",
+    ]]]:
         """
         Calculate the mean square error for a single transition.
 
@@ -1085,20 +1122,17 @@ class QuantumModel(QObject):
             The parameter sweep object.
         transition: ExtrTransition
             The extracted transition data.
-        dataNameWOlabel: List[str]
-            The list of data names that do not have identifiable state labels.
-            It will be updated in this method.
         """
         mse = 0.0
-
+        mseCalcStatus = set()
         tag = transition.tag
 
         for xData, yData in transition.data.T:
             # obtain the transition frequency from the transition data
             yData = self._yCaliFunc(yData)
             (
-                transition_freq,
-                get_transition_freq_status,
+                transitionFreq,
+                getTransitionFreqStatus,
             ) = self._numericalSpecByTag(
                 xData=xData,
                 yDataFreq=yData,
@@ -1108,31 +1142,21 @@ class QuantumModel(QObject):
 
             # process the status
             # if the transition_freq is None, return directly with a mse of None
-            if get_transition_freq_status == "DRESSED_OUT_OF_RANGE":
-                statusType = "error"
-                statusText = (
-                    f"The {tag.tagType} tag {tag.initial}->{tag.final} includes"
-                    " state label(s) that exceed evals count."
+            if getTransitionFreqStatus == "LABEL_OUT_OF_RANGE":
+                raise ValueError(
+                    f"The tag {tag.initial} -> {tag.final} includes "
+                    "state indices that exceed the evaluated eigenvalue count."
                 )
-                # emit error message
-                status = Status(
-                    statusSource=self.sweepUsage,
-                    statusType=statusType,
-                    message=statusText,
-                )
-                self.updateStatus.emit(status)
-                return np.nan
-            # if the return status is not SUCCESS, add a warning message and set status type to WARNING
-            if get_transition_freq_status != "SUCCESS":
-                if transition.name not in dataNameWOlabel:
-                    dataNameWOlabel.append(transition.name)
-
+                
+            # for now, we just summarize them as LABEL_CORRECTED
+            mseCalcStatus.add(getTransitionFreqStatus)
+            
             # finish the calculation
             photons = 1 if tag.photons is None else tag.photons
-            transition_freq /= photons
-            mse += (yData - transition_freq) ** 2
+            transitionFreq /= photons
+            mse += (yData - transitionFreq) ** 2
 
-        return mse
+        return mse, mseCalcStatus
 
     def _calculateMSE(self) -> float:
         """
@@ -1152,8 +1176,8 @@ class QuantumModel(QObject):
             return np.nan
 
         mse = 0
-        dataNameWOlabel = []
 
+        overallMseCalcStatus = set()
         for figName, extrSpec in self._fullExtr.items():
             sweep = self._sweeps[figName]
             # if there is no extracted data: do not calculate the MSE
@@ -1164,7 +1188,29 @@ class QuantumModel(QObject):
             sweep._out_of_sync_warning_issued = True
 
             for transition in extrSpec:
-                mse += self._MSEByTransition(sweep, transition, dataNameWOlabel)
+                try:
+                    newMse, mseCalcStatus = self._MSEByTransition(
+                        sweep, transition
+                    )
+                    overallMseCalcStatus.update(mseCalcStatus)
+                    
+                    print(f"figName: {figName}, transition: {transition.name}, mse: {newMse}")
+                    
+                    mse += newMse
+                except Exception as e:
+                    statusType = "error"
+                    statusText = (
+                        f"MSE calculation failed for <{transition.name}> in <{figName}>'s "
+                        f" due to: {e}"
+                    )
+                    # emit error message
+                    status = Status(
+                        statusSource=self.sweepUsage,
+                        statusType=statusType,
+                        message=statusText,
+                    )
+                    self.updateStatus.emit(status)
+                    return np.nan
 
         # normalize the MSE
         mse /= self._fullExtr.count()
@@ -1173,37 +1219,47 @@ class QuantumModel(QObject):
         # handled in the fit model instead
         if self.sweepUsage in ["fit", "fit-result"]:
             return mse
+        
         # otherwise, add to the status text if there is any unidentifiable tag
         # and send out the status
-        else:
-            if dataNameWOlabel != []:
-                statusType = "warning"
-                message = (
-                    f"Data sets {dataNameWOlabel} have unidentifiable state "
-                    "labels or are untagged. "
-                    "Selected transition frequencies are matched to the closest ones in the model, "
-                    "starting from the ground state."
-                )
-                status = Status(
-                    statusSource=self.sweepUsage,
-                    statusType=statusType,
-                    message=message,
-                    mse=mse,
-                )
-                self.updateStatus.emit(status)
+        if overallMseCalcStatus != set(["SUCCESS"]):
+            problems = []
+            if "INCOMPLETE_TAG" in overallMseCalcStatus:
+                problems.append("incomplete")
+            if "BARE_UNIDENTIFIABLE" in overallMseCalcStatus:
+                problems.append("unidentifiable")
+            if "NO_TAG" in overallMseCalcStatus:
+                problems.append("no")
+            problemsStr = " or ".join(problems)
+                
+            statusType = "warning"
+            message = (
+                f"Found extracted transitions with {problemsStr} labels. "
+                "Any missing initial state label will be replaced by the "
+                "lowest-lying states, and any missing final state label will "
+                "be replaced by the all possible eigenstates."
+            )
+            status = Status(
+                statusSource=self.sweepUsage,
+                statusType=statusType,
+                message=message,
+                mse=mse,
+            )
+            self.updateStatus.emit(status)
 
-            # else, send out the success status with the MSE
-            else:
-                statusType = "success"
-                message = "Successful spectrum and MSE calculation."
-                status = Status(
-                    statusSource=self.sweepUsage,
-                    message=message,
-                    statusType=statusType,
-                    mse=mse,
-                )
-                self.updateStatus.emit(status)
-            return mse
+        # else, send out the success status with the MSE
+        else:
+            statusType = "success"
+            message = "Successful spectrum and MSE calculation."
+            status = Status(
+                statusSource=self.sweepUsage,
+                message=message,
+                statusType=statusType,
+                mse=mse,
+            )
+            self.updateStatus.emit(status)
+        
+        return mse
         
     # Plotting to a standalone canvas
     # ==================================================================
