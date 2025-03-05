@@ -627,12 +627,18 @@ class SpectrumElement(PlotElement):
                 # no highlighted data (usually when evalsCount too small)
                 pass
          
-        # get the line2D artists and label them
+        # get the line2D artists and label them 
         artist_after = set(axes.get_children())
         new_artists = list(artist_after - artist_before)
         line_artists = [artist for artist in new_artists if isinstance(artist, Line2D)]
-        labelLines(line_artists, zorder = zorder + 2.0, alpha = 1.0 * alpha_factor)
-        
+        if len(data.param_vals) > 0:    
+            labelLines(
+                line_artists, 
+                xvals = (data.param_vals.min(), data.param_vals.max()),
+                zorder = zorder + 2.0, 
+                alpha = 1.0 * alpha_factor
+            )
+
     def canvasPlot(self, axes: Axes, **kwargs) -> None:
         """
         Plot the spectrum on the canvas
@@ -644,7 +650,7 @@ class SpectrumElement(PlotElement):
         artist_before = set(axes.get_children())
         
         alpha_factor_list = np.logspace(0, len(self)-1, len(self), base=0.5)
-        zorder_list = np.linspace(3.0, len(self) * 3, len(self))    # spacing = 3 to fit in the labelLines
+        zorder_list = np.linspace(3.0, len(self) * 3.0, len(self))    # spacing = 3 to fit in the labelLines
         for ov_data, hl_data, alpha_factor, zorder in zip(
             self.overall_specdata, 
             self.highlighted_specdata, 

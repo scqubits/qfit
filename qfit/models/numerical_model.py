@@ -1193,9 +1193,6 @@ class QuantumModel(QObject):
                         sweep, transition
                     )
                     overallMseCalcStatus.update(mseCalcStatus)
-                    
-                    print(f"figName: {figName}, transition: {transition.name}, mse: {newMse}")
-                    
                     mse += newMse
                 except Exception as e:
                     statusType = "error"
