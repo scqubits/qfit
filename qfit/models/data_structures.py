@@ -15,14 +15,12 @@ from matplotlib.lines import Line2D
 from matplotlib.artist import Artist
 from matplotlib import colors as colors
 
-from labellines import labelLines
-
 from qfit.utils.helpers import (
     OrderedDictMod,
 )
 from qfit.models.parameter_settings import ParameterType
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
-from qfit.utils.helpers import OrderedDictMod, lineLabelLocations
+from qfit.utils.helpers import OrderedDictMod, labelLinesWithNans
         
 
 # Status ===============================================================
@@ -639,15 +637,8 @@ class SpectrumElement(PlotElement):
         
         # select the lines that is within the xlim and ylim of the axis
         # and use some heuristics to find the positions of the labels
-        lines_to_label, xvals = lineLabelLocations(line_artists, xlim, ylim)
-        
-        if len(lines_to_label) > 0:
-            labelLines(
-                lines_to_label, 
-                xvals = xvals,
-                zorder = zorder + 2.0, 
-                alpha = 1.0 * alpha_factor
-            )
+        # finally, label the lines
+        labelLinesWithNans(axes, line_artists, xlim, ylim)
 
     def canvasPlot(
         self, 
