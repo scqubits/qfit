@@ -22,7 +22,7 @@ from qfit.utils.helpers import (
 )
 from qfit.models.parameter_settings import ParameterType
 from qfit.widgets.grouped_sliders import SLIDER_RANGE
-from qfit.utils.helpers import OrderedDictMod
+from qfit.utils.helpers import OrderedDictMod, lineLabelLocations
         
 
 # Status ===============================================================
@@ -598,8 +598,13 @@ class SpectrumElement(PlotElement):
         data: SpectrumData,
         alpha_factor: float = 1.0,
         zorder: float = 1.0,
+        xlim: Tuple[float, float] = None,
+        ylim: Tuple[float, float] = None,
         **kwargs
     ) -> None:
+        if len(data.param_vals) == 0: 
+            return
+        
         fig = axes.get_figure()
         
         artist_before = set(axes.get_children()) # help to get the Line2D artists
@@ -631,15 +636,26 @@ class SpectrumElement(PlotElement):
         artist_after = set(axes.get_children())
         new_artists = list(artist_after - artist_before)
         line_artists = [artist for artist in new_artists if isinstance(artist, Line2D)]
-        if len(data.param_vals) > 0:    
+        
+        # select the lines that is within the xlim and ylim of the axis
+        # and use some heuristics to find the positions of the labels
+        lines_to_label, xvals = lineLabelLocations(line_artists, xlim, ylim)
+        
+        if len(lines_to_label) > 0:
             labelLines(
-                line_artists, 
-                xvals = (data.param_vals.min(), data.param_vals.max()),
+                lines_to_label, 
+                xvals = xvals,
                 zorder = zorder + 2.0, 
                 alpha = 1.0 * alpha_factor
             )
 
-    def canvasPlot(self, axes: Axes, **kwargs) -> None:
+    def canvasPlot(
+        self, 
+        axes: Axes, 
+        xlim: Tuple[float, float] = None,
+        ylim: Tuple[float, float] = None,
+        **kwargs
+    ) -> None:
         """
         Plot the spectrum on the canvas
         """
@@ -658,7 +674,7 @@ class SpectrumElement(PlotElement):
             zorder_list
         ):
             self._plotOverallData(axes, ov_data, alpha_factor, zorder=-1, **kwargs)
-            self._plotHighlightedData(axes, hl_data, alpha_factor, zorder=zorder, **kwargs)
+            self._plotHighlightedData(axes, hl_data, alpha_factor, zorder=zorder, xlim=xlim, ylim=ylim, **kwargs)
 
         axes.set_xlabel("")
         axes.set_ylabel("")

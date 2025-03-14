@@ -894,9 +894,9 @@ class MplFigureCanvas(QFrame):
         self._checkElementName(elementName)
         return elementName in self._plottingElements.keys()
 
-    def _coloringKwargs(self, elementName: str) -> Dict[str, Any]:
+    def _specialKwargs(self, elementName: str) -> Dict[str, Any]:
         """
-        For different elements, they accept different coloring kwargs.
+        For different elements, they accept different special kwargs.
         """
         self._checkElementName(elementName)
 
@@ -908,6 +908,11 @@ class MplFigureCanvas(QFrame):
             return {"color": self.scatterColor}
         elif elementName == "extraction_vlines":
             return {"color": self.lineColor}
+        elif elementName == "spectrum":
+            return {
+                "xlim": self._measPrcplXLim,
+                "ylim": self._measPrcplYLim,
+            }
         else:
             return {}
 
@@ -967,7 +972,11 @@ class MplFigureCanvas(QFrame):
         if isinstance(element, str):
             element = self._plottingElements[element]
 
-        element.canvasPlot(self.axes, **self._coloringKwargs(element.name), **kwargs)
+        element.canvasPlot(
+            self.axes, 
+            **self._specialKwargs(element.name), 
+            **kwargs
+        )
         self._restoreXYLim()
 
         if draw:
