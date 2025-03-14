@@ -301,8 +301,8 @@ class Fit:
     # functionalities that does not involves the main window ###########
     def createStandaloneCanvas(
         self, 
-        selectedDataNames: List[str | int],
-        numericalPoints: int, 
+        selectedDataNames: List[str | int] | None = None,
+        numericalPoints: int = 10, 
         xLim: Tuple[float, float] | None = None, 
         yLim: Tuple[float, float] | None = None,
     ):

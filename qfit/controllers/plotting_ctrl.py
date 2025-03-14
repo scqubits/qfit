@@ -775,8 +775,8 @@ class PlottingCtrl(QObject):
 
     def createStandaloneCanvas(
         self, 
-        selectedDataNames: List[str | int],
-        numericalPoints: int, 
+        selectedDataNames: List[str | int] | None = None,
+        numericalPoints: int = 10, 
         xLim: Tuple[float, float] | None = None, 
         yLim: Tuple[float, float] | None = None,
     ):
@@ -807,6 +807,8 @@ class PlottingCtrl(QObject):
         fullData = self.measDataSet.fullData
         selectedData = []
         figNames = []
+        if selectedDataNames is None:
+            selectedDataNames = range(len(fullData))
         for idx, data in enumerate(fullData):
             if idx in selectedDataNames or data.name in selectedDataNames:
                 selectedData.append(data)
@@ -814,7 +816,8 @@ class PlottingCtrl(QObject):
 
         # all of the data must be collinear with each other
         for data in selectedData[1:]:
-            assert selectedData[0].isCollinearWith(data), "data are not collinear"
+            if not selectedData[0].isCollinearWith(data):
+                raise ValueError(f"Data {data.name} are not collinear with {selectedData[0].name}")
             
         for data in selectedData:
             elem = copy.deepcopy(data.generatePlotElement())
