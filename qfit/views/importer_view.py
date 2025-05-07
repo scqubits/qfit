@@ -1,4 +1,3 @@
-
 from PySide6.QtWidgets import (
     QPushButton,
     QWidget,
@@ -27,7 +26,7 @@ class ImporterView(QObject):
     deleteFigClicked = Signal()
 
     def __init__(
-        self, 
+        self,
         parent: QWidget,
         metaInfo: Dict[str, QLabel],
         importFigButtons: Dict[str, QPushButton],
@@ -59,26 +58,14 @@ class ImporterView(QObject):
         """
         self.metaInfo["name"].setText(metaInfo.name)
         self.metaInfo["file"].setText(metaInfo.file)
-        self.metaInfo["shape"].setText(
-            ", ".join([str(i) for i in metaInfo.shape])
-        )
-        self.metaInfo["xCandidateNames"].setText(
-            ", ".join(metaInfo.xCandidateNames)
-        )
-        self.metaInfo["yCandidateNames"].setText(
-            ", ".join(metaInfo.yCandidateNames)
-        )
-        self.metaInfo["zCandidateNames"].setText(
-            ", ".join(metaInfo.zCandidateNames)
-        )
-        self.metaInfo["discardedKeys"].setText(
-            ", ".join(metaInfo.discardedKeys)
-        )
+        self.metaInfo["shape"].setText(", ".join([str(i) for i in metaInfo.shape]))
+        self.metaInfo["xCandidateNames"].setText(", ".join(metaInfo.xCandidateNames))
+        self.metaInfo["yCandidateNames"].setText(", ".join(metaInfo.yCandidateNames))
+        self.metaInfo["zCandidateNames"].setText(", ".join(metaInfo.zCandidateNames))
+        self.metaInfo["discardedKeys"].setText(", ".join(metaInfo.discardedKeys))
 
     # config ===========================================================
-    def _insertCheckBox(
-        self, axis: str, names: List[str]
-    ):
+    def _insertCheckBox(self, axis: str, names: List[str]):
         """
         Given a list of names, insert a checkbox for each name into the
         scroll area.
@@ -99,7 +86,8 @@ class ImporterView(QObject):
             # configure the check box
             checkBox.setEnabled(True)
             checkBox.setCheckable(True)
-            checkBox.setStyleSheet("""
+            checkBox.setStyleSheet(
+                """
 QCheckBox:disabled {	
 	color: rgb(85, 85, 85);
 }
@@ -107,7 +95,8 @@ QCheckBox::indicator:disabled {
 	border: 1px solid rgb(85, 85, 85);
    background: transparent;
 }
-""")
+"""
+            )
 
             # connect to the signal
             checkBox.clicked.connect(self.emitConfigChanged)
@@ -116,9 +105,7 @@ QCheckBox::indicator:disabled {
             layout.addWidget(checkBox)
             self.checkBoxes[axis][name] = checkBox
 
-    def _checkCheckBox(
-        self, axis: str, names: List[str]
-    ):
+    def _checkCheckBox(self, axis: str, names: List[str]):
         """
         Given a list of names, check the checkboxes for each name.
         """
@@ -128,9 +115,7 @@ QCheckBox::indicator:disabled {
             else:
                 checkBox.setChecked(False)
 
-    def _grayOutCheckBox(
-        self, axis: str, names: List[str]
-    ):
+    def _grayOutCheckBox(self, axis: str, names: List[str]):
         """
         Given a list of names, gray out the checkboxes for each name.
         """
@@ -164,12 +149,14 @@ QCheckBox::indicator:disabled {
         Return the checked x and y candidates.
         """
         config = MeasRawXYConfig(
-            checkedX = [
-                name for name, checkBox in self.checkBoxes["x"].items() 
+            checkedX=[
+                name
+                for name, checkBox in self.checkBoxes["x"].items()
                 if checkBox.isChecked()
             ],
-            checkedY = [
-                name for name, checkBox in self.checkBoxes["y"].items() 
+            checkedY=[
+                name
+                for name, checkBox in self.checkBoxes["y"].items()
                 if checkBox.isChecked()
             ],
         )
@@ -196,9 +183,9 @@ QCheckBox::indicator:disabled {
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Question)
         msgBox.setText(
-            "After proceeding, you can no longer go back to this page "
-            "to import any data and update their configuration. \n"
-            "Are you sure to proceed?"
+            "By leaving the import page, you will not be able to "
+            "come back to add or remove datasets or change the axis settings. "
+            "Are you sure you want to continue?"
         )
         msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         msgBox.setDefaultButton(QMessageBox.No)
@@ -215,18 +202,10 @@ QCheckBox::indicator:disabled {
         """
         Connect signals to slots.
         """
-        self.transposeButton.clicked.connect(
-            lambda: self.transposeZClicked.emit()
-        )
-        self.importFigButtons["new"].clicked.connect(
-            lambda: self.addFigClicked.emit()
-        )
+        self.transposeButton.clicked.connect(lambda: self.transposeZClicked.emit())
+        self.importFigButtons["new"].clicked.connect(lambda: self.addFigClicked.emit())
         self.importFigButtons["delete"].clicked.connect(
             lambda: self.deleteFigClicked.emit()
         )
 
         self.continueButton.clicked.connect(self.onContinueClicked)
-
-
-
-

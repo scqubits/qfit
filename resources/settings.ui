@@ -1152,7 +1152,7 @@ QSpinBox::down-button:pressed {
           <item row="6" column="0">
            <widget class="QLabel" name="label_4">
             <property name="text">
-             <string>NUM CPUS</string>
+             <string>CORES TO USE</string>
             </property>
            </widget>
           </item>

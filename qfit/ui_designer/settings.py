@@ -890,7 +890,7 @@ class Ui_settingsWidget(object):
         self.label_5.setText(QCoreApplication.translate("settingsWidget", u"* For multiple initial-state indices: separate indices by \";\"", None))
         self.label_6.setText(QCoreApplication.translate("settingsWidget", u"HELP", None))
         self.label_33.setText(QCoreApplication.translate("settingsWidget", u"PHOTONS", None))
-        self.label_4.setText(QCoreApplication.translate("settingsWidget", u"NUM CPUS", None))
+        self.label_4.setText(QCoreApplication.translate("settingsWidget", u"CORES TO USE", None))
         self.label_42.setText(QCoreApplication.translate("settingsWidget", u"EVALS COUNT", None))
         self.label_43.setText(QCoreApplication.translate("settingsWidget", u"POINTS ADDED", None))
         self.evalsCountLineEdit.setText(QCoreApplication.translate("settingsWidget", u"20", None))
