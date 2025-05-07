@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'settings.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.2
+## Created by: Qt User Interface Compiler version 6.6.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -28,7 +28,7 @@ class Ui_settingsWidget(object):
         if not settingsWidget.objectName():
             settingsWidget.setObjectName(u"settingsWidget")
         settingsWidget.resize(390, 470)
-        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(settingsWidget.sizePolicy().hasHeightForWidth())
@@ -199,13 +199,13 @@ class Ui_settingsWidget(object):
         self.gridLayout_3.setSpacing(0)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(12, 12, 12, -1)
-        self.verticalSpacer_3 = QSpacerItem(5, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_3 = QSpacerItem(5, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.gridLayout_3.addItem(self.verticalSpacer_3, 1, 1, 1, 1)
 
         self.tabWidget = QTabWidget(settingsWidget)
         self.tabWidget.setObjectName(u"tabWidget")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.tabWidget.sizePolicy().hasHeightForWidth())
@@ -341,9 +341,9 @@ class Ui_settingsWidget(object):
 "QComboBox QAbstractItemView::item{\n"
 "    height: 50px;\n"
 "}")
-        self.tabWidget.setTabPosition(QTabWidget.TabPosition.North)
-        self.tabWidget.setTabShape(QTabWidget.TabShape.Rounded)
-        self.tabWidget.setElideMode(Qt.TextElideMode.ElideRight)
+        self.tabWidget.setTabPosition(QTabWidget.North)
+        self.tabWidget.setTabShape(QTabWidget.Rounded)
+        self.tabWidget.setElideMode(Qt.ElideRight)
         self.visualTab = QWidget()
         self.visualTab.setObjectName(u"visualTab")
         self.verticalLayout = QVBoxLayout(self.visualTab)
@@ -358,7 +358,7 @@ class Ui_settingsWidget(object):
         self.gridLayout_2.setContentsMargins(0, 5, 0, 0)
         self.rangeSliderMin = QSlider(self.visualTabContainerWidget)
         self.rangeSliderMin.setObjectName(u"rangeSliderMin")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.rangeSliderMin.sizePolicy().hasHeightForWidth())
@@ -367,7 +367,7 @@ class Ui_settingsWidget(object):
         self.rangeSliderMin.setMaximumSize(QSize(207, 16777215))
         self.rangeSliderMin.setMaximum(99)
         self.rangeSliderMin.setSingleStep(1)
-        self.rangeSliderMin.setOrientation(Qt.Orientation.Horizontal)
+        self.rangeSliderMin.setOrientation(Qt.Horizontal)
 
         self.gridLayout_2.addWidget(self.rangeSliderMin, 3, 0, 1, 1)
 
@@ -380,17 +380,17 @@ class Ui_settingsWidget(object):
         self.rangeSliderMax.setMaximum(99)
         self.rangeSliderMax.setValue(99)
         self.rangeSliderMax.setSliderPosition(99)
-        self.rangeSliderMax.setOrientation(Qt.Orientation.Horizontal)
+        self.rangeSliderMax.setOrientation(Qt.Horizontal)
 
         self.gridLayout_2.addWidget(self.rangeSliderMax, 4, 0, 1, 1)
 
-        self.verticalSpacer = QSpacerItem(20, 7, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer = QSpacerItem(20, 7, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.gridLayout_2.addItem(self.verticalSpacer, 9, 0, 1, 1)
 
         self.filterQFrame = QFrame(self.visualTabContainerWidget)
         self.filterQFrame.setObjectName(u"filterQFrame")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         sizePolicy3.setHorizontalStretch(0)
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.filterQFrame.sizePolicy().hasHeightForWidth())
@@ -438,22 +438,22 @@ class Ui_settingsWidget(object):
 
         self.colorComboBox = QComboBox(self.visualTabContainerWidget)
         icon = QIcon()
-        icon.addFile(u":/icons/PuOr.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addFile(u":/icons/PuOr.png", QSize(), QIcon.Normal, QIcon.Off)
         self.colorComboBox.addItem(icon, u"PuOr")
         icon1 = QIcon()
-        icon1.addFile(u":/icons/RdYlBu.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon1.addFile(u":/icons/RdYlBu.png", QSize(), QIcon.Normal, QIcon.Off)
         self.colorComboBox.addItem(icon1, u"RdYlBu")
         icon2 = QIcon()
-        icon2.addFile(u":/icons/bwr.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon2.addFile(u":/icons/bwr.png", QSize(), QIcon.Normal, QIcon.Off)
         self.colorComboBox.addItem(icon2, u"bwr")
         icon3 = QIcon()
-        icon3.addFile(u":/icons/viridis.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon3.addFile(u":/icons/viridis.png", QSize(), QIcon.Normal, QIcon.Off)
         self.colorComboBox.addItem(icon3, u"viridis")
         icon4 = QIcon()
-        icon4.addFile(u":/icons/cividis.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon4.addFile(u":/icons/cividis.png", QSize(), QIcon.Normal, QIcon.Off)
         self.colorComboBox.addItem(icon4, u"cividis")
         icon5 = QIcon()
-        icon5.addFile(u":/icons/gray.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon5.addFile(u":/icons/gray.png", QSize(), QIcon.Normal, QIcon.Off)
         self.colorComboBox.addItem(icon5, u"gray")
         self.colorComboBox.setObjectName(u"colorComboBox")
         sizePolicy2.setHeightForWidth(self.colorComboBox.sizePolicy().hasHeightForWidth())
@@ -470,7 +470,7 @@ class Ui_settingsWidget(object):
 
         self.label_39 = QLabel(self.visualTabContainerWidget)
         self.label_39.setObjectName(u"label_39")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         sizePolicy4.setHorizontalStretch(0)
         sizePolicy4.setVerticalStretch(0)
         sizePolicy4.setHeightForWidth(self.label_39.sizePolicy().hasHeightForWidth())
@@ -508,7 +508,7 @@ class Ui_settingsWidget(object):
         self.logScaleCheckBox = QCheckBox(self.visualTabContainerWidget)
         self.logScaleCheckBox.setObjectName(u"logScaleCheckBox")
         self.logScaleCheckBox.setFont(font)
-        self.logScaleCheckBox.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
+        self.logScaleCheckBox.setLayoutDirection(Qt.LeftToRight)
         self.logScaleCheckBox.setAutoFillBackground(False)
         self.logScaleCheckBox.setText(u"Log")
         self.logScaleCheckBox.setChecked(False)
@@ -520,7 +520,7 @@ class Ui_settingsWidget(object):
         sizePolicy3.setHeightForWidth(self.bgndSubtractQFrame.sizePolicy().hasHeightForWidth())
         self.bgndSubtractQFrame.setSizePolicy(sizePolicy3)
         self.bgndSubtractQFrame.setMinimumSize(QSize(207, 0))
-        self.bgndSubtractQFrame.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
+        self.bgndSubtractQFrame.setLayoutDirection(Qt.LeftToRight)
         self.verticalLayout_7 = QVBoxLayout(self.bgndSubtractQFrame)
         self.verticalLayout_7.setSpacing(15)
         self.verticalLayout_7.setObjectName(u"verticalLayout_7")
@@ -571,48 +571,6 @@ class Ui_settingsWidget(object):
         self.gridLayout = QGridLayout(self.spectrumTabContainerWidget)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setContentsMargins(0, 5, 0, 0)
-        self.label_43 = QLabel(self.spectrumTabContainerWidget)
-        self.label_43.setObjectName(u"label_43")
-        sizePolicy2.setHeightForWidth(self.label_43.sizePolicy().hasHeightForWidth())
-        self.label_43.setSizePolicy(sizePolicy2)
-        self.label_43.setStyleSheet(u"font-size: 13px")
-
-        self.gridLayout.addWidget(self.label_43, 4, 0, 1, 1)
-
-        self.label = QLabel(self.spectrumTabContainerWidget)
-        self.label.setObjectName(u"label")
-        sizePolicy2.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy2)
-        self.label.setStyleSheet(u"font-size: 13px")
-
-        self.gridLayout.addWidget(self.label, 2, 0, 1, 1)
-
-        self.initStateLineEdit = MultiStatesLineEdit(self.spectrumTabContainerWidget)
-        self.initStateLineEdit.setObjectName(u"initStateLineEdit")
-        sizePolicy2.setHeightForWidth(self.initStateLineEdit.sizePolicy().hasHeightForWidth())
-        self.initStateLineEdit.setSizePolicy(sizePolicy2)
-        self.initStateLineEdit.setMinimumSize(QSize(170, 30))
-        self.initStateLineEdit.setMaximumSize(QSize(16777215, 30))
-
-        self.gridLayout.addWidget(self.initStateLineEdit, 2, 1, 1, 2)
-
-        self.evalsCountLineEdit = IntLineEdit(self.spectrumTabContainerWidget)
-        self.evalsCountLineEdit.setObjectName(u"evalsCountLineEdit")
-        sizePolicy2.setHeightForWidth(self.evalsCountLineEdit.sizePolicy().hasHeightForWidth())
-        self.evalsCountLineEdit.setSizePolicy(sizePolicy2)
-        self.evalsCountLineEdit.setMinimumSize(QSize(170, 30))
-        self.evalsCountLineEdit.setMaximumSize(QSize(16777215, 30))
-
-        self.gridLayout.addWidget(self.evalsCountLineEdit, 3, 1, 1, 2)
-
-        self.label_42 = QLabel(self.spectrumTabContainerWidget)
-        self.label_42.setObjectName(u"label_42")
-        sizePolicy2.setHeightForWidth(self.label_42.sizePolicy().hasHeightForWidth())
-        self.label_42.setSizePolicy(sizePolicy2)
-        self.label_42.setStyleSheet(u"font-size: 13px")
-
-        self.gridLayout.addWidget(self.label_42, 3, 0, 1, 1)
-
         self.subsysComboBox = QComboBox(self.spectrumTabContainerWidget)
         self.subsysComboBox.setObjectName(u"subsysComboBox")
         sizePolicy2.setHeightForWidth(self.subsysComboBox.sizePolicy().hasHeightForWidth())
@@ -620,9 +578,18 @@ class Ui_settingsWidget(object):
         self.subsysComboBox.setMinimumSize(QSize(170, 30))
         self.subsysComboBox.setMaximumSize(QSize(16777215, 30))
         self.subsysComboBox.setStyleSheet(u"")
-        self.subsysComboBox.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.subsysComboBox.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
 
         self.gridLayout.addWidget(self.subsysComboBox, 1, 1, 1, 2)
+
+        self.pointsAddLineEdit = IntLineEdit(self.spectrumTabContainerWidget)
+        self.pointsAddLineEdit.setObjectName(u"pointsAddLineEdit")
+        sizePolicy2.setHeightForWidth(self.pointsAddLineEdit.sizePolicy().hasHeightForWidth())
+        self.pointsAddLineEdit.setSizePolicy(sizePolicy2)
+        self.pointsAddLineEdit.setMinimumSize(QSize(170, 30))
+        self.pointsAddLineEdit.setMaximumSize(QSize(16777215, 30))
+
+        self.gridLayout.addWidget(self.pointsAddLineEdit, 5, 1, 1, 2)
 
         self.prefitPhotonSpinBox = QSpinBox(self.spectrumTabContainerWidget)
         self.prefitPhotonSpinBox.setObjectName(u"prefitPhotonSpinBox")
@@ -692,19 +659,26 @@ class Ui_settingsWidget(object):
 "QSpinBox::down-button:pressed {\n"
 "    background-color: #262626;\n"
 "}")
-        self.prefitPhotonSpinBox.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.prefitPhotonSpinBox.setAlignment(Qt.AlignCenter)
         self.prefitPhotonSpinBox.setMinimum(1)
 
-        self.gridLayout.addWidget(self.prefitPhotonSpinBox, 6, 1, 1, 1)
+        self.gridLayout.addWidget(self.prefitPhotonSpinBox, 7, 1, 1, 1)
 
-        self.pointsAddLineEdit = IntLineEdit(self.spectrumTabContainerWidget)
-        self.pointsAddLineEdit.setObjectName(u"pointsAddLineEdit")
-        sizePolicy2.setHeightForWidth(self.pointsAddLineEdit.sizePolicy().hasHeightForWidth())
-        self.pointsAddLineEdit.setSizePolicy(sizePolicy2)
-        self.pointsAddLineEdit.setMinimumSize(QSize(170, 30))
-        self.pointsAddLineEdit.setMaximumSize(QSize(16777215, 30))
+        self.numCPUsLineEdit = IntLineEdit(self.spectrumTabContainerWidget)
+        self.numCPUsLineEdit.setObjectName(u"numCPUsLineEdit")
+        sizePolicy2.setHeightForWidth(self.numCPUsLineEdit.sizePolicy().hasHeightForWidth())
+        self.numCPUsLineEdit.setSizePolicy(sizePolicy2)
+        self.numCPUsLineEdit.setMinimumSize(QSize(170, 30))
 
-        self.gridLayout.addWidget(self.pointsAddLineEdit, 4, 1, 1, 2)
+        self.gridLayout.addWidget(self.numCPUsLineEdit, 6, 1, 1, 1)
+
+        self.label = QLabel(self.spectrumTabContainerWidget)
+        self.label.setObjectName(u"label")
+        sizePolicy2.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy2)
+        self.label.setStyleSheet(u"font-size: 13px")
+
+        self.gridLayout.addWidget(self.label, 2, 0, 1, 1)
 
         self.label_44 = QLabel(self.spectrumTabContainerWidget)
         self.label_44.setObjectName(u"label_44")
@@ -713,6 +687,78 @@ class Ui_settingsWidget(object):
         self.label_44.setStyleSheet(u"font-size: 13px")
 
         self.gridLayout.addWidget(self.label_44, 1, 0, 1, 1)
+
+        self.label_5 = QLabel(self.spectrumTabContainerWidget)
+        self.label_5.setObjectName(u"label_5")
+        sizePolicy5 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        sizePolicy5.setHorizontalStretch(170)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.label_5.sizePolicy().hasHeightForWidth())
+        self.label_5.setSizePolicy(sizePolicy5)
+        self.label_5.setMinimumSize(QSize(170, 0))
+        self.label_5.setStyleSheet(u"QLabel {\n"
+"    font-size: 10pt;\n"
+"}")
+        self.label_5.setWordWrap(True)
+
+        self.gridLayout.addWidget(self.label_5, 3, 1, 1, 1)
+
+        self.label_6 = QLabel(self.spectrumTabContainerWidget)
+        self.label_6.setObjectName(u"label_6")
+        self.label_6.setStyleSheet(u"font-size: 13px")
+
+        self.gridLayout.addWidget(self.label_6, 8, 0, 1, 1)
+
+        self.label_33 = QLabel(self.spectrumTabContainerWidget)
+        self.label_33.setObjectName(u"label_33")
+        sizePolicy2.setHeightForWidth(self.label_33.sizePolicy().hasHeightForWidth())
+        self.label_33.setSizePolicy(sizePolicy2)
+        self.label_33.setStyleSheet(u"font-size: 13px")
+
+        self.gridLayout.addWidget(self.label_33, 7, 0, 1, 1)
+
+        self.verticalSpacer_2 = QSpacerItem(20, 115, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.gridLayout.addItem(self.verticalSpacer_2, 9, 0, 1, 1)
+
+        self.label_4 = QLabel(self.spectrumTabContainerWidget)
+        self.label_4.setObjectName(u"label_4")
+
+        self.gridLayout.addWidget(self.label_4, 6, 0, 1, 1)
+
+        self.label_42 = QLabel(self.spectrumTabContainerWidget)
+        self.label_42.setObjectName(u"label_42")
+        sizePolicy2.setHeightForWidth(self.label_42.sizePolicy().hasHeightForWidth())
+        self.label_42.setSizePolicy(sizePolicy2)
+        self.label_42.setStyleSheet(u"font-size: 13px")
+
+        self.gridLayout.addWidget(self.label_42, 4, 0, 1, 1)
+
+        self.label_43 = QLabel(self.spectrumTabContainerWidget)
+        self.label_43.setObjectName(u"label_43")
+        sizePolicy2.setHeightForWidth(self.label_43.sizePolicy().hasHeightForWidth())
+        self.label_43.setSizePolicy(sizePolicy2)
+        self.label_43.setStyleSheet(u"font-size: 13px")
+
+        self.gridLayout.addWidget(self.label_43, 5, 0, 1, 1)
+
+        self.evalsCountLineEdit = IntLineEdit(self.spectrumTabContainerWidget)
+        self.evalsCountLineEdit.setObjectName(u"evalsCountLineEdit")
+        sizePolicy2.setHeightForWidth(self.evalsCountLineEdit.sizePolicy().hasHeightForWidth())
+        self.evalsCountLineEdit.setSizePolicy(sizePolicy2)
+        self.evalsCountLineEdit.setMinimumSize(QSize(170, 30))
+        self.evalsCountLineEdit.setMaximumSize(QSize(16777215, 30))
+
+        self.gridLayout.addWidget(self.evalsCountLineEdit, 4, 1, 1, 2)
+
+        self.initStateLineEdit = MultiStatesLineEdit(self.spectrumTabContainerWidget)
+        self.initStateLineEdit.setObjectName(u"initStateLineEdit")
+        sizePolicy2.setHeightForWidth(self.initStateLineEdit.sizePolicy().hasHeightForWidth())
+        self.initStateLineEdit.setSizePolicy(sizePolicy2)
+        self.initStateLineEdit.setMinimumSize(QSize(170, 30))
+        self.initStateLineEdit.setMaximumSize(QSize(16777215, 30))
+
+        self.gridLayout.addWidget(self.initStateLineEdit, 2, 1, 1, 2)
 
         self.numericalSpectrumSettingsHelpPushButton = QPushButton(self.spectrumTabContainerWidget)
         self.numericalSpectrumSettingsHelpPushButton.setObjectName(u"numericalSpectrumSettingsHelpPushButton")
@@ -724,36 +770,11 @@ class Ui_settingsWidget(object):
 "    background: none;\n"
 "}")
         icon6 = QIcon()
-        icon6.addFile(u":/icons/svg/question-circle.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon6.addFile(u":/icons/svg/question-circle.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.numericalSpectrumSettingsHelpPushButton.setIcon(icon6)
         self.numericalSpectrumSettingsHelpPushButton.setIconSize(QSize(23, 23))
 
-        self.gridLayout.addWidget(self.numericalSpectrumSettingsHelpPushButton, 1, 3, 1, 1)
-
-        self.label_33 = QLabel(self.spectrumTabContainerWidget)
-        self.label_33.setObjectName(u"label_33")
-        sizePolicy2.setHeightForWidth(self.label_33.sizePolicy().hasHeightForWidth())
-        self.label_33.setSizePolicy(sizePolicy2)
-        self.label_33.setStyleSheet(u"font-size: 13px")
-
-        self.gridLayout.addWidget(self.label_33, 6, 0, 1, 1)
-
-        self.verticalSpacer_2 = QSpacerItem(20, 115, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout.addItem(self.verticalSpacer_2, 7, 0, 1, 1)
-
-        self.label_4 = QLabel(self.spectrumTabContainerWidget)
-        self.label_4.setObjectName(u"label_4")
-
-        self.gridLayout.addWidget(self.label_4, 5, 0, 1, 1)
-
-        self.numCPUsLineEdit = IntLineEdit(self.spectrumTabContainerWidget)
-        self.numCPUsLineEdit.setObjectName(u"numCPUsLineEdit")
-        sizePolicy2.setHeightForWidth(self.numCPUsLineEdit.sizePolicy().hasHeightForWidth())
-        self.numCPUsLineEdit.setSizePolicy(sizePolicy2)
-        self.numCPUsLineEdit.setMinimumSize(QSize(170, 30))
-
-        self.gridLayout.addWidget(self.numCPUsLineEdit, 5, 1, 1, 1)
+        self.gridLayout.addWidget(self.numericalSpectrumSettingsHelpPushButton, 8, 1, 1, 1)
 
 
         self.verticalLayout_3.addWidget(self.spectrumTabContainerWidget)
@@ -780,17 +801,17 @@ class Ui_settingsWidget(object):
 
         self.gridLayout_4.addWidget(self.tolLineEdit, 1, 1, 1, 2)
 
-        self.verticalSpacer_4 = QSpacerItem(20, 240, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_4 = QSpacerItem(20, 240, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.gridLayout_4.addItem(self.verticalSpacer_4, 2, 0, 1, 1)
 
         self.label_47 = QLabel(self.fitTabContainerWidget)
         self.label_47.setObjectName(u"label_47")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
-        sizePolicy5.setHorizontalStretch(0)
-        sizePolicy5.setVerticalStretch(0)
-        sizePolicy5.setHeightForWidth(self.label_47.sizePolicy().hasHeightForWidth())
-        self.label_47.setSizePolicy(sizePolicy5)
+        sizePolicy6 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.label_47.sizePolicy().hasHeightForWidth())
+        self.label_47.setSizePolicy(sizePolicy6)
         self.label_47.setStyleSheet(u"font-size: 13px")
 
         self.gridLayout_4.addWidget(self.label_47, 0, 0, 1, 1)
@@ -811,8 +832,8 @@ class Ui_settingsWidget(object):
 
         self.label_8 = QLabel(self.fitTabContainerWidget)
         self.label_8.setObjectName(u"label_8")
-        sizePolicy5.setHeightForWidth(self.label_8.sizePolicy().hasHeightForWidth())
-        self.label_8.setSizePolicy(sizePolicy5)
+        sizePolicy6.setHeightForWidth(self.label_8.sizePolicy().hasHeightForWidth())
+        self.label_8.setSizePolicy(sizePolicy6)
         self.label_8.setMinimumSize(QSize(0, 0))
         self.label_8.setStyleSheet(u"font-size: 13px")
 
@@ -836,7 +857,7 @@ class Ui_settingsWidget(object):
 "    background: none;\n"
 "}")
         icon7 = QIcon()
-        icon7.addFile(u":/icons/svg/cross.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon7.addFile(u":/icons/svg/cross.svg", QSize(), QIcon.Normal, QIcon.Off)
         self.settingsCloseButton.setIcon(icon7)
         self.settingsCloseButton.setIconSize(QSize(30, 30))
 
@@ -845,7 +866,7 @@ class Ui_settingsWidget(object):
 
         self.retranslateUi(settingsWidget)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(settingsWidget)
@@ -861,18 +882,20 @@ class Ui_settingsWidget(object):
         self.label_3.setText(QCoreApplication.translate("settingsWidget", u"MAX", None))
         self.label_40.setText(QCoreApplication.translate("settingsWidget", u"COLORING", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.visualTab), QCoreApplication.translate("settingsWidget", u"VISUAL", None))
-        self.label_43.setText(QCoreApplication.translate("settingsWidget", u"POINTS ADDED", None))
-        self.label.setText(QCoreApplication.translate("settingsWidget", u"INITIAL STATE", None))
-        self.initStateLineEdit.setPlaceholderText(QCoreApplication.translate("settingsWidget", u"dressed or bare indices", None))
-        self.evalsCountLineEdit.setText(QCoreApplication.translate("settingsWidget", u"20", None))
-        self.label_42.setText(QCoreApplication.translate("settingsWidget", u"EVALS COUNT", None))
         self.pointsAddLineEdit.setText(QCoreApplication.translate("settingsWidget", u"10", None))
         self.pointsAddLineEdit.setPlaceholderText(QCoreApplication.translate("settingsWidget", u"# of x value for spectrum sweep", None))
+        self.numCPUsLineEdit.setText(QCoreApplication.translate("settingsWidget", u"1", None))
+        self.label.setText(QCoreApplication.translate("settingsWidget", u"INITIAL STATE", None))
         self.label_44.setText(QCoreApplication.translate("settingsWidget", u"TRANSITIONS", None))
-        self.numericalSpectrumSettingsHelpPushButton.setText("")
+        self.label_5.setText(QCoreApplication.translate("settingsWidget", u"* For multiple initial-state indices: separate indices by \";\"", None))
+        self.label_6.setText(QCoreApplication.translate("settingsWidget", u"HELP", None))
         self.label_33.setText(QCoreApplication.translate("settingsWidget", u"PHOTONS", None))
         self.label_4.setText(QCoreApplication.translate("settingsWidget", u"NUM CPUS", None))
-        self.numCPUsLineEdit.setText(QCoreApplication.translate("settingsWidget", u"1", None))
+        self.label_42.setText(QCoreApplication.translate("settingsWidget", u"EVALS COUNT", None))
+        self.label_43.setText(QCoreApplication.translate("settingsWidget", u"POINTS ADDED", None))
+        self.evalsCountLineEdit.setText(QCoreApplication.translate("settingsWidget", u"20", None))
+        self.initStateLineEdit.setPlaceholderText(QCoreApplication.translate("settingsWidget", u"dressed or bare indices", None))
+        self.numericalSpectrumSettingsHelpPushButton.setText("")
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.spectrumTab), QCoreApplication.translate("settingsWidget", u"SPECTRUM", None))
         self.tolLineEdit.setStyleSheet(QCoreApplication.translate("settingsWidget", u"font-size: 13px", None))
         self.tolLineEdit.setText(QCoreApplication.translate("settingsWidget", u"1e-6", None))
