@@ -562,11 +562,11 @@ def labelLinesWithNans(
             else:
                 idx_to_try = set(
                     [
-                        int(segment_len * 1 / 2) - 1,
-                        int(segment_len * 2 / 5) - 1,
-                        int(segment_len * 3 / 5) - 1,
-                        int(segment_len * 1 / 5) - 1,
-                        int(segment_len * 4 / 5) - 1,
+                        int(segment_len * 1 / 2),
+                        int(segment_len * 2 / 5),
+                        int(segment_len * 3 / 5),
+                        int(segment_len * 1 / 5),
+                        int(segment_len * 4 / 5),
                     ]
                 )
                 # remove indices that are out of range
