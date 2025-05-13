@@ -39,7 +39,7 @@ Value = TypeVar("Value")
 
 try:
     # numpy < 2.0.0
-    float_types = [float, *np.sctypes['float']]
+    float_types = [float, *np.sctypes["float"]]
 except AttributeError:
     # numpy > 2.0.0
     float_types = [float, np.float64, np.float32]
@@ -366,20 +366,21 @@ class Cmap:
     def __call__(self, val):
         # return self.mappable.cmap(val)
         return self.cmap(self.norm(val))
-    
+
+
 # label lines ##################################################################
 def _find_continuous_segments(
-    xdata: np.ndarray, 
-    ydata: np.ndarray, 
-    xmin: float, 
-    xmax: float, 
-    ymin: float, 
-    ymax: float, 
-    min_segment_length: int = 2
+    xdata: np.ndarray,
+    ydata: np.ndarray,
+    xmin: float,
+    xmax: float,
+    ymin: float,
+    ymax: float,
+    min_segment_length: int = 2,
 ) -> List[List[int]]:
     """
     Find continuous segments of a line that are within axis limits and have no NaN values.
-    
+
     Parameters
     ----------
     xdata, ydata : array-like
@@ -388,7 +389,7 @@ def _find_continuous_segments(
         The axis limits
     min_segment_length : int, optional
         The minimum length of a segment to be considered valid
-        
+
     Returns
     -------
     list of list of int
@@ -396,32 +397,33 @@ def _find_continuous_segments(
     """
     segments = []
     current_segment = []
-    
+
     for i, (x, y) in enumerate(zip(xdata, ydata)):
-        if (xmin <= x <= xmax and ymin <= y <= ymax and not np.isnan(y)):
+        if xmin <= x <= xmax and ymin <= y <= ymax and not np.isnan(y):
             current_segment.append(i)
         else:
             if len(current_segment) >= min_segment_length:
                 segments.append(current_segment)
             current_segment = []
-    
+
     # Don't forget the last segment
     if len(current_segment) >= min_segment_length:
         segments.append(current_segment)
-        
+
     return segments
 
+
 def _check_position_overlap(
-    x_pos: float, 
-    y_pos: float, 
-    existing_lines: List["Line2D"], 
-    existing_positions: List[float], 
-    min_x_spacing: float, 
-    min_y_spacing: float
+    x_pos: float,
+    y_pos: float,
+    existing_lines: List["Line2D"],
+    existing_positions: List[float],
+    min_x_spacing: float,
+    min_y_spacing: float,
 ) -> bool:
     """
     Check if a position overlaps with existing label positions.
-    
+
     Parameters
     ----------
     x_pos, y_pos : float
@@ -432,7 +434,7 @@ def _check_position_overlap(
         The x-positions of existing labels
     min_x_spacing, min_y_spacing : float
         The minimum spacing between labels
-        
+
     Returns
     -------
     bool
@@ -441,15 +443,16 @@ def _check_position_overlap(
     for line, x in zip(existing_lines, existing_positions):
         # Get y-value at the existing label position
         existing_y = np.interp(x, line.get_xdata(), line.get_ydata())
-        
+
         # Check both horizontal and vertical spacing
-        if (abs(x_pos - x) < min_x_spacing and abs(y_pos - existing_y) < min_y_spacing):
+        if abs(x_pos - x) < min_x_spacing and abs(y_pos - existing_y) < min_y_spacing:
             return False
-    
+
     return True
 
+
 def _axPlotAndMimicLine(
-    ax: "Axes", 
+    ax: "Axes",
     xdata: np.ndarray,
     ydata: np.ndarray,
     lineToMimic: "Line2D",
@@ -458,18 +461,20 @@ def _axPlotAndMimicLine(
     Mimic a line in the axes.
     """
     return ax.plot(
-        xdata, ydata, 
-        color = lineToMimic.get_color(), 
-        linestyle = lineToMimic.get_linestyle(), 
-        linewidth = lineToMimic.get_linewidth(), 
-        alpha = lineToMimic.get_alpha(), 
-        zorder = lineToMimic.get_zorder(), 
-        label = lineToMimic.get_label()
+        xdata,
+        ydata,
+        color=lineToMimic.get_color(),
+        linestyle=lineToMimic.get_linestyle(),
+        linewidth=lineToMimic.get_linewidth(),
+        alpha=lineToMimic.get_alpha(),
+        zorder=lineToMimic.get_zorder(),
+        label=lineToMimic.get_label(),
     )[0]
+
 
 def labelLinesWithNans(
     ax: "Axes",
-    lines: List["Line2D"], 
+    lines: List["Line2D"],
     xlim: Tuple[float, float],
     ylim: Tuple[float, float],
     zorder: float = 2.0,
@@ -481,11 +486,11 @@ def labelLinesWithNans(
     - Avoid NaN values
     - Are placed on continuous segments with at least two points
     - Are spaced to avoid overlaps
-    
-    Then create invisible lines at the label positions and put a text label 
-    on them. Package `matplotlib-label-lines` can't label lines with nans 
+
+    Then create invisible lines at the label positions and put a text label
+    on them. Package `matplotlib-label-lines` can't label lines with nans
     properly, so we need to do this manually.
-    
+
     Parameters
     ----------
     ax : Axes
@@ -496,7 +501,7 @@ def labelLinesWithNans(
         The x-axis limits
     ylim : Tuple[float, float]
         The y-axis limits
-        
+
     Returns
     -------
     tuple
@@ -504,51 +509,50 @@ def labelLinesWithNans(
     """
     xmin, xmax = xlim
     ymin, ymax = ylim
-    
+
     # Calculate spacing parameters
     x_range = xmax - xmin
     y_range = ymax - ymin
     min_x_spacing = x_range * 0.1  # 10% of x-axis range
     min_y_spacing = y_range * 0.05  # 5% of y-axis range
-    
+
     # Filter for visible lines with labels
     visible_lines = [
-        line for line in lines 
+        line
+        for line in lines
         if (
-            line.get_visible() and 
-            line.get_label() and 
-            line.get_label() != '_nolegend_'
+            line.get_visible() and line.get_label() and line.get_label() != "_nolegend_"
         )
     ]
-    
+
     if not visible_lines:
         return [], []
-    
+
     # store the selected lines and their label positions to label
     lines_to_label = []
     label_positions = []
-    
+
     # Process each visible line
     for line in visible_lines:
-        xdata: np.ndarray = line.get_xdata()    # type: ignore
-        ydata: np.ndarray = line.get_ydata()    # type: ignore
-        
+        xdata: np.ndarray = line.get_xdata()  # type: ignore
+        ydata: np.ndarray = line.get_ydata()  # type: ignore
+
         # Skip if line has no data points
         if len(xdata) == 0 or len(ydata) == 0:
             continue
-            
+
         # Find continuous segments within axis limits
         segments = _find_continuous_segments(xdata, ydata, xmin, xmax, ymin, ymax)
-        
+
         if not segments:
             continue  # No valid segments found
-        
+
         # Sort segments by length (prefer longer segments)
         segments.sort(key=len, reverse=True)
-        
+
         # Try to find a good position
         label_placed = False
-        
+
         for segment in segments:
             # put labels at the middle of a subsegment of the segment (length = 2)
             # Try positions at 1/2, 2/5, 3/5, 1/5 and 4/5 of the segment
@@ -556,63 +560,71 @@ def labelLinesWithNans(
             if segment_len == 2:
                 subsegments_to_try = [[segment[0], segment[1]]]
             else:
-                idx_to_try = set([
-                    int(segment_len * 1 / 2) - 1, 
-                    int(segment_len * 2 / 5) - 1, 
-                    int(segment_len * 3 / 5) - 1,  
-                    int(segment_len * 1 / 5) - 1,   
-                    int(segment_len * 4 / 5) - 1,   
-                ])
-                assert all([0 <= idx and idx+1 < segment_len for idx in idx_to_try])
-                subsegments_to_try = [
-                    [segment[idx], segment[idx + 1]] 
-                    for idx in idx_to_try
+                idx_to_try = set(
+                    [
+                        int(segment_len * 1 / 2) - 1,
+                        int(segment_len * 2 / 5) - 1,
+                        int(segment_len * 3 / 5) - 1,
+                        int(segment_len * 1 / 5) - 1,
+                        int(segment_len * 4 / 5) - 1,
+                    ]
+                )
+                # remove indices that are out of range
+                idx_to_try = [
+                    idx for idx in idx_to_try if 0 <= idx and idx + 1 < segment_len
                 ]
-            
+                subsegments_to_try = [
+                    [segment[idx], segment[idx + 1]] for idx in idx_to_try
+                ]
+
             # Try each position
             for subseg_idx_0, subseg_idx_1 in subsegments_to_try:
                 x_pos = (xdata[subseg_idx_0] + xdata[subseg_idx_1]) / 2
                 y_pos = (ydata[subseg_idx_0] + ydata[subseg_idx_1]) / 2
-                
+
                 # Check if position is good (no overlap)
                 if _check_position_overlap(
-                    x_pos, 
-                    y_pos, 
-                    lines_to_label, 
-                    label_positions, 
-                    min_x_spacing, 
-                    min_y_spacing
-                ):                   
+                    x_pos,
+                    y_pos,
+                    lines_to_label,
+                    label_positions,
+                    min_x_spacing,
+                    min_y_spacing,
+                ):
                     # create a new invisible line at the label position
                     # so that we can use the `labelLines` function to label it
-                    new_line = _axPlotAndMimicLine(ax, xdata[segment], ydata[segment], line)
+                    new_line = _axPlotAndMimicLine(
+                        ax, xdata[segment], ydata[segment], line
+                    )
                     new_line.set_visible(False)
-                    
-                    lines_to_label.append(new_line) 
+
+                    lines_to_label.append(new_line)
                     label_positions.append(x_pos)
                     label_placed = True
                     break
-            
+
             if label_placed:
                 break
-        
+
         # If no good position found, use the middle of the longest segment
         if not label_placed and segments:
             longest_segment = segments[0]
             middle_idx = longest_segment[len(longest_segment) // 2]
-            
-            new_line = _axPlotAndMimicLine(ax, xdata[longest_segment], ydata[longest_segment], line)
+
+            new_line = _axPlotAndMimicLine(
+                ax, xdata[longest_segment], ydata[longest_segment], line
+            )
             new_line.set_visible(False)
-            
+
             lines_to_label.append(new_line)
             label_positions.append(xdata[middle_idx])
-    
+
     if len(lines_to_label) > 0:
         labelLines(
-            lines = lines_to_label, 
-            xvals = label_positions,
-            zorder = zorder + 2.0, 
-            alpha = 1.0 * alpha_factor
+            lines=lines_to_label,
+            xvals=label_positions,
+            zorder=zorder + 2.0,
+            alpha=1.0 * alpha_factor,
         )
 
 
