@@ -11,6 +11,31 @@ if TYPE_CHECKING:
         SliderParam,
         Tag,
     )
+    
+    
+def _extract_version(registryDict: Dict[str, Any]) -> Tuple[int, int, int]:
+    """
+    Extract the version number from the registry dictionary.
+    """
+    try:
+        version = registryDict["version"]
+    except KeyError:
+        version = "1.0.0"  # the version that we haven't stored the version number
+
+    major, minor, micro = version.split(".")[:3]
+    return int(major), int(minor), int(micro)
+
+
+def _update_version(
+    registryDict: Dict[str, Any],
+    major: int,
+    minor: int,
+    micro: int,
+) -> Dict[str, Any]:
+    """
+    Update the version number of the registry dictionary.
+    """
+    registryDict["version"] = f"{major}.{minor}.{micro}"
 
 
 def parseRegDict(
@@ -32,27 +57,23 @@ def parseRegDict(
     registryDict : Dict[str, Any]
         the registry dictionary
     """
-    try:
-        version = registryDict["version"]
-    except KeyError:
-        version = "1.0.0"  # the version that we haven't stored the version number
-
-    major, minor, micro = version.split(".")[:3]
-    major, minor, micro = int(major), int(minor), int(micro)
+    major, minor, micro = _extract_version(registryDict)
     
     if major == 0:
         raise ValueError(
-            f"File version {version} is no longer supported. "
+            f"File version {major}.{minor}.{micro} is no longer supported. "
             f"Please contact the developer for retrieving the data."
         )
 
+    # 1.0.x --> 2.0.x
     if major == 1:
-        # 1.0.x --> 2.0.x
         _parseRegDict10x_20x(registryDict)
+        major, minor, micro = _extract_version(registryDict)
 
+    # 2.0.x / 2.1.x --> 2.2.x
     if major == 2 and minor in [0, 1]:
-        # 2.0.x / 2.1.x --> 2.2.x
         _parseRegDict2xx_22x(registryDict)
+        major, minor, micro = _extract_version(registryDict)
         
     # current: 2.2.x
     return registryDict
@@ -98,8 +119,9 @@ def _parseRegDict10x_20x(registryDict: Dict[str, Any]) -> Dict[str, Any]:
 
     fitCaliParams = registryDict["FitCaliParams"]
     _parseFitCaliParam10x_20x(fitCaliParams)
-
-    return registryDict
+    
+    # update the version number
+    _update_version(registryDict, 2, 0, 0)
 
 
 def _parseMeasData10x_20x(measData: "MeasDataType"):
@@ -164,7 +186,11 @@ def _parseRegDict2xx_22x(registryDict: Dict[str, Any]) -> Dict[str, Any]:
     for transitions in registryDict["allExtractedData"].values():
         for trans in transitions:
             _parseTag2xx_22x(trans.tag)
+            
+    # update the version number
+    _update_version(registryDict, 2, 2, 0)
         
+
 def _parseTag2xx_22x(tag: "Tag"):
     if not tag.tagType == "NO_TAG":
         tag.initial = [tag.initial]
