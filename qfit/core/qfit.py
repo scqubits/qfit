@@ -146,7 +146,7 @@ class Fit:
     def new(
         cls,
         hilbertSpace: HilbertSpace,
-        measurementFileName: Union[str, None] = None,
+        measurementFileName: Optional[str | List[str]] = None,
         deepcopy: bool = False,
         **kwargs,
     ) -> "Fit":
