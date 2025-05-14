@@ -299,7 +299,7 @@ class Fit:
         self._mainWindow.hide()
         
     # functionalities that does not involves the main window ###########
-    def createStandaloneCanvas(
+    def create_standalone_canvas(
         self, 
         selectedDataNames: List[str | int] | None = None,
         numericalPoints: int = 10, 
