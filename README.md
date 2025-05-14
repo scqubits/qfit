@@ -45,6 +45,9 @@ Once done, the application can be launched in a jupyter notebook session via
 ```
 where `<HilbertSpace>` is a `scqubits.HilbertSpace` object, the circuit model you want to fit against.
 
+> [!NOTE]
+> We have observed that on recent macOS versions, installing QFit using the above instructions may cause the app to crash on launch. The issue appears to stem from the scipy package installed via pip. As a temporary workaround, we recommend installing scipy with conda before running pip install qfit. We’re working on making QFit fully installable via conda. Please stay tuned!
+
 Check out the notebook [QFit_Quick_Start.ipynb](./QFit_Quick_Start.ipynb) for a quick intro tutorial, and [QFit_Advanced_Tips.ipynb](./QFit_Advanced_Tips.ipynb) for further information.
 
 License
