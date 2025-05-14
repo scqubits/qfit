@@ -225,7 +225,7 @@ class Fit:
         return instance
 
     # methods to export data ##################################################
-    def exportParameters(self, fromFit: bool = True) -> Dict[str, Any]:
+    def export_parameters(self, fromFit: bool = True) -> Dict[str, Any]:
         """
         Export the fit parameters to a file.
 
@@ -247,7 +247,7 @@ class Fit:
                 | self._prefitCaliParams.getFlattenedAttrDict("value")
             )
 
-    def exportHilbertSpace(
+    def export_hilbertspace(
         self, deepcopy: bool = False, fromFit: bool = True
     ) -> HilbertSpace:
         """
