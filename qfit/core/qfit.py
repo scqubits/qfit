@@ -134,7 +134,7 @@ class Fit:
             measurementFileName=measurementFileName,
             deepcopy=deepcopy,
         )
-        
+
         if kwargs.get("show", True):
             self.show()
 
@@ -173,10 +173,7 @@ class Fit:
         """
         instance = cls.__new__(cls)
         instance.__init__(
-            hilbertSpace, 
-            measurementFileName, 
-            deepcopy=deepcopy, 
-            **kwargs
+            hilbertSpace, measurementFileName, deepcopy=deepcopy, **kwargs
         )
 
         return instance
@@ -225,16 +222,16 @@ class Fit:
         return instance
 
     # methods to export data ##################################################
-    def export_parameters(self, fromFit: bool = True) -> Dict[str, Any]:
+    def export_parameters(self, from_fit: bool = True) -> Dict[str, Any]:
         """
         Export the fit parameters to a file.
 
         Parameters
         ----------
-        fromFit: bool
+        from_fit: bool
             As we have two copies of parameters, one from prefit sliders and one from fit tables, please specify which one to export.
         """
-        if fromFit:
+        if from_fit:
             return (
                 self._fitHSParams.getFlattenedAttrDict("value")
                 | self._caliParamModel.getFlattenedAttrDict("value")
@@ -248,7 +245,7 @@ class Fit:
             )
 
     def export_hilbertspace(
-        self, deepcopy: bool = False, fromFit: bool = True
+        self, deepcopy: bool = False, from_fit: bool = True
     ) -> HilbertSpace:
         """
         Export the HilbertSpace object.
@@ -263,7 +260,7 @@ class Fit:
             As we have two copies of parameters, one from prefit sliders and one from fit tables, please specify which one to export.
         """
 
-        if fromFit:
+        if from_fit:
             self._fitHSParams.blockSignals(True)
             self._fitHSParams.updateParamForHS()
             self._fitHSParams.blockSignals(False)
@@ -278,51 +275,51 @@ class Fit:
             hilbertSpace = self._prefitHSParams.hilbertspace
 
         return _deepcopy(hilbertSpace) if deepcopy else hilbertSpace
-    
+
     # methods to controll the window ###################################
     def close(self):
         """Close the window and save the project."""
         if self._ioCtrl.appClosed:
             raise ValueError("QFit is already closed.")
         self._ioCtrl.closeAppAfterSaving()
-    
+
     def show(self):
         """Show the main window (if hidden)."""
         if self._ioCtrl.appClosed:
             raise ValueError("QFit is already closed, can't show window.")
         self._mainWindow.show()
-        
+
     def hide(self):
         """Hide the main window."""
         if self._ioCtrl.appClosed:
             raise ValueError("QFit is already closed, can't hide window.")
         self._mainWindow.hide()
-        
+
     # functionalities that does not involves the main window ###########
     def create_standalone_canvas(
-        self, 
-        selectedDataNames: List[str | int] | None = None,
-        numericalPoints: int = 10, 
-        xLim: Tuple[float, float] | None = None, 
-        yLim: Tuple[float, float] | None = None,
+        self,
+        selected_dataset_names: List[str | int] | None = None,
+        points_added: int = 10,
+        xlim: Tuple[float, float] | None = None,
+        ylim: Tuple[float, float] | None = None,
     ):
         """
         Create a standalone canvas with multiple measurement data.
-        
+
         Parameters
         ----------
         selectedDataNames: List[str | int]
             The names (or indices) of the measurement data to be displayed.
-        numericalPoints: int
-            To plot the numerical calculation, the number of points to be 
-            swept over.
-        xLim: Tuple[float, float] | None
+        points_added: int
+            To plot the numerical calculation, the number of points to be
+            added for the sweep.
+        xlim: Tuple[float, float] | None
             The x limits of the canvas. Currently not supported.
-        yLim: Tuple[float, float] | None
+        ylim: Tuple[float, float] | None
             The y limits of the canvas. Currently not supported.
         """
         self._plottingCtrl.createStandaloneCanvas(
-            selectedDataNames, numericalPoints, xLim, yLim
+            selected_dataset_names, points_added, xlim, ylim
         )
 
     # models, views and controllers ####################################
