@@ -52,8 +52,10 @@ Check out the notebook [QFit_Quick_Start.ipynb](./QFit_Quick_Start.ipynb) for a 
 
 > [!NOTE]
 > While you can install QFit with 
-> ```pip install qfit```
-> this may cause crashes on recent macOS versions due to compatibility issues with pip-installed scipy. As a workaround, you can run `conda install scipy` afterward, though using conda for the full installation is preferred.
+> ```
+> pip install qfit
+> ```
+> this may cause crashes on recent macOS versions due to compatibility issues with pip-installed `scipy`. As a workaround, you can run `conda install scipy` afterward, though using conda for the full installation is preferred.
 
 License
 -------
