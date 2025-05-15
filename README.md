@@ -1,6 +1,8 @@
 QFit: Interactive Parameter Fitting for Superconducting Circuits
 ================================================================
+
 [<img src="https://github.com/scqubits/qfit/assets/68950614/514cc57c-675d-4aee-b902-0dda7ab14213" width="100">](https://designawards.core77.com/2024/Apps-Platforms.html)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/qfit/badges/version.svg)](https://anaconda.org/conda-forge/qfit) [![Anaconda-Server Badge](https://anaconda.org/conda-forge/qfit/badges/downloads.svg)](https://anaconda.org/conda-forge/qfit) [![Anaconda-Server Badge](https://anaconda.org/conda-forge/qfit/badges/latest_release_date.svg)](https://anaconda.org/conda-forge/qfit)
 
 **Notice: This package is currently in beta testing. Bugs and issues are expected. We greatly appreciate your feedback and bug reports to help us improve.**
 
@@ -48,11 +50,9 @@ where `<HilbertSpace>` is a `scqubits.HilbertSpace` object, the circuit model yo
 Check out the notebook [QFit_Quick_Start.ipynb](./QFit_Quick_Start.ipynb) for a quick intro tutorial, and [QFit_Advanced_Tips.ipynb](./QFit_Advanced_Tips.ipynb) for further information.
 
 > [!NOTE]
-> It is possible to install `QFit` using `pip` by
-> ```
->    pip install qfit
-> ```
-> However, we have observed that on recent macOS versions, this may cause the app to crash on launch. The issue appears to stem from `scipy` installed along with `qfit` during pip installation. Although it is not recommended, one can run `conda install scipy` after `pip` installation to fix the issue.
+> While you can install QFit with 
+> ```pip install qfit```
+> this may cause crashes on recent macOS versions due to compatibility issues with pip-installed scipy. As a workaround, you can run `conda install scipy` afterward, though using conda for the full installation is preferred.
 
 License
 -------
