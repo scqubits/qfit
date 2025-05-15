@@ -23,7 +23,8 @@ QFit is your go-to Python application for extracting parameters of superconducti
 
 4. **Automated Fitting**: With one click, let the numerical optimizers do the work. You can easily configure your fitting: adjust which paramters are fixed or free, set their range, and more.
 
-QFit supports a wide variety of circuit quantum electrodynamic systems, thanks to the powerful Python library `scqubits` as its backend simulator. Once you've extracted your parameters, you can pass them directly to scQubits for any further numerical simulations you need to do.
+QFit supports a wide variety of circuit quantum electrodynamic systems, thanks to the powerful Python library `scqubits` as its backend simulator. Once you've extracted your parameters, you can pass them directly to scQubits for any further numerical simulations you need to do. 
+Check out the notebook [QFit_Quick_Start.ipynb](./QFit_Quick_Start.ipynb) for a quick intro tutorial, and [QFit_Advanced_Tips.ipynb](./QFit_Advanced_Tips.ipynb) for further information.
 
 Join us in refining QFit during its beta phase! Your insights and reports are invaluable in making QFit a robust tool for this community. Dive in and explore what QFit can do for you, and let us know your experience!
 
@@ -47,8 +48,6 @@ Once done, the application can be launched in a jupyter notebook session via
     Fit(<HilbertSpace>)
 ```
 where `<HilbertSpace>` is a `scqubits.HilbertSpace` object, the circuit model you want to fit against.
-
-Check out the notebook [QFit_Quick_Start.ipynb](./QFit_Quick_Start.ipynb) for a quick intro tutorial, and [QFit_Advanced_Tips.ipynb](./QFit_Advanced_Tips.ipynb) for further information.
 
 > [!NOTE]
 > While you can install QFit with 
