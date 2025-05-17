@@ -866,7 +866,7 @@ class Ui_settingsWidget(object):
 
         self.retranslateUi(settingsWidget)
 
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(settingsWidget)

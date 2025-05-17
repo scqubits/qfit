@@ -14,7 +14,7 @@
     <x>0</x>
     <y>0</y>
     <width>1333</width>
-    <height>776</height>
+    <height>795</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -2282,7 +2282,7 @@ border: None;</string>
                   <rect>
                    <x>0</x>
                    <y>0</y>
-                   <width>100</width>
+                   <width>441</width>
                    <height>250</height>
                   </rect>
                  </property>
@@ -3134,13 +3134,13 @@ icon: url(:/icons/svg/trash-pressed.svg);
                       <property name="minimumSize">
                        <size>
                         <width>159</width>
-                        <height>500</height>
+                        <height>550</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
                         <width>120</width>
-                        <height>500</height>
+                        <height>550</height>
                        </size>
                       </property>
                       <property name="font">
@@ -3192,13 +3192,13 @@ QListView::item {
                       <property name="minimumSize">
                        <size>
                         <width>265</width>
-                        <height>500</height>
+                        <height>550</height>
                        </size>
                       </property>
                       <property name="maximumSize">
                        <size>
                         <width>265</width>
-                        <height>500</height>
+                        <height>550</height>
                        </size>
                       </property>
                       <property name="styleSheet">
