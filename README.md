@@ -35,12 +35,12 @@ Installation and Usage
 
 Follow these steps to install `QFit`:
 
-1. (Optional but highly Recommended) Create a virtual environment with python (version > 3.10). If you are using conda, run on terminal
+1. (Optional but highly Recommended) Create a virtual environment with python (version >= 3.10). If you are using conda, run on terminal
 ```
     conda create -n <env name> python=3.10
     conda activate <env name>
 ```
-2. On terminal, install `QFit` by
+2. Then, install `QFit` by
 ```
     conda install conda-forge::qfit
 ```
@@ -52,11 +52,7 @@ Once done, the application can be launched in a jupyter notebook session via
 where `<HilbertSpace>` is a `scqubits.HilbertSpace` object, the circuit model you want to fit against.
 
 > [!NOTE]
-> While you can install QFit with 
-> ```
-> pip install qfit
-> ```
-> this may cause crashes on recent macOS versions due to compatibility issues with pip-installed `scipy`. As a workaround, you can run `conda install scipy` afterward, though using conda for the full installation is preferred.
+> While you can install QFit with `pip install qfit`, this application is instabile on machines with Apple silicons. This is due to compatibility issues with pip-installed `scipy`. As a workaround, you can run `conda install scipy` afterward, though using conda for the full installation is preferred.
 
 License
 -------
