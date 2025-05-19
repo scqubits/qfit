@@ -52,7 +52,7 @@ Once done, the application can be launched in a jupyter notebook session via
 where `<HilbertSpace>` is a `scqubits.HilbertSpace` object, the circuit model you want to fit against.
 
 > [!NOTE]
-> While you can install QFit with `pip install qfit`, this application is instabile on machines with Apple silicons. This is due to compatibility issues with pip-installed `scipy`. As a workaround, you can run `conda install scipy` afterward, though using conda for the full installation is preferred.
+> While you can install QFit with `pip install qfit`, this application is unstable on machines with Apple silicons. This is due to compatibility issues with pip-installed `scipy`. As a workaround, you can run `conda install scipy` afterward, though using conda for the full installation is preferred.
 
 License
 -------
