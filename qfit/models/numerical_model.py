@@ -274,7 +274,7 @@ class QuantumModel(QObject):
         """
         self._yCaliFunc = yCaliFunc
         self._yInvCaliFunc = invYCaliFunc
-        self.sweep2SpecMSE(sweepUsage=self.sweepUsage)
+        self.sweep2SpecCost(sweepUsage=self.sweepUsage)
 
     @Slot(str, object)
     def storeSweepOption(
@@ -324,7 +324,7 @@ class QuantumModel(QObject):
         setattr(self, "_" + attrName, value)
 
         if attrName in ["subsysToPlot", "initialStates", "photons"]:
-            self.sweep2SpecMSE(sweepUsage=self.sweepUsage)
+            self.sweep2SpecCost(sweepUsage=self.sweepUsage)
         elif attrName in ["evalsCount", "pointsAdded", "autoRun"]:
             self.updateCalc()
 
@@ -834,11 +834,11 @@ class QuantumModel(QObject):
                 self.updateStatus.emit(status)
         else:
             self._sweeps = result
-            self.sweep2SpecMSE(forced=forced, sweepUsage=sweepUsage)
+            self.sweep2SpecCost(forced=forced, sweepUsage=sweepUsage)
 
     # public methods ===========================================================
     @Slot(bool, str)
-    def sweep2SpecMSE(self, forced: bool = False, sweepUsage: str = "prefit") -> float:
+    def sweep2SpecCost(self, forced: bool = False, sweepUsage: str = "prefit") -> float:
         """
         Given the existing sweeps, calculate and emit the spectrum and the
         mean square error
@@ -881,8 +881,8 @@ class QuantumModel(QObject):
                 )
 
         # mse calculation
-        mse = self._calculateMSE()
-        return mse
+        cost = self._calculateCost()
+        return cost
 
     @Slot()
     def updateCalc(self, forced: bool = False) -> Union[None, float]:
@@ -915,7 +915,7 @@ class QuantumModel(QObject):
         elif forced and (self.sweepUsage == "fit"):
             self._newSweep()
             self._runSweep()
-            return self.sweep2SpecMSE(forced=forced, sweepUsage=self.sweepUsage)
+            return self.sweep2SpecCost(forced=forced, sweepUsage=self.sweepUsage)
 
     # calculate MSE ===========================================================
     @staticmethod
@@ -1160,15 +1160,23 @@ class QuantumModel(QObject):
 
         return devi, deviCalcStatus
     
-    def _MSEByFullDevi(self, fullDevi: FullDevi) -> float:
+    def _costByFullDevi(
+        self, 
+        fullDevi: FullDevi,
+    ) -> float:
         """
-        Calculate the mean square error between the extracted data and the simulated data
-        from the parameter sweep. It is calculated for each transition
-        and then averaged.
+        Calculate the cost function from the full deviation data.
         """
-        return fullDevi.sumSquareError() / fullDevi.count()
+        if settings.COST_FUNCTION_TYPE == "MSE":
+            return fullDevi.sumSquareError() / fullDevi.count()
+        elif settings.COST_FUNCTION_TYPE == "RMSE":
+            return fullDevi.sumRootMeanSquareError()
+        else:
+            raise ValueError(
+                f"Invalid cost function type: {settings.COST_FUNCTION_TYPE}. "
+            )
 
-    def _calculateMSE(self) -> float:
+    def _calculateCost(self) -> float:
         """
         Calculate the mean square error between the extracted data and the simulated data
         from the parameter sweep. It is calculated for each transition
@@ -1180,14 +1188,14 @@ class QuantumModel(QObject):
                 statusSource=self.sweepUsage,
                 message="Successful spectrum calculation, while no extracted data is available.",
                 statusType="success",
-                mse=np.nan,
+                cost=np.nan,
             )
             self.updateStatus.emit(status)
             return np.nan
 
         fullDevi = FullDevi()
 
-        overallMseCalcStatus = set()
+        overallDeviCalcStatus = set()
         for figName, extrSpec in self._fullExtr.items():
             sweep = self._sweeps[figName]
             # if there is no extracted data: do not calculate the MSE
@@ -1203,7 +1211,7 @@ class QuantumModel(QObject):
                     deviTrans, deviCalcStatus = self._deviByTransition(
                         sweep, transition
                     )
-                    overallMseCalcStatus.update(deviCalcStatus)
+                    overallDeviCalcStatus.update(deviCalcStatus)
                     deviSpectra.append(deviTrans)
                 except Exception as e:
                     statusType = "error"
@@ -1222,22 +1230,22 @@ class QuantumModel(QObject):
                 
             fullDevi[figName] = deviSpectra
 
-        mse = self._MSEByFullDevi(fullDevi)
+        cost = self._costByFullDevi(fullDevi)
 
         # if in fit mode, return the mse directly, the status message will be
         # handled in the fit model instead
         if self.sweepUsage in ["fit", "fit-result"]:
-            return mse
+            return cost
         
         # otherwise, add to the status text if there is any unidentifiable tag
         # and send out the status
-        if overallMseCalcStatus != set(["SUCCESS"]):
+        if overallDeviCalcStatus != set(["SUCCESS"]):
             problems = []
-            if "INCOMPLETE_TAG" in overallMseCalcStatus:
+            if "INCOMPLETE_TAG" in overallDeviCalcStatus:
                 problems.append("incomplete")
-            if "BARE_UNIDENTIFIABLE" in overallMseCalcStatus:
+            if "BARE_UNIDENTIFIABLE" in overallDeviCalcStatus:
                 problems.append("unidentifiable")
-            if "NO_TAG" in overallMseCalcStatus:
+            if "NO_TAG" in overallDeviCalcStatus:
                 problems.append("no")
             problemsStr = " or ".join(problems)
                 
@@ -1252,7 +1260,7 @@ class QuantumModel(QObject):
                 statusSource=self.sweepUsage,
                 statusType=statusType,
                 message=message,
-                mse=mse,
+                cost=cost,
             )
             self.updateStatus.emit(status)
 
@@ -1264,11 +1272,11 @@ class QuantumModel(QObject):
                 statusSource=self.sweepUsage,
                 message=message,
                 statusType=statusType,
-                mse=mse,
+                cost=cost,
             )
             self.updateStatus.emit(status)
         
-        return mse
+        return cost
         
     # Plotting to a standalone canvas
     # ==================================================================

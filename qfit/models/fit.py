@@ -495,7 +495,7 @@ class FitModel(QObject):
                 statusSource="fit",
                 statusType="computing",
                 message="",
-                mse=mse,  # a dummy value
+                cost=mse,  # a dummy value
             )
             self.updateStatus.emit(status)
 
@@ -549,7 +549,7 @@ class FitModel(QObject):
                 statusType="error",
                 message="Fail to set up the optimization. Due to the "
                         "following reason: " + str(e),
-                mse=np.nan,
+                cost=np.nan,
             )
             return False
 
@@ -583,7 +583,7 @@ class FitModel(QObject):
                     statusSource="fit",
                     statusType="warning",
                     message="The optimization is terminated by the user.",
-                    mse=np.nan,
+                    cost=np.nan,
                 )
                 self.updateStatus.emit(status)
                 return
@@ -595,7 +595,7 @@ class FitModel(QObject):
                     "Optimization was interrupted. Due to the following reason: "
                     + result
                 ),
-                mse=np.nan,
+                cost=np.nan,
             )
             self.updateStatus.emit(status)
             return
@@ -605,7 +605,7 @@ class FitModel(QObject):
                 statusSource="fit",
                 statusType="warning",
                 message="The optimized parameters may hit the bound.",
-                mse=result.final_target,
+                cost=result.final_target,
             )
             self.updateStatus.emit(status)
             return
@@ -614,7 +614,7 @@ class FitModel(QObject):
             statusSource="fit",
             statusType="success",
             message="Successfully optimized the parameter.",
-            mse=result.final_target,
+            cost=result.final_target,
         )
         self.updateStatus.emit(status)
 
@@ -642,7 +642,7 @@ class FitModel(QObject):
             statusSource="fit",
             statusType="initializing",
             message="",
-            mse=initMSE,
+            cost=initMSE,
         )
         self.updateStatus.emit(status)
 

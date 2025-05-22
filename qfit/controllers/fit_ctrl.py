@@ -360,12 +360,12 @@ class FitCtrl(QObject):
             self.caliParamModel.invYCalibration(),
         )
 
-        mse = self.quantumModel.updateCalc(forced=True)
+        cost = self.quantumModel.updateCalc(forced=True)
 
-        if mse is None or np.isnan(mse):
+        if cost is None or np.isnan(cost):
             raise ValueError("The cost function returns None or np.nan.")
 
-        return mse
+        return cost
 
     def _optCallback(self, *args, **kwargs):
         """
@@ -374,7 +374,7 @@ class FitCtrl(QObject):
         current MSE and the current spectrum.
         """
         self.quantumModel.emitReadyToPlot()
-        return self.quantumModel.sweep2SpecMSE(forced=True, sweepUsage="fit")
+        return self.quantumModel.sweep2SpecCost(forced=True, sweepUsage="fit")
 
     @Slot()
     def postOptimization(self):

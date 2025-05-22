@@ -49,19 +49,19 @@ class Status:
         statusSource: Optional[str],
         statusType: str,
         message: Optional[str] = None,
-        mse: Optional[float] = None,
+        cost: Optional[float] = None,
         messageTime: Optional[float] = None,
     ):
         self.statusSource: Optional[str] = statusSource
         self.statusType: str = statusType
         self.message: Optional[str] = message
-        self.mse: Optional[float] = mse
+        self.cost: Optional[float] = cost
         self.timestamp: datetime = datetime.now()
         self.messageTime: Optional[float] = messageTime
 
     def __str__(self):
         if self.statusType != "temp":
-            return f"{self.timestamp} ({self.statusSource}) {self.statusType}, MSE: {self.mse} - {self.message}"
+            return f"{self.timestamp} ({self.statusSource}) {self.statusType}, MSE: {self.cost} - {self.message}"
         else:
             return f"{self.timestamp} ({self.statusSource}) {self.statusType} lasting time {self.messageTime} s - {self.message}"
 
@@ -448,7 +448,7 @@ class FullDevi(dict[str, DeviSpectra]):
 
     def sumRootMeanSquareError(self) -> float:
         """
-        Return the sum of the root mean square error of all figures.
+        Return the sum of the root mean square error for data from all figures.
         """
         return sum([spectra.rootMeanSquareError() for spectra in self.values()])
     
