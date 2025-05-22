@@ -7,7 +7,6 @@ from numpy import ndarray
 
 import copy
 
-import scqubits as scq
 from scqubits.core.qubit_base import QuantumSystem
 from scqubits.core.hilbert_space import HilbertSpace
 from scqubits.core.param_sweep import ParameterSweep
@@ -16,14 +15,16 @@ from scqubits.core.storage import SpectrumData
 
 from qfit.models.parameter_set import SweepParamSet
 from qfit.models.data_structures import (
-    QMSweepParam,
     FullExtr,
     ExtrTransition,
+    DeviTransition,
+    DeviSpectra,
+    FullDevi,
 )
 from qfit.models.data_structures import Tag, SpectrumElement, Status
 import qfit.settings as settings
 
-from typing import Dict, List, Tuple, Union, Callable, Any, Literal, Optional, Set
+from typing import Dict, List, Tuple, Union, Callable, Any, Literal
 
 
 class SweepConfigForStandaloneCanvas(QObject):
@@ -1103,11 +1104,11 @@ class QuantumModel(QObject):
             simulationFreq = np.abs(simulationFreq)
         return simulationFreq, status
 
-    def _MSEByTransition(
+    def _deviByTransition(
         self,
         sweep: ParameterSweep,
         transition: ExtrTransition,
-    ) -> Tuple[float, set[Literal[
+    ) -> Tuple[DeviTransition, set[Literal[
         "SUCCESS",
         "INCOMPLETE_TAG",
         "BARE_UNIDENTIFIABLE",
@@ -1123,9 +1124,10 @@ class QuantumModel(QObject):
         transition: ExtrTransition
             The extracted transition data.
         """
-        mse = 0.0
-        mseCalcStatus = set()
+        deviCalcStatus = set()
         tag = transition.tag
+        
+        devi = DeviTransition()
 
         for xData, yData in transition.data.T:
             # obtain the transition frequency from the transition data
@@ -1149,14 +1151,22 @@ class QuantumModel(QObject):
                 )
                 
             # for now, we just summarize them as LABEL_CORRECTED
-            mseCalcStatus.add(getTransitionFreqStatus)
+            deviCalcStatus.add(getTransitionFreqStatus)
             
             # finish the calculation
             photons = 1 if tag.photons is None else tag.photons
             transitionFreq /= photons
-            mse += (yData - transitionFreq) ** 2
+            devi.append(yData - transitionFreq)
 
-        return mse, mseCalcStatus
+        return devi, deviCalcStatus
+    
+    def _MSEByFullDevi(self, fullDevi: FullDevi) -> float:
+        """
+        Calculate the mean square error between the extracted data and the simulated data
+        from the parameter sweep. It is calculated for each transition
+        and then averaged.
+        """
+        return fullDevi.sumSquareError() / fullDevi.count()
 
     def _calculateMSE(self) -> float:
         """
@@ -1175,7 +1185,7 @@ class QuantumModel(QObject):
             self.updateStatus.emit(status)
             return np.nan
 
-        mse = 0
+        fullDevi = FullDevi()
 
         overallMseCalcStatus = set()
         for figName, extrSpec in self._fullExtr.items():
@@ -1187,13 +1197,14 @@ class QuantumModel(QObject):
             # manually turn off the warning message
             sweep._out_of_sync_warning_issued = True
 
+            deviSpectra = DeviSpectra()
             for transition in extrSpec:
                 try:
-                    newMse, mseCalcStatus = self._MSEByTransition(
+                    deviTrans, deviCalcStatus = self._deviByTransition(
                         sweep, transition
                     )
-                    overallMseCalcStatus.update(mseCalcStatus)
-                    mse += newMse
+                    overallMseCalcStatus.update(deviCalcStatus)
+                    deviSpectra.append(deviTrans)
                 except Exception as e:
                     statusType = "error"
                     statusText = (
@@ -1208,9 +1219,10 @@ class QuantumModel(QObject):
                     )
                     self.updateStatus.emit(status)
                     return np.nan
+                
+            fullDevi[figName] = deviSpectra
 
-        # normalize the MSE
-        mse /= self._fullExtr.count()
+        mse = self._MSEByFullDevi(fullDevi)
 
         # if in fit mode, return the mse directly, the status message will be
         # handled in the fit model instead

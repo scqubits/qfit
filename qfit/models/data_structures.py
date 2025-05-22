@@ -384,6 +384,74 @@ class FullExtr(dict[str, ExtrSpectra]):
             value.swapXY()
 
 
+# ######################################################################
+
+class DeviTransition(list[float]):
+    """
+    A class for storing the deviation from the measured transition and 
+    theoretically computed transition.
+
+    Attributes
+    ----------
+    name: str
+        The name of the transition
+    data: np.ndarray
+        The transition data, shape (N,), where N is the number of data points
+    """
+    def count(self) -> int:
+        return len(self)
+
+    def sumSquareError(self) -> float:
+        return sum([data ** 2 for data in self])
+    
+    def meanSquareError(self) -> float:
+        return self.sumSquareError() / self.count()
+    
+    def rootMeanSquareError(self) -> float:
+        return np.sqrt(self.meanSquareError())
+    
+
+class DeviSpectra(list[DeviTransition]):
+    """
+    Deviation of multiple transitions.
+
+    Parameters
+    ----------
+    args: DeviTransition
+        The transitions to be stored in the spectra
+    """
+    def count(self) -> int:
+        """
+        Return the total number of data points in the spectra
+        """
+        return sum([transition.count() for transition in self])
+
+    def sumSquareError(self) -> float:
+        return sum([transition.sumSquareError() for transition in self])
+    
+    def meanSquareError(self) -> float:
+        return self.sumSquareError() / self.count()
+    
+    def rootMeanSquareError(self) -> float:
+        return np.sqrt(self.meanSquareError())
+
+
+class FullDevi(dict[str, DeviSpectra]):
+    """
+    A class for storing all the deviation data.
+    """
+    def count(self) -> int:
+        return sum([spectra.count() for spectra in self.values()])
+    
+    def sumSquareError(self) -> float:
+        return sum([spectra.sumSquareError() for spectra in self.values()])
+
+    def sumRootMeanSquareError(self) -> float:
+        """
+        Return the sum of the root mean square error of all figures.
+        """
+        return sum([spectra.rootMeanSquareError() for spectra in self.values()])
+    
 
 # ######################################################################
 class PlotElement:
