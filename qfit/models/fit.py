@@ -488,14 +488,14 @@ class FitModel(QObject):
         """
 
         def wrappedCallback(*args, **kwargs):
-            mse = callback(*args, **kwargs)
+            cost = callback(*args, **kwargs)
             self.iteration += 1
             # status update; during the optimization, the status is always computing
             status = Status(
                 statusSource="fit",
                 statusType="computing",
                 message="",
-                cost=mse,  # a dummy value
+                cost=cost,  # a dummy value
             )
             self.updateStatus.emit(status)
 
@@ -627,12 +627,12 @@ class FitModel(QObject):
         Once the user clicks the optimize button, run the optimization in a
         separate thread.
         """
-        # initial parameter & calculate the current MSE
+        # initial parameter & calculate the current cost function
         try:
-            initMSE = self.opt.target_func(initParam)
+            initCost = self.opt.target_func(initParam)
         except Exception as e:
             self._postOptimization(
-                "Fail to calculate the MSE. Due to the following reason: " 
+                "Fail to calculate the cost function. Due to the following reason: " 
                 + str(e)
             )
             return
@@ -642,7 +642,7 @@ class FitModel(QObject):
             statusSource="fit",
             statusType="initializing",
             message="",
-            cost=initMSE,
+            cost=initCost,
         )
         self.updateStatus.emit(status)
 

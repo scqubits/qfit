@@ -19,7 +19,7 @@ class StatusCtrl(QObject):
     """
     Controller for the status bar. This controller serves as a transmittor between the status bar
     (view) and models that may produce signals that inform user about state of the app (such as
-    completion of calculation, MSE report, etc.). The status bar will be updated accordingly.
+    completion of calculation, cost function report, etc.). The status bar will be updated accordingly.
 
     Relevant UI elements:
     - status bar

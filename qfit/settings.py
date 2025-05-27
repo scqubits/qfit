@@ -21,7 +21,7 @@ COST_FUNCTION_TYPE: Literal["MSE", "RMSE"] = "RMSE"
 
 # status bar settings
 ROOT_DISPLAYED_MSE = True
-DISYPLAYED_COST_UNIT: Literal["GHz", "MHz"] = "MHz"
+DISPLAYED_COST_UNIT: Literal["GHz", "MHz"] = "MHz"
 DISPLAYED_COST_PRECISION = 2
 
 # numerical model settings

@@ -38,8 +38,8 @@ class Status:
         "warning", "computing", "initializing"
     message: Optional[str]
         The status message
-    mse: Optional[float]
-        The mean squared error in the prefit ot fit stage
+    cost: Optional[float]
+        The cost function in the prefit ot fit stage
     messageTime: Optional[float]
         The time the message is displayed
     """
@@ -61,7 +61,7 @@ class Status:
 
     def __str__(self):
         if self.statusType != "temp":
-            return f"{self.timestamp} ({self.statusSource}) {self.statusType}, MSE: {self.cost} - {self.message}"
+            return f"{self.timestamp} ({self.statusSource}) {self.statusType}, cost function: {self.cost} - {self.message}"
         else:
             return f"{self.timestamp} ({self.statusSource}) {self.statusType} lasting time {self.messageTime} s - {self.message}"
 

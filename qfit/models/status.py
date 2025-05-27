@@ -27,11 +27,11 @@ class StatusModel(QObject):
     The model's main function:
         - receives status type ("ready", "error", "success", "warning", 
         "computing", "initializing") and status message
-        - for prefit result, fit computing and fit result, receive MSE and compute its change
+        - for prefit result, fit computing and fit result, receive cost function and compute its change
         - compile message and send to UI for display  
             - for errors, add the (<source of error>) in the front of the message
             - add current time in the front of the message
-            - for prefit result, fit computing and fit result, generate message based on the MSE change
+            - for prefit result, fit computing and fit result, generate message based on the cost function change
                 (i.e. prefit and fit model does not provide these messages)
 
     Parameters
@@ -54,7 +54,7 @@ class StatusModel(QObject):
         self.updateNormalStatus(DEFAULT_STATUS)
         self.oldCostForComputingDelta: Optional[float] = None
         self.newCostForComputingDelta: Optional[float] = None
-        self._updateMseForComputingDelta()
+        self._updateCostForComputingDelta()
 
     @property
     def deltaCost(self) -> Union[float, None]:
@@ -96,13 +96,13 @@ class StatusModel(QObject):
         # get the cost name and unit
         if settings.COST_FUNCTION_TYPE == "MSE":
             if settings.ROOT_DISPLAYED_MSE:
-                dispUnit = settings.DISYPLAYED_COST_UNIT
+                unitStr = settings.DISPLAYED_COST_UNIT
                 costName = "root mean square error"
             else:
-                dispUnit = settings.DISYPLAYED_COST_UNIT + "\u00B2"
+                unitStr = settings.DISPLAYED_COST_UNIT + "\u00B2"
                 costName = "mean square error"
         elif settings.COST_FUNCTION_TYPE == "RMSE":
-            dispUnit = settings.DISYPLAYED_COST_UNIT
+            unitStr = settings.DISPLAYED_COST_UNIT
             costName = "root mean square error"
         else:
             raise ValueError(f"Invalid cost function type: {settings.COST_FUNCTION_TYPE}")
@@ -115,35 +115,35 @@ class StatusModel(QObject):
         else: 
             # cost function returns a float, process value
             if settings.COST_FUNCTION_TYPE == "MSE":
-                if settings.DISYPLAYED_COST_UNIT == "GHz":
+                if settings.DISPLAYED_COST_UNIT == "GHz":
                     pass
-                elif settings.DISYPLAYED_COST_UNIT == "MHz":
+                elif settings.DISPLAYED_COST_UNIT == "MHz":
                     cost = cost * 1e6
                 else:
-                    raise ValueError(f"Invalid MSE unit: {settings.DISYPLAYED_COST_UNIT}")
+                    raise ValueError(f"Invalid cost function unit: {settings.DISPLAYED_COST_UNIT}")
                 
                 if settings.ROOT_DISPLAYED_MSE:
                     cost = np.sqrt(cost)
                 
             elif settings.COST_FUNCTION_TYPE == "RMSE":
-                if settings.DISYPLAYED_COST_UNIT == "GHz":
+                if settings.DISPLAYED_COST_UNIT == "GHz":
                     pass
-                elif settings.DISYPLAYED_COST_UNIT == "MHz":
+                elif settings.DISPLAYED_COST_UNIT == "MHz":
                     cost = cost * 1e3
                 else:
-                    raise ValueError(f"Invalid MSE unit: {settings.DISYPLAYED_COST_UNIT}")
+                    raise ValueError(f"Invalid cost function unit: {settings.DISPLAYED_COST_UNIT}")
                 
             else:
                 raise ValueError(f"Invalid cost function type: {settings.COST_FUNCTION_TYPE}")
                 
-        costValStr = f"{cost:.{settings.DISPLAYED_COST_PRECISION}f} {dispUnit}"  
+        costValStr = f"{cost:.{settings.DISPLAYED_COST_PRECISION}f} {unitStr}"  
         
         return costName + ": " + costValStr
     
     @property
     def displayedCost(self) -> str:
         """
-        The MSE to be displayed in the status bar, along with the change in MSE.
+        The cost function value to be displayed in the status bar, along with the change in cost function.
         """
         if self.newCostForComputingDelta is None:
             return f"{self._costString(None)}  (- %)"
@@ -213,7 +213,7 @@ class StatusModel(QObject):
             if finalCost is None:
                 self.statusStrForView += f"SUCCESS: {successMessage}. "
             else:
-                self._updateMseForComputingDelta()
+                self._updateCostForComputingDelta()
                 self.statusStrForView += f"SUCCESS: "
                 self.statusStrForView += f"{self._costString(finalCost)} ({self.deltaCostStr} %). "
                 self.statusStrForView += f"     |     "
@@ -223,7 +223,7 @@ class StatusModel(QObject):
             warningMessage = self.currentNormalStatus.message
             if self.currentNormalStatus.statusSource in ["fit", "prefit"]:
                 finalCost = self.currentNormalStatus.cost
-                self._updateMseForComputingDelta()
+                self._updateCostForComputingDelta()
                 self.statusStrForView += f"WARNING: "
                 self.statusStrForView += f"{self._costString(finalCost)} ({self.deltaCostStr} %). "
                 self.statusStrForView += f"     |     "
@@ -234,14 +234,14 @@ class StatusModel(QObject):
         elif self.currentNormalStatus.statusType == "computing":
             if self.currentNormalStatus.statusSource == "fit":
                 computingCost = self.currentNormalStatus.cost
-                self._updateMseForComputingDelta()
+                self._updateCostForComputingDelta()
                 self.statusStrForView += f"COMPUTING: {self._costString(computingCost)} ({self.deltaCostStr} %). "
             elif self.currentNormalStatus.statusSource == "prefit":
                 self.statusStrForView += f"COMPUTING: "
 
         elif self.currentNormalStatus.statusType == "initializing":
             initialCost = self.currentNormalStatus.cost
-            self._updateMseForComputingDelta()
+            self._updateCostForComputingDelta()
             self.statusStrForView += (
                 f"INITIALIZE FITTING: {self._costString(initialCost)}"
             )
@@ -268,27 +268,27 @@ class StatusModel(QObject):
     #     self.statusStrForView += status.message
     #     self.tempStatusChanged.emit(self.statusStrForView, status.messageTime)
 
-    def _updateMseForComputingDelta(self):
+    def _updateCostForComputingDelta(self):
         """
-        Updates the previous Mean Squared Error (MSE) and the change in MSE.
+        Updates the previous cost function and the change in cost function.
 
-        This function should only be used when an update to the MSE is expected.
+        This function should only be used when an update to the cost function is expected.
         For instance, during the 'prefit' stage when the status is 'computing',
-        the MSE is set to None and should not be updated.
+        the cost function value is set to None and should not be updated.
         Conversely, during the 'fit' stage when the status is
-        'computing', the MSE should be updated.
+        'computing', the cost function should be updated.
         """
-        # erase the previous MSE if the source is changed
+        # erase the previous cost function value if the source is changed
         if self.sourceChanged:
             self.oldCostForComputingDelta = None
         else:
-            # if the information is from prefit, update the old MSE for computing delta
+            # if the information is from prefit, update the old cost function for computing delta
             if self.currentNormalStatus.statusSource == "prefit":
                 self.oldCostForComputingDelta = self.newCostForComputingDelta
             # if the information is from fit, depend on the previous status
             elif self.currentNormalStatus.statusSource in ["fit", "fit-result"]:
-                # only if the previous status is initializing, store the previous MSE
-                # otherwise, the previous MSE stays the same (which is the initialized MSE)
+                # only if the previous status is initializing, store the previous cost function
+                # otherwise, the previous cost function stays the same (which is the initialized cost function)
                 if self.previousNormalStatus.statusType == "initializing":
                     self.oldCostForComputingDelta = self.newCostForComputingDelta
         self.newCostForComputingDelta = self.currentNormalStatus.cost

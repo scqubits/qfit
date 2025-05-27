@@ -371,7 +371,7 @@ class FitCtrl(QObject):
         """
         Callback for the optimization. It is called after each iteration of the
         optimization. It updates the views with the current parameters,
-        current MSE and the current spectrum.
+        current cost function and the current spectrum.
         """
         self.quantumModel.emitReadyToPlot()
         return self.quantumModel.sweep2SpecCost(forced=True, sweepUsage="fit")
