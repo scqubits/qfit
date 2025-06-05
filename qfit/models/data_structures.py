@@ -182,6 +182,9 @@ class ExtrTransition:
         The raw x data, where the key is the name of the raw x data
     tag: Tag
         The tag of the transition
+    weight: Dict[int, float]
+        The weight of the data points (when deviation is minimized),
+        the length of the weight should be the same as the number of data points
     """
 
     def __init__(
@@ -193,6 +196,22 @@ class ExtrTransition:
         self._data: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
         self.rawX: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
         self.tag = Tag()
+        self.weight: Dict[int, float] = {}
+        
+    def setWeightByIndex(self, index: int, weight: float):
+        assert weight >= 0, "The weight should be non-negative"
+        self.weight[index] = weight
+    
+    def setWeight(self, weight: np.ndarray):
+        assert len(weight) == self.count(), "The weight should have the same length as the data"
+        assert np.all(weight >= 0), "The weight should be non-negative"
+        self.weight = {idx: w for idx, w in enumerate(weight)}
+        
+    def setUniformWeight(self, weight: float):
+        """
+        Set a uniform weight for all data points.
+        """
+        self.setWeight(np.ones(self.count()) * weight)
 
     @property
     def data(self) -> np.ndarray:
@@ -307,6 +326,13 @@ class ExtrSpectra(list[ExtrTransition]):
         *args: ExtrTransition,
     ) -> None:
         super().__init__(args)
+         
+    def setUniformWeight(self, weight: float):
+        """
+        Set a uniform weight for all transitions. 
+        """
+        for transition in self:
+            transition.setUniformWeight(weight)
 
     def count(self) -> int:
         """
@@ -393,16 +419,25 @@ class DeviTransition(list[float]):
 
     Attributes
     ----------
-    name: str
-        The name of the transition
-    data: np.ndarray
-        The transition data, shape (N,), where N is the number of data points
+    weight: Dict[int, float]
+        The weight of the data points (when deviation is minimized),
+        the length of the weight should be the same as the number of data points
     """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.weight: Dict[int, float] = {}
+
     def count(self) -> int:
         return len(self)
 
     def sumSquareError(self) -> float:
-        return sum([data ** 2 for data in self])
+        agg = 0.0
+        for idx, data in enumerate(self):
+            if idx in self.weight:
+                agg += data ** 2 * self.weight[idx]
+            else:
+                agg += data ** 2
+        return agg
     
     def meanSquareError(self) -> float:
         return self.sumSquareError() / self.count()
@@ -439,7 +474,7 @@ class DeviSpectra(list[DeviTransition]):
 class FullDevi(dict[str, DeviSpectra]):
     """
     A class for storing all the deviation data.
-    """
+    """            
     def count(self) -> int:
         return sum([spectra.count() for spectra in self.values()])
     

@@ -10,6 +10,7 @@ if TYPE_CHECKING:
         FitParam,
         SliderParam,
         Tag,
+        ExtrSpectra,
     )
     
     
@@ -31,7 +32,7 @@ def _update_version(
     major: int,
     minor: int,
     micro: int,
-) -> Dict[str, Any]:
+):
     """
     Update the version number of the registry dictionary.
     """
@@ -75,12 +76,17 @@ def parseRegDict(
         _parseRegDict2xx_22x(registryDict)
         major, minor, micro = _extract_version(registryDict)
         
-    # current: 2.2.x
+    # 2.2.x --> 2.3.x
+    if major == 2 and minor == 2:
+        _parseRegDict2xx_23x(registryDict)
+        major, minor, micro = _extract_version(registryDict)
+        
+    # current: 2.3.x
     return registryDict
         
 
 # 1.0.x --> 2.0.x =============================================================
-def _parseRegDict10x_20x(registryDict: Dict[str, Any]) -> Dict[str, Any]:
+def _parseRegDict10x_20x(registryDict: Dict[str, Any]):
     """
     Parse the measurement data unpickled from the file with version 1.0.x.
     """
@@ -177,7 +183,7 @@ def _parsePrefitCaliParam10x_20x(caliParams: Dict[str, Dict[str, "SliderParam"]]
                 caliDict[newKey] = caliDict.pop(key)
 
 # 2.0.x / 2.1.x --> 2.2.x =============================================================
-def _parseRegDict2xx_22x(registryDict: Dict[str, Any]) -> Dict[str, Any]:
+def _parseRegDict2xx_22x(registryDict: Dict[str, Any]):
     """
     Parse the tags in the registry dictionary from version 2.0.x or 2.1.x to 2.2.x.
     The main change is that in 2.2.x, we support uncertain tags, which are 
@@ -195,3 +201,18 @@ def _parseTag2xx_22x(tag: "Tag"):
     if not tag.tagType == "NO_TAG":
         tag.initial = [tag.initial]
         tag.final = [tag.final]
+
+# 2.2.x --> 2.3.x =============================================================
+def _parseRegDict2xx_23x(registryDict: Dict[str, Any]):
+    """
+    Parse the tags in the registry dictionary from version 2.2.x to 2.3.x.
+    The main change is that in 2.3.x, we support uncertain tags, which are 
+    represented by a list of possible values.
+    """
+    for spectra in registryDict["allExtractedData"].values():
+        spectra: "ExtrSpectra"
+        for trans in spectra:
+            trans.weight = {}
+            
+    # update the version number
+    _update_version(registryDict, 2, 3, 0)

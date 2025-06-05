@@ -1159,6 +1159,9 @@ class QuantumModel(QObject):
             transitionFreq /= photons
             devi.append(yData - transitionFreq)
 
+        # transfer the weight information from the transition to the deviation
+        devi.weight = transition.weight
+        
         return devi, deviCalcStatus
     
     def _costByFullDevi(
