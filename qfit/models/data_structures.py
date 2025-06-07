@@ -482,6 +482,10 @@ class FullDevi(dict[str, DeviSpectra]):
     
     def sumSquareError(self) -> float:
         return sum([spectra.sumSquareError() for spectra in self.values()])
+    
+    def _rootMeanSquareError(self) -> float:
+        """Internal use only. Main branch implementation"""
+        return np.sqrt(self.sumSquareError() / self.count()) 
 
     def sumRootMeanSquareError(self) -> float:
         """
