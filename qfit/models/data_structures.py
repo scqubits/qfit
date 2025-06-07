@@ -176,10 +176,12 @@ class ExtrTransition:
     ----------
     name: str
         The name of the transition
-    data: np.ndarray
-        The transition data, shape (2, N), where N is the number of data points
+    data: OrderedDictMod[str, np.ndarray]
+        The transition data, have 2 keys: <principle x name> and <y axis name>, 
+        where the value is x / y coordinates, shape (N,)
     rawX: OrderedDictMod[str, np.ndarray]
-        The raw x data, where the key is the name of the raw x data
+        The raw x data, where the key is the name of the raw x data, and 
+        each value is the raw x data, shape (N,)
     tag: Tag
         The tag of the transition
     weight: Dict[int, float]
@@ -196,16 +198,12 @@ class ExtrTransition:
         self._data: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
         self.rawX: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
         self.tag = Tag()
-        self.weight: Dict[int, float] = {}
+        self.weight: np.ndarray = np.empty((0,), dtype=float)
         
-    def setWeightByIndex(self, index: int, weight: float):
-        assert weight >= 0, "The weight should be non-negative"
-        self.weight[index] = weight
-    
     def setWeight(self, weight: np.ndarray):
         assert len(weight) == self.count(), "The weight should have the same length as the data"
         assert np.all(weight >= 0), "The weight should be non-negative"
-        self.weight = {idx: w for idx, w in enumerate(weight)}
+        self.weight = weight
         
     def setUniformWeight(self, weight: float):
         """
@@ -262,6 +260,7 @@ class ExtrTransition:
             self._data[key] = np.append(self._data[key], value)
         for key, value in rawX.items():
             self.rawX[key] = np.append(self.rawX[key], value)
+        self.weight = np.append(self.weight, 1)
 
     def remove(self, index: int):
         """
@@ -276,6 +275,7 @@ class ExtrTransition:
             self._data[key] = np.delete(self._data[key], index)
         for key in self.rawX.keys():
             self.rawX[key] = np.delete(self.rawX[key], index)
+        self.weight = np.delete(self.weight, index)
 
     def swapXY(self):
         """
@@ -419,24 +419,26 @@ class DeviTransition(list[float]):
 
     Attributes
     ----------
-    weight: Dict[int, float]
+    weight: np.ndarray
         The weight of the data points (when deviation is minimized),
         the length of the weight should be the same as the number of data points
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.weight: Dict[int, float] = {}
+        self._weight: np.ndarray = np.empty((0,), dtype=float)
+        
+    def setWeight(self, weight: np.ndarray):
+        assert len(weight) == self.count(), "The weight should have the same length as the data"
+        self._weight = weight
 
     def count(self) -> int:
         return len(self)
 
     def sumSquareError(self) -> float:
+        assert len(self) == len(self._weight), "The weight should have the same length as the data"
         agg = 0.0
         for idx, data in enumerate(self):
-            if idx in self.weight:
-                agg += data ** 2 * self.weight[idx]
-            else:
-                agg += data ** 2
+            agg += data ** 2 * self._weight[idx]
         return agg
     
     def meanSquareError(self) -> float:

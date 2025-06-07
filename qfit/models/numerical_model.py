@@ -1160,7 +1160,7 @@ class QuantumModel(QObject):
             devi.append(yData - transitionFreq)
 
         # transfer the weight information from the transition to the deviation
-        devi.weight = transition.weight
+        devi.setWeight(transition.weight)
         
         return devi, deviCalcStatus
     

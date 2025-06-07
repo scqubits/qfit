@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Tuple, TYPE_CHECKING
+import numpy as np
 
 import re
 
@@ -212,7 +213,7 @@ def _parseRegDict2xx_23x(registryDict: Dict[str, Any]):
     for spectra in registryDict["allExtractedData"].values():
         spectra: "ExtrSpectra"
         for trans in spectra:
-            trans.weight = {}
+            trans.weight = np.ones(trans.count(), dtype=float)
             
     # update the version number
     _update_version(registryDict, 2, 3, 0)
