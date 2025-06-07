@@ -25,8 +25,9 @@ from labellines import labelLines
 
 from PySide6 import QtCore as QtCore
 from PySide6.QtWidgets import QWidget, QPushButton
+from PySide6.QtCore import QEventLoop, QTimer
 
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import Dict, List, Literal, Optional, Tuple, Union, Callable
 from typing import TypeVar, Generic, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -874,3 +875,35 @@ def ySnap(
         peak_idx = np.argmax(np.abs(data_for_peak_finding))
 
     return y_list[peak_idx + y_min_idx]
+
+# Event loop ###################################################################
+def waitForEvent(checkFunction: Callable[[], bool], checkInterval=1000):
+    """
+    Blocks execution (e.g., in a Jupyter cell) until the condition is met,
+    while processing events so that asynchronous tasks (like QRunnable) keep running.
+    
+    Parameters
+    ----------
+    checkFunction: 
+        A function that returns a boolean value, if the condition is met,
+        the function will return True which will stop the loop.
+    checkInterval: int
+        Milliseconds between checks.
+    """
+    loop = QEventLoop()
+
+    # Set up a QTimer to periodically check the fit status.
+    timer = QTimer()
+    
+    def checkAndStop():
+        if checkFunction():
+            timer.stop()
+            loop.quit()
+
+    timer.timeout.connect(checkAndStop)
+    
+    # wait for check_interval milliseconds, then check the status periodically
+    QTimer.singleShot(checkInterval, lambda: timer.start(checkInterval))
+    
+    # Start the nested event loop.
+    loop.exec()
