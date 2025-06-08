@@ -13,12 +13,13 @@ __all__ = [
     "__version__",
     "__version_tuple__",
     "waitForEvent",
+    "sleep",
 ]
 
 from qfit.core.qfit import Fit
 from qfit.version import __version__, __version_tuple__
 import qfit.settings as _settings
-from qfit.utils.helpers import executed_in_ipython as _executed_in_ipython, waitForEvent
+from qfit.utils.helpers import executed_in_ipython as _executed_in_ipython, waitForEvent, sleep
 
 if _executed_in_ipython():
     # inside ipython, the function get_ipython is always in globals()

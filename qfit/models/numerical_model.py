@@ -1174,8 +1174,8 @@ class QuantumModel(QObject):
         if settings.COST_FUNCTION_TYPE == "MSE":
             return fullDevi.sumSquareError() / fullDevi.count()
         elif settings.COST_FUNCTION_TYPE == "RMSE":
-            # return fullDevi._rootMeanSquareError()
-            return fullDevi.sumRootMeanSquareError()
+            return fullDevi._rootMeanSquareError()
+            # return fullDevi.sumRootMeanSquareError()
         else:
             raise ValueError(
                 f"Invalid cost function type: {settings.COST_FUNCTION_TYPE}. "

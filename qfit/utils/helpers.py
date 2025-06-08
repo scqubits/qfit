@@ -907,3 +907,24 @@ def waitForEvent(checkFunction: Callable[[], bool], checkInterval=1000):
     
     # Start the nested event loop.
     loop.exec()
+
+
+def sleep(time: int):
+    """
+    Sleep for a fixed time while processing Qt events, preventing UI freezing.
+    
+    Parameters
+    ----------
+    time: int
+        Time to sleep in milliseconds.
+    """
+    loop = QEventLoop()
+    
+    # Set up a QTimer to wake up after the specified time
+    timer = QTimer()
+    timer.timeout.connect(loop.quit)
+    timer.setSingleShot(True)
+    timer.start(time)
+    
+    # Start the nested event loop
+    loop.exec()
