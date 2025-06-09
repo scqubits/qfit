@@ -1,7 +1,7 @@
 import sys
 import os
 from copy import deepcopy as _deepcopy
-from typing import Union, Dict, Any, Dict, List, Optional, Tuple
+from typing import Union, Dict, Any, Dict, List, Optional, Tuple, Callable
 
 from PySide6.QtWidgets import QApplication
 

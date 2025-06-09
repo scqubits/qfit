@@ -38,8 +38,8 @@ class Status:
         "warning", "computing", "initializing"
     message: Optional[str]
         The status message
-    mse: Optional[float]
-        The mean squared error in the prefit ot fit stage
+    cost: Optional[float]
+        The cost function in the prefit ot fit stage
     messageTime: Optional[float]
         The time the message is displayed
     """
@@ -49,19 +49,19 @@ class Status:
         statusSource: Optional[str],
         statusType: str,
         message: Optional[str] = None,
-        mse: Optional[float] = None,
+        cost: Optional[float] = None,
         messageTime: Optional[float] = None,
     ):
         self.statusSource: Optional[str] = statusSource
         self.statusType: str = statusType
         self.message: Optional[str] = message
-        self.mse: Optional[float] = mse
+        self.cost: Optional[float] = cost
         self.timestamp: datetime = datetime.now()
         self.messageTime: Optional[float] = messageTime
 
     def __str__(self):
         if self.statusType != "temp":
-            return f"{self.timestamp} ({self.statusSource}) {self.statusType}, MSE: {self.mse} - {self.message}"
+            return f"{self.timestamp} ({self.statusSource}) {self.statusType}, cost function: {self.cost} - {self.message}"
         else:
             return f"{self.timestamp} ({self.statusSource}) {self.statusType} lasting time {self.messageTime} s - {self.message}"
 
@@ -176,12 +176,17 @@ class ExtrTransition:
     ----------
     name: str
         The name of the transition
-    data: np.ndarray
-        The transition data, shape (2, N), where N is the number of data points
+    data: OrderedDictMod[str, np.ndarray]
+        The transition data, have 2 keys: <principle x name> and <y axis name>, 
+        where the value is x / y coordinates, shape (N,)
     rawX: OrderedDictMod[str, np.ndarray]
-        The raw x data, where the key is the name of the raw x data
+        The raw x data, where the key is the name of the raw x data, and 
+        each value is the raw x data, shape (N,)
     tag: Tag
         The tag of the transition
+    weight: Dict[int, float]
+        The weight of the data points (when deviation is minimized),
+        the length of the weight should be the same as the number of data points
     """
 
     def __init__(
@@ -193,6 +198,18 @@ class ExtrTransition:
         self._data: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
         self.rawX: OrderedDictMod[str, np.ndarray] = OrderedDictMod()
         self.tag = Tag()
+        self.weight: np.ndarray = np.empty((0,), dtype=float)
+        
+    def setWeight(self, weight: np.ndarray):
+        assert len(weight) == self.count(), "The weight should have the same length as the data"
+        assert np.all(weight >= 0), "The weight should be non-negative"
+        self.weight = weight
+        
+    def setUniformWeight(self, weight: float):
+        """
+        Set a uniform weight for all data points.
+        """
+        self.setWeight(np.ones(self.count()) * weight)
 
     @property
     def data(self) -> np.ndarray:
@@ -243,6 +260,7 @@ class ExtrTransition:
             self._data[key] = np.append(self._data[key], value)
         for key, value in rawX.items():
             self.rawX[key] = np.append(self.rawX[key], value)
+        self.weight = np.append(self.weight, 1)
 
     def remove(self, index: int):
         """
@@ -257,6 +275,7 @@ class ExtrTransition:
             self._data[key] = np.delete(self._data[key], index)
         for key in self.rawX.keys():
             self.rawX[key] = np.delete(self.rawX[key], index)
+        self.weight = np.delete(self.weight, index)
 
     def swapXY(self):
         """
@@ -307,6 +326,13 @@ class ExtrSpectra(list[ExtrTransition]):
         *args: ExtrTransition,
     ) -> None:
         super().__init__(args)
+         
+    def setUniformWeight(self, weight: float):
+        """
+        Set a uniform weight for all transitions. 
+        """
+        for transition in self:
+            transition.setUniformWeight(weight)
 
     def count(self) -> int:
         """
@@ -384,6 +410,102 @@ class FullExtr(dict[str, ExtrSpectra]):
             value.swapXY()
 
 
+# ######################################################################
+
+class DeviTransition(list[float]):
+    """
+    A class for storing the deviation from the measured transition and 
+    theoretically computed transition.
+
+    Attributes
+    ----------
+    weight: np.ndarray
+        The weight of the data points (when deviation is minimized),
+        the length of the weight should be the same as the number of data points
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._weight: np.ndarray = np.empty((0,), dtype=float)
+        
+    def setWeight(self, weight: np.ndarray):
+        assert len(weight) == self.count(), "The weight should have the same length as the data"
+        self._weight = weight
+
+    def count(self) -> int:
+        return len(self)
+
+    def totalSquaredError(self) -> float:
+        assert len(self) == len(self._weight), "The weight should have the same length as the data"
+        agg = 0.0
+        for idx, data in enumerate(self):
+            agg += (data * self._weight[idx]) ** 2 
+        return agg
+    
+    def totalAbsError(self) -> float:
+        assert len(self) == len(self._weight), "The weight should have the same length as the data"
+        agg = 0.0
+        for idx, data in enumerate(self):
+            agg += np.abs(data) * self._weight[idx]
+        return agg
+    
+
+class DeviSpectra(list[DeviTransition]):
+    """
+    Deviation of multiple transitions.
+
+    Parameters
+    ----------
+    args: DeviTransition
+        The transitions to be stored in the spectra
+    """
+    def count(self) -> int:
+        """
+        Return the total number of data points in the spectra
+        """
+        return sum([transition.count() for transition in self])
+
+    def totalSquaredError(self) -> float:
+        return sum([transition.totalSquaredError() for transition in self])
+    
+    def meanSquaredError(self) -> float:
+        return self.totalSquaredError() / self.count()
+    
+    def rootMeanSquaredError(self) -> float:
+        return np.sqrt(self.meanSquaredError())
+    
+    def totalAbsError(self) -> float:
+        return sum([transition.totalAbsError() for transition in self])
+
+
+class FullDevi(dict[str, DeviSpectra]):
+    """
+    A class for storing all the deviation data.
+    """            
+    def count(self) -> int:
+        return sum([spectra.count() for spectra in self.values()])
+    
+    def totalSquaredError(self) -> float:
+        return sum([spectra.totalSquaredError() for spectra in self.values()])
+    
+    def rootMeanSquaredError(self) -> float:
+        """Root mean square error for all data points from all figures"""
+        return np.sqrt(self.totalSquaredError() / self.count()) 
+
+    def rootMeanSquareErrorByFig(self) -> float:
+        """
+        Return the sum of the root mean square error for data from all figures.
+        The difference between this method and ``rootMeanSquareError`` is that
+        here the square is taken for each figure, while in ``rootMeanSquareError``,
+        the square is taken at the end.
+        """
+        return sum([spectra.rootMeanSquaredError() for spectra in self.values()])
+    
+    def totalAbsError(self) -> float:
+        return sum([spectra.totalAbsError() for spectra in self.values()])
+    
+    def meanAbsError(self) -> float:
+        return self.totalAbsError() / self.count()
+    
 
 # ######################################################################
 class PlotElement:

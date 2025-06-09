@@ -16,10 +16,13 @@ color_dict = {
 # plot settings
 MARKER_SIZE = 130
 
+# cost function settings
+COST_FUNCTION_TYPE: Literal["MSE", "RMSE"] = "RMSE"
+
 # status bar settings
-ROOT_MSE = True
-MSE_UNIT: Literal["GHz", "MHz"] = "MHz"
-MSE_DISPLAY_PRECISION = 2
+ROOT_DISPLAYED_MSE = True
+DISPLAYED_COST_UNIT: Literal["GHz", "MHz"] = "MHz"
+DISPLAYED_COST_PRECISION = 2
 
 # numerical model settings
 POSSIBLE_INIT_STATE_FREQUENCY = 1   # GHz

@@ -12,12 +12,20 @@ __all__ = [
     "Fit",
     "__version__",
     "__version_tuple__",
+    "block_exec",
+    "block_exec_until",
+    "block_exec_until_success",
 ]
 
 from qfit.core.qfit import Fit
 from qfit.version import __version__, __version_tuple__
 import qfit.settings as _settings
-from qfit.utils.helpers import executed_in_ipython as _executed_in_ipython
+from qfit.utils.helpers import (
+    executed_in_ipython as _executed_in_ipython,
+    block_exec,
+    block_exec_until,
+    block_exec_until_success,
+)
 
 if _executed_in_ipython():
     # inside ipython, the function get_ipython is always in globals()
