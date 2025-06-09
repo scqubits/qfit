@@ -207,8 +207,7 @@ def _parseTag2xx_22x(tag: "Tag"):
 def _parseRegDict2xx_23x(registryDict: Dict[str, Any]):
     """
     Parse the tags in the registry dictionary from version 2.2.x to 2.3.x.
-    The main change is that in 2.3.x, we support uncertain tags, which are 
-    represented by a list of possible values.
+    The main change is that in 2.3.x, we support weight for each data point.
     """
     for spectra in registryDict["allExtractedData"].values():
         spectra: "ExtrSpectra"
