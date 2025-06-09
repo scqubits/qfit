@@ -324,43 +324,6 @@ class Fit:
         self._plottingCtrl.createStandaloneCanvas(
             selected_dataset_names, points_added, xlim, ylim
         )
-        
-    def sleep(self, time: int = 1000):
-        """
-        Sleep for a fixed time while processing Qt events, preventing UI freezing.
-        
-        Parameters
-        ----------
-        time: int
-            Time to sleep in milliseconds.
-        """
-        sleep(time)
-        
-    def wait_for_event(
-        self,
-        check_function: Callable[["Fit"], bool],
-        check_interval: int = 1000,
-        delay: int = 10,
-    ):
-        """
-        Blocks execution (e.g., in a Jupyter cell) until the condition is met,
-        while processing events so that asynchronous tasks (like QRunnable) keep running.
-        
-        Parameters
-        ----------
-        checkFunction: Callable[[], bool]
-            A function that takes no arguments and returns a boolean value 
-            indicating whether the condition is met.
-        checkInterval: int
-            The interval in milliseconds at which to check the condition.
-        delay: int
-            The time to keep the event loop running in milliseconds after 
-            the check_function returns True. A finite amount of delay enhances
-            the stability of this code.
-        """
-        wrappedCheckFunction = lambda: check_function(self)
-        waitForEvent(wrappedCheckFunction, check_interval)
-        self.sleep(delay) # just for stability
 
     # models, views and controllers ####################################
     # ##################################################################

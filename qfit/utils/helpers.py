@@ -33,6 +33,7 @@ from typing import TypeVar, Generic, TYPE_CHECKING
 if TYPE_CHECKING:
     from matplotlib.lines import Line2D
     from matplotlib.axes import Axes
+    from qfit.core.qfit import Fit
 
 
 Key = TypeVar("Key")
@@ -877,41 +878,10 @@ def ySnap(
     return y_list[peak_idx + y_min_idx]
 
 # Event loop ###################################################################
-def waitForEvent(checkFunction: Callable[[], bool], checkInterval=1000):
+def block_exec(time: int):
     """
-    Blocks execution (e.g., in a Jupyter cell) until the condition is met,
-    while processing events so that asynchronous tasks (like QRunnable) keep running.
-    
-    Parameters
-    ----------
-    checkFunction: 
-        A function that returns a boolean value, if the condition is met,
-        the function will return True which will stop the loop.
-    checkInterval: int
-        Milliseconds between checks.
-    """
-    loop = QEventLoop()
-
-    # Set up a QTimer to periodically check the fit status.
-    timer = QTimer()
-    
-    def checkAndStop():
-        if checkFunction():
-            timer.stop()
-            loop.quit()
-
-    timer.timeout.connect(checkAndStop)
-    
-    # wait for check_interval milliseconds, then check the status periodically
-    QTimer.singleShot(checkInterval, lambda: timer.start(checkInterval))
-    
-    # Start the nested event loop.
-    loop.exec()
-
-
-def sleep(time: int):
-    """
-    Sleep for a fixed time while processing Qt events, preventing UI freezing.
+    Block execution (e.g., in a Jupyter cell) for a fixed time while 
+    processing Qt events, preventing UI freezing.
     
     Parameters
     ----------
@@ -928,3 +898,76 @@ def sleep(time: int):
     
     # Start the nested event loop
     loop.exec()
+    
+def block_exec_until(
+    check_function: Callable[[], bool],
+    check_interval: int = 1000,
+    delay: int = 100,
+):
+    """
+    Blocks execution (e.g., in a Jupyter cell) until the condition is met,
+    while processing events so that asynchronous tasks (like QRunnable) keep running.
+    
+    Parameters
+    ----------
+    check_function: 
+        A function that returns a boolean value, if the condition is met,
+        the function will return True which will stop the loop.
+    check_interval: int
+        Milliseconds between checks.
+    delay: int
+        The time to keep the event loop running in milliseconds after 
+        the check_function returns True. A finite amount of delay enhances
+        the stability of this code.
+    """
+    loop = QEventLoop()
+
+    # Set up a QTimer to periodically check the fit status.
+    timer = QTimer()
+    
+    def checkAndStop():
+        if check_function():
+            timer.stop()
+            loop.quit()
+
+    timer.timeout.connect(checkAndStop)
+    
+    # wait for check_interval milliseconds, then check the status periodically
+    QTimer.singleShot(check_interval, lambda: timer.start(check_interval))
+    
+    # Start the nested event loop.
+    loop.exec()
+    
+    # sleep for a short time to ensure the event loop is executed
+    block_exec(delay)
+
+def _isStatusSuccess(fit: "Fit") -> bool:
+    if fit._statusModel.currentNormalStatus.statusType == "success":
+        return True
+    return False
+
+def block_exec_until_success(
+    fit: "Fit",
+    check_interval: int = 1000,
+    delay: int = 100,
+):
+    """
+    Block execution (e.g., in a Jupyter cell) until the fit is successful.
+
+    Parameters
+    ----------
+    fit: Fit
+        The fit to wait for.
+    check_interval: int
+        The interval in milliseconds to check the status of the fit.
+    delay: int
+        The time to keep the event loop running in milliseconds after 
+        the check_function returns True. A finite amount of delay enhances
+        the stability of this code.
+    """
+    wrappedIsSuccess = lambda: _isStatusSuccess(fit)
+    block_exec_until(
+        check_function=wrappedIsSuccess,
+        check_interval=check_interval,
+        delay=delay,
+    )
