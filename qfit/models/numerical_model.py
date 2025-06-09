@@ -1172,10 +1172,15 @@ class QuantumModel(QObject):
         Calculate the cost function from the full deviation data.
         """
         if settings.COST_FUNCTION_TYPE == "MSE":
-            return fullDevi.sumSquareError() / fullDevi.count()
+            return fullDevi.totalSquaredError() / fullDevi.count()
         elif settings.COST_FUNCTION_TYPE == "RMSE":
-            return fullDevi._rootMeanSquareError()
-            # return fullDevi.sumRootMeanSquareError()
+            return fullDevi.rootMeanSquaredError()
+        elif settings.COST_FUNCTION_TYPE == "_RMSE_FIG":
+            # only for internal use
+            return fullDevi.rootMeanSquareErrorByFig()
+        elif settings.COST_FUNCTION_TYPE == "_MAE":
+            # only for internal use
+            return fullDevi.meanAbsError()
         else:
             raise ValueError(
                 f"Invalid cost function type: {settings.COST_FUNCTION_TYPE}. "

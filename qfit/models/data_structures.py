@@ -434,18 +434,19 @@ class DeviTransition(list[float]):
     def count(self) -> int:
         return len(self)
 
-    def sumSquareError(self) -> float:
+    def totalSquaredError(self) -> float:
         assert len(self) == len(self._weight), "The weight should have the same length as the data"
         agg = 0.0
         for idx, data in enumerate(self):
-            agg += data ** 2 * self._weight[idx]
+            agg += (data * self._weight[idx]) ** 2 
         return agg
     
-    def meanSquareError(self) -> float:
-        return self.sumSquareError() / self.count()
-    
-    def rootMeanSquareError(self) -> float:
-        return np.sqrt(self.meanSquareError())
+    def totalAbsError(self) -> float:
+        assert len(self) == len(self._weight), "The weight should have the same length as the data"
+        agg = 0.0
+        for idx, data in enumerate(self):
+            agg += np.abs(data) * self._weight[idx]
+        return agg
     
 
 class DeviSpectra(list[DeviTransition]):
@@ -463,14 +464,17 @@ class DeviSpectra(list[DeviTransition]):
         """
         return sum([transition.count() for transition in self])
 
-    def sumSquareError(self) -> float:
-        return sum([transition.sumSquareError() for transition in self])
+    def totalSquaredError(self) -> float:
+        return sum([transition.totalSquaredError() for transition in self])
     
-    def meanSquareError(self) -> float:
-        return self.sumSquareError() / self.count()
+    def meanSquaredError(self) -> float:
+        return self.totalSquaredError() / self.count()
     
-    def rootMeanSquareError(self) -> float:
-        return np.sqrt(self.meanSquareError())
+    def rootMeanSquaredError(self) -> float:
+        return np.sqrt(self.meanSquaredError())
+    
+    def totalAbsError(self) -> float:
+        return sum([transition.totalAbsError() for transition in self])
 
 
 class FullDevi(dict[str, DeviSpectra]):
@@ -480,18 +484,27 @@ class FullDevi(dict[str, DeviSpectra]):
     def count(self) -> int:
         return sum([spectra.count() for spectra in self.values()])
     
-    def sumSquareError(self) -> float:
-        return sum([spectra.sumSquareError() for spectra in self.values()])
+    def totalSquaredError(self) -> float:
+        return sum([spectra.totalSquaredError() for spectra in self.values()])
     
-    def _rootMeanSquareError(self) -> float:
-        """Internal use only. Main branch implementation"""
-        return np.sqrt(self.sumSquareError() / self.count()) 
+    def rootMeanSquaredError(self) -> float:
+        """Root mean square error for all data points from all figures"""
+        return np.sqrt(self.totalSquaredError() / self.count()) 
 
-    def sumRootMeanSquareError(self) -> float:
+    def rootMeanSquareErrorByFig(self) -> float:
         """
         Return the sum of the root mean square error for data from all figures.
+        The difference between this method and ``rootMeanSquareError`` is that
+        here the square is taken for each figure, while in ``rootMeanSquareError``,
+        the square is taken at the end.
         """
-        return sum([spectra.rootMeanSquareError() for spectra in self.values()])
+        return sum([spectra.rootMeanSquaredError() for spectra in self.values()])
+    
+    def totalAbsError(self) -> float:
+        return sum([spectra.totalAbsError() for spectra in self.values()])
+    
+    def meanAbsError(self) -> float:
+        return self.totalAbsError() / self.count()
     
 
 # ######################################################################

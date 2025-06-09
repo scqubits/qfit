@@ -101,7 +101,7 @@ class StatusModel(QObject):
             else:
                 unitStr = settings.DISPLAYED_COST_UNIT + "\u00B2"
                 costName = "mean square error"
-        elif settings.COST_FUNCTION_TYPE == "RMSE":
+        elif settings.COST_FUNCTION_TYPE in ["RMSE", "_RMSE_FIG", "_MAE"]:
             unitStr = settings.DISPLAYED_COST_UNIT
             costName = "root mean square error"
         else:
@@ -125,7 +125,7 @@ class StatusModel(QObject):
                 if settings.ROOT_DISPLAYED_MSE:
                     cost = np.sqrt(cost)
                 
-            elif settings.COST_FUNCTION_TYPE == "RMSE":
+            elif settings.COST_FUNCTION_TYPE in ["RMSE", "_RMSE_FIG", "_MAE"]:
                 if settings.DISPLAYED_COST_UNIT == "GHz":
                     pass
                 elif settings.DISPLAYED_COST_UNIT == "MHz":
