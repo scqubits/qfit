@@ -70,9 +70,6 @@ from qfit.controllers.io_ctrl import IOCtrl
 # settings
 import qfit.settings as settings
 
-# Helper functions for asynchronous operations
-from qfit.utils.helpers import sleep, waitForEvent
-
 
 class Fit:
     """
