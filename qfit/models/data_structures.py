@@ -246,10 +246,9 @@ class ExtrTransition:
             # the first data
             assert len(data) == 2, "The data should have two elements: x & y"
             for key, value in data.items():
-                self._data[key] = np.array([value])
+                self._data[key] = np.empty((0,), dtype=float)
             for key, value in rawX.items():
-                self.rawX[key] = np.array([value])
-            return
+                self.rawX[key] = np.empty((0,), dtype=float)
 
         assert len(data) == 2, "The data should have two elements: x & y"
         assert len(rawX) == len(
