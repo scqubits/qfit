@@ -667,9 +667,10 @@ class MplFigureCanvas(QFrame):
         Set the principal x and y limits of the axes to fit the measurement data.
 
         This Slot should be called accopmanied with updateXAxes and updateYAxes.
-        """        
-        xLim = (np.min(x), np.max(x))
-        yLim = (np.min(y), np.max(y))
+        """
+        xLim = (x[0], x[-1])
+        yLim = (y[0], y[-1])
+        
         self._setMeasXYLim(xLim, yLim)
         self._setMeasXList(x)
 

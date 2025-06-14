@@ -840,13 +840,13 @@ class PlottingCtrl(QObject):
                 else:
                     allRawY[key] = np.concatenate([allRawY[key], val])
                 
-        # extract the min and max of each axis that enclose all the data
+        # extract the range of each axis that enclose all the data
         rawX = OrderedDictMod()
         rawY = OrderedDictMod()
         for key, val in allRawX.items():
-            rawX[key] = np.array([np.min(val), np.max(val)])
+            rawX[key] = np.array([val[0], val[-1]])
         for key, val in allRawY.items():
-            rawY[key] = np.array([np.min(val), np.max(val)])
+            rawY[key] = np.array([val[0], val[-1]])
             
         # set the boundary of the measurement data
         prcpXName = selectedData[0].principalX.name

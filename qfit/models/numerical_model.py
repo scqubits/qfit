@@ -1330,9 +1330,12 @@ class QuantumModel(QObject):
         self._sweepConfigsForStandaloneCanvas[name].cleanup()
         self._sweepConfigsForStandaloneCanvas.pop(name)
         
-        if name in self._sweeps:
-            self._sweeps.pop(name)
-        
+        try:
+            if name in self._sweeps:
+                self._sweeps.pop(name)
+        except AttributeError:
+            # if the sweeps are not initialized, do nothing
+            pass
 
 
 class sweepSignalHost(QObject):

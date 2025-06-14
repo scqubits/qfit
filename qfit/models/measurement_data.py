@@ -844,7 +844,7 @@ class NumericalMeasurementData(MeasurementData):
 
         return zCandidates
 
-    def _findXYCandidates(self):
+    def _findXYCandidates(self, checkMonotonic: bool = True):
         """
         By trying to match the dimensions of the zData with the x and y axis candidates,
         find the x and y axis candidates that are compatible with the zData.
@@ -853,12 +853,14 @@ class NumericalMeasurementData(MeasurementData):
         xyCandidates = OrderedDictMod()
         for name, theObject in self.rawData.items():
             if isinstance(theObject, np.ndarray):
-                if isValid1dArray(theObject):
+                if isValid1dArray(theObject, checkMonotonic):
                     xyCandidates[name] = theObject.flatten()
                 if isValid2dArray(theObject) and hasIdenticalRows(theObject):
-                    xyCandidates[name] = theObject[0]
+                    if isValid1dArray(theObject[0], checkMonotonic):
+                        xyCandidates[name] = theObject[0]
                 if isValid2dArray(theObject) and hasIdenticalCols(theObject):
-                    xyCandidates[name] = theObject[:, 0]
+                    if isValid1dArray(theObject[:, 0], checkMonotonic):
+                        xyCandidates[name] = theObject[:, 0]
 
         # based on the shape, find the compatible x and y axis candidates
         self.xCandidates = OrderedDictMod()
@@ -896,7 +898,7 @@ class NumericalMeasurementData(MeasurementData):
         self.zCandidates = self._findZCandidates(self.rawData)
         self._principalZ = self.zCandidates.itemByIndex(0)
 
-        self._findXYCandidates()
+        self._findXYCandidates(checkMonotonic=True)
         self._initRawXY()
         self._resetPrincipalXY()
 

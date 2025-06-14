@@ -182,20 +182,22 @@ def isValid2dArray(array):
     return False
 
 
-def isValid1dArray(array):
+def isValid1dArray(array, checkMonotonic: bool = True):
     """
     A valid 1d array must satisfy the following conditions:
         - Array entries must be real-valued
         - The array is strictly one-dimensional, i.e., number of rows=1 or number of cols=1
+        - If checkMonotonic is True, the array must be monotonic.
     """
     if array.dtype not in float_types:
         return False
     if array.ndim == 1:
-        return True
-        # return np.all(np.diff(array) > 0) or np.all(np.diff(array) < 0)
+        if checkMonotonic:
+            return np.all(np.diff(array) >= 0) or np.all(np.diff(array) <= 0)
+        else:
+            return True
     if (array.ndim == 2) and (min(array.shape) == 1):
-        return True
-        # return np.all(np.diff(array.flatten()) > 0)
+        return isValid1dArray(array.flatten(), checkMonotonic)
     return False
 
 
