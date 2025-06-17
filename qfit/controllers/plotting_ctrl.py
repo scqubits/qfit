@@ -29,19 +29,21 @@ if TYPE_CHECKING:
 mpl.rcParams["toolbar"] = "None"
 try:
     mpl.use("qtagg")
-except ImportError as e: 
-    warnings.warn(f"Recieving error {e} while importing matplotlib, indicating "
-                  "that the code is running in a headless environment for "
-                  "testing. Using Agg backend instead.")
+except ImportError as e:
+    warnings.warn(
+        f"Recieving error {e} while importing matplotlib, indicating "
+        "that the code is running in a headless environment for "
+        "testing. Using Agg backend instead."
+    )
     mpl.use("Agg")
-    
 
 
 class StandaloneCanvasAndConfigs:
     """
-    It is a data structure that manages the dynamical view - standalone 
+    It is a data structure that manages the dynamical view - standalone
     mplFigureCanvas and its configs.
     """
+
     def __init__(
         self,
         name: str,
@@ -247,11 +249,15 @@ class PlottingCtrl(QObject):
         self.measPlotSettings["log"].toggled.connect(self._modelStoreFilter)
         self.measPlotSettings["min"].valueChanged.connect(self._modelStoreFilter)
         self.measPlotSettings["max"].valueChanged.connect(self._modelStoreFilter)
-        self.measPlotSettings["color"].currentTextChanged.connect(self._modelStoreFilter)
         self.measPlotSettings["color"].currentTextChanged.connect(
-            lambda: self.mplCanvas.updateColorMap(self.measPlotSettings["color"].currentText())
+            self._modelStoreFilter
         )
-        
+        self.measPlotSettings["color"].currentTextChanged.connect(
+            lambda: self.mplCanvas.updateColorMap(
+                self.measPlotSettings["color"].currentText()
+            )
+        )
+
     def dataSwitchConnects(self):
         """
         Connect the combo boxes for the x, y, and z axes to the measurement data.
@@ -365,18 +371,18 @@ class PlottingCtrl(QObject):
         self.setXYAxesForAll()
 
     def _setXYAxes(
-        self, 
+        self,
         rawX: Dict[str, np.ndarray],
         rawY: Dict[str, np.ndarray],
         calibFuncName: str,
-        canvas: MplFigureCanvas | None = None
+        canvas: MplFigureCanvas | None = None,
     ):
         """
         Update the x and y axes of the canvas based on
         - a given rawX and rawY axes to be shown / calibrated
         - a calibration function (each figure gets its own calibration function,
         so we need to put in the name of the figure)
-        
+
         This function can be also used for standalone mplCanvas.
         """
         if canvas is None:
@@ -391,9 +397,7 @@ class PlottingCtrl(QObject):
 
         if not self.calibrateAxes:
             canvas.updateXAxes(rawXLim)
-            canvas.updateYAxes(
-                rawYLim.name, (rawYLim.data[0], rawYLim.data[-1])
-            )
+            canvas.updateYAxes(rawYLim.name, (rawYLim.data[0], rawYLim.data[-1]))
             return
 
         # when need to show the calibrated data
@@ -415,25 +419,25 @@ class PlottingCtrl(QObject):
 
         canvas.updateXAxes(mappedXLim)
         canvas.updateYAxes(mappedYName, mappedYLim)
-        
+
     def _setXYAxesByCurrentMeasData(self):
         measData = self.measDataSet.currentMeasData
         self._setXYAxes(
             rawX=measData.rawX,
             rawY=measData.rawY,
             calibFuncName=measData.name,
-            canvas=self.mplCanvas
+            canvas=self.mplCanvas,
         )
-        
+
     def _setXYAxesForStandaloneCanvas(self, canvasName: str):
         canvasAndConfigs = self.standaloneCanvases[canvasName]
         self._setXYAxes(
             rawX=canvasAndConfigs.rawX,
             rawY=canvasAndConfigs.rawY,
             calibFuncName=canvasAndConfigs.figNames[0],
-            canvas=canvasAndConfigs.canvas
+            canvas=canvasAndConfigs.canvas,
         )
-        
+
     def setXYAxesForAll(self):
         self._setXYAxesByCurrentMeasData()
         for canvasName in self.standaloneCanvases.keys():
@@ -462,8 +466,8 @@ class PlottingCtrl(QObject):
 
         # model: update the calibration data
         self.calibrationModel.processSelectedPtFromPlot(
-                data=rawXYDict, figName=self.measDataSet.currentMeasData.name
-            )
+            data=rawXYDict, figName=self.measDataSet.currentMeasData.name
+        )
         # the above will then trigger the update the view:
         # turn off highlighting, set value, etc
 
@@ -699,7 +703,7 @@ class PlottingCtrl(QObject):
         """
         self.setClickResponse("PAN")
         self.mplCanvas.panView()
-        
+
     @Slot()
     def toggleReset(self):
         """
@@ -774,21 +778,21 @@ class PlottingCtrl(QObject):
             return self.storeCalibrationPoint(xName, yName, xdata, ydata)
 
     def createStandaloneCanvas(
-        self, 
+        self,
         selectedDataNames: List[str | int] | None = None,
-        numericalPoints: int = 10, 
-        xLim: Tuple[float, float] | None = None, 
+        numericalPoints: int = 10,
+        xLim: Tuple[float, float] | None = None,
         yLim: Tuple[float, float] | None = None,
     ):
         """
         Create a standalone canvas with multiple measurement data.
-        
+
         Parameters
         ----------
         selectedDataNames: List[str | int]
             The names (or indices) of the measurement data to be displayed.
         numericalPoints: int
-            To plot the numerical calculation, the number of points to be 
+            To plot the numerical calculation, the number of points to be
             swept over.
         xLim: Tuple[float, float] | None
             The x limits of the canvas. Currently not supported.
@@ -796,8 +800,10 @@ class PlottingCtrl(QObject):
             The y limits of the canvas. Currently not supported.
         """
         if xLim is not None or yLim is not None:
-            raise NotImplementedError("Setting a custom x or y limit is not implemented")
-        
+            raise NotImplementedError(
+                "Setting a custom x or y limit is not implemented"
+            )
+
         # create a unique name for the canvas: e.g. "Collection (1)"
         existingNames = list(self.standaloneCanvases.keys())
         canvasName = makeUnique(existingNames + ["Collection"])[-1]
@@ -817,13 +823,15 @@ class PlottingCtrl(QObject):
         # all of the data must be collinear with each other
         for data in selectedData[1:]:
             if not selectedData[0].isCollinearWith(data):
-                raise ValueError(f"Data {data.name} are not collinear with {selectedData[0].name}")
-            
+                raise ValueError(
+                    f"Data {data.name} are not collinear with {selectedData[0].name}"
+                )
+
         for data in selectedData:
             elem = copy.deepcopy(data.generatePlotElement())
             canvas._plottingElements[elem.fileName] = elem
         canvas.plotAllElements()
-            
+
         # step 2: relim the canvas --------------------------------------------
         # collect all the rawX and rawY axes
         allRawX = OrderedDictMod()
@@ -839,23 +847,21 @@ class PlottingCtrl(QObject):
                     allRawY[key] = val
                 else:
                     allRawY[key] = np.concatenate([allRawY[key], val])
-                
+
         # extract the range of each axis that enclose all the data
         rawX = OrderedDictMod()
         rawY = OrderedDictMod()
         for key, val in allRawX.items():
-            rawX[key] = np.array([val[0], val[-1]])
+            # different from mainWindow, here we use the min and max of the data
+            rawX[key] = np.array([min(val), max(val)])
         for key, val in allRawY.items():
-            rawY[key] = np.array([val[0], val[-1]])
-            
+            rawY[key] = np.array([min(val), max(val)])
+
         # set the boundary of the measurement data
         prcpXName = selectedData[0].principalX.name
         prcpYName = selectedData[0].principalY.name
-        canvas.relimPrincipalAxes(
-            x=rawX[prcpXName],
-            y=rawY[prcpYName]
-        )
-        
+        canvas.relimPrincipalAxes(x=rawX[prcpXName], y=rawY[prcpYName])
+
         # store the standalone canvas (used in setXYAxesForStandaloneCanvas)
         self.standaloneCanvases[canvasName] = StandaloneCanvasAndConfigs(
             name=canvasName,
@@ -864,34 +870,36 @@ class PlottingCtrl(QObject):
             canvas=canvas,
             figNames=figNames,
         )
-        
+
         # set the axes
         self._setXYAxesForStandaloneCanvas(canvasName)
-        
+
         # step 3: add the numerical calculation -------------------------------
         allPrcpX = np.array([])
 
         for data in selectedData:
-            assert data.principalX.name == prcpXName, "principalX names are not the same"
-            
+            assert (
+                data.principalX.name == prcpXName
+            ), "principalX names are not the same"
+
             allPrcpX = np.concatenate([allPrcpX, data.principalX.data])
-            
+
         self.quantumModel._newStandaloneCanvas(
             name=canvasName,
             pointsAdded=numericalPoints,
             xLim=(np.min(allPrcpX), np.max(allPrcpX)),
             caliByFigName=selectedData[0].name,
         )
-        
+
         # step 4: connect the signals -----------------------------------------
         self.quantumModel._sweepConfigsForStandaloneCanvas[
             canvasName
         ].readyToPlot.connect(canvas.updateElement)
-        
+
         canvas.canvasClosed.connect(
             lambda canvasName=canvasName: self.removeStandaloneCanvas(canvasName)
         )
-        
+
         # step 5: show the canvas ---------------------------------------------
         canvas.canvas.draw()
         canvas.show()
@@ -902,5 +910,3 @@ class PlottingCtrl(QObject):
         """
         self.quantumModel._removeSweepForStandaloneCanvas(canvasName)
         self.standaloneCanvases.pop(canvasName)
-        
-        
