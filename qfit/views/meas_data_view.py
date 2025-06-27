@@ -60,6 +60,14 @@ class MeasDataView(QObject):
             return
 
         figName = self.dataTab.tabText(figIdx)
+        
+        # if current index is different from the given index in the view,
+        # it means that the function is called internally (not by the user)
+        # we need to manually set the current index to the given index
+        self.dataTab.blockSignals(True)
+        if self.dataTab.currentIndex() != figIdx:
+            self.dataTab.setCurrentIndex(figIdx)
+        self.dataTab.blockSignals(False)
 
         self.figChanged.emit(figName)
 
