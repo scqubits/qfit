@@ -15,6 +15,10 @@ __all__ = [
     "block_exec",
     "block_exec_until",
     "block_exec_until_success",
+    "load_config",
+    "create_fit_by_config",
+    "apply_config",
+    "load_fit_by_config",
 ]
 
 from qfit.core.qfit import Fit
@@ -25,6 +29,12 @@ from qfit.utils.helpers import (
     block_exec,
     block_exec_until,
     block_exec_until_success,
+)
+from qfit.utils.run_by_scripts import (
+    load_config,
+    create_fit_by_config,
+    apply_config,
+    load_fit_by_config,
 )
 
 if _executed_in_ipython():
