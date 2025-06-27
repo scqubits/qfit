@@ -121,8 +121,8 @@ class Fit:
 
     def __init__(
         self,
-        hilbertSpace: HilbertSpace,
-        measurementFileName: Optional[str | List[str]] = None,
+        hilbert_space: HilbertSpace,
+        measurement_file_name: Optional[str | List[str]] = None,
         deepcopy: bool = False,
         **kwargs,
     ):
@@ -130,8 +130,8 @@ class Fit:
 
         self._ioCtrl.newProject(
             from_menu=False,
-            hilbertSpace=hilbertSpace,
-            measurementFileName=measurementFileName,
+            hilbertSpace=hilbert_space,
+            measurementFileName=measurement_file_name,
             deepcopy=deepcopy,
         )
 
@@ -145,8 +145,8 @@ class Fit:
     @classmethod
     def new(
         cls,
-        hilbertSpace: HilbertSpace,
-        measurementFileName: Optional[str | List[str]] = None,
+        hilbert_space: HilbertSpace,
+        measurement_file_name: Optional[str | List[str]] = None,
         deepcopy: bool = False,
         **kwargs,
     ) -> "Fit":
@@ -173,7 +173,7 @@ class Fit:
         """
         instance = cls.__new__(cls)
         instance.__init__(
-            hilbertSpace, measurementFileName, deepcopy=deepcopy, **kwargs
+            hilbert_space, measurement_file_name, deepcopy=deepcopy, **kwargs
         )
 
         return instance
@@ -181,7 +181,7 @@ class Fit:
     @classmethod
     def open(
         cls,
-        fileName: Union[str, None] = None,
+        file_name: Union[str, None] = None,
         deepcopy: bool = False,
         **kwargs,
     ) -> "Fit":
@@ -209,7 +209,7 @@ class Fit:
         # load registry
         instance._ioCtrl.openFile(
             from_menu=False,
-            fileName=fileName,
+            file_name=file_name,
             deepcopy=deepcopy,
         )
 
