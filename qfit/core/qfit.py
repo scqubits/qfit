@@ -67,6 +67,9 @@ from qfit.models.registry import Registry
 # menu controller
 from qfit.controllers.io_ctrl import IOCtrl
 
+# run by scripts
+from qfit.utils.run_by_scripts import dataPathsFromYaml, applyConfigYaml
+
 # settings
 import qfit.settings as settings
 
@@ -176,6 +179,36 @@ class Fit:
             hilbert_space, measurement_file_name, deepcopy=deepcopy, **kwargs
         )
 
+        return instance
+    
+    @classmethod
+    def new_by_yaml(
+        cls,
+        hilbert_space: HilbertSpace,
+        yaml_file: str,
+        deepcopy: bool = False,
+        **kwargs,
+    ) -> "Fit":
+        """
+        Create a qfit project from a yaml file.
+        
+        Parameters
+        ----------
+        hilbert_space: HilbertSpace
+            HilbertSpace object from scqubits
+        yaml_file: str
+            Path to the yaml file
+        deepcopy: bool
+            Whether to use a deepcopy of the HilbertSpace object, instead of
+            referencing the original HilbertSpace object. The latter option
+            updates the original HilbertSpace object during any prefit / fit
+            operations.
+        """
+        data_paths = dataPathsFromYaml(yaml_file)
+        instance = cls.new(
+            hilbert_space, data_paths, deepcopy=deepcopy, **kwargs
+        )
+        applyConfigYaml(instance, yaml_file)
         return instance
 
     @classmethod
