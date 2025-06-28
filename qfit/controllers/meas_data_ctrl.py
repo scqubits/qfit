@@ -81,7 +81,8 @@ class MeasDataCtrl(QObject):
 
         self.fullReplaceMeasData(self.measDataSet.fullData)
         self.fullDynamicalInit()
-
+        self.measDataView.switchToFig(0)
+        
         self.importerView.enableFigImport(False)
 
         self.pageView.switchToPage("calibrate")
