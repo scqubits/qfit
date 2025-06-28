@@ -271,11 +271,30 @@ def applyConfigYaml(
     optimizer = yamlDict.get("optimizer", "L-BFGS-B")
     parameterBounds = yamlDict.get("parameter_bounds", {})
 
-    applyImport(fit, xAxis, yAxis, transposeSquareData)
-    applyFilters(fit, filterConfig)
-    numX, fluxNames = applyCalibration(fit, xAxis, yAxis, voltageFluxConversion, freqUnit)
-    applyExtraction(fit)
-    applyPrefit(fit, initParameters)
+    applyImport(
+        fit, 
+        xAxis, 
+        yAxis, 
+        transposeSquareData,
+    )
+    applyFilters(
+        fit, 
+        filterConfig,
+    )
+    numX, fluxNames = applyCalibration(
+        fit, 
+        xAxis, 
+        yAxis, 
+        voltageFluxConversion, 
+        freqUnit,
+    )
+    applyExtraction(
+        fit,
+    )
+    applyPrefit(
+        fit, 
+        initParameters,
+    )
     applyFit(
         fit,
         initParameters,
