@@ -511,8 +511,8 @@ def labelLinesWithNans(
     tuple
         (selected_lines, label_positions) - Lists of lines to label and their x-positions
     """
-    xmin, xmax = xlim
-    ymin, ymax = ylim
+    xmin, xmax = np.min(xlim), np.max(xlim)
+    ymin, ymax = np.min(ylim), np.max(ylim)
 
     # Calculate spacing parameters
     x_range = xmax - xmin

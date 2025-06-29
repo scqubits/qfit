@@ -848,6 +848,7 @@ class PlottingCtrl(QObject):
                 else:
                     allRawY[key] = np.concatenate([allRawY[key], val])
 
+        # if the xlim and ylim are not provided,
         # extract the range of each axis that enclose all the data
         rawX = OrderedDictMod()
         rawY = OrderedDictMod()
