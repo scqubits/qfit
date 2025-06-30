@@ -141,6 +141,7 @@ class PlottingCtrl(QObject):
             # self.calibrationButtons,
             self.calibratedCheckBox,
             self.pageView,
+            self.sweepSettingsView,
         ) = views
         self.mplCanvas = mplCanvas
         self.axes = mplCanvas.axes
@@ -162,6 +163,7 @@ class PlottingCtrl(QObject):
         self.mouseClickConnects()
         self.plottingModeConnects()
         self.caliConnects()
+        self.prefitConnects()
 
         # Although measurement data is updated when reloaded,
         # but swapXY only involves the "pointer" of measurement data,
@@ -536,6 +538,21 @@ class PlottingCtrl(QObject):
     def isRelativelyClose(self, x1y1: np.ndarray, x2y2: np.ndarray):
         distance = self.mplCanvas._distanceInPts(x1y1, x2y2)
         return distance < np.sqrt(MARKER_SIZE)
+    
+    # prefit ===========================================================
+    @Slot(bool)
+    def toggleSpectrumVisibility(self, checked: bool):
+        """
+        Toggle the visibility of the prefit spectrum.
+        """
+        self.mplCanvas._plottingElements["spectrum"].set_visible(checked)
+        self.mplCanvas.plotAllElements()
+    
+    def prefitConnects(self):
+        """
+        Connect the prefit view to the prefit model.
+        """
+        self.sweepSettingsView.specVisibleUpdated.connect(self.toggleSpectrumVisibility)
 
     # plotting =========================================================
     def plotElementsConnects(self):

@@ -348,6 +348,7 @@ class SweepSettingsView(QObject):
     """
 
     optionUpdated = Signal(str, object)
+    specVisibleUpdated = Signal(bool)
 
     def __init__(
         self,
@@ -367,6 +368,7 @@ class SweepSettingsView(QObject):
         self.pointsAdded: IntLineEdit = self.options["pointsAdded"]
         self.numCPUs: IntLineEdit = self.options["numCPUs"]
         self.autoRun: QCheckBox = self.options["autoRun"]
+        self.specVisible: QPushButton = self.options["specVisible"]
 
         self.optionsConnects()
 
@@ -399,6 +401,7 @@ class SweepSettingsView(QObject):
         self.autoRun.setEnabled(value)
         self.runSweep.setEnabled(value)
         self.numCPUs.setEnabled(value)
+        self.specVisible.setEnabled(value)
 
     # Signal processing ======================================================
     def blockAllSignals(self, b: bool):
@@ -433,6 +436,8 @@ class SweepSettingsView(QObject):
             self.numCPUs.setText(value)
         elif option == "autoRun":
             self.autoRun.setChecked(value)
+        elif option == "specVisible":
+            self.specVisible.setChecked(value)
         self.blockAllSignals(False)
 
     def optionsConnects(self):
@@ -462,4 +467,7 @@ class SweepSettingsView(QObject):
         )
         self.autoRun.stateChanged.connect(
             lambda: self.optionUpdated.emit("autoRun", self.autoRun.isChecked())
+        )
+        self.specVisible.clicked.connect(
+            lambda: self.specVisibleUpdated.emit(self.specVisible.isChecked())
         )

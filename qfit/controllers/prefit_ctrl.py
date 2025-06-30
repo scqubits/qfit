@@ -172,11 +172,10 @@ class PrefitCtrl(QObject):
         """
         Prefit option, the run sweep button --> quantum model.
         """
-        self.sweepSettingsView.optionUpdated.connect(self.quantumModel.storeSweepOption)
-
         self.sweepSettingsView.runSweep.clicked.connect(
             lambda: self.quantumModel.updateCalc(forced=True)
         )
+        self.sweepSettingsView.optionUpdated.connect(self.quantumModel.storeSweepOption)
 
     def _sliderParamConnects(self):
         """

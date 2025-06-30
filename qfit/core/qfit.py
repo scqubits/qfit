@@ -685,6 +685,7 @@ class Fit:
             "numCPUs": self._settingUi.ui.numCPUsLineEdit,
             "pointsAdded": self._settingUi.ui.pointsAddLineEdit,
             "autoRun": self._mainUi.autoRunCheckBox,
+            "specVisible": self._mainUi.specVisibButton,
         }
 
         self._quantumModel = QuantumModel(self._mainWindow)
@@ -805,6 +806,7 @@ class Fit:
                 # self._calibrationButtons,
                 self._mainUi.calibratedCheckBox,
                 self._pageView,
+                self._sweepSettingsView,
             ),
         )
 
