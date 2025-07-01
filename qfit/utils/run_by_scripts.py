@@ -1,11 +1,12 @@
 import yaml
 from qfit.models.data_structures import (
-    MeasRawXYConfig, ParamAttr, Tag
+    MeasRawXYConfig, ParamAttr, Tag, SliderParam
 )
 from qfit.widgets.validated_line_edits import (
     MultiIntsLineEdit,
     MultiIntTuplesLineEdit,
 )
+from qfit.models.parameter_set import HSParamSet, SweepParamSet
 import os
 import warnings
 
@@ -103,10 +104,10 @@ def applyCalibration(
     fluxNamesNoBr = [name.replace("<br>", "") for name in fluxNames]
     numX = len([key for key in fit._caliParamModel.keys() if key.startswith("X")])
     
-    print(f"\nNote: Calibrating parameters must be provided in the following format:")
-    print(f"voltage_flux_conversion: ")
-    for idx in range(numX):
-        print(f"  " + ", ".join(voltageNames) + ": " + ", ".join(fluxNamesNoBr))
+    # print(f"\nNote: Calibrating parameters must be provided in the following format:")
+    # print(f"voltage_flux_conversion: ")
+    # for idx in range(numX):
+    #     print(f"  " + ", ".join(voltageNames) + ": " + ", ".join(fluxNamesNoBr))
 
     for idx, (voltages, fluxes) in enumerate(voltageFluxConversion.items()):
         fluxes = _convertFloatingList(str(fluxes))
@@ -260,7 +261,7 @@ def applyFit(
                     parentName=parentName,
                     name=paramName,
                     attr="max",
-                    value=initParam
+                    value=initParam * (1 + param),
                 )
                 fit._fitHSParams.storeParamAttr(paramAttr)
             elif isinstance(param, str) and param == "fixed":
@@ -377,7 +378,7 @@ def applyConfigYaml(
 
 def generate_yaml_template(
     hilbertspace: "HilbertSpace",
-    file_path: str = None,
+    file_path: str | None = None,
     num_voltages: int = 1,
 ):
     """
@@ -393,75 +394,63 @@ def generate_yaml_template(
         The number of voltage sources for the calibration. Default is 1.
     """
     # grab the parameters from the HilbertSpace object
-    paramsToExclude = ["ng", "flux", "cutoff", "ncut", "truncated_dim"]
-    numSweepParams = 0
-    params = {}
-    for subsystem in hilbertspace.subsystem_list:
-        params[subsystem.id_str] = {}
-        for paramName in subsystem.default_params().keys():
-            if paramName not in paramsToExclude:
-                value = getattr(subsystem, paramName)
-                params[subsystem.id_str][paramName] = value
-            if paramName in ["flux", "ng"]:
-                numSweepParams += 1 # count the number of sweep parameters
-
-    if hilbertspace.interaction_list:
-        params["Interactions"] = {}
-        for idx, interactionTerm in enumerate(hilbertspace.interaction_list):
-            gName = f"g{idx+1}"
-            value = interactionTerm.g_strength
-            params["Interactions"][gName] = value
+    paramsToExclude = ["cutoff", "truncated_dim", "l_osc"]
+    sweepParams = ["flux", "ng"]
+    circuitParams = HSParamSet(SliderParam)
+    circuitParams.dynamicalInit(
+        hilbertspace, 
+        excluded_parameter_type=paramsToExclude + sweepParams,
+    )
+    sweepParams = SweepParamSet.initByHS(hilbertspace)
 
     # create the init_parameters string
     initParamsStr = ""
-    for parentName, paramDictByParent in params.items():
+    for parentName, paramDictByParent in circuitParams.items():
         initParamsStr += f"  {parentName}:\n"
         for paramName, param in paramDictByParent.items():
-            initParamsStr += f"    {paramName}: {param:.4f}\n"
+            initParamsStr += f"    {paramName}: {param.value:.4f}\n"
     initParamsStr = initParamsStr.strip("\n")
 
     # create the parameter_bounds string
     paramBoundsStr = ""
-    for parentName, paramDictByParent in params.items():
+    for parentName, paramDictByParent in circuitParams.items():
         paramBoundsStr += f"  {parentName}:\n"
         for paramName, param in paramDictByParent.items():
             paramBoundsStr += f"    {paramName}: 0.1\n"
     paramBoundsStr = paramBoundsStr.strip("\n")
+    
+    # create the sweep_parameters string
+    sweepParamsStrs = []
+    for parentName, paramDictByParent in sweepParams.items():
+        for paramName, param in paramDictByParent.items():
+            paramStr = f"{paramName}({parentName})"
+            sweepParamsStrs.append(paramStr)
 
     # create the calibration string
     pointsRequired = num_voltages + 1
+    numSweepParams = len(sweepParams)
 
-    if num_voltages == 1:
-        calibStr = f"""# For a single voltage source, provide 2 pairs of voltage and control parameter for linear conversion.
-voltage_flux_conversion:
-  <voltage_1>: <control_param_1>
-  <voltage_2>: <control_param_2>"""
-    else:
-        calibStr = f"""# Example for {num_voltages} voltage source(s) and {numSweepParams} control parameter(s).
+    calibStr = f"""# Example for {num_voltages} voltage source(s) and {numSweepParams} control parameter(s) ({", ".join(sweepParamsStrs)}).
 # For a full calibration, provide {pointsRequired} data points (pairs of voltage and control parameter values).
-# Each point consists of a comma-separated string for voltages and a corresponding one for control parameter values.
 voltage_flux_conversion:
 """
-        for i in range(pointsRequired):
-            voltagePlaceholders = ", ".join(
-                f"<voltage{j+1}_{i+1}>" for j in range(num_voltages)
-            )
-            if numSweepParams > 0:
-                controlPlaceholders = ", ".join(
-                    f"<control_param{j+1}_{i+1}>" for j in range(numSweepParams)
-                )
-                calibStr += f'  "{voltagePlaceholders}": "{controlPlaceholders}"\n'
-            else:
-                calibStr += f'  "{voltagePlaceholders}": ""\n'
+    for i in range(pointsRequired):
+        voltagePlaceholders = ", ".join(
+            f"<voltage{j+1}_{i+1}>" for j in range(num_voltages)
+        )
+        controlPlaceholders = ", ".join(
+            f"<{sweepParam}_{i+1}>" for sweepParam in sweepParamsStrs
+        )
+        calibStr += f'  {voltagePlaceholders}: {controlPlaceholders}\n'
 
-        calibStr = calibStr.strip()
+    calibStr = calibStr.strip()
 
     template = f"""# This is a template for the configuration file for initializing QFit.
 # Entries wrapped in < > are placeholders that you should replace with your own values.
 
-# ==================================================================
+# =================================================================================
 # Required entries
-# ==================================================================
+# =================================================================================
 
 # Measurement data files and their corresponding transitions.
 # For each file, you can specify transitions and their labels to create an empty transition. 
@@ -496,9 +485,9 @@ axes:
 init_parameters:
 {initParamsStr}
 
-# ==================================================================
+# =================================================================================
 # Optional entries
-# ==================================================================
+# =================================================================================
 
 # Frequency unit for the y-axis.
 freq_unit: GHz  # available options: MHz, GHz
@@ -530,7 +519,7 @@ filter:
   log: false
   min: 0
   max: 100
-  color: viridis
+  color: PuOr
 
 # Path to save the fit results. If not provided, the results will not be saved automatically.
 # save_path: <path/to/save/results.qfit>

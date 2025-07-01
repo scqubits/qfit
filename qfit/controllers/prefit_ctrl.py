@@ -230,10 +230,7 @@ class PrefitCtrl(QObject):
 
     def _buildHSParamSet(self, hilbertspace: "HilbertSpace"):
         """
-        Identify prefit slider parameters for the HilbertSpace object. For
-        now, we only accept one tunable parameter (flux or ng) in the
-        HilbertSpace object. If one flux and one ng are found, we assume
-        that the flux is swept.
+        Identify prefit slider parameters for the HilbertSpace object. 
 
         A temporary solution for the prefit slider parameter.
         """
