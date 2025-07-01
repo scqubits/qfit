@@ -188,17 +188,17 @@ class IntTupleLineEdit(ValidatedLineEdit):
         
         # view-level validator: any possible partial input is accepted
         # e.g. ",2", "02, 3", "02, ,4"
-        regEx = QRegExp("^[0-9,\s]*$")
+        regEx = QRegExp(r"^[0-9,\s]*$")
         self._validator = QRegExpValidator(regEx)
         self.setValidator(self._validator)
         
         # model-level validator:
         if tupleLength is None:
             # integer tuple with any length
-            regEx = QRegExp("^([1-9]\d*|0)(, ?([1-9]\d*|0))*$")
+            regEx = QRegExp(r"^([1-9]\d*|0)(, ?([1-9]\d*|0))*$")
         else:
             # integer tuple with length tupleLength
-            regEx = QRegExp("^([1-9]\d*|0)(, ?([1-9]\d*|0)){%d}$" % (tupleLength - 1))
+            regEx = QRegExp(r"^([1-9]\d*|0)(, ?([1-9]\d*|0)){%d}$" % (tupleLength - 1))
         self._finalValidator = QRegExpValidator(regEx)
 
     def setTupleLength(self, tupleLength: int):
@@ -233,19 +233,19 @@ class StateLineEdit(ValidatedLineEdit):
         
         # view-level validator: any possible partial input is accepted
         # e.g. "", "02", ",2", "02, 3", "02, ,4"
-        regEx = QRegExp("^$|^[0-9,\s]*$")
+        regEx = QRegExp(r"^$|^[0-9,\s]*$")
         self._validator = QRegExpValidator(regEx)
         self.setValidator(self._validator)
         
         # model-level validator:
         if tupleLength is None:
             # integer tuple with any length or empty string
-            regEx = QRegExp("^$|^([1-9]\d*|0)(, ?([1-9]\d*|0))*$")
+            regEx = QRegExp(r"^$|^([1-9]\d*|0)(, ?([1-9]\d*|0))*$")
         else:
             # integer or a tuple with length tupleLength or empty string
             num_commas = tupleLength - 1
             regEx = QRegExp(
-                "^$|^([1-9]\d*|0)(, ?([1-9]\d*|0)){0,%d}$" % num_commas
+                r"^$|^([1-9]\d*|0)(, ?([1-9]\d*|0)){0,%d}$" % num_commas
             )
         self._finalValidator = QRegExpValidator(regEx)
 
@@ -287,15 +287,41 @@ class MultiIntsLineEdit(ValidatedLineEdit):
         Initialize the validators for the line edit.
         """
         # View-level validator: allows any partial input with digits, semicolons, and spaces
-        viewRegEx = QRegExp("^[0-9;\s]*$")
+        viewRegEx = QRegExp(r"^[0-9;\s]*$")
         self._validator = QRegExpValidator(viewRegEx)
         self.setValidator(self._validator)
 
         # Model-level validator: ensures complete and valid input
         # Accepts any number of integers separated by semicolons
-        modelRegEx = QRegExp("^$|^([1-9]\d*|0)(\s*;\s*([1-9]\d*|0))*$")
+        modelRegEx = QRegExp(r"^$|^([1-9]\d*|0)(\s*;\s*([1-9]\d*|0))*$")
         
         self._finalValidator = QRegExpValidator(modelRegEx)
+        
+    @staticmethod
+    def strToInts(intStrs: str) -> List[int | None]:
+        """
+        Convert a string of integers separated by semicolons to a list of integers.
+        """
+        ints = []
+        for intStr in intStrs.split(";"):
+            if intStr.strip() == "":
+                ints.append(None)
+            else:
+                ints.append(int(intStr))
+        return ints
+    
+    @staticmethod
+    def intsToStr(ints: List[int | None]) -> str:
+        """
+        Convert a list of integers to a tuple of integers.
+        """
+        strs = []
+        for int_ in ints:
+            if int_ is None:
+                strs.append("")
+            else:   
+                strs.append(str(int_))
+        return "; ".join(strs)
         
     def getInts(self) -> List[int | None]:
         """
@@ -304,12 +330,7 @@ class MultiIntsLineEdit(ValidatedLineEdit):
         if not self.isValid():
             return [None]
 
-        ints = []
-        for int_str in self.text().split(";"):
-            if int_str.strip() == "":
-                ints.append(None)
-            else:
-                ints.append(int(int_str))
+        ints = self.strToInts(self.text())
                 
         assert not (None in ints and len(ints) > 1), "Impossible case, " \
             "which should be already caught by the validator"  
@@ -317,13 +338,7 @@ class MultiIntsLineEdit(ValidatedLineEdit):
         return ints
     
     def setFromInts(self, ints: List[int | None]):
-        strs = []
-        for int_ in ints:
-            if int_ is None:
-                strs.append("")
-            else:   
-                strs.append(str(int_))
-        self.setText("; ".join(strs))
+        self.setText(self.intsToStr(ints))
 
 
 class MultiIntTuplesLineEdit(ValidatedLineEdit):
@@ -336,26 +351,52 @@ class MultiIntTuplesLineEdit(ValidatedLineEdit):
         Initialize the validators for the line edit.
         """
         # View-level validator: allows any partial input with digits, commas, semicolons, and spaces
-        viewRegEx = QRegExp("^[0-9,;\s]*$")
+        viewRegEx = QRegExp(r"^[0-9,;\s]*$")
         self._validator = QRegExpValidator(viewRegEx)
         self.setValidator(self._validator)
 
         # Model-level validator: ensures complete and valid input
         if tupleLength is None:
             # Accepts any number of tuples, each being a tuple of any length
-            modelRegEx = QRegExp("^$|^([1-9]\d*|0)(\s*,\s*([1-9]\d*|0))*"
-                                 "(\s*;\s*([1-9]\d*|0)(\s*,\s*([1-9]\d*|0))*)*$")
+            modelRegEx = QRegExp(r"^$|^([1-9]\d*|0)(\s*,\s*([1-9]\d*|0))*"
+                                 r"(\s*;\s*([1-9]\d*|0)(\s*,\s*([1-9]\d*|0))*)*$")
         else:
             # Accepts any number of tuples, each being a tuple with the specified length
             num_commas = tupleLength - 1
-            modelRegEx = QRegExp("^$|^([1-9]\d*|0)(\s*,\s*([1-9]\d*|0)){%d}"
-                                 "(\s*;\s*([1-9]\d*|0)(\s*,\s*([1-9]\d*|0)){%d})*$" % (num_commas, num_commas))
+            modelRegEx = QRegExp(r"^$|^([1-9]\d*|0)(\s*,\s*([1-9]\d*|0)){%d}"
+                                 r"(\s*;\s*([1-9]\d*|0)(\s*,\s*([1-9]\d*|0)){%d})*$" % (num_commas, num_commas))
         
         self._finalValidator = QRegExpValidator(modelRegEx)
         
     def setTupleLength(self, tupleLength: int):
         self._initializeValidator(tupleLength)
         
+    @staticmethod
+    def strToTuples(tupleStrs: str) -> List[Tuple[int, ...] | None]:
+        """
+        Convert a string of tuples separated by semicolons to a list of tuples of integers.
+        """
+        tuples = []
+        for tupleStr in tupleStrs.split(";"):
+            if tupleStr.strip() == "":
+                tuples.append(None)
+            else:
+                tuples.append(tuple(int(x) for x in tupleStr.split(",")))
+        return tuples
+    
+    @staticmethod
+    def tuplesToStr(tuples: List[Tuple[int, ...] | None]) -> str:
+        """
+        Convert a list of tuples of integers to a string of tuples separated by semicolons.
+        """
+        strs = []
+        for tuple_ in tuples:
+            if tuple_ is None:
+                strs.append("")
+            else:   
+                strs.append(", ".join(str(x) for x in tuple_))
+        return "; ".join(strs)
+    
     def getTuples(self) -> List[Tuple[int, ...] | None]:
         """
         Return the tuples in the line edit. Each tuple is a tuple of integers.
@@ -363,12 +404,7 @@ class MultiIntTuplesLineEdit(ValidatedLineEdit):
         if not self.isValid():
             return [None]
         
-        tuples = []
-        for tuple_str in self.text().split(";"):
-            if tuple_str.strip() == "":
-                tuples.append(None)
-            else:
-                tuples.append(tuple(int(x) for x in tuple_str.split(",")))
+        tuples = self.strToTuples(self.text())
                 
         assert not (None in tuples and len(tuples) > 1), "Impossible case, " \
             "which should be already caught by the validator"  
@@ -376,13 +412,7 @@ class MultiIntTuplesLineEdit(ValidatedLineEdit):
         return tuples
     
     def setFromTuples(self, tuples: List[Tuple[int, ...] | None]):
-        strs = []
-        for tuple_ in tuples:
-            if tuple_ is None:
-                strs.append("")
-            else:   
-                strs.append(", ".join(str(x) for x in tuple_))
-        self.setText("; ".join(strs))
+        self.setText(self.tuplesToStr(tuples))
 
 
 class MultiStatesLineEdit(ValidatedLineEdit):
@@ -397,20 +427,20 @@ class MultiStatesLineEdit(ValidatedLineEdit):
         Initialize the validators for the line edit.
         """
         # View-level validator: allows any partial input with digits, commas, semicolons, and spaces
-        viewRegEx = QRegExp("^[0-9,;\s]*$")
+        viewRegEx = QRegExp(r"^[0-9,;\s]*$")
         self._validator = QRegExpValidator(viewRegEx)
         self.setValidator(self._validator)
 
         # Model-level validator: ensures complete and valid input
         if tupleLength is None:
             # Accepts any number of states, each being an int or a tuple of any length
-            modelRegEx = QRegExp("^$|^([1-9]\d*|0)(\s*,\s*([1-9]\d*|0))*"
-                                 "(\s*;\s*([1-9]\d*|0)(\s*,\s*([1-9]\d*|0))*)*$")
+            modelRegEx = QRegExp(r"^$|^([1-9]\d*|0)(\s*,\s*([1-9]\d*|0))*"
+                                 r"(\s*;\s*([1-9]\d*|0)(\s*,\s*([1-9]\d*|0))*)*$")
         else:
             # Accepts any number of states, each being an int or a tuple with the specified length
             num_commas = tupleLength - 1
-            modelRegEx = QRegExp("^$|^([1-9]\d*|0)(\s*,\s*([1-9]\d*|0)){0,%d}"
-                                 "(\s*;\s*([1-9]\d*|0)(\s*,\s*([1-9]\d*|0)){0,%d})*$" % (num_commas, num_commas))
+            modelRegEx = QRegExp(r"^$|^([1-9]\d*|0)(\s*,\s*([1-9]\d*|0)){0,%d}"
+                                 r"(\s*;\s*([1-9]\d*|0)(\s*,\s*([1-9]\d*|0)){0,%d})*$" % (num_commas, num_commas))
         
         self._finalValidator = QRegExpValidator(modelRegEx)
         

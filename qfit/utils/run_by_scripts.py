@@ -1,8 +1,13 @@
 import yaml
 from qfit.models.data_structures import (
-    MeasRawXYConfig, ParamAttr
+    MeasRawXYConfig, ParamAttr, Tag
+)
+from qfit.widgets.validated_line_edits import (
+    MultiIntsLineEdit,
+    MultiIntTuplesLineEdit,
 )
 import os
+import warnings
 
 from typing import Dict, List, Any, TYPE_CHECKING
 if TYPE_CHECKING:
@@ -147,47 +152,61 @@ def applyCalibration(
         raise ValueError(f"Unit {freqUnit} not supported")
     return numX, fluxNames
 
+def _tagByDict(tagDict):
+    """
+    Convert a tag dictionary (from the config file) into a Tag object.
+    """
+    kwargs = {}
+    for fieldName, fieldValue in tagDict.items():
+        if fieldName == "tagType":
+            kwargs[fieldName] = fieldValue
+        elif tagDict["tagType"] == "DISPERSIVE_BARE" and fieldName in ["initial", "final"]:
+            kwargs[fieldName] = MultiIntTuplesLineEdit.strToTuples(str(fieldValue))
+        elif tagDict["tagType"] == "DISPERSIVE_DRESSED" and fieldName in ["initial", "final"]:
+            kwargs[fieldName] = MultiIntsLineEdit.strToInts(str(fieldValue))
+        else:
+            # photons
+            kwargs[fieldName] = fieldValue
+        
+    return Tag(**kwargs)
 
 def applyExtraction(
     fit: "Fit",
+    fileAndTransDict: Dict[str, Dict[str, Any]],
 ):
     """Switch to extraction page (stub for future extraction logic)."""
     fit._pageView.switchToPage("extract")
     
-    # for each
-    
-    config = load_config(path, config_file)
-    print(f"Tagging profile {path + config['save_path']}")
-    
-    fit = load_fit_by_config(path, config_file, show_window=False)
-    
-    for file_name, config_trans_dict in config["file_paths"].items():
-        if config_trans_dict is None:
+    # for each file, create and label the transitions
+    for fileName, configTransDict in fileAndTransDict.items():
+        _, fileStr = os.path.split(fileName)
+        if configTransDict is None:
             continue
         
-        extracted_transitions = fit._allDatasets._fullSpectra[file_name]
-        extracted_name = [transition.name for transition in extracted_transitions]
+        # get the extracted transitions
+        extractedTransitions = fit._allDatasets._fullSpectra[fileStr]
+        extractedName = [transition.name for transition in extractedTransitions]
         
-        # compare extracted_name with config_trans_dict.keys()
-        for transition_name in config_trans_dict.keys():
-            if transition_name not in extracted_name:
-                warnings.warn(
-                    f"Can't find transition '{transition_name}' to be tagged"
-                )
+        # compare extracted_name with config_trans_dict.keys() and create the transitions
+        for transitionName in configTransDict.keys():
+            if transitionName not in extractedName:
+                # create an empty transition
+                fit._allDatasets.newRow(transitionName)
                 
-        for transition in extracted_transitions:
-            if transition.name not in config_trans_dict.keys():
+        # label the transitions
+        for transition in extractedTransitions:
+            if transition.name in configTransDict.keys():
+                tag = _tagByDict(configTransDict[transition.name])
+                transition.tag = tag
+            else:
                 warnings.warn(
                     f"Transition '{transition.name}' is not tagged in config file"
                 )
-            else:
-                tag = _tag_by_dict(config_trans_dict[transition.name])
-                transition.tag = tag
-        
-    if save_and_close:
-        fit._ioCtrl.forceSaveAs(path + config["save_path"])
-        fit.close()
-
+    
+    # update the currently visible transition's tag
+    activeDataset = fit._extractingCtrl.activeDataset
+    activeDataset.dataSwitched.emit(activeDataset._transition)
+    
     return fit 
 
 
@@ -297,6 +316,7 @@ def applyConfigYaml(
     """
     path = os.path.dirname(yamlFile)
     yamlDict = _loadYaml(yamlFile)
+    fileAndTransDict = yamlDict["file_paths"]
     xAxis = _splitStr(yamlDict["axes"]["x"])
     yAxis = _splitStr(yamlDict["axes"]["y"])
     transposeSquareData = yamlDict.get("transpose_square_data", False)
@@ -332,6 +352,7 @@ def applyConfigYaml(
     )
     applyExtraction(
         fit,
+        fileAndTransDict,
     )
     applyPrefit(
         fit, 
