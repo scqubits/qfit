@@ -550,7 +550,10 @@ class PlottingCtrl(QObject):
         Toggle the visibility of the prefit spectrum.
         """
         self.mplCanvas._plottingElements["spectrum"].set_visible(checked)
-        self.mplCanvas.plotAllElements()
+        self.mplCanvas.canvas.draw_idle()
+        for canvasAndConfigs in self.standaloneCanvases.values():
+            canvasAndConfigs.canvas._plottingElements["spectrum"].set_visible(checked)
+            canvasAndConfigs.canvas.canvas.draw_idle()
     
     def prefitConnects(self):
         """

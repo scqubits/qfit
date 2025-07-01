@@ -153,7 +153,42 @@ def applyExtraction(
 ):
     """Switch to extraction page (stub for future extraction logic)."""
     fit._pageView.switchToPage("extract")
-    # ... not yet implemented
+    
+    # for each
+    
+    config = load_config(path, config_file)
+    print(f"Tagging profile {path + config['save_path']}")
+    
+    fit = load_fit_by_config(path, config_file, show_window=False)
+    
+    for file_name, config_trans_dict in config["file_paths"].items():
+        if config_trans_dict is None:
+            continue
+        
+        extracted_transitions = fit._allDatasets._fullSpectra[file_name]
+        extracted_name = [transition.name for transition in extracted_transitions]
+        
+        # compare extracted_name with config_trans_dict.keys()
+        for transition_name in config_trans_dict.keys():
+            if transition_name not in extracted_name:
+                warnings.warn(
+                    f"Can't find transition '{transition_name}' to be tagged"
+                )
+                
+        for transition in extracted_transitions:
+            if transition.name not in config_trans_dict.keys():
+                warnings.warn(
+                    f"Transition '{transition.name}' is not tagged in config file"
+                )
+            else:
+                tag = _tag_by_dict(config_trans_dict[transition.name])
+                transition.tag = tag
+        
+    if save_and_close:
+        fit._ioCtrl.forceSaveAs(path + config["save_path"])
+        fit.close()
+
+    return fit 
 
 
 def applyPrefit(

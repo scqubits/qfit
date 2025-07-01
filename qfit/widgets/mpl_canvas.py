@@ -986,25 +986,25 @@ class MplFigureCanvas(QFrame):
     ):
         """
         Switch to the mode and update the plotting elements
+        
+        We no longer update the spectrum visibility here, it is controlled by 
+        a button in plotting tool panel.
         """
         if page == "calibrate":
             self._setVisible("measurement", True)
             self._setVisible("extraction_vlines", False)
             self._setVisible("active_extractions", False)
             self._setVisible("all_extractions", False)
-            self._setVisible("spectrum", False)
         elif page == "extract":
             self._setVisible("measurement", True)
             self._setVisible("extraction_vlines", True)
             self._setVisible("active_extractions", True)
             self._setVisible("all_extractions", True)
-            self._setVisible("spectrum", False)
         elif page == "fit" or page == "prefit":
             self._setVisible("measurement", True)
             self._setVisible("extraction_vlines", False)
             self._setVisible("active_extractions", True)
             self._setVisible("all_extractions", True)
-            self._setVisible("spectrum", True)
 
         self.canvas.draw_idle()
 
