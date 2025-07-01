@@ -12,6 +12,7 @@ import warnings
 from typing import Dict, List, Any, TYPE_CHECKING
 if TYPE_CHECKING:
     from qfit.core.qfit import Fit
+    from scqubits.core.hilbert_space import HilbertSpace
 
 
 # load the config file and create the fit
@@ -372,3 +373,171 @@ def applyConfigYaml(
         fit._ioCtrl.forceSaveAs(savePath)
         
     return fit
+
+
+def generate_yaml_template(
+    hilbertspace: "HilbertSpace",
+    file_path: str = None,
+    num_voltages: int = 1,
+):
+    """
+    Generate a template for the config file.
+
+    Parameters
+    ----------
+    hilbertspace: HilbertSpace
+        The HilbertSpace object for the fit.
+    file_path: str, optional
+        The path to save the config file. If None, print to the console.
+    num_voltages: int, optional
+        The number of voltage sources for the calibration. Default is 1.
+    """
+    # grab the parameters from the HilbertSpace object
+    paramsToExclude = ["ng", "flux", "cutoff", "ncut", "truncated_dim"]
+    numSweepParams = 0
+    params = {}
+    for subsystem in hilbertspace.subsystem_list:
+        params[subsystem.id_str] = {}
+        for paramName in subsystem.default_params().keys():
+            if paramName not in paramsToExclude:
+                value = getattr(subsystem, paramName)
+                params[subsystem.id_str][paramName] = value
+            if paramName in ["flux", "ng"]:
+                numSweepParams += 1 # count the number of sweep parameters
+
+    if hilbertspace.interaction_list:
+        params["Interactions"] = {}
+        for idx, interactionTerm in enumerate(hilbertspace.interaction_list):
+            gName = f"g{idx+1}"
+            value = interactionTerm.g_strength
+            params["Interactions"][gName] = value
+
+    # create the init_parameters string
+    initParamsStr = ""
+    for parentName, paramDictByParent in params.items():
+        initParamsStr += f"  {parentName}:\n"
+        for paramName, param in paramDictByParent.items():
+            initParamsStr += f"    {paramName}: {param:.4f}\n"
+    initParamsStr = initParamsStr.strip("\n")
+
+    # create the parameter_bounds string
+    paramBoundsStr = ""
+    for parentName, paramDictByParent in params.items():
+        paramBoundsStr += f"  {parentName}:\n"
+        for paramName, param in paramDictByParent.items():
+            paramBoundsStr += f"    {paramName}: 0.1\n"
+    paramBoundsStr = paramBoundsStr.strip("\n")
+
+    # create the calibration string
+    pointsRequired = num_voltages + 1
+
+    if num_voltages == 1:
+        calibStr = f"""# For a single voltage source, provide 2 pairs of voltage and control parameter for linear conversion.
+voltage_flux_conversion:
+  <voltage_1>: <control_param_1>
+  <voltage_2>: <control_param_2>"""
+    else:
+        calibStr = f"""# Example for {num_voltages} voltage source(s) and {numSweepParams} control parameter(s).
+# For a full calibration, provide {pointsRequired} data points (pairs of voltage and control parameter values).
+# Each point consists of a comma-separated string for voltages and a corresponding one for control parameter values.
+voltage_flux_conversion:
+"""
+        for i in range(pointsRequired):
+            voltagePlaceholders = ", ".join(
+                f"<voltage{j+1}_{i+1}>" for j in range(num_voltages)
+            )
+            if numSweepParams > 0:
+                controlPlaceholders = ", ".join(
+                    f"<control_param{j+1}_{i+1}>" for j in range(numSweepParams)
+                )
+                calibStr += f'  "{voltagePlaceholders}": "{controlPlaceholders}"\n'
+            else:
+                calibStr += f'  "{voltagePlaceholders}": ""\n'
+
+        calibStr = calibStr.strip()
+
+    template = f"""# This is a template for the configuration file for initializing QFit.
+# Entries wrapped in < > are placeholders that you should replace with your own values.
+
+# ==================================================================
+# Required entries
+# ==================================================================
+
+# Measurement data files and their corresponding transitions.
+# For each file, you can specify transitions and their labels to create an empty transition. 
+file_paths:
+  <path/to/your/data1>:
+    # No transitions are specified for this file.
+  <path/to/your/data2>:
+    <transition_name_1>:
+      tagType: DISPERSIVE_BARE  # can be DISPERSIVE_BARE or DISPERSIVE_DRESSED 
+      # For DISPERSIVE_BARE, provide initial and final states as tuples of integers.
+      initial: <e.g., 0,0>
+      final: <e.g., 0,1>
+      photons: <e.g., 1>
+    <transition_name_2>:
+      tagType: DISPERSIVE_DRESSED
+      # For DISPERSIVE_DRESSED, provide initial and final states as integers.
+      initial: <e.g., 0>
+      final: <e.g., 1>
+      photons: <e.g., 1>
+
+# Axes configuration, names must match the data in the file
+axes:
+  x: <name_of_x_axis_from_data_file>
+  y: <name_of_y_axis_from_data_file>
+
+# Calibrate X axis: Voltage-flux conversion.
+{calibStr}
+
+# Initial parameters for the fit.
+# The structure is generated based on the HilbertSpace object.
+# Replace the values with your initial guesses for prefit and fit.
+init_parameters:
+{initParamsStr}
+
+# ==================================================================
+# Optional entries
+# ==================================================================
+
+# Frequency unit for the y-axis.
+freq_unit: GHz  # available options: MHz, GHz
+
+# Transpose the data if x and y axes are swappable.
+transpose_square_data: false
+
+# Optimizer for the fit.
+# Options: L-BFGS-B, Nelder-Mead, Powell, shgo, differential_evolution
+optimizer: L-BFGS-B
+
+# Optimization bounds. For each parameter, providing: 
+# - A float (e.g., 0.1) sets a relative bound of +/- 10% around the initial value.
+# - A list of two floats (e.g., [min, max]) sets an absolute value bound.
+# - A string "fixed" prevents the parameter from being varied during optimization.
+parameter_bounds:
+{paramBoundsStr}
+
+# Whether to optimize the voltage-flux conversion parameters.
+optimize_calibration: false
+
+# Measurement data's filter settings.
+filter:
+  topHat: false
+  wavelet: false
+  edge: false
+  bgndX: false
+  bgndY: false
+  log: false
+  min: 0
+  max: 100
+  color: viridis
+
+# Path to save the fit results. If not provided, the results will not be saved automatically.
+# save_path: <path/to/save/results.qfit>
+"""
+    if file_path:
+        with open(file_path, "w") as f:
+            f.write(template)
+        print(f"Configuration template saved to {file_path}")
+    else:
+        print(template)

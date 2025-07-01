@@ -15,6 +15,7 @@ __all__ = [
     "block_exec",
     "block_exec_until",
     "block_exec_until_success",
+    "generate_yaml_template",
 ]
 
 from qfit.core.qfit import Fit
@@ -26,6 +27,7 @@ from qfit.utils.helpers import (
     block_exec_until,
     block_exec_until_success,
 )
+from qfit.utils.run_by_scripts import generate_yaml_template
 
 if _executed_in_ipython():
     # inside ipython, the function get_ipython is always in globals()
