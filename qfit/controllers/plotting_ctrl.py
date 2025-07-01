@@ -47,8 +47,8 @@ class StandaloneCanvasAndConfigs:
     def __init__(
         self,
         name: str,
-        rawX: Dict[str, np.ndarray],
-        rawY: Dict[str, np.ndarray],
+        rawX: OrderedDictMod[str, np.ndarray],
+        rawY: OrderedDictMod[str, np.ndarray],
         figNames: List[str],
         canvas: MplFigureCanvas,
     ):
@@ -374,8 +374,8 @@ class PlottingCtrl(QObject):
 
     def _setXYAxes(
         self,
-        rawX: Dict[str, np.ndarray],
-        rawY: Dict[str, np.ndarray],
+        rawX: OrderedDictMod[str, np.ndarray],
+        rawY: OrderedDictMod[str, np.ndarray],
         calibFuncName: str,
         canvas: MplFigureCanvas | None = None,
     ):
@@ -423,6 +423,8 @@ class PlottingCtrl(QObject):
         canvas.updateYAxes(mappedYName, mappedYLim)
 
     def _setXYAxesByCurrentMeasData(self):
+        # self.mplCanvas.home()
+        
         measData = self.measDataSet.currentMeasData
         self._setXYAxes(
             rawX=measData.rawX,
@@ -433,6 +435,8 @@ class PlottingCtrl(QObject):
 
     def _setXYAxesForStandaloneCanvas(self, canvasName: str):
         canvasAndConfigs = self.standaloneCanvases[canvasName]
+        # canvasAndConfigs.canvas.home()
+        
         self._setXYAxes(
             rawX=canvasAndConfigs.rawX,
             rawY=canvasAndConfigs.rawY,
@@ -834,7 +838,7 @@ class PlottingCtrl(QObject):
         selectedData = []
         figNames = []
         if selectedDataNames is None:
-            selectedDataNames = range(len(fullData))
+            selectedDataNames = list(range(len(fullData)))
         for idx, data in enumerate(fullData):
             if idx in selectedDataNames or data.name in selectedDataNames:
                 selectedData.append(data)

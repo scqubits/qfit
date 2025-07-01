@@ -86,14 +86,17 @@ def applyCalibration(
 ):
     """Apply calibration parameters to the fit."""
     fit._pageView.switchToPage("calibrate")
+    
+    # hand pick the parameter names
     voltageNames = fit._caliParamModel._rawXVecNameList
     fluxNames = [
         name
         for name in list(fit._caliParamModel["X1"].keys())
-        if name not in xAxis and name != "DATA<br>SOURCE"
+        if name not in voltageNames and name != "DATA<br>SOURCE"
     ]
     fluxNamesNoBr = [name.replace("<br>", "") for name in fluxNames]
     numX = len([key for key in fit._caliParamModel.keys() if key.startswith("X")])
+    
     print(f"\nNote: Calibrating parameters must be provided in the following format:")
     print(f"voltage_flux_conversion: ")
     for idx in range(numX):
@@ -182,6 +185,8 @@ def applyFit(
     optimizer: str,
 ):
     """Set up the fit parameters, bounds, optimizer, and save/close if needed."""
+    
+    # copy the initial parameters to the fit parameters
     fit._fitCtrl._prefitToFit()
     fit._pageView.switchToPage("fit")
     
@@ -231,6 +236,7 @@ def applyFit(
             else:
                 raise ValueError(f"Parameter bound {paramName} = {param} not supported")
     fit._fitHSParams.emitUpdateBox()
+    
     if optimizeCalibration:
         for parentName in [f"X{idx+1}" for idx in range(numX)]:
             for fluxName in fluxNames:
@@ -241,6 +247,7 @@ def applyFit(
                     value=False,
                 )
                 fit._fitCaliParams.storeParamAttr(paramAttr)
+    
     fit._fitCaliParams.emitUpdateBox()
     fit._fitView.optimizerComboBox.setCurrentText(optimizer)
     fit._fitModel.updateOptimizer(optimizer)

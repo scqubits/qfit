@@ -624,6 +624,8 @@ class MplFigureCanvas(QFrame):
         self._currentPrcplXLim = self.axes.get_xlim()
         self._currentPrcplYLim = self.axes.get_ylim()
 
+        self._currentAllXLim = []
+        self._currentAllYLim = []
         for xAx in self._xAxes:
             self._currentAllXLim.append(xAx.get_xlim())
         for yAx in self._yAxes:
@@ -723,7 +725,7 @@ class MplFigureCanvas(QFrame):
         This Slot should be called accopmanied with relim and updateYAxes.
         """
         self._allXLim = list(xAxes.values())
-        self._currentAllXLim = copy.deepcopy(self._allXLim)
+        self._currentAllXLim = []
 
         for ax in self._xAxes:
             self.canvas.figure.delaxes(ax)
@@ -741,12 +743,19 @@ class MplFigureCanvas(QFrame):
             _, spineLoc = self._inchToPts((0, self._xAxesLoc(i)))
             ax.spines['bottom'].set_position(('outward', spineLoc))
             ax.xaxis.set_ticks_position('bottom')
+
+            # scale the x-axis if the canvas is panned or zoomed
+            currentXLim = self._dispLimByPrcplLim(
+                self._currentPrcplXLim, self._measPrcplXLim, xRange
+            )
+            self._currentAllXLim.append(currentXLim)
+
             if xRange[0] == xRange[1]:
                 ax.set_xlim(*self._nonSignularLim(xRange))
                 ax.set_xticks([xRange[0]])
                 ax.set_xticklabels([f"Coordinate fixed at: {xRange[0]:.4e}"])
             else:
-                ax.set_xlim(*xRange)
+                ax.set_xlim(*currentXLim)
 
             # label
             labelLoc = self._inchToPts((-0.05, -self._xAxesLoc(i + 0.5)))
@@ -775,14 +784,21 @@ class MplFigureCanvas(QFrame):
         This Slot should be called accopmanied with relim and updateXAxes.
         """
         self._allYLim = [yRange]
-        self._currentAllYLim = copy.deepcopy(self._allYLim)
+        self._currentAllYLim = []
         
         for ax in self._yAxes:
             self.canvas.figure.delaxes(ax)
 
         # Create a new axes for each x-values in the dictionary
         ax = self.axes.twinx()
-        ax.set_ylim(*self._nonSignularLim(yRange))
+
+        # scale the y-axis if the canvas is panned or zoomed
+        currentYLim = self._dispLimByPrcplLim(
+            self._currentPrcplYLim, self._measPrcplYLim, yRange
+        )
+        self._currentAllYLim.append(currentYLim)
+        ax.set_ylim(*currentYLim)
+
         ax.set_ylabel(yName)
         ax.set_label(f"Y axis: {yName}")
         ax.yaxis.set_ticks_position('left')
