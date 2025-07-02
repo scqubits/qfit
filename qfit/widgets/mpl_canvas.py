@@ -22,11 +22,8 @@ from PySide6.QtWidgets import (
 )
 
 from matplotlib.backend_bases import cursors
-from matplotlib.backends.backend_qtagg import (
-    # FigureCanvasQTAgg,
-    FigureCanvas as FigureCanvasQTAgg,
-    NavigationToolbar2QT,
-)
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qt import NavigationToolbar2QT
 
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -79,9 +76,11 @@ class NavigationHidden(NavigationToolbar2QT):
             self.update()
         
         # only connect to external buttons
-        self.toolitems = [
-            t for t in NavigationToolbar2QT.toolitems if t[0] in ("Home", "Pan", "Zoom")
-        ]
+        self.toolitems = tuple(
+            t
+            for t in super().toolitems
+            if t[0] in ("Home", "Pan", "Zoom")
+        )
 
         self.set_cursor(cursors.SELECT_REGION)
         self._idPress = None
@@ -434,6 +433,8 @@ class MplFigureCanvas(QFrame):
 
     def __init__(self, parent=None, standalone: bool = False):
         QFrame.__init__(self, parent)
+        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        self.setAttribute(QtCore.Qt.WA_NoSystemBackground, True)
 
         # this widget could be initialized outside of the main window
         # and shown as a standalone plotting widget

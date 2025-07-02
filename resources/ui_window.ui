@@ -13,12 +13,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1386</width>
-    <height>795</height>
+    <width>1206</width>
+    <height>816</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -4239,7 +4239,7 @@ QSpinBox::down-button:pressed {
                    <x>0</x>
                    <y>0</y>
                    <width>441</width>
-                   <height>383</height>
+                   <height>416</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -4993,7 +4993,7 @@ icon: url(:/icons/svg/copy-pressed.svg);
                    <x>0</x>
                    <y>0</y>
                    <width>441</width>
-                   <height>461</height>
+                   <height>494</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -5269,6 +5269,12 @@ icon: url(:/icons/svg/copy-pressed.svg);
           </property>
           <item>
            <widget class="QWidget" name="widget" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="styleSheet">
              <string notr="true">
 	background-color: #2A2A2A; 
@@ -5278,21 +5284,12 @@ icon: url(:/icons/svg/copy-pressed.svg);
             </property>
             <layout class="QVBoxLayout" name="verticalLayout">
              <property name="spacing">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>12</number>
-             </property>
-             <property name="rightMargin">
-              <number>12</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
+              <number>-1</number>
              </property>
              <item>
               <widget class="QWidget" name="mplFigureButtons" native="true">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -5300,7 +5297,7 @@ icon: url(:/icons/svg/copy-pressed.svg);
                <property name="minimumSize">
                 <size>
                  <width>0</width>
-                 <height>90</height>
+                 <height>78</height>
                 </size>
                </property>
                <property name="maximumSize">
@@ -5344,10 +5341,13 @@ QPushButton:checked {
                 <property name="leftMargin">
                  <number>12</number>
                 </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
                 <property name="horizontalSpacing">
                  <number>20</number>
                 </property>
-                <item row="1" column="3">
+                <item row="2" column="3">
                  <widget class="QLabel" name="label_34">
                   <property name="styleSheet">
                    <string notr="true">color: #DDDDDD; background-color: transparent;</string>
@@ -5447,7 +5447,7 @@ QPushButton:checked {
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="2">
+                <item row="2" column="2">
                  <widget class="QLabel" name="label_27">
                   <property name="styleSheet">
                    <string notr="true">color: #DDDDDD; background-color: transparent;</string>
@@ -5460,7 +5460,7 @@ QPushButton:checked {
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="8">
+                <item row="2" column="8">
                  <widget class="QLabel" name="label_35">
                   <property name="styleSheet">
                    <string notr="true">color: #DDDDDD; background-color: transparent;</string>
@@ -5470,67 +5470,6 @@ QPushButton:checked {
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignmentFlag::AlignCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="11" rowspan="2">
-                 <widget class="QPushButton" name="calibratedCheckBox">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>150</width>
-                    <height>65</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>200</width>
-                    <height>65</height>
-                   </size>
-                  </property>
-                  <property name="font">
-                   <font>
-                    <family>Roboto Medium</family>
-                    <pointsize>-1</pointsize>
-                    <kerning>false</kerning>
-                   </font>
-                  </property>
-                  <property name="styleSheet">
-                   <string notr="true">QPushButton {
-color: #DDDDDD;
-background-color: #2A2A2A;
-font-size: 14px;
-}
-
-QPushButton::checked {
-background-color: #2A2A2A;
-}
-
-</string>
-                  </property>
-                  <property name="text">
-                   <string>View
-Calibrated
-Axes</string>
-                  </property>
-                  <property name="icon">
-                   <iconset resource="resources.qrc">
-                    <normaloff>:/icons/svg/toggle-off.svg</normaloff>
-                    <normalon>:/icons/svg/toggle-on.svg</normalon>:/icons/svg/toggle-off.svg</iconset>
-                  </property>
-                  <property name="iconSize">
-                   <size>
-                    <width>60</width>
-                    <height>50</height>
-                   </size>
-                  </property>
-                  <property name="checkable">
-                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
@@ -5691,7 +5630,7 @@ Axes</string>
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="6">
+                <item row="2" column="6">
                  <widget class="QLabel" name="label_37">
                   <property name="font">
                    <font>
@@ -5710,7 +5649,7 @@ Axes</string>
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="0">
+                <item row="2" column="0">
                  <widget class="QLabel" name="label_9">
                   <property name="font">
                    <font>
@@ -5772,7 +5711,7 @@ Axes</string>
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="4">
+                <item row="2" column="4">
                  <widget class="QLabel" name="label_36">
                   <property name="styleSheet">
                    <string notr="true">color: #DDDDDD; background-color: transparent;</string>
@@ -5807,40 +5746,104 @@ Axes</string>
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="10">
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="mplFigureVisibilityButtons" native="true">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QWidget {
+	background-color: #2A2A2A;
+	border: 0px solid rgb(52, 59, 72);
+}
+QPushButton {
+	border: 0px solid rgb(52, 59, 72);
+	border-radius: 18px;	
+	background-color: #4B4B4B;
+}
+
+QPushButton:hover {
+	background-color: #5C3F83;
+	border: 0px solid rgb(61, 70, 86);
+}
+QPushButton:pressed {	
+	background-color: #5C3F83;
+	border: 0px solid rgb(43, 50, 61);
+}
+QPushButton:checked {	
+	background-color: #5C3F83;
+	border: 0px solid rgb(43, 50, 61);
+}
+</string>
+               </property>
+               <layout class="QHBoxLayout" name="horizontalLayout_4">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
                  <widget class="QPushButton" name="specVisibButton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="minimumSize">
                    <size>
-                    <width>10</width>
-                    <height>0</height>
+                    <width>120</width>
+                    <height>50</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>30</width>
-                    <height>39</height>
+                    <width>999</width>
+                    <height>999</height>
                    </size>
+                  </property>
+                  <property name="layoutDirection">
+                   <enum>Qt::LayoutDirection::LeftToRight</enum>
                   </property>
                   <property name="styleSheet">
                    <string notr="true">QPushButton {
-    background-color: transparent;
-    border: none;
-    padding: 4px;
-}</string>
+color: #DDDDDD;
+background-color: #2A2A2A;
+font-size: 14px;
+}
+
+QPushButton::checked {
+background-color: #2A2A2A;
+}
+
+</string>
                   </property>
                   <property name="text">
-                   <string/>
+                   <string>View Numerical Spectrum</string>
                   </property>
                   <property name="icon">
                    <iconset resource="resources.qrc">
-                    <normaloff>:/icons/svg/eye-pressed-darker.svg</normaloff>
-                    <normalon>:/icons/svg/eye-solid.svg</normalon>
-                    <activeon>:/icons/svg/eye-solid.svg</activeon>:/icons/svg/eye-pressed-darker.svg</iconset>
+                    <normaloff>:/icons/svg/toggle-off.svg</normaloff>
+                    <normalon>:/icons/svg/toggle-on.svg</normalon>
+                    <activeon>:/icons/svg/toggle-on.svg</activeon>:/icons/svg/toggle-off.svg</iconset>
                   </property>
                   <property name="iconSize">
                    <size>
-                    <width>20</width>
-                    <height>20</height>
+                    <width>60</width>
+                    <height>50</height>
                    </size>
                   </property>
                   <property name="checkable">
@@ -5851,21 +5854,93 @@ Axes</string>
                   </property>
                  </widget>
                 </item>
+                <item>
+                 <widget class="QPushButton" name="calibratedCheckBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>120</width>
+                    <height>50</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>200</width>
+                    <height>60</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <family>Roboto Medium</family>
+                    <pointsize>-1</pointsize>
+                    <kerning>false</kerning>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QPushButton {
+color: #DDDDDD;
+background-color: #2A2A2A;
+font-size: 14px;
+}
+
+QPushButton::checked {
+background-color: #2A2A2A;
+}
+
+</string>
+                  </property>
+                  <property name="text">
+                   <string>View Calibrated Axes</string>
+                  </property>
+                  <property name="icon">
+                   <iconset resource="resources.qrc">
+                    <normaloff>:/icons/svg/toggle-off.svg</normaloff>
+                    <normalon>:/icons/svg/toggle-on.svg</normalon>:/icons/svg/toggle-off.svg</iconset>
+                  </property>
+                  <property name="iconSize">
+                   <size>
+                    <width>60</width>
+                    <height>50</height>
+                   </size>
+                  </property>
+                  <property name="checkable">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_3">
+                  <property name="orientation">
+                   <enum>Qt::Orientation::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
                </layout>
               </widget>
              </item>
              <item>
               <widget class="MplFigureCanvas" name="mplFigureCanvas">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                 <horstretch>100</horstretch>
-                 <verstretch>100</verstretch>
+                <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>500</width>
-                 <height>500</height>
+                 <width>400</width>
+                 <height>400</height>
                 </size>
                </property>
                <property name="maximumSize">
@@ -5896,7 +5971,7 @@ QToolTip {
              <item>
               <widget class="QWidget" name="figureTabContainerWidget" native="true">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
