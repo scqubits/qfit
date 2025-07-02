@@ -88,6 +88,9 @@ class PrefitParamView(QObject):
             "editingFinished": self.caliEditingFinished,
             "rangeEditingFinished": self.caliRangeEditingFinished,
         }
+        # track the range updates
+        self._pendingRangeUpdates: set[tuple[str, str]] = set()
+        self._connectRangeUpdateNotif()
 
     def _insertSliders(
         self, paramNameDict: Dict[str, List[str]], removeExisting: bool = True
@@ -295,6 +298,10 @@ class PrefitParamView(QObject):
     def _connectMinmaxTableFolding(self):
         self.foldable_widget.expandWidgetToggled.connect(self.toggleMinMaxTableFrame)
 
+    def _connectRangeUpdateNotif(self):
+        self.HSRangeEditingFinished.connect(self._markRangeUpdate)
+        self.caliRangeEditingFinished.connect(self._markRangeUpdate)
+
     # slots ==========================================================
     @Slot(ParamAttr)
     def setByParamAttr(self, paramAttr: ParamAttr, toSlider: bool = True):
@@ -302,10 +309,13 @@ class PrefitParamView(QObject):
         Set the value of the parameter from the model using ParamAttr.
         """
         if paramAttr.attr == "value":
-            labeledSlider: LabeledSlider = self.sliderSet[paramAttr.parentName][
-                paramAttr.name
-            ]
-            labeledSlider.setValue(paramAttr.value, toSlider=toSlider)
+            slider: LabeledSlider = self.sliderSet[paramAttr.parentName][paramAttr.name]
+            key = (paramAttr.parentName, paramAttr.name)
+            if key in self._pendingRangeUpdates:
+                slider.setValueToSliderSilently(paramAttr.value)
+                self._pendingRangeUpdates.discard(key)
+            else:
+                slider.setValue(paramAttr.value, toSlider=toSlider)
         elif paramAttr.attr == "min":
             assert toSlider is False
             item: MinMaxItems = self.minMaxTable[paramAttr.parentName][paramAttr.name]
@@ -326,6 +336,14 @@ class PrefitParamView(QObject):
             self.prefitMinMaxFrame.setMaximumHeight(400)
         else:
             self.prefitMinMaxFrame.setMaximumHeight(0)
+
+    @Slot(ParamAttr)
+    def _markRangeUpdate(self, paramAttr: ParamAttr):
+        """
+        Remember that this parameter's value update is coming from
+        a min/max change, so the textbox must stay untouched.
+        """
+        self._pendingRangeUpdates.add((paramAttr.parentName, paramAttr.name))
 
 
 class SweepSettingsView(QObject):
