@@ -1,7 +1,7 @@
 import sys
 import os
 from copy import deepcopy as _deepcopy
-from typing import Union, Dict, Any, Dict, List, Optional, Tuple, Callable
+from typing import Union, Dict, Any, Dict, List, Optional, Tuple, Callable, Literal
 
 from PySide6.QtWidgets import QApplication
 
@@ -69,6 +69,13 @@ from qfit.controllers.io_ctrl import IOCtrl
 
 # settings
 import qfit.settings as settings
+
+# calibration export utils
+from qfit.utils.calibration_tools import (
+    full_x_matrix,
+    y_linear_params,
+    partial_x_pairs,
+)
 
 
 class Fit:
@@ -275,6 +282,74 @@ class Fit:
             hilbertSpace = self._prefitHSParams.hilbertspace
 
         return _deepcopy(hilbertSpace) if deepcopy else hilbertSpace
+
+    # ------------------------------------------------------------------
+    # calibration export
+    # ------------------------------------------------------------------
+    def export_calibration_result(
+        self,
+        source: Literal["current", "fit", "prefit"] = "current",
+    ) -> dict:
+        """Export calibration results in a uniform dict.
+
+        Depending on *source* this will use:
+        • "current" – whatever is shown in the calibration table now.
+        • "fit"     – the best-fit calibration parameters stored in
+                      ``_fitCaliParams``.
+        • "prefit"  – the pre-fit slider values (if any) stored in
+                      ``_prefitCaliParams``.
+
+        Returns
+        -------
+        dict
+            Keys
+                "mode" : "full" | "partial"
+                "X"   : for *full*   → (M, b, raw_names, map_names)
+                        for *partial* → dict returned by ``partial_x_pairs``
+                "Y"   : (offset, slope)
+        """
+        # 1. choose which numbers to read from
+        if source == "current":
+            # use the live model as-is
+            cali_model = self._caliParamModel
+            # restore_dict = None
+            cali_param_set_for_report = None
+        elif source == "fit":
+            cali_model = self._caliParamModel
+            # restore_dict = cali_model.getFlattenedAttrDict("value")
+            cali_param_set_for_report = self._fitCaliParams
+            # cali_model.setByFlattenedAttrDict(fit_dict, "value")
+        elif source == "prefit":
+            cali_model = self._caliParamModel
+            # restore_dict = cali_model.getFlattenedAttrDict("value")
+            cali_param_set_for_report = self._prefitCaliParams
+            # cali_model.setByFlattenedAttrDict(prefit_dict, "value")
+        else:
+            raise ValueError("Unknown source option.")
+
+        # try:
+        # Y always linear (offset, slope)
+        y_result = y_linear_params(cali_model, cali_param_set_for_report)
+
+        if cali_model.isFullCalibration:
+            M, b, raw_names, map_names = full_x_matrix(
+                cali_model, cali_param_set_for_report
+            )
+            x_result = (M, b, raw_names, map_names)
+            mode = "full"
+        else:
+            x_result = partial_x_pairs(cali_model, cali_param_set_for_report)
+            mode = "partial"
+
+        return {
+            "mode": mode,
+            "X": x_result,
+            "Y": y_result,
+        }
+        # finally:
+        # restore original table if we overwrote it
+        # if restore_dict is not None:
+        #     cali_model.setByFlattenedAttrDict(restore_dict, "value")
 
     # methods to controll the window ###################################
     def close(self):
