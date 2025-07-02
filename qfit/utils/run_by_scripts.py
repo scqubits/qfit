@@ -382,14 +382,16 @@ def generate_yaml_template(
     num_voltages: int = 1,
 ):
     """
-    Generate a template for the config file.
+    Generate a template for the configuration file to initialize QFit by 
+    calling Fit.new_by_yaml().
 
     Parameters
     ----------
     hilbertspace: HilbertSpace
         The HilbertSpace object for the fit.
     file_path: str, optional
-        The path to save the config file. If None, print to the console.
+        The path to save the configuration file. If None, print to the 
+        console.
     num_voltages: int, optional
         The number of voltage sources for the calibration. Default is 1.
     """
