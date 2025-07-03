@@ -421,10 +421,13 @@ def full_x_calibration(
     raw_param_names = tuple(cali_param_model._rawXVecNameList)  # e.g. ("V1", "V2", ...)
     row_names = tuple(cali_param_model._caliTableXRowIdxList)  # ("X1", "X2", ...)
 
+    mapped_param_source = cali_param_model.parameters
+    if param_set is not None:
+        mapped_param_source = param_set.parameters
+    raw_param_source = cali_param_model.parameters
+
     # Build augmented raw matrix from *raw* components stored in the live table
-    aug_raw_matrix = augmented_raw_matrix(
-        row_names, raw_param_names, cali_param_model.parameters
-    )
+    aug_raw_matrix = augmented_raw_matrix(row_names, raw_param_names, raw_param_source)
 
     offsets: List[float] = []
     slopes: List[List[float]] = []
@@ -436,7 +439,7 @@ def full_x_calibration(
             col_name = f"{param_name}<br>({parent_name})"
 
             y = np.array(
-                [_get_val(r, col_name, cali_param_model.parameters) for r in row_names]
+                [_get_val(r, col_name, mapped_param_source) for r in row_names]
             )
 
             try:
@@ -488,6 +491,11 @@ def partial_x_calibration(
         str, Tuple[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]
     ] = {}
 
+    mapped_param_source = cali_param_model.parameters
+    if param_set is not None:
+        mapped_param_source = param_set.parameters
+    raw_param_source = cali_param_model.parameters
+
     for fig in cali_param_model._figNames:
         rows = cali_param_model._xRowIdxBySourceDict[fig]
         if len(rows) != 2:
@@ -498,16 +506,10 @@ def partial_x_calibration(
         raw_vecs, map_vecs = [], []
         for row in rows:
             raw_vec = np.array(
-                [
-                    _get_val(row, rn, cali_param_model.parameters)
-                    for rn in raw_param_names
-                ]
+                [_get_val(row, rn, raw_param_source) for rn in raw_param_names]
             )
             map_vec = np.array(
-                [
-                    _get_val(row, mn, cali_param_model.parameters)
-                    for mn in mapped_param_names
-                ]
+                [_get_val(row, mn, mapped_param_source) for mn in mapped_param_names]
             )
             raw_vecs.append(raw_vec)
             map_vecs.append(map_vec)
@@ -525,10 +527,16 @@ def full_y_calibration(
     # Build matrix and vector manually to allow substitution of mappedY values
     raw_vals = []
     map_vals = []
+
+    raw_param_source = cali_model.parameters
+    mapped_param_source = cali_model.parameters
+    if param_set is not None:
+        mapped_param_source = param_set.parameters
+
     for row in ["Y1", "Y2"]:
-        raw_vals.append(cali_model.parameters[row][cali_model._rawYName].value)
+        raw_vals.append(_get_val(row, cali_model._rawYName, raw_param_source))
         map_col = "mappedY"
-        map_vals.append(_get_val(row, map_col, cali_model.parameters))
+        map_vals.append(_get_val(row, map_col, mapped_param_source))
 
     aug = np.vstack([np.ones(2), np.array(raw_vals)]).T  # 2x2
     alpha_vec: np.ndarray
