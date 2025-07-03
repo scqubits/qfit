@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple, Sequence, Any, TYPE_CHECKING, Optional
+from typing import Dict, List, Tuple, Sequence, Any, TYPE_CHECKING, Optional, Union
 
 import numpy as np
 from abc import ABC, abstractmethod
@@ -8,19 +8,67 @@ if TYPE_CHECKING:
     from qfit.models.parameter_set import ParamSet
 
 
-# -----------------------------------------------------------------------------
-# Pretty-name helper (defined *before* classes so linters are happy)
-# -----------------------------------------------------------------------------
-
-
 def format_mapped_param_key(pair: Tuple[str, str]) -> str:
     """Return a compact label such as ``Q1.EJ`` for a mapped parameter."""
     return f"{pair[0]}.{pair[1]}"
 
 
-# -----------------------------------------------------------------------------
-# Abstract base – common Y-calibration behaviour
-# -----------------------------------------------------------------------------
+def export_circuit_parameters_from_paramset(
+    param_set: "ParamSet",
+) -> Dict[Tuple[str, str], float]:
+    """
+    Export the circuit parameters from the parameter set.
+
+    Parameters
+    ----------
+    param_set: ParamSet
+        The parameter set to export.
+
+    Returns
+    -------
+    Dict[Tuple[str, str], float]
+        The exported circuit parameters.
+    """
+    flat = param_set.getFlattenedAttrDict("value")
+
+    conv: Dict[Tuple[str, str], float] = {}
+    for key, val in flat.items():
+        parent, param = parse_mapped_param_name(key)
+        conv[(parent, param)] = val
+    return conv
+
+
+def export_calibration_result_from_paramset(
+    cali_model: "CaliParamModel", param_set: "ParamSet"
+) -> Union["FullCalibrationResult", "PartialCalibrationResult"]:
+
+    # Y calibration (always linear)
+    y_slope, y_offset = full_y_calibration(cali_model, param_set)
+    raw_y_name = cali_model._rawYName
+
+    if cali_model.isFullCalibration:
+        # FULL calibration
+        M, b, raw_names, map_names = full_x_calibration(cali_model, param_set)
+        return FullCalibrationResult(
+            x_linear_part=M,
+            x_offset=b,
+            raw_dc_bias_names=raw_names,
+            mapped_sweep_param_names=map_names,
+            y_slope=y_slope,
+            y_offset=y_offset,
+            raw_y_name=raw_y_name,
+        )
+    else:
+        # PARTIAL calibration
+        data_dict, raw_names, map_names = partial_x_calibration(cali_model, param_set)
+        return PartialCalibrationResult(
+            data_dict=data_dict,
+            raw_param_names=raw_names,
+            mapped_param_names=map_names,
+            y_slope=y_slope,
+            y_offset=y_offset,
+            raw_y_name=raw_y_name,
+        )
 
 
 class CalibrationResult(ABC):

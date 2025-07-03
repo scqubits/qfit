@@ -71,12 +71,15 @@ from qfit.controllers.io_ctrl import IOCtrl
 import qfit.settings as settings
 
 # calibration export utils
-from qfit.utils.calibration_tools import (
+from qfit.qfit.utils.export import (
     full_x_calibration,
     partial_x_calibration,
     full_y_calibration,
     FullCalibrationResult,
     PartialCalibrationResult,
+    parse_mapped_param_name,
+    export_circuit_parameters_from_paramset,
+    export_calibration_result_from_paramset,
 )
 
 
@@ -231,30 +234,8 @@ class Fit:
         return instance
 
     # methods to export data ##################################################
-    def export_parameters(self, from_fit: bool = True) -> Dict[str, Any]:
-        """
-        Export the fit parameters to a file.
-
-        Parameters
-        ----------
-        from_fit: bool
-            As we have two copies of parameters, one from prefit sliders and one from fit tables, please specify which one to export.
-        """
-        if from_fit:
-            return (
-                self._fitHSParams.getFlattenedAttrDict("value")
-                | self._caliParamModel.getFlattenedAttrDict("value")
-                | self._fitCaliParams.getFlattenedAttrDict("value")
-            )
-        else:
-            return (
-                self._prefitHSParams.getFlattenedAttrDict("value")
-                | self._caliParamModel.getFlattenedAttrDict("value")
-                | self._prefitCaliParams.getFlattenedAttrDict("value")
-            )
-
     def export_hilbertspace(
-        self, deepcopy: bool = False, from_fit: bool = True
+        self, deepcopy: bool = False, source: Literal["fit", "prefit"] = "fit"
     ) -> HilbertSpace:
         """
         Export the HilbertSpace object.
@@ -265,11 +246,13 @@ class Fit:
             If True, a deepcopy of the HilbertSpace object is returned.
             If False, the original HilbertSpace object is returned. Either of
             them is updated with the latest parameters.
-        fromFit: bool
-            As we have two copies of parameters, one from prefit sliders and one from fit tables, please specify which one to export.
+        source: Literal["fit", "prefit"]
+            Which parameter set to use:
+            * fit: final fit table values (default)
+            * prefit: slider / pre-fit values
         """
 
-        if from_fit:
+        if source == "fit":
             self._fitHSParams.blockSignals(True)
             self._fitHSParams.updateParamForHS()
             self._fitHSParams.blockSignals(False)
@@ -285,56 +268,57 @@ class Fit:
 
         return _deepcopy(hilbertSpace) if deepcopy else hilbertSpace
 
-    # ------------------------------------------------------------------
-    # calibration export
-    # ------------------------------------------------------------------
     def export_calibration_result(
         self,
-        source: Literal["current", "fit", "prefit"] = "current",
+        source: Literal["calibration", "fit", "prefit"] = "calibration",
     ) -> Union[PartialCalibrationResult, FullCalibrationResult]:
-        """Export calibration result as a data object (full or partial)."""
+        """
+        Export calibration result as a data object (full or partial).
+
+        Parameters
+        ----------
+        source
+            Which parameter set to use:
+            * calibration: calibration panel values (default)
+            * fit: final fit table values
+            * prefit: slider / pre-fit values
+        """
 
         # pick parameter set according to source
-        if source == "current":
+        if source == "calibration":
             param_set = None
         elif source == "fit":
             param_set = self._fitCaliParams
         elif source == "prefit":
             param_set = self._prefitCaliParams
         else:
-            raise ValueError("Unknown source option.")
+            raise ValueError(f"Unknown source option: {source}")
 
-        cali_model = self._caliParamModel
+        return export_calibration_result_from_paramset(self._caliParamModel, param_set)
 
-        # Y calibration (always linear)
-        y_slope, y_offset = full_y_calibration(cali_model, param_set)
-        raw_y_name = cali_model._rawYName
+    def export_circuit_parameters(
+        self, source: Literal["fit", "prefit"] = "fit"
+    ) -> Dict[Tuple[str, str], float]:
+        """Return a flatten dict of Hilbert-space (circuit) parameters.
 
-        if cali_model.isFullCalibration:
-            # FULL calibration
-            M, b, raw_names, map_names = full_x_calibration(cali_model, param_set)
-            return FullCalibrationResult(
-                x_linear_part=M,
-                x_offset=b,
-                raw_dc_bias_names=raw_names,
-                mapped_sweep_param_names=map_names,
-                y_slope=y_slope,
-                y_offset=y_offset,
-                raw_y_name=raw_y_name,
-            )
+        Keys are (parent_name, param_name) tuples, e.g. ("Transmon", "EJ").
+
+        Parameters
+        ----------
+        source
+            Which parameter set to use:
+            * fit: final fit table values (default)
+            * prefit: slider / pre-fit values
+        """
+
+        if source == "fit":
+            param_set = self._fitHSParams
+        elif source == "prefit":
+            param_set = self._prefitHSParams
         else:
-            # PARTIAL calibration
-            data_dict, raw_names, map_names = partial_x_calibration(
-                cali_model, param_set
-            )
-            return PartialCalibrationResult(
-                data_dict=data_dict,
-                raw_param_names=raw_names,
-                mapped_param_names=map_names,
-                y_slope=y_slope,
-                y_offset=y_offset,
-                raw_y_name=raw_y_name,
-            )
+            raise ValueError(f"Unknown source option: {source}")
+
+        return export_circuit_parameters_from_paramset(param_set)
 
     # methods to controll the window ###################################
     def close(self):
