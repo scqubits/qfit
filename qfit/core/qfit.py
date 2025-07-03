@@ -72,9 +72,11 @@ import qfit.settings as settings
 
 # calibration export utils
 from qfit.utils.calibration_tools import (
-    full_x_matrix,
-    y_linear_params,
-    partial_x_pairs,
+    full_x_calibration,
+    partial_x_calibration,
+    full_y_calibration,
+    FullCalibrationResult,
+    PartialCalibrationResult,
 )
 
 
@@ -289,67 +291,50 @@ class Fit:
     def export_calibration_result(
         self,
         source: Literal["current", "fit", "prefit"] = "current",
-    ) -> dict:
-        """Export calibration results in a uniform dict.
+    ) -> Union[PartialCalibrationResult, FullCalibrationResult]:
+        """Export calibration result as a data object (full or partial)."""
 
-        Depending on *source* this will use:
-        • "current" – whatever is shown in the calibration table now.
-        • "fit"     – the best-fit calibration parameters stored in
-                      ``_fitCaliParams``.
-        • "prefit"  – the pre-fit slider values (if any) stored in
-                      ``_prefitCaliParams``.
-
-        Returns
-        -------
-        dict
-            Keys
-                "mode" : "full" | "partial"
-                "X"   : for *full*   → (M, b, raw_names, map_names)
-                        for *partial* → dict returned by ``partial_x_pairs``
-                "Y"   : (offset, slope)
-        """
-        # 1. choose which numbers to read from
+        # pick parameter set according to source
         if source == "current":
-            # use the live model as-is
-            cali_model = self._caliParamModel
-            # restore_dict = None
-            cali_param_set_for_report = None
+            param_set = None
         elif source == "fit":
-            cali_model = self._caliParamModel
-            # restore_dict = cali_model.getFlattenedAttrDict("value")
-            cali_param_set_for_report = self._fitCaliParams
-            # cali_model.setByFlattenedAttrDict(fit_dict, "value")
+            param_set = self._fitCaliParams
         elif source == "prefit":
-            cali_model = self._caliParamModel
-            # restore_dict = cali_model.getFlattenedAttrDict("value")
-            cali_param_set_for_report = self._prefitCaliParams
-            # cali_model.setByFlattenedAttrDict(prefit_dict, "value")
+            param_set = self._prefitCaliParams
         else:
             raise ValueError("Unknown source option.")
 
-        # try:
-        # Y always linear (offset, slope)
-        y_result = y_linear_params(cali_model, cali_param_set_for_report)
+        cali_model = self._caliParamModel
+
+        # Y calibration (always linear)
+        y_slope, y_offset = full_y_calibration(cali_model, param_set)
+        raw_y_name = cali_model._rawYName
 
         if cali_model.isFullCalibration:
-            M, b, raw_names, map_names = full_x_matrix(
-                cali_model, cali_param_set_for_report
+            # FULL calibration
+            M, b, raw_names, map_names = full_x_calibration(cali_model, param_set)
+            return FullCalibrationResult(
+                x_linear_part=M,
+                x_offset=b,
+                raw_dc_bias_names=raw_names,
+                mapped_sweep_param_names=map_names,
+                y_slope=y_slope,
+                y_offset=y_offset,
+                raw_y_name=raw_y_name,
             )
-            x_result = (M, b, raw_names, map_names)
-            mode = "full"
         else:
-            x_result = partial_x_pairs(cali_model, cali_param_set_for_report)
-            mode = "partial"
-
-        return {
-            "mode": mode,
-            "X": x_result,
-            "Y": y_result,
-        }
-        # finally:
-        # restore original table if we overwrote it
-        # if restore_dict is not None:
-        #     cali_model.setByFlattenedAttrDict(restore_dict, "value")
+            # PARTIAL calibration
+            data_dict, raw_names, map_names = partial_x_calibration(
+                cali_model, param_set
+            )
+            return PartialCalibrationResult(
+                data_dict=data_dict,
+                raw_param_names=raw_names,
+                mapped_param_names=map_names,
+                y_slope=y_slope,
+                y_offset=y_offset,
+                raw_y_name=raw_y_name,
+            )
 
     # methods to controll the window ###################################
     def close(self):
