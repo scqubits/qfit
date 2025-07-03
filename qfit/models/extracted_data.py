@@ -277,32 +277,26 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
 
     @property
     def _currentSpectrum(self) -> ExtrSpectra:
-        return self._fullSpectra[self.currentFigName]
+        return self._fullSpectra[self._currentFigName]
 
     def data(self, index: QModelIndex, role):
-        """
-        The NAME & Icon of the transition!
-        """
-        if role == Qt.DisplayRole:
-            str_value = self._currentSpectrum[index.row()].name
-            return str_value
+        if not index.isValid():
+            return None
 
-        if role == Qt.DecorationRole:
-            if self._currentSpectrum[index.row()].tag.tagType != "NO_TAG":
-                # icon1.addPixmap(
-                #     QtGui.QPixmap(":/icons/svg/tag.svg").scaled(40, 40),
-                #     QtGui.QIcon.Normal,
-                #     QtGui.QIcon.Off,
-                # )
-                icon1 = QtGui.QIcon(":/icons/svg/tag.svg")
+        row = index.row()
+        transition = self._currentSpectrum[row]
+
+        if role == Qt.ItemDataRole.DisplayRole or role == Qt.ItemDataRole.EditRole:
+            return transition.name
+
+        if role == Qt.ItemDataRole.DecorationRole:
+            if transition.tag.tagType != "NO_TAG":
+                icon = QtGui.QIcon(":/icons/svg/tag.svg")
             else:
-                # icon1.addPixmap(
-                #     QtGui.QPixmap(":/icons/svg/tag-question.svg").scaled(40, 40),
-                #     QtGui.QIcon.Normal,
-                #     QtGui.QIcon.Off,
-                # )
-                icon1 = QtGui.QIcon(":/icons/svg/tag-question.svg")
-            return icon1
+                icon = QtGui.QIcon(":/icons/svg/tag-question.svg")
+            return icon
+
+        return None
 
     def rowCount(self, *args) -> int:
         return len(self._fullSpectra[self.currentFigName])
@@ -314,11 +308,14 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
         return self._currentSpectrum.isEmpty()
 
     def flags(self, index):
-        flags = super(self.__class__, self).flags(index)
-        flags |= Qt.ItemIsEditable
-        flags |= Qt.ItemIsSelectable
-        flags |= Qt.ItemIsEnabled
-        return flags
+        if not index.isValid():
+            return Qt.ItemFlag.NoItemFlags
+        
+        return (
+            Qt.ItemFlag.ItemIsSelectable
+            | Qt.ItemFlag.ItemIsEnabled
+            | Qt.ItemFlag.ItemIsEditable
+        )
 
     # Signal processing ================================================
     def emitFocusChanged(self, *args):
@@ -407,14 +404,7 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
 
     # Public data manipulation =========================================
     def setData(self, index: QModelIndex, data, role=None):
-        """
-        Override Qt's native setData method to update the name of the transition.
-        
-        Update:
-        1. The name shown in the list view
-        2. The name of the currently selected spectrum
-        """
-        if not (index.isValid() and role == Qt.EditRole):
+        if not index.isValid() or role != Qt.ItemDataRole.EditRole:
             return False
         try:
             self._currentSpectrum[index.row()].name = data
@@ -424,7 +414,7 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
 
     def swapXY(self):
         """
-        Swap the x and y values of the current transition.
+        Swap the x and y values of all transitions.
         """
         self._fullSpectra.swapXY()
         self.emitXUpdated()
@@ -479,7 +469,7 @@ class AllExtractedData(QAbstractListModel, Registrable, metaclass=ListModelMeta)
             counter += 1
 
         self.insertRow(rowCount)
-        self.setData(self.index(rowCount, 0), str_value, role=Qt.EditRole)
+        self.setData(self.index(rowCount, 0), str_value, role=Qt.ItemDataRole.EditRole)
 
     @Slot()
     def removeCurrentRow(self):

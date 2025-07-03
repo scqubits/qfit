@@ -47,8 +47,8 @@ class StandaloneCanvasAndConfigs:
     def __init__(
         self,
         name: str,
-        rawX: Dict[str, np.ndarray],
-        rawY: Dict[str, np.ndarray],
+        rawX: OrderedDictMod[str, np.ndarray],
+        rawY: OrderedDictMod[str, np.ndarray],
         figNames: List[str],
         canvas: MplFigureCanvas,
     ):
@@ -141,6 +141,7 @@ class PlottingCtrl(QObject):
             # self.calibrationButtons,
             self.calibratedCheckBox,
             self.pageView,
+            self.sweepSettingsView,
         ) = views
         self.mplCanvas = mplCanvas
         self.axes = mplCanvas.axes
@@ -162,6 +163,7 @@ class PlottingCtrl(QObject):
         self.mouseClickConnects()
         self.plottingModeConnects()
         self.caliConnects()
+        self.prefitConnects()
 
         # Although measurement data is updated when reloaded,
         # but swapXY only involves the "pointer" of measurement data,
@@ -372,8 +374,8 @@ class PlottingCtrl(QObject):
 
     def _setXYAxes(
         self,
-        rawX: Dict[str, np.ndarray],
-        rawY: Dict[str, np.ndarray],
+        rawX: OrderedDictMod[str, np.ndarray],
+        rawY: OrderedDictMod[str, np.ndarray],
         calibFuncName: str,
         canvas: MplFigureCanvas | None = None,
     ):
@@ -421,6 +423,8 @@ class PlottingCtrl(QObject):
         canvas.updateYAxes(mappedYName, mappedYLim)
 
     def _setXYAxesByCurrentMeasData(self):
+        # self.mplCanvas.home()
+        
         measData = self.measDataSet.currentMeasData
         self._setXYAxes(
             rawX=measData.rawX,
@@ -431,6 +435,8 @@ class PlottingCtrl(QObject):
 
     def _setXYAxesForStandaloneCanvas(self, canvasName: str):
         canvasAndConfigs = self.standaloneCanvases[canvasName]
+        # canvasAndConfigs.canvas.home()
+        
         self._setXYAxes(
             rawX=canvasAndConfigs.rawX,
             rawY=canvasAndConfigs.rawY,
@@ -536,6 +542,24 @@ class PlottingCtrl(QObject):
     def isRelativelyClose(self, x1y1: np.ndarray, x2y2: np.ndarray):
         distance = self.mplCanvas._distanceInPts(x1y1, x2y2)
         return distance < np.sqrt(MARKER_SIZE)
+    
+    # prefit ===========================================================
+    @Slot(bool)
+    def toggleSpectrumVisibility(self, checked: bool):
+        """
+        Toggle the visibility of the prefit spectrum.
+        """
+        self.mplCanvas._plottingElements["spectrum"].set_visible(checked)
+        self.mplCanvas.canvas.draw_idle()
+        for canvasAndConfigs in self.standaloneCanvases.values():
+            canvasAndConfigs.canvas._plottingElements["spectrum"].set_visible(checked)
+            canvasAndConfigs.canvas.canvas.draw_idle()
+    
+    def prefitConnects(self):
+        """
+        Connect the prefit view to the prefit model.
+        """
+        self.sweepSettingsView.specVisibleUpdated.connect(self.toggleSpectrumVisibility)
 
     # plotting =========================================================
     def plotElementsConnects(self):
@@ -710,7 +734,10 @@ class PlottingCtrl(QObject):
         Reset the zoom and pan of the canvas.
         """
         self.mplCanvas.resetView()
-        self._setXYAxesByCurrentMeasData()
+        
+        # this is not the accurate thing to do as we are not changing the axes 
+        # this is replaced by _restoreXYLim() in the resetView()
+        # self._setXYAxesByCurrentMeasData()    
 
     def updateCursor(self):
         """
@@ -814,7 +841,7 @@ class PlottingCtrl(QObject):
         selectedData = []
         figNames = []
         if selectedDataNames is None:
-            selectedDataNames = range(len(fullData))
+            selectedDataNames = list(range(len(fullData)))
         for idx, data in enumerate(fullData):
             if idx in selectedDataNames or data.name in selectedDataNames:
                 selectedData.append(data)
@@ -848,6 +875,7 @@ class PlottingCtrl(QObject):
                 else:
                     allRawY[key] = np.concatenate([allRawY[key], val])
 
+        # if the xlim and ylim are not provided,
         # extract the range of each axis that enclose all the data
         rawX = OrderedDictMod()
         rawY = OrderedDictMod()
@@ -901,7 +929,7 @@ class PlottingCtrl(QObject):
         )
 
         # step 5: show the canvas ---------------------------------------------
-        canvas.canvas.draw()
+        canvas.canvas.draw_idle()
         canvas.show()
 
     def removeStandaloneCanvas(self, canvasName: str):

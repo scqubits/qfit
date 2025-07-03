@@ -759,8 +759,6 @@ class QuantumModel(QObject):
             if sweep is None:
                 continue
 
-            # manually turn off the warning message
-            sweep._out_of_sync_warning_issued = True
             try:
                 sweep.run()
             except Exception as e:
@@ -834,6 +832,14 @@ class QuantumModel(QObject):
                 self.updateStatus.emit(status)
         else:
             self._sweeps = result
+            # Acknowledge that a race condition could have happened:
+            # while the sweep was running asynchronously, the HilbertSpace object
+            # is updated and the sweep is out of sync.
+            # Since we have the results we want, suppress any potential warnings
+            # before using them.
+            for sweep in self._sweeps.values():
+                if sweep is not None:
+                    sweep._out_of_sync_warning_issued = True
             self.sweep2SpecCost(forced=forced, sweepUsage=sweepUsage)
 
     # public methods ===========================================================
@@ -1212,9 +1218,6 @@ class QuantumModel(QObject):
             if sweep is None:
                 continue
 
-            # manually turn off the warning message
-            sweep._out_of_sync_warning_issued = True
-
             deviSpectra = DeviSpectra()
             for transition in extrSpec:
                 try:
@@ -1374,8 +1377,6 @@ class SweepRunner(QRunnable):
             if sweep is None:
                 continue
 
-            # manually turn off the warning message
-            sweep._out_of_sync_warning_issued = True
             try:
                 sweep.run()
             except Exception as e:

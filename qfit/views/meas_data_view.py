@@ -48,19 +48,30 @@ class MeasDataView(QObject):
         Initialize the view: connect the buttons to the corresponding slots.
         """
         # when clicked a different tab, emit a signal for switching the current page
-        self.dataTab.currentChanged.connect(self.switchToFig)
-
-    @Slot()
+        self.dataTab.currentChanged.connect(self.emitFigChanged)
+        
     def switchToFig(self, figIdx: int):
         """
+        Switch to the given figure in the dataTab view and the dataTab 
+        will immediately emit the currentChanged signal, which will 
+        then trigger the figChanged signal and inform every other models.
+        """
+        # if no figure is present (when all the figures are deleted), do nothing
+        if figIdx == -1:
+            return
+        self.dataTab.setCurrentIndex(figIdx)
+
+    @Slot()
+    def emitFigChanged(self, figIdx: int):
+        """
+        View --> 
         Switch to the given figure and emit the figChanged signal.
         """
         # if no figure is present (when all the figures are deleted), do nothing
         if figIdx == -1:
             return
-
+        
         figName = self.dataTab.tabText(figIdx)
-
         self.figChanged.emit(figName)
 
     @Slot(list)

@@ -496,16 +496,23 @@ class MeasurementData:
 
     def _initRawXY(self):
         """
-        Initialize the raw x and y axis by the first compatible x and y axis.
+        Initialize the raw x and y axis by the first non-uniform 
+        x and y candidates.
         """
-        self._rawXNames = self.xCandidates.keyList[:1]
-        self._rawYNames = self.yCandidates.keyList[:1]
-
-        # if rawX and rawY are the same, set rawY to the next compatible y axis.
-        # It can always be done because there are pixel coordinates as the last
-        # resort
-        if self._rawXNames == self._rawYNames:
-            self._rawYNames = self.yCandidates.keyList[1:2]
+        self._rawXNames = [
+            self._findFastestAxis(self.xCandidates).name
+        ]
+        
+        # this can always be done because there are pixel coordinates 
+        # as the last resort
+        remainingYCandidates = OrderedDictMod({
+            key: value
+            for key, value in self.yCandidates.items()
+            if key not in self._rawXNames
+        })
+        self._rawYNames = [
+            self._findFastestAxis(remainingYCandidates).name
+        ]
 
     # def _removePixelCoord(self):
     #     """
@@ -548,6 +555,47 @@ class MeasurementData:
         ydim, xdim = self._principalZ.data.shape[:2]
         self.xCandidates.update({f"range({xdim})": np.arange(xdim)})
         self.yCandidates.update({f"range({ydim})": np.arange(ydim)})
+        
+    def _findFastestAxis(
+        self, 
+        candidates: OrderedDictMod[str, np.ndarray],
+    ) -> DictItem[str, np.ndarray]:
+        """
+        Find the axis that has the fastest change in the candidate dictionary. 
+        The search will be done amond the non-pixel coordinate candidates first. 
+        If that fails (all axes are uniform), the pixel coordinate candidates will be used.
+        
+        Parameters
+        ----------
+        candidates: OrderedDictMod[str, np.ndarray]
+            The candidate dictionary to search for the fastest axis.
+            
+        Returns
+        -------
+        DictItem[str, np.ndarray]
+            The axis that has the fastest change in the candidate dictionary.
+        """
+        nonPixelCoordCandidates = OrderedDictMod({
+            key: value
+            for key, value in candidates.items()
+            if not key.startswith("range")
+        })
+        
+        diffs = ([
+            data.max() - data.min()
+            for data in nonPixelCoordCandidates.values()
+        ])
+        idx = np.argmax(diffs)
+        
+        if np.isclose(diffs[idx], 0):
+            diffs = ([
+                data.max() - data.min()
+                for data in candidates.values()
+            ])
+            idx = np.argmax(diffs)
+            return candidates.itemByIndex(int(idx))
+        else:
+            return nonPixelCoordCandidates.itemByIndex(int(idx))
 
     def _resetPrincipalXY(self):
         """
@@ -556,12 +604,9 @@ class MeasurementData:
         Since there should only be one y axis, the principal y axis is
         the first y axis.
         """
-        if len(self.rawX) > 1:
-            idx = np.argmax([data.max() - data.min() for data in self.rawX.values()])
-            self._principalX = self.rawX.itemByIndex(int(idx))
-        else:
-            self._principalX = self.rawX.itemByIndex(0)
-
+        self._principalX = self._findFastestAxis(self.rawX)
+        
+        assert len(self.rawY) == 1, "There should only be one raw y axis"
         self._principalY = self.rawY.itemByIndex(0)
 
     def swapXY(self):

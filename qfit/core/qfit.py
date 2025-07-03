@@ -67,6 +67,9 @@ from qfit.models.registry import Registry
 # menu controller
 from qfit.controllers.io_ctrl import IOCtrl
 
+# run by scripts
+from qfit.utils.run_by_scripts import dataPathsFromYaml, applyConfigYaml
+
 # settings
 import qfit.settings as settings
 
@@ -129,8 +132,8 @@ class Fit:
 
     def __init__(
         self,
-        hilbertSpace: HilbertSpace,
-        measurementFileName: Optional[str | List[str]] = None,
+        hilbert_space: HilbertSpace,
+        measurement_file_name: Optional[str | List[str]] = None,
         deepcopy: bool = False,
         **kwargs,
     ):
@@ -138,8 +141,8 @@ class Fit:
 
         self._ioCtrl.newProject(
             from_menu=False,
-            hilbertSpace=hilbertSpace,
-            measurementFileName=measurementFileName,
+            hilbertSpace=hilbert_space,
+            measurementFileName=measurement_file_name,
             deepcopy=deepcopy,
         )
 
@@ -153,8 +156,8 @@ class Fit:
     @classmethod
     def new(
         cls,
-        hilbertSpace: HilbertSpace,
-        measurementFileName: Optional[str | List[str]] = None,
+        hilbert_space: HilbertSpace,
+        measurement_file_name: Optional[str | List[str]] = None,
         deepcopy: bool = False,
         **kwargs,
     ) -> "Fit":
@@ -181,15 +184,45 @@ class Fit:
         """
         instance = cls.__new__(cls)
         instance.__init__(
-            hilbertSpace, measurementFileName, deepcopy=deepcopy, **kwargs
+            hilbert_space, measurement_file_name, deepcopy=deepcopy, **kwargs
         )
 
+        return instance
+    
+    @classmethod
+    def new_by_yaml(
+        cls,
+        hilbert_space: HilbertSpace,
+        yaml_file: str,
+        deepcopy: bool = False,
+        **kwargs,
+    ) -> "Fit":
+        """
+        Create a qfit project from a yaml file.
+        
+        Parameters
+        ----------
+        hilbert_space: HilbertSpace
+            HilbertSpace object from scqubits
+        yaml_file: str
+            Path to the yaml file
+        deepcopy: bool
+            Whether to use a deepcopy of the HilbertSpace object, instead of
+            referencing the original HilbertSpace object. The latter option
+            updates the original HilbertSpace object during any prefit / fit
+            operations.
+        """
+        data_paths = dataPathsFromYaml(yaml_file)
+        instance = cls.new(
+            hilbert_space, data_paths, deepcopy=deepcopy, **kwargs
+        )
+        applyConfigYaml(instance, yaml_file)
         return instance
 
     @classmethod
     def open(
         cls,
-        fileName: Union[str, None] = None,
+        file_name: Union[str, None] = None,
         deepcopy: bool = False,
         **kwargs,
     ) -> "Fit":
@@ -217,7 +250,7 @@ class Fit:
         # load registry
         instance._ioCtrl.openFile(
             from_menu=False,
-            fileName=fileName,
+            file_name=file_name,
             deepcopy=deepcopy,
         )
 
@@ -692,6 +725,7 @@ class Fit:
             "numCPUs": self._settingUi.ui.numCPUsLineEdit,
             "pointsAdded": self._settingUi.ui.pointsAddLineEdit,
             "autoRun": self._mainUi.autoRunCheckBox,
+            "specVisible": self._mainUi.specVisibButton,
         }
 
         self._quantumModel = QuantumModel(self._mainWindow)
@@ -812,6 +846,7 @@ class Fit:
                 # self._calibrationButtons,
                 self._mainUi.calibratedCheckBox,
                 self._pageView,
+                self._sweepSettingsView,
             ),
         )
 
