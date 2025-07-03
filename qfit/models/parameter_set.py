@@ -390,7 +390,8 @@ class HSParamSet(ParamSet[ParamCls], Generic[ParamCls]):
             excluded_parameter_type=excluded_parameter_type,
         )
 
-    def _paramDictForCircuit(self, subsystem: Circuit) -> Dict[str, List[str]]:
+    @staticmethod
+    def _paramDictForCircuit(subsystem: Circuit) -> Dict[str, List[str]]:
         """
         The parameter dict is used to identify the parameters of a
         Circuit object, which serves as QSYS_PARAM_NAMES for the Circuit object.
