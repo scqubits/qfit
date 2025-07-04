@@ -249,8 +249,8 @@ class Fit:
 
         # load registry
         instance._ioCtrl.openFile(
-            from_menu=False,
-            file_name=file_name,
+            fromMenu=False,
+            fileName=file_name,
             deepcopy=deepcopy,
         )
 
