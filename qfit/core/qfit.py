@@ -77,8 +77,8 @@ import qfit.settings as settings
 from qfit.utils.export import (
     FullCalibrationResult,
     PartialCalibrationResult,
-    export_circuit_parameters_from_paramset,
-    export_calibration_result_from_paramset,
+    exportCircuitParametersFromParamset,
+    exportCalibrationResultFromParamset,
 )
 
 
@@ -188,7 +188,7 @@ class Fit:
         )
 
         return instance
-    
+
     @classmethod
     def new_by_yaml(
         cls,
@@ -199,7 +199,7 @@ class Fit:
     ) -> "Fit":
         """
         Create a qfit project from a yaml file.
-        
+
         Parameters
         ----------
         hilbert_space: HilbertSpace
@@ -213,9 +213,7 @@ class Fit:
             operations.
         """
         data_paths = dataPathsFromYaml(yaml_file)
-        instance = cls.new(
-            hilbert_space, data_paths, deepcopy=deepcopy, **kwargs
-        )
+        instance = cls.new(hilbert_space, data_paths, deepcopy=deepcopy, **kwargs)
         applyConfigYaml(instance, yaml_file)
         return instance
 
@@ -323,7 +321,7 @@ class Fit:
         else:
             raise ValueError(f"Unknown source option: {source}")
 
-        return export_calibration_result_from_paramset(self._caliParamModel, param_set)
+        return exportCalibrationResultFromParamset(self._caliParamModel, param_set)
 
     def export_circuit_parameters(
         self, source: Literal["fit", "prefit"] = "fit"
@@ -347,7 +345,7 @@ class Fit:
         else:
             raise ValueError(f"Unknown source option: {source}")
 
-        return export_circuit_parameters_from_paramset(param_set)
+        return exportCircuitParametersFromParamset(param_set)
 
     # methods to controll the window ###################################
     def close(self):
