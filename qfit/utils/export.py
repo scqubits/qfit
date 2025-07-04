@@ -8,12 +8,7 @@ if TYPE_CHECKING:
     from qfit.models.parameter_set import ParamSet
 
 
-def format_mapped_param_key(pair: Tuple[str, str]) -> str:
-    """Return a compact label such as ``Q1.EJ`` for a mapped parameter."""
-    return f"{pair[0]}.{pair[1]}"
-
-
-def export_circuit_parameters_from_paramset(
+def exportCircuitParametersFromParamset(
     param_set: "ParamSet",
 ) -> Dict[Tuple[str, str], float]:
     """
@@ -33,38 +28,42 @@ def export_circuit_parameters_from_paramset(
 
     conv: Dict[Tuple[str, str], float] = {}
     for key, val in flat.items():
-        parent, param = parse_mapped_param_name(key)
+        parent, param = parseMappedParamName(key)
         conv[(parent, param)] = val
     return conv
 
 
-def export_calibration_result_from_paramset(
+def exportCalibrationResultFromParamset(
     cali_model: "CaliParamModel", param_set: "ParamSet"
 ) -> Union["FullCalibrationResult", "PartialCalibrationResult"]:
 
     # Y calibration (always linear)
-    y_slope, y_offset = full_y_calibration(cali_model, param_set)
+    y_slope, y_offset = returnPrecursorFullYCalibration(cali_model, param_set)
     raw_y_name = cali_model._rawYName
 
     if cali_model.isFullCalibration:
         # FULL calibration
-        M, b, raw_names, map_names = full_x_calibration(cali_model, param_set)
+        M, b, rawNames, mapNames = returnPrecursorFullXCalibration(
+            cali_model, param_set
+        )
         return FullCalibrationResult(
-            x_linear_part=M,
+            x_linear=M,
             x_offset=b,
-            raw_dc_bias_names=raw_names,
-            mapped_sweep_param_names=map_names,
+            raw_dc_bias_names=rawNames,
+            mapped_sweep_param_names=mapNames,
             y_slope=y_slope,
             y_offset=y_offset,
             raw_y_name=raw_y_name,
         )
     else:
         # PARTIAL calibration
-        data_dict, raw_names, map_names = partial_x_calibration(cali_model, param_set)
+        dataDict, rawNames, mapNames = returnPrecursorPartialXCalibration(
+            cali_model, param_set
+        )
         return PartialCalibrationResult(
-            data_dict=data_dict,
-            raw_param_names=raw_names,
-            mapped_param_names=map_names,
+            data_dict=dataDict,
+            raw_param_names=rawNames,
+            mapped_param_names=mapNames,
             y_slope=y_slope,
             y_offset=y_offset,
             raw_y_name=raw_y_name,
@@ -112,7 +111,7 @@ class CalibrationResult(ABC):
 class FullCalibrationResult(CalibrationResult):
     def __init__(
         self,
-        x_linear_part: np.ndarray,
+        x_linear: np.ndarray,
         x_offset: np.ndarray,
         raw_dc_bias_names: Tuple[str, ...],
         mapped_sweep_param_names: Tuple[str, ...],
@@ -123,12 +122,12 @@ class FullCalibrationResult(CalibrationResult):
         """
         A class to store the calibration result. The calibration assumes an affine function
         of the raw parameters to the map parameters:
-        mapped_sweep_param = x_linear_part @ raw_dc_bias + x_offset
+        mapped_sweep_param = x_linear @ raw_dc_bias + x_offset
         mapped_y = y_slope * raw_dc_bias + y_offset
 
         Parameters
         ----------
-        x_linear_part
+        x_linear
             The linear part of the x-axis calibration result.
         x_offset
             The offset of the x-axis calibration result.
@@ -144,12 +143,12 @@ class FullCalibrationResult(CalibrationResult):
         raw_y_name
             The name of the raw y parameter.
         """
-        self.x_linear_part = x_linear_part
+        self.x_linear = x_linear
         self.x_offset = x_offset
         self.raw_dc_bias_names = raw_dc_bias_names
         # store *parsed* parent/param pairs internally
-        self._mapped_param_pairs = tuple(
-            parse_mapped_param_name(name) for name in mapped_sweep_param_names
+        self.mapped_param_names = tuple(
+            parseMappedParamName(name) for name in mapped_sweep_param_names
         )
         # initialise Y-axis calibration via super-class
         super().__init__(y_slope=y_slope, y_offset=y_offset, raw_y_name=raw_y_name)
@@ -157,21 +156,23 @@ class FullCalibrationResult(CalibrationResult):
         self._np_print_opts = dict(precision=6, suppress_small=True)
 
     def __repr__(self):
-        mapped_labels = ", ".join(self.mapped_param_names)
+        mapped_labels = ", ".join(
+            str(mapped_param_name) for mapped_param_name in self.mapped_param_names
+        )
         raw_labels = ", ".join(self.raw_dc_bias_names)
         header = "FullCalibrationResult"
-        x_linear_part_str = np.array2string(self.x_linear_part, **self._np_print_opts)
+        x_linear_str = np.array2string(self.x_linear, **self._np_print_opts)
         x_offset_str = np.array2string(self.x_offset, **self._np_print_opts)
 
         return (
             f"{header}\n"
             f"--------------------------------\n"
             f"x-axis\n"
-            f"raw to mapped: mapped_sweep_param = x_linear_part @ raw_dc_bias + x_offset\n"
+            f"raw to mapped: mapped_sweep_param = x_linear @ raw_dc_bias + x_offset\n"
             f"raw names    : {raw_labels}\n"
             f"mapped names : {mapped_labels}\n"
             f"--------------------------------\n"
-            f"x_linear_part =\n{x_linear_part_str}\n"
+            f"x_linear =\n{x_linear_str}\n"
             f"x_offset = {x_offset_str}\n"
             f"--------------------------------\n"
             f"{self._repr_y()}\n"
@@ -192,18 +193,12 @@ class FullCalibrationResult(CalibrationResult):
             If *True* a ``dict`` mapping compact labels (e.g. ``Q1.EJ``)
             to float values is returned instead of a bare ``numpy`` vector.
         """
-        mapped = self.x_linear_part @ raw_dc_bias + self.x_offset
+        mapped = self.x_linear @ raw_dc_bias + self.x_offset
         if return_dict:
             return {
                 key: float(val) for key, val in zip(self.mapped_param_names, mapped)
             }
         return mapped
-
-    # public ----------------------------------------------------------------
-    @property
-    def mapped_param_names(self) -> Tuple[str, ...]:
-        """Human-readable mapped sweep-parameter names."""
-        return tuple(format_mapped_param_key(p) for p in self._mapped_param_pairs)
 
 
 class PartialCalibrationResult(CalibrationResult):
@@ -240,8 +235,8 @@ class PartialCalibrationResult(CalibrationResult):
         self._data = data_dict
         self.raw_param_names = raw_param_names
         # store *parsed* parent/param pairs internally
-        self._mapped_param_pairs = tuple(
-            parse_mapped_param_name(name) for name in mapped_param_names
+        self.mapped_param_names = tuple(
+            parseMappedParamName(name) for name in mapped_param_names
         )
         # store Y-axis calibration using base-class
         super().__init__(y_slope=y_slope, y_offset=y_offset, raw_y_name=raw_y_name)
@@ -303,7 +298,9 @@ class PartialCalibrationResult(CalibrationResult):
     def __repr__(self):
         header = "PartialCalibrationResult"
         raw_labels = ", ".join(self.raw_param_names)
-        mapped_labels = ", ".join(self.mapped_param_names)
+        mapped_labels = ", ".join(
+            str(mapped_param_name) for mapped_param_name in self.mapped_param_names
+        )
 
         lines: List[str] = [
             header,
@@ -320,24 +317,16 @@ class PartialCalibrationResult(CalibrationResult):
             for rn, v1, v2 in zip(self.raw_param_names, raw1, raw2):
                 lines.append(f"  raw {rn}: {v1:.6g} → {v2:.6g}")
             # mapped sweeps
-            for pair, m1, m2 in zip(self._mapped_param_pairs, map1, map2):
-                lines.append(
-                    f"  mapped {format_mapped_param_key(pair)}: {m1:.6g} → {m2:.6g}"
-                )
+            for pair, m1, m2 in zip(self.mapped_param_names, map1, map2):
+                lines.append(f"  mapped {pair}: {m1:.6g} → {m2:.6g}")
             lines.append("")
 
         lines.append(self._repr_y())
 
         return "\n".join(lines)
 
-    # public ----------------------------------------------------------------
-    @property
-    def mapped_param_names(self) -> Tuple[str, ...]:
-        """Human-readable mapped sweep-parameter names."""
-        return tuple(format_mapped_param_key(p) for p in self._mapped_param_pairs)
 
-
-def _get_val(
+def _getVal(
     row: str,
     col: str,
     param_dict: Dict[str, Dict[str, Any]],
@@ -345,7 +334,7 @@ def _get_val(
     return param_dict[row][col].value
 
 
-def parse_mapped_param_name(mapped_param_name: str) -> Tuple[str, str]:
+def parseMappedParamName(mapped_param_name: str) -> Tuple[str, str]:
     """
     Parse the mapped parameter name into parent name and parameter name.
     The mapped parameter name is of the form "param_name<br>(parent_name)".
@@ -392,7 +381,7 @@ def augmented_raw_matrix(
     return aug_raw_matrix
 
 
-def full_x_calibration(
+def returnPrecursorFullXCalibration(
     cali_param_model: "CaliParamModel",
     param_set: Optional["ParamSet"] = None,
 ) -> Tuple[np.ndarray, np.ndarray, Tuple[str, ...], Tuple[str, ...]]:
@@ -438,9 +427,7 @@ def full_x_calibration(
         for param_name, _param in param_dict.items():
             col_name = f"{param_name}<br>({parent_name})"
 
-            y = np.array(
-                [_get_val(r, col_name, mapped_param_source) for r in row_names]
-            )
+            y = np.array([_getVal(r, col_name, mapped_param_source) for r in row_names])
 
             try:
                 alpha = np.linalg.solve(aug_raw_matrix, y)
@@ -453,12 +440,12 @@ def full_x_calibration(
             slopes.append(alpha[1:].tolist())
             mapped_param_names.append(col_name)
 
-    x_linear_part = np.asarray(slopes)  # shape (N_mapped, N_raw)
+    x_linear = np.asarray(slopes)  # shape (N_mapped, N_raw)
     x_offset = np.asarray(offsets)  # shape (N_mapped,)
-    return x_linear_part, x_offset, raw_param_names, tuple(mapped_param_names)
+    return x_linear, x_offset, raw_param_names, tuple(mapped_param_names)
 
 
-def partial_x_calibration(
+def returnPrecursorPartialXCalibration(
     cali_param_model: "CaliParamModel",
     param_set: Optional["ParamSet"] = None,
 ) -> Tuple[
@@ -506,10 +493,10 @@ def partial_x_calibration(
         raw_vecs, map_vecs = [], []
         for row in rows:
             raw_vec = np.array(
-                [_get_val(row, rn, raw_param_source) for rn in raw_param_names]
+                [_getVal(row, rn, raw_param_source) for rn in raw_param_names]
             )
             map_vec = np.array(
-                [_get_val(row, mn, mapped_param_source) for mn in mapped_param_names]
+                [_getVal(row, mn, mapped_param_source) for mn in mapped_param_names]
             )
             raw_vecs.append(raw_vec)
             map_vecs.append(map_vec)
@@ -519,7 +506,7 @@ def partial_x_calibration(
     return data_dict, raw_param_names, tuple(mapped_param_names)
 
 
-def full_y_calibration(
+def returnPrecursorFullYCalibration(
     cali_model: "CaliParamModel",
     param_set: Optional["ParamSet"] = None,
 ) -> Tuple[float, float]:
@@ -534,9 +521,9 @@ def full_y_calibration(
         mapped_param_source = param_set.parameters
 
     for row in ["Y1", "Y2"]:
-        raw_vals.append(_get_val(row, cali_model._rawYName, raw_param_source))
+        raw_vals.append(_getVal(row, cali_model._rawYName, raw_param_source))
         map_col = "mappedY"
-        map_vals.append(_get_val(row, map_col, mapped_param_source))
+        map_vals.append(_getVal(row, map_col, mapped_param_source))
 
     aug = np.vstack([np.ones(2), np.array(raw_vals)]).T  # 2x2
     alpha_vec: np.ndarray

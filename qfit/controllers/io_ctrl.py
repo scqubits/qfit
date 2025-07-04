@@ -396,7 +396,7 @@ class IOCtrl(QObject):
     def openFile(
         self,
         __value=None,
-        from_menu: bool = True,
+        fromMenu: bool = True,
         fileName: Optional[str] = None,
         deepcopy: bool = False,
     ):
@@ -418,7 +418,7 @@ class IOCtrl(QObject):
             cause correlated updates to the original HilbertSpace object / other
             HilbertSpace objects.
         """
-        if from_menu and self.menu.isVisible():
+        if fromMenu and self.menu.isVisible():
             self.menu.toggle()
 
         # check if file exists
@@ -427,7 +427,7 @@ class IOCtrl(QObject):
                 raise FileNotFoundError(f"File '{fileName}' does not exist.")
 
         if fileName is None:
-            registryDict = self._registryDictFromDialog(window_initialized=from_menu)
+            registryDict = self._registryDictFromDialog(window_initialized=fromMenu)
         else:
             registryDict = Registry.dictFromFile(fileName)
             if registryDict is None:
