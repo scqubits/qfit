@@ -297,6 +297,7 @@ class MeasurementData:
             zData.data = gaussian_laplace(zData.data, 1.0)
 
         zData.data = self._clip(zData.data)
+        zData.data = self._zeroMedian(zData.data)
 
         return zData
 
@@ -697,11 +698,11 @@ class MeasurementData:
             color=self._colorMapStr,
         )
 
-    def currentMinMax(self, array2D: np.ndarray) -> Tuple[float, float, float, float]:
+    def clippedMinMax(self, array2D: np.ndarray) -> Tuple[float, float, float, float]:
         """
         Return the clipped min max values of the current zData and the
         unprocessed min max values.
-
+        
         Returns
         -------
         Tuple[float, float, float, float]
@@ -724,7 +725,11 @@ class MeasurementData:
 
         return zMin, zMax, rawZMin, rawZMax
 
-    def _doBgndSubtraction(self, array: np.ndarray, axis=0):
+    def _doBgndSubtraction(
+        self, 
+        array: np.ndarray, 
+        axis: int = 0,
+    ) -> np.ndarray:
         """
         Subtract the background from the data and rescale the zData to the
         range of the original data.
@@ -819,7 +824,7 @@ class MeasurementData:
             return np.round(result, 0).astype(int)
 
         # Original function for 1D or 2D arrays
-        zMin, zMax, rawZMin, rawZMax = self.currentMinMax(array)
+        zMin, zMax, rawZMin, rawZMax = self.clippedMinMax(array)
 
         # Clip the data to the range of the slider
         array = np.clip(array, zMin, zMax)
@@ -828,6 +833,12 @@ class MeasurementData:
         array = (array - zMin) / (zMax - zMin) * (rawZMax - rawZMin) + rawZMin
 
         return array
+    
+    def _zeroMedian(self, array: np.ndarray) -> np.ndarray:
+        """
+        Set the median of the data to zero.
+        """
+        return array - np.nanmedian(array)
 
 
 class NumericalMeasurementData(MeasurementData):
@@ -953,17 +964,20 @@ class NumericalMeasurementData(MeasurementData):
         Generate a plot element from the current data
         """
         zData = self.principalZ.data
+        
+        
+        zMin, zMax, _, _ = self.clippedMinMax(zData)
+        maxPeak = max(abs(zMin), abs(zMax))
 
         if self._logColoring:
-            zMin, zMax, _, _ = self.currentMinMax(zData)
-            linthresh = max(abs(zMin), abs(zMax)) / 20.0
+            linthresh = maxPeak / 20
             norm = colors.SymLogNorm(
                 linthresh=linthresh,  # the range within which the plot is linear (i.e. color map is linear)
-                vmin=zMin,
-                vmax=zMax,  # **add_on_mpl_3_2_0
+                vmin=-maxPeak,
+                vmax=maxPeak,  # **add_on_mpl_3_2_0
             )
         else:
-            norm = None
+            norm = colors.Normalize(vmin=-maxPeak, vmax=maxPeak)   
 
         xData, yData = np.meshgrid(self.principalX.data, self.principalY.data)
         return MeshgridElement(
