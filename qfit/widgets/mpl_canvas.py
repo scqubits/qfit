@@ -1032,8 +1032,8 @@ class MplFigureCanvas(QFrame):
             return {"color": self.lineColor}
         elif elementName == "spectrum":
             return {
-                "xlim": self._measPrcplXLim,
-                "ylim": self._measPrcplYLim,
+                "xlim": self._currentPrcplXLim,
+                "ylim": self._currentPrcplYLim,
             }
         else:
             return {}
