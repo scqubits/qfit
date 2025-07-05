@@ -543,7 +543,8 @@ class Fit:
             button.setGraphicsEffect(eff)
 
         for button in [
-            self._mainUi.zoomViewButton,
+            self._mainUi.zoomInViewButton,
+            self._mainUi.zoomOutViewButton,
             self._mainUi.resetViewButton,
             self._mainUi.panViewButton,
             self._mainUi.selectViewButton,
@@ -844,7 +845,8 @@ class Fit:
         }
         self._canvasTools = {
             "reset": self._mainUi.resetViewButton,
-            "zoom": self._mainUi.zoomViewButton,
+            "zoomIn": self._mainUi.zoomInViewButton,
+            "zoomOut": self._mainUi.zoomOutViewButton,
             "pan": self._mainUi.panViewButton,
             "select": self._mainUi.selectViewButton,
             "snapX": self._mainUi.horizontalSnapButton,

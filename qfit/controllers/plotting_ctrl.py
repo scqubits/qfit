@@ -100,7 +100,7 @@ class PlottingCtrl(QObject):
     trans0Focused: bool  # whether the first extracted transition is focused
     axisSnap: Literal["X", "Y", "OFF"]  # whether to snap to one of the axes
     clickResponse: Literal[  # the response to a mouse click
-        "ZOOM",
+        "ZOOMIN",
         "PAN",
         "EXTRACT",
     ]
@@ -424,7 +424,7 @@ class PlottingCtrl(QObject):
 
     def _setXYAxesByCurrentMeasData(self):
         # self.mplCanvas.home()
-        
+
         measData = self.measDataSet.currentMeasData
         self._setXYAxes(
             rawX=measData.rawX,
@@ -436,7 +436,7 @@ class PlottingCtrl(QObject):
     def _setXYAxesForStandaloneCanvas(self, canvasName: str):
         canvasAndConfigs = self.standaloneCanvases[canvasName]
         # canvasAndConfigs.canvas.home()
-        
+
         self._setXYAxes(
             rawX=canvasAndConfigs.rawX,
             rawY=canvasAndConfigs.rawY,
@@ -542,7 +542,7 @@ class PlottingCtrl(QObject):
     def isRelativelyClose(self, x1y1: np.ndarray, x2y2: np.ndarray):
         distance = self.mplCanvas._distanceInPts(x1y1, x2y2)
         return distance < np.sqrt(MARKER_SIZE)
-    
+
     # prefit ===========================================================
     @Slot(bool)
     def toggleSpectrumVisibility(self, checked: bool):
@@ -554,7 +554,7 @@ class PlottingCtrl(QObject):
         for canvasAndConfigs in self.standaloneCanvases.values():
             canvasAndConfigs.canvas._plottingElements["spectrum"].set_visible(checked)
             canvasAndConfigs.canvas.canvas.draw_idle()
-    
+
     def prefitConnects(self):
         """
         Connect the prefit view to the prefit model.
@@ -598,7 +598,8 @@ class PlottingCtrl(QObject):
         matplotlib canvas.
         """
         self.canvasTools["reset"].clicked.connect(self.toggleReset)
-        self.canvasTools["zoom"].clicked.connect(self.toggleZoom)
+        self.canvasTools["zoomIn"].clicked.connect(self.toggleZoomIn)
+        self.canvasTools["zoomOut"].clicked.connect(self.toggleZoomOut)
         self.canvasTools["pan"].clicked.connect(self.togglePan)
         self.canvasTools["select"].clicked.connect(self.toggleSelect)
 
@@ -665,10 +666,10 @@ class PlottingCtrl(QObject):
         self.trans0Focused = checked
         self.updateCursor()
 
-    def setClickResponse(self, response: Literal["ZOOM", "PAN", "EXTRACT"]):
+    def setClickResponse(self, response: Literal["ZOOMIN", "PAN", "EXTRACT"]):
         """
         Set the response to a mouse click. The response can be one of the following:
-        - ZOOM: zoom in the canvas
+        - ZOOMIN: zoom in the canvas
         - PAN: pan the canvas
         - EXTRACT: select a point from the canvas
         """
@@ -711,13 +712,24 @@ class PlottingCtrl(QObject):
         self.mplCanvas.selectOn()
 
     @Slot()
-    def toggleZoom(self):
+    def toggleZoomIn(self):
         """
-        Toggle the zoom mode. When the zoom mode is on, the user can zoom in
+        Toggle the zoomIn mode. When the zoomIn mode is on, the user can zoom in
         the canvas.
         """
-        self.setClickResponse("ZOOM")
-        self.mplCanvas.zoomView()
+        self.setClickResponse("ZOOMIN")
+        self.mplCanvas.zoomInView()
+
+    @Slot()
+    def toggleZoomOut(self):
+        """
+        One-shot zoom-out action. Unlike zoom-in or pan, this does not enter an
+        interactive mode.  It simply enlarges the current view by a fixed
+        factor (handled by the canvas helper) and leaves the click-response
+        unchanged.
+        """
+        # Delegate the action to the canvas
+        self.mplCanvas.zoomOutView()
 
     @Slot()
     def togglePan(self):
@@ -734,10 +746,10 @@ class PlottingCtrl(QObject):
         Reset the zoom and pan of the canvas.
         """
         self.mplCanvas.resetView()
-        
-        # this is not the accurate thing to do as we are not changing the axes 
+
+        # this is not the accurate thing to do as we are not changing the axes
         # this is replaced by _restoreXYLim() in the resetView()
-        # self._setXYAxesByCurrentMeasData()    
+        # self._setXYAxesByCurrentMeasData()
 
     def updateCursor(self):
         """
