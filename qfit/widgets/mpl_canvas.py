@@ -434,6 +434,10 @@ class MplFigureCanvas(QFrame):
     """
 
     canvasClosed = Signal()
+    # Emitted whenever the principal axes limits are changed programmatically
+    # or through user interaction (zoom, pan, home, etc.).  Provides the
+    # new x- and y-ranges as NumPy arrays with two entries each.
+    axesViewChanged = Signal(object, object)  # (np.ndarray, np.ndarray)
 
     def __init__(self, parent=None, standalone: bool = False):
         QFrame.__init__(self, parent)
@@ -637,6 +641,12 @@ class MplFigureCanvas(QFrame):
             self._currentAllXLim.append(xAx.get_xlim())
         for yAx in self._yAxes:
             self._currentAllYLim.append(yAx.get_ylim())
+
+        # Emit the updated view limits
+        self.axesViewChanged.emit(
+            np.array(self._currentPrcplXLim),
+            np.array(self._currentPrcplYLim),
+        )
 
     def _dispLimByPrcplLim(
         self,

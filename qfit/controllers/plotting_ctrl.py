@@ -174,6 +174,11 @@ class PlottingCtrl(QObject):
         self.measPlotSettingConnects()
         # self.uiXYZComboBoxesConnects()
 
+        # When user changes the canvas view (zoom/pan/home/zoom-out), update
+        # the numerical model's cached x/y range WITHOUT triggering a new
+        # calculation.  QuantumModel.relimX simply stores the limits.
+        self.mplCanvas.axesViewChanged.connect(self.quantumModel.relimX)
+
     def dynamicalInit(self):
         """
         When the app is reloaded (new measurement data and hilbert space),
