@@ -941,6 +941,11 @@ class PlottingCtrl(QObject):
             canvasName
         ].readyToPlot.connect(canvas.updateElement)
 
+        # Keep QuantumModel informed of range changes for this canvas.
+        canvas.axesViewChanged.connect(
+            lambda x, y, name=canvasName: self.quantumModel.relimStandalone(name, x, y)
+        )
+
         canvas.canvasClosed.connect(
             lambda canvasName=canvasName: self.removeStandaloneCanvas(canvasName)
         )
