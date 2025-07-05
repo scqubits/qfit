@@ -750,7 +750,7 @@ class PlottingCtrl(QObject):
         """
         Reset the zoom and pan of the canvas.
         """
-        self.mplCanvas.resetView()
+        self.mplCanvas.postHomeClicked()
 
         # this is not the accurate thing to do as we are not changing the axes
         # this is replaced by _restoreXYLim() in the resetView()

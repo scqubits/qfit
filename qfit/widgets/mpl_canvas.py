@@ -179,40 +179,36 @@ class NavigationHidden(NavigationToolbar2QT):
         will be used when the plot element is updated.
         """
         super().release_zoom(event)
-        self.parent()._recordXYLim()
+        self.parent().postZoomPanReleased()
 
     def release_pan(self, event):
         """
         See release_pan
         """
         super().release_pan(event)
-        self.parent()._recordXYLim()
+        self.parent().postZoomPanReleased()
 
     def back(self, *args):
         """
         Overridden back method to correctly update all axes.
         """
         super().back(*args)
-        self.parent()._recordXYLim()
-        self.parent()._restoreXYLim()
-        self.parent().canvas.draw_idle()
+        self.parent().postForwardBackClicked()
 
     def forward(self, *args):
         """
         Overridden forward method to correctly update all axes.
         """
         super().forward(*args)
-        self.parent()._recordXYLim()
-        self.parent()._restoreXYLim()
-        self.parent().canvas.draw_idle()
-
+        self.parent().postForwardBackClicked()
+        
     def home(self, *args, **kwargs):
         """
-        Overridden home method. For standalone canvas, trigger resetView.
+        Overridden home method. For standalone canvas, trigger homeClicked.
         The main canvas button is not on this toolbar.
         """
-        self.parent().resetView()
-
+        self.parent().postHomeClicked()
+        
 
 class SpecialCursor(Cursor):
     """
@@ -906,6 +902,10 @@ class MplFigureCanvas(QFrame):
         )  # toggle zoom in at the level of the NavigationToolbar2QT, enabling actual
         # zoom in functionality
         self.updateCursor(horizOn=False, vertOn=False)
+        
+    def postZoomPanReleased(self):
+        self._recordXYLim()
+        self._plotElement("spectrum", draw=True)
 
     @Slot()
     def panView(self):
@@ -917,6 +917,11 @@ class MplFigureCanvas(QFrame):
         )  # toggle pan at the level of the NavigationToolbar2QT, enabling actual
         # pan functionality
         self.updateCursor(horizOn=False, vertOn=False)
+        
+    def postForwardBackClicked(self):
+        self._recordXYLim()
+        self._restoreXYLim()
+        self._plotElement("spectrum", draw=True)
 
     @Slot()
     def selectOn(self):
@@ -926,18 +931,14 @@ class MplFigureCanvas(QFrame):
         self.toolbar.setZoomInMode(on=False)
         self.toolbar.setPanMode(on=False)
 
-    def resetView(self):
+    def postHomeClicked(self):
         # reset the x and y limits of the axes to fit the measurement data
         self._restoreXYLim(byMeasData=True)
         self._recordXYLim()
-        self.canvas.draw_idle()
-
+        self._plotElement("spectrum", draw=True)
+        
         # reset the margins
         self._adjustMargin(xAxisNum=len(self._xAxes))
-
-    @Slot()
-    def home(self):
-        self.toolbar.home()
 
     @Slot()
     def zoomOutView(self):
@@ -986,9 +987,7 @@ class MplFigureCanvas(QFrame):
         # ------------------------------------------------------------------
         self._recordXYLim()  # record the new limits as the current view
         self._restoreXYLim()  # propagate to all linked axes
-
-        # Trigger a redraw so the user sees the updated view immediately.
-        self.canvas.draw_idle()
+        self._plotElement("spectrum", draw=True)
 
         # Re-establish the cursor/crosshair in case it had been suppressed
         # by previous mode changes.
