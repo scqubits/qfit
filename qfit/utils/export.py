@@ -2,74 +2,75 @@ from typing import Dict, List, Tuple, Sequence, Any, TYPE_CHECKING, Optional, Un
 
 import numpy as np
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 
 if TYPE_CHECKING:
     from qfit.models.calibration import CaliParamModel, CaliTableRowParam
     from qfit.models.parameter_set import ParamSet
 
 
-def exportCircuitParametersFromParamset(
-    param_set: "ParamSet",
-) -> Dict[Tuple[str, str], float]:
+from qfit.models.data_structures import FullExtr
+
+# Extracted points class ----------------------------------------------------
+@dataclass
+class ExtractedPointsResult:
+    """Light-weight container for user-extracted transition points.
+
+    Internally this just wraps a nested ``dict`` with the structure::
+
+        {
+            <figure_name>: {
+                <transition_name>: {
+                    "type"           : <str>,   # Tag.tagType
+                    "x"              : <List[float]>,
+                    "y"              : <List[float]>,
+                    "photons"        : <int | None>,
+                    "initial_states" : <Any>,  # usually list or int
+                    "final_states"   : <Any>,
+                },
+                ...
+            },
+            ...
+        }
+
+    The container acts like a read-only mapping but can be converted to a
+    regular ``dict`` via :pyfunc:`dict` if desired.
     """
-    Export the circuit parameters from the parameter set.
 
-    Parameters
-    ----------
-    param_set: ParamSet
-        The parameter set to export.
+    data: Dict[str, Dict[str, Dict[str, Any]]]
 
-    Returns
-    -------
-    Dict[Tuple[str, str], float]
-        The exported circuit parameters.
-    """
-    flat = param_set.getFlattenedAttrDict("value")
+    def __getitem__(self, item):
+        return self.data[item]
 
-    conv: Dict[Tuple[str, str], float] = {}
-    for key, val in flat.items():
-        parent, param = parseMappedParamName(key)
-        conv[(parent, param)] = val
-    return conv
+    def __iter__(self):
+        return iter(self.data)
 
+    def __len__(self):
+        return len(self.data)
 
-def exportCalibrationResultFromParamset(
-    cali_model: "CaliParamModel", param_set: "ParamSet"
-) -> Union["FullCalibrationResult", "PartialCalibrationResult"]:
+    def __repr__(self):  # pragma: no cover – convenience only
+        figs = ", ".join(self.data.keys())
+        return f"ExtractedPointsResult(figures=[{figs}])"
 
-    # Y calibration (always linear)
-    y_slope, y_offset = returnPrecursorFullYCalibration(cali_model, param_set)
-    raw_y_name = cali_model._rawYName
+    def list_figures(self) -> List[str]:
+        """Return a list of all figure names contained in the export."""
+        return list(self.data.keys())
 
-    if cali_model.isFullCalibration:
-        # FULL calibration
-        M, b, rawNames, mapNames = returnPrecursorFullXCalibration(
-            cali_model, param_set
-        )
-        return FullCalibrationResult(
-            x_linear=M,
-            x_offset=b,
-            raw_dc_bias_names=rawNames,
-            mapped_sweep_param_names=mapNames,
-            y_slope=y_slope,
-            y_offset=y_offset,
-            raw_y_name=raw_y_name,
-        )
-    else:
-        # PARTIAL calibration
-        dataDict, rawNames, mapNames = returnPrecursorPartialXCalibration(
-            cali_model, param_set
-        )
-        return PartialCalibrationResult(
-            data_dict=dataDict,
-            raw_param_names=rawNames,
-            mapped_param_names=mapNames,
-            y_slope=y_slope,
-            y_offset=y_offset,
-            raw_y_name=raw_y_name,
-        )
+    def list_transitions(self, figure: str) -> List[str]:
+        """Return transition names present in *figure*.
 
-
+        Parameters
+        ----------
+        figure
+            Figure key as returned by :pyfunc:`list_figures`.
+        """
+        if figure not in self.data:
+            raise KeyError(
+                f"Figure '{figure}' not found. Available: {', '.join(self.data.keys())}"
+            )
+        return list(self.data[figure].keys())
+    
+# Calibration result classes ------------------------------------------------
 class CalibrationResult(ABC):
     """Abstract base class encapsulating Y-axis calibration.
 
@@ -325,7 +326,124 @@ class PartialCalibrationResult(CalibrationResult):
 
         return "\n".join(lines)
 
+# Extracted points export ----------------------------------------------------
+def exportExtractedPoints(
+    full_extr: FullExtr,
+) -> ExtractedPointsResult:
+    """Convert an internal :class:`~qfit.models.data_structures.FullExtr` object
+    into a plain Python representation.
 
+    Parameters
+    ----------
+    full_extr
+        The :class:`~qfit.models.data_structures.FullExtr` instance that stores
+        all user-extracted transition data.
+
+    Returns
+    -------
+    ExtractedPointsResult
+        A wrapper around a nested dictionary where each transition dictionary
+        may contain the following keys (depending on the *include_* flags):
+
+        ``x``       – dict mapping *raw axis name* → vector
+        ``y``       – vector of mapped Y values
+    """
+
+    export_dict: Dict[str, Dict[str, Dict[str, Any]]] = {}
+
+    for fig_name, spectra in full_extr.items():
+        fig_dict: Dict[str, Dict[str, Any]] = {}
+        for transition in spectra:
+            if transition.count() == 0:
+                continue  # skip empty transitions
+
+            # mandatory fields
+            trans_dict: Dict[str, Any] = {
+                "type": transition.tag.tagType,
+                "photons": transition.tag.photons,
+                "initial_states": transition.tag.initial,
+                "final_states": transition.tag.final,
+            }
+
+            # principal raw X and raw Y
+            y_vals = transition.data[1]
+            trans_dict["y"] = y_vals
+
+            # additional raw X components
+            raw_dict: Dict[str, Any] = {}
+            for raw_key, raw_vec in transition.rawX.items():
+                raw_dict[raw_key] = raw_vec
+            trans_dict["x"] = raw_dict
+
+            fig_dict[transition.name or f"Transition_{id(transition)}"] = trans_dict
+
+        export_dict[fig_name] = fig_dict
+
+    return ExtractedPointsResult(export_dict)
+
+# Circuit parameters export --------------------------------------------------
+def exportCircuitParametersFromParamset(
+    param_set: "ParamSet",
+) -> Dict[Tuple[str, str], float]:
+    """
+    Export the circuit parameters from the parameter set.
+
+    Parameters
+    ----------
+    param_set: ParamSet
+        The parameter set to export.
+
+    Returns
+    -------
+    Dict[Tuple[str, str], float]
+        The exported circuit parameters.
+    """
+    flat = param_set.getFlattenedAttrDict("value")
+
+    conv: Dict[Tuple[str, str], float] = {}
+    for key, val in flat.items():
+        parent, param = parseMappedParamName(key)
+        conv[(parent, param)] = val
+    return conv
+
+
+def exportCalibrationResultFromParamset(
+    cali_model: "CaliParamModel", param_set: "ParamSet"
+) -> Union["FullCalibrationResult", "PartialCalibrationResult"]:
+
+    # Y calibration (always linear)
+    y_slope, y_offset = returnPrecursorFullYCalibration(cali_model, param_set)
+    raw_y_name = cali_model._rawYName
+
+    if cali_model.isFullCalibration:
+        # FULL calibration
+        M, b, rawNames, mapNames = returnPrecursorFullXCalibration(
+            cali_model, param_set
+        )
+        return FullCalibrationResult(
+            x_linear=M,
+            x_offset=b,
+            raw_dc_bias_names=rawNames,
+            mapped_sweep_param_names=mapNames,
+            y_slope=y_slope,
+            y_offset=y_offset,
+            raw_y_name=raw_y_name,
+        )
+    else:
+        # PARTIAL calibration
+        dataDict, rawNames, mapNames = returnPrecursorPartialXCalibration(
+            cali_model, param_set
+        )
+        return PartialCalibrationResult(
+            data_dict=dataDict,
+            raw_param_names=rawNames,
+            mapped_param_names=mapNames,
+            y_slope=y_slope,
+            y_offset=y_offset,
+            raw_y_name=raw_y_name,
+        )
+
+# Helper functions ----------------------------------------------------------
 def _getVal(
     row: str,
     col: str,

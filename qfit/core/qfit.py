@@ -77,8 +77,10 @@ import qfit.settings as settings
 from qfit.utils.export import (
     FullCalibrationResult,
     PartialCalibrationResult,
+    ExtractedPointsResult,
     exportCircuitParametersFromParamset,
     exportCalibrationResultFromParamset,
+    exportExtractedPoints,
 )
 
 
@@ -336,6 +338,12 @@ class Fit:
             Which parameter set to use:
             * fit: final fit table values (default)
             * prefit: slider / pre-fit values
+
+        Returns
+        -------
+        Dict[Tuple[str, str], float]
+            A flatten dict of Hilbert-space (circuit) parameters.
+            Keys are (parent_name, param_name) tuples, e.g. ("Transmon", "EJ").
         """
 
         if source == "fit":
@@ -346,6 +354,24 @@ class Fit:
             raise ValueError(f"Unknown source option: {source}")
 
         return exportCircuitParametersFromParamset(param_set)
+
+    def export_extracted_points(self) -> "ExtractedPointsResult":
+        """Export user-extracted transition points.
+
+        The returned object is a light-weight container mapping *figure names*
+        to extracted *transition* data. See
+        :pyclass:`qfit.utils.export.ExtractedPointsResult` for the exact
+        structure.
+
+        Returns
+        -------
+        ExtractedPointsResult
+            A light-weight container mapping *figure names* to extracted
+            *transition* data.
+        """
+
+        full_extr = self._allDatasets._fullSpectra  # type: ignore[attr-defined]
+        return exportExtractedPoints(full_extr)
 
     # methods to controll the window ###################################
     def close(self):
