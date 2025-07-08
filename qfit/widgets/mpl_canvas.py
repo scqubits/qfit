@@ -905,7 +905,10 @@ class MplFigureCanvas(QFrame):
         
     def postZoomPanReleased(self):
         self._recordXYLim()
-        self._plotElement("spectrum", draw=True)
+        if "spectrum" in self._plottingElements:
+            self._plotElement("spectrum", draw=True)
+        else:
+            self.canvas.draw_idle()
 
     @Slot()
     def panView(self):
@@ -921,8 +924,11 @@ class MplFigureCanvas(QFrame):
     def postForwardBackClicked(self):
         self._recordXYLim()
         self._restoreXYLim()
-        self._plotElement("spectrum", draw=True)
-
+        if "spectrum" in self._plottingElements:
+            self._plotElement("spectrum", draw=True)
+        else:
+            self.canvas.draw_idle()
+            
     @Slot()
     def selectOn(self):
         """
@@ -935,7 +941,11 @@ class MplFigureCanvas(QFrame):
         # reset the x and y limits of the axes to fit the measurement data
         self._restoreXYLim(byMeasData=True)
         self._recordXYLim()
-        self._plotElement("spectrum", draw=True)
+        
+        if "spectrum" in self._plottingElements:
+            self._plotElement("spectrum", draw=True)
+        else:
+            self.canvas.draw_idle()
         
         # reset the margins
         self._adjustMargin(xAxisNum=len(self._xAxes))
@@ -987,7 +997,10 @@ class MplFigureCanvas(QFrame):
         # ------------------------------------------------------------------
         self._recordXYLim()  # record the new limits as the current view
         self._restoreXYLim()  # propagate to all linked axes
-        self._plotElement("spectrum", draw=True)
+        if "spectrum" in self._plottingElements:
+            self._plotElement("spectrum", draw=True)
+        else:
+            self.canvas.draw_idle()
 
         # Re-establish the cursor/crosshair in case it had been suppressed
         # by previous mode changes.
