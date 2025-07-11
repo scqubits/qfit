@@ -825,8 +825,6 @@ class PlottingCtrl(QObject):
         self,
         selectedDataNames: List[str | int] | None = None,
         numericalPoints: int = 10,
-        xLim: Tuple[float, float] | None = None,
-        yLim: Tuple[float, float] | None = None,
     ):
         """
         Create a standalone canvas with multiple measurement data.
@@ -838,16 +836,7 @@ class PlottingCtrl(QObject):
         numericalPoints: int
             To plot the numerical calculation, the number of points to be
             swept over.
-        xLim: Tuple[float, float] | None
-            The x limits of the canvas. Currently not supported.
-        yLim: Tuple[float, float] | None
-            The y limits of the canvas. Currently not supported.
         """
-        if xLim is not None or yLim is not None:
-            raise NotImplementedError(
-                "Setting a custom x or y limit is not implemented"
-            )
-
         # create a unique name for the canvas: e.g. "Collection (1)"
         existingNames = list(self.standaloneCanvases.keys())
         canvasName = makeUnique(existingNames + ["Collection"])[-1]

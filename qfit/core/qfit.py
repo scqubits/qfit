@@ -169,11 +169,12 @@ class Fit:
 
         Parameters
         ----------
-        hilbertSpace: HilbertSpace
-            HilbertSpace object from scqubits
-        measurementFileName: str
-            Name of measurement file to be loaded. If left blank, a window
-            will pop up to ask for a file.
+        hilbert_space: HilbertSpace
+            HilbertSpace object from scqubits, modeling the superconducting circuit 
+            whose parameters are to be fitted.
+        measurement_file_name: str | List[str]
+            Name(s) of measurement file(s) to be loaded. If left blank, a window
+            will pop up to ask for a file(s).
         deepcopy: bool
             Whether to use a deepcopy of the HilbertSpace object, instead of
             referencing the original HilbertSpace object. The latter option
@@ -205,9 +206,11 @@ class Fit:
         Parameters
         ----------
         hilbert_space: HilbertSpace
-            HilbertSpace object from scqubits
+            HilbertSpace object from scqubits, modeling the superconducting circuit 
+            whose parameters are to be fitted.
         yaml_file: str
-            Path to the yaml file
+            Path to the yaml file, which contains the configuration of 
+            initializing the qfit project.
         deepcopy: bool
             Whether to use a deepcopy of the HilbertSpace object, instead of
             referencing the original HilbertSpace object. The latter option
@@ -231,8 +234,8 @@ class Fit:
 
         Parameters
         ----------
-        fileName: str
-            Name of file to be opened.
+        file_name: str
+            Name of the qfit project file to be opened.
         deepcopy: bool
             Whether to use a deepcopy of the HilbertSpace object, instead of
             referencing the original HilbertSpace object. Even when the HilbertSpace
@@ -395,28 +398,22 @@ class Fit:
     # functionalities that does not involves the main window ###########
     def create_standalone_canvas(
         self,
-        selected_dataset_names: List[str | int] | None = None,
+        selected_data_files: List[str | int] | None = None,
         points_added: int = 10,
-        xlim: Tuple[float, float] | None = None,
-        ylim: Tuple[float, float] | None = None,
     ):
         """
         Create a standalone canvas with multiple measurement data.
 
         Parameters
         ----------
-        selectedDataNames: List[str | int]
+        selected_data_files: List[str | int]
             The names (or indices) of the measurement data to be displayed.
         points_added: int
             To plot the numerical calculation, the number of points to be
             added for the sweep.
-        xlim: Tuple[float, float] | None
-            The x limits of the canvas. Currently not supported.
-        ylim: Tuple[float, float] | None
-            The y limits of the canvas. Currently not supported.
         """
         self._plottingCtrl.createStandaloneCanvas(
-            selected_dataset_names, points_added, xlim, ylim
+            selected_data_files, points_added
         )
 
     # models, views and controllers ####################################
