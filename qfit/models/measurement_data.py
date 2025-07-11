@@ -493,6 +493,8 @@ class MeasurementData:
         """
         if isinstance(item, str):
             itemIndex = self.zCandidates.keyList.index(item)
+        else:
+            itemIndex = item
         self._principalZ = self.zCandidates.itemByIndex(itemIndex)
 
     def _initRawXY(self):

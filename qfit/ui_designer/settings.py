@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'settings.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.6.1
+## Created by: Qt User Interface Compiler version 6.9.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -28,7 +28,7 @@ class Ui_settingsWidget(object):
         if not settingsWidget.objectName():
             settingsWidget.setObjectName(u"settingsWidget")
         settingsWidget.resize(390, 470)
-        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(settingsWidget.sizePolicy().hasHeightForWidth())
@@ -199,13 +199,13 @@ class Ui_settingsWidget(object):
         self.gridLayout_3.setSpacing(0)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(12, 12, 12, -1)
-        self.verticalSpacer_3 = QSpacerItem(5, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_3 = QSpacerItem(5, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_3.addItem(self.verticalSpacer_3, 1, 1, 1, 1)
 
         self.tabWidget = QTabWidget(settingsWidget)
         self.tabWidget.setObjectName(u"tabWidget")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.tabWidget.sizePolicy().hasHeightForWidth())
@@ -358,7 +358,7 @@ class Ui_settingsWidget(object):
         self.gridLayout_2.setContentsMargins(0, 5, 0, 0)
         self.rangeSliderMin = QSlider(self.visualTabContainerWidget)
         self.rangeSliderMin.setObjectName(u"rangeSliderMin")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.rangeSliderMin.sizePolicy().hasHeightForWidth())
@@ -384,13 +384,13 @@ class Ui_settingsWidget(object):
 
         self.gridLayout_2.addWidget(self.rangeSliderMax, 4, 0, 1, 1)
 
-        self.verticalSpacer = QSpacerItem(20, 7, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer = QSpacerItem(20, 7, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_2.addItem(self.verticalSpacer, 9, 0, 1, 1)
 
         self.filterQFrame = QFrame(self.visualTabContainerWidget)
         self.filterQFrame.setObjectName(u"filterQFrame")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         sizePolicy3.setHorizontalStretch(0)
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.filterQFrame.sizePolicy().hasHeightForWidth())
@@ -438,22 +438,22 @@ class Ui_settingsWidget(object):
 
         self.colorComboBox = QComboBox(self.visualTabContainerWidget)
         icon = QIcon()
-        icon.addFile(u":/icons/PuOr.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/icons/PuOr.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.colorComboBox.addItem(icon, u"PuOr")
         icon1 = QIcon()
-        icon1.addFile(u":/icons/RdYlBu.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon1.addFile(u":/icons/RdYlBu.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.colorComboBox.addItem(icon1, u"RdYlBu")
         icon2 = QIcon()
-        icon2.addFile(u":/icons/bwr.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon2.addFile(u":/icons/bwr.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.colorComboBox.addItem(icon2, u"bwr")
         icon3 = QIcon()
-        icon3.addFile(u":/icons/viridis.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon3.addFile(u":/icons/viridis.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.colorComboBox.addItem(icon3, u"viridis")
         icon4 = QIcon()
-        icon4.addFile(u":/icons/cividis.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon4.addFile(u":/icons/cividis.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.colorComboBox.addItem(icon4, u"cividis")
         icon5 = QIcon()
-        icon5.addFile(u":/icons/gray.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon5.addFile(u":/icons/gray.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.colorComboBox.addItem(icon5, u"gray")
         self.colorComboBox.setObjectName(u"colorComboBox")
         sizePolicy2.setHeightForWidth(self.colorComboBox.sizePolicy().hasHeightForWidth())
@@ -470,7 +470,7 @@ class Ui_settingsWidget(object):
 
         self.label_39 = QLabel(self.visualTabContainerWidget)
         self.label_39.setObjectName(u"label_39")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         sizePolicy4.setHorizontalStretch(0)
         sizePolicy4.setVerticalStretch(0)
         sizePolicy4.setHeightForWidth(self.label_39.sizePolicy().hasHeightForWidth())
@@ -690,7 +690,7 @@ class Ui_settingsWidget(object):
 
         self.label_5 = QLabel(self.spectrumTabContainerWidget)
         self.label_5.setObjectName(u"label_5")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
         sizePolicy5.setHorizontalStretch(170)
         sizePolicy5.setVerticalStretch(0)
         sizePolicy5.setHeightForWidth(self.label_5.sizePolicy().hasHeightForWidth())
@@ -717,7 +717,7 @@ class Ui_settingsWidget(object):
 
         self.gridLayout.addWidget(self.label_33, 7, 0, 1, 1)
 
-        self.verticalSpacer_2 = QSpacerItem(20, 115, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_2 = QSpacerItem(20, 115, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout.addItem(self.verticalSpacer_2, 9, 0, 1, 1)
 
@@ -770,7 +770,7 @@ class Ui_settingsWidget(object):
 "    background: none;\n"
 "}")
         icon6 = QIcon()
-        icon6.addFile(u":/icons/svg/question-circle.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon6.addFile(u":/icons/svg/question-circle.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.numericalSpectrumSettingsHelpPushButton.setIcon(icon6)
         self.numericalSpectrumSettingsHelpPushButton.setIconSize(QSize(23, 23))
 
@@ -801,13 +801,13 @@ class Ui_settingsWidget(object):
 
         self.gridLayout_4.addWidget(self.tolLineEdit, 1, 1, 1, 2)
 
-        self.verticalSpacer_4 = QSpacerItem(20, 240, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalSpacer_4 = QSpacerItem(20, 240, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_4.addItem(self.verticalSpacer_4, 2, 0, 1, 1)
 
         self.label_47 = QLabel(self.fitTabContainerWidget)
         self.label_47.setObjectName(u"label_47")
-        sizePolicy6 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
         sizePolicy6.setHorizontalStretch(0)
         sizePolicy6.setVerticalStretch(0)
         sizePolicy6.setHeightForWidth(self.label_47.sizePolicy().hasHeightForWidth())
@@ -857,7 +857,7 @@ class Ui_settingsWidget(object):
 "    background: none;\n"
 "}")
         icon7 = QIcon()
-        icon7.addFile(u":/icons/svg/cross.svg", QSize(), QIcon.Normal, QIcon.Off)
+        icon7.addFile(u":/icons/svg/cross.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.settingsCloseButton.setIcon(icon7)
         self.settingsCloseButton.setIconSize(QSize(30, 30))
 
