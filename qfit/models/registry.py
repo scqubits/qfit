@@ -212,6 +212,13 @@ class Registry:
                 dill.dump(self.exportDict(), f)
         except FileNotFoundError:
             print(f"Error: File '{filename}' not found. Cannot export data.")
+    
+    @staticmethod
+    def _updateRegFileName(registryDict: Dict[str, Any], fileName: str):
+        """
+        Change the file name entry in the registry dictionary.
+        """
+        registryDict["MainWindow._projectFile"] = fileName
 
     @staticmethod
     def dictFromFile(filename: str) -> Union[Dict[str, Any], None]:
@@ -225,7 +232,10 @@ class Registry:
         """
         try:
             with open(filename, "rb") as f:
-                return dill.load(f)
+                registryDict = dill.load(f)
+                Registry._updateRegFileName(registryDict, filename)
+                return registryDict
+            
         except FileNotFoundError:
             return None  # indicate that the file is not found
 
