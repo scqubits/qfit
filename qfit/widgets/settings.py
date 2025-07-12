@@ -53,12 +53,15 @@ class SettingsWidgetBase(QWidget):
 
     # def mouseReleaseEvent(self, event):
     #     self.oldPos = None
+    
+    def show(self):
+        super().show()
+        self.raise_()  # Bring to front
+        self.activateWindow()  # Make it the active window
 
     def toggle(self):
         if self.isHidden():
             self.show()
-            self.raise_()  # Bring to front
-            self.activateWindow()  # Make it the active window
         else:
             self.hide()
 

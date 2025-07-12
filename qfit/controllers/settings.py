@@ -22,4 +22,4 @@ class SettingsCtrl(QObject):
         self.uiSettingsConnects()
 
     def uiSettingsConnects(self):
-        self.settingsButton.clicked.connect(self.settingsWidget.toggle)
+        self.settingsButton.clicked.connect(self.settingsWidget.show)
