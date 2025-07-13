@@ -112,8 +112,9 @@ def applyFilters(
             setattr(current_filter, filterAttr[field_name], field_value)
         meas_data.setFilter(current_filter)
         
+    # this will update the filter in the settings widget
+    fit._measData.switchFig(fit._measData.currentMeasData.name)
     fit._measData.emitReadyToPlot()
-
 
 def applyCalibration(
     fit: "Fit",

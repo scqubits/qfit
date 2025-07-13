@@ -556,8 +556,13 @@ class MeasurementData:
         Add pixel coordinates as the last resort for x and y axis candidates.
         """
         ydim, xdim = self._principalZ.data.shape[:2]
-        self.xCandidates.update({f"range({xdim})": np.arange(xdim)})
-        self.yCandidates.update({f"range({ydim})": np.arange(ydim)})
+        
+        if ydim != xdim:
+            self.xCandidates.update({f"range({xdim})": np.arange(xdim)})
+            self.yCandidates.update({f"range({ydim})": np.arange(ydim)})
+        else:
+            self.xCandidates.update({f"range({xdim}) (1)": np.arange(xdim)})
+            self.yCandidates.update({f"range({ydim}) (2)": np.arange(ydim)})
         
     def _findFastestAxis(
         self, 
@@ -584,20 +589,20 @@ class MeasurementData:
             if not key.startswith("range")
         })
         
-        diffs = ([
+        diffs = [
             data.max() - data.min()
             for data in nonPixelCoordCandidates.values()
-        ])
-        idx = np.argmax(diffs)
+        ]
         
-        if np.isclose(diffs[idx], 0):
-            diffs = ([
+        if len(diffs) == 0 or np.isclose(np.max(diffs), 0):
+            diffs = [
                 data.max() - data.min()
                 for data in candidates.values()
-            ])
+            ]
             idx = np.argmax(diffs)
             return candidates.itemByIndex(int(idx))
         else:
+            idx = np.argmax(diffs)
             return nonPixelCoordCandidates.itemByIndex(int(idx))
 
     def _resetPrincipalXY(self):
@@ -1011,6 +1016,13 @@ class ImageMeasurementData(MeasurementData):
     def __init__(self, name: str, image: np.ndarray, file: str):
         super().__init__(name, image, file)
         self._initXYZ()
+        
+    def _initFilters(self):
+        """
+        Initialize the filters for the measurement data.
+        """
+        super()._initFilters()
+        self._colorMapStr = "gray"  # default color map for image data
 
     def _initXYZ(self):
         """
@@ -1021,11 +1033,8 @@ class ImageMeasurementData(MeasurementData):
         self._principalZ = self.zCandidates.itemByIndex(0)
 
         # since there is no x and y axis data, we use pixel coordinates
-        ydim, xdim = self._principalZ.data.shape[:2]
-        self.xCandidates = OrderedDictMod({
-            f"range{xdim}": np.arange(xdim)})
-        self.yCandidates = OrderedDictMod({
-            f"range{ydim}": np.arange(ydim)})
+        self.xCandidates = OrderedDictMod()
+        self.yCandidates = OrderedDictMod()
         self._addPixelCoord()
         self._initRawXY()
         self._resetPrincipalXY()
@@ -1036,6 +1045,10 @@ class ImageMeasurementData(MeasurementData):
         - inversing the y axis
         """
         assert zData.ndim in [2, 3], "zData must be a 2d or 3d array"
+        
+        # For a temporary solution, we make the image monochromatic
+        if zData.ndim == 3:
+            zData = np.mean(zData, axis=2)
 
         # inverse the y axis
         zData = np.flip(zData, axis=0)
