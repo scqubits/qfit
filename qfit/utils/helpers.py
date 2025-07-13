@@ -24,7 +24,7 @@ from matplotlib import colormaps
 from labellines import labelLines
 
 from PySide6 import QtCore as QtCore
-from PySide6.QtWidgets import QWidget, QPushButton
+from PySide6.QtWidgets import QWidget, QPushButton, QLayout, QLayoutItem, QSpacerItem
 from PySide6.QtCore import QEventLoop, QTimer
 
 from typing import Dict, List, Literal, Optional, Tuple, Union, Callable
@@ -262,22 +262,45 @@ def makeUnique(names: List[str]):
 
 
 # widgets ######################################################################
+def clearLayout(layout: QLayout):
+    """Recursively clear all items from a layout"""
+    if layout is None:
+        return
+        
+    while layout.count():
+        item = layout.takeAt(0)
+        if item is None:
+            continue
+            
+        # If it's a widget, delete it
+        if item.widget():
+            item.widget().setParent(None)
+            item.widget().deleteLater()
+        # If it's a layout, recursively clear it
+        elif item.layout():
+            clearLayout(item.layout())
+        # If it's a spacer item, just delete it
+        elif item.spacerItem():
+            del item
+            
 def clearChildren(widget: QWidget):
     """
-    Clear all children of the given widget.
-
+    Clear all visible content from a widget, including child widgets and layout items like spacers.
+    
     Parameters
     ----------
     widget: QWidget
-    """
-    layout = widget.layout()
-    if layout is None:
-        return
-    for i in reversed(range(layout.count())):
-        widget = layout.itemAt(i).widget()
-        if widget:  # Check if the item is a widget
-            widget.setParent(None)
-            widget.deleteLater()
+        The widget to clear all content from
+    """    
+    # Clear the widget's layout if it has one
+    if widget.layout():
+        clearLayout(widget.layout())
+    
+    # Clear any remaining child widgets that might not be in layouts
+    for child in widget.findChildren(QWidget):
+        child.setParent(None)
+        child.deleteLater()
+
 
 
 def modifyStyleSheet(widget: QWidget, property_name: str, new_value: str):
