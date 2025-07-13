@@ -166,6 +166,12 @@ class CalibrationView(QObject):
         When the app is reloaded (new measurement data and hilbert space),
         the model will reinitialized by this method.
         """
+        # delete the calibration table entirely
+        try:
+            self.caliXTable.deleteLater()
+        except AttributeError:
+            pass
+        
         # generate the X calibration table
         self.XParamItems = self._generateXParamItems()
         self.caliXTable = FoldableTable(
@@ -231,6 +237,7 @@ class CalibrationView(QObject):
                 # set checkable and checked
                 XParamItems.extractRawPushButton.setCheckable(True)
                 XParamItems.extractRawPushButton.setChecked(False)
+                
         for YRowIdx, button in self.caliYButtons.items():
             self.caliButtonGroup.addButton(button, self.rowIdxToButtonGroupId[YRowIdx])
         self.caliButtonGroup.setExclusive(False)
@@ -331,7 +338,10 @@ class CalibrationView(QObject):
             for rowIdx in self.lineEditSet:
                 for compName, lineEdit in self.lineEditSet[rowIdx].items():
                     lineEdit.editingFinished.disconnect()
-                    lineEdit.deleteLater()
+                    # Only delete X widgets, not Y widgets 
+                    # (they're not dynamically generated in this view class)
+                    if rowIdx.startswith("X"):
+                        lineEdit.deleteLater()
 
             self.lineEditSet.clear()
 
