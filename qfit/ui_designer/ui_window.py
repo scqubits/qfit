@@ -34,7 +34,7 @@ class Ui_MainWindow(object):
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.setWindowModality(Qt.WindowModality.NonModal)
         MainWindow.setEnabled(True)
-        MainWindow.resize(1319, 797)
+        MainWindow.resize(1339, 772)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -442,11 +442,9 @@ class Ui_MainWindow(object):
         self.windowBodyFrame.setStyleSheet(u"QFrame {\n"
 "	background-color: rgb(33,33,33);\n"
 "}")
-        self.gridLayout = QGridLayout(self.windowBodyFrame)
-        self.gridLayout.setObjectName(u"gridLayout")
-        self.gridLayout.setHorizontalSpacing(0)
-        self.gridLayout.setVerticalSpacing(12)
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_11 = QHBoxLayout(self.windowBodyFrame)
+        self.horizontalLayout_11.setObjectName(u"horizontalLayout_11")
+        self.horizontalLayout_11.setContentsMargins(0, 0, 0, 0)
         self.menu_frame = QFrame(self.windowBodyFrame)
         self.menu_frame.setObjectName(u"menu_frame")
         sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
@@ -711,7 +709,7 @@ class Ui_MainWindow(object):
         self.gridLayout_2.addWidget(self.settingsPushButton, 9, 0, 1, 1)
 
 
-        self.gridLayout.addWidget(self.menu_frame, 0, 0, 4, 1)
+        self.horizontalLayout_11.addWidget(self.menu_frame)
 
         self.pagesStackedWidget = QStackedWidget(self.windowBodyFrame)
         self.pagesStackedWidget.setObjectName(u"pagesStackedWidget")
@@ -737,6 +735,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_12 = QVBoxLayout(self.frame)
         self.verticalLayout_12.setSpacing(15)
         self.verticalLayout_12.setObjectName(u"verticalLayout_12")
+        self.verticalLayout_12.setContentsMargins(5, 20, 0, 0)
         self.metadataTitleWidget = QWidget(self.frame)
         self.metadataTitleWidget.setObjectName(u"metadataTitleWidget")
         self.horizontalLayout_3 = QHBoxLayout(self.metadataTitleWidget)
@@ -789,7 +788,7 @@ class Ui_MainWindow(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 422, 210))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 441, 210))
         sizePolicy8 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         sizePolicy8.setHorizontalStretch(0)
         sizePolicy8.setVerticalStretch(0)
@@ -1004,7 +1003,7 @@ class Ui_MainWindow(object):
         self.yAxesScrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents_3 = QWidget()
         self.scrollAreaWidgetContents_3.setObjectName(u"scrollAreaWidgetContents_3")
-        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 187, 177))
+        self.scrollAreaWidgetContents_3.setGeometry(QRect(0, 0, 196, 177))
         self.verticalLayout_19 = QVBoxLayout(self.scrollAreaWidgetContents_3)
         self.verticalLayout_19.setObjectName(u"verticalLayout_19")
         self.yAxesScrollArea.setWidget(self.scrollAreaWidgetContents_3)
@@ -1039,7 +1038,7 @@ class Ui_MainWindow(object):
         self.xAxesScrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 189, 179))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 199, 179))
         self.verticalLayout_18 = QVBoxLayout(self.scrollAreaWidgetContents_2)
         self.verticalLayout_18.setObjectName(u"verticalLayout_18")
         self.xAxesScrollArea.setWidget(self.scrollAreaWidgetContents_2)
@@ -1162,7 +1161,7 @@ class Ui_MainWindow(object):
         self.calibrationFrame.setFrameShape(QFrame.Shape.NoFrame)
         self.calibrationFrame.setFrameShadow(QFrame.Shadow.Plain)
         self.verticalLayout_17 = QVBoxLayout(self.calibrationFrame)
-        self.verticalLayout_17.setSpacing(5)
+        self.verticalLayout_17.setSpacing(10)
         self.verticalLayout_17.setObjectName(u"verticalLayout_17")
         self.verticalLayout_17.setContentsMargins(5, 20, 0, 0)
         self.widget_3 = QWidget(self.calibrationFrame)
@@ -1206,25 +1205,6 @@ class Ui_MainWindow(object):
 
 
         self.verticalLayout_17.addWidget(self.widget_3)
-
-        self.widget_4 = QWidget(self.calibrationFrame)
-        self.widget_4.setObjectName(u"widget_4")
-        self.horizontalLayout_11 = QHBoxLayout(self.widget_4)
-#ifndef Q_OS_MAC
-        self.horizontalLayout_11.setSpacing(-1)
-#endif
-        self.horizontalLayout_11.setObjectName(u"horizontalLayout_11")
-        self.horizontalLayout_11.setContentsMargins(0, -1, 0, -1)
-        self.horizontalSpacer_38 = QSpacerItem(23, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayout_11.addItem(self.horizontalSpacer_38)
-
-        self.horizontalSpacer_39 = QSpacerItem(20, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayout_11.addItem(self.horizontalSpacer_39)
-
-
-        self.verticalLayout_17.addWidget(self.widget_4)
 
         self.widget_5 = QWidget(self.calibrationFrame)
         self.widget_5.setObjectName(u"widget_5")
@@ -1537,17 +1517,23 @@ class Ui_MainWindow(object):
         sizePolicy13.setHeightForWidth(self.frame_9.sizePolicy().hasHeightForWidth())
         self.frame_9.setSizePolicy(sizePolicy13)
         self.frame_9.setStyleSheet(u"")
-        self.verticalLayout_13 = QVBoxLayout(self.frame_9)
-        self.verticalLayout_13.setObjectName(u"verticalLayout_13")
-        self.verticalLayout_13.setContentsMargins(0, 0, 0, 0)
-        self.frame_10 = QFrame(self.frame_9)
-        self.frame_10.setObjectName(u"frame_10")
-        self.frame_10.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_10.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_7 = QGridLayout(self.frame_10)
+        self.gridLayout_7 = QGridLayout(self.frame_9)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
+        self.gridLayout_7.setVerticalSpacing(15)
         self.gridLayout_7.setContentsMargins(5, 20, 0, 0)
-        self.widget_9 = QWidget(self.frame_10)
+        self.label_32 = QLabel(self.frame_9)
+        self.label_32.setObjectName(u"label_32")
+        sizePolicy10.setHeightForWidth(self.label_32.sizePolicy().hasHeightForWidth())
+        self.label_32.setSizePolicy(sizePolicy10)
+        self.label_32.setMinimumSize(QSize(0, 23))
+        self.label_32.setFont(font1)
+        self.label_32.setStyleSheet(u"color: rgb(190, 130, 250);\n"
+" font-size:16px;")
+        self.label_32.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_7.addWidget(self.label_32, 0, 1, 1, 1)
+
+        self.widget_9 = QWidget(self.frame_9)
         self.widget_9.setObjectName(u"widget_9")
         self.horizontalLayout_16 = QHBoxLayout(self.widget_9)
         self.horizontalLayout_16.setSpacing(19)
@@ -1615,35 +1601,27 @@ class Ui_MainWindow(object):
         self.horizontalLayout_16.addItem(self.horizontalSpacer_14)
 
 
-        self.gridLayout_7.addWidget(self.widget_9, 1, 0, 1, 2)
+        self.gridLayout_7.addWidget(self.widget_9, 1, 1, 1, 1)
 
-        self.label_32 = QLabel(self.frame_10)
-        self.label_32.setObjectName(u"label_32")
-        sizePolicy10.setHeightForWidth(self.label_32.sizePolicy().hasHeightForWidth())
-        self.label_32.setSizePolicy(sizePolicy10)
-        self.label_32.setMinimumSize(QSize(0, 23))
-        self.label_32.setFont(font1)
-        self.label_32.setStyleSheet(u"color: rgb(190, 130, 250);\n"
-" font-size:16px;")
-        self.label_32.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_7.addWidget(self.label_32, 0, 0, 1, 2)
-
-        self.widget_10 = QWidget(self.frame_10)
+        self.widget_10 = QWidget(self.frame_9)
         self.widget_10.setObjectName(u"widget_10")
+        sizePolicy16 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+        sizePolicy16.setHorizontalStretch(0)
+        sizePolicy16.setVerticalStretch(0)
+        sizePolicy16.setHeightForWidth(self.widget_10.sizePolicy().hasHeightForWidth())
+        self.widget_10.setSizePolicy(sizePolicy16)
+        self.widget_10.setMinimumSize(QSize(0, 500))
+        self.widget_10.setMaximumSize(QSize(16777215, 500))
         self.horizontalLayout_17 = QHBoxLayout(self.widget_10)
         self.horizontalLayout_17.setSpacing(0)
         self.horizontalLayout_17.setObjectName(u"horizontalLayout_17")
         self.horizontalLayout_17.setContentsMargins(0, 0, 0, 0)
         self.datasetListView = ListView(self.widget_10)
         self.datasetListView.setObjectName(u"datasetListView")
-        sizePolicy16 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
-        sizePolicy16.setHorizontalStretch(0)
-        sizePolicy16.setVerticalStretch(0)
-        sizePolicy16.setHeightForWidth(self.datasetListView.sizePolicy().hasHeightForWidth())
-        self.datasetListView.setSizePolicy(sizePolicy16)
-        self.datasetListView.setMinimumSize(QSize(159, 550))
-        self.datasetListView.setMaximumSize(QSize(120, 550))
+        sizePolicy12.setHeightForWidth(self.datasetListView.sizePolicy().hasHeightForWidth())
+        self.datasetListView.setSizePolicy(sizePolicy12)
+        self.datasetListView.setMinimumSize(QSize(160, 500))
+        self.datasetListView.setMaximumSize(QSize(9999, 500))
         font5 = QFont()
         font5.setFamilies([u"Roboto Medium"])
         font5.setPointSize(13)
@@ -1677,10 +1655,10 @@ class Ui_MainWindow(object):
 
         self.widget_11 = QWidget(self.widget_10)
         self.widget_11.setObjectName(u"widget_11")
-        sizePolicy5.setHeightForWidth(self.widget_11.sizePolicy().hasHeightForWidth())
-        self.widget_11.setSizePolicy(sizePolicy5)
-        self.widget_11.setMinimumSize(QSize(265, 550))
-        self.widget_11.setMaximumSize(QSize(265, 550))
+        sizePolicy16.setHeightForWidth(self.widget_11.sizePolicy().hasHeightForWidth())
+        self.widget_11.setSizePolicy(sizePolicy16)
+        self.widget_11.setMinimumSize(QSize(265, 500))
+        self.widget_11.setMaximumSize(QSize(9999, 500))
         self.widget_11.setStyleSheet(u"background-color: #171717;\n"
 "\n"
 "")
@@ -2134,14 +2112,11 @@ class Ui_MainWindow(object):
         self.horizontalLayout_17.addWidget(self.widget_11)
 
 
-        self.gridLayout_7.addWidget(self.widget_10, 2, 0, 2, 1)
-
-
-        self.verticalLayout_13.addWidget(self.frame_10)
+        self.gridLayout_7.addWidget(self.widget_10, 2, 1, 1, 1)
 
         self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.verticalLayout_13.addItem(self.verticalSpacer_6)
+        self.gridLayout_7.addItem(self.verticalSpacer_6, 3, 1, 1, 1)
 
 
         self.verticalLayout_10.addWidget(self.frame_9)
@@ -2163,6 +2138,7 @@ class Ui_MainWindow(object):
         self.frame_prefit.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_prefit.setFrameShadow(QFrame.Shadow.Plain)
         self.verticalLayout_6 = QVBoxLayout(self.frame_prefit)
+        self.verticalLayout_6.setSpacing(15)
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
         self.verticalLayout_6.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
         self.verticalLayout_6.setContentsMargins(5, 20, 0, 0)
@@ -2192,10 +2168,6 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_6.addWidget(self.widget_8)
 
-        self.verticalSpacer_16 = QSpacerItem(20, 15, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-
-        self.verticalLayout_6.addItem(self.verticalSpacer_16)
-
         self.prefitScrollArea = QScrollArea(self.frame_prefit)
         self.prefitScrollArea.setObjectName(u"prefitScrollArea")
         sizePolicy17.setHeightForWidth(self.prefitScrollArea.sizePolicy().hasHeightForWidth())
@@ -2207,7 +2179,7 @@ class Ui_MainWindow(object):
         self.prefitScrollArea.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
         self.prefitScrollAreaWidget = QWidget()
         self.prefitScrollAreaWidget.setObjectName(u"prefitScrollAreaWidget")
-        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 441, 385))
+        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 441, 380))
         self.verticalLayout_11 = QVBoxLayout(self.prefitScrollAreaWidget)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -2276,7 +2248,7 @@ class Ui_MainWindow(object):
 
         self.gridLayout_15.addItem(self.horizontalSpacer_18, 1, 0, 1, 1)
 
-        self.verticalSpacer_15 = QSpacerItem(20, 19, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_15 = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_15.addItem(self.verticalSpacer_15, 4, 2, 1, 1)
 
@@ -2293,10 +2265,6 @@ class Ui_MainWindow(object):
         self.autoRunCheckBox.setStyleSheet(u"padding-left: 13px")
 
         self.gridLayout_15.addWidget(self.autoRunCheckBox, 3, 2, 1, 2)
-
-        self.verticalSpacer_13 = QSpacerItem(20, 70, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-
-        self.gridLayout_15.addItem(self.verticalSpacer_13, 2, 4, 3, 1)
 
         self.verticalSpacer_18 = QSpacerItem(20, 8, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 
@@ -2499,7 +2467,7 @@ class Ui_MainWindow(object):
         self.fitScrollArea.setWidgetResizable(True)
         self.fitScrollAreaWidget = QWidget()
         self.fitScrollAreaWidget.setObjectName(u"fitScrollAreaWidget")
-        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 441, 463))
+        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 441, 438))
         self.verticalLayout_4 = QVBoxLayout(self.fitScrollAreaWidget)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -2544,11 +2512,11 @@ class Ui_MainWindow(object):
 
         self.gridLayout_12.addWidget(self.fitButton, 2, 1, 1, 1)
 
-        self.verticalSpacer_11 = QSpacerItem(20, 70, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        self.verticalSpacer_11 = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 
         self.gridLayout_12.addItem(self.verticalSpacer_11, 4, 1, 1, 1)
 
-        self.verticalSpacer_12 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_12 = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 
         self.gridLayout_12.addItem(self.verticalSpacer_12, 0, 1, 1, 1)
 
@@ -2592,7 +2560,7 @@ class Ui_MainWindow(object):
 
         self.pagesStackedWidget.addWidget(self.fitWidget)
 
-        self.gridLayout.addWidget(self.pagesStackedWidget, 0, 1, 3, 1)
+        self.horizontalLayout_11.addWidget(self.pagesStackedWidget)
 
         self.mplFigureCanvasContainerWidget = QWidget(self.windowBodyFrame)
         self.mplFigureCanvasContainerWidget.setObjectName(u"mplFigureCanvasContainerWidget")
@@ -2613,10 +2581,9 @@ class Ui_MainWindow(object):
 "	border-radius: 10px;\n"
 "")
         self.verticalLayout = QVBoxLayout(self.widget)
-#ifndef Q_OS_MAC
-        self.verticalLayout.setSpacing(-1)
-#endif
+        self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setContentsMargins(-1, 0, -1, 0)
         self.mplFigureButtons = QWidget(self.widget)
         self.mplFigureButtons.setObjectName(u"mplFigureButtons")
         sizePolicy9.setHeightForWidth(self.mplFigureButtons.sizePolicy().hasHeightForWidth())
@@ -3117,7 +3084,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.addWidget(self.widget)
 
 
-        self.gridLayout.addWidget(self.mplFigureCanvasContainerWidget, 0, 2, 1, 1)
+        self.horizontalLayout_11.addWidget(self.mplFigureCanvasContainerWidget)
 
 
         self.gridLayout_5.addWidget(self.windowBodyFrame, 0, 0, 1, 1)

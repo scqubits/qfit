@@ -17,7 +17,7 @@ from typing import Union, Literal, Tuple, Dict, Any, List
 
 from PySide6 import QtCore
 from PySide6.QtCore import Slot, Signal
-from PySide6.QtWidgets import QFrame, QVBoxLayout, QToolButton, QSizePolicy
+from PySide6.QtWidgets import QFrame, QVBoxLayout, QToolButton, QSizePolicy, QWidget
 
 from matplotlib.backend_bases import cursors
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
@@ -57,6 +57,8 @@ class NavigationHidden(NavigationToolbar2QT):
         The canvas on which the figure is drawn.
     parent : MplFigureCanvas
         The parent widget.
+    parentIsStandalone: bool = False
+        Whether the parent widget is a standalone canvas or not.
     """
 
     def __init__(
@@ -67,10 +69,34 @@ class NavigationHidden(NavigationToolbar2QT):
     ):
         super().__init__(canvas, parent, coordinates=False)
 
-        # Hide all buttons.
+        # Remove all buttons and widgets to eliminate size constraints
         if not parentIsStandalone:
-            for child in self.findChildren(QToolButton):
-                child.setVisible(False)
+            # Find and remove all toolbar buttons
+            toolbar_buttons = self.findChildren(QToolButton)
+            for button in toolbar_buttons:
+                button.setParent(None)  # Remove from parent
+                button.deleteLater()    # Schedule for deletion
+            
+            # Find and remove any QMenu widgets
+            from PySide6.QtWidgets import QMenu
+            menus = self.findChildren(QMenu)
+            for menu in menus:
+                menu.setParent(None)
+                menu.deleteLater()
+            
+            # Find and remove any other widgets that might constrain size
+            from PySide6.QtWidgets import QWidget
+            all_widgets = self.findChildren(QWidget)
+            for widget in all_widgets:
+                # Skip the toolbar itself and the canvas
+                if widget != self and widget != canvas:
+                    widget.setParent(None)
+                    widget.deleteLater()
+            
+            # Also set the toolbar itself to have no minimum size
+            self.setMinimumSize(0, 0)
+            self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+            
             self.update()
 
         # only connect to external buttons in the hidden toolbar.  We still
@@ -427,6 +453,8 @@ class MplFigureCanvas(QFrame):
     ----------
     parent : QWidget
         The parent widget.
+    standalone: bool = False
+        Whether the widget is a standalone plotting widget or not.
     """
 
     canvasClosed = Signal()
@@ -467,6 +495,35 @@ class MplFigureCanvas(QFrame):
         self.canvas.figure.patch.set_facecolor("#B8B8B8")
         self.canvas.figure.subplots()
         self.axes.autoscale(enable=False)
+        
+        # Remove size constraints from matplotlib components
+        self.remove_matplotlib_size_constraints()
+
+    def remove_matplotlib_size_constraints(self):
+        """
+        Remove size constraints from matplotlib components that might prevent proper resizing.
+        This is called during initialization to ensure the canvas can be resized to very small sizes.
+        """
+        # Set canvas to have no minimum size
+        self.canvas.setMinimumSize(0, 0)
+        self.canvas.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        
+        # Set toolbar to have no minimum size (already done in NavigationHidden, but just to be sure)
+        self.toolbar.setMinimumSize(0, 0)
+        self.toolbar.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        
+        # Set the main widget itself to have flexible sizing
+        self.setMinimumSize(0, 0)
+        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        
+        # # Try to make the figure itself more flexible
+        # # Note: This might affect plot quality at very small sizes
+        # try:
+        #     # Set a very small initial figure size
+        #     self.canvas.figure.set_size_inches(2, 2)
+        # except Exception:
+        #     # If this fails, continue anyway
+        #     pass
 
     def initPlotting(self):
         """
