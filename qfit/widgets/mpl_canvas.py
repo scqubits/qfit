@@ -497,9 +497,9 @@ class MplFigureCanvas(QFrame):
         self.axes.autoscale(enable=False)
         
         # Remove size constraints from matplotlib components
-        self.remove_matplotlib_size_constraints()
+        self.removeSizeConstraints()
 
-    def remove_matplotlib_size_constraints(self):
+    def removeSizeConstraints(self):
         """
         Remove size constraints from matplotlib components that might prevent proper resizing.
         This is called during initialization to ensure the canvas can be resized to very small sizes.
@@ -515,15 +515,6 @@ class MplFigureCanvas(QFrame):
         # Set the main widget itself to have flexible sizing
         self.setMinimumSize(0, 0)
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
-        
-        # # Try to make the figure itself more flexible
-        # # Note: This might affect plot quality at very small sizes
-        # try:
-        #     # Set a very small initial figure size
-        #     self.canvas.figure.set_size_inches(2, 2)
-        # except Exception:
-        #     # If this fails, continue anyway
-        #     pass
 
     def initPlotting(self):
         """
