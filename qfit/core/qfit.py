@@ -75,12 +75,11 @@ import qfit.settings as settings
 
 # calibration export utils
 from qfit.utils.export import (
-    FullCalibrationResult,
-    PartialCalibrationResult,
+    CalibrationResult,
     ExtractedPointsResult,
-    exportCircuitParametersFromParamset,
-    exportCalibrationResultFromParamset,
-    exportExtractedPoints,
+    getCircuitParametersFromParamset,
+    getCalibrationResultFromParamset,
+    getExtractedPoints,
 )
 
 
@@ -170,7 +169,7 @@ class Fit:
         Parameters
         ----------
         hilbert_space: HilbertSpace
-            HilbertSpace object from scqubits, modeling the superconducting circuit 
+            HilbertSpace object from scqubits, modeling the superconducting circuit
             whose parameters are to be fitted.
         measurement_file_name: str | List[str]
             Name(s) of measurement file(s) to be loaded. If left blank, a window
@@ -206,10 +205,10 @@ class Fit:
         Parameters
         ----------
         hilbert_space: HilbertSpace
-            HilbertSpace object from scqubits, modeling the superconducting circuit 
+            HilbertSpace object from scqubits, modeling the superconducting circuit
             whose parameters are to be fitted.
         yaml_file: str
-            Path to the yaml file, which contains the configuration of 
+            Path to the yaml file, which contains the configuration of
             initializing the qfit project.
         deepcopy: bool
             Whether to use a deepcopy of the HilbertSpace object, instead of
@@ -266,11 +265,11 @@ class Fit:
         return instance
 
     # methods to export data ##################################################
-    def export_hilbertspace(
+    def get_hilbertspace(
         self, deepcopy: bool = False, source: Literal["fit", "prefit"] = "fit"
     ) -> HilbertSpace:
         """
-        Export the HilbertSpace object.
+        Get the HilbertSpace object.
 
         Parameters
         ----------
@@ -300,10 +299,10 @@ class Fit:
 
         return _deepcopy(hilbertSpace) if deepcopy else hilbertSpace
 
-    def export_calibration_result(
+    def get_calibration_result(
         self,
         source: Literal["calibration", "fit", "prefit"] = "calibration",
-    ) -> Union[PartialCalibrationResult, FullCalibrationResult]:
+    ) -> CalibrationResult:
         """
         Export calibration result as a data object (full or partial).
 
@@ -326,9 +325,9 @@ class Fit:
         else:
             raise ValueError(f"Unknown source option: {source}")
 
-        return exportCalibrationResultFromParamset(self._caliParamModel, param_set)
+        return getCalibrationResultFromParamset(self._caliParamModel, param_set)
 
-    def export_circuit_parameters(
+    def get_circuit_parameters(
         self, source: Literal["fit", "prefit"] = "fit"
     ) -> Dict[Tuple[str, str], float]:
         """Return a flatten dict of Hilbert-space (circuit) parameters.
@@ -356,10 +355,10 @@ class Fit:
         else:
             raise ValueError(f"Unknown source option: {source}")
 
-        return exportCircuitParametersFromParamset(param_set)
+        return getCircuitParametersFromParamset(param_set)
 
-    def export_extracted_points(self) -> "ExtractedPointsResult":
-        """Export user-extracted transition points.
+    def get_extracted_points(self) -> ExtractedPointsResult:
+        """Get user-extracted transition points.
 
         The returned object is a light-weight container mapping *figure names*
         to extracted *transition* data. See
@@ -374,7 +373,7 @@ class Fit:
         """
 
         full_extr = self._allDatasets._fullSpectra  # type: ignore[attr-defined]
-        return exportExtractedPoints(full_extr)
+        return getExtractedPoints(full_extr)
 
     # methods to controll the window ###################################
     def close(self):
@@ -412,9 +411,7 @@ class Fit:
             To plot the numerical calculation, the number of points to be
             added for the sweep.
         """
-        self._plottingCtrl.createStandaloneCanvas(
-            selected_data_files, points_added
-        )
+        self._plottingCtrl.createStandaloneCanvas(selected_data_files, points_added)
 
     # models, views and controllers ####################################
     # ##################################################################

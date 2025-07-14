@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 from qfit.models.data_structures import FullExtr
 
+
 # Extracted points class ----------------------------------------------------
 @dataclass
 class ExtractedPointsResult:
@@ -69,12 +70,13 @@ class ExtractedPointsResult:
                 f"Figure '{figure}' not found. Available: {', '.join(self.data.keys())}"
             )
         return list(self.data[figure].keys())
-    
+
+
 # Calibration result classes ------------------------------------------------
 class CalibrationResult(ABC):
     """Abstract base class encapsulating Y-axis calibration.
 
-    Sub-classes must implement an *X-axis* helper ``get_mapped_sweep_param``.
+    Sub-classes must implement an *X-axis* helper ``get_mapped_sweep_params``.
     """
 
     def __init__(self, y_slope: float, y_offset: float, raw_y_name: str):
@@ -82,27 +84,29 @@ class CalibrationResult(ABC):
         self.y_offset = y_offset
         self.raw_y_name = raw_y_name
 
-    # ------------------------------------------------------------------
-    # public – Y calibration
-    # ------------------------------------------------------------------
-    def get_mapped_y(self, raw_y: np.ndarray) -> np.ndarray:
+    def get_mapped_y(self, raw_y: float) -> float:
         """Return mapped-Y value(s) computed via *affine* relation."""
         return self.y_slope * raw_y + self.y_offset
 
     # subclasses must supply their own X-axis mapping helpers
     @abstractmethod
-    def get_mapped_sweep_param(self, *args, **kwargs):
+    def get_mapped_sweep_params(
+        self,
+        return_dict: bool = False,
+        *args,
+        **kwargs,
+    ) -> "np.ndarray | Dict[str, float]":
         """Return mapped sweep-parameter values for given raw bias(es)."""
         raise NotImplementedError
 
-    # ------------------------------------------------------------------
-    # helpers – representation
-    # ------------------------------------------------------------------
     def _repr_y(self) -> str:
         return (
             f"y-axis\n"
-            f"raw to mapped: mapped_y = {self.y_slope} * raw_y + {self.y_offset}\n"
-            f"raw_y_name   : {self.raw_y_name}\n"
+            f"raw to mapped: mapped_y = y_slope * raw_y + y_offset\n"
+            f"raw_y_name: {self.raw_y_name}\n"
+            f"--------------------------------\n"
+            f"y_slope = {self.y_slope}\n"
+            f"y_offset = {self.y_offset}\n"
         )
 
     def __str__(self) -> str:  # pragma: no cover – convenience
@@ -114,8 +118,8 @@ class FullCalibrationResult(CalibrationResult):
         self,
         x_linear: np.ndarray,
         x_offset: np.ndarray,
-        raw_dc_bias_names: Tuple[str, ...],
-        mapped_sweep_param_names: Tuple[str, ...],
+        raw_dc_biases_names: Tuple[str, ...],
+        mapped_sweep_params_names: Tuple[str, ...],
         y_slope: float,
         y_offset: float,
         raw_y_name: str,
@@ -123,7 +127,7 @@ class FullCalibrationResult(CalibrationResult):
         """
         A class to store the calibration result. The calibration assumes an affine function
         of the raw parameters to the map parameters:
-        mapped_sweep_param = x_linear @ raw_dc_bias + x_offset
+        mapped_sweep_params = x_linear @ raw_dc_bias + x_offset
         mapped_y = y_slope * raw_dc_bias + y_offset
 
         Parameters
@@ -132,9 +136,9 @@ class FullCalibrationResult(CalibrationResult):
             The linear part of the x-axis calibration result.
         x_offset
             The offset of the x-axis calibration result.
-        raw_dc_bias_names
+        raw_dc_biases_names
             The names of the raw dc bias parameters.
-        mapped_sweep_param_names
+        mapped_sweep_params_names
             The names of the mapped sweep parameters. Each element is a tuple of
             (parent_name, sweep_param_name).
         y_slope
@@ -146,10 +150,10 @@ class FullCalibrationResult(CalibrationResult):
         """
         self.x_linear = x_linear
         self.x_offset = x_offset
-        self.raw_dc_bias_names = raw_dc_bias_names
+        self.raw_dc_biases_names = raw_dc_biases_names
         # store *parsed* parent/param pairs internally
         self.mapped_param_names = tuple(
-            parseMappedParamName(name) for name in mapped_sweep_param_names
+            parseMappedParamName(name) for name in mapped_sweep_params_names
         )
         # initialise Y-axis calibration via super-class
         super().__init__(y_slope=y_slope, y_offset=y_offset, raw_y_name=raw_y_name)
@@ -160,7 +164,7 @@ class FullCalibrationResult(CalibrationResult):
         mapped_labels = ", ".join(
             str(mapped_param_name) for mapped_param_name in self.mapped_param_names
         )
-        raw_labels = ", ".join(self.raw_dc_bias_names)
+        raw_labels = ", ".join(self.raw_dc_biases_names)
         header = "FullCalibrationResult"
         x_linear_str = np.array2string(self.x_linear, **self._np_print_opts)
         x_offset_str = np.array2string(self.x_offset, **self._np_print_opts)
@@ -169,9 +173,9 @@ class FullCalibrationResult(CalibrationResult):
             f"{header}\n"
             f"--------------------------------\n"
             f"x-axis\n"
-            f"raw to mapped: mapped_sweep_param = x_linear @ raw_dc_bias + x_offset\n"
-            f"raw names    : {raw_labels}\n"
-            f"mapped names : {mapped_labels}\n"
+            f"raw to mapped: mapped_sweep_params = x_linear @ raw_dc_biases + x_offset\n"
+            f"raw_dc_biases_names: {raw_labels}\n"
+            f"mapped_sweep_params_names: {mapped_labels}\n"
             f"--------------------------------\n"
             f"x_linear =\n{x_linear_str}\n"
             f"x_offset = {x_offset_str}\n"
@@ -179,22 +183,25 @@ class FullCalibrationResult(CalibrationResult):
             f"{self._repr_y()}\n"
         )
 
-    def get_mapped_sweep_param(
+    def get_mapped_sweep_params(
         self,
-        raw_dc_bias: np.ndarray,
+        raw_dc_biases: Dict[str, float],
         return_dict: bool = False,
     ) -> "np.ndarray | Dict[str, float]":
         """Return mapped sweep-parameter values for a *raw* dc-bias vector.
 
         Parameters
         ----------
-        raw_dc_bias
-            1-D array of length ``N_raw``.
+        raw_dc_biases
+            A dictionary mapping raw dc-bias component names to their values.
         return_dict
-            If *True* a ``dict`` mapping compact labels (e.g. ``Q1.EJ``)
-            to float values is returned instead of a bare ``numpy`` vector.
+            If True, a dict mapping a tuple of (parent_name, param_name)
+            to float values is returned instead of a bare numpy vector.
         """
-        mapped = self.x_linear @ raw_dc_bias + self.x_offset
+        raw_dc_biases_value = np.array(
+            [raw_dc_biases[name] for name in self.raw_dc_biases_names]
+        )
+        mapped = self.x_linear @ raw_dc_biases_value + self.x_offset
         if return_dict:
             return {
                 key: float(val) for key, val in zip(self.mapped_param_names, mapped)
@@ -227,56 +234,52 @@ class PartialCalibrationResult(CalibrationResult):
         data_dict: Dict[
             str, Tuple[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]
         ],
-        raw_param_names: Tuple[str, ...],
-        mapped_param_names: Tuple[str, ...],
+        raw_dc_biases_names: Tuple[str, ...],
+        mapped_sweep_params_names: Tuple[str, ...],
         y_slope: float,
         y_offset: float,
         raw_y_name: str,
     ):
         self._data = data_dict
-        self.raw_param_names = raw_param_names
+        self.raw_dc_biases_names = raw_dc_biases_names
         # store *parsed* parent/param pairs internally
-        self.mapped_param_names = tuple(
-            parseMappedParamName(name) for name in mapped_param_names
+        self.mapped_sweep_params_names = tuple(
+            parseMappedParamName(name) for name in mapped_sweep_params_names
         )
         # store Y-axis calibration using base-class
         super().__init__(y_slope=y_slope, y_offset=y_offset, raw_y_name=raw_y_name)
 
-    # ------------------------------------------------------------------
-    # public helpers
-    # ------------------------------------------------------------------
-    def get_mapped_sweep_param(
+    def get_mapped_sweep_params(
         self,
-        raw_dc_bias_name: str,
-        raw_dc_bias_value: float,
+        raw_dc_bias: Dict[str, float],
         figure: str,
         return_dict: bool = False,
-    ) -> "Dict[str, float] | np.ndarray":
+    ) -> Dict[Tuple[str, str], float]:
         """Return mapped sweep-parameter values for *partial* calibration.
 
         Parameters
         ----------
-        raw_dc_bias_name
-            Which raw dc-bias component to vary (must be in
-            ``self.raw_param_names``).
-        raw_dc_bias_value
-            Value to plug into the linear interpolation/extrapolation.
+        raw_dc_bias
+            A dictionary mapping a raw dc-bias component name to its value.
+            Only one dictionary entry is allowed.
         figure
             Name of the figure whose two-point calibration should be used.
         return_dict
             If *True* return a ``dict`` keyed by compact labels; otherwise a
-            1-D *numpy* array ordered as ``self.mapped_param_names``.
+            1-D *numpy* array ordered as ``self.mapped_sweep_params_names``.
         """
         if figure not in self._data:
             raise KeyError(f"Figure '{figure}' not found in partial calibration data.")
 
         ((raw1, map1), (raw2, map2)) = self._data[figure]
+        if len(raw_dc_bias) != 1:
+            raise ValueError(
+                "Only one raw dc-bias component is allowed for partial calibration."
+            )
+        raw_dc_bias_name = list(raw_dc_bias.keys())[0]
+        raw_dc_bias_value = raw_dc_bias[raw_dc_bias_name]
 
-        # compute per mapped param slope & offset using raw_param_name
-        if raw_dc_bias_name not in self.raw_param_names:
-            raise KeyError(f"Unknown raw parameter '{raw_dc_bias_name}'.")
-
-        idx_raw = self.raw_param_names.index(raw_dc_bias_name)
+        idx_raw = self.raw_dc_biases_names.index(raw_dc_bias_name)
         r1 = raw1[idx_raw]
         r2 = raw2[idx_raw]
         if r1 == r2:
@@ -292,33 +295,33 @@ class PartialCalibrationResult(CalibrationResult):
         if return_dict:
             return {
                 key: float(val)
-                for key, val in zip(self.mapped_param_names, mapped_vals)
+                for key, val in zip(self.mapped_sweep_params_names, mapped_vals)
             }
         return mapped_vals
 
     def __repr__(self):
         header = "PartialCalibrationResult"
-        raw_labels = ", ".join(self.raw_param_names)
+        raw_labels = ", ".join(self.raw_dc_biases_names)
         mapped_labels = ", ".join(
-            str(mapped_param_name) for mapped_param_name in self.mapped_param_names
+            str(mapped_param_name) for mapped_param_name in self.mapped_params_names
         )
 
         lines: List[str] = [
             header,
             "--------------------------------",
             f"x-axis\n"
-            f"raw names    : {raw_labels}\n"
-            f"mapped names : {mapped_labels}\n"
+            f"raw_dc_biases_names: {raw_labels}\n"
+            f"mapped_sweep_params_names: {mapped_labels}\n"
             "--------------------------------",
         ]
 
         for fig, ((raw1, map1), (raw2, map2)) in self._data.items():
             lines.append(f"Figure: {fig}")
             # raw sweeps
-            for rn, v1, v2 in zip(self.raw_param_names, raw1, raw2):
+            for rn, v1, v2 in zip(self.raw_dc_biases_names, raw1, raw2):
                 lines.append(f"  raw {rn}: {v1:.6g} → {v2:.6g}")
             # mapped sweeps
-            for pair, m1, m2 in zip(self.mapped_param_names, map1, map2):
+            for pair, m1, m2 in zip(self.mapped_sweep_params_names, map1, map2):
                 lines.append(f"  mapped {pair}: {m1:.6g} → {m2:.6g}")
             lines.append("")
 
@@ -326,8 +329,9 @@ class PartialCalibrationResult(CalibrationResult):
 
         return "\n".join(lines)
 
+
 # Extracted points export ----------------------------------------------------
-def exportExtractedPoints(
+def getExtractedPoints(
     full_extr: FullExtr,
 ) -> ExtractedPointsResult:
     """Convert an internal :class:`~qfit.models.data_structures.FullExtr` object
@@ -345,8 +349,12 @@ def exportExtractedPoints(
         A wrapper around a nested dictionary where each transition dictionary
         may contain the following keys (depending on the *include_* flags):
 
-        ``x``       – dict mapping *raw axis name* → vector
-        ``y``       – vector of mapped Y values
+        ``x``        : dict mapping *raw axis name* → vector
+        ``y``        : vector of mapped Y values
+        ``type``     : transition type
+        ``photons``  : number of photons
+        ``initial_states`` : initial states
+        ``final_states``   : final states
     """
 
     export_dict: Dict[str, Dict[str, Dict[str, Any]]] = {}
@@ -381,8 +389,9 @@ def exportExtractedPoints(
 
     return ExtractedPointsResult(export_dict)
 
+
 # Circuit parameters export --------------------------------------------------
-def exportCircuitParametersFromParamset(
+def getCircuitParametersFromParamset(
     param_set: "ParamSet",
 ) -> Dict[Tuple[str, str], float]:
     """
@@ -407,9 +416,9 @@ def exportCircuitParametersFromParamset(
     return conv
 
 
-def exportCalibrationResultFromParamset(
+def getCalibrationResultFromParamset(
     cali_model: "CaliParamModel", param_set: "ParamSet"
-) -> Union["FullCalibrationResult", "PartialCalibrationResult"]:
+) -> "CalibrationResult":
 
     # Y calibration (always linear)
     y_slope, y_offset = returnPrecursorFullYCalibration(cali_model, param_set)
@@ -423,8 +432,8 @@ def exportCalibrationResultFromParamset(
         return FullCalibrationResult(
             x_linear=M,
             x_offset=b,
-            raw_dc_bias_names=rawNames,
-            mapped_sweep_param_names=mapNames,
+            raw_dc_biases_names=rawNames,
+            mapped_sweep_params_names=mapNames,
             y_slope=y_slope,
             y_offset=y_offset,
             raw_y_name=raw_y_name,
@@ -436,12 +445,13 @@ def exportCalibrationResultFromParamset(
         )
         return PartialCalibrationResult(
             data_dict=dataDict,
-            raw_param_names=rawNames,
-            mapped_param_names=mapNames,
+            raw_dc_biases_names=rawNames,
+            mapped_sweep_params_names=mapNames,
             y_slope=y_slope,
             y_offset=y_offset,
             raw_y_name=raw_y_name,
         )
+
 
 # Helper functions ----------------------------------------------------------
 def _getVal(
