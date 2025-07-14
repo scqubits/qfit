@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QPushButton,
     QWidget,
-    QFrame,
+    QSizePolicy,
 )
 from qfit.widgets.validated_line_edits import IntLineEdit, MultiStatesLineEdit
 
@@ -40,9 +40,6 @@ class PrefitParamView(QObject):
         The widget that contains the prefit parameters.
     prefitMinmaxScrollAreaWidget : QWidget
         The widget that contains the prefit min max table.
-    prefitMinMaxFrame : QFrame
-        The frame that contains the prefit min max table, which can be
-        folded.
     """
 
     HSSliderChanged = Signal(ParamAttr)
@@ -61,17 +58,21 @@ class PrefitParamView(QObject):
         parent: QObject,
         prefitScrollAreaWidget: QWidget,
         prefitMinmaxScrollAreaWidget: QWidget,
-        prefitMinMaxFrame: QFrame,
     ):
         super().__init__(parent)
 
+        # The widgets that contain the contents of the scroll areas
         self.prefitScrollAreaWidget = prefitScrollAreaWidget
         self.prefitMinmaxScrollAreaWidget = prefitMinmaxScrollAreaWidget
-        self.prefitMinMaxFrame = prefitMinMaxFrame
-
-        # setting for prefit minmax scroll area
-        # self.prefitMinmaxScrollAreaWidget.setWidgetResizable(True)
-
+        
+        # to get the actual scroll areas, we need to go two levels up
+        # hierarchy: 
+        # prefitScrollAreaWidget --parent-> prefitScrollArea (View point)
+        # prefitScrollArea (View point) --parent-> prefitScrollArea
+        self.prefitScrollArea = prefitScrollAreaWidget.parent().parent()    
+        self.prefitMinmaxScrollArea = prefitMinmaxScrollAreaWidget.parent().parent()
+        self.prefitLayout = self.prefitScrollArea.parent().layout()
+        
         # A list to tell whether the parameter belongs to a hilbertspace
         # or a calibration model.
         self.HSNames: List[str] = []
@@ -137,9 +138,6 @@ class PrefitParamView(QObject):
 
         # add a spacing between the sliders and the min max table
         prefitScrollLayout.addSpacing(SPACING_BETWEEN_GROUPS)
-
-    # def _removeSliderGroup(self, groupName: str):
-    #     pass
 
     def _insertMinMax(
         self, paramNameDict: Dict[str, List[str]], removeExisting: bool = True
@@ -296,7 +294,7 @@ class PrefitParamView(QObject):
                 )
 
     def _connectMinmaxTableFolding(self):
-        self.foldable_widget.expandWidgetToggled.connect(self.toggleMinMaxTableFrame)
+        self.foldable_widget.expandWidgetToggled.connect(self.toggleMinMaxScrollSize)
 
     def _connectRangeUpdateNotif(self):
         self.HSRangeEditingFinished.connect(self._markRangeUpdate)
@@ -328,14 +326,20 @@ class PrefitParamView(QObject):
             raise ValueError(f"Invalid attribute {paramAttr.attr}")
 
     @Slot(bool)
-    def toggleMinMaxTableFrame(self, b: bool):
+    def toggleMinMaxScrollSize(self, b: bool):
         """
         Toggle the visibility of the minmax table frame.
         """
         if b:
-            self.prefitMinMaxFrame.setMaximumHeight(400)
+            # When expanded, both areas should share space equally
+            self.prefitLayout.setStretchFactor(self.prefitScrollArea, 1)
+            self.prefitLayout.setStretchFactor(self.prefitMinmaxScrollArea, 1)
+            self.prefitMinmaxScrollArea.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         else:
-            self.prefitMinMaxFrame.setMaximumHeight(0)
+            # When collapsed, prefit area should take most space, minmax minimal
+            self.prefitLayout.setStretchFactor(self.prefitScrollArea, 1)
+            self.prefitLayout.setStretchFactor(self.prefitMinmaxScrollArea, 0)
+            self.prefitMinmaxScrollArea.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
 
     @Slot(ParamAttr)
     def _markRangeUpdate(self, paramAttr: ParamAttr):

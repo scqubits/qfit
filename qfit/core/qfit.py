@@ -755,7 +755,6 @@ class Fit:
             self._mainWindow,
             self._mainUi.prefitScrollAreaWidget,
             self._mainUi.prefitMinmaxScrollAreaWidget,
-            self._mainUi.frame_prefit_minmax,
         )
         self._sweepSettingsView = SweepSettingsView(
             self._mainWindow,

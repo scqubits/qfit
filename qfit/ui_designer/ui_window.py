@@ -17,10 +17,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
     QGridLayout, QGroupBox, QHBoxLayout, QLabel,
-    QLayout, QMainWindow, QPushButton, QRadioButton,
-    QScrollArea, QSizePolicy, QSpacerItem, QSpinBox,
-    QStackedWidget, QStatusBar, QTabWidget, QVBoxLayout,
-    QWidget)
+    QMainWindow, QPushButton, QRadioButton, QScrollArea,
+    QSizePolicy, QSpacerItem, QSpinBox, QStackedWidget,
+    QStatusBar, QTabWidget, QVBoxLayout, QWidget)
 
 from qfit.views.calibration_view import CalibrationLineEdit
 from qfit.widgets.data_extracting import (DataExtractingWidget, ListView)
@@ -2114,7 +2113,7 @@ class Ui_MainWindow(object):
 
         self.gridLayout_7.addWidget(self.widget_10, 2, 1, 1, 1)
 
-        self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_6 = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_7.addItem(self.verticalSpacer_6, 3, 1, 1, 1)
 
@@ -2131,18 +2130,11 @@ class Ui_MainWindow(object):
         self.verticalLayout_3 = QVBoxLayout(self.prefitWidget)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.verticalLayout_3.setContentsMargins(12, -1, -1, 12)
-        self.frame_prefit = QFrame(self.prefitWidget)
-        self.frame_prefit.setObjectName(u"frame_prefit")
-        sizePolicy11.setHeightForWidth(self.frame_prefit.sizePolicy().hasHeightForWidth())
-        self.frame_prefit.setSizePolicy(sizePolicy11)
-        self.frame_prefit.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_prefit.setFrameShadow(QFrame.Shadow.Plain)
-        self.verticalLayout_6 = QVBoxLayout(self.frame_prefit)
-        self.verticalLayout_6.setSpacing(15)
+        self.widget_4 = QWidget(self.prefitWidget)
+        self.widget_4.setObjectName(u"widget_4")
+        self.verticalLayout_6 = QVBoxLayout(self.widget_4)
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
-        self.verticalLayout_6.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
-        self.verticalLayout_6.setContentsMargins(5, 20, 0, 0)
-        self.widget_8 = QWidget(self.frame_prefit)
+        self.widget_8 = QWidget(self.widget_4)
         self.widget_8.setObjectName(u"widget_8")
         sizePolicy10.setHeightForWidth(self.widget_8.sizePolicy().hasHeightForWidth())
         self.widget_8.setSizePolicy(sizePolicy10)
@@ -2168,10 +2160,13 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_6.addWidget(self.widget_8)
 
-        self.prefitScrollArea = QScrollArea(self.frame_prefit)
+        self.prefitScrollArea = QScrollArea(self.widget_4)
         self.prefitScrollArea.setObjectName(u"prefitScrollArea")
-        sizePolicy17.setHeightForWidth(self.prefitScrollArea.sizePolicy().hasHeightForWidth())
-        self.prefitScrollArea.setSizePolicy(sizePolicy17)
+        sizePolicy20 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        sizePolicy20.setHorizontalStretch(0)
+        sizePolicy20.setVerticalStretch(0)
+        sizePolicy20.setHeightForWidth(self.prefitScrollArea.sizePolicy().hasHeightForWidth())
+        self.prefitScrollArea.setSizePolicy(sizePolicy20)
         self.prefitScrollArea.setStyleSheet(u"background-color: rgb(33,33,33);")
         self.prefitScrollArea.setFrameShape(QFrame.Shape.NoFrame)
         self.prefitScrollArea.setFrameShadow(QFrame.Shadow.Plain)
@@ -2179,7 +2174,9 @@ class Ui_MainWindow(object):
         self.prefitScrollArea.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
         self.prefitScrollAreaWidget = QWidget()
         self.prefitScrollAreaWidget.setObjectName(u"prefitScrollAreaWidget")
-        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 441, 380))
+        self.prefitScrollAreaWidget.setGeometry(QRect(0, 0, 422, 452))
+        sizePolicy11.setHeightForWidth(self.prefitScrollAreaWidget.sizePolicy().hasHeightForWidth())
+        self.prefitScrollAreaWidget.setSizePolicy(sizePolicy11)
         self.verticalLayout_11 = QVBoxLayout(self.prefitScrollAreaWidget)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -2187,50 +2184,35 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_6.addWidget(self.prefitScrollArea)
 
-
-        self.verticalLayout_3.addWidget(self.frame_prefit)
-
-        self.frame_prefit_minmax = QFrame(self.prefitWidget)
-        self.frame_prefit_minmax.setObjectName(u"frame_prefit_minmax")
-        sizePolicy13.setHeightForWidth(self.frame_prefit_minmax.sizePolicy().hasHeightForWidth())
-        self.frame_prefit_minmax.setSizePolicy(sizePolicy13)
-        self.frame_prefit_minmax.setMinimumSize(QSize(0, 100))
-        self.frame_prefit_minmax.setMaximumSize(QSize(16777215, 0))
-        self.verticalLayout_14 = QVBoxLayout(self.frame_prefit_minmax)
-#ifndef Q_OS_MAC
-        self.verticalLayout_14.setSpacing(-1)
-#endif
-        self.verticalLayout_14.setObjectName(u"verticalLayout_14")
-        self.verticalLayout_14.setContentsMargins(0, 0, 0, 0)
-        self.scrollArea = QScrollArea(self.frame_prefit_minmax)
-        self.scrollArea.setObjectName(u"scrollArea")
-        sizePolicy1.setHeightForWidth(self.scrollArea.sizePolicy().hasHeightForWidth())
-        self.scrollArea.setSizePolicy(sizePolicy1)
-        self.scrollArea.setMinimumSize(QSize(0, 60))
-        self.scrollArea.setMaximumSize(QSize(16777215, 16777215))
-        self.scrollArea.setStyleSheet(u"background-color: #292929;\n"
+        self.perfitMinMaxScrollArea = QScrollArea(self.widget_4)
+        self.perfitMinMaxScrollArea.setObjectName(u"perfitMinMaxScrollArea")
+        sizePolicy9.setHeightForWidth(self.perfitMinMaxScrollArea.sizePolicy().hasHeightForWidth())
+        self.perfitMinMaxScrollArea.setSizePolicy(sizePolicy9)
+        self.perfitMinMaxScrollArea.setMinimumSize(QSize(0, 50))
+        self.perfitMinMaxScrollArea.setMaximumSize(QSize(16777215, 16777215))
+        self.perfitMinMaxScrollArea.setStyleSheet(u"background-color: #292929;\n"
 "border-top-right-radius: 6px;\n"
 "border-bottom-right-radius: 6px;	")
-        self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
-        self.scrollArea.setFrameShadow(QFrame.Shadow.Plain)
-        self.scrollArea.setWidgetResizable(True)
+        self.perfitMinMaxScrollArea.setFrameShape(QFrame.Shape.NoFrame)
+        self.perfitMinMaxScrollArea.setFrameShadow(QFrame.Shadow.Plain)
+        self.perfitMinMaxScrollArea.setWidgetResizable(True)
         self.prefitMinmaxScrollAreaWidget = QWidget()
         self.prefitMinmaxScrollAreaWidget.setObjectName(u"prefitMinmaxScrollAreaWidget")
-        self.prefitMinmaxScrollAreaWidget.setGeometry(QRect(0, 0, 446, 100))
+        self.prefitMinmaxScrollAreaWidget.setGeometry(QRect(0, 0, 422, 59))
+        sizePolicy11.setHeightForWidth(self.prefitMinmaxScrollAreaWidget.sizePolicy().hasHeightForWidth())
+        self.prefitMinmaxScrollAreaWidget.setSizePolicy(sizePolicy11)
+        self.prefitMinmaxScrollAreaWidget.setMinimumSize(QSize(0, 0))
         self.verticalLayout_16 = QVBoxLayout(self.prefitMinmaxScrollAreaWidget)
         self.verticalLayout_16.setObjectName(u"verticalLayout_16")
-        self.scrollArea.setWidget(self.prefitMinmaxScrollAreaWidget)
+        self.perfitMinMaxScrollArea.setWidget(self.prefitMinmaxScrollAreaWidget)
 
-        self.verticalLayout_14.addWidget(self.scrollArea)
+        self.verticalLayout_6.addWidget(self.perfitMinMaxScrollArea)
 
-
-        self.verticalLayout_3.addWidget(self.frame_prefit_minmax)
-
-        self.frame_3 = QFrame(self.prefitWidget)
+        self.frame_3 = QFrame(self.widget_4)
         self.frame_3.setObjectName(u"frame_3")
-        sizePolicy10.setHeightForWidth(self.frame_3.sizePolicy().hasHeightForWidth())
-        self.frame_3.setSizePolicy(sizePolicy10)
-        self.frame_3.setMinimumSize(QSize(0, 130))
+        sizePolicy8.setHeightForWidth(self.frame_3.sizePolicy().hasHeightForWidth())
+        self.frame_3.setSizePolicy(sizePolicy8)
+        self.frame_3.setMinimumSize(QSize(0, 0))
         self.frame_3.setMaximumSize(QSize(16777215, 130))
         self.frame_3.setStyleSheet(u"")
         self.frame_3.setFrameShape(QFrame.Shape.NoFrame)
@@ -2248,11 +2230,11 @@ class Ui_MainWindow(object):
 
         self.gridLayout_15.addItem(self.horizontalSpacer_18, 1, 0, 1, 1)
 
-        self.verticalSpacer_15 = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_15 = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 
         self.gridLayout_15.addItem(self.verticalSpacer_15, 4, 2, 1, 1)
 
-        self.verticalSpacer_17 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_17 = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 
         self.gridLayout_15.addItem(self.verticalSpacer_17, 0, 2, 1, 1)
 
@@ -2332,7 +2314,10 @@ class Ui_MainWindow(object):
         self.gridLayout_15.addItem(self.horizontalSpacer_30, 1, 3, 1, 1)
 
 
-        self.verticalLayout_3.addWidget(self.frame_3)
+        self.verticalLayout_6.addWidget(self.frame_3)
+
+
+        self.verticalLayout_3.addWidget(self.widget_4)
 
         self.pagesStackedWidget.addWidget(self.prefitWidget)
         self.fitWidget = QWidget()
@@ -2467,7 +2452,7 @@ class Ui_MainWindow(object):
         self.fitScrollArea.setWidgetResizable(True)
         self.fitScrollAreaWidget = QWidget()
         self.fitScrollAreaWidget.setObjectName(u"fitScrollAreaWidget")
-        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 441, 438))
+        self.fitScrollAreaWidget.setGeometry(QRect(0, 0, 441, 488))
         self.verticalLayout_4 = QVBoxLayout(self.fitScrollAreaWidget)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -2480,9 +2465,9 @@ class Ui_MainWindow(object):
 
         self.frame_6 = QFrame(self.fitWidget)
         self.frame_6.setObjectName(u"frame_6")
-        sizePolicy10.setHeightForWidth(self.frame_6.sizePolicy().hasHeightForWidth())
-        self.frame_6.setSizePolicy(sizePolicy10)
-        self.frame_6.setMinimumSize(QSize(0, 130))
+        sizePolicy8.setHeightForWidth(self.frame_6.sizePolicy().hasHeightForWidth())
+        self.frame_6.setSizePolicy(sizePolicy8)
+        self.frame_6.setMinimumSize(QSize(0, 0))
         self.frame_6.setMaximumSize(QSize(16777215, 130))
         self.frame_6.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_6.setFrameShadow(QFrame.Shadow.Raised)
@@ -2998,11 +2983,11 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.figureTabWidget = QTabWidget(self.figureTabContainerWidget)
         self.figureTabWidget.setObjectName(u"figureTabWidget")
-        sizePolicy20 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Preferred)
-        sizePolicy20.setHorizontalStretch(0)
-        sizePolicy20.setVerticalStretch(0)
-        sizePolicy20.setHeightForWidth(self.figureTabWidget.sizePolicy().hasHeightForWidth())
-        self.figureTabWidget.setSizePolicy(sizePolicy20)
+        sizePolicy21 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Preferred)
+        sizePolicy21.setHorizontalStretch(0)
+        sizePolicy21.setVerticalStretch(0)
+        sizePolicy21.setHeightForWidth(self.figureTabWidget.sizePolicy().hasHeightForWidth())
+        self.figureTabWidget.setSizePolicy(sizePolicy21)
         self.figureTabWidget.setMinimumSize(QSize(0, 50))
         self.figureTabWidget.setMaximumSize(QSize(16777215, 50))
         self.figureTabWidget.setFont(font11)
