@@ -31,7 +31,7 @@ from qfit.models.parameter_set import ParamSet, SweepParamSet
 from qfit.models.data_structures import QMSweepParam, ParamAttr
 
 from qfit.widgets.custom_table import FoldableTable, CollectionType, WidgetCollection
-from qfit.utils.helpers import modifyStyleSheet
+from qfit.utils.helpers import modifyStyleSheet, clearChildren
 
 
 class CalibrationView(QObject):
@@ -167,10 +167,7 @@ class CalibrationView(QObject):
         the model will reinitialized by this method.
         """
         # delete the calibration table entirely
-        try:
-            self.caliXTable.deleteLater()
-        except AttributeError:
-            pass
+        clearChildren(self.caliXScrollAreaWidget)
         
         # generate the X calibration table
         self.XParamItems = self._generateXParamItems()
@@ -369,8 +366,6 @@ class CalibrationView(QObject):
 
     def _generateXDataSourceSet(self):
         if self.XDataSourceSet != {}:
-            for XRowIdx in range(self.caliTableXRowNr):
-                self.XDataSourceSet[f"X{XRowIdx+1}"]["DATA<br>SOURCE"].setText("")
             self.XDataSourceSet.clear()
         for XRowIdx in range(self.caliTableXRowNr):
             self.XDataSourceSet[f"X{XRowIdx+1}"] = {}

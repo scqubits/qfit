@@ -79,7 +79,6 @@ class FitParamView(QObject):
         removeExisting : bool, optional
             Whether to remove the existing widgets, by default True.
         """
-
         self.HSNames = list(HSParamNames.keys())
         paramNameDict = HSParamNames | caliParamNames
 

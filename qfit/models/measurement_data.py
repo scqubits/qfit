@@ -1102,7 +1102,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     rawXYConfigChanged = Signal(MeasRawXYConfig)
     updateStatus = Signal(Status)
     newFigAdded = Signal(list)
-    dataLoaded = Signal(list)
+    dataReloadCompleted = Signal(list)
 
     # single data processing
     readyToPlot = Signal(PlotElement)
@@ -1128,8 +1128,10 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     # init & load data list ============================================
     def loadDataSet(self, measDataList: List[MeasDataType]):
         """
-        Replace all the measurement data with the new data. It will emit the
-        signals to update the view and proceed to the next stage.
+        Replace all the measurement data with the new data. It will 
+        1. emit the signals to update the view 
+        2. emit the dataReloadCompleted signal to proceed to the next stage, 
+        including a full dynamical initialization. 
         """
         self.fullData = measDataList
 
@@ -1147,7 +1149,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         dataNames = [measData.name for measData in self.fullData]
 
         # emit to proceed to the next stage
-        self.dataLoaded.emit(dataNames)
+        self.dataReloadCompleted.emit(dataNames)
 
     @staticmethod
     def _rawDataFromFile(fileName) -> MeasDataType | None:
