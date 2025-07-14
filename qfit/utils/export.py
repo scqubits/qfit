@@ -92,7 +92,6 @@ class CalibrationResult(ABC):
     @abstractmethod
     def get_mapped_sweep_params(
         self,
-        raw_dc_biases: Dict[str, float],
         return_dict: bool = False,
         *args,
         **kwargs,
@@ -252,7 +251,7 @@ class PartialCalibrationResult(CalibrationResult):
 
     def get_mapped_sweep_params(
         self,
-        raw_dc_biases: Dict[str, float],
+        raw_dc_bias: Dict[str, float],
         figure: str,
         return_dict: bool = False,
     ) -> Dict[Tuple[str, str], float]:
@@ -260,8 +259,9 @@ class PartialCalibrationResult(CalibrationResult):
 
         Parameters
         ----------
-        raw_dc_biases
-            A dictionary mapping raw dc-bias component names to their values.
+        raw_dc_bias
+            A dictionary mapping a raw dc-bias component name to its value.
+            Only one dictionary entry is allowed.
         figure
             Name of the figure whose two-point calibration should be used.
         return_dict
@@ -272,14 +272,16 @@ class PartialCalibrationResult(CalibrationResult):
             raise KeyError(f"Figure '{figure}' not found in partial calibration data.")
 
         ((raw1, map1), (raw2, map2)) = self._data[figure]
+        if len(raw_dc_bias) != 1:
+            raise ValueError(
+                "Only one raw dc-bias component is allowed for partial calibration."
+            )
+        raw_dc_bias_name = list(raw_dc_bias.keys())[0]
+        raw_dc_bias_value = raw_dc_bias[raw_dc_bias_name]
 
-        # compute per mapped param slope & offset using raw_param_name
-        raw_dc_biases_value = np.array(
-            [raw_dc_biases[name] for name in self.raw_dc_biases_names]
-        )
-
-        r1 = raw1
-        r2 = raw2
+        idx_raw = self.raw_dc_biases_names.index(raw_dc_bias_name)
+        r1 = raw1[idx_raw]
+        r2 = raw2[idx_raw]
         if r1 == r2:
             raise ValueError(
                 "Selected raw parameter does not vary between the two calibration points."
@@ -288,7 +290,7 @@ class PartialCalibrationResult(CalibrationResult):
         slopes = (map2 - map1) / (r2 - r1)
         offsets = map1 - slopes * r1
 
-        mapped_vals = slopes * raw_dc_biases_value + offsets
+        mapped_vals = slopes * raw_dc_bias_value + offsets
 
         if return_dict:
             return {
@@ -308,8 +310,8 @@ class PartialCalibrationResult(CalibrationResult):
             header,
             "--------------------------------",
             f"x-axis\n"
-            f"raw    : {raw_labels}\n"
-            f"mapped names : {mapped_labels}\n"
+            f"raw_dc_biases_names: {raw_labels}\n"
+            f"mapped_sweep_params_names: {mapped_labels}\n"
             "--------------------------------",
         ]
 
