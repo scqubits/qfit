@@ -46,7 +46,7 @@ dependencies = [
     "jupyter",
     "pathos",
     "dill",
-    "pywt",
+    "pywavelets",
 ]
 
 [project.urls]
