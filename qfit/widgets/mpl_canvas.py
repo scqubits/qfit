@@ -34,9 +34,9 @@ from qfit.models.data_structures import PlotElement
 from qfit.settings import color_dict, MARKER_SIZE
 
 
-class MplNavButtons(QFrame):
-    pass
-
+def _setZeroSize(widget: QWidget):
+    widget.setMinimumSize(0, 0)
+    widget.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
 
 class NavigationHidden(NavigationToolbar2QT):
     """
@@ -74,15 +74,13 @@ class NavigationHidden(NavigationToolbar2QT):
             # Find and remove all toolbar buttons
             toolbar_buttons = self.findChildren(QToolButton)
             for button in toolbar_buttons:
-                button.setParent(None)  # Remove from parent
-                button.deleteLater()    # Schedule for deletion
+                _setZeroSize(button)
             
             # Find and remove any QMenu widgets
             from PySide6.QtWidgets import QMenu
             menus = self.findChildren(QMenu)
             for menu in menus:
-                menu.setParent(None)
-                menu.deleteLater()
+                _setZeroSize(menu)
             
             # Find and remove any other widgets that might constrain size
             from PySide6.QtWidgets import QWidget
@@ -90,12 +88,10 @@ class NavigationHidden(NavigationToolbar2QT):
             for widget in all_widgets:
                 # Skip the toolbar itself and the canvas
                 if widget != self and widget != canvas:
-                    widget.setParent(None)
-                    widget.deleteLater()
+                    _setZeroSize(widget)
             
             # Also set the toolbar itself to have no minimum size
-            self.setMinimumSize(0, 0)
-            self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+            _setZeroSize(self)
             
             self.update()
 
