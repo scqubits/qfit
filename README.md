@@ -19,7 +19,7 @@ QFit is your go-to Python application for extracting parameters of superconducti
 
 1. **Calibration**: QFit helps to establish the mapping from voltage (your experimental tunable input) to circuit parameters (your simulation ingredients). 
 
-2. **Point Extraction**: With just a click, you can locate the peak of the spectrum sweep data with computer-assistance. The extracted data can be simply grouped as a transition and labeled. QFit even provides filters and coloring options for enhancing data visualization.
+2. **Point Extraction**: With just a click, you can locate the resonance peak in the spectroscopy data with computer-assistance. The extracted data can be simply grouped as a transition and labeled. QFit even provides filters and coloring options for enhancing data visualization.
 
 3. **Interactive Pre-fit**: See your numerical model result and the data on the same plot for intuitive comparison. Adjust the numerical simulator with simple sliders to improve your fit.
 
@@ -29,8 +29,8 @@ QFit supports a wide variety of circuit quantum electrodynamic systems, thanks t
 
 Join us in refining QFit during its beta phase! Your insights and reports are invaluable in making QFit a robust tool for this community. Dive in and explore what QFit can do for you, and let us know your experience!
 
-Installation and Usage
-----------------------
+Installation
+------------
 
 Follow these steps to install `QFit`:
 
@@ -50,7 +50,9 @@ Once done, the application can be launched in a jupyter notebook session via
 ```
 where `<HilbertSpace>` is a `scqubits.HilbertSpace` object, the circuit model you want to fit against. 
 
-Check out the notebook [QFit_Quick_Start.ipynb](./example_notebooks/QFit_Quick_Start.ipynb) for a quick tutorial, and [QFit_Advanced_Tips.ipynb](./example_notebooks/QFit_Advanced_Tips.ipynb) for further information.
+Usage
+-----
+Please check out the notebook [QFit_Quick_Start.ipynb](./example_notebooks/QFit_Quick_Start.ipynb) for a quick tutorial, and [QFit_Advanced_Tips.ipynb](./example_notebooks/QFit_Advanced_Tips.ipynb) for further information.
 
 > [!NOTE]
 > While you can install QFit with `pip install qfit`, this application is unstable on machines with Apple silicons. This is due to compatibility issues with pip-installed `scipy`. As a workaround, you can run `conda install scipy` afterward, though using conda for the full installation is preferred.
