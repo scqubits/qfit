@@ -17,7 +17,7 @@ from typing import Union, Literal, Tuple, Dict, Any, List
 
 from PySide6 import QtCore
 from PySide6.QtCore import Slot, Signal
-from PySide6.QtWidgets import QFrame, QVBoxLayout, QToolButton, QSizePolicy, QWidget
+from PySide6.QtWidgets import QFrame, QVBoxLayout, QToolButton, QSizePolicy, QWidget, QMenu
 
 from matplotlib.backend_bases import cursors
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
@@ -71,29 +71,7 @@ class NavigationHidden(NavigationToolbar2QT):
 
         # Remove all buttons and widgets to eliminate size constraints
         if not parentIsStandalone:
-            # Find and remove all toolbar buttons
-            toolbar_buttons = self.findChildren(QToolButton)
-            for button in toolbar_buttons:
-                _setZeroSize(button)
-            
-            # Find and remove any QMenu widgets
-            from PySide6.QtWidgets import QMenu
-            menus = self.findChildren(QMenu)
-            for menu in menus:
-                _setZeroSize(menu)
-            
-            # Find and remove any other widgets that might constrain size
-            from PySide6.QtWidgets import QWidget
-            all_widgets = self.findChildren(QWidget)
-            for widget in all_widgets:
-                # Skip the toolbar itself and the canvas
-                if widget != self and widget != canvas:
-                    _setZeroSize(widget)
-            
-            # Also set the toolbar itself to have no minimum size
-            _setZeroSize(self)
-            
-            self.update()
+            self._remove_buttons()
 
         # only connect to external buttons in the hidden toolbar.  We still
         # keep the default "Zoom" entry so that Matplotlib attaches the
@@ -106,6 +84,29 @@ class NavigationHidden(NavigationToolbar2QT):
         self.set_cursor(cursors.SELECT_REGION)
         self._idPress = None
         self._idRelease = None
+        
+    def _remove_buttons(self):
+        # Find and remove all toolbar buttons
+        toolbar_buttons = self.findChildren(QToolButton)
+        for button in toolbar_buttons:
+            _setZeroSize(button)
+        
+        # Find and remove any QMenu widgets
+        menus = self.findChildren(QMenu)
+        for menu in menus:
+            _setZeroSize(menu)
+        
+        # Find and remove any other widgets that might constrain size
+        all_widgets = self.findChildren(QWidget)
+        for widget in all_widgets:
+            # Skip the toolbar itself and the canvas
+            if widget != self and widget != self.canvas:
+                _setZeroSize(widget)
+        
+        # Also set the toolbar itself to have no minimum size
+        _setZeroSize(self)
+        
+        self.update()
 
     def _init_toolbar(self):
         if self.parent()._standalone:
@@ -492,8 +493,9 @@ class MplFigureCanvas(QFrame):
         self.canvas.figure.subplots()
         self.axes.autoscale(enable=False)
         
-        # Remove size constraints from matplotlib components
-        self.removeSizeConstraints()
+        if not self._standalone:
+            # Remove size constraints from matplotlib components
+            self.removeSizeConstraints()
 
     def removeSizeConstraints(self):
         """
