@@ -494,8 +494,8 @@ class FullDevi(dict[str, DeviSpectra]):
         """
         Return the sum of the root mean square error for data from all figures.
         The difference between this method and ``rootMeanSquareError`` is that
-        here the square is taken for each figure, while in ``rootMeanSquareError``,
-        the square is taken at the end.
+        here the root is taken for each figure, while in ``rootMeanSquareError``,
+        the root is taken at the end.
         """
         return sum([spectra.rootMeanSquaredError() for spectra in self.values()])
     

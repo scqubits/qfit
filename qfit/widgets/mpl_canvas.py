@@ -910,7 +910,7 @@ class MplFigureCanvas(QFrame):
             useblit = True,
             horizOn = self._crosshairHorizOn,
             vertOn = self._crosshairVertOn,
-            colo = self.crossColor,
+            color = self.crossColor,
             alpha = 0.5,
         )
         self.canvas.draw_idle()

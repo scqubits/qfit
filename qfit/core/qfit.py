@@ -132,7 +132,7 @@ class Fit:
         self._mainWindow: MainWindow
 
         self._ioCtrl.newProject(
-            from_menu=False,
+            fromMenu=False,
             hilbertSpace=hilbert_space,
             measurementFileName=measurement_file_name,
             deepcopy=deepcopy,
@@ -241,8 +241,8 @@ class Fit:
 
         # load registry
         instance._ioCtrl.openFile(
-            from_menu=False,
-            file_name=file_name,
+            fromMenu=False,
+            fileName=file_name,
             deepcopy=deepcopy,
         )
 

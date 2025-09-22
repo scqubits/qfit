@@ -189,7 +189,7 @@ class IOCtrl(QObject):
     def _saveProject(
         self,
         home=None,
-        save_as: bool = False,
+        saveAs: bool = False,
     ):
         """
         Open a dialog to select a file, then save the project to the file.
@@ -198,7 +198,7 @@ class IOCtrl(QObject):
         ----------
         home : str
             the home directory to start the dialog
-        save_as : bool
+        saveAs : bool
             whether to save the project as a new file
         """
         if not self.measDataSet.importFinished:
@@ -212,7 +212,7 @@ class IOCtrl(QObject):
                 home = os.path.expanduser("~")
 
         # find a suitable filename
-        if save_as or self.mainWindow.projectFile is None:
+        if saveAs or self.mainWindow.projectFile is None:
             while True:
                 fileCategories = "Qfit project (*.qfit)"
                 fileName, _ = QFileDialog.getSaveFileName(
@@ -265,10 +265,10 @@ class IOCtrl(QObject):
         else:
             sys.exit()
 
-    def _saveAndCloseApp(self, save_as: bool = False):
+    def _saveAndCloseApp(self, saveAs: bool = False):
         """Save the extracted data and calibration information to file, then exit the
         application."""
-        success = self._saveProject(save_as=save_as)
+        success = self._saveProject(saveAs=saveAs)
         if not success:
             return
         self._closeApp()
@@ -327,7 +327,7 @@ class IOCtrl(QObject):
             reply = msgBox.exec_()
 
             if reply == QMessageBox.Save:
-                self._saveAndCloseApp(save_as=self.mainWindow.projectFile is None)
+                self._saveAndCloseApp(saveAs=self.mainWindow.projectFile is None)
                 return True
             elif reply == QMessageBox.Discard:
                 self._closeApp()
@@ -344,7 +344,7 @@ class IOCtrl(QObject):
     def newProject(
         self,
         __value=None,
-        from_menu: bool = True,
+        fromMenu: bool = True,
         hilbertSpace: Optional["HilbertSpace"] = None,
         measurementFileName: Optional[str | List[str]] = None,
         deepcopy: bool = False,
@@ -355,7 +355,7 @@ class IOCtrl(QObject):
 
         Parameters
         ----------
-        from_menu : bool
+        fromMenu : bool
             whether the function is called from the menu. If Truem the menu
             will be closed after the function is called.
         hilbertSpace : HilbertSpace
@@ -368,7 +368,7 @@ class IOCtrl(QObject):
             updates the original HilbertSpace object during any prefit / fit
             operations.
         """
-        if from_menu and self.menu.isVisible():
+        if fromMenu and self.menu.isVisible():
             self.menu.toggle()
 
         # load or re-use the HilbertSpace object
@@ -385,7 +385,7 @@ class IOCtrl(QObject):
 
         if not openWindow:
             # the only reason is user canceled the dialog
-            if not from_menu:
+            if not fromMenu:
                 self._closeApp()
                 # raise StopExecution
             else:
@@ -396,7 +396,7 @@ class IOCtrl(QObject):
     def openFile(
         self,
         __value=None,
-        from_menu: bool = True,
+        fromMenu: bool = True,
         fileName: Optional[str] = None,
         deepcopy: bool = False,
     ):
@@ -406,7 +406,7 @@ class IOCtrl(QObject):
 
         Parameters
         ----------
-        from_menu : bool
+        fromMenu : bool
             whether the function is called from the menu. If Truem the menu
             will be closed after the function is called.
         fileName : str
@@ -418,7 +418,7 @@ class IOCtrl(QObject):
             cause correlated updates to the original HilbertSpace object / other
             HilbertSpace objects.
         """
-        if from_menu and self.menu.isVisible():
+        if fromMenu and self.menu.isVisible():
             self.menu.toggle()
 
         # check if file exists
@@ -427,7 +427,7 @@ class IOCtrl(QObject):
                 raise FileNotFoundError(f"File '{fileName}' does not exist.")
 
         if fileName is None:
-            registryDict = self._registryDictFromDialog(window_initialized=from_menu)
+            registryDict = self._registryDictFromDialog(window_initialized=fromMenu)
         else:
             registryDict = Registry.dictFromFile(fileName)
             if registryDict is None:
@@ -455,7 +455,7 @@ class IOCtrl(QObject):
     @Slot()
     def saveFile(self):
         """Save the extracted data and calibration information to file."""
-        self._saveProject(save_as=False)
+        self._saveProject(saveAs=False)
 
         if self.menu.isVisible():
             self.menu.toggle()
@@ -463,7 +463,7 @@ class IOCtrl(QObject):
     @Slot()
     def saveFileAs(self):
         """Save the extracted data and calibration information to file."""
-        self._saveProject(save_as=True)
+        self._saveProject(saveAs=True)
 
         if self.menu.isVisible():
             self.menu.toggle()
