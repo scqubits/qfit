@@ -69,25 +69,22 @@ def parseRegDict(
 
     # 1.0.x --> 2.0.x
     if major == 1:
-        _parseRegDict10x_20x(registryDict)
-        major, minor, micro = _extract_version(registryDict)
+        major, minor, micro = _parseRegDict10xTo20x(registryDict)
 
     # 2.0.x / 2.1.x --> 2.2.x
     if major == 2 and minor in [0, 1]:
-        _parseRegDict2xx_22x(registryDict)
-        major, minor, micro = _extract_version(registryDict)
+        major, minor, micro = _parseRegDict20x_21xTo22x(registryDict)
         
-    # 2.2.x --> 2.3.x
+    # 2.2.x --> 2.3.x / 3.0.x
     if major == 2 and minor == 2:
-        _parseRegDict2xx_23x(registryDict)
-        major, minor, micro = _extract_version(registryDict)
+        major, minor, micro = _parseRegDict22xTo23x(registryDict)
         
-    # current: 2.3.x
+    # current: 3.0.x
     return registryDict
         
 
 # 1.0.x --> 2.0.x =============================================================
-def _parseRegDict10x_20x(registryDict: Dict[str, Any]):
+def _parseRegDict10xTo20x(registryDict: Dict[str, Any]) -> Tuple[int, int, int]:
     """
     Parse the measurement data unpickled from the file with version 1.0.x.
     """
@@ -129,6 +126,7 @@ def _parseRegDict10x_20x(registryDict: Dict[str, Any]):
     
     # update the version number
     _update_version(registryDict, 2, 0, 0)
+    return 2, 0, 0
 
 
 def _parseMeasData10x_20x(measData: "MeasDataType"):
@@ -184,7 +182,7 @@ def _parsePrefitCaliParam10x_20x(caliParams: Dict[str, Dict[str, "SliderParam"]]
                 caliDict[newKey] = caliDict.pop(key)
 
 # 2.0.x / 2.1.x --> 2.2.x =============================================================
-def _parseRegDict2xx_22x(registryDict: Dict[str, Any]):
+def _parseRegDict20x_21xTo22x(registryDict: Dict[str, Any]) -> Tuple[int, int, int]:
     """
     Parse the tags in the registry dictionary from version 2.0.x or 2.1.x to 2.2.x.
     The main change is that in 2.2.x, we support uncertain tags, which are 
@@ -196,6 +194,7 @@ def _parseRegDict2xx_22x(registryDict: Dict[str, Any]):
             
     # update the version number
     _update_version(registryDict, 2, 2, 0)
+    return 2, 2, 0
         
 
 def _parseTag2xx_22x(tag: "Tag"):
@@ -204,7 +203,7 @@ def _parseTag2xx_22x(tag: "Tag"):
         tag.final = [tag.final]
 
 # 2.2.x --> 2.3.x =============================================================
-def _parseRegDict2xx_23x(registryDict: Dict[str, Any]):
+def _parseRegDict22xTo23x(registryDict: Dict[str, Any]) -> Tuple[int, int, int]:
     """
     Parse the tags in the registry dictionary from version 2.2.x to 2.3.x.
     The main change is that in 2.3.x, we support weight for each data point.
@@ -216,3 +215,4 @@ def _parseRegDict2xx_23x(registryDict: Dict[str, Any]):
             
     # update the version number
     _update_version(registryDict, 2, 3, 0)
+    return 2, 3, 0

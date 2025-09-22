@@ -10,7 +10,7 @@ fallback_version = "0.0"
 
 [project]
 name = "qfit"
-description = "qfit: data extraction GUI tool for use with scQubits"
+description = "QFit: Interactive Parameter Fitting for Superconducting Circuits"
 readme = "README.md"
 dynamic = ["version"]
 authors = [
@@ -45,7 +45,8 @@ dependencies = [
     "ipykernel",
     "jupyter",
     "pathos",
-    "dill"
+    "dill",
+    "pywavelets",
 ]
 
 [project.urls]

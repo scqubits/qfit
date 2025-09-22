@@ -31,7 +31,7 @@ from qfit.models.parameter_set import ParamSet, SweepParamSet
 from qfit.models.data_structures import QMSweepParam, ParamAttr
 
 from qfit.widgets.custom_table import FoldableTable, CollectionType, WidgetCollection
-from qfit.utils.helpers import modifyStyleSheet
+from qfit.utils.helpers import modifyStyleSheet, clearChildren
 
 
 class CalibrationView(QObject):
@@ -166,6 +166,9 @@ class CalibrationView(QObject):
         When the app is reloaded (new measurement data and hilbert space),
         the model will reinitialized by this method.
         """
+        # delete the calibration table entirely
+        clearChildren(self.caliXScrollAreaWidget)
+        
         # generate the X calibration table
         self.XParamItems = self._generateXParamItems()
         self.caliXTable = FoldableTable(
@@ -231,6 +234,7 @@ class CalibrationView(QObject):
                 # set checkable and checked
                 XParamItems.extractRawPushButton.setCheckable(True)
                 XParamItems.extractRawPushButton.setChecked(False)
+                
         for YRowIdx, button in self.caliYButtons.items():
             self.caliButtonGroup.addButton(button, self.rowIdxToButtonGroupId[YRowIdx])
         self.caliButtonGroup.setExclusive(False)
@@ -331,7 +335,10 @@ class CalibrationView(QObject):
             for rowIdx in self.lineEditSet:
                 for compName, lineEdit in self.lineEditSet[rowIdx].items():
                     lineEdit.editingFinished.disconnect()
-                    lineEdit.deleteLater()
+                    # Only delete X widgets, not Y widgets 
+                    # (they're not dynamically generated in this view class)
+                    if rowIdx.startswith("X"):
+                        lineEdit.deleteLater()
 
             self.lineEditSet.clear()
 
@@ -359,8 +366,6 @@ class CalibrationView(QObject):
 
     def _generateXDataSourceSet(self):
         if self.XDataSourceSet != {}:
-            for XRowIdx in range(self.caliTableXRowNr):
-                self.XDataSourceSet[f"X{XRowIdx+1}"]["DATA<br>SOURCE"].setText("")
             self.XDataSourceSet.clear()
         for XRowIdx in range(self.caliTableXRowNr):
             self.XDataSourceSet[f"X{XRowIdx+1}"] = {}

@@ -105,5 +105,5 @@ class MeasDataCtrl(QObject):
         """
         Establish connections for reading .qfit file.
         """
-        self.measDataSet.dataLoaded.connect(lambda _: self.continueToPostImportStages())
-        self.measDataSet.dataLoaded.connect(self.measDataView.reloadFig)
+        self.measDataSet.dataReloadCompleted.connect(lambda _: self.continueToPostImportStages())
+        self.measDataSet.dataReloadCompleted.connect(self.measDataView.reloadFig)

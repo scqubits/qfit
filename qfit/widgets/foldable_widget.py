@@ -117,8 +117,8 @@ class FoldableWidget(QGroupBox):
         # initialize the content
         self._toggleContent(self.foldPushButton.isChecked())
 
-        # set the size policy for the foldable widget: expand along horizontal, fixed along vertical
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        # set the size policy for the foldable widget
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.boxLayout.setContentsMargins(0, MARGIN, 0, MARGIN)  # Remove the margins
         self.boxLayout.setSpacing(SPACING)
 

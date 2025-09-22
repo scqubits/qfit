@@ -114,7 +114,8 @@ class FitCtrl(QObject):
         reinitialize the all relevant models and views. In particular, the
         fitting parameters are initialized with the prefit parameters.
         """
-        # build paramset
+        # model: build paramset 
+        self.fitHSParams.clear()
         self.fitHSParams.setAttrByParamSet(
             self.prefitHSParams.toFitParams(),
             insertMissing=True,
@@ -122,12 +123,13 @@ class FitCtrl(QObject):
         # change this later to make it more safe
         self.fitHSParams.parentNameByObj = self.prefitHSParams.parentNameByObj
         self.fitHSParams.parentObjByName = self.prefitHSParams.parentObjByName
-
+        self.fitCaliParams.clear()
         self.fitCaliParams.setAttrByParamSet(
             self.caliParamModel.toFitParams(),
             insertMissing=True,
         )
-        # insert parameters
+        
+        # view: insert parameters
         self.fitParamView.fitTableInserts(
             self.fitHSParams.paramNamesDict(),
             self.fitCaliParams.paramNamesDict(),

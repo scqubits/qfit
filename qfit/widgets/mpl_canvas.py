@@ -17,9 +17,7 @@ from typing import Union, Literal, Tuple, Dict, Any, List
 
 from PySide6 import QtCore
 from PySide6.QtCore import Slot, Signal
-from PySide6.QtWidgets import (
-    QFrame, QVBoxLayout, QToolButton, QSizePolicy
-)
+from PySide6.QtWidgets import QFrame, QVBoxLayout, QToolButton, QSizePolicy, QWidget, QMenu
 
 from matplotlib.backend_bases import cursors
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
@@ -36,21 +34,21 @@ from qfit.models.data_structures import PlotElement
 from qfit.settings import color_dict, MARKER_SIZE
 
 
-class MplNavButtons(QFrame):
-    pass
-
+def _setZeroSize(widget: QWidget):
+    widget.setMinimumSize(0, 0)
+    widget.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
 
 class NavigationHidden(NavigationToolbar2QT):
     """
-    This class extends the NavigationToolbar2QT class from Matplotlib to 
+    This class extends the NavigationToolbar2QT class from Matplotlib to
     create a custom navigation toolbar for a Matplotlib figure.
 
-    The toolbar is designed to be hidden, with only the "Home", "Pan", 
-    and "Zoom" buttons connected to external buttons. 
+    The toolbar is designed to be hidden, with only the "Home", "Pan",
+    and "Zoom" buttons connected to external buttons.
 
-    The class overrides several methods from the parent class to customize 
-    the behavior of the toolbar. It provides methods to set the pan and 
-    zoom modes, set the cursor, and handle the release of the zoom and 
+    The class overrides several methods from the parent class to customize
+    the behavior of the toolbar. It provides methods to set the pan and
+    zoomIn modes, set the cursor, and handle the release of the zoomIn and
     pan buttons, as well as the home button.
 
     Parameters
@@ -59,6 +57,8 @@ class NavigationHidden(NavigationToolbar2QT):
         The canvas on which the figure is drawn.
     parent : MplFigureCanvas
         The parent widget.
+    parentIsStandalone: bool = False
+        Whether the parent widget is a standalone canvas or not.
     """
 
     def __init__(
@@ -69,22 +69,44 @@ class NavigationHidden(NavigationToolbar2QT):
     ):
         super().__init__(canvas, parent, coordinates=False)
 
-        # Hide all buttons.
+        # Remove all buttons and widgets to eliminate size constraints
         if not parentIsStandalone:
-            for child in self.findChildren(QToolButton):
-                child.setVisible(False)
-            self.update()
-        
-        # only connect to external buttons
-        self.toolitems = tuple(
-            t
-            for t in super().toolitems
-            if t[0] in ("Home", "Pan", "Zoom")
+            self._remove_buttons()
+
+        # only connect to external buttons in the hidden toolbar.  We still
+        # keep the default "Zoom" entry so that Matplotlib attaches the
+        # correct callbacks internally, even though our visible button is
+        # called "zoomIn" in the UI code.
+        self.toolitems = list(
+            t for t in super().toolitems if t[0] in ("Home", "Pan", "Zoom")
         )
 
         self.set_cursor(cursors.SELECT_REGION)
         self._idPress = None
         self._idRelease = None
+        
+    def _remove_buttons(self):
+        # Find and remove all toolbar buttons
+        toolbar_buttons = self.findChildren(QToolButton)
+        for button in toolbar_buttons:
+            _setZeroSize(button)
+        
+        # Find and remove any QMenu widgets
+        menus = self.findChildren(QMenu)
+        for menu in menus:
+            _setZeroSize(menu)
+        
+        # Find and remove any other widgets that might constrain size
+        all_widgets = self.findChildren(QWidget)
+        for widget in all_widgets:
+            # Skip the toolbar itself and the canvas
+            if widget != self and widget != self.canvas:
+                _setZeroSize(widget)
+        
+        # Also set the toolbar itself to have no minimum size
+        _setZeroSize(self)
+        
+        self.update()
 
     def _init_toolbar(self):
         if self.parent()._standalone:
@@ -134,14 +156,14 @@ class NavigationHidden(NavigationToolbar2QT):
 
         self.set_message(self.mode)
 
-    def setZoomMode(self, on=True):
+    def setZoomInMode(self, on=True):
         """
-        Activate zoom mode. on is a boolean. It first disconnects any
-        prior callback set by setPanMode or setZoomMode. Then it will turn
-        on the appropriate callback, and set the mode message accordingly.
+        Activate zoom-in mode.  This is functionally identical to Matplotlib's
+        built-in rectangular zoom, but we expose it under the name
+        "zoomIn" in our UI.
         """
         if on:
-            self._active = "ZOOM"
+            self._active = "ZOOMIN"
         else:
             self._active = None
 
@@ -153,13 +175,14 @@ class NavigationHidden(NavigationToolbar2QT):
             self.mode = ""
 
         if on:
+            # Still use Matplotlib's default callbacks for rectangular zoom
             self._idPress = self.canvas.mpl_connect(
                 "button_press_event", self.press_zoom
             )
             self._idRelease = self.canvas.mpl_connect(
                 "button_release_event", self.release_zoom
             )
-            self.mode = "zoom rect"
+            self.mode = "zoomIn rect"
             self.canvas.widgetlock(self)
         else:
             self.canvas.widgetlock.release(self)
@@ -173,45 +196,42 @@ class NavigationHidden(NavigationToolbar2QT):
 
     def release_zoom(self, event):
         """
-        The x and y limits of the axes can only be changed by zoom, pan, or
+        The x and y limits of the axes can only be changed by zoom-in, pan, or
         home buttons. To do this, we need to record the x and y limits of the
-        axes after each zoom/pan/home action. The recorded x and y limits
+        axes after each zoom-in/pan/home action. The recorded x and y limits
         will be used when the plot element is updated.
         """
         super().release_zoom(event)
-        self.parent()._recordXYLim()
+        self.parent().postZoomPanReleased()
 
     def release_pan(self, event):
         """
-        See release_zoom
+        See release_pan
         """
         super().release_pan(event)
-        self.parent()._recordXYLim()
-        
+        self.parent().postZoomPanReleased()
+
     def back(self, *args):
         """
         Overridden back method to correctly update all axes.
         """
         super().back(*args)
-        self.parent()._recordXYLim()
-        self.parent()._restoreXYLim()
-        self.parent().canvas.draw_idle()
+        self.parent().postForwardBackClicked()
 
     def forward(self, *args):
         """
         Overridden forward method to correctly update all axes.
         """
         super().forward(*args)
-        self.parent()._recordXYLim()
-        self.parent()._restoreXYLim()
-        self.parent().canvas.draw_idle()
-
+        self.parent().postForwardBackClicked()
+        
     def home(self, *args, **kwargs):
         """
-        Overridden home method. For standalone canvas, trigger resetView.
+        Overridden home method. For standalone canvas, trigger homeClicked.
         The main canvas button is not on this toolbar.
         """
-        self.parent().resetView()
+        self.parent().postHomeClicked()
+        
 
 class SpecialCursor(Cursor):
     """
@@ -225,11 +245,11 @@ class SpecialCursor(Cursor):
     Parameters
     ----------
     ax: Axes
-        A list of Axes that the cursor is attached to, these axes share 
+        A list of Axes that the cursor is attached to, these axes share
         the same x-axis or y-axis.
     xSnapMode: Literal["MeasData", "ExtrX", "OFF"]
         Whether to snap the cursor to the closest x value in a list.
-        - "MeasData": snap to the closest x value in the x values of the 
+        - "MeasData": snap to the closest x value in the x values of the
         measurement data
         - "ExtrX": snap to the closest x value in the extracted data points
         - "OFF": do not snap to any x value
@@ -249,6 +269,7 @@ class SpecialCursor(Cursor):
     **lineprops: Any
         Additional properties for the lines and the cursor
     """
+
     def __init__(
         self,
         axes: List[Axes],
@@ -315,9 +336,9 @@ class SpecialCursor(Cursor):
 
         When the mouse moves, the cursor (a scatter plot) is drawn at the
         calculated coordinates. The vertical and horizontal lines (crosshair)
-        are also drawn at the calculated coordinates. 
+        are also drawn at the calculated coordinates.
         """
-        # Do nothing if the event is ignored or the widget is locked 
+        # Do nothing if the event is ignored or the widget is locked
         # or the cursor is not visible
         if self.ignore(event):
             return
@@ -325,7 +346,7 @@ class SpecialCursor(Cursor):
             return
         if not self.visible:
             return
-        
+
         # Hide the vertical and horizontal lines when the mouse is outside the axes
         if event.inaxes not in self.allAxes:
             self.linev.set_visible(False)
@@ -337,7 +358,9 @@ class SpecialCursor(Cursor):
         self.needclear = True
 
         # convert the mouse x and y coordinates to the data coordinates
-        xdata, ydata = self.allAxes[0].transData.inverted().transform((event.x, event.y))
+        xdata, ydata = (
+            self.allAxes[0].transData.inverted().transform((event.x, event.y))
+        )
 
         # Calculate the x-coordinate of the point based on the snapping mode and axis snap mode
         if self.axis_snap_mode == "Y":
@@ -469,9 +492,15 @@ class MplFigureCanvas(QFrame):
     ----------
     parent : QWidget
         The parent widget.
+    standalone: bool = False
+        Whether the widget is a standalone plotting widget or not.
     """
-    
+
     canvasClosed = Signal()
+    # Emitted whenever the principal axes limits are changed programmatically
+    # or through user interaction (zoom, pan, home, etc.).  Provides the
+    # new x- and y-ranges as NumPy arrays with two entries each.
+    axesViewChanged = Signal(object, object)  # (np.ndarray, np.ndarray)
 
     def __init__(self, parent=None, standalone: bool = False):
         QFrame.__init__(self, parent)
@@ -481,15 +510,15 @@ class MplFigureCanvas(QFrame):
         # this widget could be initialized outside of the main window
         # and shown as a standalone plotting widget
         self._standalone = standalone
-        
+
         self.initViewElem()
         self.initPlotting()
 
     def initViewElem(self):
         self.canvas = FigureCanvasQTAgg(Figure())
         self.toolbar = NavigationHidden(
-            self.canvas, 
-            self, 
+            self.canvas,
+            self,
             parentIsStandalone=self._standalone,
         )
 
@@ -505,6 +534,27 @@ class MplFigureCanvas(QFrame):
         self.canvas.figure.patch.set_facecolor("#B8B8B8")
         self.canvas.figure.subplots()
         self.axes.autoscale(enable=False)
+        
+        if not self._standalone:
+            # Remove size constraints from matplotlib components
+            self.removeSizeConstraints()
+
+    def removeSizeConstraints(self):
+        """
+        Remove size constraints from matplotlib components that might prevent proper resizing.
+        This is called during initialization to ensure the canvas can be resized to very small sizes.
+        """
+        # Set canvas to have no minimum size
+        self.canvas.setMinimumSize(0, 0)
+        self.canvas.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        
+        # Set toolbar to have no minimum size (already done in NavigationHidden, but just to be sure)
+        self.toolbar.setMinimumSize(0, 0)
+        self.toolbar.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        
+        # Set the main widget itself to have flexible sizing
+        self.setMinimumSize(0, 0)
+        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
 
     def initPlotting(self):
         """
@@ -513,10 +563,10 @@ class MplFigureCanvas(QFrame):
         """
         self.axes.set_label("Principal Axes")
         # remove the default x- and y-axis
-        self.axes.spines['bottom'].set_visible(False)
+        self.axes.spines["bottom"].set_visible(False)
         self.axes.xaxis.set_ticks([])
         self.axes.set_xticklabels([])
-        self.axes.spines['left'].set_visible(False)
+        self.axes.spines["left"].set_visible(False)
         self.axes.yaxis.set_ticks([])
         self.axes.set_yticklabels([])
 
@@ -524,9 +574,12 @@ class MplFigureCanvas(QFrame):
         self._adjustMargin(xAxisNum=1)
 
         # limits of the principal axes
-        self._currentPrcplXLim: Tuple[float, float] = (0, 1)    # x, y lims after zoom/pan
+        self._currentPrcplXLim: Tuple[float, float] = (
+            0,
+            1,
+        )  # x, y lims after zoomin/pan
         self._currentPrcplYLim: Tuple[float, float] = (0, 1)
-        self._measPrcplXLim: Tuple[float, float] = (0, 1)       # x, y lims after reset
+        self._measPrcplXLim: Tuple[float, float] = (0, 1)  # x, y lims after reset
         self._measPrcplYLim: Tuple[float, float] = (0, 1)
         self._measPrcplXList = np.ndarray(self._measPrcplXLim)
 
@@ -552,7 +605,6 @@ class MplFigureCanvas(QFrame):
         self._colorMapStr: str = "PuOr"
         self._updateElementColors()
 
-
     # Properties =======================================================
     @property
     def axes(self) -> Axes:
@@ -561,7 +613,7 @@ class MplFigureCanvas(QFrame):
     @Slot()
     def updateColorMap(self, colorMap: str):
         """
-        Update the color map of the plotting elements. 
+        Update the color map of the plotting elements.
         """
         if colorMap != self._colorMapStr:
             self._colorMapStr = colorMap
@@ -590,28 +642,28 @@ class MplFigureCanvas(QFrame):
         bottomLeftMargin = self._inchToRatio(leftBottomMarginInch)[::-1]
 
         self.canvas.figure.subplots_adjust(
-            top = 1 - topRightMargin[0],
-            right = 1 - topRightMargin[1], 
-            bottom = bottomLeftMargin[0],
-            left = bottomLeftMargin[1],
+            top=1 - topRightMargin[0],
+            right=1 - topRightMargin[1],
+            bottom=bottomLeftMargin[0],
+            left=bottomLeftMargin[1],
         )
-        self.canvas.draw_idle() 
+        self.canvas.draw_idle()
 
     def _inchToRatio(self, inch: Tuple[float, float]) -> np.ndarray:
         """
         Convert an xy vector in inches to a ratio of the figure size.
-        """ 
+        """
         figSizeInch = self.canvas.figure.get_size_inches()
         inch = np.array(inch)
         return inch / figSizeInch
-    
+
     def _inchToPts(self, inch: Tuple[float, float]) -> np.ndarray:
         """
         Convert an xy vector in inches to the points.
 
-        Note that MPL will treat the dpi to be fixed at 100, and will 
+        Note that MPL will treat the dpi to be fixed at 100, and will
         automacally scale the points to the actual dpi of the figure.
-        """ 
+        """
         return np.array(inch) * 100
         # return np.array(inch) * self.canvas.figure.dpi    # wrong
 
@@ -638,7 +690,7 @@ class MplFigureCanvas(QFrame):
     def _setMeasXList(self, xList: np.ndarray):
         """
         When the measurement data is loaded, we want to record the x values
-        of the measurement data. This method records the principal x values 
+        of the measurement data. This method records the principal x values
         of the measurement data.
         """
         self._measPrcplXList = xList
@@ -662,7 +714,7 @@ class MplFigureCanvas(QFrame):
         It will be called when:
         1. the view is initializes/reset internally, for example,
             when the measurement data is loaded / transposed
-        2. the view's x and y limits are zoomed/panned/reset externally
+        2. the view's x and y limits are zoomed in/panned/reset externally
         """
         self._currentPrcplXLim = self.axes.get_xlim()
         self._currentPrcplYLim = self.axes.get_ylim()
@@ -674,10 +726,16 @@ class MplFigureCanvas(QFrame):
         for yAx in self._yAxes:
             self._currentAllYLim.append(yAx.get_ylim())
 
+        # Emit the updated view limits
+        self.axesViewChanged.emit(
+            np.array(self._currentPrcplXLim),
+            np.array(self._currentPrcplYLim),
+        )
+
     def _dispLimByPrcplLim(
         self,
-        currentPrcplLim: Tuple[float, float], 
-        measPrcplLim: Tuple[float, float], 
+        currentPrcplLim: Tuple[float, float],
+        measPrcplLim: Tuple[float, float],
         originalLim: Tuple[float, float],
     ) -> Tuple[float, float]:
         """
@@ -692,7 +750,7 @@ class MplFigureCanvas(QFrame):
         originalLim: Tuple[float, float]
             The original limits of the displayed axes
         """
-        # determine the linear relationship between the principal limits 
+        # determine the linear relationship between the principal limits
         # and the displayed limits. displayed = k * principal + b
         k = (originalLim[1] - originalLim[0]) / (measPrcplLim[1] - measPrcplLim[0])
         b = originalLim[0] - k * measPrcplLim[0]
@@ -701,14 +759,14 @@ class MplFigureCanvas(QFrame):
         dispLim = (k * currentPrcplLim[0] + b, k * currentPrcplLim[1] + b)
 
         return self._nonSignularLim(dispLim)
-    
+
     @staticmethod
     def _nonSignularLim(lim: Tuple[float, float]) -> Tuple[float, float]:
         """
         Process the limits of the axes, making it not to be a single point.
         """
         if lim[0] == lim[1]:
-            return lim[0]*0.9 - 1, lim[0]*1.1 + 1
+            return lim[0] * 0.9 - 1, lim[0] * 1.1 + 1
         else:
             return lim
 
@@ -726,19 +784,23 @@ class MplFigureCanvas(QFrame):
                 xAx.set_xlim(*self._nonSignularLim(self._allXLim[i]))
             for i, yAx in enumerate(self._yAxes):
                 yAx.set_ylim(*self._nonSignularLim(self._allYLim[i]))
-            
+
         else:
             self.axes.set_xlim(*self._nonSignularLim(self._currentPrcplXLim))
             self.axes.set_ylim(*self._nonSignularLim(self._currentPrcplYLim))
 
             for i, xAx in enumerate(self._xAxes):
-                xAx.set_xlim(*self._dispLimByPrcplLim(
-                    self._currentPrcplXLim, self._measPrcplXLim, self._allXLim[i]
-                ))
+                xAx.set_xlim(
+                    *self._dispLimByPrcplLim(
+                        self._currentPrcplXLim, self._measPrcplXLim, self._allXLim[i]
+                    )
+                )
             for i, yAx in enumerate(self._yAxes):
-                yAx.set_ylim(*self._dispLimByPrcplLim(
-                    self._currentPrcplYLim, self._measPrcplYLim, self._allYLim[i]
-                ))
+                yAx.set_ylim(
+                    *self._dispLimByPrcplLim(
+                        self._currentPrcplYLim, self._measPrcplYLim, self._allYLim[i]
+                    )
+                )
 
     @Slot(np.ndarray, np.ndarray)
     def relimPrincipalAxes(self, x: np.ndarray, y: np.ndarray):
@@ -749,7 +811,7 @@ class MplFigureCanvas(QFrame):
         """
         xLim = (x[0], x[-1])
         yLim = (y[0], y[-1])
-        
+
         self._setMeasXYLim(xLim, yLim)
         self._setMeasXList(x)
 
@@ -784,10 +846,10 @@ class MplFigureCanvas(QFrame):
 
             # ticks and spines
             _, spineLoc = self._inchToPts((0, self._xAxesLoc(i)))
-            ax.spines['bottom'].set_position(('outward', spineLoc))
-            ax.xaxis.set_ticks_position('bottom')
+            ax.spines["bottom"].set_position(("outward", spineLoc))
+            ax.xaxis.set_ticks_position("bottom")
 
-            # scale the x-axis if the canvas is panned or zoomed
+            # scale the x-axis if the canvas is panned or zoomed in
             currentXLim = self._dispLimByPrcplLim(
                 self._currentPrcplXLim, self._measPrcplXLim, xRange
             )
@@ -803,9 +865,7 @@ class MplFigureCanvas(QFrame):
             # label
             labelLoc = self._inchToPts((-0.05, -self._xAxesLoc(i + 0.5)))
             ax.annotate(
-                xName, xy=labelLoc, 
-                xycoords='axes points', 
-                ha='right', va='center'
+                xName, xy=labelLoc, xycoords="axes points", ha="right", va="center"
             )
             ax.set_label(f"X axis: {xName}")
 
@@ -813,7 +873,7 @@ class MplFigureCanvas(QFrame):
 
         self._xAxes = new_axes
 
-        # layout 
+        # layout
         self._adjustMargin(xAxisNum=len(self._xAxes))
 
         # self.canvas.figure.tight_layout()
@@ -828,14 +888,14 @@ class MplFigureCanvas(QFrame):
         """
         self._allYLim = [yRange]
         self._currentAllYLim = []
-        
+
         for ax in self._yAxes:
             self.canvas.figure.delaxes(ax)
 
         # Create a new axes for each x-values in the dictionary
         ax = self.axes.twinx()
 
-        # scale the y-axis if the canvas is panned or zoomed
+        # scale the y-axis if the canvas is panned or zoomed in
         currentYLim = self._dispLimByPrcplLim(
             self._currentPrcplYLim, self._measPrcplYLim, yRange
         )
@@ -844,9 +904,9 @@ class MplFigureCanvas(QFrame):
 
         ax.set_ylabel(yName)
         ax.set_label(f"Y axis: {yName}")
-        ax.yaxis.set_ticks_position('left')
-        ax.yaxis.set_label_position('left')
-        ax.spines['left'].set_position(('outward', 40 * 0))
+        ax.yaxis.set_ticks_position("left")
+        ax.yaxis.set_label_position("left")
+        ax.spines["left"].set_position(("outward", 40 * 0))
         # ax.yaxis.set_label_coords(1.05, -0.08 * (i))  # set label position
         self._yAxes = [ax]
 
@@ -884,7 +944,7 @@ class MplFigureCanvas(QFrame):
         """
         if self._standalone:
             return  # do nothing in standalone mode
-        
+
         # memorize the state of the crosshair cursor
         if xSnapMode is not None:
             self._xSnapMode = xSnapMode
@@ -923,15 +983,22 @@ class MplFigureCanvas(QFrame):
 
     # View Manipulation: Navigation ====================================
     @Slot()
-    def zoomView(self):
+    def zoomInView(self):
         """
-        Enable zoom mode and remove the cursor crosshair.
+        Enable zoom in mode and remove the cursor crosshair.
         """
-        self.toolbar.setZoomMode(
+        self.toolbar.setZoomInMode(
             on=True
-        )  # toggle zoom at the level of the NavigationToolbar2QT, enabling actual
-        # zoom functionality
+        )  # toggle zoom in at the level of the NavigationToolbar2QT, enabling actual
+        # zoom in functionality
         self.updateCursor(horizOn=False, vertOn=False)
+        
+    def postZoomPanReleased(self):
+        self._recordXYLim()
+        if "spectrum" in self._plottingElements:
+            self._plotElement("spectrum", draw=True)
+        else:
+            self.canvas.draw_idle()
 
     @Slot()
     def panView(self):
@@ -943,27 +1010,91 @@ class MplFigureCanvas(QFrame):
         )  # toggle pan at the level of the NavigationToolbar2QT, enabling actual
         # pan functionality
         self.updateCursor(horizOn=False, vertOn=False)
-
+        
+    def postForwardBackClicked(self):
+        self._recordXYLim()
+        self._restoreXYLim()
+        if "spectrum" in self._plottingElements:
+            self._plotElement("spectrum", draw=True)
+        else:
+            self.canvas.draw_idle()
+            
     @Slot()
     def selectOn(self):
         """
         Enable select mode.
         """
-        self.toolbar.setZoomMode(on=False)
+        self.toolbar.setZoomInMode(on=False)
         self.toolbar.setPanMode(on=False)
-        
-    def resetView(self):
+
+    def postHomeClicked(self):
         # reset the x and y limits of the axes to fit the measurement data
         self._restoreXYLim(byMeasData=True)
         self._recordXYLim()
-        self.canvas.draw_idle()
-
+        
+        if "spectrum" in self._plottingElements:
+            self._plotElement("spectrum", draw=True)
+        else:
+            self.canvas.draw_idle()
+        
         # reset the margins
         self._adjustMargin(xAxisNum=len(self._xAxes))
 
     @Slot()
-    def home(self):
-        self.toolbar.home()
+    def zoomOutView(self):
+        """
+        Zoom out the current view by expanding both the x and y range by a
+        constant factor (default: 1.2).  The zoom out is centred on the
+        current view so that the geometrical centre of the axes remains
+        fixed while the span grows.
+
+        This helper does **not** enter any interactive navigation mode, it
+        merely adjusts the axes limits programmatically.  It therefore also
+        makes sure to
+            1. leave the toolbar in a neutral (select) state and
+            2. keep the book-keeping attributes (e.g. _currentPrcplXLim)
+               in sync so that subsequent canvas operations behave as
+               expected.
+        """
+        # Leave existing navigation mode unchanged (zoom-in/pan/select) to
+        # preserve the user's workflow. We therefore do *not* alter the
+        # toolbar's mode flags here.
+
+        # ------------------------------------------------------------------
+        # Compute the new principal axes limits
+        # ------------------------------------------------------------------
+        x0, x1 = self.axes.get_xlim()
+        y0, y1 = self.axes.get_ylim()
+
+        x_center = (x0 + x1) / 2.0
+        y_center = (y0 + y1) / 2.0
+
+        zoom_factor = 1.2  # >1 means zoom-out, <1 would zoom-in
+
+        x_half_range = (x1 - x0) / 2.0 * zoom_factor
+        y_half_range = (y1 - y0) / 2.0 * zoom_factor
+
+        new_xlim = (x_center - x_half_range, x_center + x_half_range)
+        new_ylim = (y_center - y_half_range, y_center + y_half_range)
+
+        # Apply the new limits to the principal axes
+        self.axes.set_xlim(*new_xlim)
+        self.axes.set_ylim(*new_ylim)
+
+        # ------------------------------------------------------------------
+        # Update internal state so that secondary/auxiliary axes keep their
+        # relative scaling and the navigation history is preserved.
+        # ------------------------------------------------------------------
+        self._recordXYLim()  # record the new limits as the current view
+        self._restoreXYLim()  # propagate to all linked axes
+        if "spectrum" in self._plottingElements:
+            self._plotElement("spectrum", draw=True)
+        else:
+            self.canvas.draw_idle()
+
+        # Re-establish the cursor/crosshair in case it had been suppressed
+        # by previous mode changes.
+        self.updateCursor()
 
     # View Manipulation: Plotting ======================================
     # toolbox
@@ -1003,8 +1134,8 @@ class MplFigureCanvas(QFrame):
             return {"color": self.lineColor}
         elif elementName == "spectrum":
             return {
-                "xlim": self._measPrcplXLim,
-                "ylim": self._measPrcplYLim,
+                "xlim": self._currentPrcplXLim,
+                "ylim": self._currentPrcplYLim,
             }
         else:
             return {}
@@ -1024,15 +1155,15 @@ class MplFigureCanvas(QFrame):
             dummy_element.set_visible(visible)
             self.updateElement(dummy_element)
 
-    # manipulate plotting elements        
+    # manipulate plotting elements
     @Slot()
     def updateElemPropertyByPage(
         self, page: Literal["calibrate", "extract", "prefit", "fit"]
     ):
         """
         Switch to the mode and update the plotting elements
-        
-        We no longer update the spectrum visibility here, it is controlled by 
+
+        We no longer update the spectrum visibility here, it is controlled by
         a button in plotting tool panel.
         """
         if page == "calibrate":
@@ -1065,11 +1196,7 @@ class MplFigureCanvas(QFrame):
         if isinstance(element, str):
             element = self._plottingElements[element]
 
-        element.canvasPlot(
-            self.axes, 
-            **self._specialKwargs(element.name), 
-            **kwargs
-        )
+        element.canvasPlot(self.axes, **self._specialKwargs(element.name), **kwargs)
         self._restoreXYLim()
 
         if draw:
@@ -1085,8 +1212,8 @@ class MplFigureCanvas(QFrame):
         """
         name = element.name
         self._checkElementName(name)
-        
-        # We may have multiple MplFigureCanvas instances, 
+
+        # We may have multiple MplFigureCanvas instances,
         # deepcopy the element to avoid reference issues
         element = copy.deepcopy(element)
 
@@ -1126,7 +1253,7 @@ class MplFigureCanvas(QFrame):
             self._restoreXYLim(byMeasData=True)
 
         self.canvas.draw_idle()
-        
+
     def closeEvent(self, event):
         self.canvasClosed.emit()
         super().closeEvent(event)

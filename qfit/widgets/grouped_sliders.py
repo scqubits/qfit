@@ -147,6 +147,7 @@ class LabeledSlider(QWidget):
         - the value box displays the raw value of the slider.
         - the slider value is set to the value box when the value box is changed.
         """
+
         def updateValue():
             self._textBox.setText(str(self._slider.value()))
 
@@ -263,7 +264,17 @@ class LabeledSlider(QWidget):
             self.user_is_typing = False
             self._textBox.setText(value)
             self.user_is_typing = False
-
+    
+    def setValueToSliderSilently(self, value: Union[str, int]):
+        """
+        Programmatically set the value without emitting slider / text signals.
+        Used when the slider's range (min/max) has just been edited.
+        """
+        self._slider.blockSignals(True)
+        self._textBox.blockSignals(True)
+        self.setValue(value, toSlider=True)
+        self._slider.blockSignals(False)
+        self._textBox.blockSignals(False)
 
 
 WidgetCls = TypeVar("WidgetCls", bound=QWidget)
@@ -293,7 +304,7 @@ class GroupedWidget(QWidget, Generic[WidgetCls]):
         widgetNames: List[str],
         initKwargs: Dict[str, Any] = {},
         columns: int = 2,
-        parent = None,
+        parent=None,
     ):
         super().__init__(parent)
 
@@ -322,7 +333,7 @@ class GroupedWidget(QWidget, Generic[WidgetCls]):
 
     def __getitem__(self, key):
         return self.widgets[key]
-    
+
     def insertWidget(self, name: str, idx: Optional[int] = None):
         """
         Insert a widget into the layout.
@@ -380,11 +391,11 @@ class GroupedWidgetSet(QWidget, Generic[WidgetCls]):
     """
 
     def __init__(
-        self, 
-        widgetClass: Type[WidgetCls], 
-        initKwargs: Dict[str, Any] = {}, 
-        columns = 2, 
-        parent = None
+        self,
+        widgetClass: Type[WidgetCls],
+        initKwargs: Dict[str, Any] = {},
+        columns=2,
+        parent=None,
     ):
         super().__init__(parent)
 
@@ -424,7 +435,7 @@ class GroupedWidgetSet(QWidget, Generic[WidgetCls]):
         setName : str
             The name of the group.
         widgetNames : List[str]
-            The names of the widgets to be grouped, one of the parameters of 
+            The names of the widgets to be grouped, one of the parameters of
             the widgetClass.
         """
         # store the group
@@ -455,4 +466,3 @@ class GroupedWidgetSet(QWidget, Generic[WidgetCls]):
     def setEnabled(self, value):
         for group in self.values():
             group.setEnabled(value)
-

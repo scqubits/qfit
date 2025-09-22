@@ -1,0 +1,79 @@
+
+# =================================================================================
+# Required entries
+# =================================================================================
+
+# Measurement data files and their corresponding transitions.
+# For each file, you can specify transitions and their labels to create an empty transition.
+# The points are extracted manually later inside the qfit application 
+file_paths:
+  partial_twotone_1.h5:
+  partial_twotone_2.h5:
+  partial_twotone_3.h5:
+  partial_twotone_4.h5:
+  partial_twotone_5.h5:
+  partial_twotone_6.h5:
+
+# Axes configuration, names must match the data in the file
+axes:
+  x: flux_list
+  y: pulse_freqs
+
+# Calibrate X axis: Voltage-flux conversion.
+# Example for 1 voltage source(s) and 1 control parameter(s) (flux(Fluxonium)).
+# For a full calibration, provide 2 data points (pairs of voltage and control parameter values).
+voltage_flux_conversion:
+  0: 0
+  1: 1
+
+# Initial parameters for the fit.
+# The structure is generated based on the HilbertSpace object.
+# Replace the values with your initial guesses for prefit and fit.
+init_parameters:
+  Fluxonium:
+    EJ: 5.0
+    EC: 0.85
+    EL: 0.4
+
+# =================================================================================
+# Optional entries
+# =================================================================================
+
+# Frequency unit for the y-axis
+# This specifies the calibration of the measurement data along the y-axis.
+freq_unit: MHz  # available options: Hz, kHz, MHz, GHz
+
+# Transpose the data if x and y axes are swappable.
+transpose_square_data: false
+
+# Optimizer for the fit.
+# Options: L-BFGS-B, Nelder-Mead, Powell, shgo, differential_evolution
+optimizer: L-BFGS-B
+
+# Optimization bounds. For each parameter, providing: 
+# - A float (e.g., 0.1) sets a relative bound of +/- 10% around the initial value.
+# - A list of two floats (e.g., [min, max]) sets an absolute value bound.
+# - A string "fixed" prevents the parameter from being varied during optimization.
+parameter_bounds:
+  Fluxonium:
+    EJ: 0.1
+    EC: 0.1
+    EL: 0.1
+
+# Whether to optimize the voltage-flux conversion parameters.
+optimize_calibration: false
+
+# Measurement data's filter settings.
+filters:
+  # top_hat: false
+  # wavelet: false
+  # edge: false
+  # remove_x_background: false
+  remove_y_background: true
+  # log: false
+  # min: 0
+  # max: 100
+  # color_map: PuOr
+
+# Path to save the fit results. If not provided, the results will not be saved automatically.
+# save_path: <path/to/save/results.qfit>

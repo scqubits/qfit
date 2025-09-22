@@ -44,8 +44,6 @@ class Ui_settingsWidget(object):
 "\n"
 "QWidget {\n"
 "	font-family: \"Roboto Medium\";\n"
-"	border: 2px solid #171717; \n"
-"	border-radius: 5px;\n"
 "	background-color: #2F2F2F;\n"
 "}\n"
 "\n"
@@ -85,11 +83,11 @@ class Ui_settingsWidget(object):
 "\n"
 "\n"
 "/* SLIDERS */\n"
-"QSlider::groove:horizo"
-                        "ntal {\n"
+"QSlider::groove:horizontal {\n"
 "    border-radius: 9px;\n"
 "    height: 18px;\n"
-"	margin: 0px;\n"
+""
+                        "	margin: 0px;\n"
 "	background-color: #38363B;\n"
 "}\n"
 "\n"
@@ -134,11 +132,11 @@ class Ui_settingsWidget(object):
 "	border-radius: 9px;\n"
 "}\n"
 "\n"
-"QSlider::handle:vertical"
-                        ":hover {\n"
+"QSlider::handle:vertical:hover {\n"
 "    background-color: rgb(105, 180, 255);\n"
 "}\n"
-"\n"
+""
+                        "\n"
 "QSlider::handle:vertical:pressed {\n"
 "    background-color: rgb(65, 130, 195);\n"
 "}\n"
@@ -176,11 +174,11 @@ class Ui_settingsWidget(object):
 "    border: 1px;\n"
 "}\n"
 "\n"
-"QSpinBox::up-arrow "
-                        "{\n"
+"QSpinBox::up-arrow {\n"
 "    width: 20px;\n"
 "    height: 20px;\n"
-"    image: url(:/icons/svg/plus.svg) 1;\n"
+"    image: url(:"
+                        "/icons/svg/plus.svg) 1;\n"
 "}\n"
 "\n"
 "QSpinBox::down-arrow {\n"
@@ -341,9 +339,9 @@ class Ui_settingsWidget(object):
 "QComboBox QAbstractItemView::item{\n"
 "    height: 50px;\n"
 "}")
-        self.tabWidget.setTabPosition(QTabWidget.North)
-        self.tabWidget.setTabShape(QTabWidget.Rounded)
-        self.tabWidget.setElideMode(Qt.ElideRight)
+        self.tabWidget.setTabPosition(QTabWidget.TabPosition.North)
+        self.tabWidget.setTabShape(QTabWidget.TabShape.Rounded)
+        self.tabWidget.setElideMode(Qt.TextElideMode.ElideRight)
         self.visualTab = QWidget()
         self.visualTab.setObjectName(u"visualTab")
         self.verticalLayout = QVBoxLayout(self.visualTab)
@@ -367,7 +365,7 @@ class Ui_settingsWidget(object):
         self.rangeSliderMin.setMaximumSize(QSize(207, 16777215))
         self.rangeSliderMin.setMaximum(99)
         self.rangeSliderMin.setSingleStep(1)
-        self.rangeSliderMin.setOrientation(Qt.Horizontal)
+        self.rangeSliderMin.setOrientation(Qt.Orientation.Horizontal)
 
         self.gridLayout_2.addWidget(self.rangeSliderMin, 3, 0, 1, 1)
 
@@ -380,7 +378,7 @@ class Ui_settingsWidget(object):
         self.rangeSliderMax.setMaximum(99)
         self.rangeSliderMax.setValue(99)
         self.rangeSliderMax.setSliderPosition(99)
-        self.rangeSliderMax.setOrientation(Qt.Horizontal)
+        self.rangeSliderMax.setOrientation(Qt.Orientation.Horizontal)
 
         self.gridLayout_2.addWidget(self.rangeSliderMax, 4, 0, 1, 1)
 
@@ -508,7 +506,7 @@ class Ui_settingsWidget(object):
         self.logScaleCheckBox = QCheckBox(self.visualTabContainerWidget)
         self.logScaleCheckBox.setObjectName(u"logScaleCheckBox")
         self.logScaleCheckBox.setFont(font)
-        self.logScaleCheckBox.setLayoutDirection(Qt.LeftToRight)
+        self.logScaleCheckBox.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
         self.logScaleCheckBox.setAutoFillBackground(False)
         self.logScaleCheckBox.setText(u"Log")
         self.logScaleCheckBox.setChecked(False)
@@ -520,7 +518,7 @@ class Ui_settingsWidget(object):
         sizePolicy3.setHeightForWidth(self.bgndSubtractQFrame.sizePolicy().hasHeightForWidth())
         self.bgndSubtractQFrame.setSizePolicy(sizePolicy3)
         self.bgndSubtractQFrame.setMinimumSize(QSize(207, 0))
-        self.bgndSubtractQFrame.setLayoutDirection(Qt.LeftToRight)
+        self.bgndSubtractQFrame.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
         self.verticalLayout_7 = QVBoxLayout(self.bgndSubtractQFrame)
         self.verticalLayout_7.setSpacing(15)
         self.verticalLayout_7.setObjectName(u"verticalLayout_7")
@@ -578,7 +576,7 @@ class Ui_settingsWidget(object):
         self.subsysComboBox.setMinimumSize(QSize(170, 30))
         self.subsysComboBox.setMaximumSize(QSize(16777215, 30))
         self.subsysComboBox.setStyleSheet(u"")
-        self.subsysComboBox.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self.subsysComboBox.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
 
         self.gridLayout.addWidget(self.subsysComboBox, 1, 1, 1, 2)
 
@@ -659,7 +657,7 @@ class Ui_settingsWidget(object):
 "QSpinBox::down-button:pressed {\n"
 "    background-color: #262626;\n"
 "}")
-        self.prefitPhotonSpinBox.setAlignment(Qt.AlignCenter)
+        self.prefitPhotonSpinBox.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.prefitPhotonSpinBox.setMinimum(1)
 
         self.gridLayout.addWidget(self.prefitPhotonSpinBox, 7, 1, 1, 1)
@@ -846,23 +844,6 @@ class Ui_settingsWidget(object):
 
         self.gridLayout_3.addWidget(self.tabWidget, 0, 0, 2, 1)
 
-        self.settingsCloseButton = QPushButton(settingsWidget)
-        self.settingsCloseButton.setObjectName(u"settingsCloseButton")
-        sizePolicy2.setHeightForWidth(self.settingsCloseButton.sizePolicy().hasHeightForWidth())
-        self.settingsCloseButton.setSizePolicy(sizePolicy2)
-        self.settingsCloseButton.setMinimumSize(QSize(25, 0))
-        self.settingsCloseButton.setMaximumSize(QSize(25, 16777215))
-        self.settingsCloseButton.setStyleSheet(u"QPushButton {\n"
-"    border: none;\n"
-"    background: none;\n"
-"}")
-        icon7 = QIcon()
-        icon7.addFile(u":/icons/svg/cross.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.settingsCloseButton.setIcon(icon7)
-        self.settingsCloseButton.setIconSize(QSize(30, 30))
-
-        self.gridLayout_3.addWidget(self.settingsCloseButton, 0, 1, 1, 1)
-
 
         self.retranslateUi(settingsWidget)
 
@@ -909,6 +890,5 @@ class Ui_settingsWidget(object):
         self.optimizerComboBox.setStyleSheet(QCoreApplication.translate("settingsWidget", u"font-size: 13px", None))
         self.label_8.setText(QCoreApplication.translate("settingsWidget", u"TOLERANCE", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.fitTab), QCoreApplication.translate("settingsWidget", u"FIT", None))
-        self.settingsCloseButton.setText("")
     # retranslateUi
 

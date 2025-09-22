@@ -29,24 +29,35 @@ class SettingsWidgetBase(QWidget):
     """
     def __init__(self, parent):
         super().__init__(parent)
+        
+        # Make it a standalone window
+        self.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)
+        self.setAttribute(Qt.WA_DeleteOnClose, False)  # Don't delete when closed
+        
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.mainwindow = parent
         self.move(350, 300)
         self.oldPos: Union[None, QPoint] = self.pos()
         self.hide()
 
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.oldPos = event.globalPos()
+    # Remove the mouse event handlers since they're not needed for standalone windows
+    # def mousePressEvent(self, event):
+    #     if event.button() == Qt.LeftButton:
+    #         self.oldPos = event.globalPos()
 
-    def mouseMoveEvent(self, event):
-        if event.buttons() == Qt.LeftButton:
-            delta = QPoint(event.globalPos() - self.oldPos)
-            self.move(self.x() + delta.x(), self.y() + delta.y())
-            self.oldPos = event.globalPos()
+    # def mouseMoveEvent(self, event):
+    #     if event.buttons() == Qt.LeftButton:
+    #         delta = QPoint(event.globalPos() - self.oldPos)
+    #         self.move(self.x() + delta.x(), self.y() + delta.y())
+    #         self.oldPos = event.globalPos()
 
-    def mouseReleaseEvent(self, event):
-        self.oldPos = None
+    # def mouseReleaseEvent(self, event):
+    #     self.oldPos = None
+    
+    def show(self):
+        super().show()
+        self.raise_()  # Bring to front
+        self.activateWindow()  # Make it the active window
 
     def toggle(self):
         if self.isHidden():
@@ -54,9 +65,17 @@ class SettingsWidgetBase(QWidget):
         else:
             self.hide()
 
+    def closeEvent(self, event):
+        """Override close event to hide instead of destroy"""
+        self.hide()
+        event.ignore()  # Prevent the widget from being destroyed
+
 
 class SettingsWidget(SettingsWidgetBase):
     def __init__(self, parent):
         super(SettingsWidget, self).__init__(parent=parent)
         self.ui = Ui_settingsWidget()
         self.ui.setupUi(self)
+        
+        # Set window title for standalone window
+        self.setWindowTitle("Settings")

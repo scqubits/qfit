@@ -27,6 +27,7 @@ from typing import (
     List,
     Callable,
     Tuple,
+    Literal,
 )
 
 if TYPE_CHECKING:
@@ -272,19 +273,11 @@ class IOCtrl(QObject):
         if not success:
             return
         self._closeApp()
-
-    def closeAppAfterSaving(self) -> bool:
+        
+    def _unsavedChangesExist(self) -> bool:
         """
-        Close the app after asking the user whether to save the changes.
-
-        Returns
-        -------
-        bool
-            whether the app is closed
+        Check if there are any unsaved changes.
         """
-        # first, if the project is open from a file, check the registry dict of the old file
-        # with that obtained from the current session, if something changed, ask the user
-        # whether to save the changes
         if self.mainWindow.projectFile is not None:
             registryDict = copy.deepcopy(self.registry.exportDict())
             registryDictFromFile = copy.deepcopy(
@@ -312,8 +305,36 @@ class IOCtrl(QObject):
 
         else:
             self.mainWindow.unsavedChanges = True
+            
+        return self.mainWindow.unsavedChanges
+        
+    def _saveCheckWithDialog(
+        self,
+    ) -> Literal[
+        "SAVE_AND_CLOSE",
+        "CLOSE",
+        "CANCEL",
+    ]:
+        """
+        Before closing the app or moving to a new opened file, check if there
+        are any unsaved changes.
 
-        if self.mainWindow.unsavedChanges and self.measDataSet.importFinished:
+        Returns
+        -------
+        Literal[
+            "SAVE_AND_CLOSE",
+            "CLOSE",
+            "CANCEL",
+        ]
+            The action to take before closing the app.
+        """
+        # first, if the project is open from a file, check the registry dict of the old file
+        # with that obtained from the current session, if something changed, ask the user
+        # whether to save the changes
+        unsavedChangesExist = self._unsavedChangesExist()
+        
+        # if there are unsaved changes, ask the user whether to save the changes
+        if unsavedChangesExist and self.measDataSet.importFinished:
             msgBox = QMessageBox()
             msgBox.setWindowTitle("qfit")
             msgBox.setIcon(QMessageBox.Question)
@@ -327,17 +348,34 @@ class IOCtrl(QObject):
             reply = msgBox.exec_()
 
             if reply == QMessageBox.Save:
-                self._saveAndCloseApp(saveAs=self.mainWindow.projectFile is None)
-                return True
+                return "SAVE_AND_CLOSE"
             elif reply == QMessageBox.Discard:
-                self._closeApp()
-                return True
+                return "CLOSE"
             else:  # reply == QMessageBox.Cancel
-                return False
+                return "CANCEL"
 
         else:
+            return "CLOSE"
+
+    def closeAppAfterSaving(self) -> bool:
+        """
+        Close the app after asking the user whether to save the changes.
+
+        Returns
+        -------
+        bool
+            whether the app is closed
+        """
+        status = self._saveCheckWithDialog()
+        if status == "SAVE_AND_CLOSE":
+            self._saveAndCloseApp(save_as=self.mainWindow.projectFile is None)
+            return True
+        elif status == "CLOSE":
             self._closeApp()
             return True
+        else:  # status == "CANCEL"
+            return False
+
 
     # slots ###################################################################
     @Slot()
@@ -418,9 +456,20 @@ class IOCtrl(QObject):
             cause correlated updates to the original HilbertSpace object / other
             HilbertSpace objects.
         """
-        if fromMenu and self.menu.isVisible():
-            self.menu.toggle()
-
+        # check if there are unsaved changes in the current project
+        if fromMenu:
+            if self.menu.isVisible():
+                self.menu.toggle()
+                
+            savingStatus = self._saveCheckWithDialog()
+            print(savingStatus)
+            if savingStatus == "SAVE_AND_CLOSE":
+                self._saveProject()
+            elif savingStatus == "CLOSE":
+                pass
+            else:  # savingStatus == "CANCEL"
+                return
+        
         # check if file exists
         if fileName is not None:
             if not os.path.isfile(fileName):

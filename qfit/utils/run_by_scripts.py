@@ -7,6 +7,7 @@ from qfit.widgets.validated_line_edits import (
     MultiIntTuplesLineEdit,
 )
 from qfit.models.parameter_set import HSParamSet, SweepParamSet
+from pathlib import Path
 import os
 import warnings
 
@@ -30,10 +31,24 @@ def _loadYaml(yamlPath: str) -> Dict:
         yamlDict = yaml.safe_load(file)
     return yamlDict
 
+def combinePath(cwd: str, path: str) -> str:
+  """
+  Computes an absolute path using pathlib.
+  """
+  # The / operator is overloaded for joining paths
+  combinedPath = Path(cwd) / Path(path)
+  
+  # We still use os.path.normpath for purely string-based normalization
+  # without accessing the filesystem (Path.resolve() would, and requires
+  # the path to exist).
+  return os.path.normpath(str(combinedPath))
+
 def dataPathsFromYaml(yamlFile: str) -> List[str]:
     path = os.path.dirname(yamlFile)
     yamlDict = _loadYaml(yamlFile)
-    filePaths = [path + fp for fp in yamlDict["file_paths"]]
+    filePaths = [
+        combinePath(path, fp) for fp in yamlDict["file_paths"]
+    ]
     return filePaths
 
 
@@ -75,14 +90,31 @@ def applyFilters(
     filterConfig: Dict[str, Any],
 ):
     """Apply filter configuration to measurement data."""
-    if filterConfig is not None:
-        for meas_data in fit._measData.fullData:
-            current_filter = meas_data.getFilter()
-            for field_name, field_value in filterConfig.items():
-                setattr(current_filter, field_name, field_value)
-            meas_data.setFilter(current_filter)
+    if filterConfig is None:
+        return
+    
+    # translate the filter config to the correct attr names
+    filterAttr = {
+        "top_hat": "topHat",
+        "wavelet": "wavelet",
+        "edge": "edge",
+        "remove_x_background": "bgndX",
+        "remove_y_background": "bgndY",
+        "log": "log",
+        "min": "min",
+        "max": "max",
+        "color_map": "color",
+    }
+    
+    for meas_data in fit._measData.fullData:
+        current_filter = meas_data.getFilter()
+        for field_name, field_value in filterConfig.items():
+            setattr(current_filter, filterAttr[field_name], field_value)
+        meas_data.setFilter(current_filter)
+        
+    # this will update the filter in the settings widget
+    fit._measData.switchFig(fit._measData.currentMeasData.name)
     fit._measData.emitReadyToPlot()
-
 
 def applyCalibration(
     fit: "Fit",
@@ -104,11 +136,7 @@ def applyCalibration(
     fluxNamesNoBr = [name.replace("<br>", "") for name in fluxNames]
     numX = len([key for key in fit._caliParamModel.keys() if key.startswith("X")])
     
-    # print(f"\nNote: Calibrating parameters must be provided in the following format:")
-    # print(f"voltage_flux_conversion: ")
-    # for idx in range(numX):
-    #     print(f"  " + ", ".join(voltageNames) + ": " + ", ".join(fluxNamesNoBr))
-
+    # storing x calibration parameters
     for idx, (voltages, fluxes) in enumerate(voltageFluxConversion.items()):
         fluxes = _convertFloatingList(str(fluxes))
         voltages = _convertFloatingList(str(voltages))
@@ -132,26 +160,34 @@ def applyCalibration(
             )
             fit._caliParamModel.storeParamAttr(fParam)
         fit._caliParamModel.emitUpdateBox()
-    if freqUnit == "MHz":
-        rawParam = ParamAttr(
-            parentName=f"Y2",
-            name=yAxis[0],
-            attr="value",
-            value=f"1000",
-        )
-        calibParam = ParamAttr(
-            parentName=f"Y2",
-            name="mappedY",
-            attr="value",
-            value="1",
-        )
-        fit._caliParamModel.storeParamAttr(rawParam)
-        fit._caliParamModel.storeParamAttr(calibParam)
-        fit._caliParamModel.emitUpdateBox()
-    elif freqUnit == "GHz":
-        pass
+        
+    # storing y calibration parameters
+    if freqUnit == "GHz":
+        yCalib = "1"
+    elif freqUnit == "MHz":
+        yCalib = "1e3"
+    elif freqUnit == "kHz":
+        yCalib = "1e6"
+    elif freqUnit == "Hz":
+        yCalib = "1e9"
     else:
         raise ValueError(f"Unit {freqUnit} not supported")
+    
+    rawParam = ParamAttr(
+        parentName=f"Y2",
+        name=yAxis[0],
+        attr="value",
+        value=yCalib,
+    )
+    calibParam = ParamAttr(
+        parentName=f"Y2",
+        name="mappedY",
+        attr="value",
+        value="1",
+    )
+    fit._caliParamModel.storeParamAttr(rawParam)
+    fit._caliParamModel.storeParamAttr(calibParam)
+    fit._caliParamModel.emitUpdateBox()
     return numX, fluxNames
 
 def _tagByDict(tagDict):
@@ -160,11 +196,11 @@ def _tagByDict(tagDict):
     """
     kwargs = {}
     for fieldName, fieldValue in tagDict.items():
-        if fieldName == "tagType":
-            kwargs[fieldName] = fieldValue
-        elif tagDict["tagType"] == "DISPERSIVE_BARE" and fieldName in ["initial", "final"]:
+        if fieldName == "label_type":
+            kwargs["tagType"] = fieldValue
+        elif tagDict["label_type"] == "DISPERSIVE_BARE" and fieldName in ["initial", "final"]:
             kwargs[fieldName] = MultiIntTuplesLineEdit.strToTuples(str(fieldValue))
-        elif tagDict["tagType"] == "DISPERSIVE_DRESSED" and fieldName in ["initial", "final"]:
+        elif tagDict["label_type"] == "DISPERSIVE_DRESSED" and fieldName in ["initial", "final"]:
             kwargs[fieldName] = MultiIntsLineEdit.strToInts(str(fieldValue))
         else:
             # photons
@@ -235,7 +271,7 @@ def applyFit(
     fit: "Fit",
     initParameters: Dict[str, Dict[str, float]],
     parameterBounds: Dict[str, Dict[str, Any]],
-    optimizeCalibration: bool,
+    optimizeXCalibration: bool,
     numX: int,
     fluxNames: List[str],
     optimizer: str,
@@ -293,7 +329,7 @@ def applyFit(
                 raise ValueError(f"Parameter bound {paramName} = {param} not supported")
     fit._fitHSParams.emitUpdateBox()
     
-    if optimizeCalibration:
+    if optimizeXCalibration:
         for parentName in [f"X{idx+1}" for idx in range(numX)]:
             for fluxName in fluxNames:
                 paramAttr = ParamAttr(
@@ -325,13 +361,13 @@ def applyConfigYaml(
     assert len(yAxis) == 1, "There should only be one y axis"
     voltageFluxConversion = yamlDict["voltage_flux_conversion"]
     initParameters = yamlDict["init_parameters"]
-    optimizeCalibration = yamlDict.get("optimize_calibration", False)
+    optimizeXCalibration = yamlDict.get("optimize_x_calibration", False)
     try:
         savePath = path + yamlDict["save_path"]
     except KeyError:
         savePath = None
     freqUnit = yamlDict.get("freq_unit", "GHz")
-    filterConfig = yamlDict.get("filter", None)
+    filterConfig = yamlDict.get("filters", None)
     optimizer = yamlDict.get("optimizer", "L-BFGS-B")
     parameterBounds = yamlDict.get("parameter_bounds", {})
 
@@ -364,7 +400,7 @@ def applyConfigYaml(
         fit,
         initParameters,
         parameterBounds,
-        optimizeCalibration,
+        optimizeXCalibration,
         numX,
         fluxNames,
         optimizer,
@@ -455,20 +491,21 @@ voltage_flux_conversion:
 # =================================================================================
 
 # Measurement data files and their corresponding transitions.
-# For each file, you can specify transitions and their labels to create an empty transition. 
+# For each file, you can specify transitions and their labels to create an empty transition.
+# The points are extracted manually later inside the qfit application 
 file_paths:
   <path/to/your/data1>:
-    # No transitions are specified for this file.
+    # No transitions are created for this file. 
   <path/to/your/data2>:
     <transition_name_1>:
-      tagType: DISPERSIVE_BARE  # can be DISPERSIVE_BARE or DISPERSIVE_DRESSED 
-      # For DISPERSIVE_BARE, provide initial and final states as tuples of integers.
+      label_type: DISPERSIVE_BARE  # can be DISPERSIVE_BARE or DISPERSIVE_DRESSED 
+      # Bare labels are tuples of integers. For uncertain labels, separate them with semicolons.
       initial: <e.g., 0,0>
-      final: <e.g., 0,1>
+      final: <e.g., 2,0>
       photons: <e.g., 1>
     <transition_name_2>:
-      tagType: DISPERSIVE_DRESSED
-      # For DISPERSIVE_DRESSED, provide initial and final states as integers.
+      label_type: DISPERSIVE_DRESSED
+      # Dressed labels are integers.
       initial: <e.g., 0>
       final: <e.g., 1>
       photons: <e.g., 1>
@@ -491,8 +528,9 @@ init_parameters:
 # Optional entries
 # =================================================================================
 
-# Frequency unit for the y-axis.
-freq_unit: GHz  # available options: MHz, GHz
+# Frequency unit for the y-axis
+# This specifies the calibration of the measurement data along the y-axis.
+freq_unit: GHz  # available options: Hz, kHz, MHz, GHz
 
 # Transpose the data if x and y axes are swappable.
 transpose_square_data: false
@@ -509,21 +547,21 @@ parameter_bounds:
 {paramBoundsStr}
 
 # Whether to optimize the voltage-flux conversion parameters.
-optimize_calibration: false
+optimize_x_calibration: false
 
 # Measurement data's filter settings.
-filter:
-  topHat: false
+filters:
+  top_hat: false
   wavelet: false
   edge: false
-  bgndX: false
-  bgndY: false
+  remove_x_background: false
+  remove_y_background: false
   log: false
   min: 0
   max: 100
-  color: PuOr
+  color_map: PuOr
 
-# Path to save the fit results. If not provided, the results will not be saved automatically.
+# Path to save the qfit project once created. If not provided, you can save it manually later.
 # save_path: <path/to/save/results.qfit>
 """
     if file_path:

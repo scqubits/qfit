@@ -1,6 +1,4 @@
-from PySide6.QtCore import (
-    Slot, Signal, QObject, QRunnable, QThreadPool, SignalInstance
-)
+from PySide6.QtCore import Slot, Signal, QObject, QRunnable, QThreadPool, SignalInstance
 
 import numpy as np
 from numpy import ndarray
@@ -34,28 +32,29 @@ class SweepConfigForStandaloneCanvas(QObject):
 
     Parameters
     ----------
-    pointsAdded: int, 
+    pointsAdded: int,
         number of sweep points
-    xLim: Tuple[float, float], 
+    xLim: Tuple[float, float],
         x limits
-    caliByFigName: str, 
+    caliByFigName: str,
         the calibration function used for this figure
         it must be the same as one of the figNames
     """
+
     readyToPlot = Signal(SpectrumElement)
 
     def __init__(
-        self, 
-        pointsAdded: int, 
-        xLim: Tuple[float, float], 
-        caliByFigName: str, 
-        parent: QObject = None
+        self,
+        pointsAdded: int,
+        xLim: Tuple[float, float],
+        caliByFigName: str,
+        parent: QObject = None,
     ):
         super().__init__(parent)
         self.pointsAdded = pointsAdded
         self.xLim = xLim
         self.caliByFigName = caliByFigName
-        
+
     def cleanup(self):
         self.readyToPlot.disconnect()
 
@@ -90,7 +89,7 @@ class QuantumModel(QObject):
     ):
         super().__init__(parent)
         self._figNames: List[str] = []
-        
+
         # standalone canvases and their configurations
         self._sweepConfigsForStandaloneCanvas: Dict[
             str, SweepConfigForStandaloneCanvas
@@ -239,7 +238,9 @@ class QuantumModel(QObject):
         self._rawXByX = rawXByX
 
     @Slot(object)
-    def updateXCaliFunc(self, sweepParamSets: Dict[str, SweepParamSet] | Literal[False]):
+    def updateXCaliFunc(
+        self, sweepParamSets: Dict[str, SweepParamSet] | Literal[False]
+    ):
         """
         Update the x calibration function that is stored in the sweepParamSets.
         It also updates the calculation.
@@ -256,9 +257,9 @@ class QuantumModel(QObject):
     @Slot(object, object)  # can't use Callable here in the initialization
     # because Argument of type "type[Callable]" cannot be assigned to parameter of type "type"
     def updateYCaliFunc(
-        self, 
-        yCaliFunc: Callable | Literal[False], 
-        invYCaliFunc: Callable | Literal[False]
+        self,
+        yCaliFunc: Callable | Literal[False],
+        invYCaliFunc: Callable | Literal[False],
     ):
         """
         Update the y calibration function.
@@ -336,6 +337,22 @@ class QuantumModel(QObject):
         """
         self._xLim = (np.min(x), np.max(x))
 
+    @Slot(str, object, object)
+    def relimStandalone(self, canvasName: str, x: np.ndarray, y: np.ndarray):
+        """
+        Update the x-range cached for a standalone canvas when its view
+        limits change (zoom, pan, etc.).  No computation is triggered; the
+        new range is stored so that the next spectrum calculation for this
+        canvas uses the updated limits.
+        """
+        if canvasName not in self._sweepConfigsForStandaloneCanvas:
+            return
+
+        self._sweepConfigsForStandaloneCanvas[canvasName].xLim = (
+            float(np.min(x)),
+            float(np.max(x)),
+        )
+
     def exportSweepOption(self) -> Dict[str, Any]:
         """
         Export the sweep options to view.
@@ -391,15 +408,15 @@ class QuantumModel(QObject):
             sweep = self._currentSweep
         else:
             sweep = self._sweeps[sweepToPlot]
-            
+
         if sweep is None:
             # this will only happen during the fit stage, where no sweep
             # is generated for an empty figure
             return
-        
+
         if signalToEmit is None:
             signalToEmit = self.readyToPlotMainCanvas
-        
+
         # compute the spectrum data for each initial state
         overall_specdata_list = []
         highlight_specdata_list = []
@@ -434,7 +451,7 @@ class QuantumModel(QObject):
             )
             self.updateStatus.emit(status)
             return False
-        
+
         if not self.ingredientsReady():
             return False
 
@@ -476,8 +493,10 @@ class QuantumModel(QObject):
             raise ValueError(
                 f"Cannot convert {state_str} to a state label. Please check the format."
             )
-            
-    def _multiStateStr2Label(self, state_str: str) -> List[int | Tuple[int, ...] | None]:
+
+    def _multiStateStr2Label(
+        self, state_str: str
+    ) -> List[int | Tuple[int, ...] | None]:
         """
         Convert a multi-state label in string (something like "0, 1, 2; 1, 2, 3")
         to a list of numerical labels, which is a list of tuples or integers.
@@ -486,7 +505,7 @@ class QuantumModel(QObject):
         for state_str in state_str.split(";"):
             states.append(self._stateStr2Label(state_str))
         return states
-            
+
     def _invCaliSpec(self, specData: SpectrumData):
         """
         scale the spectrum data accordingly, based on the calibration
@@ -525,15 +544,13 @@ class QuantumModel(QObject):
         )
 
         # overall data
-        overall_specdata = copy.deepcopy(
-            sweep[(slice(None),)].dressed_specdata
-        )
+        overall_specdata = copy.deepcopy(sweep[(slice(None),)].dressed_specdata)
         overall_specdata.energy_table -= highlight_specdata.subtract
 
         # scale the spectrum data accordingly, based on the calibration
         self._invCaliSpec(overall_specdata)
         self._invCaliSpec(highlight_specdata)
-        
+
         return overall_specdata, highlight_specdata
 
     def ingredientsReady(self) -> bool:
@@ -557,9 +574,9 @@ class QuantumModel(QObject):
             )
             self.updateStatus.emit(status)
             return False
-        
+
         return True
-    
+
     # generate sweep ==========================================================
     def _sweptX(self, addPoints: bool = True) -> Dict[str, np.ndarray]:
         """
@@ -568,12 +585,12 @@ class QuantumModel(QObject):
         1. a uniformly distributed list of x coordinates in
         between the min and max of the x-coordinates of the extracted data
         2. the x-coordinates of the extracted data.
-        
+
         For the standalone canvas, the x-coordinates are uniformly distributed
         according to the sweepConfigForStandaloneCanvas.
         """
         sweptX = {}
-        
+
         # for each figure
         for figName, extracted_data_set in self._fullExtr.items():
             extrX = extracted_data_set.distinctSortedX()
@@ -587,14 +604,13 @@ class QuantumModel(QObject):
             else:
                 # only calculate the spectrum for the extracted data x coordinates
                 sweptX[figName] = extrX
-                
+
         # for each standalone canvas
         for name, config in self._sweepConfigsForStandaloneCanvas.items():
             sweptX[name] = np.linspace(
-                *config.xLim, 
-                config.pointsAdded if addPoints else 0
+                *config.xLim, config.pointsAdded if addPoints else 0
             )
-                
+
         return sweptX
 
     def _updateHSForSweep(
@@ -606,15 +622,15 @@ class QuantumModel(QObject):
         `update_hilbertspace` that is passed to the ParameterSweep object.
         """
         updateHSDict = {}
-        
+
         # for each figure
         for figName, sweepParamSet in self._sweepParamSets.items():
             rawXByX = self._rawXByX[figName]
 
             def updateHilbertspace(
                 x: float,
-                sweepParamSet = sweepParamSet,
-                rawXByX = rawXByX,
+                sweepParamSet=sweepParamSet,
+                rawXByX=rawXByX,
             ) -> None:
                 # map x to the rawX (voltage vector)
                 rawX = rawXByX(x)
@@ -622,7 +638,7 @@ class QuantumModel(QObject):
                 sweepParamSet.updateParamForHS()
 
             updateHSDict[figName] = updateHilbertspace
-            
+
         # for each standalone canvas
         for name, config in self._sweepConfigsForStandaloneCanvas.items():
             caliByFigName = config.caliByFigName
@@ -642,12 +658,12 @@ class QuantumModel(QObject):
             )
             for figName, sweepParamSet in self._sweepParamSets.items()
         }
-        
+
         # for each standalone canvas
         for name, config in self._sweepConfigsForStandaloneCanvas.items():
             caliByFigName = config.caliByFigName
             info[name] = info[caliByFigName]
-            
+
         return info
 
     def _generateSweep(
@@ -689,7 +705,7 @@ class QuantumModel(QObject):
                 # Either in the fit mode or the figure is not being plotted
                 sweeps[figName] = None
                 continue
-            
+
             paramvals_by_name = {"x": x_coordinate}
             update_hilbertspace = updateHS[figName]
             subsys_update_info = {"x": subsysUpdateInfo[figName]}
@@ -704,9 +720,11 @@ class QuantumModel(QObject):
                 num_cpus=self._numCPUs,  # change this later to connect to the number from the view
             )
             sweeps[figName] = param_sweep
-            
+
         if all([sweep is None for sweep in sweeps.values()]):
-            raise ValueError("No extracted data is available to generate a parameter sweep.")
+            raise ValueError(
+                "No extracted data is available to generate a parameter sweep."
+            )
 
         return sweeps
 
@@ -793,7 +811,7 @@ class QuantumModel(QObject):
             _postSweepInThread method.
         """
         runner = SweepRunner(self._sweeps, forced=forced, sweepUsage=sweepUsage)
-        runner.signalHost.sweepFinished.connect(self._postSweepInThread)  
+        runner.signalHost.sweepFinished.connect(self._postSweepInThread)
         self._sweepThreadPool.start(runner)
 
     @Slot(object, bool, str)
@@ -866,7 +884,7 @@ class QuantumModel(QObject):
         """
         if not self.ingredientsReady():
             return 0.0
-        
+
         if sweepUsage != "prefit" and not forced:
             # only in prefit mode, this method will be activated as a slot
             # function
@@ -879,7 +897,7 @@ class QuantumModel(QObject):
 
         if sweepUsage in ["prefit", "fit-result"]:
             self.emitReadyToPlot()
-            
+
             for name, config in self._sweepConfigsForStandaloneCanvas.items():
                 self.emitReadyToPlot(
                     sweepToPlot=name,
@@ -906,7 +924,7 @@ class QuantumModel(QObject):
         """
         if not self.ingredientsReady():
             return
-        
+
         if (self.sweepUsage != "prefit") and (not forced):
             # only in prefit mode, this method will be activated as a slot
             # function
@@ -929,13 +947,13 @@ class QuantumModel(QObject):
         evals: ndarray,
     ) -> List[int]:
         """
-        Given the eigenenergies, find the possible initial states of the 
+        Given the eigenenergies, find the possible initial states of the
         transition that is below POSSIBLE_INIT_STATE_FREQUENCY.
         """
         assert evals.ndim == 1, "evals must be a 1D array"
         diff_evals = evals - evals[0]
         return list(np.where(diff_evals < settings.POSSIBLE_INIT_STATE_FREQUENCY)[0])
-    
+
     @staticmethod
     def _closestTransFreq(
         dataFreq: float,
@@ -951,7 +969,7 @@ class QuantumModel(QObject):
         ----------
         dataFreq: float
             The transition frequency from the extracted data. With that,
-            we can find the closest transition frequency if the initial 
+            we can find the closest transition frequency if the initial
             and final states are uncertain.
         evals: ndarray
             The eigenenergies of the system. (1D array)
@@ -976,11 +994,11 @@ class QuantumModel(QObject):
             slc = (slice(None), slice(None))
         possibleTransitions = allToAllFreqs[slc]
         possibleTransitions = possibleTransitions.flatten()
-        
+
         # find the closest transition frequency
         closestIdx = np.abs(np.abs(possibleTransitions) - dataFreq).argmin()
         return possibleTransitions[closestIdx]
-    
+
     def _numericalSpecByTag(
         self,
         xData: float,
@@ -1046,7 +1064,7 @@ class QuantumModel(QObject):
 
         elif tag.tagType == "DISPERSIVE_DRESSED":
             # if the state is above evals_count, terminate the computation and return error status
-            
+
             if None in tag.initial:
                 status = "INCOMPLETE_TAG"
                 initial = self._thermalInitialStates(eigenenergies)
@@ -1055,7 +1073,7 @@ class QuantumModel(QObject):
                 return np.nan, status
             else:
                 initial = tag.initial
-                
+
             if None in tag.final:
                 status = "INCOMPLETE_TAG"
                 final = None
@@ -1064,7 +1082,7 @@ class QuantumModel(QObject):
                 return np.nan, status
             else:
                 final = tag.final
-            
+
             availableLabels = {"initial": initial, "final": final}
 
         # if provided bare label
@@ -1072,11 +1090,13 @@ class QuantumModel(QObject):
             if None in tag.initial:
                 status = "INCOMPLETE_TAG"
                 initial = self._thermalInitialStates(eigenenergies)
-            elif not all([idx < tuple(self.hilbertspace.subsystem_dims) for idx in tag.initial]):
+            elif not all(
+                [idx < tuple(self.hilbertspace.subsystem_dims) for idx in tag.initial]
+            ):
                 status = "LABEL_OUT_OF_RANGE"
                 return np.nan, status
             else:
-                initial = [sweep.dressed_index(idx)["x":xData] for idx in tag.initial]  
+                initial = [sweep.dressed_index(idx)["x":xData] for idx in tag.initial]
                 if None in initial:
                     status = "BARE_UNIDENTIFIABLE"
                     # when there is unidentifiable initial state,
@@ -1084,11 +1104,13 @@ class QuantumModel(QObject):
                     initial = [idx for idx in initial if idx is not None]
                     thermal_initial = self._thermalInitialStates(eigenenergies)
                     initial = list(set(initial + thermal_initial))
-                
+
             if None in tag.final:
                 status = "INCOMPLETE_TAG"
                 final = None
-            elif not all([idx < tuple(self.hilbertspace.subsystem_dims) for idx in tag.final]):
+            elif not all(
+                [idx < tuple(self.hilbertspace.subsystem_dims) for idx in tag.final]
+            ):
                 status = "LABEL_OUT_OF_RANGE"
                 return np.nan, status
             else:
@@ -1098,7 +1120,7 @@ class QuantumModel(QObject):
                     # when there is unidentifiable final state,
                     # we just compare it with the full eigenenergies
                     final = None
-                
+
             availableLabels = {"initial": initial, "final": final}
 
         simulationFreq = self._closestTransFreq(
@@ -1114,12 +1136,17 @@ class QuantumModel(QObject):
         self,
         sweep: ParameterSweep,
         transition: ExtrTransition,
-    ) -> Tuple[DeviTransition, set[Literal[
-        "SUCCESS",
-        "INCOMPLETE_TAG",
-        "BARE_UNIDENTIFIABLE",
-        "NO_TAG",
-    ]]]:
+    ) -> Tuple[
+        DeviTransition,
+        set[
+            Literal[
+                "SUCCESS",
+                "INCOMPLETE_TAG",
+                "BARE_UNIDENTIFIABLE",
+                "NO_TAG",
+            ]
+        ],
+    ]:
         """
         Calculate the mean square error for a single transition.
 
@@ -1132,7 +1159,7 @@ class QuantumModel(QObject):
         """
         deviCalcStatus = set()
         tag = transition.tag
-        
+
         devi = DeviTransition()
 
         for xData, yData in transition.data.T:
@@ -1156,10 +1183,10 @@ class QuantumModel(QObject):
                     f"The tag {tag.initial} -> {tag.final} includes "
                     "state indices that exceed the evaluated eigenvalue count."
                 )
-                
+
             # for now, we just summarize them as LABEL_CORRECTED
             deviCalcStatus.add(getTransitionFreqStatus)
-            
+
             # finish the calculation
             photons = 1 if tag.photons is None else tag.photons
             transitionFreq /= photons
@@ -1167,11 +1194,11 @@ class QuantumModel(QObject):
 
         # transfer the weight information from the transition to the deviation
         devi.setWeight(transition.weight)
-        
+
         return devi, deviCalcStatus
-    
+
     def _costByFullDevi(
-        self, 
+        self,
         fullDevi: FullDevi,
     ) -> float:
         """
@@ -1240,7 +1267,7 @@ class QuantumModel(QObject):
                     )
                     self.updateStatus.emit(status)
                     return np.nan
-                
+
             fullDevi[figName] = deviSpectra
 
         cost = self._costByFullDevi(fullDevi)
@@ -1249,7 +1276,7 @@ class QuantumModel(QObject):
         # handled in the fit model instead
         if self.sweepUsage in ["fit", "fit-result"]:
             return cost
-        
+
         # otherwise, add to the status text if there is any unidentifiable tag
         # and send out the status
         if overallDeviCalcStatus != set(["SUCCESS"]):
@@ -1261,7 +1288,7 @@ class QuantumModel(QObject):
             if "NO_TAG" in overallDeviCalcStatus:
                 problems.append("no")
             problemsStr = " or ".join(problems)
-                
+
             statusType = "warning"
             message = (
                 f"Found extracted transitions with {problemsStr} labels. "
@@ -1288,13 +1315,13 @@ class QuantumModel(QObject):
                 cost=cost,
             )
             self.updateStatus.emit(status)
-        
+
         return cost
-        
+
     # Plotting to a standalone canvas
     # ==================================================================
     def _newStandaloneCanvas(
-        self, 
+        self,
         name: str,
         pointsAdded: int,
         xLim: Tuple[float, float],
@@ -1302,7 +1329,7 @@ class QuantumModel(QObject):
     ):
         """
         Initialize a standalone canvas.
-        
+
         Parameters
         ----------
         name: str
@@ -1312,27 +1339,29 @@ class QuantumModel(QObject):
         xLim: Tuple[float, float]
             The x limits of the canvas, range of the sweeped x-axis.
         caliByFigName: str
-            Calibration function. For a standalone canvas, it must contain the 
-            x, y axis that are colinear, so any of the calibration function 
+            Calibration function. For a standalone canvas, it must contain the
+            x, y axis that are colinear, so any of the calibration function
             associated with a figName in the canvas can be used.
         """
         assert caliByFigName in self._figNames, "Calibration function not found"
-        assert name not in self._sweepConfigsForStandaloneCanvas, "Canvas already exists"
+        assert (
+            name not in self._sweepConfigsForStandaloneCanvas
+        ), "Canvas already exists"
         assert name not in self._figNames, "Canvas (Main canvas) already exists"
-        
+
         self._sweepConfigsForStandaloneCanvas[name] = SweepConfigForStandaloneCanvas(
             pointsAdded=pointsAdded,
             xLim=xLim,
             caliByFigName=caliByFigName,
         )
-        
+
     def _removeSweepForStandaloneCanvas(self, name: str):
         """
         Garbage collection for removed standalone canvas.
         """
         self._sweepConfigsForStandaloneCanvas[name].cleanup()
         self._sweepConfigsForStandaloneCanvas.pop(name)
-        
+
         try:
             if name in self._sweeps:
                 self._sweeps.pop(name)
@@ -1357,7 +1386,6 @@ class SweepRunner(QRunnable):
     forced: bool
         It will be passed to the _postSweepInThread method.
     """
-
 
     def __init__(
         self,

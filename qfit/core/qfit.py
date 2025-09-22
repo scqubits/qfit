@@ -1,7 +1,7 @@
 import sys
 import os
 from copy import deepcopy as _deepcopy
-from typing import Union, Dict, Any, Dict, List, Optional, Tuple, Callable
+from typing import Union, Dict, Any, Dict, List, Optional, Tuple, Callable, Literal
 
 from PySide6.QtWidgets import QApplication
 
@@ -72,6 +72,15 @@ from qfit.utils.run_by_scripts import dataPathsFromYaml, applyConfigYaml
 
 # settings
 import qfit.settings as settings
+
+# calibration export utils
+from qfit.utils.export import (
+    CalibrationResult,
+    ExtractedPointsResult,
+    getCircuitParametersFromParamset,
+    getCalibrationResultFromParamset,
+    getExtractedPoints,
+)
 
 
 class Fit:
@@ -159,11 +168,12 @@ class Fit:
 
         Parameters
         ----------
-        hilbertSpace: HilbertSpace
-            HilbertSpace object from scqubits
-        measurementFileName: str
-            Name of measurement file to be loaded. If left blank, a window
-            will pop up to ask for a file.
+        hilbert_space: HilbertSpace
+            HilbertSpace object from scqubits, modeling the superconducting circuit
+            whose parameters are to be fitted.
+        measurement_file_name: str | List[str]
+            Name(s) of measurement file(s) to be loaded. If left blank, a window
+            will pop up to ask for a file(s).
         deepcopy: bool
             Whether to use a deepcopy of the HilbertSpace object, instead of
             referencing the original HilbertSpace object. The latter option
@@ -180,7 +190,7 @@ class Fit:
         )
 
         return instance
-    
+
     @classmethod
     def new_by_yaml(
         cls,
@@ -191,13 +201,15 @@ class Fit:
     ) -> "Fit":
         """
         Create a qfit project from a yaml file.
-        
+
         Parameters
         ----------
         hilbert_space: HilbertSpace
-            HilbertSpace object from scqubits
+            HilbertSpace object from scqubits, modeling the superconducting circuit
+            whose parameters are to be fitted.
         yaml_file: str
-            Path to the yaml file
+            Path to the yaml file, which contains the configuration of
+            initializing the qfit project.
         deepcopy: bool
             Whether to use a deepcopy of the HilbertSpace object, instead of
             referencing the original HilbertSpace object. The latter option
@@ -205,9 +217,7 @@ class Fit:
             operations.
         """
         data_paths = dataPathsFromYaml(yaml_file)
-        instance = cls.new(
-            hilbert_space, data_paths, deepcopy=deepcopy, **kwargs
-        )
+        instance = cls.new(hilbert_space, data_paths, deepcopy=deepcopy, **kwargs)
         applyConfigYaml(instance, yaml_file)
         return instance
 
@@ -223,8 +233,8 @@ class Fit:
 
         Parameters
         ----------
-        fileName: str
-            Name of file to be opened.
+        file_name: str
+            Name of the qfit project file to be opened.
         deepcopy: bool
             Whether to use a deepcopy of the HilbertSpace object, instead of
             referencing the original HilbertSpace object. Even when the HilbertSpace
@@ -255,33 +265,11 @@ class Fit:
         return instance
 
     # methods to export data ##################################################
-    def export_parameters(self, from_fit: bool = True) -> Dict[str, Any]:
-        """
-        Export the fit parameters to a file.
-
-        Parameters
-        ----------
-        from_fit: bool
-            As we have two copies of parameters, one from prefit sliders and one from fit tables, please specify which one to export.
-        """
-        if from_fit:
-            return (
-                self._fitHSParams.getFlattenedAttrDict("value")
-                | self._caliParamModel.getFlattenedAttrDict("value")
-                | self._fitCaliParams.getFlattenedAttrDict("value")
-            )
-        else:
-            return (
-                self._prefitHSParams.getFlattenedAttrDict("value")
-                | self._caliParamModel.getFlattenedAttrDict("value")
-                | self._prefitCaliParams.getFlattenedAttrDict("value")
-            )
-
-    def export_hilbertspace(
-        self, deepcopy: bool = False, from_fit: bool = True
+    def get_hilbertspace(
+        self, deepcopy: bool = False, source: Literal["fit", "prefit"] = "fit"
     ) -> HilbertSpace:
         """
-        Export the HilbertSpace object.
+        Get the HilbertSpace object.
 
         Parameters
         ----------
@@ -289,11 +277,13 @@ class Fit:
             If True, a deepcopy of the HilbertSpace object is returned.
             If False, the original HilbertSpace object is returned. Either of
             them is updated with the latest parameters.
-        fromFit: bool
-            As we have two copies of parameters, one from prefit sliders and one from fit tables, please specify which one to export.
+        source: Literal["fit", "prefit"]
+            Which parameter set to use:
+            * fit: final fit table values (default)
+            * prefit: slider / pre-fit values
         """
 
-        if from_fit:
+        if source == "fit":
             self._fitHSParams.blockSignals(True)
             self._fitHSParams.updateParamForHS()
             self._fitHSParams.blockSignals(False)
@@ -308,6 +298,82 @@ class Fit:
             hilbertSpace = self._prefitHSParams.hilbertspace
 
         return _deepcopy(hilbertSpace) if deepcopy else hilbertSpace
+
+    def get_calibration_result(
+        self,
+        source: Literal["calibration", "fit", "prefit"] = "calibration",
+    ) -> CalibrationResult:
+        """
+        Export calibration result as a data object (full or partial).
+
+        Parameters
+        ----------
+        source
+            Which parameter set to use:
+            * calibration: calibration panel values (default)
+            * fit: final fit table values
+            * prefit: slider / pre-fit values
+        """
+
+        # pick parameter set according to source
+        if source == "calibration":
+            param_set = None
+        elif source == "fit":
+            param_set = self._fitCaliParams
+        elif source == "prefit":
+            param_set = self._prefitCaliParams
+        else:
+            raise ValueError(f"Unknown source option: {source}")
+
+        return getCalibrationResultFromParamset(self._caliParamModel, param_set)
+
+    def get_circuit_parameters(
+        self, source: Literal["fit", "prefit"] = "fit"
+    ) -> Dict[Tuple[str, str], float]:
+        """Return a flatten dict of Hilbert-space (circuit) parameters.
+
+        Keys are (parent_name, param_name) tuples, e.g. ("Transmon", "EJ").
+
+        Parameters
+        ----------
+        source
+            Which parameter set to use:
+            * fit: final fit table values (default)
+            * prefit: slider / pre-fit values
+
+        Returns
+        -------
+        Dict[Tuple[str, str], float]
+            A flatten dict of Hilbert-space (circuit) parameters.
+            Keys are (parent_name, param_name) tuples, e.g. ("Transmon", "EJ").
+        """
+
+        if source == "fit":
+            param_set = self._fitHSParams
+        elif source == "prefit":
+            param_set = self._prefitHSParams
+        else:
+            raise ValueError(f"Unknown source option: {source}")
+
+        return getCircuitParametersFromParamset(param_set)
+
+    def get_extracted_points(self) -> ExtractedPointsResult:
+        """Get user-extracted transition points.
+
+        The returned object is a light-weight container mapping *figure names*
+        to extracted *transition* data. See
+        :pyclass:`qfit.utils.export.ExtractedPointsResult` for the exact
+        structure.
+
+        Returns
+        -------
+        ExtractedPointsResult
+            A light-weight container mapping *figure names* to extracted
+            *transition* data.
+        """
+
+        full_extr = self._allDatasets._fullSpectra  # type: ignore[attr-defined]
+        return getExtractedPoints(full_extr)
 
     # methods to controll the window ###################################
     def close(self):
@@ -331,29 +397,21 @@ class Fit:
     # functionalities that does not involves the main window ###########
     def create_standalone_canvas(
         self,
-        selected_dataset_names: List[str | int] | None = None,
+        selected_data_files: List[str | int] | None = None,
         points_added: int = 10,
-        xlim: Tuple[float, float] | None = None,
-        ylim: Tuple[float, float] | None = None,
     ):
         """
         Create a standalone canvas with multiple measurement data.
 
         Parameters
         ----------
-        selectedDataNames: List[str | int]
+        selected_data_files: List[str | int]
             The names (or indices) of the measurement data to be displayed.
         points_added: int
             To plot the numerical calculation, the number of points to be
             added for the sweep.
-        xlim: Tuple[float, float] | None
-            The x limits of the canvas. Currently not supported.
-        ylim: Tuple[float, float] | None
-            The y limits of the canvas. Currently not supported.
         """
-        self._plottingCtrl.createStandaloneCanvas(
-            selected_dataset_names, points_added, xlim, ylim
-        )
+        self._plottingCtrl.createStandaloneCanvas(selected_data_files, points_added)
 
     # models, views and controllers ####################################
     # ##################################################################
@@ -479,7 +537,8 @@ class Fit:
             button.setGraphicsEffect(eff)
 
         for button in [
-            self._mainUi.zoomViewButton,
+            self._mainUi.zoomInViewButton,
+            self._mainUi.zoomOutViewButton,
             self._mainUi.resetViewButton,
             self._mainUi.panViewButton,
             self._mainUi.selectViewButton,
@@ -696,7 +755,6 @@ class Fit:
             self._mainWindow,
             self._mainUi.prefitScrollAreaWidget,
             self._mainUi.prefitMinmaxScrollAreaWidget,
-            self._mainUi.frame_prefit_minmax,
         )
         self._sweepSettingsView = SweepSettingsView(
             self._mainWindow,
@@ -780,7 +838,8 @@ class Fit:
         }
         self._canvasTools = {
             "reset": self._mainUi.resetViewButton,
-            "zoom": self._mainUi.zoomViewButton,
+            "zoomIn": self._mainUi.zoomInViewButton,
+            "zoomOut": self._mainUi.zoomOutViewButton,
             "pan": self._mainUi.panViewButton,
             "select": self._mainUi.selectViewButton,
             "snapX": self._mainUi.horizontalSnapButton,

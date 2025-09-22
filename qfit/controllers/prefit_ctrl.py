@@ -263,6 +263,7 @@ class PrefitCtrl(QObject):
         self,
     ):
         # initialize calibration parameters
+        self.prefitCaliParams.clear()
         self.prefitCaliParams.setAttrByParamSet(
             self.caliParamModel.toPrefitParams(),
             insertMissing=True,

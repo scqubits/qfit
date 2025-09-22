@@ -297,6 +297,7 @@ class MeasurementData:
             zData.data = gaussian_laplace(zData.data, 1.0)
 
         zData.data = self._clip(zData.data)
+        zData.data = self._zeroMedian(zData.data)
 
         return zData
 
@@ -492,6 +493,8 @@ class MeasurementData:
         """
         if isinstance(item, str):
             itemIndex = self.zCandidates.keyList.index(item)
+        else:
+            itemIndex = item
         self._principalZ = self.zCandidates.itemByIndex(itemIndex)
 
     def _initRawXY(self):
@@ -553,8 +556,13 @@ class MeasurementData:
         Add pixel coordinates as the last resort for x and y axis candidates.
         """
         ydim, xdim = self._principalZ.data.shape[:2]
-        self.xCandidates.update({f"range({xdim})": np.arange(xdim)})
-        self.yCandidates.update({f"range({ydim})": np.arange(ydim)})
+        
+        if ydim != xdim:
+            self.xCandidates.update({f"range({xdim})": np.arange(xdim)})
+            self.yCandidates.update({f"range({ydim})": np.arange(ydim)})
+        else:
+            self.xCandidates.update({f"range({xdim}) (1)": np.arange(xdim)})
+            self.yCandidates.update({f"range({ydim}) (2)": np.arange(ydim)})
         
     def _findFastestAxis(
         self, 
@@ -581,20 +589,20 @@ class MeasurementData:
             if not key.startswith("range")
         })
         
-        diffs = ([
+        diffs = [
             data.max() - data.min()
             for data in nonPixelCoordCandidates.values()
-        ])
-        idx = np.argmax(diffs)
+        ]
         
-        if np.isclose(diffs[idx], 0):
-            diffs = ([
+        if len(diffs) == 0 or np.isclose(np.max(diffs), 0):
+            diffs = [
                 data.max() - data.min()
                 for data in candidates.values()
-            ])
+            ]
             idx = np.argmax(diffs)
             return candidates.itemByIndex(int(idx))
         else:
+            idx = np.argmax(diffs)
             return nonPixelCoordCandidates.itemByIndex(int(idx))
 
     def _resetPrincipalXY(self):
@@ -697,11 +705,11 @@ class MeasurementData:
             color=self._colorMapStr,
         )
 
-    def currentMinMax(self, array2D: np.ndarray) -> Tuple[float, float, float, float]:
+    def clippedMinMax(self, array2D: np.ndarray) -> Tuple[float, float, float, float]:
         """
         Return the clipped min max values of the current zData and the
         unprocessed min max values.
-
+        
         Returns
         -------
         Tuple[float, float, float, float]
@@ -724,7 +732,11 @@ class MeasurementData:
 
         return zMin, zMax, rawZMin, rawZMax
 
-    def _doBgndSubtraction(self, array: np.ndarray, axis=0):
+    def _doBgndSubtraction(
+        self, 
+        array: np.ndarray, 
+        axis: int = 0,
+    ) -> np.ndarray:
         """
         Subtract the background from the data and rescale the zData to the
         range of the original data.
@@ -819,7 +831,7 @@ class MeasurementData:
             return np.round(result, 0).astype(int)
 
         # Original function for 1D or 2D arrays
-        zMin, zMax, rawZMin, rawZMax = self.currentMinMax(array)
+        zMin, zMax, rawZMin, rawZMax = self.clippedMinMax(array)
 
         # Clip the data to the range of the slider
         array = np.clip(array, zMin, zMax)
@@ -828,6 +840,12 @@ class MeasurementData:
         array = (array - zMin) / (zMax - zMin) * (rawZMax - rawZMin) + rawZMin
 
         return array
+    
+    def _zeroMedian(self, array: np.ndarray) -> np.ndarray:
+        """
+        Set the median of the data to zero.
+        """
+        return array - np.nanmedian(array)
 
 
 class NumericalMeasurementData(MeasurementData):
@@ -953,17 +971,20 @@ class NumericalMeasurementData(MeasurementData):
         Generate a plot element from the current data
         """
         zData = self.principalZ.data
+        
+        
+        zMin, zMax, _, _ = self.clippedMinMax(zData)
+        maxPeak = max(abs(zMin), abs(zMax))
 
         if self._logColoring:
-            zMin, zMax, _, _ = self.currentMinMax(zData)
-            linthresh = max(abs(zMin), abs(zMax)) / 20.0
+            linthresh = maxPeak / 20
             norm = colors.SymLogNorm(
                 linthresh=linthresh,  # the range within which the plot is linear (i.e. color map is linear)
-                vmin=zMin,
-                vmax=zMax,  # **add_on_mpl_3_2_0
+                vmin=-maxPeak,
+                vmax=maxPeak,  # **add_on_mpl_3_2_0
             )
         else:
-            norm = None
+            norm = colors.Normalize(vmin=-maxPeak, vmax=maxPeak)   
 
         xData, yData = np.meshgrid(self.principalX.data, self.principalY.data)
         return MeshgridElement(
@@ -995,6 +1016,13 @@ class ImageMeasurementData(MeasurementData):
     def __init__(self, name: str, image: np.ndarray, file: str):
         super().__init__(name, image, file)
         self._initXYZ()
+        
+    def _initFilters(self):
+        """
+        Initialize the filters for the measurement data.
+        """
+        super()._initFilters()
+        self._colorMapStr = "gray"  # default color map for image data
 
     def _initXYZ(self):
         """
@@ -1005,11 +1033,8 @@ class ImageMeasurementData(MeasurementData):
         self._principalZ = self.zCandidates.itemByIndex(0)
 
         # since there is no x and y axis data, we use pixel coordinates
-        ydim, xdim = self._principalZ.data.shape[:2]
-        self.xCandidates = OrderedDictMod({
-            f"range{xdim}": np.arange(xdim)})
-        self.yCandidates = OrderedDictMod({
-            f"range{ydim}": np.arange(ydim)})
+        self.xCandidates = OrderedDictMod()
+        self.yCandidates = OrderedDictMod()
         self._addPixelCoord()
         self._initRawXY()
         self._resetPrincipalXY()
@@ -1020,6 +1045,10 @@ class ImageMeasurementData(MeasurementData):
         - inversing the y axis
         """
         assert zData.ndim in [2, 3], "zData must be a 2d or 3d array"
+        
+        # For a temporary solution, we make the image monochromatic
+        if zData.ndim == 3:
+            zData = np.mean(zData, axis=2)
 
         # inverse the y axis
         zData = np.flip(zData, axis=0)
@@ -1073,7 +1102,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     rawXYConfigChanged = Signal(MeasRawXYConfig)
     updateStatus = Signal(Status)
     newFigAdded = Signal(list)
-    dataLoaded = Signal(list)
+    dataReloadCompleted = Signal(list)
 
     # single data processing
     readyToPlot = Signal(PlotElement)
@@ -1099,8 +1128,10 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
     # init & load data list ============================================
     def loadDataSet(self, measDataList: List[MeasDataType]):
         """
-        Replace all the measurement data with the new data. It will emit the
-        signals to update the view and proceed to the next stage.
+        Replace all the measurement data with the new data. It will 
+        1. emit the signals to update the view 
+        2. emit the dataReloadCompleted signal to proceed to the next stage, 
+        including a full dynamical initialization. 
         """
         self.fullData = measDataList
 
@@ -1118,7 +1149,7 @@ class MeasDataSet(QAbstractListModel, Registrable, metaclass=ListModelMeta):
         dataNames = [measData.name for measData in self.fullData]
 
         # emit to proceed to the next stage
-        self.dataLoaded.emit(dataNames)
+        self.dataReloadCompleted.emit(dataNames)
 
     @staticmethod
     def _rawDataFromFile(fileName) -> MeasDataType | None:
