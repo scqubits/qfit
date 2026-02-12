@@ -388,6 +388,33 @@ class Fit:
             raise ValueError("QFit is already closed, can't show window.")
         self._mainWindow.show()
 
+    # configuration: y-snap fitting function ###################################
+    def set_y_snap_fit_function(
+        self, mode: Literal["lorentzian", "gaussian", "hanger", "extremum"]
+    ):
+        """
+        Select the fitting function used by the y-snap feature.
+
+        Parameters
+        ----------
+        mode
+            One of:
+            - "lorentzian" (default)
+            - "gaussian"
+            - "hanger"
+            - "extremum" (no fit; uses max abs value)
+        """
+        if mode not in ("lorentzian", "gaussian", "hanger", "extremum"):
+            raise ValueError(f"Unknown y-snap fit function: {mode}")
+        # propagate to plotting controller
+        self._plottingCtrl.y_snap_mode = mode
+
+    def get_y_snap_fit_function(self) -> Literal["lorentzian", "gaussian", "hanger", "extremum"]:
+        """
+        Return the current y-snap fitting function selection.
+        """
+        return getattr(self._plottingCtrl, "y_snap_mode", "lorentzian")
+
     def hide(self):
         """Hide the main window."""
         if self._ioCtrl.appClosed:

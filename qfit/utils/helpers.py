@@ -266,12 +266,12 @@ def clearLayout(layout: QLayout):
     """Recursively clear all items from a layout"""
     if layout is None:
         return
-        
+
     while layout.count():
         item = layout.takeAt(0)
         if item is None:
             continue
-            
+
         # If it's a widget, delete it
         if item.widget():
             item.widget().setParent(None)
@@ -282,25 +282,25 @@ def clearLayout(layout: QLayout):
         # If it's a spacer item, just delete it
         elif item.spacerItem():
             del item
-            
+
+
 def clearChildren(widget: QWidget):
     """
     Clear all visible content from a widget, including child widgets and layout items like spacers.
-    
+
     Parameters
     ----------
     widget: QWidget
         The widget to clear all content from
-    """    
+    """
     # Clear the widget's layout if it has one
     if widget.layout():
         clearLayout(widget.layout())
-    
+
     # Clear any remaining child widgets that might not be in layouts
     for child in widget.findChildren(QWidget):
         child.setParent(None)
         child.deleteLater()
-
 
 
 def modifyStyleSheet(widget: QWidget, property_name: str, new_value: str):
@@ -779,6 +779,127 @@ def _find_lorentzian_peak(data: np.ndarray, gamma_guess=5.0) -> int:
     return np.round(popt[0]).astype(int)
 
 
+def _find_gaussian_peak(data: np.ndarray, sigma_guess: float = 5.0) -> int:
+    """
+    Fit the data with a Gaussian function and return the peak index.
+    The data is assumed to be a 1D array sampled at unit index spacing.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        The 1D data to be fitted.
+    sigma_guess : float
+        Initial guess for the Gaussian width parameter (in index units).
+    """
+    freq_list_length = len(data)
+    idx_list = np.arange(freq_list_length)
+
+    # 1D Gaussian with baseline
+    gaussian = (
+        lambda idx, mu, sigma, amp, bias: amp
+        * np.exp(-0.5 * ((idx - mu) / np.maximum(sigma, 1e-9)) ** 2)
+        + bias
+    )
+
+    bias_guess = np.mean(data)
+    mu_guess = np.argmax(np.abs(data - bias_guess))
+    amp_guess = data[mu_guess] - bias_guess
+
+    popt, pcov = curve_fit(
+        gaussian,
+        idx_list,
+        data,
+        p0=[mu_guess, sigma_guess, amp_guess, bias_guess],
+        maxfev=300,
+    )
+
+    if np.sum(pcov) == np.inf:
+        raise ValueError(
+            "Gaussian fit failed, potentially due to the data being "
+            "flat in this region."
+        )
+
+    return np.round(popt[0]).astype(int)
+
+
+def _find_hanger_peak(data: np.ndarray) -> int:
+    """
+    fit the data with a Lorentzian function. The data is supposed to be taken from
+    the two-tone spectroscopy, which is a 1D array of S21 values at selected freq
+    range and a fixed voltage parameter.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        The 1D data to be fitted.
+    freq_res : float
+        The resonance frequency of the qubit.
+    Q_load : float
+        The loaded quality factor of the qubit.
+    Q_ext : float
+        The external quality factor of the qubit.
+    ext_phase : float
+        The phase of the external field.
+        The initial guess of the gamma parameter (the width of the Lorentzian)
+        in the unit of the index of the data.
+    """
+    freq_list_length = len(data)
+    idx_list = np.arange(freq_list_length)
+
+    def hanger_S21(
+        idx_probe: int,
+        idx_res: float,
+        Q_load: float,
+        Q_ext: float,
+        ext_phase: float = 0,
+        amp: float = 1,
+        bias: float = 0,
+    ) -> float:
+        detuning = idx_probe - idx_res
+        return (
+            amp
+            * np.abs(
+                1
+                - (Q_load / Q_ext)
+                / ((1 + 1j * 2 * Q_load * detuning / idx_res) * np.exp(1j * ext_phase))
+            )
+            + bias
+        )
+
+    # guess
+    idx_res_guess = np.argmin(data)
+    amp_guess = np.max(data) - np.mean(data)
+    bias_guess = np.mean(data)
+    Q_load_guess = 1000
+    Q_ext_guess = 1000
+    ext_phase_guess = 0
+
+    popt, pcov = curve_fit(
+        hanger_S21,
+        idx_list,
+        data,
+        p0=[
+            idx_res_guess,
+            Q_load_guess,
+            Q_ext_guess,
+            ext_phase_guess,
+            amp_guess,
+            bias_guess,
+        ],
+        maxfev=300,
+    )
+    print("popt:", popt)
+    print("idx_list:", idx_list)
+    print("data:", data)
+
+    if np.sum(pcov) == np.inf:
+        raise ValueError(
+            "Hanger fit failed, potentially due to the data is " "flat in this region."
+        )
+
+    return np.round(popt[0]).astype(int)
+
+
 def _extract_data_for_peak_finding(
     x_list: np.ndarray,
     y_list: np.ndarray,
@@ -870,10 +991,11 @@ def ySnap(
     half_y_range : float
         The half range of the y-axis data to be sliced.
     mode : str
-        The mode of the peak finding. It can be "lorentzian" or "extremum".
-        For "lorentzian", the peak will be found by fitting a Lorentzian function
-        to the data. For "extremum", the peak will be found by finding the maximum
-        value of the data.
+        The mode of the peak finding. One of:
+        - "lorentzian": fit a Lorentzian to find the peak
+        - "gaussian": fit a Gaussian to find the peak
+        - "hanger": fit a Hanger function to find the peak
+        - "extremum": find the maximum absolute value (no fit)
 
     Returns
     -------
@@ -897,33 +1019,45 @@ def ySnap(
             peak_idx = _find_lorentzian_peak(data_for_peak_finding)
         except Exception as e:
             return user_selected_xy[1]
+    elif mode == "gaussian":
+        try:
+            peak_idx = _find_gaussian_peak(data_for_peak_finding)
+        except Exception:
+            return user_selected_xy[1]
+    elif mode == "hanger":
+        try:
+            peak_idx = _find_hanger_peak(data_for_peak_finding)
+        except Exception:
+            return user_selected_xy[1]
     elif mode == "extremum":
         peak_idx = np.argmax(np.abs(data_for_peak_finding))
 
     return y_list[peak_idx + y_min_idx]
 
+
 # Event loop ###################################################################
 def block_exec(time: int):
     """
-    Block execution (e.g., in a Jupyter cell) for a fixed time while 
+    Block execution (e.g., in a Jupyter cell) for a fixed time while
     processing Qt events, preventing UI freezing.
-    
+
     Parameters
     ----------
     time: int
         Time to sleep in milliseconds.
     """
     loop = QEventLoop()
-    
+
     # Set up a QTimer to wake up after the specified time
     timer = QTimer()
     timer.timeout.connect(loop.quit)
     timer.setSingleShot(True)
     timer.start(time)
-    
+
     # Start the nested event loop
     loop.exec()
-    
+
+
 def block_exec_until(
     check_function: Callable[[], bool],
     check_interval: int = 1000,
@@ -932,16 +1066,16 @@ def block_exec_until(
     """
     Blocks execution (e.g., in a Jupyter cell) until the condition is met,
     while processing events so that asynchronous tasks (like QRunnable) keep running.
-    
+
     Parameters
     ----------
-    check_function: 
+    check_function:
         A function that returns a boolean value, if the condition is met,
         the function will return True which will stop the loop.
     check_interval: int
         Milliseconds between checks.
     delay: int
-        The time to keep the event loop running in milliseconds after 
+        The time to keep the event loop running in milliseconds after
         the check_function returns True. A finite amount of delay enhances
         the stability of this code.
     """
@@ -949,27 +1083,29 @@ def block_exec_until(
 
     # Set up a QTimer to periodically check the fit status.
     timer = QTimer()
-    
+
     def checkAndStop():
         if check_function():
             timer.stop()
             loop.quit()
 
     timer.timeout.connect(checkAndStop)
-    
+
     # wait for check_interval milliseconds, then check the status periodically
     QTimer.singleShot(check_interval, lambda: timer.start(check_interval))
-    
+
     # Start the nested event loop.
     loop.exec()
-    
+
     # sleep for a short time to ensure the event loop is executed
     block_exec(delay)
+
 
 def _isStatusSuccess(fit: "Fit") -> bool:
     if fit._statusModel.currentNormalStatus.statusType == "success":
         return True
     return False
+
 
 def block_exec_until_success(
     fit: "Fit",
@@ -986,7 +1122,7 @@ def block_exec_until_success(
     check_interval: int
         The interval in milliseconds to check the status of the fit.
     delay: int
-        The time to keep the event loop running in milliseconds after 
+        The time to keep the event loop running in milliseconds after
         the check_function returns True. A finite amount of delay enhances
         the stability of this code.
     """

@@ -154,6 +154,8 @@ class PlottingCtrl(QObject):
         self.clickResponse = "EXTRACT"  # the response to a mouse click
         self.dataDestination = "NONE"  # the destination of the data after a click
         self.calibrateAxes = False  # whether the ticklabels are calibrated
+        # y-snap fitting function selection (default: lorentzian)
+        self.y_snap_mode: Literal["lorentzian", "hanger","gaussian", "extremum"] = "lorentzian"
         self.standaloneCanvases: Dict[str, StandaloneCanvasAndConfigs] = {}
 
         # connects
@@ -536,7 +538,7 @@ class PlottingCtrl(QObject):
                 z_data=z_data,
                 user_selected_xy=(xData, yData),
                 half_y_range=half_y_range,
-                mode="lorentzian",
+                mode=self.y_snap_mode,
             )
 
         self.activeDataset.append(

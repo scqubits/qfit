@@ -29,6 +29,23 @@ from qfit.utils.helpers import (
 )
 from qfit.utils.run_by_scripts import generate_yaml_template
 
+
+def reload_all():
+    """Dynamically reload all qfit modules."""
+    import sys
+    import importlib
+
+    # Get all loaded qfit modules
+    modules = [m for m in sys.modules if m.startswith("qfit.")]
+    # Sort by dependency (deeper modules first)
+    modules.sort(key=lambda m: m.count("."), reverse=True)
+    # Reload each module
+    for module_name in modules:
+        if module_name in sys.modules:
+            importlib.reload(sys.modules[module_name])
+    print(f"Reloaded {len(modules)} modules!")
+
+
 if _executed_in_ipython():
     # inside ipython, the function get_ipython is always in globals()
     ipython = get_ipython()
@@ -40,10 +57,10 @@ else:
 # scqubits settings
 import scqubits as _scq
 import scqubits.utils.plotting as _scq_plotting
+
 _scq.settings.PROGRESSBAR_DISABLED = True
 _scq.settings.MULTIPROC = "pathos"
 _scq.settings.FUZZY_SLICING = True
 _scq.settings.FUZZY_WARNING = False
 # disable default label lines in scqubits
 _scq_plotting._LABELLINES_ENABLED = False
-
