@@ -3,28 +3,34 @@ import os
 import re
 import sys
 import requests
-import hashlib
-
-def get_latest_version():
+def get_latest_version() -> str:
     ref = os.getenv("GITHUB_REF")
     if not ref:
-        print("Error: GITHUB_REF environment variable not set. Pass the tag or run in GitHub Actions.")
+        print("Error: GITHUB_REF or PACKAGE_VERSION environment variable must be set.")
         sys.exit(1)
     tag = ref.split('/')[-1]
-    version = tag[1:] if tag.startswith("v") else tag
-    return version
+    return tag[1:] if tag.startswith("v") else tag
 
-def get_sha256(url):
-    print(f"Downloading tarball from: {url}")
-    response = requests.get(url, stream=True)
+def get_package_version() -> str:
+    version = os.getenv("PACKAGE_VERSION")
+    if version:
+        return version
+    return get_latest_version()
+
+def get_sdist_sha256(name: str, version: str) -> str:
+    api_url = f"https://pypi.org/pypi/{name}/{version}/json"
+    print(f"Fetching release metadata from: {api_url}")
+    response = requests.get(api_url, timeout=30)
     response.raise_for_status()
-    hash_sha256 = hashlib.sha256()
-    for chunk in response.iter_content(chunk_size=8192):
-        if chunk:
-            hash_sha256.update(chunk)
-    computed_hash = hash_sha256.hexdigest()
-    print(f"Computed sha256: {computed_hash}")
-    return computed_hash
+    sdists = [
+        url for url in response.json()["urls"]
+        if url["packagetype"] == "sdist"
+    ]
+    if not sdists:
+        raise RuntimeError(f"No sdist found for {name} {version} on PyPI")
+    sha256 = sdists[0]["digests"]["sha256"]
+    print(f"PyPI sdist sha256: {sha256}")
+    return sha256
 
 def update_meta_yaml(new_version, new_sha256, filename="meta.yaml"):
     with open(filename, "r") as f:
@@ -46,10 +52,9 @@ def update_meta_yaml(new_version, new_sha256, filename="meta.yaml"):
 
 def main(new_version: str | None = None):
     if new_version is None:
-        new_version = get_latest_version()
+        new_version = get_package_version()
     name = "qfit"
-    tarball_url = f"https://pypi.org/packages/source/{name[0]}/{name}/qfit-{new_version}.tar.gz"
-    new_sha256 = get_sha256(tarball_url)
+    new_sha256 = get_sdist_sha256(name, new_version)
     update_meta_yaml(new_version, new_sha256)
 
 if __name__ == "__main__":
