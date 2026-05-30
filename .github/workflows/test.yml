@@ -1,0 +1,72 @@
+name: Test
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * *"
+
+jobs:
+  test:
+    name: pytest (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.10"]
+
+    env:
+      QT_QPA_PLATFORM: offscreen
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Linux GUI dependencies
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libxkbcommon-x11-0
+
+      - name: Install package and test deps
+        run: |
+          pip install --upgrade pip
+          pip install -e ".[test]"
+
+      - name: Generate synthetic fixture if missing
+        run: python tests/fixtures/generate_synthetic_h5.py
+
+      - name: Run tests
+        run: pytest -m "not slow" --cov=qfit --cov-report=term-missing -v
+
+  test-slow:
+    name: pytest slow (ubuntu)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install Linux GUI dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libxkbcommon-x11-0
+      - name: Install package and test deps
+        run: |
+          pip install --upgrade pip
+          pip install -e ".[test]"
+      - name: Generate synthetic fixture if missing
+        run: python tests/fixtures/generate_synthetic_h5.py
+      - name: Run slow tests
+        run: pytest -m slow -v
