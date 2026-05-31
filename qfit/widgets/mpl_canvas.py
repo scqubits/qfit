@@ -276,24 +276,60 @@ class SpecialCursor(Cursor):
         xSnapMode: Literal["MeasData", "ExtrX", "OFF"],
         distinctExtrX: np.ndarray,
         measX: np.ndarray,
-        xyMin: Tuple[float, float],
+        xlim: Tuple[float, float],
+        ylim: Tuple[float, float],
         axisSnapMode: Literal["X", "Y", "OFF"] = "OFF",
+        xSnapRange: float = 0.05,
         horizOn=True,
         vertOn=True,
         useblit=False,
         **lineprops,
     ):
+        """
+        Parameters
+        ----------
+        axes: List[Axes]
+            The axes that the cursor is attached to
+        xSnapMode: Literal["MeasData", "ExtrX", "OFF"] = "MeasData"
+            "MeasData": snap to the grid of the measurement data
+            "ExtrX": snap to the existing extracted data points (if they
+                are close enough to the cursor within the xSnapRange)
+            "OFF": do not snap to any x value
+        xSnapRange: float = 0.1
+            The range of the x value (in the unit of the full x range) 
+            that the cursor will snap to the closest extracted data point.
+        distinctExtrX: np.ndarray
+            The list of all x values in the extracted data points
+        measX: np.ndarray
+            The list of all x values in the measurement data
+        xlim: Tuple[float, float]
+            The x limits of the axes
+        ylim: Tuple[float, float]
+            The y limits of the axes
+        axisSnapMode: Literal["X", "Y", "OFF"] = "OFF"
+            Whether to snap the cursor to the minimum x or y value (edge of the plot).
+        horizOn: bool = True
+            Whether to show the horizontal line
+        vertOn: bool = True
+            Whether to show the vertical line
+        useblit: bool = False
+            Whether to use blitting for faster drawing
+        **lineprops: Any
+            Additional properties for the lines and the cursor
+        """
         super().__init__(
             axes[0], horizOn=horizOn, vertOn=vertOn, useblit=useblit, **lineprops
         )
         self.allAxes = axes
         self.xSnapMode = xSnapMode
+        self.xSnapRange = xSnapRange
         self.distinctExtrX = distinctExtrX
         self.measX = measX
 
         self.axis_snap_mode = axisSnapMode
-        self.xyMin = xyMin
-
+        self.xlim = xlim
+        self.ylim = ylim
+        
     def onmove(self, event):
         """
         Internal event handler to draw the cursor when the mouse moves.
@@ -328,13 +364,13 @@ class SpecialCursor(Cursor):
 
         # Calculate the x-coordinate of the point based on the snapping mode and axis snap mode
         if self.axis_snap_mode == "Y":
-            point_x_coordinate = self.xyMin[0]
+            point_x_coordinate = self.xlim[0]
         else:
             point_x_coordinate = self.snapToProperX(xdata)
 
         # Calculate the y-coordinate of the point based on the axis snap mode
         if self.axis_snap_mode == "X":
-            point_y_coordinate = self.xyMin[1]
+            point_y_coordinate = self.ylim[0]
         else:
             point_y_coordinate = ydata
 
@@ -369,7 +405,7 @@ class SpecialCursor(Cursor):
         # Update the canvas to reflect the changes
         self._update()
 
-    def _closestX(self, xdat: float, xArray: np.ndarray):
+    def _closestX(self, xdat: float, xArray: np.ndarray) -> float:
         """
         Find the closest x value in the list of all x values
         """
@@ -379,7 +415,7 @@ class SpecialCursor(Cursor):
         else:
             return xdat
 
-    def _snapToMeasDataGrid(self, xdat):
+    def _snapToMeasDataGrid(self, xdat) -> float:
         """
         Find the closest x value in the list of all x values in the measurement data
         """
@@ -388,7 +424,7 @@ class SpecialCursor(Cursor):
 
         return self._closestX(xdat, self.measX)
 
-    def _snapToExtrX(self, xdat):
+    def _snapToExtrX(self, xdat) -> float:
         """
         Find the closest x value in the list of all x values in the extracted data points
         """
@@ -397,12 +433,18 @@ class SpecialCursor(Cursor):
 
         return self._closestX(xdat, self.distinctExtrX)
 
-    def snapToProperX(self, xdat):
+    def snapToProperX(self, xdat) -> float:
         """
-        Snap the cursor to the closest x value if the xSnapMode is not "OFF".
+        1. when xSnapMode is "ExtrX", snap to the closest x value in the extracted data points
+        2. when xSnapMode is "MeasData", snap to the closest x value in the measurement data
+        3. when xSnapMode is "OFF", return the original x value
         """
         if self.xSnapMode == "ExtrX":
-            return self._snapToExtrX(xdat)
+            closest_x = self._snapToExtrX(xdat)
+            if np.abs((closest_x - xdat) / (self.xlim[1] - self.xlim[0])) < self.xSnapRange:
+                return closest_x
+            else:
+                return self._snapToMeasDataGrid(xdat)
         elif self.xSnapMode == "MeasData":
             return self._snapToMeasDataGrid(xdat)
         else:
@@ -918,16 +960,18 @@ class MplFigureCanvas(QFrame):
 
         self.specialCursor = SpecialCursor(
             [self.axes] + self._xAxes + self._yAxes,
-            xSnapMode=self._xSnapMode,
-            distinctExtrX=self._distinctExtrX,
-            measX=self._measPrcplXList,
-            xyMin=(self.axes.get_xlim()[0], self.axes.get_ylim()[0]),
-            axisSnapMode=self._axisSnapMode,
-            useblit=True,
-            horizOn=self._crosshairHorizOn,
-            vertOn=self._crosshairVertOn,
-            color=self.crossColor,
-            alpha=0.5,
+            xSnapMode = self._xSnapMode,
+            distinctExtrX = self._distinctExtrX,
+            measX = self._measPrcplXList,
+            xlim = self.axes.get_xlim(),
+            ylim = self.axes.get_ylim(),
+            axisSnapMode = self._axisSnapMode,
+            xSnapRange = 0.05,
+            useblit = True,
+            horizOn = self._crosshairHorizOn,
+            vertOn = self._crosshairVertOn,
+            color = self.crossColor,
+            alpha = 0.5,
         )
         self.canvas.draw_idle()
         self.specialCursor.line_blit_on()

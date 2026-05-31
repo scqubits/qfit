@@ -141,7 +141,7 @@ class Fit:
         self._mainWindow: MainWindow
 
         self._ioCtrl.newProject(
-            from_menu=False,
+            fromMenu=False,
             hilbertSpace=hilbert_space,
             measurementFileName=measurement_file_name,
             deepcopy=deepcopy,

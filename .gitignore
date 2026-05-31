@@ -8,6 +8,10 @@ dist
 build
 qfit.egg-info
 
+# Tests
+.coverage
+htmlcov/
+
 # Danyang's unwanted files
 .DS_Store
 /danyang_tests

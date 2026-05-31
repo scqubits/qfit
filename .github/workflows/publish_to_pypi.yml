@@ -22,7 +22,22 @@ jobs:
         build
         --user
     - name: Build a binary wheel and a source tarball
-      run: python3 -m build
+      run: |
+        if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+          version="${GITHUB_REF_NAME#v}"
+          export SETUPTOOLS_SCM_PRETEND_VERSION="$version"
+          export SETUPTOOLS_SCM_PRETEND_VERSION_FOR_QFIT="$version"
+        fi
+        python3 -m build
+    - name: Verify tag matches built package version
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        tag_version="${GITHUB_REF_NAME#v}"
+        pkg_version=$(ls dist/*.whl | head -n 1 | sed -n 's/^qfit-\([^-]*\)-.*/\1/p')
+        if [[ "$tag_version" != "$pkg_version" ]]; then
+          echo "Tag v${tag_version} does not match built package version ${pkg_version}."
+          exit 1
+        fi
     - name: Store the distribution packages
       uses: actions/upload-artifact@v4
       with:
@@ -87,11 +102,17 @@ jobs:
       with:
         name: python-package-distributions
         path: dist/
+    - name: Check version is not already on PyPI
+      run: |
+        version=$(ls dist/*.whl | head -n 1 | sed -n 's/^qfit-\([^-]*\)-.*/\1/p')
+        echo "Package version to publish: $version"
+        if curl --fail -s "https://pypi.org/pypi/qfit/${version}/json" > /dev/null; then
+          echo "Error: qfit ${version} is already published on PyPI."
+          echo "Push a new tag with a higher version after merging the workflow fixes."
+          exit 1
+        fi
     - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
 
 
   github-release:
@@ -142,15 +163,29 @@ jobs:
       Update meta.yaml
     needs:
     - publish-to-pypi
+    - build
 
     runs-on: ubuntu-latest
     steps:
-      - name: Wait until the PyPi goes live
+      - name: Download built distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Determine published package version
+        id: package_version
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          version=$(ls dist/*.whl | head -n 1 | sed -n 's/^qfit-\([^-]*\)-.*/\1/p')
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "Published package version: $version"
+
+      - name: Wait until the PyPI release is indexed
+        run: |
+          version="${{ steps.package_version.outputs.version }}"
           echo "Checking version: $version"
-          until curl --fail -s "https://pypi.org/project/qfit/${version}" > /dev/null; do
-            echo "Waiting for PyPi to be ready..."
+          until curl --fail -s "https://pypi.org/pypi/qfit/${version}/json" > /dev/null; do
+            echo "Waiting for PyPI release ${version} to be indexed..."
             sleep 10
           done
 
@@ -168,6 +203,8 @@ jobs:
           pip install requests 
 
       - name: Run meta.yaml updater
+        env:
+          PACKAGE_VERSION: ${{ steps.package_version.outputs.version }}
         run: python .github/workflows/update_meta_yaml.py
 
       - name: Commit changes

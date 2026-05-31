@@ -1,0 +1,466 @@
+# Auto-generated connection inventory
+edges:
+  - cluster: B_calibrate
+    file: qfit/controllers/calibration_ctrl.py
+    line: 128
+    code: 'self.calibrationView.caliStatusChangedByButtonClicked.connect('
+  - cluster: B_calibrate
+    file: qfit/controllers/calibration_ctrl.py
+    line: 136
+    code: 'self.pageButtons[pageStr].clicked.connect(self.caliParamModel.interruptCali)'
+  - cluster: B_calibrate
+    file: qfit/controllers/calibration_ctrl.py
+    line: 140
+    code: 'self.calibrationView.dataEditingFinished.connect('
+  - cluster: B_calibrate
+    file: qfit/controllers/calibration_ctrl.py
+    line: 143
+    code: 'self.calibrationView.clearDataSource.connect('
+  - cluster: B_calibrate
+    file: qfit/controllers/calibration_ctrl.py
+    line: 148
+    code: 'self.caliParamModel.updateBox.connect(self.calibrationView.setBoxValue)'
+  - cluster: B_calibrate
+    file: qfit/controllers/calibration_ctrl.py
+    line: 153
+    code: 'self.caliParamModel.plotCaliPtExtractFinished.connect('
+  - cluster: B_calibrate
+    file: qfit/controllers/calibration_ctrl.py
+    line: 156
+    code: 'self.caliParamModel.plotCaliPtExtractInterrupted.connect('
+  - cluster: B_calibrate
+    file: qfit/controllers/calibration_ctrl.py
+    line: 163
+    code: 'self.caliParamModel.caliModelRawVecUpdatedForSwapXY.connect('
+  - cluster: B_calibrate
+    file: qfit/controllers/calibration_ctrl.py
+    line: 166
+    code: 'self.calibrationView.caliViewRawVecUpdatedForSwapXY.connect('
+  - cluster: C_extract
+    file: qfit/controllers/extracting_ctrl.py
+    line: 111
+    code: 'self.measDataSet.figSwitched.connect(self.allDatasets.switchFig)'
+  - cluster: C_extract
+    file: qfit/controllers/extracting_ctrl.py
+    line: 118
+    code: 'self.measDataSet.figSwitched.connect('
+  - cluster: C_extract
+    file: qfit/controllers/extracting_ctrl.py
+    line: 127
+    code: 'self.labelingView.extractionCtrls["new"].clicked.connect('
+  - cluster: C_extract
+    file: qfit/controllers/extracting_ctrl.py
+    line: 130
+    code: 'self.labelingView.extractionCtrls["delete"].clicked.connect('
+  - cluster: C_extract
+    file: qfit/controllers/extracting_ctrl.py
+    line: 133
+    code: 'self.labelingView.extractionCtrls["clear"].clicked.connect('
+  - cluster: C_extract
+    file: qfit/controllers/extracting_ctrl.py
+    line: 141
+    code: 'self.labelingView.extractionList.focusChanged.connect('
+  - cluster: C_extract
+    file: qfit/controllers/extracting_ctrl.py
+    line: 146
+    code: 'self.allDatasets.focusChanged.connect(self.activeDataset.replaceAllData)'
+  - cluster: C_extract
+    file: qfit/controllers/extracting_ctrl.py
+    line: 151
+    code: 'self.activeDataset.dataUpdated.connect(self.allDatasets.updateCurrentTransition)'
+  - cluster: C_extract
+    file: qfit/controllers/extracting_ctrl.py
+    line: 157
+    code: 'self.allDatasets.rowsInserted.connect('
+  - cluster: C_extract
+    file: qfit/controllers/extracting_ctrl.py
+    line: 162
+    code: 'self.allDatasets.rowsRemoved.connect('
+  - cluster: C_extract
+    file: qfit/controllers/extracting_ctrl.py
+    line: 174
+    code: 'self.labelingView.tagChanged.connect(self.activeDataset.updateTag)'
+  - cluster: C_extract
+    file: qfit/controllers/extracting_ctrl.py
+    line: 181
+    code: 'self.activeDataset.dataSwitched.connect('
+  - cluster: F_fit
+    file: qfit/controllers/fit_ctrl.py
+    line: 149
+    code: 'self.fitParamView.HSEditingFinished.connect(self.fitHSParams.storeParamAttr)'
+  - cluster: F_fit
+    file: qfit/controllers/fit_ctrl.py
+    line: 150
+    code: 'self.fitParamView.CaliEditingFinished.connect(self.fitCaliParams.storeParamAttr)'
+  - cluster: F_fit
+    file: qfit/controllers/fit_ctrl.py
+    line: 151
+    code: 'self.fitHSParams.updateBox.connect(self.fitParamView.setBoxValue)'
+  - cluster: F_fit
+    file: qfit/controllers/fit_ctrl.py
+    line: 152
+    code: 'self.fitCaliParams.updateBox.connect(self.fitParamView.setBoxValue)'
+  - cluster: F_fit
+    file: qfit/controllers/fit_ctrl.py
+    line: 158
+    code: 'self.fitView.tolLineEdit.editingFinished.connect('
+  - cluster: F_fit
+    file: qfit/controllers/fit_ctrl.py
+    line: 161
+    code: 'self.fitView.optimizerComboBox.currentIndexChanged.connect('
+  - cluster: F_fit
+    file: qfit/controllers/fit_ctrl.py
+    line: 177
+    code: 'self.fitView.runFit.clicked.connect(self.onFitButtonClicked)'
+  - cluster: F_fit
+    file: qfit/controllers/fit_ctrl.py
+    line: 180
+    code: 'self.fitView.dataTransferButtons["fit"].clicked.connect(self._prefitToFit)'
+  - cluster: F_fit
+    file: qfit/controllers/fit_ctrl.py
+    line: 182
+    code: 'self.fitView.dataTransferButtons["prefit"].clicked.connect(self._resultToPrefit)'
+  - cluster: F_fit
+    file: qfit/controllers/fit_ctrl.py
+    line: 185
+    code: 'self.fitView.dataTransferButtons["init"].clicked.connect(self._resultToInit)'
+  - cluster: F_fit
+    file: qfit/controllers/fit_ctrl.py
+    line: 188
+    code: 'self.fitModel.optFinished.connect(self.postOptimization)'
+  - cluster: other
+    file: qfit/controllers/help_tooltip.py
+    line: 45
+    code: 'help_button.clicked.connect(help_method)'
+  - cluster: G_io
+    file: qfit/controllers/io_ctrl.py
+    line: 119
+    code: 'self.menuButton.clicked.connect(self.menu.toggle)'
+  - cluster: G_io
+    file: qfit/controllers/io_ctrl.py
+    line: 121
+    code: 'self.menu.ui.menuQuitButton.clicked.connect(self.mainWindow.close)'
+  - cluster: G_io
+    file: qfit/controllers/io_ctrl.py
+    line: 122
+    code: 'self.menu.ui.menuQuitButton.clicked.connect(self.menu.toggle)'
+  - cluster: G_io
+    file: qfit/controllers/io_ctrl.py
+    line: 123
+    code: 'self.menu.ui.menuOpenButton.clicked.connect(self.openFile)'
+  - cluster: G_io
+    file: qfit/controllers/io_ctrl.py
+    line: 124
+    code: 'self.menu.ui.menuNewButton.clicked.connect(self.newProject)'
+  - cluster: G_io
+    file: qfit/controllers/io_ctrl.py
+    line: 125
+    code: 'self.menu.ui.menuSaveButton.clicked.connect(self.saveFile)'
+  - cluster: G_io
+    file: qfit/controllers/io_ctrl.py
+    line: 126
+    code: 'self.menu.ui.menuSaveAsButton.clicked.connect(self.saveFileAs)'
+  - cluster: G_io
+    file: qfit/controllers/io_ctrl.py
+    line: 127
+    code: 'self.mainWindow.closeWindow.connect(self.closeByMainWindow)'
+  - cluster: A_import
+    file: qfit/controllers/meas_data_ctrl.py
+    line: 45
+    code: 'self.importerView.addFigClicked.connect(self.measDataSet.insertRow)'
+  - cluster: A_import
+    file: qfit/controllers/meas_data_ctrl.py
+    line: 46
+    code: 'self.measDataSet.newFigAdded.connect(self.measDataView.addFig)'
+  - cluster: A_import
+    file: qfit/controllers/meas_data_ctrl.py
+    line: 47
+    code: 'self.importerView.deleteFigClicked.connect(self.measDataView.deleteFig)'
+  - cluster: A_import
+    file: qfit/controllers/meas_data_ctrl.py
+    line: 48
+    code: 'self.measDataView.figDeletedFromTab.connect(self.measDataSet.removeRow)'
+  - cluster: A_import
+    file: qfit/controllers/meas_data_ctrl.py
+    line: 54
+    code: 'self.measDataView.figChanged.connect(self.measDataSet.switchFig)'
+  - cluster: A_import
+    file: qfit/controllers/meas_data_ctrl.py
+    line: 60
+    code: 'self.measDataSet.metaInfoChanged.connect(self.importerView.setMetaInfo)'
+  - cluster: A_import
+    file: qfit/controllers/meas_data_ctrl.py
+    line: 66
+    code: 'self.importerView.configChanged.connect(self.measDataSet.storeRawXYConfig)'
+  - cluster: A_import
+    file: qfit/controllers/meas_data_ctrl.py
+    line: 67
+    code: 'self.measDataSet.rawXYConfigChanged.connect(self.importerView.setConfig)'
+  - cluster: A_import
+    file: qfit/controllers/meas_data_ctrl.py
+    line: 73
+    code: 'self.importerView.transposeZClicked.connect(self.measDataSet.transposeZ)'
+  - cluster: A_import
+    file: qfit/controllers/meas_data_ctrl.py
+    line: 102
+    code: 'self.importerView.continueClicked.connect(self.continueToPostImportStages)'
+  - cluster: A_import
+    file: qfit/controllers/meas_data_ctrl.py
+    line: 108
+    code: 'self.measDataSet.dataReloadCompleted.connect(lambda _: self.continueToPostImportStages())'
+  - cluster: A_import
+    file: qfit/controllers/meas_data_ctrl.py
+    line: 109
+    code: 'self.measDataSet.dataReloadCompleted.connect(self.measDataView.reloadFig)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 171
+    code: '# self.swapXYButton.clicked.connect(self.swapXY)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 180
+    code: 'self.mplCanvas.axesViewChanged.connect(self.quantumModel.relimX)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 251
+    code: 'self.measPlotSettings["topHat"].toggled.connect(self._modelStoreFilter)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 252
+    code: 'self.measPlotSettings["wavelet"].toggled.connect(self._modelStoreFilter)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 253
+    code: 'self.measPlotSettings["edge"].toggled.connect(self._modelStoreFilter)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 254
+    code: 'self.measPlotSettings["bgndX"].toggled.connect(self._modelStoreFilter)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 255
+    code: 'self.measPlotSettings["bgndY"].toggled.connect(self._modelStoreFilter)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 256
+    code: 'self.measPlotSettings["log"].toggled.connect(self._modelStoreFilter)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 257
+    code: 'self.measPlotSettings["min"].valueChanged.connect(self._modelStoreFilter)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 258
+    code: 'self.measPlotSettings["max"].valueChanged.connect(self._modelStoreFilter)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 259
+    code: 'self.measPlotSettings["color"].currentTextChanged.connect('
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 262
+    code: 'self.measPlotSettings["color"].currentTextChanged.connect('
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 272
+    code: 'self.measComboBoxes["z"].activated.connect(self.zDataUpdate)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 274
+    code: 'self.measDataSet.figSwitched.connect(self.switchFig)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 276
+    code: '# self.measComboBoxes["x"].activated.connect(self.xAxisUpdate)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 277
+    code: '# self.measComboBoxes["y"].activated.connect(self.yAxisUpdate)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 365
+    code: 'self.calibratedCheckBox.toggled.connect(self.toggleCalibrateAxes)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 366
+    code: 'self.calibrationModel.xCaliUpdated.connect(self.onXCaliFuncUpdated)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 367
+    code: 'self.calibrationModel.yCaliUpdated.connect(self.onYCaliFuncUpdated)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 567
+    code: 'self.sweepSettingsView.specVisibleUpdated.connect(self.toggleSpectrumVisibility)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 575
+    code: 'self.activeDataset.readyToPlot.connect(self.mplCanvas.updateElement)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 576
+    code: 'self.allDatasets.readyToPlot.connect(self.mplCanvas.updateElement)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 577
+    code: 'self.allDatasets.readyToPlotX.connect(self.mplCanvas.updateElement)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 579
+    code: 'self.allDatasets.distinctXUpdated.connect('
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 583
+    code: 'self.measDataSet.readyToPlot.connect(self.mplCanvas.updateElement)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 584
+    code: 'self.measDataSet.relimCanvas.connect(self.relimCanvas)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 585
+    code: 'self.quantumModel.readyToPlotMainCanvas.connect(self.mplCanvas.updateElement)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 605
+    code: 'self.canvasTools["reset"].clicked.connect(self.toggleReset)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 606
+    code: 'self.canvasTools["zoomIn"].clicked.connect(self.toggleZoomIn)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 607
+    code: 'self.canvasTools["zoomOut"].clicked.connect(self.toggleZoomOut)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 608
+    code: 'self.canvasTools["pan"].clicked.connect(self.togglePan)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 609
+    code: 'self.canvasTools["select"].clicked.connect(self.toggleSelect)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 618
+    code: 'self.calibrationModel.plotCaliPtExtractStart.connect(self.setDataDestAxisSnap)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 619
+    code: 'self.calibrationModel.plotCaliPtExtractFinished.connect('
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 624
+    code: 'self.pageView.pageChanged.connect('
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 631
+    code: 'self.pageView.pageChanged.connect(self.mplCanvas.updateElemPropertyByPage)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 634
+    code: 'self.canvasTools["snapX"].toggled.connect(self.setXSnapTool)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 635
+    code: 'self.allDatasets.focusChanged.connect('
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 931
+    code: '].readyToPlot.connect(canvas.updateElement)'
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 934
+    code: 'canvas.axesViewChanged.connect('
+  - cluster: D_plot
+    file: qfit/controllers/plotting_ctrl.py
+    line: 938
+    code: 'canvas.canvasClosed.connect('
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 153
+    code: 'self.measurementData.figSwitched.connect(self.quantumModel.switchFig)'
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 159
+    code: 'self.prefitHSParams.hilbertSpaceUpdated.connect('
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 162
+    code: 'self.allDatasets.dataUpdated.connect(self.quantumModel.updateExtractedData)'
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 163
+    code: 'self.caliParamModel.xCaliUpdated.connect(self.quantumModel.updateXCaliFunc)'
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 164
+    code: 'self.caliParamModel.yCaliUpdated.connect(self.quantumModel.updateYCaliFunc)'
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 165
+    code: 'self.measurementData.relimCanvas.connect(self.quantumModel.relimX)'
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 166
+    code: 'self.measurementData.updateRawXMap.connect(self.quantumModel.updateRawXMap)'
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 169
+    code: 'self.pageView.pageChanged.connect(self.quantumModel.updateModeOnPageChange)'
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 175
+    code: 'self.sweepSettingsView.runSweep.clicked.connect('
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 178
+    code: 'self.sweepSettingsView.optionUpdated.connect(self.quantumModel.storeSweepOption)'
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 193
+    code: 'signalSet["sliderChanged"].connect('
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 198
+    code: 'signalSet["textChanged"].connect('
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 201
+    code: 'signalSet["rangeEditingFinished"].connect('
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 206
+    code: 'model.updateSlider.connect('
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 211
+    code: 'model.updateBox.connect('
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 218
+    code: 'self.prefitParamView.HSEditingFinished.connect('
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 223
+    code: 'self.prefitParamView.caliEditingFinished.connect('
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 226
+    code: 'self.prefitCaliParams.updateCaliModel.connect(self.caliParamModel.setParamByPA)'
+  - cluster: E_prefit
+    file: qfit/controllers/prefit_ctrl.py
+    line: 227
+    code: 'self.caliParamModel.updatePrefitModel.connect('
+  - cluster: other
+    file: qfit/controllers/settings.py
+    line: 25
+    code: 'self.settingsButton.clicked.connect(self.settingsWidget.show)'
+  - cluster: H_status
+    file: qfit/controllers/status.py
+    line: 73
+    code: 'self.statusModel.normalStatusChanged.connect('
+  - cluster: H_status
+    file: qfit/controllers/status.py
+    line: 78
+    code: 'model.updateStatus.connect(self.statusModel.updateNormalStatus)'
