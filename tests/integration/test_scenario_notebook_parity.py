@@ -13,7 +13,8 @@ def test_yaml_config_lists_files():
     from qfit.utils.run_by_scripts import dataPathsFromYaml
 
     paths = dataPathsFromYaml(str(YAML_CONFIG))
-    assert isinstance(paths, dict)
+    assert isinstance(paths, list)
+    assert len(paths) >= 1
 
 
 @pytest.mark.gui
