@@ -8,6 +8,13 @@
 #    This source code is licensed under the BSD-style license found in the
 #    LICENSE file in the root directory of this source tree.
 ############################################################################
+# Before NumPy / SciPy: default OpenBLAS thread counts make small-matrix
+# expm tens of times slower and can overflow Qt worker stacks.
+from qfit.utils.blas_threads import apply_blas_thread_env as _apply_blas_thread_env
+from qfit.utils.blas_threads import configure_blas_threads as _configure_blas_threads
+
+_apply_blas_thread_env()
+
 __all__ = [
     "Fit",
     "__version__",
@@ -28,6 +35,9 @@ from qfit.utils.helpers import (
     block_exec_until_success,
 )
 from qfit.utils.run_by_scripts import generate_yaml_template
+
+# Notebooks often import numpy/scqubits first; env vars are then too late.
+_configure_blas_threads()
 
 
 def reload_all():
